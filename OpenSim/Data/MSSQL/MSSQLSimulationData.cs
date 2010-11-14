@@ -34,6 +34,7 @@ using System.IO;
 using System.Reflection;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -115,7 +116,7 @@ namespace OpenSim.Data.MSSQL
                 {
                     while (reader.Read())
                     {
-                        SceneObjectPart sceneObjectPart = BuildPrim(reader);
+                        SceneObjectPart sceneObjectPart = BuildPrim(reader, scene);
                         if (reader["Shape"] is DBNull)
                             sceneObjectPart.Shape = PrimitiveBaseShape.Default;
                         else
@@ -960,6 +961,7 @@ VALUES
                                                  Convert.ToSingle(row["sunvectorz"])
                                                  );
             newSettings.Covenant = new UUID((Guid)row["covenant"]);
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]);
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
 
             newSettings.LoadedCreationDateTime = Convert.ToInt32(row["loaded_creation_datetime"]);
@@ -968,6 +970,10 @@ VALUES
                 newSettings.LoadedCreationID = "";
             else
                 newSettings.LoadedCreationID = (String)row["loaded_creation_id"];
+
+            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
+            if (o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
             return newSettings;
         }
 
@@ -1062,9 +1068,9 @@ VALUES
         /// </summary>
         /// <param name="primRow">datarecord</param>
         /// <returns></returns>
-        private static SceneObjectPart BuildPrim(IDataRecord primRow)
+        private static SceneObjectPart BuildPrim(IDataRecord primRow, Scene scene)
         {
-            SceneObjectPart prim = new SceneObjectPart();
+            SceneObjectPart prim = new SceneObjectPart(scene);
 
             prim.UUID = new UUID((Guid)primRow["UUID"]);
             // explicit conversion of integers is required, which sort
@@ -1374,10 +1380,11 @@ VALUES
             parameters.Add(_Database.CreateParameter("sunvectory", settings.SunVector.Y));
             parameters.Add(_Database.CreateParameter("sunvectorz", settings.SunVector.Z));
             parameters.Add(_Database.CreateParameter("covenant", settings.Covenant));
+            parameters.Add(_Database.CreateParameter("covenantlastupdated", settings.CovenantLastUpdated));
             parameters.Add(_Database.CreateParameter("Loaded_Creation_DateTime", settings.LoadedCreationDateTime));
             parameters.Add(_Database.CreateParameter("Loaded_Creation_ID", settings.LoadedCreationID));
             parameters.Add(_Database.CreateParameter("minimum_age", settings.LoadedCreationDateTime));
-
+            parameters.Add(_Database.CreateParameter("generic", OSDParser.SerializeJsonString(settings.Generic)));
             return parameters.ToArray();
         }
 

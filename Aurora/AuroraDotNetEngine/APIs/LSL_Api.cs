@@ -3869,20 +3869,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void llPointAt(LSL_Vector pos)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            ScenePresence Owner = World.GetScenePresence(m_host.UUID);
-            LSL_Rotation rot = llEuler2Rot(pos);
-            Owner.PreviousRotation = Owner.Rotation;
-            Owner.Rotation = (new Quaternion((float)rot.x,(float)rot.y,(float)rot.z,(float)rot.s));
         }
 
         public void llStopPointAt()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            ScenePresence Owner = m_host.ParentGroup.Scene.GetScenePresence(m_host.OwnerID);
-            Owner.Rotation = Owner.PreviousRotation;
         }
 
         public void llTargetOmega(LSL_Vector axis, double spinrate, double gain)

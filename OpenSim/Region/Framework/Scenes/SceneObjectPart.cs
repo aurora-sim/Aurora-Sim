@@ -39,9 +39,10 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes.Serialization;
+using OpenSim.Region.Framework.Scenes.Components;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Scenes.Serialization;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -159,7 +160,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("DIE_AT_EDGE", value);
+                SetComponentState("DIE_AT_EDGE", value);
                 m_DIE_AT_EDGE = value;
             }
         }
@@ -174,7 +175,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("RETURN_AT_EDGE", value);
+                SetComponentState("RETURN_AT_EDGE", value);
                 m_RETURN_AT_EDGE = value;
             }
         }
@@ -189,7 +190,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("BlockGrab", value);
+                SetComponentState("BlockGrab", value);
                 m_BlockGrab = value;
             }
         }
@@ -204,7 +205,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("StatusSandbox", value);
+                SetComponentState("StatusSandbox", value);
                 m_StatusSandbox = value;
             }
         }
@@ -219,7 +220,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("StatusSandboxPos", value);
+                SetComponentState("StatusSandboxPos", value);
                 m_StatusSandboxPos = value;
             }
         }
@@ -234,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("UseSoundQueue", value);
+                SetComponentState("UseSoundQueue", value);
                 m_UseSoundQueue = value;
             }
         }
@@ -264,7 +265,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("Sound", value);
+                SetComponentState("Sound", value);
                 m_Sound = value;
             }
         }
@@ -279,7 +280,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("SoundFlags", value);
+                SetComponentState("SoundFlags", value);
                 m_SoundFlags = value;
             }
         }
@@ -294,7 +295,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("SoundGain", value);
+                SetComponentState("SoundGain", value);
                 m_SoundGain = value;
             }
         }
@@ -309,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("SoundRadius", value);
+                SetComponentState("SoundRadius", value);
                 m_SoundRadius = value;
             }
         }
@@ -336,7 +337,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set 
             {
-                AddGenericField("STATUS_ROTATE_X", value);
+                SetComponentState("STATUS_ROTATE_X", value);
                 m_STATUS_ROTATE_X = value; 
             }
         }
@@ -351,7 +352,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("STATUS_ROTATE_Y", value);
+                SetComponentState("STATUS_ROTATE_Y", value);
                 m_STATUS_ROTATE_Y = value;
             }
         }
@@ -366,7 +367,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("STATUS_ROTATE_Z", value);
+                SetComponentState("STATUS_ROTATE_Z", value);
                 m_STATUS_ROTATE_Z = value;
             }
         }
@@ -380,7 +381,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("PIDTarget", value);
+                SetComponentState("PIDTarget", value);
                 PhysActor.PIDTarget = value;
             }
         }
@@ -393,7 +394,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("PIDActive", value);
+                SetComponentState("PIDActive", value);
                 PhysActor.PIDActive = value;
             }
         }
@@ -406,7 +407,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("PIDTau", value);
+                SetComponentState("PIDTau", value);
                 PhysActor.PIDTau = value;
             }
         }
@@ -510,7 +511,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("VolumeDetectActive", value);
+                SetComponentState("VolumeDetectActive", value);
                 m_VolumeDetectActive = value;
             }
         }
@@ -601,6 +602,10 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_lastAcceleration;
         protected Vector3 m_lastAngularVelocity;
         protected int m_lastTerseSent;
+        /// <summary>
+        /// This scene is set from the constructor and will be right as long as the object does not leave the region, this is to be able to access the Scene while starting up
+        /// </summary>
+        private Scene m_initialScene;
         
         /// <summary>
         /// Stores media texture data
@@ -617,7 +622,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("CameraEyeOffset", value);
+                SetComponentState("CameraEyeOffset", value);
                 m_cameraEyeOffset = value;
             }
         }
@@ -632,7 +637,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("CameraAtOffset", value);
+                SetComponentState("CameraAtOffset", value);
                 m_cameraAtOffset = value;
             }
         }
@@ -646,7 +651,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("ForceMouselook", value);
+                SetComponentState("ForceMouselook", value);
                 m_forceMouselook = value;
             }
         }
@@ -655,94 +660,68 @@ namespace OpenSim.Region.Framework.Scenes
         private UUID m_collisionSprite;
         private float m_collisionSoundVolume;
 
+        [XmlIgnore]
         public string GenericData
         {
             get
             {
                 string data = string.Empty;
-                lock (GenericDataMap)
-                {
-                    try
-                    {
-                        data = OSDParser.SerializeJsonString(GenericDataMap);
-                    }
-                    catch { }
-                }
+                //Get the Components from the ComponentManager
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+                if (manager != null)
+                    data = manager.SerializeComponents(this);
                 return data;
             }
             set
             {
-                lock (GenericDataMap)
-                {
-                    try
-                    {
-                        OSD data = OSDParser.DeserializeJson(value);
-                        if (data.Type != OSDType.Unknown)
-                            m_GenericData = (OSDMap)data;
-                    }
-                    catch { }
-                }
+                //Set the Components for this object
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+                if (manager != null)
+                    manager.DeserializeComponents(this, value);
             }
         }
 
-        private OSDMap m_GenericData = new OSDMap();
         /// <summary>
-        /// Just as a warning, do not combine this property and the string property, it will cause slowdowns!
+        /// Get the current State of a Component
         /// </summary>
-        [XmlIgnore]
-        public OSDMap GenericDataMap
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        public OSD GetComponentState(string Name)
         {
-            get
-            {
-                lock(m_GenericData)
-                    return m_GenericData;
-            }
-            set
-            {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
-                lock (m_GenericData)
-                {
-                    m_GenericData = value;
-                    foreach (KeyValuePair<string, OSD> dat in m_GenericData)
-                    {
-                        PropertyInfo info = GetType().GetProperty(dat.Key);
-                        try
-                        {
-                            if (info.PropertyType.Name == "Byte[]")
-                            {
-                                Byte[] ta = Primitive.ParticleSystem.FromOSD(dat.Value).GetBytes();
-                                info.SetValue(this, ta, null);
-                            }
-                            else
-                            {
-                                object ta = OSD.ToObject(info.PropertyType, dat.Value);
-                                info.SetValue(this, ta, null);
-                            }
-                        }
-                        catch
-                        {
-                            m_log.Warn("Deserialization failed for " + dat.Key);
-                        }
-                    }
-                }
-            }
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+            if (manager != null)
+                return manager.GetComponentState(this, Name);
+
+            return null;
         }
 
-        public void AddGenericField(string key, object Value)
+        /// <summary>
+        /// Set a Component with the given name's State
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="State"></param>
+        public void SetComponentState(string Name, object State)
         {
-            if(ParentGroup != null)
+            SetComponentState(Name, State, true);
+        }
+
+        /// <summary>
+        /// Set a Component with the given name's State
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="State"></param>
+        /// <param name="shouldBackup">Should this be backed up now</param>
+        public void SetComponentState(string Name, object State, bool shouldBackup)
+        {
+            //Back up the object later
+            if (ParentGroup != null && shouldBackup)
                 ParentGroup.HasGroupChanged = true;
-            if (Value is byte[])
-            {
-                byte[] V = Value as byte[];
-                Primitive.ParticleSystem PS = new Primitive.ParticleSystem(V, 0);
-                m_GenericData[key] = PS.GetOSD();
-            }
-            else
-            {
-                m_GenericData[key] = OSD.FromObject(Value);
-            }
+
+            //Tell the ComponentManager about it
+            Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
+            IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
+            if (manager != null)
+                manager.SetComponentState(this, Name, OSD.FromObject(State));
         }
 
         #endregion Fields
@@ -754,9 +733,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectPart()
         {
+        }
+
+        public SceneObjectPart(Scene scene)
+        {
             // It's not necessary to persist this
-            m_TextureAnimation = Utils.EmptyBytes;
-            ParticleSystem = Utils.EmptyBytes;
+            m_initialScene = scene;
             Rezzed = DateTime.UtcNow;
 
             m_inventory = new SceneObjectPartInventory(this);
@@ -771,10 +753,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="rotationOffset"></param>
         /// <param name="offsetPosition"></param>
         public SceneObjectPart(
-            UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition, 
-            Quaternion rotationOffset, Vector3 offsetPosition, string DefaultObjectName)
+            UUID ownerID, PrimitiveBaseShape shape, Vector3 groupPosition,
+            Quaternion rotationOffset, Vector3 offsetPosition, string DefaultObjectName, Scene scene)
         {
             m_name = DefaultObjectName;
+            m_initialScene = scene;
 
             Rezzed = DateTime.UtcNow;
             _creationDate = (int)Utils.DateTimeToUnixTime(Rezzed);
@@ -933,7 +916,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("CRC", value);
+                SetComponentState("CRC", value, false);
                 m_CRC = value;
             }
         }
@@ -1040,7 +1023,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("APIDTarget", value);
+                SetComponentState("APIDTarget", value);
                 m_APIDTarget = value;
             }
         }
@@ -1054,7 +1037,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("APIDDamp", value);
+                SetComponentState("APIDDamp", value);
                 m_APIDDamp = value; 
             }
         }
@@ -1068,7 +1051,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set 
             {
-                AddGenericField("APIDStrength", value);
+                SetComponentState("APIDStrength", value);
                 m_APIDStrength = value; 
             }
         }
@@ -1131,7 +1114,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("ParticleSystem", value);
+                //MUST set via the OSD
+                Primitive.ParticleSystem ps = new Primitive.ParticleSystem(value, 0);
+                SetComponentState("ParticleSystem", ps.GetOSD());
                 m_particleSystem = value;
             }
         }
@@ -1145,7 +1130,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("Expires", value);
+                SetComponentState("Expires", value);
                 m_expires = value;
             }
         }
@@ -1159,7 +1144,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("Rezzed", value);
+                SetComponentState("Rezzed", value);
                 m_rezzed = value;
             }
         }
@@ -1173,7 +1158,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("Damage", value);
+                SetComponentState("Damage", value);
                 m_damage = value; 
             }
         }
@@ -1319,6 +1304,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_rotationOffset = value;
+
+                if (value.W == 0) //We have an issue here... try to normalize it
+                    value.Normalize();
 
                 PhysicsActor actor = PhysActor;
                 if (actor != null)
@@ -1642,8 +1630,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-//---------------
-#region Public Properties with only Get
+        //---------------
+        #region Public Properties with only Get
 
         public Vector3 AbsolutePosition
         {
@@ -1674,7 +1662,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
-                AddGenericField("SitTargetOrientation", value);
+                SetComponentState("SitTargetOrientation", value);
                 m_sitTargetOrientation = value; 
             }
         }
@@ -1690,7 +1678,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
-                AddGenericField("SitTargetPosition", value);
+                SetComponentState("SitTargetPosition", value);
                 m_sitTargetPosition = value;
             }
         }
@@ -1705,7 +1693,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
-                AddGenericField("SitTargetPosition", value);
+                SetComponentState("SitTargetPosition", value);
                 m_sitTargetPosition = value; 
             }
         }
@@ -1724,7 +1712,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             set
             {
-                AddGenericField("SitTargetOrientationLL", value);
+                SetComponentState("SitTargetOrientationLL", value);
                 m_sitTargetOrientation = new Quaternion(value.X, value.Y, value.Z, value.W); 
             }
         }
@@ -2517,9 +2505,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="xmlReader"></param>
         /// <returns></returns>
-        public static SceneObjectPart FromXml(XmlTextReader xmlReader)
+        public static SceneObjectPart FromXml(XmlTextReader xmlReader, Scene scene)
         {
-            return FromXml(UUID.Zero, xmlReader);
+            return FromXml(UUID.Zero, xmlReader, scene);
         }
 
         /// <summary>
@@ -2528,9 +2516,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
         /// <param name="xmlReader"></param>
         /// <returns></returns>
-        public static SceneObjectPart FromXml(UUID fromUserInventoryItemId, XmlTextReader xmlReader)
+        public static SceneObjectPart FromXml(UUID fromUserInventoryItemId, XmlTextReader xmlReader, Scene scene)
         {
-            SceneObjectPart part = SceneObjectSerializer.Xml2ToSOP(xmlReader);
+            SceneObjectPart part = SceneObjectSerializer.Xml2ToSOP(xmlReader, scene);
             part.m_fromUserInventoryItemID = fromUserInventoryItemId;
 
             // for tempOnRez objects, we have to fix the Expire date.
@@ -3677,18 +3665,8 @@ namespace OpenSim.Region.Framework.Scenes
             //    UpdateFlags = PrimUpdateFlags.FullUpdate;
             if (UpdateFlags == PrimUpdateFlags.FindBest)
             {
+                //Add the defaults
                 UpdateFlags = PrimUpdateFlags.None;
-                if (Text != "")
-                    UpdateFlags |= PrimUpdateFlags.Text;
-                if (TextureAnimation.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                if (Sound != UUID.Zero)
-                    UpdateFlags |= PrimUpdateFlags.Sound;
-                if (ParticleSystem.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.Particles;
-                if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                    UpdateFlags |= PrimUpdateFlags.MediaURL;
-
                 UpdateFlags |= PrimUpdateFlags.ClickAction;
                 UpdateFlags |= PrimUpdateFlags.ExtraData;
                 UpdateFlags |= PrimUpdateFlags.Shape;
@@ -3698,6 +3676,18 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
             }
+            //Must send these as well
+            if (Text != "")
+                UpdateFlags |= PrimUpdateFlags.Text;
+            if (TextureAnimation != null && TextureAnimation.Length != 0)
+                UpdateFlags |= PrimUpdateFlags.TextureAnim;
+            if (Sound != UUID.Zero)
+                UpdateFlags |= PrimUpdateFlags.Sound;
+            if (ParticleSystem != null && ParticleSystem.Length != 0)
+                UpdateFlags |= PrimUpdateFlags.Particles;
+            if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
+                UpdateFlags |= PrimUpdateFlags.MediaURL;
+
             //Needs to be outside, otherwise compressed updates will be screwy with groups
             if (ParentGroup.ChildrenList.Count != 1)
                 UpdateFlags |= PrimUpdateFlags.ParentID;
@@ -3918,7 +3908,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
                     !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
                     !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                    Environment.TickCount - m_lastTerseSent > TIME_MS_TOLERANCE)
+                    Util.EnvironmentTickCount() - m_lastTerseSent > TIME_MS_TOLERANCE)
                 {
                     SendTerseUpdateToAllClients();
 
@@ -3928,7 +3918,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastVelocity = Velocity;
                     m_lastAcceleration = Acceleration;
                     m_lastAngularVelocity = AngularVelocity;
-                    m_lastTerseSent = Environment.TickCount;
+                    m_lastTerseSent = Util.EnvironmentTickCount();
                 }
                 ClearUpdateSchedule();
             }
@@ -4490,12 +4480,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                             }
 
-                            if (m_parentGroup.GetSceneMaxUndo() > 0)
-                            {
-                                UndoState nUndo = new UndoState(this);
-
-                                m_undo.Push(nUndo);
-                            }
+                            UndoState nUndo = new UndoState(this);
+                            m_undo.Push(nUndo);
                         }
                     }
                 }
@@ -4968,10 +4954,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_undo.Count > 0)
                 {
-                    if (m_parentGroup.GetSceneMaxUndo() > 0)
-                    {
-                       m_redo.Push(new UndoState(this));
-                    }
+                    m_redo.Push(new UndoState(this));
                     UndoState goback = m_undo.Pop();
                     if (goback != null)
                     {
@@ -4987,12 +4970,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_redo.Count > 0)
                 {
-                    if (m_parentGroup.GetSceneMaxUndo() > 0)
-                    {
-                        UndoState nUndo = new UndoState(this);
+                    UndoState nUndo = new UndoState(this);
+                    m_undo.Push(nUndo);
 
-                        m_undo.Push(nUndo);
-                    }
                     UndoState gofwd = m_redo.Pop();
                     if (gofwd != null)
                         gofwd.PlayfwdState(this);

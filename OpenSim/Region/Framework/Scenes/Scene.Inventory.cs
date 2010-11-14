@@ -57,6 +57,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void CreateScriptInstances()
         {
             m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
+            //Set loading prims here to block backup
+            LoadingPrims = true;
             EntityBase[] entities = Entities.GetEntities();
             foreach (EntityBase group in entities)
             {
@@ -66,6 +68,8 @@ namespace OpenSim.Region.Framework.Scenes
                     ((SceneObjectGroup)group).ResumeScripts();
                 }
             }
+            //Now reset it
+            LoadingPrims = false;
         }
 
         public void AddUploadedInventoryItem(UUID agentID, InventoryItemBase item)
@@ -73,6 +77,11 @@ namespace OpenSim.Region.Framework.Scenes
             IMoneyModule money = RequestModuleInterface<IMoneyModule>();
             if (money != null)
             {
+                if (!money.AmountCovered(GetScenePresence(agentID).ControllingClient, money.UploadCharge))
+                {
+                    GetScenePresence(agentID).ControllingClient.SendAlertMessage("You do not have enough money to complete this upload.");
+                    return;
+                }
                 money.ApplyUploadCharge(agentID, money.UploadCharge, "Asset upload");
             }
 
@@ -813,7 +822,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_dialogModule.SendAlertToUser(remoteClient, "Failed to create item");
+                IDialogModule module = RequestModuleInterface<IDialogModule>();
+                if (module != null)
+                    module.SendAlertToUser(remoteClient, "Failed to create item");
                 m_log.WarnFormat(
                     "Failed to add item for {0} in CreateNewInventoryItem!",
                      remoteClient.Name);
@@ -963,7 +974,9 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                group.RequestInventoryFile(remoteClient, primLocalID, XferManager);
+                IXfer xfer = RequestModuleInterface<IXfer>();
+                if (xfer != null)
+                    group.RequestInventoryFile(remoteClient, primLocalID, xfer);
             }
             else
             {
@@ -1745,7 +1758,7 @@ namespace OpenSim.Region.Framework.Scenes
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                ScenePresence SP = remoteClient == null ? null : GetScenePresence(remoteClient.AgentId);
 
                 if (SP == null)
                 {
@@ -1900,7 +1913,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (AddInventoryItem(item))
                     remoteClient.SendInventoryItemCreateUpdate(item, 0);
                 else
-                    m_dialogModule.SendAlertToUser(remoteClient, "Operation failed");
+                {
+                    IDialogModule module = RequestModuleInterface<IDialogModule>();
+                    if (module != null)
+                        module.SendAlertToUser(remoteClient, "Operation failed");
+                }
 
                 itemID = item.ID;
                 return item.AssetID;

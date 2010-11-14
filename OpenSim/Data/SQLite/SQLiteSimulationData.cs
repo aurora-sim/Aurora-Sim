@@ -519,7 +519,7 @@ namespace OpenSim.Data.SQLite
                         
                         if (uuid == objID) //is new SceneObjectGroup ?
                         {
-                            prim = buildPrim(primRow);
+                            prim = buildPrim(primRow, scene);
                             DataRow shapeRow = shapes.Rows.Find(prim.UUID.ToString());
                             if (shapeRow != null)
                             {
@@ -560,7 +560,7 @@ namespace OpenSim.Data.SQLite
                         string objID = (string) primRow["SceneGroupID"];
                         if (uuid != objID) //is new SceneObjectGroup ?
                         {
-                            prim = buildPrim(primRow);
+                            prim = buildPrim(primRow, scene);
                             DataRow shapeRow = shapes.Rows.Find(prim.UUID.ToString());
                             if (shapeRow != null)
                             {
@@ -1302,7 +1302,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        private SceneObjectPart buildPrim(DataRow row)
+        private SceneObjectPart buildPrim(DataRow row, Scene scene)
         {
             // Code commented.  Uncomment to test the unit test inline.
 
@@ -1326,7 +1326,7 @@ namespace OpenSim.Data.SQLite
             // interesting has to be done to actually get these values
             // back out.  Not enough time to figure it out yet.
 
-            SceneObjectPart prim = new SceneObjectPart();
+            SceneObjectPart prim = new SceneObjectPart(scene);
             prim.UUID = new UUID((String) row["UUID"]);
             // explicit conversion of integers is required, which sort
             // of sucks.  No idea if there is a shortcut here or not.
@@ -1609,8 +1609,13 @@ namespace OpenSim.Data.SQLite
                                      );
             newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
             newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
-            newSettings.Covenant = new UUID((String) row["covenant"]);
+            newSettings.Covenant = new UUID((String)row["covenant"]);
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]);
             newSettings.TerrainImageID = new UUID((String)row["map_tile_ID"]);
+
+            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
+            if (o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1937,7 +1942,9 @@ namespace OpenSim.Data.SQLite
             row["fixed_sun"] = settings.FixedSun;
             row["sun_position"] = settings.SunPosition;
             row["covenant"] = settings.Covenant.ToString();
+            row["covenantlastupdated"] = settings.CovenantLastUpdated.ToString();
             row["map_tile_ID"] = settings.TerrainImageID.ToString();
+            row["generic"] = OSDParser.SerializeJsonString(settings.Generic);
         }
 
         /// <summary>

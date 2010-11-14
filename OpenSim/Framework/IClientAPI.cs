@@ -1249,10 +1249,10 @@ namespace OpenSim.Framework
         void SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID);
 
         void SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args);
-        void SendEstateCovenantInformation(UUID covenant);
+        void SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated);
 
         void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags,
-                                    uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner);
+                                    uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner);
 
         void SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData,
                                 float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity,

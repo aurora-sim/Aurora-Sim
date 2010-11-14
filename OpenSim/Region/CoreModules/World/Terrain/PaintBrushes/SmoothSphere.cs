@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -34,7 +35,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize)
+        public void PaintEffect(ITerrainChannel map, bool[,] mask, double rx, double ry, double rz, double strength, double duration, float BrushSize, List<Scene> scenes)
         {
             if(BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
                 BrushSize = 6;
@@ -45,7 +46,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             double step = BrushSize / 4;
             duration *= 0.03; //MCP Should be read from ini file
 
-
             // compute delta and blend in
             for (x = 0; x < map.Width; x++)
             {
@@ -55,9 +55,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     double z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
-                    if (z < 0)
-                    {
-                    }
                     if (z > 0) // add in non-zero amount
                     {
                         double average = 0.0;
@@ -70,7 +67,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                             for (l = 0.0 - area; l < area; l += step)
                             {
                                 avgsteps++;
-                                average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map);
+                                average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, scenes);
                             }
                         }
                         double da = z;

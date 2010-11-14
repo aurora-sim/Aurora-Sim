@@ -83,7 +83,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             Scene.EventManager.OnObjectGrab +=
                     touch_start;
-            Scene.EventManager.OnObjectGrabbing += 
+            Scene.EventManager.OnObjectGrabbing +=
                     touch;
             Scene.EventManager.OnObjectDeGrab +=
                     touch_end;
@@ -105,9 +105,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     collision;
             Scene.EventManager.OnScriptCollidingEnd +=
                     collision_end;
-            Scene.EventManager.OnScriptLandColliderStart += 
+            Scene.EventManager.OnScriptLandColliderStart +=
                     land_collision_start;
-            Scene.EventManager.OnScriptLandColliding += 
+            Scene.EventManager.OnScriptLandColliding +=
                     land_collision;
             Scene.EventManager.OnScriptLandColliderEnd +=
                     land_collision_end;
@@ -122,24 +122,55 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             IMoneyModule money =
                     Scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
-                money.OnObjectPaid+=HandleObjectPaid;
+            {
+                money.OnObjectPaid += HandleObjectPaid;
+                money.OnPostObjectPaid += HandlePostObjectPaid;
+            }
         }
 
-        private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
+        //private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
+        private bool HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         {
+            bool ret = false;
             SceneObjectPart part = m_scriptEngine.findPrim(objectID);
 
-            if (part == null)
-                return;
+            //if (part == null)
+            //    return;
 
-            m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
-            if (part.ParentGroup != null)
-                part = part.ParentGroup.RootPart;
+            //m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
+            //if (part.ParentGroup != null)
+            //    part = part.ParentGroup.RootPart;
 
-            if (part != null)
+            //if (part != null)
+            //{
+            //    money(part.LocalId, agentID, amount);
+            //}
+            if (part != null) 
             {
-                money(part.LocalId, agentID, amount);
+                m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
+                if (part.ParentGroup != null) part = part.ParentGroup.RootPart;
+                if (part != null)
+                {
+                    ret = money(part.LocalId, agentID, amount);
+                }
             }
+            return ret;
+        }
+
+        private bool HandlePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
+        {
+            bool ret = true;
+
+            foreach (Scene scene in m_Scenes)
+            {
+                if (scene.RegionInfo.RegionHandle == regionHandle)
+                {
+                    ret = money(localID, agentID, amount);
+                    break;
+                }
+            }
+
+            return ret;
         }
 
         public void changed(SceneObjectPart part, uint change)
@@ -286,18 +317,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             CoalescedTouchEvents[part.LocalId] = det;
         }
 
-        public void money(uint localID, UUID agentID, int amount)
+        //public void money(uint localID, UUID agentID, int amount)
+        public bool money(uint localID, UUID agentID, int amount)
         {
+            bool ret = false;
             SceneObjectPart part = m_scriptEngine.findPrim(localID);
-            if (part == null)
-                return;
+            if (part == null) return ret;
+
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
             {
                 datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
-                if (datas == null || datas.Length == 0)
-                    return;
+                if (datas == null || datas.Length == 0) return ret;
             }
             string functionName = "money";
             object[] param = new object[] {
@@ -306,9 +338,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (ScriptData ID in datas)
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                if (CheckIfEventShouldFire(ID, functionName, param)) {
+                     m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], ID.VersionID, EventPriority.FirstStart, param);
+                    ret = true;
+                }
             }
+            return ret;
         }
 
         public void collision_start(SceneObjectPart part, ColliderArgs col)

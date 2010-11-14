@@ -47,6 +47,7 @@ using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Services.Connectors.Hypergrid;
 using Aurora.DataManager;
 using Aurora.Framework;
+using AvatarArchives;
 
 namespace OpenSim.Services.LLLoginService
 {
@@ -89,7 +90,6 @@ namespace OpenSim.Services.LLLoginService
         IConfigSource m_config;
         IConfig m_AuroraLoginConfig;
         bool m_AllowAnonymousLogin = false;
-        bool m_AuthenticateUsers = true;
         bool m_UseTOS = false;
         string m_TOSLocation = "";
         string m_DefaultUserAvatarArchive = "";
@@ -114,7 +114,6 @@ namespace OpenSim.Services.LLLoginService
                 m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
                 m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
                 m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
-                m_AuthenticateUsers = m_AuroraLoginConfig.GetBoolean("AuthenticateUsers", true);
                 m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
                 m_AllowFirstLife = m_AuroraLoginConfig.GetBoolean("AllowFirstLifeInProfile", true);
                 m_TutorialURL = m_AuroraLoginConfig.GetString("TutorialURL", m_TutorialURL);
@@ -149,7 +148,7 @@ namespace OpenSim.Services.LLLoginService
             m_GatekeeperURL = m_LoginServerConfig.GetString("GatekeeperURI", string.Empty);
             m_MapTileURL = m_LoginServerConfig.GetString("MapTileURL", string.Empty);
             m_SearchURL = m_LoginServerConfig.GetString("SearchURL", string.Empty);
-            
+
             // These are required; the others aren't
             if (accountService == string.Empty || authService == string.Empty)
                 throw new Exception("LoginService is missing service specifications");
@@ -306,13 +305,13 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID, 
+        public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData)
         {
             bool success = false;
             UUID session = UUID.Random();
 
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}", 
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} {1} from {2} with user agent {3} starting in {4}",
                 firstName, lastName, clientIP.Address.ToString(), clientVersion, startLocation);
             try
             {
@@ -341,23 +340,18 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
 
+                //Set the scopeID for the user
+                scopeID = account.ScopeID;
+
                 UUID secureSession = UUID.Zero;
-                if (m_AuthenticateUsers)
+                //
+                // Authenticate this user
+                //
+                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+                if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
                 {
-                    //
-                    // Authenticate this user
-                    //
-                    string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
-                    if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
-                        return LLFailedLoginResponse.UserProblem;
-                    }
-                }
-                else
-                {
-                    string token = m_AuthenticationService.GetToken(account.PrincipalID, 30);
-                    UUID.TryParse(token, out secureSession);
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                    return LLFailedLoginResponse.UserProblem;
                 }
 
                 IAgentInfo agent = null;
@@ -375,7 +369,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     bool AcceptedNewTOS = false;
                     //This gets if the viewer has accepted the new TOS
-                    if(requestData.ContainsKey("agree_to_tos"))
+                    if (requestData.ContainsKey("agree_to_tos"))
                     {
                         if (requestData["agree_to_tos"].ToString() == "0")
                             AcceptedNewTOS = false;
@@ -551,13 +545,13 @@ namespace OpenSim.Services.LLLoginService
                 //
                 string reason = string.Empty;
                 GridRegion dest;
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avatar, session, secureSession, position, where, 
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avatar, session, secureSession, position, where,
                     clientVersion, channel, mac, id0, clientIP, out where, out reason, out dest);
                 destination = dest;
-                if(requestData.ContainsKey("id0"))
+                if (requestData.ContainsKey("id0"))
                     id0 = (string)requestData["id0"];
                 string platform = "";
-                if(requestData.ContainsKey("platform"))
+                if (requestData.ContainsKey("platform"))
                     platform = (string)requestData["platform"];
 
                 if (aCircuit == null)
@@ -883,7 +877,7 @@ namespace OpenSim.Services.LLLoginService
                 success = LaunchAgentDirectly(simConnector, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
-					m_GridService.SetRegionUnsafe(destination.RegionID);
+                    m_GridService.SetRegionUnsafe(destination.RegionID);
                     // Try the fallback regions
                     List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
                     if (fallbacks != null)
@@ -978,8 +972,8 @@ namespace OpenSim.Services.LLLoginService
                 return null;
         }
 
-        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account, 
-            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position, 
+        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
+            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position,
             string ipaddress, string viewer, string channel, string mac, string id0)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
@@ -1092,9 +1086,12 @@ namespace OpenSim.Services.LLLoginService
             }
         }
     }
+}
+    #endregion
 
-        #endregion
-
+namespace AvatarArchives
+{
+    using OpenMetaverse.StructuredData;
     public class GridAvatarArchiver : IAvatarAppearanceArchiver
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -1109,6 +1106,7 @@ namespace OpenSim.Services.LLLoginService
             MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
+
         #region Console Commands
 
         protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
@@ -1141,7 +1139,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
                 string ArchiveXML = MakeXMLFormat(appearance, cmdparams[6]);
-                
+
                 AvatarArchive archive = new AvatarArchive();
                 archive.ArchiveXML = ArchiveXML;
                 archive.Name = ArchiveName;
@@ -1160,81 +1158,83 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
+        #endregion
+
         private string MakeXMLFormat(AvatarAppearance appearance, string FolderNameToSaveInto)
         {
-            string ArchiveXML = "";
+            OSDMap map = new OSDMap();
+            OSDMap body = new OSDMap();
+            body.Add("AvatarHeight", OSD.FromReal(appearance.AvatarHeight));
+            body.Add("BodyAsset", OSD.FromUUID(appearance.BodyAsset));
+            body.Add("BodyItem", OSD.FromUUID(appearance.BodyItem));
+            body.Add("EyesAsset", OSD.FromUUID(appearance.EyesAsset));
+            body.Add("EyesItem", OSD.FromUUID(appearance.EyesItem));
+            body.Add("GlovesAsset", OSD.FromUUID(appearance.GlovesAsset));
+            body.Add("GlovesItem", OSD.FromUUID(appearance.GlovesItem));
+            body.Add("HairAsset", OSD.FromUUID(appearance.HairAsset));
+            body.Add("HairItem", OSD.FromUUID(appearance.HairItem));
+            body.Add("HipOffset", OSD.FromReal(appearance.HipOffset));
+            body.Add("JacketAsset", OSD.FromUUID(appearance.JacketAsset));
+            body.Add("JacketItem", OSD.FromUUID(appearance.JacketItem));
+            body.Add("Owner", OSD.FromUUID(appearance.Owner));
+            body.Add("PantsAsset", OSD.FromUUID(appearance.PantsAsset));
+            body.Add("Serial", OSD.FromInteger(appearance.Serial));
+            body.Add("ShirtAsset", OSD.FromUUID(appearance.ShirtAsset));
+            body.Add("ShirtItem", OSD.FromUUID(appearance.ShirtItem));
+            body.Add("ShoesAsset", OSD.FromUUID(appearance.ShoesAsset));
+            body.Add("ShoesItem", OSD.FromUUID(appearance.ShoesItem));
+            body.Add("SkinAsset", OSD.FromUUID(appearance.SkinAsset));
+            body.Add("SkirtAsset", OSD.FromUUID(appearance.SkirtAsset));
+            body.Add("SkirtItem", OSD.FromUUID(appearance.SkirtItem));
+            body.Add("SocksAsset", OSD.FromUUID(appearance.SocksAsset));
+            body.Add("SocksItem", OSD.FromUUID(appearance.SocksItem));
+            body.Add("UnderPantsAsset", OSD.FromUUID(appearance.UnderPantsAsset));
+            body.Add("UnderPantsItem", OSD.FromUUID(appearance.UnderPantsItem));
+            body.Add("UnderShirtAsset", OSD.FromUUID(appearance.UnderShirtAsset));
+            body.Add("UnderShirtItem", OSD.FromUUID(appearance.UnderShirtItem));
+            body.Add("TattooAsset", OSD.FromUUID(appearance.TattooAsset));
+            body.Add("TattooItem", OSD.FromUUID(appearance.TattooItem));
+            body.Add("AlphaAsset", OSD.FromUUID(appearance.AlphaAsset));
+            body.Add("AlphaItem", OSD.FromUUID(appearance.AlphaItem));
+            body.Add("FolderName", OSD.FromString(FolderNameToSaveInto));
+            body.Add("VisualParams", OSD.FromBinary(appearance.VisualParams));
 
-            ArchiveXML += "<avatar>\n";
-            ArchiveXML += "<" + appearance.AvatarHeight + ">\n";
-            ArchiveXML += "<" + appearance.BodyAsset + ">\n";
-            ArchiveXML += "<" + appearance.BodyItem + ">\n";
-            ArchiveXML += "<" + appearance.EyesAsset + ">\n";
-            ArchiveXML += "<" + appearance.EyesItem + ">\n";
-            ArchiveXML += "<" + appearance.GlovesAsset + ">\n";
-            ArchiveXML += "<" + appearance.GlovesItem + ">\n";
-            ArchiveXML += "<" + appearance.HairAsset + ">\n";
-            ArchiveXML += "<" + appearance.HairItem + ">\n";
-            ArchiveXML += "<" + appearance.HipOffset + ">\n";
-            ArchiveXML += "<" + appearance.JacketAsset + ">\n";
-            ArchiveXML += "<" + appearance.JacketItem + ">\n";
-            ArchiveXML += "<" + appearance.Owner + ">\n";
-            ArchiveXML += "<" + appearance.PantsAsset + ">\n";
-            ArchiveXML += "<" + appearance.PantsItem + ">\n";
-            ArchiveXML += "<" + appearance.Serial + ">\n";
-            ArchiveXML += "<" + appearance.ShirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.ShirtItem + ">\n";
-            ArchiveXML += "<" + appearance.ShoesAsset + ">\n";
-            ArchiveXML += "<" + appearance.ShoesItem + ">\n";
-            ArchiveXML += "<" + appearance.SkinAsset + ">\n";
-            ArchiveXML += "<" + appearance.SkinItem + ">\n";
-            ArchiveXML += "<" + appearance.SkirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.SkirtItem + ">\n";
-            ArchiveXML += "<" + appearance.SocksAsset + ">\n";
-            ArchiveXML += "<" + appearance.SocksItem + ">\n";
-            ArchiveXML += "<" + appearance.UnderPantsAsset + ">\n";
-            ArchiveXML += "<" + appearance.UnderPantsItem + ">\n";
-            ArchiveXML += "<" + appearance.UnderShirtAsset + ">\n";
-            ArchiveXML += "<" + appearance.UnderShirtItem + ">\n";
-            ArchiveXML += "<" + FolderNameToSaveInto + ">\n";
-            ArchiveXML += "<VisualParams>\n";
-            foreach (Byte Byte in appearance.VisualParams)
-            {
-                ArchiveXML += "</VP" + Convert.ToString(Byte) + ">\n";
-            }
-            ArchiveXML += "</VisualParams>\n";
-            ArchiveXML += "<wearables>\n";
+            OSDArray wearables = new OSDArray();
             foreach (AvatarWearable wear in appearance.Wearables)
             {
-                ArchiveXML += "<WA" + wear.AssetID + ">\n";
-                ArchiveXML += "<WI" + wear.ItemID + ">\n";
+                OSDMap wearable = new OSDMap();
+                wearable.Add("Asset", wear.AssetID);
+                wearable.Add("Item", wear.ItemID);
+                wearables.Add(wearable);
             }
-            ArchiveXML += "</wearables>\n";
-            ArchiveXML += "<TEXTURE" + appearance.Texture.ToString().Replace("\n", "") + "TEXTURE>\n";
-            ArchiveXML += "</avatar>";
+            body.Add("AvatarWearables", wearables);
+
+            body.Add("Texture", appearance.Texture.GetOSD());
+
+            OSDArray attachmentsArray = new OSDArray();
+
             Hashtable attachments = appearance.GetAttachments();
-            ArchiveXML += "<attachments>\n";
             if (attachments != null)
             {
                 foreach (DictionaryEntry element in attachments)
                 {
                     Hashtable attachInfo = (Hashtable)element.Value;
-
                     InventoryItemBase IB = new InventoryItemBase(UUID.Parse(attachInfo["item"].ToString()));
-                    IB = InventoryService.GetItem(IB);
-                    ArchiveXML += "<AI" + attachInfo["item"] + ">\n";
-                    ArchiveXML += "<AA" + IB.AssetID + ">\n";
-                    ArchiveXML += "<AP" + (int)element.Key + ">\n";
+                    OSDMap attachment = new OSDMap();
+                    attachment.Add("Asset", OSD.FromUUID(IB.AssetID));
+                    attachment.Add("Item", OSD.FromUUID(UUID.Parse(attachInfo["item"].ToString())));
+                    attachment.Add("Point", OSD.FromInteger((int)element.Key));
+                    attachmentsArray.Add(attachment);
                 }
             }
-            ArchiveXML += "</attachments>";
-            return ArchiveXML;
-        }
 
-        #endregion
+            body.Add("Attachments", attachmentsArray);
+            return (OSDParser.SerializeLLSDXmlString(map));
+        }
 
         public void LoadAvatarArchive(string FileName, string First, string Last)
         {
-            List<string> file = new List<string>();
+            string file = "";
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
             if (account == null)
             {
@@ -1243,33 +1243,31 @@ namespace OpenSim.Services.LLLoginService
             }
 
             string FolderNameToLoadInto = "";
-            
+
             if (FileName.EndsWith(".database"))
             {
                 m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
-                
-                FileName = FileName.Substring(0,FileName.Length-9);
+
+                FileName = FileName.Substring(0, FileName.Length - 9);
 
                 Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 AvatarArchive archive = avarchiver.GetAvatarArchive(FileName);
 
-                string[] lines = archive.ArchiveXML.Split('\n');
-                file = new List<string>(lines);
+                file = archive.ArchiveXML;
             }
             else
             {
                 m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
                 StreamReader reader = new StreamReader(FileName);
-                string line = reader.ReadToEnd();
-                string[] lines = line.Split('\n');
-                file = new List<string>(lines);
+                string fine = reader.ReadToEnd();
                 reader.Close();
                 reader.Dispose();
             }
 
             List<UUID> AttachmentUUIDs = new List<UUID>();
-            List<string> AttachmentPoints = new List<string>();
-            List<string> AttachmentAssets = new List<string>();
+            List<int> AttachmentPoints = new List<int>();
+            List<UUID> AttachmentAssets = new List<UUID>();
+
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(file, out AttachmentUUIDs, out AttachmentPoints, out AttachmentAssets, out FolderNameToLoadInto);
             appearance.Owner = account.PrincipalID;
             List<InventoryItemBase> items = new List<InventoryItemBase>();
@@ -1291,116 +1289,191 @@ namespace OpenSim.Services.LLLoginService
             if (appearance.BodyItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.BodyItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.BodyItem, folderForAppearance);
-                items.Add(IB);
-                appearance.BodyItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.BodyItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.BodyItem = IB.ID;
+                }
             }
 
             if (appearance.EyesItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.EyesItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.EyesItem, folderForAppearance);
-                items.Add(IB);
-                appearance.EyesItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.EyesItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.EyesItem = IB.ID;
+                }
             }
 
             if (appearance.GlovesItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.GlovesItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.GlovesItem, folderForAppearance);
-                items.Add(IB);
-                appearance.GlovesItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.GlovesItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.GlovesItem = IB.ID;
+                }
             }
 
             if (appearance.HairItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.HairItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.HairItem, folderForAppearance);
-                items.Add(IB);
-                appearance.HairItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.HairItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.HairItem = IB.ID;
+                }
             }
 
             if (appearance.JacketItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.JacketItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.JacketItem, folderForAppearance);
-                items.Add(IB);
-                appearance.JacketItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.JacketItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.JacketItem = IB.ID;
+                }
             }
 
             if (appearance.PantsItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.PantsItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.PantsItem, folderForAppearance);
-                items.Add(IB);
-                appearance.PantsItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.PantsItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.PantsItem = IB.ID;
+                }
             }
 
             if (appearance.ShirtItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShirtItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShirtItem, folderForAppearance);
-                items.Add(IB);
-                appearance.ShirtItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShirtItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.ShirtItem = IB.ID;
+                }
             }
 
             if (appearance.ShoesItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShoesItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShoesItem, folderForAppearance);
-                items.Add(IB);
-                appearance.ShoesItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShoesItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.ShoesItem = IB.ID;
+                }
             }
 
             if (appearance.SkinItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkinItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkinItem, folderForAppearance);
-                items.Add(IB);
-                appearance.SkinItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkinItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.SkinItem = IB.ID;
+                }
             }
 
             if (appearance.SkirtItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkirtItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkirtItem, folderForAppearance);
-                items.Add(IB);
-                appearance.SkirtItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkirtItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.SkirtItem = IB.ID;
+                }
             }
 
             if (appearance.SocksItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SocksItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SocksItem, folderForAppearance);
-                items.Add(IB);
-                appearance.SocksItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SocksItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.SocksItem = IB.ID;
+                }
             }
 
             if (appearance.UnderPantsItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderPantsItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderPantsItem, folderForAppearance);
-                items.Add(IB);
-                appearance.UnderPantsItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderPantsItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.UnderPantsItem = IB.ID;
+                }
             }
 
             if (appearance.UnderShirtItem != UUID.Zero)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderShirtItem));
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderShirtItem, folderForAppearance);
-                items.Add(IB);
-                appearance.UnderShirtItem = IB.ID;
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderShirtItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.UnderShirtItem = IB.ID;
+                }
+            }
+
+            if (appearance.AlphaItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.AlphaItem));
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.AlphaItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.AlphaItem = IB.ID;
+                }
+            }
+
+            if (appearance.TattooItem != UUID.Zero)
+            {
+                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.TattooItem));
+                if (IB != null)
+                {
+                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.TattooItem, folderForAppearance);
+                    IB.Folder = folderForAppearance.ID;
+                    items.Add(IB);
+                    appearance.TattooItem = IB.ID;
+                }
             }
 
             appearance.ClearAttachments(); //Clear so that we can rebuild
-            int i = 0;
             foreach (UUID uuid in AttachmentUUIDs)
             {
                 InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(uuid));
+                if (IB == null)
+                    continue;
                 IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, uuid, folderForAppearance);
                 items.Add(IB);
-                appearance.SetAttachment(int.Parse(AttachmentPoints[i]), IB.ID, UUID.Parse(AttachmentAssets[i]));
-                i++;
             }
 
             #endregion
@@ -1411,130 +1484,80 @@ namespace OpenSim.Services.LLLoginService
             m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
         }
 
-        private AvatarAppearance ConvertXMLToAvatarAppearance(List<string> file, out List<UUID> AttachmentIDs, out List<string> AttachmentPoints, out List<string> AttachmentAsset, out string FolderNameToPlaceAppearanceIn)
+        private AvatarAppearance ConvertXMLToAvatarAppearance(string file, out List<UUID> AttachmentIDs, out List<int> AttachmentPoints, out List<UUID> AttachmentAsset, out string FolderNameToPlaceAppearanceIn)
         {
-            AvatarAppearance appearance = new AvatarAppearance();
-            List<string> newFile = new List<string>();
-            foreach (string line in file)
-            {
-                string newLine = line.TrimStart('<');
-                newFile.Add(newLine.TrimEnd('>'));
-            }
-            appearance.AvatarHeight = Convert.ToInt32(newFile[1]);
-            appearance.BodyAsset = new UUID(newFile[2]);
-            appearance.BodyItem = new UUID(newFile[3]);
-            appearance.EyesAsset = new UUID(newFile[4]);
-            appearance.EyesItem = new UUID(newFile[5]);
-            appearance.GlovesAsset = new UUID(newFile[6]);
-            appearance.GlovesItem = new UUID(newFile[7]);
-            appearance.HairAsset = new UUID(newFile[8]);
-            appearance.HairItem = new UUID(newFile[9]);
-            //Skip Hip Offset
-            appearance.JacketAsset = new UUID(newFile[11]);
-            appearance.JacketItem = new UUID(newFile[12]);
-            appearance.Owner = new UUID(newFile[13]);
-            appearance.PantsAsset = new UUID(newFile[14]);
-            appearance.PantsItem = new UUID(newFile[15]);
-            appearance.Serial = Convert.ToInt32(newFile[16]);
-            appearance.ShirtAsset = new UUID(newFile[17]);
-            appearance.ShirtItem = new UUID(newFile[18]);
-            appearance.ShoesAsset = new UUID(newFile[19]);
-            appearance.ShoesItem = new UUID(newFile[20]);
-            appearance.SkinAsset = new UUID(newFile[21]);
-            appearance.SkinItem = new UUID(newFile[22]);
-            appearance.SkirtAsset = new UUID(newFile[23]);
-            appearance.SkirtItem = new UUID(newFile[24]);
-            appearance.SocksAsset = new UUID(newFile[25]);
-            appearance.SocksItem = new UUID(newFile[26]);
-            //appearance.Texture = new Primitive.TextureEntry(newFile[27],);
-            appearance.UnderPantsAsset = new UUID(newFile[27]);
-            appearance.UnderPantsItem = new UUID(newFile[28]);
-            appearance.UnderShirtAsset = new UUID(newFile[29]);
-            appearance.UnderShirtItem = new UUID(newFile[30]);
-            FolderNameToPlaceAppearanceIn = newFile[31];
-
-            Byte[] bytes = new byte[218];
-            int i = 0;
-            while (i <= 31)
-            {
-                newFile.RemoveAt(0); //Clear out the already processed parts
-                i++;
-            }
-            i = 0;
-            if (newFile[0] == "VisualParams")
-            {
-                foreach (string partLine in newFile)
-                {
-                    if (partLine.StartsWith("/VP"))
-                    {
-                        string newpartLine = "";
-                        newpartLine = partLine.Replace("/VP", "");
-                        bytes[i] = Convert.ToByte(newpartLine);
-                        i++;
-                    }
-                }
-            }
-            appearance.VisualParams = bytes;
-            List<string> WearableAsset = new List<string>();
-            List<string> WearableItem = new List<string>();
-            string texture = "";
+            AttachmentPoints = new List<int>();
+            AttachmentAsset = new List<UUID>();
             AttachmentIDs = new List<UUID>();
-            AttachmentPoints = new List<string>();
-            AttachmentAsset = new List<string>();
-            foreach (string partLine in newFile)
+
+            AvatarAppearance appearance = new AvatarAppearance();
+
+            OSDMap map = (OSDMap)((OSDMap)OSDParser.DeserializeLLSDXml(file))["Body"];
+
+            appearance.AvatarHeight = (float)map["AvatarHeight"].AsReal();
+            appearance.BodyAsset = map["BodyAsset"].AsUUID();
+            appearance.BodyItem = map["BodyItem"].AsUUID();
+            appearance.EyesAsset = map["EyesAsset"].AsUUID();
+            appearance.EyesItem = map["EyesItem"].AsUUID();
+            appearance.GlovesAsset = map["GlovesAsset"].AsUUID();
+            appearance.GlovesItem = map["GlovesItem"].AsUUID();
+            appearance.HairAsset = map["HairAsset"].AsUUID();
+            appearance.HairItem = map["HairItem"].AsUUID();
+            //Skip Hip Offset
+            appearance.JacketAsset = map["JacketAsset"].AsUUID();
+            appearance.JacketItem = map["JacketItem"].AsUUID();
+            appearance.Owner = map["Owner"].AsUUID();
+            appearance.PantsAsset = map["PantsAsset"].AsUUID();
+            appearance.PantsItem = map["PantsItem"].AsUUID();
+            appearance.Serial = map["Serial"].AsInteger();
+            appearance.ShirtAsset = map["ShirtAsset"].AsUUID();
+            appearance.ShirtItem = map["ShirtItem"].AsUUID();
+            appearance.ShoesAsset = map["ShoesAsset"].AsUUID();
+            appearance.ShoesItem = map["ShoesItem"].AsUUID();
+            appearance.SkinAsset = map["SkinAsset"].AsUUID();
+            appearance.SkinItem = map["SkinItem"].AsUUID();
+            appearance.SkirtAsset = map["SkirtAsset"].AsUUID();
+            appearance.SkirtItem = map["SkirtItem"].AsUUID();
+            appearance.SocksAsset = map["SocksAsset"].AsUUID();
+            appearance.SocksItem = map["SocksItem"].AsUUID();
+            appearance.UnderPantsAsset = map["UnderPantsAsset"].AsUUID();
+            appearance.UnderPantsItem = map["UnderPantsItem"].AsUUID();
+            appearance.UnderShirtAsset = map["UnderShirtAsset"].AsUUID();
+            appearance.UnderShirtItem = map["UnderShirtItem"].AsUUID();
+            appearance.TattooAsset = map["TattooAsset"].AsUUID();
+            appearance.TattooItem = map["TattooItem"].AsUUID();
+            appearance.AlphaAsset = map["AlphaAsset"].AsUUID();
+            appearance.AlphaItem = map["AlphaItem"].AsUUID();
+            FolderNameToPlaceAppearanceIn = map["FolderName"].AsString();
+            appearance.VisualParams = map["VisualParams"].AsBinary();
+
+            OSDArray wearables = (OSDArray)map["AvatarWearables"];
+            List<AvatarWearable> AvatarWearables = new List<AvatarWearable>();
+            foreach (OSD o in wearables)
             {
-                if (partLine.StartsWith("WA"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("WA", "");
-                    WearableAsset.Add(newpartLine);
-                }
-                if (partLine.StartsWith("WI"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("WI", "");
-                    WearableItem.Add(newpartLine);
-                }
-                if (partLine.StartsWith("TEXTURE"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("TEXTURE", "");
-                    texture = newpartLine;
-                }
-                if (partLine.StartsWith("AI"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AI", "");
-                    AttachmentIDs.Add(new UUID(newpartLine));
-                }
-                if (partLine.StartsWith("AA"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AA", "");
-                    AttachmentAsset.Add(newpartLine);
-                }
-                if (partLine.StartsWith("AP"))
-                {
-                    string newpartLine = "";
-                    newpartLine = partLine.Replace("AP", "");
-                    AttachmentPoints.Add(newpartLine);
-                }
+                OSDMap wearable = (OSDMap)o;
+                AvatarWearable wear = new AvatarWearable();
+                wear.AssetID = wearable["Asset"].AsUUID();
+                wear.ItemID = wearable["Item"].AsUUID();
+                AvatarWearables.Add(wear);
             }
-            //byte[] textureBytes = Utils.StringToBytes(texture);
-            //appearance.Texture = new Primitive.TextureEntry(textureBytes, 0, textureBytes.Length);
-            AvatarWearable[] wearables = new AvatarWearable[15];
-            i = 0;
-            foreach (string asset in WearableAsset)
+            appearance.Wearables = AvatarWearables.ToArray();
+
+            appearance.Texture = Primitive.TextureEntry.FromOSD(map["Texture"]);
+
+            OSDArray attachmentsArray = (OSDArray)map["Attachments"];
+            foreach (OSD o in wearables)
             {
-                AvatarWearable wearable = new AvatarWearable(new UUID(asset), new UUID(WearableItem[i]));
-                wearables[i] = wearable;
-                i++;
-            }
-            i = 0;
-            foreach (string asset in AttachmentAsset)
-            {
-                appearance.SetAttachment(Convert.ToInt32(AttachmentPoints[i]), AttachmentIDs[i], new UUID(asset));
-                i++;
+                OSDMap attachment = (OSDMap)o;
+                UUID Asset = attachment["Asset"].AsUUID();
+                UUID Item = attachment["Item"].AsUUID();
+                int AttachmentPoint = attachment["Point"].AsInteger();
+
+                AttachmentAsset.Add(Asset);
+                AttachmentIDs.Add(Item);
+                AttachmentPoints.Add(AttachmentPoint);
+
+                appearance.SetAttachment(AttachmentPoint, Item, Asset);
             }
             return appearance;
         }
@@ -1621,7 +1644,7 @@ namespace OpenSim.Services.LLLoginService
             string[] lines = document.Split('\n');
             List<string> file = new List<string>(lines);
             Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(file[1]);
-            
+
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
             UserAccount UDA = new UserAccount();
             UDA.FirstName = cmdparams[3];
@@ -1651,7 +1674,7 @@ namespace OpenSim.Services.LLLoginService
             }
             UserAccountService.StoreUserAccount(UDA);
 
-            
+
             replyData = ServerUtils.ParseXmlResponse(file[2]);
             IUserProfileInfo UPI = new IUserProfileInfo();
             UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
@@ -1664,7 +1687,7 @@ namespace OpenSim.Services.LLLoginService
 
             profileData.UpdateUserProfile(UPI);
 
-            
+
             reader.Close();
             reader.Dispose();
 

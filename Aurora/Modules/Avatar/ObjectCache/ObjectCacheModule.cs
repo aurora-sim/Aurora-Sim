@@ -83,13 +83,16 @@ namespace Aurora.Modules
         {
             ObjectCacheClient client;
             //If we have the client in the store, we can check, if not, no cached update
-            if (ObjectCacheAgents.TryGetValue(AgentID, out client))
-                return client.GetUseCachedObject(localID, CurrentEntityCRC);
-            else
+            lock (ObjectCacheAgents)
             {
-                client = new ObjectCacheClient();
-                ObjectCacheAgents[AgentID] = client;
-                return client.GetUseCachedObject(localID, CurrentEntityCRC);
+                if (ObjectCacheAgents.TryGetValue(AgentID, out client))
+                    return client.GetUseCachedObject(localID, CurrentEntityCRC);
+                else
+                {
+                    client = new ObjectCacheClient();
+                    ObjectCacheAgents[AgentID] = client;
+                    return client.GetUseCachedObject(localID, CurrentEntityCRC);
+                }
             }
         }
 

@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
@@ -43,19 +44,66 @@ namespace OpenSim.Region.Framework.Scenes
             return size * size - ((x - rx) * (x - rx) + (y - ry) * (y - ry));
         }
 
-        public static double GetBilinearInterpolate(double x, double y, ITerrainChannel map)
+        public static double GetBilinearInterpolate(double x, double y, ITerrainChannel map, List<Scene> scenes)
         {
             int w = map.Width;
             int h = map.Height;
 
+            Scene scene = null;
+
             if (x > w - 2.0)
-                x = w - 2.0;
+            {
+                scene = FindScene(map, scenes, 1, 0);
+                if(scene != null)
+                {
+                    //Fix this position in the new heightmap
+                    x -= w;
+                    map = scene.Heightmap;
+                }
+                else //1 away from the edge if we don't have a sim on this instance
+                    x = w - 1;
+            }
             if (y > h - 2.0)
-                y = h - 2.0;
+            {
+                scene = FindScene(map, scenes, 0, 1);
+                if (scene != null)
+                {
+                    //Fix this position in the new heightmap
+                    y -= h;
+                    map = scene.Heightmap;
+                }
+                else //1 away from the edge if we don't have a sim on this instance
+                    y = h - 1;
+            }
             if (x < 0.0)
-                x = 0.0;
+            {
+                scene = FindScene(map, scenes, -1, 0);
+                if (scene != null)
+                {
+                    //Fix this position in the new heightmap
+                    x += w;
+                    map = scene.Heightmap;
+                }
+                else //1 away from the edge if we don't have a sim on this instance
+                    x = 0.0;
+            }
             if (y < 0.0)
-                y = 0.0;
+            {
+                scene = FindScene(map, scenes, 0, -1);
+                if (scene != null)
+                {
+                    //Fix this position in the new heightmap
+                    y += h;
+                    map = scene.Heightmap;
+                }
+                else //1 away from the edge if we don't have a sim on this instance
+                    y = 0.0;
+            }
+
+            if (scene != null) //Set the heightmap up for that scene
+            {
+                scene.Heightmap = map;
+            }
 
             const int stepSize = 1;
             double h00 = map[(int)x, (int)y];
@@ -74,6 +122,19 @@ namespace OpenSim.Region.Framework.Scenes
             double partialz = y - (int)y;
             double hi = a00 + (a10 * partialx) + (a01 * partialz) + (a11 * partialx * partialz);
             return hi;
+        }
+
+        private static Scene FindScene(ITerrainChannel map, List<Scene> scenes, int X, int Y)
+        {
+            uint RegX = (uint)(map.Scene.RegionInfo.RegionLocX + X);
+            uint RegY = (uint)(map.Scene.RegionInfo.RegionLocY + Y);
+            foreach (Scene scene in scenes)
+            {
+                if (scene.RegionInfo.RegionLocX == RegX &&
+                    scene.RegionInfo.RegionLocY == RegY)
+                    return scene;
+            }
+            return null;
         }
 
         private static double Noise(double x, double y)

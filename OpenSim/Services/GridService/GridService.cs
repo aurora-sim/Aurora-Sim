@@ -256,7 +256,7 @@ namespace OpenSim.Services.GridService
             return String.Empty;
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion gregion, UUID mapID, UUID terrainID, UUID sessionID)
+        public string UpdateMap(UUID scopeID, GridRegion gregion, UUID sessionID)
         {
             RegionData region = m_Database.Get(gregion.RegionID, scopeID);
             if (region != null)
@@ -275,8 +275,9 @@ namespace OpenSim.Services.GridService
                 oldFlags |= (int)OpenSim.Data.RegionFlags.RegionOnline;
                 region.Data["flags"] = oldFlags.ToString(); // Preserve flags
 
-                region.Data["regionMapTexture"] = terrainID.ToString();
-                region.Data["regionTerrainTexture"] = mapID.ToString();
+                region.Data["regionMapTexture"] = gregion.TerrainImage.ToString();
+                region.Data["regionTerrainTexture"] = gregion.TerrainMapImage.ToString();
+                region.Data["sessionid"] = sessionID.ToString();
 
                 try
                 {

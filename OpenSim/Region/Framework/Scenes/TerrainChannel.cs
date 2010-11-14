@@ -42,6 +42,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private readonly bool[,] taint;
         private double[,] map;
+        private IScene m_scene;
 
         public TerrainChannel()
         {
@@ -65,14 +66,39 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public TerrainChannel(double[,] import)
+        public TerrainChannel(IScene scene)
         {
+            m_scene = scene;
+            map = new double[Constants.RegionSize, Constants.RegionSize];
+            taint = new bool[Constants.RegionSize / 16, Constants.RegionSize / 16];
+
+            int x;
+            for (x = 0; x < Constants.RegionSize; x++)
+            {
+                int y;
+                for (y = 0; y < Constants.RegionSize; y++)
+                {
+                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
+                    double spherFacA = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 50) * 0.01;
+                    double spherFacB = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 100) * 0.001;
+                    if (map[x, y] < spherFacA)
+                        map[x, y] = spherFacA;
+                    if (map[x, y] < spherFacB)
+                        map[x, y] = spherFacB;
+                }
+            }
+        }
+
+        public TerrainChannel(double[,] import, IScene scene)
+        {
+            m_scene = scene;
             map = import;
             taint = new bool[import.GetLength(0),import.GetLength(1)];
         }
 
-        public TerrainChannel(bool createMap)
+        public TerrainChannel(bool createMap, IScene scene)
         {
+            m_scene = scene;
             if (createMap)
             {
                 map = new double[Constants.RegionSize,Constants.RegionSize];
@@ -80,8 +106,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public TerrainChannel(int w, int h)
+        public TerrainChannel(int w, int h, IScene scene)
         {
+            m_scene = scene;
             map = new double[w,h];
             taint = new bool[w / 16,h / 16];
         }
@@ -98,9 +125,15 @@ namespace OpenSim.Region.Framework.Scenes
             get { return map.GetLength(1); }
         }
 
+        public IScene Scene
+        {
+            get { return m_scene; }
+            set { m_scene = value; }
+        }
+
         public ITerrainChannel MakeCopy(IScene scene)
         {
-            TerrainChannel copy = new TerrainChannel(false);
+            TerrainChannel copy = new TerrainChannel(false, scene);
             copy.map = (double[,]) map.Clone();
 
             return copy;
@@ -163,7 +196,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public TerrainChannel Copy()
         {
-            TerrainChannel copy = new TerrainChannel(false);
+            TerrainChannel copy = new TerrainChannel(false, m_scene);
             copy.map = (double[,]) map.Clone();
 
             return copy;

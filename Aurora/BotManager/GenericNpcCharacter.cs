@@ -834,12 +834,12 @@ namespace Aurora.BotManager
         public void SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args)
         {
         }
-        
-        public void SendEstateCovenantInformation(UUID covenant)
+
+        public void SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated)
         {
         }
         
-        public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, string abuseEmail, UUID estateOwner)
+        public void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner)
         {
         }
 

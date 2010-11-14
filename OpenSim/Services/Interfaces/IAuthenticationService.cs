@@ -95,6 +95,5 @@ namespace OpenSim.Services.Interfaces
         // Session IDs are not handled here. After obtaining
         // a token, the session ID regions use can be
         // obtained from the presence service.
-        string GetToken(UUID principalID, int lifetime);
     }
 }

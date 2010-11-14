@@ -927,8 +927,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                //m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
-                //    udpClient.AgentID, remoteEndPoint, circuitCode);
+                m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
+                    udpClient.AgentID, remoteEndPoint, circuitCode);
             }
         }
 
@@ -985,9 +985,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[Scene]: Failed with " + ex);
+                    if(ex.Message != "Closing")
+                        m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()
@@ -1067,6 +1069,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     catch (Exception ex)
                     {
+                        if (ex.Message == "Closing")
+                            break;
                         m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
                         break;
                     }
@@ -1145,6 +1149,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     m_log.Error("[Scene]: Failed with " + ex);
                 }
                 FireThreadClosing(this);
+                Thread.CurrentThread.Abort();
             }
 
             private void CheckExit()

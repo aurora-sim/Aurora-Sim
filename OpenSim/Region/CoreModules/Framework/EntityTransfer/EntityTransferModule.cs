@@ -401,7 +401,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else
                 {
-                    agentCircuit.CapsPath = sp.Scene.CapsModule.GetChildSeed(sp.UUID, reg.RegionHandle);
+                    ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+                    if (module != null)
+                        agentCircuit.CapsPath = module.GetChildSeed(sp.UUID, reg.RegionHandle);
                     capsPath = "http://" + finalDestination.ExternalHostName + ":" + finalDestination.HttpPort
                                 + "/CAPS/" + agentCircuit.CapsPath + "0000/";
                 }
@@ -1070,7 +1072,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             agent.Appearance = sp.Appearance;
             agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
 
-            agent.ChildrenCapSeeds = new Dictionary<ulong, string>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID));
+            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
+                agent.ChildrenCapSeeds = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
             //m_log.DebugFormat("[XXX] Seeds 1 {0}", agent.ChildrenCapSeeds.Count);
 
             if (!agent.ChildrenCapSeeds.ContainsKey(sp.Scene.RegionInfo.RegionHandle))
@@ -1083,9 +1087,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //m_log.DebugFormat("[XXX] Adding {0}", region.RegionHandle);
             agent.ChildrenCapSeeds.Add(region.RegionHandle, agent.CapsPath);
 
-            if (sp.Scene.CapsModule != null)
+            if (module != null)
             {
-                sp.Scene.CapsModule.SetChildrenSeed(sp.UUID, agent.ChildrenCapSeeds);
+                module.SetChildrenSeed(sp.UUID, agent.ChildrenCapSeeds);
             }
 
             if (currentAgentCircuit != null)
@@ -1153,10 +1157,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
                 m_log.Info("[EntityTransferModule]: Neighbor region handles count : " + neighbourHandles.Count);
 
-            if (sp.Scene.CapsModule != null)
+            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
             {
                 previousRegionNeighbourHandles =
-                    new List<ulong>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID).Keys);
+                    new List<ulong>(module.GetChildrenSeeds(sp.UUID).Keys);
             }
             else
             {
@@ -1176,9 +1181,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             /// Collect as many seeds as possible
             Dictionary<ulong, string> seeds;
-            if (sp.Scene.CapsModule != null)
+            if (module != null)
                 seeds
-                    = new Dictionary<ulong, string>(sp.Scene.CapsModule.GetChildrenSeeds(sp.UUID));
+                    = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
             else
                 seeds = new Dictionary<ulong, string>();
 
@@ -1214,10 +1219,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
                         sp.AddNeighbourRegion(neighbour.RegionHandle, agent.CapsPath);
-                        seeds.Add(neighbour.RegionHandle, agent.CapsPath);
+                        
+                            seeds.Add(neighbour.RegionHandle, agent.CapsPath);
                     }
-                    else
-                        agent.CapsPath = sp.Scene.CapsModule.GetChildSeed(sp.UUID, neighbour.RegionHandle);
+                    else if (module != null)
+                        agent.CapsPath = module.GetChildSeed(sp.UUID, neighbour.RegionHandle);
 
                     cagents.Add(agent);
                 }
@@ -1232,9 +1238,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
                 m_log.Info("[EntityTransferModule]: Agents count : " + cagents.Count);
 
-            if (sp.Scene.CapsModule != null)
+            if (module != null)
             {
-                sp.Scene.CapsModule.SetChildrenSeed(sp.UUID, seeds);
+                module.SetChildrenSeed(sp.UUID, seeds);
             }
             sp.KnownRegions = seeds;
             //avatar.Scene.DumpChildrenSeeds(avatar.UUID);
@@ -1260,7 +1266,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                       InformClientOfNeighbourCompleted,
                                       d);
                     }
-
                     catch (ArgumentOutOfRangeException)
                     {
                         m_log.ErrorFormat(
@@ -1322,7 +1327,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Utils.LongToUInts(reg.RegionHandle, out x, out y);
             x = x / Constants.RegionSize;
             y = y / Constants.RegionSize;
-            //m_log.Info("[ENTITY TRANSFER MODULE]: Starting to inform client about neighbour " + x + ", " + y + "(" + endPoint.ToString() + ")");
+            m_log.Info("[ENTITY TRANSFER MODULE]: Starting to inform client about neighbour " + x + ", " + y + "(" + endPoint.ToString() + ")");
 
             string capsPath = "http://" + reg.ExternalHostName + ":" + reg.HttpPort
                   + "/CAPS/" + a.CapsPath + "0000/";
@@ -1358,7 +1363,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // TODO: make Event Queue disablable!
                 }
 
-                //m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());
+                m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());
 
             }
 

@@ -219,7 +219,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual string GetSimulatorVersion()
         {
-            return "OpenSimulator Server";
+            return "Aurora Server";
         }
 
         #endregion
@@ -493,11 +493,6 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual ISceneObject DeserializeObject(string representation)
         {
             return null;
-        }
-
-        public virtual bool AllowScriptCrossings
-        {
-            get { return false; }
         }
 
         public abstract bool CheckClient(UUID agentID, System.Net.IPEndPoint ep);

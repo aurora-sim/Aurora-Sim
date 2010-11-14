@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData, Scene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             try
             {
@@ -84,7 +84,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 sr = new StringReader(parts[0].InnerXml);
                 reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader), scene);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), scene);
                 reader.Close();
                 sr.Close();
 
@@ -94,7 +94,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].InnerXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = SceneObjectPart.FromXml(reader);
+                    SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
                     linkNum = part.LinkNum;
                     sceneObject.AddPart(part, true);
                     part.LinkNum = linkNum;
@@ -145,7 +145,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
             //m_log.DebugFormat("[SERIALIZER]: Starting serialization of {0}", Name);
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             writer.WriteStartElement(String.Empty, "RootPart", String.Empty);
@@ -169,7 +169,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             sceneObject.SaveScriptedState(writer);
             writer.WriteEndElement(); // SceneObjectGroup
 
-            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, System.Environment.TickCount - time);
+            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, Util.EnvironmentTickCount() - time);
         }
 
         protected static void ToXmlFormat(SceneObjectPart part, XmlTextWriter writer)
@@ -180,7 +180,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup FromXml2Format(string xmlData, Scene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
-            //int time = System.Environment.TickCount;
+            //int time = Util.EnvironmentTickCount();
 
             try
             {
@@ -197,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 StringReader sr = new StringReader(parts[0].OuterXml);
                 XmlTextReader reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(reader), scene);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(reader, scene), scene);
                 reader.Close();
                 sr.Close();
 
@@ -206,7 +206,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].OuterXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = SceneObjectPart.FromXml(reader);
+                    SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
 
                     int originalLinkNum = part.LinkNum;
 
@@ -256,7 +256,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         #region manual serialization
 
-        private delegate void SOPXmlProcessor(SceneObjectPart sop, XmlTextReader reader);
+        public delegate void SOPXmlProcessor(SceneObjectPart sop, XmlTextReader reader);
         private static Dictionary<string, SOPXmlProcessor> m_SOPXmlProcessors = new Dictionary<string, SOPXmlProcessor>();
 
         private delegate void TaskInventoryXmlProcessor(TaskInventoryItem item, XmlTextReader reader);
@@ -264,6 +264,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private delegate void ShapeXmlProcessor(PrimitiveBaseShape shape, XmlTextReader reader);
         private static Dictionary<string, ShapeXmlProcessor> m_ShapeXmlProcessors = new Dictionary<string, ShapeXmlProcessor>();
+
+        private delegate string Serialization(SceneObjectPart part);
+        private static Dictionary<string, Serialization> m_genericSerializers = new Dictionary<string, Serialization>();
 
         static SceneObjectSerializer()
         {
@@ -398,6 +401,28 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             m_ShapeXmlProcessors.Add("SculptEntry", ProcessShpSculptEntry);
             m_ShapeXmlProcessors.Add("Media", ProcessShpMedia);
             #endregion
+        }
+
+        public static void AddSerializer(string Name, ISOPSerializerModule processor)
+        {
+            if (!m_SOPXmlProcessors.ContainsKey(Name))
+            {
+                m_SOPXmlProcessors.Add(Name, processor.Deserialization);
+                m_genericSerializers.Add(Name, processor.Serialization);
+            }
+            else
+                m_log.Warn("[SCENEOBJECTSERIALIZER]: Tried to add an additional SOP processor for " + Name);
+        }
+
+        public static void RemoveSerializer(string Name)
+        {
+            if (m_SOPXmlProcessors.ContainsKey(Name))
+            {
+                m_SOPXmlProcessors.Remove(Name);
+                m_genericSerializers.Remove(Name);
+            }
+            else
+                m_log.Warn("[SCENEOBJECTSERIALIZER]: Tried to remove a SOP processor for " + Name + " that did not exist");
         }
 
         #region SOPXmlProcessors
@@ -1136,6 +1161,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             WriteBytes(writer, "TextureAnimation", sop.TextureAnimation);
             WriteBytes(writer, "ParticleSystem", sop.ParticleSystem);
 
+            //Write the generic elements last
+            foreach (KeyValuePair<string, Serialization> kvp in m_genericSerializers)
+            {
+                writer.WriteElementString(kvp.Key, kvp.Value(sop));
+            }
+
             writer.WriteEndElement();
         }
 
@@ -1316,7 +1347,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         {
             reader.Read();
             reader.ReadStartElement("SceneObjectGroup");
-            SceneObjectPart root = Xml2ToSOP(reader);
+            SceneObjectPart root = Xml2ToSOP(reader, sog.Scene);
             if (root != null)
                 sog.SetRootPart(root, true);
             else
@@ -1336,7 +1367,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     case XmlNodeType.Element:
                         if (reader.Name == "SceneObjectPart")
                         {
-                            SceneObjectPart child = Xml2ToSOP(reader);
+                            SceneObjectPart child = Xml2ToSOP(reader, sog.Scene);
                             if (child != null)
                                 sog.AddPart(child, true);
                         }
@@ -1356,9 +1387,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return true;
         }
 
-        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader)
+        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, Scene scene)
         {
-            SceneObjectPart obj = new SceneObjectPart();
+            SceneObjectPart obj = new SceneObjectPart(scene);
             reader.ReadStartElement("SceneObjectPart");
 
             string nodeName = string.Empty;

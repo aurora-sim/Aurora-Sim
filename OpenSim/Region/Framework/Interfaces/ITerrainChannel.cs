@@ -32,6 +32,7 @@ namespace OpenSim.Region.Framework.Interfaces
         int Height { get; }
         double this[int x, int y] { get; set; }
         int Width { get; }
+        IScene Scene { get; set; }
 
         /// <summary>
         /// Squash the entire heightmap into a single dimensioned array

@@ -47,7 +47,7 @@ namespace OpenSim.Data.SQLite
         
         private string m_Realm;
         private List<string> m_ColumnNames;
-        private int m_LastExpire;
+        private int m_LastExpire = Environment.TickCount;
         private string m_connectionString;
 
         protected static SqliteConnection m_Connection;

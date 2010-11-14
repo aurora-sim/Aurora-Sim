@@ -31,6 +31,7 @@ using Nini.Config;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 
 namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
@@ -408,9 +409,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             killingAvatar = m_SP.Scene.GetScenePresence(part.OwnerID);
                             if (killingAvatar == null)
                             {
-                                deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, m_SP.Scene.GetUserName(part.OwnerID));
+                                UserAccount account = m_SP.Scene.UserAccountService.GetUserAccount(m_SP.Scene.RegionInfo.ScopeID, part.OwnerID);
+                                deadAvatarMessage = String.Format("You impaled yourself on {0} owned by {1}!", part.Name, account.Name);
                                 if (FireOnDeadEvent)
-                                    FireDeadAvatarEvent(m_SP.Scene.GetUserName(part.OwnerID), m_SP, part.ParentGroup);
+                                    FireDeadAvatarEvent(account.Name, m_SP, part.ParentGroup);
                             }
                             else
                             {

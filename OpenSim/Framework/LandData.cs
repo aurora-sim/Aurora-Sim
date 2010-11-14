@@ -462,17 +462,20 @@ namespace OpenSim.Framework
             }
         }
 
-        public string m_GenericData = "";
+        private OSDMap m_GenericMap = new OSDMap();
 
         public string GenericData
         {
             get
             {
-                return m_GenericData;
+                return OSDParser.SerializeLLSDXmlString(m_GenericMap);
             }
             set
             {
-                m_GenericData = value;
+                if (value == "")
+                    return;
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(value);
+                m_GenericMap = map;
             }
         }
 
@@ -481,44 +484,23 @@ namespace OpenSim.Framework
         {
             get
             {
-                OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
-                OSDMap map = new OSDMap();
-                if (osd.Type == OSDType.Map)
-                {
-                    map = (OSDMap)osd;
-                }
-                return map;
+                return m_GenericMap;
             }
         }
 
         public void AddGenericData(string Key, object Value)
         {
-            OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
-            OSDMap map = new OSDMap();
-            if (osd.Type == OSDType.Map)
-            {
-                map = (OSDMap)osd;
-            }
             if (Value is OSD)
-            {
-                map[Key] = Value as OSD;
-            }
+                m_GenericMap[Key] = Value as OSD;
             else
-                map[Key] = OSD.FromObject(Value);
-            m_GenericData = OSDParser.SerializeLLSDXmlString(map);
+                 m_GenericMap[Key] = OSD.FromObject(Value);
         }
 
 
         public void RemoveGenericData(string Key)
         {
-            OSD osd = OSDParser.DeserializeLLSDXml(m_GenericData);
-            OSDMap map = new OSDMap();
-            if (osd.Type == OSDType.Map)
-            {
-                map = (OSDMap)osd;
-                map.Remove(Key);
-                m_GenericData = OSDParser.SerializeLLSDXmlString(map);
-            }
+            if(m_GenericMap.ContainsKey(Key))
+                m_GenericMap.Remove(Key);
         }
 
 

@@ -1623,6 +1623,11 @@ namespace OpenSim.Framework.Servers.HttpServer
                 {
                     //m_httpListener.Prefixes.Add("https://+:" + (m_sslport) + "/");
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
+                    System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
+                        new System.Security.Cryptography.X509Certificates.X509Certificate2("SineWaveCert.pfx", "123");
+                    m_httpListener2 = CoolHTTPListener.Create(IPAddress.Any, (int)m_port, cert);
+                    m_httpListener2.ExceptionThrown += httpServerException;
+                    m_httpListener2.LogWriter = httpserverlog;
                 }
 
                 m_httpListener2.RequestReceived += OnRequest;

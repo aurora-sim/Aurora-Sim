@@ -849,3 +849,10 @@ COMMIT;
 BEGIN;
 ALTER TABLE regionsettings ADD minimum_age integer NOT NULL DEFAULT '0';
 COMMIT;
+
+:VERSION 42         #---------------------
+
+BEGIN;
+ALTER TABLE regionsettings ADD covenantlastupdated VARCHAR(36) NOT NULL DEFAULT '0';
+ALTER TABLE regionsettings ADD generic VARCHAR(8196) NOT NULL DEFAULT '';
+COMMIT;

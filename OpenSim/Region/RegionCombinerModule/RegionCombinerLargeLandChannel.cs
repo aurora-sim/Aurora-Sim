@@ -89,6 +89,18 @@ namespace OpenSim.Region.RegionCombinerModule
             }
         }
 
+        public IScene Scene
+        {
+            get
+            {
+                return RegionConnections[RegData].Scene;
+            }
+            set
+            {
+                RegionConnections[RegData].Scene = value;
+            }
+        }
+
         public int Height
         {
             get 
@@ -96,8 +108,8 @@ namespace OpenSim.Region.RegionCombinerModule
                 int Height = 256;
                 foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
                 {
-                    if (kvp.Key.Offset.Y > Height)
-                        Height = (int)kvp.Key.Offset.Y;
+                    if (kvp.Key.Offset.Y + (int)Constants.RegionSize > Height)
+                        Height = (int)kvp.Key.Offset.Y + (int)Constants.RegionSize;
                 }
                 return Height;
             }
@@ -110,8 +122,8 @@ namespace OpenSim.Region.RegionCombinerModule
                 int Width = 256;
                 foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
                 {
-                    if (kvp.Key.Offset.X > Width)
-                        Width = (int)kvp.Key.Offset.X;
+                    if (kvp.Key.Offset.X + (int)Constants.RegionSize > Width)
+                        Width = (int)kvp.Key.Offset.X + (int)Constants.RegionSize;
                 }
                 return Width;
             }

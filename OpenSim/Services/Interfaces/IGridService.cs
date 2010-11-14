@@ -97,7 +97,7 @@ namespace OpenSim.Services.Interfaces
 
         int GetRegionFlags(UUID scopeID, UUID regionID);
 
-        string UpdateMap(UUID scopeID, GridRegion region, UUID mapID, UUID terrainID, UUID sessionID);
+        string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID);
 
         multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
 

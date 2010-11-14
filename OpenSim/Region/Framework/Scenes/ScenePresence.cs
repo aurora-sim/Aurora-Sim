@@ -120,7 +120,6 @@ namespace OpenSim.Region.Framework.Scenes
         private ScriptControlled LastCommands = ScriptControlled.CONTROL_ZERO;
         private bool MouseDown = false;
         private SceneObjectGroup proxyObjectGroup;
-        //private SceneObjectPart proxyObjectPart = null;
         public Vector3 lastKnownAllowedPosition;
         public Vector4 CollisionPlane = Vector4.UnitW;
 
@@ -150,6 +149,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_requestedSitTargetUUID; }
         }
         public bool SitGround = false;
+        public bool m_HasWearablesBeenSent = false;
+        public bool m_InitialHasWearablesBeenSent = false;
 
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
@@ -175,18 +176,13 @@ namespace OpenSim.Region.Framework.Scenes
         
         private bool m_forceFly;
         private bool m_flyDisabled;
+        private volatile bool m_creatingPhysicalRepresentation = false;
 
         private float m_speedModifier = 1.0f;
 
         private Quaternion m_bodyRot= Quaternion.Identity;
 
-        private Quaternion m_bodyRotPrevious = Quaternion.Identity;
-
-        private const int LAND_VELOCITYMAG_MAX = 12;
-
-        public bool IsRestrictedToRegion;
-
-        public string JID = String.Empty;
+        private const int LAND_VELOCITYMAG_MAX = 20;
 
         // Default AV Height
         private float m_avHeight = 1.56f;
@@ -202,7 +198,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected Timer m_reprioritization_timer;
         protected bool m_reprioritizing;
-        protected bool m_reprioritization_called;
 
         // Use these three vectors to figure out what the agent is looking at
         // Convert it to a Matrix and/or Quaternion
@@ -212,9 +207,6 @@ namespace OpenSim.Region.Framework.Scenes
         private AgentManager.ControlFlags m_AgentControlFlags;
         private Quaternion m_headrotation = Quaternion.Identity;
         private byte m_state;
-
-        //Reuse the Vector3 instead of creating a new one on the UpdateMovement method
-//        private Vector3 movementvector;
 
         private bool m_autopilotMoving;
         private Vector3 m_autoPilotTarget;
@@ -276,8 +268,7 @@ namespace OpenSim.Region.Framework.Scenes
         private SceneObjectPart m_SelectedUUID = null;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
         private UUID CollisionSoundID = UUID.Zero;
-        private object m_appearanceLock = new object();
-
+        
         /// <value>
         /// Script engines present in the scene
         /// </value>
@@ -328,14 +319,21 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_invulnerable; }
         }
 
+        /// <summary>
+        /// The current user god level
+        /// </summary>
         public int UserLevel
         {
             get { return m_userLevel; }
         }
 
+        /// <summary>
+        /// The max god level the user can have
+        /// </summary>
         public int GodLevel
         {
             get { return m_godLevel; }
+            set { m_godLevel = value; }
         }
 
         public ulong RegionHandle
@@ -579,12 +577,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_bodyRot = value; }
         }
 
-        public Quaternion PreviousRotation
-        {
-            get { return m_bodyRotPrevious; }
-            set { m_bodyRotPrevious = value; }
-        }
-
         /// <summary>
         /// If this is true, agent doesn't have a representation in this scene.
         ///    this is an agent 'looking into' this scene from a nearby scene(region)
@@ -638,9 +630,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void AdjustKnownSeeds()
         {
             Dictionary<ulong, string> seeds;
-
-            if (Scene.CapsModule != null)
-                seeds = Scene.CapsModule.GetChildrenSeeds(UUID);
+            ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
+                seeds = module.GetChildrenSeeds(UUID);
             else
                 seeds = new Dictionary<ulong, string>();
 
@@ -657,9 +649,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             DropOldNeighbours(old);
-            
-            if (Scene.CapsModule != null)
-                Scene.CapsModule.SetChildrenSeed(UUID, seeds);
+
+            if (module != null)
+                module.SetChildrenSeed(UUID, seeds);
             
             KnownRegions = seeds;
             //m_log.Debug(" ++++++++++AFTER+++++++++++++ ");
@@ -811,35 +803,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnForceReleaseControls += HandleForceReleaseControls;
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
-            m_controllingClient.OnRetrieveInstantMessages += HandleRetrieveInstantMessages;
-        }
-
-        /// <summary>
-        /// This is for sending an animation pack to the client as the last thing they do before they login
-        /// </summary>
-        /// <param name="client"></param>
-        public void HandleRetrieveInstantMessages(IClientAPI client)
-        {
-            //This attempts to fixes t-pose on login by sending an animation for the avatar so it has something to display.
-            //  -- Revolution
-            if (ClientIsStarting)
-            {
-                if (m_physicsActor != null)
-                {
-                    if (m_physicsActor.Flying)
-                        Animator.TrySetMovementAnimation("HOVER");
-                    else
-                        Animator.TrySetMovementAnimation("STAND");
-                }
-                else
-                {
-                    Animator.TrySetMovementAnimation("STAND");
-                }
-                ClientIsStarting = false;
-            }
-            //Don't do this until it has been tested
-            /*SendWearables();
-            SendAppearanceToAllOtherAgents();*/
         }
 
         private void SetDirectionVectors()
@@ -1006,6 +969,31 @@ namespace OpenSim.Region.Framework.Scenes
             SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
+
+            //Check to make sure that we have sent all the appearance info 10 seconds later
+            Timer t = new Timer(10 * 1000);
+            t.Elapsed += new ElapsedEventHandler(CheckToMakeSureWearablesHaveBeenSent);
+            t.AutoReset = false;
+            t.Start();
+        }
+
+        /// <summary>
+        /// This makes sure that after the agent has entered the sim that they have their clothes and that they all exist
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
+        {
+            if (!m_InitialHasWearablesBeenSent)
+            {
+                m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
+                
+                //Force send!
+                m_controllingClient.SendAvatarDataImmediate(this);
+                if (!m_HasWearablesBeenSent)
+                    SendWearables();
+                SendAppearanceToAllOtherAgents();
+            }
         }
 
         /// <summary>
@@ -1157,7 +1145,9 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ulong handle in oldRegions)
             {
                 RemoveNeighbourRegion(handle);
-                Scene.CapsModule.DropChildSeed(UUID, handle);
+                ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
+                if(module != null)
+                    module.DropChildSeed(UUID, handle);
             }
         }
 
@@ -1219,25 +1209,21 @@ namespace OpenSim.Region.Framework.Scenes
             m_isChildAgent = false;
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(AbsolutePosition, m_flying);
-            
+
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
-            
+
             // Create child agents in neighbouring regions
-            if (!m_isChildAgent)
-            {
-                //Experimentally moving this into root agents only.... since why do child agents need to send appearances?
-                SendInitialData();
+            SendInitialData();
 
-                IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
-                if (m_agentTransfer != null)
-                    m_agentTransfer.EnableChildAgents(this);
-                else
-                    m_log.DebugFormat("[SCENE PRESENCE]: Unable to create child agents in neighbours, because AgentTransferModule is not active");
+            IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
+            if (m_agentTransfer != null)
+                m_agentTransfer.EnableChildAgents(this);
+            else
+                m_log.DebugFormat("[SCENE PRESENCE]: Unable to create child agents in neighbours, because AgentTransferModule is not active");
 
-                IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
-                if (friendsModule != null)
-                    friendsModule.SendFriendsOnlineIfNeeded(ControllingClient);
-            }
+            IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
+            if (friendsModule != null)
+                friendsModule.SendFriendsOnlineIfNeeded(ControllingClient);
         }
 
         /// <summary>
@@ -1285,11 +1271,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void HandleAgentUpdate(IClientAPI remoteClient, AgentUpdateArgs agentData)
         {
-            //if (m_isChildAgent)
-            //{
-            //    // m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
-            //    return;
-            //}
+            if (m_isChildAgent)
+            {
+                m_log.Debug("DEBUG: HandleAgentUpdate: child agent");
+                return;
+            }
 
             m_perfMonMS = Util.EnvironmentTickCount();
 
@@ -1619,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // nesting this check because LengthSquared() is expensive and we don't 
                         // want to do it every step when flying.
                         //The == Zero and Z > 0.1 are to stop people from flying and then falling down because the physics engine hasn't calculted the push yet
-                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.1 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
+                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.15 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
                             StopFlying();
                     }
                 }
@@ -2734,7 +2720,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {
-            //m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
+            m_HasWearablesBeenSent = true;
+            m_InitialHasWearablesBeenSent = true;
+            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
             ControllingClient.SendWearables(m_appearance.Wearables, m_appearance.Serial++);
         }
 
@@ -2777,31 +2765,12 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             bool flyingTemp = false;
-            bool avWasNull = true;
             Vector3 pos = m_pos;
             pos.Z -= m_appearance.HipOffset;
-            /*lock (m_appearanceLock)
-            {
-                if (m_physicsActor != null)
-                {
-                    avWasNull = false;
-                    if (!IsChildAgent)
-                    {
-                        m_physicsActor.Velocity = Vector3.Zero;
-                        // This may seem like it's redundant, remove the avatar from the physics scene
-                        // just to add it back again, but it saves us from having to update
-                        // 3 variables 10 times a second.
-
-                        flyingTemp = m_physicsActor.Flying;
-                        RemoveFromPhysicalScene();
-
-                        PhysicsActor = null;
-                    }
-                }
-            }*/
 
             #region Bake Cache Check
 
+            //Check to make sure that we have all the baked textures we need and if not, request them from the client
             if (textureEntry != null)
             {
                 for (int i = 0; i < BAKE_INDICES.Length; i++)
@@ -2831,14 +2800,18 @@ namespace OpenSim.Region.Framework.Scenes
                     if (textureEntry != null)
                         module.CheckForBannedViewer(this.ControllingClient, textureEntry);
             }
+            float height = m_appearance.AvatarHeight;
 
             m_appearance.SetAppearance(textureEntry, visualParams);
             if (m_appearance.AvatarHeight > 0)
                 m_avHeight = m_appearance.AvatarHeight;
 
             //If the av exists, set their new size, if not, add them to the region
-            if(m_physicsActor != null)
-                m_physicsActor.Size = new Vector3(0, 0, m_avHeight);
+            if (m_physicsActor != null)
+            {
+                if (height != m_avHeight)
+                    m_physicsActor.Size = new Vector3(0.74f, 0.74f, m_avHeight);
+            }
             else
                 AddToPhysicalScene(flyingTemp, false);
 
@@ -2846,7 +2819,14 @@ namespace OpenSim.Region.Framework.Scenes
             //AvatarData adata = new AvatarData(m_appearance);
             //m_scene.AvatarService.SetAvatar(m_controllingClient.AgentId, adata);
 
-            SendAppearanceToAllOtherAgents();
+            //This is sent as the last update, and signals that the agent is done updating their appearance, now we send the updates
+            if (textureEntry != null)
+            {
+                m_controllingClient.SendAvatarDataImmediate(this);
+                if(!m_HasWearablesBeenSent)
+                    SendWearables();
+                SendAppearanceToAllOtherAgents();
+            }
             if (!m_startAnimationSet)
             {
                 Animator.UpdateMovementAnimations();
@@ -2854,14 +2834,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             pos.Z += m_appearance.HipOffset;
-            //lock (m_appearanceLock)
-            //{
-            //    if (!avWasNull)
-            //    {
-            //        AddToPhysicalScene(flyingTemp, false);
-            //    }
-            //}
-            m_controllingClient.SendAvatarDataImmediate(this);
         }
 
         public void SetWearable(int wearableId, AvatarWearable wearable)
@@ -3202,34 +3174,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        /// <summary>
-        /// This allows the Sim owner the abiility to kick users from their sim currently.
-        /// It tells the client that the agent has permission to do so.
-        /// </summary>
-        public void GrantGodlikePowers(UUID agentID, UUID sessionID, UUID token, bool godStatus)
-        {
-            if (godStatus)
-            {
-                // For now, assign god level 200 to anyone
-                // who is granted god powers, but has no god level set.
-                //
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, agentID);
-                if (account != null)
-                {
-                    if (account.UserLevel > 0)
-                        m_godLevel = account.UserLevel;
-                    else
-                        m_godLevel = 200;
-                }
-            }
-            else
-            {
-                m_godLevel = 0;
-            }
-
-            ControllingClient.SendAdminResponse(token, (uint)m_godLevel);
-        }
-
         #region Child Agent Updates
 
         public void ChildAgentDataUpdate(AgentData cAgentData)
@@ -3275,7 +3219,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
             // Sends out the objects in the user's draw distance if m_sendTasksToChild is true.
-            if (m_scene.m_seeIntoRegionFromNeighbor)
+            if (m_scene.RegionInfo.SeeIntoThisSimFromNeighbor)
                 m_sceneViewer.Reset();
 
             //cAgentData.AVHeight;
@@ -3317,10 +3261,11 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.BodyRotation = m_bodyRot;
             cAgent.ControlFlags = (uint)m_AgentControlFlags;
 
-            if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
+            //This is checked by the other sim, so we don't have to validate it at all
+            //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 cAgent.GodLevel = (byte)m_godLevel;
-            else 
-                cAgent.GodLevel = (byte) 0;
+            //else 
+            //    cAgent.GodLevel = (byte) 0;
 
             cAgent.Speed = SpeedModifier;
             cAgent.AlwaysRun = m_setAlwaysRun;
@@ -3559,6 +3504,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void AddToPhysicalScene(bool isFlying, bool AddAvHeightToPosition)
         {
+            //Make sure we arn't already doing this
+            if (m_creatingPhysicalRepresentation)
+                return;
+
+            //Set this so we don't do it multiple times
+            m_creatingPhysicalRepresentation = true;
+
             PhysicsScene scene = m_scene.PhysicsScene;
 
             Vector3 pVec = AbsolutePosition;
@@ -3576,8 +3528,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.SubscribeEvents(500);
             m_physicsActor.LocalID = LocalId;
 
+            //Tell any events about it
             if (OnAddPhysics != null)
                 OnAddPhysics();
+
+            //All done, reset this
+            m_creatingPhysicalRepresentation = false;
         }
 
         private void OutOfBoundsCall(Vector3 pos)
@@ -4127,8 +4083,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (!m_reprioritizing)
                         m_reprioritization_timer.Enabled = m_reprioritizing = true;
-                    else
-                        m_reprioritization_called = true;
                 }
             }
         }
@@ -4139,8 +4093,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_reprioritization_timer)
             {
-                m_reprioritization_timer.Enabled = m_reprioritizing = m_reprioritization_called;
-                m_reprioritization_called = false;
+                m_reprioritization_timer.Enabled = m_reprioritizing = false;
             }
         }
 

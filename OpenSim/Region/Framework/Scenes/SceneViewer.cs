@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneViewer(ScenePresence presence)
         {
             m_presence = presence;
-            if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
+            //if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
         }
 
@@ -64,6 +64,10 @@ namespace OpenSim.Region.Framework.Scenes
                 update.Part = part;
                 update.UpdateFlags = UpdateFlags;
                 m_partsUpdateQueue.Enqueue(update);
+
+                //Make it check when the user comes around to it again
+                if (m_objectsInView.Contains(part.UUID))
+                    m_objectsInView.Remove(part.UUID);
             }
         }
 
@@ -82,8 +86,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (entity is SceneObjectGroup) //Only objects
                 {
-                    //Check to see if they are out of range
-                    if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, entity.AbsolutePosition, m_presence.DrawDistance) && !Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance)))
+                    //Check to see if they are in range
+                    if (Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance))
                     {
                         //Check if we already have sent them an update
                         if (!m_objectsInView.Contains(entity.UUID))
@@ -99,13 +103,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            Entities = null;
         }
 
         public void SendPrimUpdates()
         {
             if (m_pendingObjects == null)
             {
-                if (!m_presence.IsChildAgent || (m_presence.Scene.m_seeIntoRegionFromNeighbor))
+                if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
                     m_pendingObjects = new Queue<SceneObjectGroup>();
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
@@ -140,8 +145,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (m_presence.Scene.CheckForObjectCulling)
                     {
                         //Check for part position against the av and the camera position
-                        if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, g.AbsolutePosition, m_presence.DrawDistance) &&
-                            !Util.DistanceLessThan(m_presence.CameraPosition, g.AbsolutePosition, m_presence.DrawDistance)))
+                        if (!Util.DistanceLessThan(m_presence.CameraPosition, g.AbsolutePosition, m_presence.DrawDistance))
                             if (m_presence.DrawDistance != 0)
                                 continue;
                     }
@@ -151,7 +155,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_updateTimes.ContainsKey(g.UUID))
                         g.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
-                //Do this HERE so that all those updates set added.
+                //Do this HERE so that all those updates added are prioritized.
                 m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
@@ -239,7 +243,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Reset()
         {
-            if (m_pendingObjects != null)
+            if (m_pendingObjects != null && m_pendingObjects.Count != 0)
             {
                 lock (m_pendingObjects)
                 {

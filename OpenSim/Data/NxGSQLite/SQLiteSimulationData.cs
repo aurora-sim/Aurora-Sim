@@ -34,6 +34,7 @@ using System.Reflection;
 using log4net;
 using Mono.Data.Sqlite;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -622,7 +623,7 @@ namespace OpenSim.Data.SQLite
 
                             if (uuid == objID) //is new SceneObjectGroup ?
                             {
-                                prim = buildPrim(primRow);
+                                prim = buildPrim(primRow, scene);
                                 prim.Shape = findPrimShape(uuid);
 
                                 SceneObjectGroup group = new SceneObjectGroup(prim, scene);
@@ -653,7 +654,7 @@ namespace OpenSim.Data.SQLite
 
                             if (uuid != objID) //is not new SceneObjectGroup ?
                             {
-                                prim = buildPrim(primRow);
+                                prim = buildPrim(primRow, scene);
                                 prim.Shape = findPrimShape(uuid);
 
                                 if (!createdObjects.ContainsKey(new UUID(objID)))
@@ -1175,7 +1176,7 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        private SceneObjectPart buildPrim(IDataReader row)
+        private SceneObjectPart buildPrim(IDataReader row, Scene scene)
         {
             // Code commented.  Uncomment to test the unit test inline.
             
@@ -1199,7 +1200,7 @@ namespace OpenSim.Data.SQLite
             // interesting has to be done to actually get these values
             // back out.  Not enough time to figure it out yet.
             
-            SceneObjectPart prim = new SceneObjectPart();
+            SceneObjectPart prim = new SceneObjectPart(scene);
             prim.UUID = new UUID(row["UUID"].ToString());
             prim.CreatorID = new UUID(row["CreatorID"].ToString());
             prim.OwnerID = new UUID(row["OwnerID"].ToString());
@@ -1482,6 +1483,7 @@ namespace OpenSim.Data.SQLite
             newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
             newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
             newSettings.Covenant = new UUID(row["covenant"].ToString());
+            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"].ToString());
             newSettings.TerrainImageID = new UUID(row["map_tile_ID"].ToString());
             newSettings.TerrainMapImageID = new UUID(row["terrain_tile_ID"].ToString());
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
@@ -1490,6 +1492,10 @@ namespace OpenSim.Data.SQLite
                 newSettings.LoadedCreationID = "";
             else
                 newSettings.LoadedCreationID = row["loaded_creation_id"].ToString();
+
+            OSD o = OSDParser.DeserializeJson(row["generic"].ToString());
+            if(o.Type == OSDType.Map)
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1828,11 +1834,13 @@ namespace OpenSim.Data.SQLite
             row["fixed_sun"] = settings.FixedSun;
             row["sun_position"] = settings.SunPosition;
             row["covenant"] = settings.Covenant.ToString();
+            row["covenantlastupdated"] = settings.CovenantLastUpdated.ToString();
             row["map_tile_ID"] = settings.TerrainImageID.ToString();
             row["terrain_tile_ID"] = settings.TerrainMapImageID.ToString();
             row["loaded_creation_datetime"] = settings.LoadedCreationDateTime.ToString();
             row["loaded_creation_id"] = settings.LoadedCreationID.ToString();
             row["minimum_age"] = settings.MinimumAge;
+            row["generic"] = OSDParser.SerializeJsonString(settings.Generic);
         }
 
         /// <summary>

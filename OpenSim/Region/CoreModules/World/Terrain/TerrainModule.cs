@@ -67,6 +67,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         #endregion
 
+        private static List<Scene> m_scenes = new List<Scene>();
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         private readonly Commander m_commander = new Commander("terrain");
@@ -111,13 +113,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
+            m_scenes.Add(scene);
 
             // Install terrain module in the simulator
             lock (m_scene)
             {
                 if (m_scene.Heightmap == null)
                 {
-                    m_channel = new TerrainChannel();
+                    m_channel = new TerrainChannel(m_scene);
                     m_scene.Heightmap = m_channel;
                     m_revert = m_channel;
                     UpdateRevertMap();
@@ -199,6 +202,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         try
                         {
                             ITerrainChannel channel = loader.Value.LoadFile(filename);
+                            channel.Scene = m_scene;
                             if (channel.Width != Constants.RegionSize || channel.Height != Constants.RegionSize)
                             {
                                 // TerrainChannel expects a RegionSize x RegionSize map, currently
@@ -295,6 +299,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         try
                         {
                             ITerrainChannel channel = loader.Value.LoadStream(stream);
+                            channel.Scene = m_scene;
                             m_scene.Heightmap = channel;
                             m_channel = channel;
                             UpdateRevertMap();
@@ -541,6 +546,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                                             fileWidth, fileHeight,
                                                                             (int) Constants.RegionSize,
                                                                             (int) Constants.RegionSize);
+                            channel.Scene = m_scene;
                             m_scene.Heightmap = channel;
                             m_channel = channel;
                             UpdateRevertMap();
@@ -817,7 +823,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
-                            m_channel, allowMask, west, south, height, size, seconds, BrushSize);
+                            m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
 
                         CheckForTerrainUpdates(!god); //revert changes outside estate limits
                     }

@@ -95,6 +95,7 @@ namespace OpenSim.Framework
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.UnsafeQueueUserWorkItem;
+        private volatile static bool m_threadPoolRunning = false;
 
         /// <summary>
         /// Gets the name of the directory where the current running executable
@@ -1413,6 +1414,7 @@ namespace OpenSim.Framework
             if (m_ThreadPool != null)
                 throw new InvalidOperationException("SmartThreadPool is already initialized");
 
+            m_threadPoolRunning = true;
             m_ThreadPool = new SmartThreadPool(2000, maxThreads, 2);
         }
 
@@ -1421,6 +1423,7 @@ namespace OpenSim.Framework
             if (FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool &&
                 m_ThreadPool != null)
             {
+                m_threadPoolRunning = false;
                 m_ThreadPool.Shutdown();
                 m_ThreadPool.Dispose();
                 m_ThreadPool = null;
@@ -1440,7 +1443,7 @@ namespace OpenSim.Framework
                     ThreadPool.GetAvailableThreads(out workerThreads, out iocpThreads);
                     return workerThreads;
                 case FireAndForgetMethod.SmartThreadPool:
-                    if (m_ThreadPool == null)
+                    if (m_ThreadPool == null || !m_threadPoolRunning)
                         return 0;
                     return m_ThreadPool.MaxThreads - m_ThreadPool.InUseThreads;
                 case FireAndForgetMethod.Thread:
@@ -1467,7 +1470,8 @@ namespace OpenSim.Framework
                 case FireAndForgetMethod.SmartThreadPool:
                     if (m_ThreadPool == null)
                         m_ThreadPool = new SmartThreadPool(2000, 15, 2);
-                    m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new object[] { callback, obj });
+                    if(m_threadPoolRunning)//Check if the thread pool should be running
+                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new object[] { callback, obj });
                     break;
                 case FireAndForgetMethod.Thread:
                     Thread thread = new Thread(delegate(object o) { callback(o); });
@@ -1502,6 +1506,15 @@ namespace OpenSim.Framework
             return Environment.TickCount & EnvironmentTickCountMask;
         }
         const Int32 EnvironmentTickCountMask = 0x3fffffff;
+
+        /// <summary>
+        /// An alternate Environment.TickCount that uses int.MaxValue to lock the tick count
+        /// </summary>
+        /// <returns></returns>
+        public static int TickCount()
+        {
+            return Environment.TickCount & Int32.MaxValue;
+        }
 
         /// <summary>
         /// Environment.TickCount is an int but it counts all 32 bits so it goes positive

@@ -969,3 +969,12 @@ BEGIN TRANSACTION
 ALTER TABLE regionsettings ADD minimum_age int NOT NULL default 0
 
 COMMIT
+
+:VERSION 29
+
+BEGIN TRANSACTION
+
+ALTER TABLE regionsettings ADD generic varchar(8196) NOT NULL default ''
+ALTER TABLE regionsettings ADD covenantlastupdated varchar(36) NOT NULL default '0'
+
+COMMIT

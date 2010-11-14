@@ -145,6 +145,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
                             errorResponse.state = "error";
                             return errorResponse;
                         }
+                        else
+                            mm.ApplyUploadCharge(agentID, mm.UploadCharge, "Asset upload.");
                     }
                 }
            // }

@@ -28,6 +28,7 @@
 using System;
 using System.IO;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
@@ -386,6 +387,40 @@ namespace OpenSim.Framework
         {
             get { return m_Covenant; }
             set { m_Covenant = value; }
+        }
+
+        private int m_CovenantLastUpdated = 0;
+
+        public int CovenantLastUpdated
+        {
+            get { return m_CovenantLastUpdated; }
+            set { m_CovenantLastUpdated = value; }
+        }
+
+        private OSDMap m_Generic = new OSDMap();
+
+        public OSDMap Generic
+        {
+            get { return m_Generic; }
+            set { m_Generic = value; }
+        }
+
+        public void AddGeneric(string key, OSD value)
+        {
+            m_Generic[key] = value;
+        }
+
+        public void RemoveGeneric(string key)
+        {
+            if (m_Generic.ContainsKey(key))
+                m_Generic.Remove(key);
+        }
+
+        public OSD GetGeneric(string key)
+        {
+            OSD value;
+            m_Generic.TryGetValue(key, out value);
+            return value;
         }
 
         private int m_LoadedCreationDateTime;

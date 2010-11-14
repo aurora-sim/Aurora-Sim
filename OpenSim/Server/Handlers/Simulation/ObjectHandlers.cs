@@ -162,7 +162,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 return;
             }
 
-            if ((args["state"] != null) && s.AllowScriptCrossings)
+            if ((args["state"] != null) && s.RegionInfo.AllowScriptCrossing)
             {
                 stateXmlStr = args["state"].AsString();
                 if (stateXmlStr != "")

@@ -49,6 +49,7 @@ namespace OpenSim.Services.AuthenticationService
                 MethodBase.GetCurrentMethod().DeclaringType);
  
         protected IAuthenticationData m_Database;
+        protected bool m_authenticateUsers = true;
 
         public AuthenticationServiceBase(IConfigSource config) : base(config)
         {
@@ -64,6 +65,7 @@ namespace OpenSim.Services.AuthenticationService
             {
                 dllName = authConfig.GetString("StorageProvider", dllName);
                 connString = authConfig.GetString("ConnectionString", connString);
+                m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
                 realm = authConfig.GetString("Realm", realm);
             }
 
@@ -127,7 +129,7 @@ namespace OpenSim.Services.AuthenticationService
             return true;
         }
         
-        public string GetToken(UUID principalID, int lifetime)
+        protected string GetToken(UUID principalID, int lifetime)
         {
             UUID token = UUID.Random();
 
@@ -136,6 +138,7 @@ namespace OpenSim.Services.AuthenticationService
 
             return String.Empty;
         }
+
         public virtual bool SetPasswordHashed(UUID principalID, string Hashedpassword)
         {
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());

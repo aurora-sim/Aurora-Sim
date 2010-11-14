@@ -347,6 +347,9 @@ namespace OpenSim.Region.Physics.Meshing
                             sculptType = PrimMesher.SculptMesh.SculptType.plane;
                             break;
                     }
+                    //Break!
+                    if (idata == null)
+                        return null;
 
                     bool mirror = ((primShape.SculptType & 128) != 0);
                     bool invert = ((primShape.SculptType & 64) != 0);

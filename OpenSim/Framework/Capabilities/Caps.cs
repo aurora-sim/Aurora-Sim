@@ -593,6 +593,8 @@ namespace OpenSim.Framework.Capabilities
                             errorResponse.state = "error";
                             return errorResponse;
                         }
+                        else
+                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
                     }
                 }
             }
@@ -696,7 +698,7 @@ namespace OpenSim.Framework.Capabilities
 
         public void BakedTextureUploaded(UUID assetID, byte[] data)
         {
-            m_log.DebugFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
+            m_log.InfoFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
             IClientAPI client = GetClient(m_agentID);
             if (client != null && client.Scene != null)
             {

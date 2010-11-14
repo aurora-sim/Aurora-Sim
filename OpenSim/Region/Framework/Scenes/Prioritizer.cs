@@ -320,7 +320,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (rootPart.IsAttachment)
                         {
                             //Attachments are always high!
-                            priority = 1.0;
+                            priority = 0.5;
                         }
                     }
                     //Closest first!

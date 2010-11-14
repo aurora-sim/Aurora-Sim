@@ -269,7 +269,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 EventProcessorIsRunning = false;
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
+                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.ToString(), m_ScriptEngine.ScriptEngineName);
             }
             EventProcessorIsRunning = false;
             return SendUpSleepRequest;

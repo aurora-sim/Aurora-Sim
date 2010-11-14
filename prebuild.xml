@@ -908,6 +908,7 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Xml"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -1051,6 +1052,7 @@
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
+      <Reference name="System.Xml.Linq"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Web"/>
       <Reference name="NDesk.Options" path="../../../bin/"/>
@@ -1447,6 +1449,7 @@
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="MySql.Data" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
 
@@ -1481,6 +1484,7 @@
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
 
       <Files>

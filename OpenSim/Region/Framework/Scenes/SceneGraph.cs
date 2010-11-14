@@ -1423,6 +1423,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     group.SetPartName(Util.CleanString(name), primLocalID);
                     group.HasGroupChanged = true;
+                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1441,6 +1442,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     group.SetPartDescription(Util.CleanString(description), primLocalID);
                     group.HasGroupChanged = true;
+                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1455,6 +1457,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
                     group.HasGroupChanged = true;
+                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1469,6 +1472,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
                     part.Material = Convert.ToByte(material);
                     group.HasGroupChanged = true;
+                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }

@@ -499,3 +499,12 @@ begin;
 ALTER TABLE regionsettings ADD COLUMN minimum_age integer NOT NULL default 0;
 
 commit;
+
+:VERSION 25
+
+begin;
+
+ALTER TABLE regionsettings ADD COLUMN covenantlastupdated varchar(36) NOT NULL default '0';
+ALTER TABLE regionsettings ADD COLUMN generic varchar(8196) NOT NULL default '';
+
+commit;

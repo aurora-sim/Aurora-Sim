@@ -104,6 +104,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
 #pragma warning disable 67
 
         public event ObjectPaid OnObjectPaid;
+        public event PostObjectPaid OnPostObjectPaid;
 
 #pragma warning restore 67
 
@@ -256,11 +257,21 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
         {
             if (config == "Startup" && startupConfig != null)
             {
-                m_enabled = (startupConfig.GetString("economymodule", "BetaGridLikeMoneyModule") == "BetaGridLikeMoneyModule");
+                //m_enabled = (startupConfig.GetString("economymodule", "BetaGridLikeMoneyModule") == "BetaGridLikeMoneyModule");
             }
 
             if (config == "Economy" && startupConfig != null)
             {
+                m_enabled = (startupConfig.GetString("EconomyModule", "BetaGridLikeMoneyModule") == "BetaGridLikeMoneyModule");
+                if (m_enabled)
+                {
+                    m_log.InfoFormat("The SampleMoneyModule is enabled.");
+                }
+                else
+                {
+                    m_log.InfoFormat("The SampleMoneyModule is disabled. And the economy module [{0}] is being loaded for currency.",
+                                     startupConfig.GetString("EconomyModule"));
+                }
                 PriceEnergyUnit = startupConfig.GetInt("PriceEnergyUnit", 100);
                 PriceObjectClaim = startupConfig.GetInt("PriceObjectClaim", 10);
                 PricePublicObjectDecay = startupConfig.GetInt("PricePublicObjectDecay", 4);
@@ -718,7 +729,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             {
                 Scene s = LocateSceneClientIn(user.AgentId);
 
-                user.SendEconomyData(EnergyEfficiency, s.ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
+                user.SendEconomyData(EnergyEfficiency, s.RegionInfo.ObjectCapacity, ObjectCount, PriceEnergyUnit, PriceGroupCreate,
                                      PriceObjectClaim, PriceObjectRent, PriceObjectScaleFactor, PriceParcelClaim, PriceParcelClaimFactor,
                                      PriceParcelRent, PricePublicObjectDecay, PricePublicObjectDelete, PriceRentLight, PriceUpload,
                                      TeleportMinPrice, TeleportPriceExponent);
@@ -791,7 +802,8 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             //m_log.Info("[FRIEND]: " + avatar.Name + " status:" + (!avatar.IsChildAgent).ToString());
         }
 
-        public int GetBalance(UUID agentID)
+        //public int GetBalance(UUID agentID)
+        public int GetBalance(IClientAPI client)
         {
             return 0;
         }
