@@ -99,7 +99,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private DateTime TimeSliceEnd = new DateTime();
         private DateTime TimeSliceStart = new DateTime();
 
-        private Double MaxTimeSlice = 25.0;    // script timeslice execution time in ms , hardwired for now
+        private Double MaxTimeSlice = 100;    // script timeslice execution time in ms , hardwired for now
   
 
         public Executor(IScript script)
