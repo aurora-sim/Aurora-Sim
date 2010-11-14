@@ -31,8 +31,9 @@ namespace OpenSim.Framework
 {
     public class VersionInfo
     {
-        private const string VERSION_NUMBER = "0.1";
+        private const string VERSION_NUMBER = "1.0";
         private const Flavour VERSION_FLAVOUR = Flavour.Dev;
+        private const string VERSION_NAME = "Aurora";
 
         public enum Flavour
         {
@@ -51,79 +52,22 @@ namespace OpenSim.Framework
 
         public static string GetVersionString(string versionNumber, Flavour flavour)
         {
-            string versionString = "Aurora " + versionNumber + " (" + flavour + ")";
-            string ReturnValue = versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
-            string buildVersion = string.Empty;
+            string versionString = VERSION_NAME + " " + versionNumber + " " + flavour;
+            versionString = versionString.PadRight(VERSIONINFO_VERSION_LENGTH);
 
-            // Add commit hash and date information if available
-            // The commit hash and date are stored in a file bin/.version
-            // This file can automatically created by a post
-            // commit script in the opensim git master repository or
-            // by issuing the follwoing command from the top level
-            // directory of the opensim repository
-            // git log -n 1 --pretty="format:%h: %ci" >bin/.version
-            // For the full git commit hash use %H instead of %h
-            //
-            // The subversion information is deprecated and will be removed at a later date
-            // Add subversion revision information if available
-            // Try file "svn_revision" in the current directory first, then the .svn info.
-            // This allows to make the revision available in simulators not running from the source tree.
-            // FIXME: Making an assumption about the directory we're currently in - we do this all over the place
-            // elsewhere as well
-            string svnRevisionFileName = "svn_revision";
-            string svnFileName = ".svn/entries";
             string gitCommitFileName = ".version";
-            string inputLine;
-            int strcmp;
 
             if (File.Exists(gitCommitFileName))
             {
                 StreamReader CommitFile = File.OpenText(gitCommitFileName);
-                buildVersion = CommitFile.ReadLine();
+                versionString = CommitFile.ReadLine();
                 CommitFile.Close();
-                ReturnValue += buildVersion ?? "";
             }
-
-            // Remove the else logic when subversion mirror is no longer used
-            else
-            {
-                if (File.Exists(svnRevisionFileName))
-                {
-                    StreamReader RevisionFile = File.OpenText(svnRevisionFileName);
-                    buildVersion = RevisionFile.ReadLine();
-                    buildVersion.Trim();
-                    RevisionFile.Close();
-
-                }
-
-                if (string.IsNullOrEmpty(buildVersion) && File.Exists(svnFileName))
-                {
-                    StreamReader EntriesFile = File.OpenText(svnFileName);
-                    inputLine = EntriesFile.ReadLine();
-                    while (inputLine != null)
-                    {
-                        // using the dir svn revision at the top of entries file
-                        strcmp = String.Compare(inputLine, "dir");
-                        if (strcmp == 0)
-                        {
-                            buildVersion = EntriesFile.ReadLine();
-                            break;
-                        }
-                        else
-                        {
-                            inputLine = EntriesFile.ReadLine();
-                        }
-                    }
-                    EntriesFile.Close();
-                }
-
-                ReturnValue += string.IsNullOrEmpty(buildVersion) ? "      " : ("." + buildVersion + "     ").Substring(0, 6);
-            }
-            return ReturnValue;
+            return versionString;
         }
 
         public const int VERSIONINFO_VERSION_LENGTH = 27;
-        
+
         /// <value>
         /// This is the external interface version.  It is separate from the OpenSimulator project version.
         /// 
