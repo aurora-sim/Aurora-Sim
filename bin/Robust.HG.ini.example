@@ -75,7 +75,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     ;; For example: 
     ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
     ;; (replace spaces with underscore)
-	
+    
     ;; Disable the checking of session ID's in the Grid Service
     ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
     DisableSessionID = false;
@@ -150,6 +150,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     LibraryService = "OpenSim.Services.InventoryService.dll:LibraryService"
     UserAgentService = "OpenSim.Services.HypergridService.dll:UserAgentService"
     FriendsService = "OpenSim.Services.FriendsService.dll:FriendsService"
+    AssetService = "OpenSim.Services.AssetService.dll:AssetService"
 
     ;; You can customize your user logins with their name by putting <USERNAME>
     WelcomeMessage = "Welcome, <USERNAME>!"
@@ -264,7 +265,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
 [AuroraLoginService]
     ;; Should new users be shown the ToS when they log in if they have not seen it before?
-	;;  If this is enabled, the FileNameOfTOS will be used to set what the users see.
+    ;;  If this is enabled, the FileNameOfTOS will be used to set what the users see.
     UseTermsOfServiceOnFirstLogin = false
     ;; File name of the location of the ToS document in the /bin folder
     FileNameOfTOS = ToS.txt
@@ -275,20 +276,20 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     ;;  Then save an Avatar Archive into the database by the command in the console "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)"
     ;;   Where <First> <Last> is the user name, FileName (can end with .database to save into the database) which is used to identify which archive you wish to use, and the default folder name to create in the new user's inventory.
     ;;  After saving this archive, put the name of the archive here to set the default avatar appearance.    
-	DefaultAvatarArchiveForNewUser = 
+    DefaultAvatarArchiveForNewUser = DefaultAvatar.aa
     ;; Will hide the First Life setting of profile from all users if set to false
     AllowFirstLifeInProfile = true
     ;; Sets the tutorial URL for new users which will be displayed on first login.
-	;; This is a website that appears in the client telling the user how to move, fly, etc.
+    ;; This is a website that appears in the client telling the user how to move, fly, etc.
     ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
     TutorialURL = ""
-	;; Allow the 'export' permission in the Imprudence viewer.
-	;; This allows people to set whether they would like to allow others to export objects that are theirs.
-	AllowUseageOfExportPermissions = true
-	;; If a user does not have a home location set, what region should it be set to for them?
+    ;; Allow the 'export' permission in the Imprudence viewer.
+    ;; This allows people to set whether they would like to allow others to export objects that are theirs.
+    AllowUseageOfExportPermissions = true
+    ;; If a user does not have a home location set, what region should it be set to for them?
     DefaultHomeRegion = ""
     
-	;; For more info, see AuroraDocs/CAPSService.txt
+    ;; For more info, see AuroraDocs/CAPSService.txt
     CAPSServiceURL = http://127.0.0.1:8007
     CAPSServicePassword = TestPass
 
@@ -303,7 +304,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 
     ;; For more info, see AuroraDocs/CAPSService.txt
     Password = TestPass
-	;; <IP> is your external IP or DNS name
+    ;; <IP> is your external IP or DNS name
     HostName = http://<IP>:8007
 
 [AuroraConnectors]
@@ -320,8 +321,8 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     OfflineMessagesConnector = LocalConnector
     DirectoryServiceConnector = LocalConnector
     MuteListConnector = LocalConnector
-    ParcelConnector = LocalConnector	
-	
+    ParcelConnector = LocalConnector
+    
 [AuroraStartup]
     ;; Should the asset loader be enabled and load all the assets from the .xml files?
     AssetLoaderEnabled = True

@@ -910,6 +910,7 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Serialization"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
@@ -1712,6 +1713,7 @@
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Serialization"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="XMLRPC" path="../../bin/"/>

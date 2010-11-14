@@ -74,6 +74,7 @@ namespace OpenSim.Services.LLLoginService
         protected IFriendsService m_FriendsService;
         protected IAvatarService m_AvatarService;
         protected IUserAgentService m_UserAgentService;
+        protected IAssetService m_AssetService;
 
         protected GatekeeperServiceConnector m_GatekeeperConnector;
 
@@ -86,23 +87,23 @@ namespace OpenSim.Services.LLLoginService
         protected string m_MapTileURL;
         protected string m_SearchURL;
 
-        IConfig m_LoginServerConfig;
-        IConfigSource m_config;
-        IConfig m_AuroraLoginConfig;
-        bool m_AllowAnonymousLogin = false;
-        bool m_UseTOS = false;
-        string m_TOSLocation = "";
-        string m_DefaultUserAvatarArchive = "";
-        string m_DefaultHomeRegion = "";
-        bool m_AllowFirstLife = true;
-        string m_TutorialURL = "";
-        ArrayList eventCategories = new ArrayList();
-        ArrayList classifiedCategories = new ArrayList();
-        string CAPSServerURL = "";
-        string CAPSServicePassword = "";
-        GridAvatarArchiver archiver;
-        List<ILoginModule> LoginModules = new List<ILoginModule>();
-        bool allowExportPermission = true;
+        protected IConfig m_LoginServerConfig;
+        protected IConfigSource m_config;
+        protected IConfig m_AuroraLoginConfig;
+        protected bool m_AllowAnonymousLogin = false;
+        protected bool m_UseTOS = false;
+        protected string m_TOSLocation = "";
+        protected string m_DefaultUserAvatarArchive = "DefaultAvatar.aa";
+        protected string m_DefaultHomeRegion = "";
+        protected bool m_AllowFirstLife = true;
+        protected string m_TutorialURL = "";
+        protected ArrayList eventCategories = new ArrayList();
+        protected ArrayList classifiedCategories = new ArrayList();
+        protected string CAPSServerURL = "";
+        protected string CAPSServicePassword = "";
+        protected GridAvatarArchiver archiver;
+        protected List<ILoginModule> LoginModules = new List<ILoginModule>();
+        protected bool allowExportPermission = true;
 
         public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
         {
@@ -112,7 +113,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
                 m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
-                m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", "");
+                m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
                 m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
                 m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
                 m_AllowFirstLife = m_AuroraLoginConfig.GetBoolean("AllowFirstLifeInProfile", true);
@@ -139,6 +140,7 @@ namespace OpenSim.Services.LLLoginService
             string friendsService = m_LoginServerConfig.GetString("FriendsService", String.Empty);
             string avatarService = m_LoginServerConfig.GetString("AvatarService", String.Empty);
             string simulationService = m_LoginServerConfig.GetString("SimulationService", String.Empty);
+            string assetService = m_LoginServerConfig.GetString("AssetService", String.Empty);
 
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
@@ -171,6 +173,8 @@ namespace OpenSim.Services.LLLoginService
                 m_RemoteSimulationService = ServerUtils.LoadPlugin<ISimulationService>(simulationService, args);
             if (agentService != string.Empty)
                 m_UserAgentService = ServerUtils.LoadPlugin<IUserAgentService>(agentService, args);
+            if (assetService != string.Empty)
+                m_AssetService = ServerUtils.LoadPlugin<IAssetService>(assetService, args);
 
             //
             // deal with the services given as argument
@@ -196,7 +200,8 @@ namespace OpenSim.Services.LLLoginService
             }
             //Start the grid profile archiver.
             new GridAvatarProfileArchiver(m_UserAccountService);
-            archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
+            archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService, m_AssetService);
+
             LoginModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ILoginModule>();
             foreach (ILoginModule module in LoginModules)
             {
@@ -409,12 +414,14 @@ namespace OpenSim.Services.LLLoginService
                         profileData.CreateNewProfile(account.PrincipalID);
                         UPI = profileData.GetUserProfile(account.PrincipalID);
                         UPI.AArchiveName = m_DefaultUserAvatarArchive;
+                        UPI.IsNewUser = true;
                         //profileData.UpdateUserProfile(UPI); //It gets hit later by the next thing
                     }
-                    if (UPI.IsNewUser && UPI.AArchiveName != "" && UPI.AArchiveName != " ")
+                    //Find which is set, if any
+                    string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
+                    if (UPI.IsNewUser && archiveName != "")
                     {
-                        GridAvatarArchiver archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService);
-                        archiver.LoadAvatarArchive(UPI.AArchiveName, account.FirstName, account.LastName);
+                        archiver.LoadAvatarArchive(archiveName, account.FirstName, account.LastName);
                         UPI.AArchiveName = "";
                     }
                     if (UPI.IsNewUser)
@@ -1098,16 +1105,17 @@ namespace AvatarArchives
         private IUserAccountService UserAccountService;
         private IAvatarService AvatarService;
         private IInventoryService InventoryService;
-        public GridAvatarArchiver(IUserAccountService ACS, IAvatarService AS, IInventoryService IS)
+        private IAssetService AssetService;
+
+        public GridAvatarArchiver(IUserAccountService ACS, IAvatarService AS, IInventoryService IS, IAssetService AService)
         {
             UserAccountService = ACS;
             AvatarService = AS;
             InventoryService = IS;
+            AssetService = AService;
             MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
-
-        #region Console Commands
 
         protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
         {
@@ -1116,134 +1124,19 @@ namespace AvatarArchives
                 m_log.Debug("[AvatarArchive] Not enough parameters!");
                 return;
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
-        }
-
-        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
-        {
-            if (cmdparams.Length != 7)
-            {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
-                return;
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            if (account == null)
-            {
-                m_log.Error("[AvatarArchive] User not found!");
-                return;
-            }
-            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
-            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
-            if (cmdparams[5].EndsWith(".database"))
-            {
-                string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
-                string ArchiveXML = MakeXMLFormat(appearance, cmdparams[6]);
-
-                AvatarArchive archive = new AvatarArchive();
-                archive.ArchiveXML = ArchiveXML;
-                archive.Name = ArchiveName;
-
-                DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
-
-                m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
-            }
-            else
-            {
-                StreamWriter writer = new StreamWriter(cmdparams[5]);
-                writer.Write(MakeXMLFormat(appearance, cmdparams[6]));
-                writer.Close();
-                writer.Dispose();
-                m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
-            }
-        }
-
-        #endregion
-
-        private string MakeXMLFormat(AvatarAppearance appearance, string FolderNameToSaveInto)
-        {
-            OSDMap map = new OSDMap();
-            OSDMap body = new OSDMap();
-            body.Add("AvatarHeight", OSD.FromReal(appearance.AvatarHeight));
-            body.Add("BodyAsset", OSD.FromUUID(appearance.BodyAsset));
-            body.Add("BodyItem", OSD.FromUUID(appearance.BodyItem));
-            body.Add("EyesAsset", OSD.FromUUID(appearance.EyesAsset));
-            body.Add("EyesItem", OSD.FromUUID(appearance.EyesItem));
-            body.Add("GlovesAsset", OSD.FromUUID(appearance.GlovesAsset));
-            body.Add("GlovesItem", OSD.FromUUID(appearance.GlovesItem));
-            body.Add("HairAsset", OSD.FromUUID(appearance.HairAsset));
-            body.Add("HairItem", OSD.FromUUID(appearance.HairItem));
-            body.Add("HipOffset", OSD.FromReal(appearance.HipOffset));
-            body.Add("JacketAsset", OSD.FromUUID(appearance.JacketAsset));
-            body.Add("JacketItem", OSD.FromUUID(appearance.JacketItem));
-            body.Add("Owner", OSD.FromUUID(appearance.Owner));
-            body.Add("PantsAsset", OSD.FromUUID(appearance.PantsAsset));
-            body.Add("Serial", OSD.FromInteger(appearance.Serial));
-            body.Add("ShirtAsset", OSD.FromUUID(appearance.ShirtAsset));
-            body.Add("ShirtItem", OSD.FromUUID(appearance.ShirtItem));
-            body.Add("ShoesAsset", OSD.FromUUID(appearance.ShoesAsset));
-            body.Add("ShoesItem", OSD.FromUUID(appearance.ShoesItem));
-            body.Add("SkinAsset", OSD.FromUUID(appearance.SkinAsset));
-            body.Add("SkirtAsset", OSD.FromUUID(appearance.SkirtAsset));
-            body.Add("SkirtItem", OSD.FromUUID(appearance.SkirtItem));
-            body.Add("SocksAsset", OSD.FromUUID(appearance.SocksAsset));
-            body.Add("SocksItem", OSD.FromUUID(appearance.SocksItem));
-            body.Add("UnderPantsAsset", OSD.FromUUID(appearance.UnderPantsAsset));
-            body.Add("UnderPantsItem", OSD.FromUUID(appearance.UnderPantsItem));
-            body.Add("UnderShirtAsset", OSD.FromUUID(appearance.UnderShirtAsset));
-            body.Add("UnderShirtItem", OSD.FromUUID(appearance.UnderShirtItem));
-            body.Add("TattooAsset", OSD.FromUUID(appearance.TattooAsset));
-            body.Add("TattooItem", OSD.FromUUID(appearance.TattooItem));
-            body.Add("AlphaAsset", OSD.FromUUID(appearance.AlphaAsset));
-            body.Add("AlphaItem", OSD.FromUUID(appearance.AlphaItem));
-            body.Add("FolderName", OSD.FromString(FolderNameToSaveInto));
-            body.Add("VisualParams", OSD.FromBinary(appearance.VisualParams));
-
-            OSDArray wearables = new OSDArray();
-            foreach (AvatarWearable wear in appearance.Wearables)
-            {
-                OSDMap wearable = new OSDMap();
-                wearable.Add("Asset", wear.AssetID);
-                wearable.Add("Item", wear.ItemID);
-                wearables.Add(wearable);
-            }
-            body.Add("AvatarWearables", wearables);
-
-            body.Add("Texture", appearance.Texture.GetOSD());
-
-            OSDArray attachmentsArray = new OSDArray();
-
-            Hashtable attachments = appearance.GetAttachments();
-            if (attachments != null)
-            {
-                foreach (DictionaryEntry element in attachments)
-                {
-                    Hashtable attachInfo = (Hashtable)element.Value;
-                    InventoryItemBase IB = new InventoryItemBase(UUID.Parse(attachInfo["item"].ToString()));
-                    OSDMap attachment = new OSDMap();
-                    attachment.Add("Asset", OSD.FromUUID(IB.AssetID));
-                    attachment.Add("Item", OSD.FromUUID(UUID.Parse(attachInfo["item"].ToString())));
-                    attachment.Add("Point", OSD.FromInteger((int)element.Key));
-                    attachmentsArray.Add(attachment);
-                }
-            }
-
-            body.Add("Attachments", attachmentsArray);
-            return (OSDParser.SerializeLLSDXmlString(map));
         }
 
         public void LoadAvatarArchive(string FileName, string First, string Last)
         {
-            string file = "";
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
+            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
                 m_log.Error("[AvatarArchive] User not found!");
                 return;
             }
-
-            string FolderNameToLoadInto = "";
-
+            string file = "";
             if (FileName.EndsWith(".database"))
             {
                 m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
@@ -1264,235 +1157,99 @@ namespace AvatarArchives
                 reader.Dispose();
             }
 
-            List<UUID> AttachmentUUIDs = new List<UUID>();
-            List<int> AttachmentPoints = new List<int>();
-            List<UUID> AttachmentAssets = new List<UUID>();
+            string FolderNameToLoadInto = "";
 
-            AvatarAppearance appearance = ConvertXMLToAvatarAppearance(file, out AttachmentUUIDs, out AttachmentPoints, out AttachmentAssets, out FolderNameToLoadInto);
+            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(file));
+
+            OSDMap assetsMap = ((OSDMap)map["Assets"]);
+            OSDMap itemsMap = ((OSDMap)map["Items"]);
+            OSDMap bodyMap = ((OSDMap)map["Body"]);
+
+            AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
+
             appearance.Owner = account.PrincipalID;
+
             List<InventoryItemBase> items = new List<InventoryItemBase>();
 
             InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType(account.PrincipalID, AssetType.Clothing);
 
-            UUID newFolderId = UUID.Random();
-
             InventoryFolderBase folderForAppearance
                 = new InventoryFolderBase(
-                    newFolderId, FolderNameToLoadInto, account.PrincipalID,
+                    UUID.Random(), FolderNameToLoadInto, account.PrincipalID,
                     -1, AppearanceFolder.ID, 1);
 
             InventoryService.AddFolder(folderForAppearance);
+
             folderForAppearance = InventoryService.GetFolder(folderForAppearance);
 
-            #region Appearance setup
-
-            if (appearance.BodyItem != UUID.Zero)
+            try
             {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.BodyItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.BodyItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.BodyItem = IB.ID;
-                }
+                LoadAssets(assetsMap);
+                LoadItems(itemsMap, account.PrincipalID, folderForAppearance, out items);
             }
-
-            if (appearance.EyesItem != UUID.Zero)
+            catch (Exception ex)
             {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.EyesItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.EyesItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.EyesItem = IB.ID;
-                }
+                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex.ToString());
             }
-
-            if (appearance.GlovesItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.GlovesItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.GlovesItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.GlovesItem = IB.ID;
-                }
-            }
-
-            if (appearance.HairItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.HairItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.HairItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.HairItem = IB.ID;
-                }
-            }
-
-            if (appearance.JacketItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.JacketItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.JacketItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.JacketItem = IB.ID;
-                }
-            }
-
-            if (appearance.PantsItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.PantsItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.PantsItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.PantsItem = IB.ID;
-                }
-            }
-
-            if (appearance.ShirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShirtItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShirtItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.ShirtItem = IB.ID;
-                }
-            }
-
-            if (appearance.ShoesItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.ShoesItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.ShoesItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.ShoesItem = IB.ID;
-                }
-            }
-
-            if (appearance.SkinItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkinItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkinItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.SkinItem = IB.ID;
-                }
-            }
-
-            if (appearance.SkirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SkirtItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SkirtItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.SkirtItem = IB.ID;
-                }
-            }
-
-            if (appearance.SocksItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.SocksItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.SocksItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.SocksItem = IB.ID;
-                }
-            }
-
-            if (appearance.UnderPantsItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderPantsItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderPantsItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.UnderPantsItem = IB.ID;
-                }
-            }
-
-            if (appearance.UnderShirtItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.UnderShirtItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.UnderShirtItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.UnderShirtItem = IB.ID;
-                }
-            }
-
-            if (appearance.AlphaItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.AlphaItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.AlphaItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.AlphaItem = IB.ID;
-                }
-            }
-
-            if (appearance.TattooItem != UUID.Zero)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(appearance.TattooItem));
-                if (IB != null)
-                {
-                    IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, appearance.TattooItem, folderForAppearance);
-                    IB.Folder = folderForAppearance.ID;
-                    items.Add(IB);
-                    appearance.TattooItem = IB.ID;
-                }
-            }
-
-            appearance.ClearAttachments(); //Clear so that we can rebuild
-            foreach (UUID uuid in AttachmentUUIDs)
-            {
-                InventoryItemBase IB = InventoryService.GetItem(new InventoryItemBase(uuid));
-                if (IB == null)
-                    continue;
-                IB = GiveInventoryItem(IB.CreatorIdAsUuid, appearance.Owner, uuid, folderForAppearance);
-                items.Add(IB);
-            }
-
-            #endregion
 
             appearance.Owner = account.PrincipalID;
             AvatarData adata = new AvatarData(appearance);
             AvatarService.SetAvatar(account.PrincipalID, adata);
+
             m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
         }
 
-        private AvatarAppearance ConvertXMLToAvatarAppearance(string file, out List<UUID> AttachmentIDs, out List<int> AttachmentPoints, out List<UUID> AttachmentAsset, out string FolderNameToPlaceAppearanceIn)
+        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
         {
-            AttachmentPoints = new List<int>();
-            AttachmentAsset = new List<UUID>();
-            AttachmentIDs = new List<UUID>();
+            InventoryItemBase itemCopy = new InventoryItemBase();
+            itemCopy.Owner = recipient;
+            itemCopy.CreatorId = item.CreatorId;
+            itemCopy.ID = UUID.Random();
+            itemCopy.AssetID = item.AssetID;
+            itemCopy.Description = item.Description;
+            itemCopy.Name = item.Name;
+            itemCopy.AssetType = item.AssetType;
+            itemCopy.InvType = item.InvType;
+            itemCopy.Folder = UUID.Zero;
 
+            //Give full permissions for them
+            itemCopy.NextPermissions = (uint)PermissionMask.All;
+            itemCopy.GroupPermissions = (uint)PermissionMask.All;
+            itemCopy.EveryOnePermissions = (uint)PermissionMask.All;
+            itemCopy.CurrentPermissions = (uint)PermissionMask.All;
+
+            if (parentFolder == null)
+            {
+                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+
+                if (folder != null)
+                    itemCopy.Folder = folder.ID;
+                else
+                {
+                    InventoryFolderBase root = InventoryService.GetRootFolder(recipient);
+
+                    if (root != null)
+                        itemCopy.Folder = root.ID;
+                    else
+                        return null; // No destination
+                }
+            }
+            else
+                itemCopy.Folder = parentFolder.ID; //We already have a folder to put it in
+
+            itemCopy.GroupID = UUID.Zero;
+            itemCopy.GroupOwned = false;
+            itemCopy.Flags = item.Flags;
+            itemCopy.SalePrice = item.SalePrice;
+            itemCopy.SaleType = item.SaleType;
+
+            InventoryService.AddItem(itemCopy);
+            return itemCopy;
+        }
+
+        private AvatarAppearance ConvertXMLToAvatarAppearance(OSDMap map, out string FolderNameToPlaceAppearanceIn)
+        {
             AvatarAppearance appearance = new AvatarAppearance();
-
-            OSDMap map = (OSDMap)((OSDMap)OSDParser.DeserializeLLSDXml(file))["Body"];
 
             appearance.AvatarHeight = (float)map["AvatarHeight"].AsReal();
             appearance.BodyAsset = map["BodyAsset"].AsUUID();
@@ -1553,67 +1310,216 @@ namespace AvatarArchives
                 UUID Item = attachment["Item"].AsUUID();
                 int AttachmentPoint = attachment["Point"].AsInteger();
 
-                AttachmentAsset.Add(Asset);
-                AttachmentIDs.Add(Item);
-                AttachmentPoints.Add(AttachmentPoint);
-
                 appearance.SetAttachment(AttachmentPoint, Item, Asset);
             }
             return appearance;
         }
 
-        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, UUID itemId, InventoryFolderBase parentFolder)
+        protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
         {
-            InventoryItemBase item = new InventoryItemBase(itemId, senderId);
-            item = InventoryService.GetItem(item);
-
-
-            InventoryItemBase itemCopy = new InventoryItemBase();
-            itemCopy.Owner = recipient;
-            itemCopy.CreatorId = item.CreatorId;
-            itemCopy.ID = UUID.Random();
-            itemCopy.AssetID = item.AssetID;
-            itemCopy.Description = item.Description;
-            itemCopy.Name = item.Name;
-            itemCopy.AssetType = item.AssetType;
-            itemCopy.InvType = item.InvType;
-            itemCopy.Folder = UUID.Zero;
-
-            //Give full permissions for them
-            itemCopy.NextPermissions = (uint)PermissionMask.All;
-            itemCopy.GroupPermissions = (uint)PermissionMask.All;
-            itemCopy.EveryOnePermissions = (uint)PermissionMask.All;
-            itemCopy.CurrentPermissions = (uint)PermissionMask.All;
-
-            if (parentFolder == null)
+            if (cmdparams.Length != 7)
             {
-                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, (AssetType)itemCopy.AssetType);
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
+            }
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            if (account == null)
+            {
+                m_log.Error("[AvatarArchive] User not found!");
+                return;
+            }
 
-                if (folder != null)
-                    itemCopy.Folder = folder.ID;
-                else
+            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
+            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
+            OSDMap map = new OSDMap();
+            OSDMap body = new OSDMap();
+            OSDMap assets = new OSDMap();
+            OSDMap items = new OSDMap();
+            body.Add("AvatarHeight", OSD.FromReal(appearance.AvatarHeight));
+            body.Add("BodyAsset", OSD.FromUUID(appearance.BodyAsset));
+            body.Add("BodyItem", OSD.FromUUID(appearance.BodyItem));
+            body.Add("EyesAsset", OSD.FromUUID(appearance.EyesAsset));
+            body.Add("EyesItem", OSD.FromUUID(appearance.EyesItem));
+            body.Add("GlovesAsset", OSD.FromUUID(appearance.GlovesAsset));
+            body.Add("GlovesItem", OSD.FromUUID(appearance.GlovesItem));
+            body.Add("HairAsset", OSD.FromUUID(appearance.HairAsset));
+            body.Add("HairItem", OSD.FromUUID(appearance.HairItem));
+            body.Add("HipOffset", OSD.FromReal(appearance.HipOffset));
+            body.Add("JacketAsset", OSD.FromUUID(appearance.JacketAsset));
+            body.Add("JacketItem", OSD.FromUUID(appearance.JacketItem));
+            body.Add("Owner", OSD.FromUUID(appearance.Owner));
+            body.Add("PantsAsset", OSD.FromUUID(appearance.PantsAsset));
+            body.Add("Serial", OSD.FromInteger(appearance.Serial));
+            body.Add("ShirtAsset", OSD.FromUUID(appearance.ShirtAsset));
+            body.Add("ShirtItem", OSD.FromUUID(appearance.ShirtItem));
+            body.Add("ShoesAsset", OSD.FromUUID(appearance.ShoesAsset));
+            body.Add("ShoesItem", OSD.FromUUID(appearance.ShoesItem));
+            body.Add("SkinAsset", OSD.FromUUID(appearance.SkinAsset));
+            body.Add("SkirtAsset", OSD.FromUUID(appearance.SkirtAsset));
+            body.Add("SkirtItem", OSD.FromUUID(appearance.SkirtItem));
+            body.Add("SocksAsset", OSD.FromUUID(appearance.SocksAsset));
+            body.Add("SocksItem", OSD.FromUUID(appearance.SocksItem));
+            body.Add("UnderPantsAsset", OSD.FromUUID(appearance.UnderPantsAsset));
+            body.Add("UnderPantsItem", OSD.FromUUID(appearance.UnderPantsItem));
+            body.Add("UnderShirtAsset", OSD.FromUUID(appearance.UnderShirtAsset));
+            body.Add("UnderShirtItem", OSD.FromUUID(appearance.UnderShirtItem));
+            body.Add("TattooAsset", OSD.FromUUID(appearance.TattooAsset));
+            body.Add("TattooItem", OSD.FromUUID(appearance.TattooItem));
+            body.Add("AlphaAsset", OSD.FromUUID(appearance.AlphaAsset));
+            body.Add("AlphaItem", OSD.FromUUID(appearance.AlphaItem));
+            body.Add("FolderName", OSD.FromString(cmdparams[6]));
+            body.Add("VisualParams", OSD.FromBinary(appearance.VisualParams));
+
+            OSDArray wearables = new OSDArray();
+            foreach (AvatarWearable wear in appearance.Wearables)
+            {
+                OSDMap wearable = new OSDMap();
+                if (wear.AssetID != UUID.Zero)
                 {
-                    InventoryFolderBase root = InventoryService.GetRootFolder(recipient);
+                    SaveAsset(wear.AssetID, assets);
+                    SaveItem(wear.ItemID, items);
+                }
+                wearable.Add("Asset", wear.AssetID);
+                wearable.Add("Item", wear.ItemID);
+                wearables.Add(wearable);
+            }
+            body.Add("AvatarWearables", wearables);
 
-                    if (root != null)
-                        itemCopy.Folder = root.ID;
-                    else
-                        return null; // No destination
+            body.Add("Texture", appearance.Texture.GetOSD());
+
+            OSDArray attachmentsArray = new OSDArray();
+
+            Hashtable attachments = appearance.GetAttachments();
+            if (attachments != null)
+            {
+                foreach (DictionaryEntry element in attachments)
+                {
+                    Hashtable attachInfo = (Hashtable)element.Value;
+                    InventoryItemBase IB = new InventoryItemBase(UUID.Parse(attachInfo["item"].ToString()));
+                    OSDMap attachment = new OSDMap();
+                    SaveAsset(IB.AssetID, assets);
+                    SaveItem(UUID.Parse(attachInfo["item"].ToString()), items);
+                    attachment.Add("Asset", OSD.FromUUID(IB.AssetID));
+                    attachment.Add("Item", OSD.FromUUID(UUID.Parse(attachInfo["item"].ToString())));
+                    attachment.Add("Point", OSD.FromInteger((int)element.Key));
+                    attachmentsArray.Add(attachment);
                 }
             }
+
+            body.Add("Attachments", attachmentsArray);
+
+            map.Add("Body", body);
+            map.Add("Assets", assets);
+            map.Add("Items", items);
+            //Write the map
+
+            if (cmdparams[5].EndsWith(".database"))
+            {
+                //Remove the .database
+                string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
+                string ArchiveXML = OSDParser.SerializeLLSDXmlString(map);
+
+                AvatarArchive archive = new AvatarArchive();
+                archive.ArchiveXML = ArchiveXML;
+                archive.Name = ArchiveName;
+
+                DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
+
+                m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
+            }
             else
-                itemCopy.Folder = parentFolder.ID; //We already have a folder to put it in
-
-            itemCopy.GroupID = UUID.Zero;
-            itemCopy.GroupOwned = false;
-            itemCopy.Flags = item.Flags;
-            itemCopy.SalePrice = item.SalePrice;
-            itemCopy.SaleType = item.SaleType;
-
-            InventoryService.AddItem(itemCopy);
-
-            return itemCopy;
+            {
+                StreamWriter writer = new StreamWriter(cmdparams[5]);
+                writer.Write(OSDParser.SerializeLLSDXmlString(map));
+                writer.Close();
+                writer.Dispose();
+                m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            }
         }
+
+        private void SaveAsset(UUID AssetID, OSDMap assetMap)
+        {
+            AssetBase asset = AssetService.Get(AssetID.ToString());
+            if (asset != null)
+            {
+                OSDMap assetData = new OSDMap();
+                m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
+                CreateMetaDataMap(asset.Metadata, assetData);
+                assetData.Add("AssetData", OSD.FromBinary(asset.Data));
+                assetMap.Add(asset.ID, assetData);
+            }
+        }
+
+        private void CreateMetaDataMap(AssetMetadata data, OSDMap map)
+        {
+            map["ContentType"] = OSD.FromString(data.ContentType);
+            map["CreationDate"] = OSD.FromDate(data.CreationDate);
+            map["CreatorID"] = OSD.FromString(data.CreatorID);
+            map["Description"] = OSD.FromString(data.Description);
+            map["ID"] = OSD.FromString(data.ID);
+            map["Name"] = OSD.FromString(data.Name);
+            map["Type"] = OSD.FromInteger(data.Type);
+        }
+
+        private AssetBase LoadAssetBase(OSDMap map)
+        {
+            AssetBase asset = new AssetBase();
+            asset.Data = map["AssetData"].AsBinary();
+
+            AssetMetadata md = new AssetMetadata();
+            md.ContentType = map["ContentType"].AsString();
+            md.CreationDate = map["CreationDate"].AsDate();
+            md.CreatorID = map["CreatorID"].AsString();
+            md.Description = map["Description"].AsString();
+            md.ID = map["ID"].AsString();
+            md.Name = map["Name"].AsString();
+            md.Type = (sbyte)map["Type"].AsInteger();
+
+            asset.Metadata = md;
+            asset.ID = md.ID;
+            asset.FullID = UUID.Parse(md.ID);
+            asset.Name = md.Name;
+            asset.Type = md.Type;
+
+            return asset;
+        }
+
+        private void SaveItem(UUID ItemID, OSDMap itemMap)
+        {
+            InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
+            m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
+            string serialization = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
+            itemMap[ItemID.ToString()] = OSD.FromString(serialization);
+        }
+
+        private void LoadAssets(OSDMap assets)
+        {
+            foreach (KeyValuePair<string, OSD> kvp in assets)
+            {
+                UUID AssetID = UUID.Parse(kvp.Key);
+                OSDMap assetMap = (OSDMap)kvp.Value;
+                AssetBase asset = AssetService.Get(AssetID.ToString());
+                m_log.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
+                if (asset == null) //Don't overwrite
+                {
+                    asset = LoadAssetBase(assetMap);
+                    AssetService.Store(asset);
+                }
+            }
+        }
+
+        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance, out List<InventoryItemBase> litems)
+        {
+            litems = new List<InventoryItemBase>();
+            foreach (KeyValuePair<string, OSD> kvp in items)
+            {
+                string serialization = kvp.Value.AsString();
+                InventoryItemBase item = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
+                m_log.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
+                item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
+                litems.Add(item);
+            }
+        }
+    
     }
 
     public class GridAvatarProfileArchiver
