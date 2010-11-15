@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using OpenSim.Framework;
@@ -74,6 +75,25 @@ namespace OpenSim.Region.Framework.Scenes
         }
         protected bool m_isDeleted;
 
+        public virtual bool HasGroupChanged
+        {
+            get { return m_hasGroupChanged; }
+            set { m_hasGroupChanged = value; }
+        }
+        /// <summary>
+        /// Signal whether the non-inventory attributes of any prims in the group have changed
+        /// since the group's last persistent backup
+        /// </summary>
+        protected bool m_hasGroupChanged = false;
+
+        /// <summary>
+        /// Force this prim to be added to backup
+        /// </summary>
+        public virtual void ForcePersistence()
+        {
+            HasGroupChanged = true;
+        }
+
         protected Vector3 m_pos;
 
         /// <summary>
@@ -105,6 +125,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_localId = value; }
         }
 
+        public virtual bool IsPhysical()
+        {
+            return false;
+        }
+
         /// <summary>
         /// Creates a new Entity (should not occur on it's own)
         /// </summary>
@@ -131,6 +156,27 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual EntityBase Copy()
         {
             return (EntityBase) MemberwiseClone();
+        }
+
+        public virtual List<ISceneEntity> ChildrenEntities()
+        {
+            return new List<ISceneEntity>();
+        }
+
+        public virtual void ResetEntityIDs()
+        {
+        }
+
+        public virtual void AttachToScene(Scene m_parentScene)
+        {
+        }
+
+        public virtual void ClearChildren()
+        {
+        }
+
+        public virtual void AddChild(ISceneEntity child)
+        {
         }
     }
 

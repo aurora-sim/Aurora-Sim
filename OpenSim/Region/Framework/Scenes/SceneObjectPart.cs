@@ -2325,6 +2325,65 @@ namespace OpenSim.Region.Framework.Scenes
             return dupe;
         }
 
+        public SceneObjectPart Copy(SceneObjectGroup parent)
+        {
+            SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
+            dupe.m_parentGroup = parent;
+            dupe.m_shape = m_shape.Copy();
+            dupe.m_regionHandle = m_regionHandle;
+
+            //memberwiseclone means it also clones the physics actor reference
+            // This will make physical prim 'bounce' if not set to null.
+            dupe._groupID = GroupID;
+            dupe.GroupPosition = GroupPosition;
+            dupe.OffsetPosition = OffsetPosition;
+            dupe.RotationOffset = RotationOffset;
+            dupe.Velocity = new Vector3(0, 0, 0);
+            dupe.Acceleration = new Vector3(0, 0, 0);
+            dupe.AngularVelocity = new Vector3(0, 0, 0);
+            dupe.Flags = Flags;
+            dupe.LinkNum = LinkNum;
+            dupe.SitTargetAvatar = ParentGroup.RootPart.SitTargetAvatar;
+
+            dupe._ownershipCost = _ownershipCost;
+            dupe._objectSaleType = _objectSaleType;
+            dupe._salePrice = _salePrice;
+            dupe._category = _category;
+            dupe.Rezzed = m_rezzed;
+
+            dupe.m_inventory = new SceneObjectPartInventory(dupe);
+            dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
+
+            byte[] extraP = new byte[Shape.ExtraParams.Length];
+            Array.Copy(Shape.ExtraParams, extraP, extraP.Length);
+            dupe.Shape.ExtraParams = extraP;
+
+            if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
+            {
+                m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived);
+            }
+
+            /*PrimitiveBaseShape pbs = dupe.Shape;
+            if (dupe.PhysActor != null)
+            {
+                dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
+                    dupe.Name,
+                    pbs,
+                    dupe.AbsolutePosition,
+                    dupe.Scale,
+                    dupe.RotationOffset,
+                    dupe.PhysActor.IsPhysical);
+
+                dupe.PhysActor.LocalID = dupe.LocalId;
+                dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
+
+                if (VolumeDetectActive)
+                    dupe.PhysActor.SetVolumeDetect(1);
+            }*/
+
+            return dupe;
+        }
+
         protected void AssetReceived(string id, Object sender, AssetBase asset)
         {
             if (asset != null)
@@ -3590,6 +3649,20 @@ namespace OpenSim.Region.Framework.Scenes
             LinkNum = linkNum;
             Inventory.ResetInventoryIDs(ChangeScripts);
             LocalId = 0;
+            CRC = 0;
+        }
+
+        public void ResetEntityIDs()
+        {
+            UUID = UUID.Random();
+            //LinkNum = linkNum;
+            Inventory.ResetInventoryIDs(false);
+            LocalId = ParentGroup.Scene.AllocateLocalId();
+
+            //Fix the localID now for the physics engine
+            if (m_physActor != null)
+                m_physActor.LocalID = LocalId;
+
             CRC = 0;
         }
 

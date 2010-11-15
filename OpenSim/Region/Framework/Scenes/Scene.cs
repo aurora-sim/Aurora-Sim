@@ -4765,11 +4765,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region SceneGraph wrapper methods
 
-        public UUID ConvertLocalIDToFullID(uint localID)
-        {
-            return m_sceneGraph.ConvertLocalIDToFullID(localID);
-        }
-
         public void SwapRootAgentCount(bool rootChildChildRootTF)
         {
             m_sceneGraph.SwapRootChildAgent(rootChildChildRootTF);

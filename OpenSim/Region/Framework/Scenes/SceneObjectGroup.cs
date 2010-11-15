@@ -105,17 +105,12 @@ namespace OpenSim.Region.Framework.Scenes
     {
         // private PrimCountTaintedDelegate handlerPrimCountTainted = null;
 
-        /// <summary>
-        /// Signal whether the non-inventory attributes of any prims in the group have changed
-        /// since the group's last persistent backup
-        /// </summary>
-        private bool m_hasGroupChanged = false;
         private DateTime timeFirstChanged;
         private DateTime timeLastChanged;
         public bool m_forceBackupNow = false;
         public bool m_isLoaded = false;
 
-        public bool HasGroupChanged
+        public override bool HasGroupChanged
         {
             get { return m_hasGroupChanged; }
             set
@@ -123,7 +118,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (value)
                 {
                     timeLastChanged = DateTime.Now;
-                    if (!m_hasGroupChanged) //First change then
+                    if (!HasGroupChanged) //First change then
                         timeFirstChanged = DateTime.Now;
 
                     if (m_scene != null && m_isLoaded && !m_scene.LoadingPrims) //Do NOT add to backup while still loading prims
@@ -137,6 +132,16 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_hasGroupChanged = value;
             }
+        }
+
+        /// <summary>
+        /// Force all prims in the scene object to persist
+        /// </summary>
+        public override void ForcePersistence()
+        {
+            //Force normal backup
+            HasGroupChanged = true;
+            ForceInventoryPersistence();
         }
 
         /// <summary>
@@ -313,6 +318,19 @@ namespace OpenSim.Region.Framework.Scenes
         public List<SceneObjectPart> ChildrenList
         {
             get { return m_partsList; }
+        }
+
+        public override List<ISceneEntity> ChildrenEntities()
+        {
+            List<ISceneEntity> entities = new List<ISceneEntity>();
+            lock (m_partsLock)
+            {
+                foreach (SceneObjectPart part in entities)
+                {
+                    entities.Add(part);
+                }
+            }
+            return entities;
         }
 
         /// <value>
@@ -594,28 +612,46 @@ namespace OpenSim.Region.Framework.Scenes
             return m_rootPart.FromItemID;
         }
 
-        /// <summary>
-        /// Hooks this object up to the backup event so that it is persisted to the database when the update thread executes.
-        /// </summary>
-        public virtual void AttachToBackup()
+        public override bool IsPhysical()
         {
-            /*if (InSceneBackup)
-            {
-                //m_log.DebugFormat(
-                //    "[SCENE OBJECT GROUP]: Attaching object {0} {1} to scene presistence sweep", Name, UUID);
+            return ((RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics);
+        }
 
-                if (!m_isBackedUp)
-                    m_scene.EventManager.OnBackup += ProcessBackup;
-                
-                m_isBackedUp = true;
-            }*/
+        public override void ClearChildren()
+        {
+            lock (m_partsLock)
+            {
+                m_parts.Clear();
+                m_partsList.Clear();
+            }
+        }
+
+        public override void AddChild(ISceneEntity child)
+        {
+            lock (m_partsLock)
+            {
+                if (child is SceneObjectPart)
+                {
+                    SceneObjectPart part = (SceneObjectPart)child;
+                    //Root part is first
+                    if (m_partsList.Count == 0)
+                    {
+                        m_rootPart = part;
+                    }
+                    //Set the link num
+                    part.LinkNum = m_partsList.Count;
+
+                    m_parts.Add(child.UUID, part);
+                    m_partsList.Add(part);
+                }
+            }
         }
         
         /// <summary>
         /// Attach this object to a scene.  It will also now appear to agents.
         /// </summary>
         /// <param name="scene"></param>
-        public void AttachToScene(Scene scene)
+        public override void AttachToScene(Scene scene)
         {
             m_scene = scene;
 
@@ -625,47 +661,55 @@ namespace OpenSim.Region.Framework.Scenes
                 m_rootPart.Shape = new PrimitiveBaseShape();
             }
 
-            if (m_rootPart.Shape.PCode != 9 || m_rootPart.Shape.State == 0)
-                m_rootPart.SetParentLocalId(0);
-            bool changedLocalIDs = false;
-            if (m_rootPart.LocalId == 0)
-            {
-                m_rootPart.LocalId = m_scene.AllocateLocalId();
-                changedLocalIDs = true;
-            }
-
-            // No need to lock here since the object isn't yet in a scene
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                if (Object.ReferenceEquals(part, m_rootPart))
-                    continue;
-
-                if (part.LocalId == 0)
-                {
-                    part.LocalId = m_scene.AllocateLocalId();
-                    changedLocalIDs = true;
-                }
-
-                part.SetParentLocalId(m_rootPart.LocalId);
-                //m_log.DebugFormat("[SCENE]: Given local id {0} to part {1}, linknum {2}, parent {3} {4}", part.LocalId, part.UUID, part.LinkNum, part.ParentID, part.ParentUUID);
-            }
-
             IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+            if (WSModule != null)
+            {
+                foreach (SceneObjectPart part in ChildrenList)
+                {
+                    if (part.Shape == null)
+                        continue;
+
+                    Vector3 scale = part.Shape.Scale;
+
+                    if (WSModule.MinimumPrimScale != -1)
+                    {
+                        if (scale.X < WSModule.MinimumPrimScale)
+                            scale.X = WSModule.MinimumPrimScale;
+                        if (scale.Y < WSModule.MinimumPrimScale)
+                            scale.Y = WSModule.MinimumPrimScale;
+                        if (scale.Z < WSModule.MinimumPrimScale)
+                            scale.Z = WSModule.MinimumPrimScale;
+                    }
+
+                    if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical &&
+                        WSModule.MaximumPhysPrimScale != -1)
+                    {
+                        if (scale.X > WSModule.MaximumPhysPrimScale)
+                            scale.X = WSModule.MaximumPhysPrimScale;
+                        if (scale.Y > WSModule.MaximumPhysPrimScale)
+                            scale.Y = WSModule.MaximumPhysPrimScale;
+                        if (scale.Z > WSModule.MaximumPhysPrimScale)
+                            scale.Z = WSModule.MaximumPhysPrimScale;
+                    }
+
+                    if (WSModule.MaximumPrimScale != -1)
+                    {
+                        if (scale.X > WSModule.MaximumPrimScale)
+                            scale.X = WSModule.MaximumPrimScale;
+                        if (scale.Y > WSModule.MaximumPrimScale)
+                            scale.Y = WSModule.MaximumPrimScale;
+                        if (scale.Z > WSModule.MaximumPrimScale)
+                            scale.Z = WSModule.MaximumPrimScale;
+                    }
+
+                    part.Shape.Scale = scale;
+                }
+            }
+
             if (WSModule != null) 
                 ApplyPhysics(WSModule.AllowPhysicalPrims);
             else
                 ApplyPhysics(true);
-
-            if (changedLocalIDs)
-            {
-                m_scene.Entities.Remove(LocalId);
-                m_scene.Entities.Remove(UUID);
-                m_scene.Entities.Add(this);
-            }
-
-            // Don't trigger the update here - otherwise some client issues occur when multiple updates are scheduled
-            // for the same object with very different properties.  The caller must schedule the update.
-            //ScheduleGroupForFullUpdate();
         }
 
         public Vector3 GroupScale()
@@ -1061,7 +1105,6 @@ namespace OpenSim.Region.Framework.Scenes
             HasGroupChanged = true;
             RootPart.Rezzed = DateTime.Now;
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-            AttachToBackup();
             m_scene.EventManager.TriggerParcelPrimCountTainted();
             m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
             m_rootPart.ClearUndoState();
@@ -1436,7 +1479,7 @@ namespace OpenSim.Region.Framework.Scenes
                             "[SCENE]: Storing {0}, {1} in {2} at {3}",
                             Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString());
 
-                    SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, Scene, false);
+                    SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, false, Scene, false);
                     //Do this we don't try to re-persist to the DB
                     backup_group.m_isLoaded = false;
                     backup_group.RootPart.Velocity = RootPart.Velocity;
@@ -1486,12 +1529,90 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Copying
 
+        public override EntityBase Copy()
+        {
+            SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
+
+            //Block attempts to persist to the DB
+            dupe.m_isLoaded = false;
+
+            dupe.m_parts = new Dictionary<UUID, SceneObjectPart>();
+            dupe.m_partsList = new List<SceneObjectPart>();
+
+            dupe.m_scene = Scene;
+
+            // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
+            // attachments do not bordercross while they're being duplicated.  This is hacktastic!
+            // Normally, setting AbsolutePosition will bordercross a prim if it's outside the region!
+            // unless IsAttachment is true!, so to prevent border crossing, we save it's attachment state 
+            // (which should be false anyway) set it as an Attachment and then set it's Absolute Position, 
+            // then restore it's attachment state
+
+            // This is only necessary when userExposed is false!
+
+            bool previousAttachmentStatus = dupe.RootPart.IsAttachment;
+
+            dupe.RootPart.IsAttachment = true;
+
+            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
+
+            dupe.RootPart.IsAttachment = previousAttachmentStatus;
+
+            dupe.ClearChildren();
+
+            AddPart(m_rootPart.Copy(dupe), false);
+
+            dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
+
+            dupe.m_rootPart.TrimPermissions();
+
+            List<SceneObjectPart> partList;
+
+            lock (m_partsLock)
+            {
+                partList = new List<SceneObjectPart>(m_partsList);
+            }
+
+            partList.Sort(LinkSetCompare);
+
+            /*if (dupe.RootPart.PhysActor != null)
+            {
+                PrimitiveBaseShape pbs = dupe.RootPart.Shape;
+                dupe.RootPart.PhysActor.LocalID = dupe.RootPart.LocalId;
+
+                dupe.RootPart.PhysActor.PIDTarget = RootPart.PhysActor.PIDTarget;
+                dupe.RootPart.PhysActor.PIDTau = RootPart.PhysActor.PIDTau;
+                dupe.RootPart.PhysActor.PIDActive = RootPart.PhysActor.PIDActive;
+
+                if (dupe.RootPart.VolumeDetectActive)
+                    dupe.RootPart.PhysActor.SetVolumeDetect(1);
+
+                dupe.RootPart.PhysActor.Selected = false;
+
+                dupe.RootPart.ScriptSetPhysicsStatus(dupe.RootPart.PhysActor.IsPhysical);
+
+            }*/
+
+            foreach (SceneObjectPart part in partList)
+            {
+                if (part.UUID != m_rootPart.UUID)
+                {
+                    AddPart(part.Copy(dupe), false);
+                }
+            }
+
+            //Reset the loaded setting
+            dupe.m_isLoaded = true;
+
+            return dupe;
+        }
+
         /// <summary>
         /// Duplicates this object, including operations such as physics set up and attaching to the backup event.
         /// </summary>
         /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
         /// <returns></returns>
-        public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, Scene scene, bool ChangeScripts)
+        public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, bool sendUpdate, Scene scene, bool ChangeScripts)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
 
@@ -1535,9 +1656,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 dupe.UpdateParentIDs();
                 dupe.HasGroupChanged = true;
-                dupe.AttachToBackup();
 
-                ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                if(sendUpdate)
+                    ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
             }
 
             if (userExposed)
@@ -2444,8 +2565,6 @@ namespace OpenSim.Region.Framework.Scenes
             Scene.Entities.Remove(objectGroup.UUID);
             Scene.Entities.Remove(objectGroup.LocalId);
             Scene.Entities.Add(this);
-
-            AttachToBackup();
 
             // Here's the deal, this is ABSOLUTELY CRITICAL so the physics scene gets the update about the 
             // position of linkset prims.  IF YOU CHANGE THIS, YOU MUST TEST colliding with just linked and 
@@ -3757,7 +3876,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
             Scene s = (Scene)scene;
-            SceneObjectGroup sog = Copy(this.OwnerID, this.GroupID, true, s, true);
+            SceneObjectGroup sog = Copy(this.OwnerID, this.GroupID, true, true, s, true);
             sog.m_isDeleted = false;
             return sog;
         }

@@ -402,13 +402,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>true if the object was deleted, false if there was no object to delete</returns>
         public bool DeleteSceneObject(UUID uuid, bool resultOfObjectLinked)
         {
-            EntityBase entity;
-            if (!Entities.TryGetValue(uuid, out entity) && entity is SceneObjectGroup)
-                return false;
-
-            if (entity == null)
-                return false;
-
+            EntityBase entity = GetGroupByPrim(uuid);
+            
             SceneObjectGroup grp = (SceneObjectGroup)entity;
 
             if (!resultOfObjectLinked)
@@ -1052,15 +1047,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Other Methods
 
-        protected internal UUID ConvertLocalIDToFullID(uint localID)
-        {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
-                return group.GetPartsFullID(localID);
-            else
-                return UUID.Zero;
-        }
-
         /// <summary>
         /// Performs action on all scene object groups.
         /// </summary>
@@ -1211,7 +1197,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
 
         /// <summary>
         ///
@@ -1741,15 +1726,8 @@ namespace OpenSim.Region.Framework.Scenes
             UUID user = remoteClient.AgentId;
             UUID objid = UUID.Zero;
             SceneObjectPart obj = null;
-            ISceneEntity entity = null;
 
-            if (!Entities.TryGetChildPrim(localID, out entity))
-                return;
-
-            if (!(entity is SceneObjectPart))
-                return;
-
-            obj = entity as SceneObjectPart;
+            obj = GetSceneObjectPart(localID);
 
             //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
             //aka ObjectFlags.JointWheel = IncludeInSearch
@@ -1812,7 +1790,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true, original.Scene, false);
+                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true, true, original.Scene, false);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
 
                     if (original.OwnerID != AgentID)
@@ -1899,6 +1877,121 @@ namespace OpenSim.Region.Framework.Scenes
                 (float)
                 Math.Sqrt((v1.X - v2.X) * (v1.X - v2.X) + (v1.Y - v2.Y) * (v1.Y - v2.Y) + (v1.Z - v2.Z) * (v1.Z - v2.Z));
         }
+
+        #endregion
+
+
+        #region New Scene Entity Manager Code
+
+        #region Wrapper Methods
+
+        public EntityBase DuplicateEntity(EntityBase entity)
+        {
+            //Make an exact copy of the entity
+            EntityBase copiedEntity = entity.Copy();
+            //Add the entity to the scene and back it up
+            AddPrimToScene(copiedEntity);
+            return copiedEntity;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Try to get an EntityBase as given by its UUID
+        /// </summary>
+        /// <param name="ID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public bool TryGetEntity(UUID ID, out EntityBase entity)
+        {
+            return Entities.TryGetValue(ID, out entity);
+        }
+        
+        /// <summary>
+        /// Try to get an EntityBase as given by it's LocalID
+        /// </summary>
+        /// <param name="LocalID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public bool TryGetEntity(uint LocalID, out EntityBase entity)
+        {
+            return Entities.TryGetValue(LocalID, out entity);
+        }
+
+        /// <summary>
+        /// Add the Entity to the Scene and back it up
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public bool AddPrimToScene(EntityBase entity)
+        {
+            //Reset the entity IDs
+            ResetEntityIDs(entity);
+            //Force the prim to backup now that it has been added
+            entity.ForcePersistence();
+            //Tell the entity that they are being added to a scene
+            entity.AttachToScene(m_parentScene);
+            //Update our prim count
+            m_numPrim += entity.ChildrenEntities().Count;
+            //Now save the entity that we have 
+            return AddEntity(entity, false);
+        }
+
+        /// <summary>
+        /// Destroy the entity and remove it from the scene
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public bool DeleteEntity(EntityBase entity)
+        {
+            m_numPrim -= entity.ChildrenEntities().Count;
+            if (entity.IsPhysical())
+                RemovePhysicalPrim(entity.ChildrenEntities().Count);
+            return RemoveEntity(entity);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private bool RemoveEntity(EntityBase entity)
+        {
+            Entities.Remove(entity.UUID);
+            return Entities.Remove(entity.LocalId);
+        }
+
+        private bool AddEntity(EntityBase entity, bool AllowUpdate)
+        {
+            Entities.Add(entity);
+            return true;
+        }
+
+        private void ResetEntityIDs(EntityBase entity)
+        {
+            //Keep this so we don't end up with two root parts at the end
+            UUID oldrootID = entity.UUID;
+
+            //Reset root first
+            List<ISceneEntity> children = entity.ChildrenEntities();
+            entity.ClearChildren();
+
+            //Add the root part first so that it is recognized as it
+            entity.ResetEntityIDs();
+            entity.AddChild(entity);
+
+            foreach (ISceneEntity child in children)
+            {
+                if (oldrootID != child.UUID) //Do not reset roots
+                {
+                    child.ResetEntityIDs();
+                    entity.AddChild(child);
+                }
+            }
+        }
+
+        #endregion
 
         #endregion
     }

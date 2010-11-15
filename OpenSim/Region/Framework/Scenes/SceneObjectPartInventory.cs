@@ -136,7 +136,7 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
                     m_items.Add(item.ItemID, item);
-                    if (m_part.ParentGroup != null)
+                    /*if (m_part.ParentGroup != null)
                     {
                         lock (m_part.ParentGroup)
                         {
@@ -148,7 +148,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
                 HasInventoryChanged = true;
                 m_part.ParentGroup.HasGroupChanged = true;

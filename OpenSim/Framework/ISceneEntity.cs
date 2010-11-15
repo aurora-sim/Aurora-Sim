@@ -31,8 +31,9 @@ namespace OpenSim.Framework
 {
     public interface ISceneEntity
     {
-        UUID UUID { get; }
-        uint LocalId { get; }
+        UUID UUID { get; set; }
+        uint LocalId { get; set; }
         Vector3 AbsolutePosition { get; }
+        void ResetEntityIDs();
     }
 }
