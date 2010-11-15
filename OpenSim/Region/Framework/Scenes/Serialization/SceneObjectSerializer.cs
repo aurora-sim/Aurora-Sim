@@ -96,7 +96,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     reader = new XmlTextReader(sr);
                     SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
                     linkNum = part.LinkNum;
-                    sceneObject.AddPart(part, true);
+                    sceneObject.AddPart(part, false);
                     part.LinkNum = linkNum;
                     part.TrimPermissions();
                     part.StoreUndoState();

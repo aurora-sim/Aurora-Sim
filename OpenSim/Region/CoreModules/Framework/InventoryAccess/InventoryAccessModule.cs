@@ -513,7 +513,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                 // TODO: add the new fields (Flags, Sale info, etc)
                 if(objectGroups.Count != 1)
-                    item.Flags = (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
+                    item.Flags |= (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();
                 item.Description = asset.Description;
                 item.Name = asset.Name;
