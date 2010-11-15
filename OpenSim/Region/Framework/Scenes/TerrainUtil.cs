@@ -51,7 +51,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Scene scene = null;
 
-            if (x > w - 2.0)
+            if (x > w - 2)
             {
                 scene = FindScene(map, scenes, 1, 0);
                 if(scene != null)
@@ -61,9 +61,9 @@ namespace OpenSim.Region.Framework.Scenes
                     map = scene.Heightmap;
                 }
                 else //1 away from the edge if we don't have a sim on this instance
-                    x = w - 1;
+                    x = w - 2;
             }
-            if (y > h - 2.0)
+            if (y > h - 2)
             {
                 scene = FindScene(map, scenes, 0, 1);
                 if (scene != null)
@@ -73,7 +73,7 @@ namespace OpenSim.Region.Framework.Scenes
                     map = scene.Heightmap;
                 }
                 else //1 away from the edge if we don't have a sim on this instance
-                    y = h - 1;
+                    y = h - 2;
             }
             if (x < 0.0)
             {
@@ -104,6 +104,15 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 scene.Heightmap = map;
             }
+
+            if (x > map.Width - 2)
+                x = map.Width - 2;
+            if (x < 0)
+                x = 0;
+            if (y > map.Height - 2)
+                y = map.Height - 2;
+            if (y < 0)
+                y = 0;
 
             const int stepSize = 1;
             double h00 = map[(int)x, (int)y];
