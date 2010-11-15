@@ -2404,6 +2404,18 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
+        public override bool GetChildPrim(uint LocalID, out ISceneEntity entity)
+        {
+            entity = GetChildPart(LocalID);
+            return entity != null;
+        }
+
+        public override bool GetChildPrim(UUID UUID, out ISceneEntity entity)
+        {
+            entity = GetChildPart(UUID);
+            return entity != null;
+        }
+
         /// <summary>
         /// Get a part with a given UUID
         /// </summary>
@@ -2673,7 +2685,7 @@ namespace OpenSim.Region.Framework.Scenes
             linkPart.RotationOffset = worldRot;
 
             SceneObjectGroup objectGroup = new SceneObjectGroup(linkPart, Scene);
-            m_scene.AddNewSceneObject(objectGroup);
+            m_scene.AddPrimToScene(objectGroup);
 
             if (sendEvents)
                 linkPart.TriggerScriptChangedEvent(Changed.LINK);

@@ -223,179 +223,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Entity Methods
-
-        /// <summary>
-        /// Add an object into the scene that has come from storage
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, changes to the object will be reflected in its persisted data
-        /// If false, the persisted data will not be changed even if the object in the scene is changed
-        /// </param>
-        /// <param name="alreadyPersisted">
-        /// If true, we won't persist this object until it changes
-        /// If false, we'll persist this object immediately
-        /// </param>
-        /// <param name="sendClientUpdates">
-        /// If true, we send updates to the client to tell it about this object
-        /// If false, we leave it up to the caller to do this
-        /// </param>
-        /// <returns>
-        /// true if the object was added, false if an object with the same uuid was already in the scene
-        /// </returns>
-        protected internal bool AddRestoredSceneObject(
-            SceneObjectGroup sceneObject, bool attachToBackup, bool alreadyPersisted, bool sendClientUpdates)
-        {
-            if (!alreadyPersisted)
-            {
-                sceneObject.ForceInventoryPersistence();
-                sceneObject.HasGroupChanged = true;
-            }
-
-            return AddSceneObject(sceneObject, attachToBackup, sendClientUpdates);
-        }
-                
-        /// <summary>
-        /// Add a newly created object to the scene.  This will both update the scene, and send information about the
-        /// new object to all clients interested in the scene.
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, the object is made persistent into the scene.
-        /// If false, the object will not persist over server restarts
-        /// </param>
-        /// <returns>
-        /// true if the object was added, false if an object with the same uuid was already in the scene
-        /// </returns>
-        protected internal bool AddNewSceneObject(SceneObjectGroup sceneObject, bool attachToBackup, bool sendClientUpdates)
-        {
-            // Ensure that we persist this new scene object
-            sceneObject.HasGroupChanged = true;
-            sceneObject.ForceInventoryPersistence();
-
-            return AddSceneObject(sceneObject, attachToBackup, sendClientUpdates);
-        }
         
-        /// <summary>
-        /// Add a newly created object to the scene.
-        /// </summary>
-        /// 
-        /// This method does not send updates to the client - callers need to handle this themselves.
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup"></param>
-        /// <param name="pos">Position of the object</param>
-        /// <param name="rot">Rotation of the object</param>
-        /// <param name="vel">Velocity of the object.  This parameter only has an effect if the object is physical</param>
-        /// <returns></returns>
-        public bool AddNewSceneObject(
-            SceneObjectGroup sceneObject, bool attachToBackup, Vector3 pos, Quaternion rot, Vector3 vel)
-        {
-            AddNewSceneObject(sceneObject, true, false);
-
-            // we set it's position in world.
-            sceneObject.AbsolutePosition = pos;
-
-            if (sceneObject.RootPart.Shape.PCode == (byte)PCode.Prim)
-            {
-                sceneObject.ClearPartAttachmentData();
-            }
-            
-            sceneObject.UpdateGroupRotationR(rot);
-            
-            //group.ApplyPhysics(m_physicalPrim);
-            if (sceneObject.RootPart.PhysActor != null && sceneObject.RootPart.PhysActor.IsPhysical && vel != Vector3.Zero)
-            {
-                sceneObject.RootPart.ApplyImpulse((vel * sceneObject.GetMass()), false);
-                sceneObject.Velocity = vel;
-            }
-        
-            return true;
-        }
-
-        /// <summary>
-        /// Add an object to the scene.  This will both update the scene, and send information about the
-        /// new object to all clients interested in the scene.
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, the object is made persistent into the scene.
-        /// If false, the object will not persist over server restarts
-        /// </param>
-        /// <param name="sendClientUpdates">
-        /// If true, updates for the new scene object are sent to all viewers in range.
-        /// If false, it is left to the caller to schedule the update
-        /// </param>
-        /// <returns>
-        /// true if the object was added, false if an object with the same uuid was already in the scene
-        /// </returns>
-        protected bool AddSceneObject(SceneObjectGroup sceneObject, bool attachToBackup, bool sendClientUpdates)
-        {
-            if (sceneObject == null || sceneObject.RootPart == null || sceneObject.RootPart.UUID == UUID.Zero)
-                return false;
-
-            //if (Entities.ContainsKey(sceneObject.UUID))
-            //{
-            //    m_log.WarnFormat(
-            //            "[SCENE GRAPH]: Scene object {0} {1} was already in region {2} on add request",
-            //            sceneObject.Name, sceneObject.UUID, m_parentScene.RegionInfo.RegionName);
-            //    return false;
-            //}
-
-            IOpenRegionSettingsModule WSModule = sceneObject.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-            if (WSModule != null)
-            {
-                foreach (SceneObjectPart part in sceneObject.ChildrenList)
-                {
-                    if (part.Shape == null)
-                        continue;
-
-                    Vector3 scale = part.Shape.Scale;
-
-                    if (WSModule.MinimumPrimScale != -1)
-                    {
-                        if (scale.X < WSModule.MinimumPrimScale)
-                            scale.X = WSModule.MinimumPrimScale;
-                        if (scale.Y < WSModule.MinimumPrimScale)
-                            scale.Y = WSModule.MinimumPrimScale;
-                        if (scale.Z < WSModule.MinimumPrimScale)
-                            scale.Z = WSModule.MinimumPrimScale;
-                    }
-
-                    if (part.ParentGroup.RootPart.PhysActor != null && part.ParentGroup.RootPart.PhysActor.IsPhysical &&
-                        WSModule.MaximumPhysPrimScale != -1)
-                    {
-                        if (scale.X > WSModule.MaximumPhysPrimScale)
-                            scale.X = WSModule.MaximumPhysPrimScale;
-                        if (scale.Y > WSModule.MaximumPhysPrimScale)
-                            scale.Y = WSModule.MaximumPhysPrimScale;
-                        if (scale.Z > WSModule.MaximumPhysPrimScale)
-                            scale.Z = WSModule.MaximumPhysPrimScale;
-                    }
-
-                    if (WSModule.MaximumPrimScale != -1)
-                    {
-                        if (scale.X > WSModule.MaximumPrimScale)
-                            scale.X = WSModule.MaximumPrimScale;
-                        if (scale.Y > WSModule.MaximumPrimScale)
-                            scale.Y = WSModule.MaximumPrimScale;
-                        if (scale.Z > WSModule.MaximumPrimScale)
-                            scale.Z = WSModule.MaximumPrimScale;
-                    }
-
-                    part.Shape.Scale = scale;
-                }
-            }
-            sceneObject.AttachToScene(m_parentScene);
-            Entities.Add(sceneObject);
-            sceneObject.m_forceBackupNow = true;
-
-            if (sendClientUpdates)
-                sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-
-            m_numPrim += sceneObject.ChildrenList.Count;
-            return true;
-        }
-
         /// <summary>
         /// Add an object to the list of prims to process on the next update
         /// </summary>
@@ -437,9 +265,8 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         EntityBase e = null;
-                        Entities.TryGetValue(ID, out e);
-                        if(e != null)
-                            ((SceneObjectGroup)e).Update();
+                        if (TryGetEntity(ID, out e))
+                            e.Update();
                     }
                     catch (Exception e)
                     {
@@ -870,31 +697,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="fullID"></param>
         /// <returns>null if no scene object group containing that prim is found</returns>
-        private SceneObjectGroup GetGroupByPrim(UUID fullID)
-        {
-            EntityBase entity = null;
-            if (Entities.TryGetChildPrimParent(fullID, out entity))
-                return entity as SceneObjectGroup;
-
-            if (fullID == UUID.Zero)
-                return null; //This isn't an entity.
-
-            //m_log.Warn("Falling back on deprecated method of finding child prim! Mantis this!");
-            EntityBase[] EntityList = GetEntities();
-
-            foreach (EntityBase ent in EntityList)
-            {
-                if (ent is SceneObjectGroup)
-                {
-                    if(((SceneObjectGroup)ent).UUID == fullID)
-                        return ((SceneObjectGroup)ent);
-                    else if (((SceneObjectGroup)ent).HasChildPrim(fullID))
-                        return ((SceneObjectGroup)ent);
-                }
-            }
-
-            return null;
-        }
 
         protected internal EntityIntersection GetClosestIntersectingPrim(Ray hray, bool frontFacesOnly, bool faceCenters)
         {
@@ -918,19 +720,6 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
-        /// <summary>
-        /// Get a part contained in this scene.
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns>null if the part was not found</returns>
-        protected internal SceneObjectPart GetSceneObjectPart(uint localID)
-        {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group == null)
-                return null;
-            return group.GetChildPart(localID);
-        }
-        
         /// <summary>
         /// Get a named prim contained in this scene (will return the first 
         /// found, if there are more than one prim with the same name)
@@ -961,19 +750,6 @@ namespace OpenSim.Region.Framework.Scenes
             );
 
             return sop;
-        }
-
-        /// <summary>
-        /// Get a part contained in this scene.
-        /// </summary>
-        /// <param name="fullID"></param>
-        /// <returns>null if the part was not found</returns>
-        protected internal SceneObjectPart GetSceneObjectPart(UUID fullID)
-        {
-            SceneObjectGroup group = GetGroupByPrim(fullID);
-            if (group == null)
-                return null;
-            return group.GetChildPart(fullID);
         }
 
         /// <summary>
@@ -1849,6 +1625,30 @@ namespace OpenSim.Region.Framework.Scenes
         public bool TryGetEntity(uint LocalID, out EntityBase entity)
         {
             return Entities.TryGetValue(LocalID, out entity);
+        }
+
+        public bool TryGetPart(uint LocalID, out ISceneEntity entity)
+        {
+            EntityBase parent;
+            if (Entities.TryGetValue(LocalID, out parent))
+            {
+                return parent.GetChildPrim(LocalID, out entity);
+            }
+
+            entity = null;
+            return false;
+        }
+
+        public bool TryGetPart(UUID ID, out ISceneEntity entity)
+        {
+            EntityBase parent;
+            if (Entities.TryGetValue(ID, out parent))
+            {
+                return parent.GetChildPrim(ID, out entity);
+            }
+
+            entity = null;
+            return false;
         }
 
         /// <summary>

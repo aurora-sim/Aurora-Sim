@@ -2365,7 +2365,7 @@ namespace OpenSim.Region.Framework.Scenes
                                       group.ChildrenList.Count);
                     continue;
                 }
-                AddRestoredSceneObject(group, true, true, true);
+                AddPrimToScene(group);
                 SceneObjectPart rootPart = group.GetChildPart(group.UUID);
                 rootPart.Flags &= ~PrimFlags.Scripted;
                 rootPart.TrimPermissions();
@@ -2530,58 +2530,20 @@ namespace OpenSim.Region.Framework.Scenes
                 //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
                 sceneObject.m_lastSignificantPosition = pos;
 
-                AddNewSceneObject(sceneObject, true);
+                AddPrimToScene(sceneObject);
+                sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 sceneObject.SetGroup(groupID, null);
             }
 
 
             return sceneObject;
         }
-
-        /// <summary>
-        /// Add an object into the scene that has come from storage
-        /// </summary>
-        ///
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, changes to the object will be reflected in its persisted data
-        /// If false, the persisted data will not be changed even if the object in the scene is changed
-        /// </param>
-        /// <param name="alreadyPersisted">
-        /// If true, we won't persist this object until it changes
-        /// If false, we'll persist this object immediately
-        /// </param>
-        /// <returns>
-        /// true if the object was added, false if an object with the same uuid was already in the scene
-        /// </returns>
-        public bool AddRestoredSceneObject(
-            SceneObjectGroup sceneObject, bool attachToBackup, bool alreadyPersisted, bool sendClientUpdates)
-        {
-            return m_sceneGraph.AddRestoredSceneObject(sceneObject, attachToBackup, alreadyPersisted, sendClientUpdates);
-        }
         
-        public bool AddNewSceneObject(SceneObjectGroup sceneObject)
+        public bool AddPrimToScene(SceneObjectGroup sceneObject)
         {
             return m_sceneGraph.AddPrimToScene(sceneObject);
         }
         
-        /// <summary>
-        /// Add a newly created object to the scene.
-        /// </summary>
-        /// 
-        /// This method does not send updates to the client - callers need to handle this themselves.
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup"></param>
-        /// <param name="pos">Position of the object</param>
-        /// <param name="rot">Rotation of the object</param>
-        /// <param name="vel">Velocity of the object.  This parameter only has an effect if the object is physical</param>
-        /// <returns></returns>
-        public bool AddNewSceneObject(
-            SceneObjectGroup sceneObject, bool attachToBackup, Vector3 pos, Quaternion rot, Vector3 vel)
-        {
-            return m_sceneGraph.AddNewSceneObject(sceneObject, attachToBackup, pos, rot, vel);
-        }
-
         /// <summary>
         /// Delete every object from the scene.  This does not include attachments worn by avatars.
         /// </summary>
@@ -3402,48 +3364,35 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            // Force allocation of new LocalId
-            //
-            foreach (SceneObjectPart p in sceneObject.ChildrenList)
-                p.LocalId = 0;
-
             if (sceneObject.IsAttachmentCheckFull()) // Attachment
             {
                 sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
                 sceneObject.RootPart.AddFlag(PrimFlags.Phantom);
-                AddRestoredSceneObject(sceneObject, false, false, true);
-
-                // Handle attachment special case
-                SceneObjectPart RootPrim = sceneObject.RootPart;
+                AddPrimToScene(sceneObject);
 
                 // Fix up attachment Parent Local ID
                 ScenePresence sp = GetScenePresence(sceneObject.OwnerID);
 
                 if (sp != null)
                 {
-                    SceneObjectGroup grp = sceneObject;
-
                     m_log.DebugFormat(
-                        "[ATTACHMENT]: Received attachment {0}, inworld asset id {1}", grp.GetFromItemID(), grp.UUID);
+                        "[ATTACHMENT]: Received attachment {0}, inworld asset id {1}", sceneObject.GetFromItemID(), sceneObject.UUID);
                     m_log.DebugFormat(
-                        "[ATTACHMENT]: Attach to avatar {0} at position {1}", sp.UUID, grp.AbsolutePosition);
+                        "[ATTACHMENT]: Attach to avatar {0} at position {1}", sp.UUID, sceneObject.AbsolutePosition);
 
                     if (AttachmentsModule != null)
-                        AttachmentsModule.AttachObject(sp.ControllingClient, grp.LocalId, 0, false);
-                
-                    RootPrim.RemFlag(PrimFlags.TemporaryOnRez);
-                    grp.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                        AttachmentsModule.AttachObject(sp.ControllingClient, sceneObject.LocalId, 0, false);
+
+                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
                 }
                 else
                 {
-                    RootPrim.RemFlag(PrimFlags.TemporaryOnRez);
-                    RootPrim.AddFlag(PrimFlags.TemporaryOnRez);
+                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
+                    sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
                 }
             }
             else
             {
-                AddRestoredSceneObject(sceneObject, true, false, true);
-
                 if (!Permissions.CanObjectEntry(sceneObject.UUID,
                         true, sceneObject.AbsolutePosition))
                 {
@@ -3456,7 +3405,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     return false;
                 }
+                AddPrimToScene(sceneObject);
             }
+            sceneObject.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
 
             return true;
         }

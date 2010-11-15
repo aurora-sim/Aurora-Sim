@@ -178,6 +178,18 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void AddChild(ISceneEntity child)
         {
         }
+
+        public virtual bool GetChildPrim(uint LocalID, out ISceneEntity entity)
+        {
+            entity = null;
+            return false;
+        }
+
+        public virtual bool GetChildPrim(UUID UUID, out ISceneEntity entity)
+        {
+            entity = null;
+            return false;
+        }
     }
 
     //Nested Classes

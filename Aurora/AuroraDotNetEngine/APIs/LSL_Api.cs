@@ -3911,7 +3911,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // If we're rezzing an attachment then don't ask AddNewSceneObject() to update the client since
                     // we'll be doing that later on.  Scheduling more than one full update during the attachment
                     // process causes some clients to fail to display the attachment properly.
-                    World.AddNewSceneObject(group, true, false);
+                    World.AddPrimToScene(group);
 
                     //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
                     // if attachment we set it's asset id so object updates can reflect that

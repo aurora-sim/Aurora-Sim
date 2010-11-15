@@ -1985,7 +1985,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     group.ResetIDs(true);
 
-                    AddNewSceneObject(group, true, false);
+                    AddPrimToScene(group);
 
                     SceneObjectPart rootPart = group.GetChildPart(group.UUID);
                     List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);

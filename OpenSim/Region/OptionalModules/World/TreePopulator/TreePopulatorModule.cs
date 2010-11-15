@@ -568,7 +568,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                 }
             }
 
-            m_scene.AddNewSceneObject(sceneObject);
+            m_scene.AddPrimToScene(sceneObject);
             sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
             sceneObject.SetGroup(groupID, null);
 

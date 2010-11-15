@@ -68,7 +68,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     //if we want this to be a import method then we need new uuids for the object to avoid any clashes
                     //obj.RegenerateFullIDs();
 
-                    scene.AddNewSceneObject(obj, true);
+                    scene.AddPrimToScene(obj);
                 }
             }
             else
