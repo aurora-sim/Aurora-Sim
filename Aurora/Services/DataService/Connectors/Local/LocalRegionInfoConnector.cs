@@ -20,7 +20,7 @@ namespace Aurora.Services.DataService
         public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
         {
             //Disabled for now until it is fixed
-            /*if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
@@ -30,7 +30,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString);
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
-            }*/
+            }
         }
 
         public string Name

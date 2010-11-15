@@ -454,6 +454,8 @@ namespace Aurora.Modules
         //Find the correct WL settings to send to the client
         public void SendProfileToClient(ScenePresence presence)
         {
+            if (presence == null)
+                return;
             ILandObject land = presence.Scene.LandChannel.GetLandObject(presence.currentLocalParcelID);
             OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
             if (map.ContainsKey("WindLight"))
