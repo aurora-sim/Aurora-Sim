@@ -2559,35 +2559,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return m_sceneGraph.AddRestoredSceneObject(sceneObject, attachToBackup, alreadyPersisted, sendClientUpdates);
         }
-
-        /// <summary>
-        /// Add a newly created object to the scene.  Updates are also sent to viewers.
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, the object is made persistent into the scene.
-        /// If false, the object will not persist over server restarts
-        /// </param>
-        public bool AddNewSceneObject(SceneObjectGroup sceneObject, bool attachToBackup)
-        {
-            return AddNewSceneObject(sceneObject, attachToBackup, true);
-        }
         
-        /// <summary>
-        /// Add a newly created object to the scene
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <param name="attachToBackup">
-        /// If true, the object is made persistent into the scene.
-        /// If false, the object will not persist over server restarts
-        /// </param>
-        /// <param name="sendClientUpdates">
-        /// If true, updates for the new scene object are sent to all viewers in range.
-        /// If false, it is left to the caller to schedule the update
-        /// </param>
-        public bool AddNewSceneObject(SceneObjectGroup sceneObject, bool attachToBackup, bool sendClientUpdates)
+        public bool AddNewSceneObject(SceneObjectGroup sceneObject)
         {
-            return m_sceneGraph.AddNewSceneObject(sceneObject, attachToBackup, sendClientUpdates);
+            return m_sceneGraph.AddPrimToScene(sceneObject);
         }
         
         /// <summary>
@@ -2642,7 +2617,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
                         
-                        m_sceneGraph.DeleteSceneObject(group.UUID, false);
+                        m_sceneGraph.DeleteEntity(group);
                         EventManager.TriggerObjectBeingRemovedFromScene(group);
 
                         //Silent true so taht we don't send needless killObjects
@@ -2728,7 +2703,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
 
-            if (m_sceneGraph.DeleteSceneObject(so.UUID, softDelete))
+            if (m_sceneGraph.DeleteEntity(so))
             {
                 if (!softDelete)
                 {
@@ -2739,7 +2714,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 					// We need to keep track of this state in case this group is still queued for further backup.
                 	so.IsDeleted = true;
-                    Entities.Remove(so.UUID);
                 }
                 return true;
             }
@@ -3998,7 +3972,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID);
+                            m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, Quaternion.Identity);
                         }
                     }
 

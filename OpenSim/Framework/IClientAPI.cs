@@ -139,7 +139,7 @@ namespace OpenSim.Framework
 
     public delegate void UpdatePrimGroupRotation(uint localID, Vector3 pos, Quaternion rot, IClientAPI remoteClient);
 
-    public delegate void ObjectDuplicate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID, UUID GroupID);
+    public delegate bool ObjectDuplicate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID, UUID GroupID, Quaternion rot);
 
     public delegate void ObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
                                               UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,

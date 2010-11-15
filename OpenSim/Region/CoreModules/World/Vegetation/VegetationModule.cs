@@ -106,7 +106,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
             if (rootPart.Shape.PCode != (byte)PCode.Grass)
                 AdaptTree(ref shape);
             
-            m_scene.AddNewSceneObject(sceneObject, true);
+            m_scene.AddNewSceneObject(sceneObject);
+            sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
             sceneObject.SetGroup(groupID, null);
             
             return sceneObject;

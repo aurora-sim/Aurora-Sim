@@ -76,7 +76,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
             client.OnObjectAttach += delegate(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt,
                 bool silent) { this.Stale = true; };
             client.OnObjectDuplicate += delegate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID,
-                UUID GroupID) { this.Stale = true; };
+                UUID GroupID, Quaternion rot) { this.Stale = true; return true; };
             client.OnObjectDuplicateOnRay += delegate(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
                 UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart, bool BypassRaycast,
                 bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates) { this.Stale = true; };
@@ -103,7 +103,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
             client.OnObjectAttach -= delegate(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt,
                 bool silent) { this.Stale = true; };
             client.OnObjectDuplicate -= delegate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID,
-                UUID GroupID) { this.Stale = true; };
+                UUID GroupID, Quaternion rot) { this.Stale = true; return true; };
             client.OnObjectDuplicateOnRay -= delegate(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
                 UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart, bool BypassRaycast,
                 bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates) { this.Stale = true; };

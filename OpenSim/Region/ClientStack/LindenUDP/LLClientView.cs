@@ -6962,7 +6962,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     handlerObjectDuplicate(dupe.ObjectData[i].ObjectLocalID, dupe.SharedData.Offset,
                                            dupe.SharedData.DuplicateFlags, AgentId,
-                                           m_activeGroupID);
+                                           m_activeGroupID, Quaternion.Identity);
                 }
             }
 

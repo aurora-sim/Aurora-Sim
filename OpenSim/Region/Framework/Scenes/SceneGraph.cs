@@ -397,33 +397,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Delete an object from the scene
-        /// </summary>
-        /// <returns>true if the object was deleted, false if there was no object to delete</returns>
-        public bool DeleteSceneObject(UUID uuid, bool resultOfObjectLinked)
-        {
-            EntityBase entity = GetGroupByPrim(uuid);
-            
-            SceneObjectGroup grp = (SceneObjectGroup)entity;
-
-            if (!resultOfObjectLinked)
-            {
-                m_numPrim -= grp.PrimCount;
-
-                if ((grp.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
-                    RemovePhysicalPrim(grp.PrimCount);
-            }
-
-            if (OnObjectRemove != null)
-            {
-                OnObjectRemove(Entities[uuid]);
-                Entities.Remove(uuid);
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Add an object to the list of prims to process on the next update
         /// </summary>
         /// <param name="obj">
@@ -1757,32 +1730,7 @@ namespace OpenSim.Region.Framework.Scenes
             #pragma warning restore 0612
         }
 
-        /// <summary>
-        /// Duplicate the given object, Fire and Forget, No rotation, no return wrapper
-        /// </summary>
-        /// <param name="originalPrim"></param>
-        /// <param name="offset"></param>
-        /// <param name="flags"></param>
-        /// <param name="AgentID"></param>
-        /// <param name="GroupID"></param>
-        protected internal void DuplicateObject(uint originalPrim, Vector3 offset, uint flags, UUID AgentID, UUID GroupID)
-        {
-            //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
-
-            // SceneObjectGroup dupe = DuplicateObject(originalPrim, offset, flags, AgentID, GroupID, Quaternion.Zero);
-            DuplicateObject(originalPrim, offset, flags, AgentID, GroupID, Quaternion.Identity);
-        }
-        
-        /// <summary>
-        /// Duplicate the given object.
-        /// </summary>
-        /// <param name="originalPrim"></param>
-        /// <param name="offset"></param>
-        /// <param name="flags"></param>
-        /// <param name="AgentID"></param>
-        /// <param name="GroupID"></param>
-        /// <param name="rot"></param>
-        public SceneObjectGroup DuplicateObject(uint originalPrimID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
+        public bool DuplicateObject(uint originalPrimID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
         {
             //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
@@ -1790,16 +1738,19 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true, true, original.Scene, false);
-                    copy.AbsolutePosition = copy.AbsolutePosition + offset;
+                    EntityBase duplicatedEntity = DuplicateEntity(original);
+                    
+                    duplicatedEntity.AbsolutePosition = duplicatedEntity.AbsolutePosition + offset;
+                    
+                    SceneObjectGroup duplicatedGroup = (SceneObjectGroup)duplicatedEntity;
 
                     if (original.OwnerID != AgentID)
                     {
-                        copy.SetOwnerId(AgentID);
-                        copy.SetRootPartOwner(copy.RootPart, AgentID, GroupID);
+                        duplicatedGroup.SetOwnerId(AgentID);
+                        duplicatedGroup.SetRootPartOwner(duplicatedGroup.RootPart, AgentID, GroupID);
 
                         List<SceneObjectPart> partList =
-                            new List<SceneObjectPart>(copy.ChildrenList);
+                            new List<SceneObjectPart>(duplicatedGroup.ChildrenList);
 
                         if (m_parentScene.Permissions.PropagatePermissions())
                         {
@@ -1811,57 +1762,37 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
 
-                        copy.RootPart.ObjectSaleType = 0;
-                        copy.RootPart.SalePrice = 10;
+                        duplicatedGroup.RootPart.ObjectSaleType = 0;
+                        duplicatedGroup.RootPart.SalePrice = 10;
                     }
-
-                    Entities.Add(copy);
 
                     // Since we copy from a source group that is in selected
                     // state, but the copy is shown deselected in the viewer,
                     // We need to clear the selection flag here, else that
                     // prim never gets persisted at all. The client doesn't
                     // think it's selected, so it will never send a deselect...
-                    copy.IsSelected = false;
-
-                    m_numPrim += copy.ChildrenList.Count;
+                    duplicatedGroup.IsSelected = false;
 
                     if (rot != Quaternion.Identity)
                     {
-                        copy.UpdateGroupRotationR(rot);
+                        duplicatedGroup.UpdateGroupRotationR(rot);
                     }
 
-                    copy.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
-                    copy.HasGroupChanged = true;
-                    copy.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
-                    copy.ResumeScripts();
+                    duplicatedGroup.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
+                    duplicatedGroup.HasGroupChanged = true;
+                    duplicatedGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    duplicatedGroup.ResumeScripts();
 
                     // required for physics to update it's position
-                    copy.AbsolutePosition = copy.AbsolutePosition;
-
-                    if (OnObjectDuplicate != null)
-                        OnObjectDuplicate(original, copy);
+                    duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
 
                     m_parentScene.EventManager.TriggerParcelPrimCountUpdate();
-
-                    //Add to backup
-                    copy.HasGroupChanged = true;
-                    original.HasGroupChanged = true;
-                    return copy;
-                }
-                else
-                {
-                    GetScenePresence(AgentID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here.");
+                    return true;
                 }
             }
-            else
-            {
-                m_log.WarnFormat("[SCENE]: Attempted to duplicate nonexistant prim id {0}", GroupID);
-            }
-            
-            return null;
+            return false;
         }
-        
+
         /// <summary>
         /// Calculates the distance between two Vector3s
         /// </summary>

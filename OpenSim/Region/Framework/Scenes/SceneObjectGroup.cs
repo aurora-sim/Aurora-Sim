@@ -2673,7 +2673,7 @@ namespace OpenSim.Region.Framework.Scenes
             linkPart.RotationOffset = worldRot;
 
             SceneObjectGroup objectGroup = new SceneObjectGroup(linkPart, Scene);
-            m_scene.AddNewSceneObject(objectGroup, true);
+            m_scene.AddNewSceneObject(objectGroup);
 
             if (sendEvents)
                 linkPart.TriggerScriptChangedEvent(Changed.LINK);
