@@ -190,7 +190,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected RegionInfo m_regionInfo;
         protected ulong crossingFromRegion;
 
-        private readonly Vector3[] Dir_Vectors = new Vector3[9];
+        private readonly Vector3[] Dir_Vectors = new Vector3[11];
 
         // Position of agent's camera in world (region cordinates)
         protected Vector3 m_CameraCenter;
@@ -250,7 +250,9 @@ namespace OpenSim.Region.Framework.Scenes
             DIR_CONTROL_FLAG_DOWN = AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG,
             DIR_CONTROL_FLAG_FORWARD_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS,
             DIR_CONTROL_FLAG_BACKWARD_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG,
-            DIR_CONTROL_FLAG_DOWN_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG
+            DIR_CONTROL_FLAG_DOWN_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG,
+            DIR_CONTROL_FLAG_LEFT_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS,
+            DIR_CONTROL_FLAG_RIGHT_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG
         }
         
         /// <summary>
@@ -816,11 +818,13 @@ namespace OpenSim.Region.Framework.Scenes
             Dir_Vectors[8] = new Vector3(0f, 0f, -0.5f); //DOWN_Nudge
             Dir_Vectors[6] = Vector3.UnitX*2; //FORWARD
             Dir_Vectors[7] = -Vector3.UnitX; //BACK
+            Dir_Vectors[9] = new Vector3(0, 4, 0); //LEFT Nudge
+            Dir_Vectors[10] = new Vector3(0, -4, 0); //RIGHT Nudge
         }
 
         private Vector3[] GetWalkDirectionVectors()
         {
-            Vector3[] vector = new Vector3[9];
+            Vector3[] vector = new Vector3[11];
             vector[0] = new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z); //FORWARD
             vector[1] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK
             vector[2] = Vector3.UnitY; //LEFT
@@ -830,6 +834,8 @@ namespace OpenSim.Region.Framework.Scenes
             vector[8] = new Vector3(-m_CameraAtAxis.Z, 0f, -m_CameraUpAxis.Z); //DOWN_Nudge
             vector[6] = (new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z) * 2); //FORWARD Nudge
             vector[7] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK Nudge
+            vector[9] = new Vector3(0, 2, 0); //LEFT Nudge
+            vector[10] = new Vector3(0, -2, 0); //RIGHT Nudge
             return vector;
         }
 
@@ -1312,6 +1318,9 @@ namespace OpenSim.Region.Framework.Scenes
             #region Inputs
 
             AgentManager.ControlFlags flags = (AgentManager.ControlFlags)agentData.ControlFlags;
+            if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) != AgentManager.ControlFlags.NONE)
+            {
+            }
             Quaternion bodyRotation = agentData.BodyRotation;
 
             // Camera location in world.  We'll need to raytrace
@@ -1441,56 +1450,74 @@ namespace OpenSim.Region.Framework.Scenes
                     // The fact that m_movementflag is a byte needs to be fixed
                     // it really should be a uint
                     uint nudgehack = 250;
-                    foreach (Dir_ControlFlags DCF in DIR_CONTROL_FLAGS)
+                    //Do these two like this to block out all others because it will slow it down
+                    if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS)
                     {
-                        if (((uint)flags & (uint)DCF) != 0)
+                        m_forceToApply = Vector3.Zero;
+                        bResetMoveToPosition = true;
+                        DCFlagKeyPressed = true;
+                        m_forceToApply = agent_control_v3 += dirVectors[9];
+                    }
+                    else if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG)
+                    {
+                        m_forceToApply = Vector3.Zero;
+                        bResetMoveToPosition = true;
+                        DCFlagKeyPressed = true;
+                        m_forceToApply = agent_control_v3 += dirVectors[10];
+                    }
+                    else
+                    {
+                        foreach (Dir_ControlFlags DCF in DIR_CONTROL_FLAGS)
                         {
-                            bResetMoveToPosition = true;
-                            DCFlagKeyPressed = true;
-                            try
+                            if (((uint)flags & (uint)DCF) != 0)
                             {
-                                agent_control_v3 += dirVectors[i];
-                                //m_log.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
-                            }
-                            catch (IndexOutOfRangeException)
-                            {
-                                // Why did I get this?
-                            }
-
-                            if ((m_movementflag & (byte)(uint)DCF) == 0)
-                            {
-                                if (DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
+                                bResetMoveToPosition = true;
+                                DCFlagKeyPressed = true;
+                                try
                                 {
-                                    m_movementflag |= (byte)nudgehack;
+                                    agent_control_v3 += dirVectors[i];
+                                    //m_log.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
                                 }
-                                m_movementflag += (byte)(uint)DCF;
-                                update_movementflag = true;
-                            }
-                        }
-                        else
-                        {
-                            if ((m_movementflag & (byte)(uint)DCF) != 0 ||
-                                ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
-                                && ((m_movementflag & (byte)nudgehack) == nudgehack))
-                                ) // This or is for Nudge forward
-                            {
-                                m_movementflag -= ((byte)(uint)DCF);
+                                catch (IndexOutOfRangeException)
+                                {
+                                    // Why did I get this?
+                                }
 
-                                update_movementflag = true;
-                                /*
-                                    if ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
-                                    && ((m_movementflag & (byte)nudgehack) == nudgehack))
+                                if ((m_movementflag & (byte)(uint)DCF) == 0)
+                                {
+                                    if (DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
                                     {
-                                        m_log.Debug("Removed Hack flag");
+                                        m_movementflag |= (byte)nudgehack;
                                     }
-                                */
+                                    m_movementflag += (byte)(uint)DCF;
+                                    update_movementflag = true;
+                                }
                             }
                             else
                             {
-                                bAllowUpdateMoveToPosition = true;
+                                if ((m_movementflag & (byte)(uint)DCF) != 0 ||
+                                    ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
+                                    && ((m_movementflag & (byte)nudgehack) == nudgehack))
+                                    ) // This or is for Nudge forward
+                                {
+                                    m_movementflag -= ((byte)(uint)DCF);
+
+                                    update_movementflag = true;
+                                    /*
+                                        if ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
+                                        && ((m_movementflag & (byte)nudgehack) == nudgehack))
+                                        {
+                                            m_log.Debug("Removed Hack flag");
+                                        }
+                                    */
+                                }
+                                else
+                                {
+                                    bAllowUpdateMoveToPosition = true;
+                                }
                             }
+                            i++;
                         }
-                        i++;
                     }
 
                     //Paupaw:Do Proper PID for Autopilot here

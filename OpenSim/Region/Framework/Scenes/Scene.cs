@@ -222,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_authenticateHandler; }
         }
 
-        protected ISimulationDataService SimulationDataService
+        public ISimulationDataService SimulationDataService
         {
             get { return m_SimulationDataService; }
         }
@@ -713,8 +713,6 @@ namespace OpenSim.Region.Framework.Scenes
             AddToStartupQueue("Startup");
 
             #endregion
-
-            LoadWorldMap();
 
             //Add stats handlers
             MainServer.Instance.AddStreamHandler(new RegionStatsHandler(RegionInfo));
@@ -2277,85 +2275,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Load Terrain
-
-        /// <summary>
-        /// Store the terrain in the persistant data store
-        /// </summary>
-        public void SaveTerrain()
-        {
-            SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
-        }
-
-        /// <summary>
-        /// Store the revert terrain in the persistant data store
-        /// </summary>
-        public void SaveRevertTerrain(ITerrainChannel channel)
-        {
-            SimulationDataService.StoreTerrain(channel.GetDoubles(this), RegionInfo.RegionID, true);
-        }
-
-        /// <summary>
-        /// Loads the World Revert heightmap
-        /// </summary>
-        public ITerrainChannel LoadRevertMap()
-        {
-            try
-            {
-                double[,] map = SimulationDataService.LoadTerrain(RegionInfo.RegionID, true);
-                if (map == null)
-                {
-                    map = Heightmap.GetDoubles(this);
-                    TerrainChannel channel = new TerrainChannel(map, this);
-                    SaveRevertTerrain(channel);
-                    return channel;
-                }
-                return new TerrainChannel(map, this);
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
-            }
-            return Heightmap;
-        }
-
-        /// <summary>
-        /// Loads the World heightmap
-        /// </summary>
-        public void LoadWorldMap()
-        {
-            try
-            {
-                double[,] map = SimulationDataService.LoadTerrain(RegionInfo.RegionID, false);
-                if (map == null)
-                {
-                    m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                    Heightmap = new TerrainChannel(this);
-
-                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
-                }
-                else
-                {
-                    Heightmap = new TerrainChannel(map, this);
-                }
-            }
-            catch (IOException e)
-            {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
-                
-                // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
-                #pragma warning disable 0162
-                if ((int)Constants.RegionSize != 256)
-                {
-                    Heightmap = new TerrainChannel(this);
-
-                    SimulationDataService.StoreTerrain(Heightmap.GetDoubles(this), RegionInfo.RegionID, false);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
-            }
-        }
 
         /// <summary>
         /// Register this region with a grid service

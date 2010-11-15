@@ -115,30 +115,31 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene = scene;
             m_scenes.Add(scene);
 
-            // Install terrain module in the simulator
-            lock (m_scene)
-            {
-                if (m_scene.Heightmap == null)
-                {
-                    m_channel = new TerrainChannel(m_scene);
-                    m_scene.Heightmap = m_channel;
-                    m_revert = m_channel;
-                    UpdateRevertMap();
-                }
-                else
-                {
-                    m_channel = m_scene.Heightmap;
-                    m_revert = m_scene.Heightmap;
-                    FindRevertMap();
-                }
+            LoadWorldMap();
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
+            scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
 
-                m_scene.RegisterModuleInterface<ITerrainModule>(this);
-                m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-                m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
-                m_scene.EventManager.OnTerrainTick += EventManager_OnTerrainTick;
-                m_scene.EventManager.OnClosingClient += OnClosingClient;
-                InstallInterfaces();
+            // Install terrain module in the simulator
+            if (m_scene.Heightmap == null)
+            {
+                m_channel = new TerrainChannel(m_scene);
+                m_scene.Heightmap = m_channel;
+                m_revert = m_channel;
+                UpdateRevertMap();
             }
+            else
+            {
+                m_channel = m_scene.Heightmap;
+                m_revert = m_scene.Heightmap;
+                FindRevertMap();
+            }
+
+            m_scene.RegisterModuleInterface<ITerrainModule>(this);
+            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
+            m_scene.EventManager.OnTerrainTick += EventManager_OnTerrainTick;
+            m_scene.EventManager.OnClosingClient += OnClosingClient;
+            InstallInterfaces();
 
             InstallDefaultEffects();
             LoadPlugins();
@@ -181,6 +182,84 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         #region ITerrainModule Members
+
+        /// <summary>
+        /// Store the terrain in the persistant data store
+        /// </summary>
+        public void SaveTerrain()
+        {
+            m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+        }
+
+        /// <summary>
+        /// Store the revert terrain in the persistant data store
+        /// </summary>
+        public void SaveRevertTerrain(ITerrainChannel channel)
+        {
+            m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+        }
+
+        /// <summary>
+        /// Loads the World Revert heightmap
+        /// </summary>
+        public ITerrainChannel LoadRevertMap()
+        {
+            try
+            {
+                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true);
+                if (map == null)
+                {
+                    map = m_scene.Heightmap.GetDoubles(m_scene);
+                    TerrainChannel channel = new TerrainChannel(map, m_scene);
+                    SaveRevertTerrain(channel);
+                    return channel;
+                }
+                return new TerrainChannel(map, m_scene);
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
+            }
+            return m_scene.Heightmap;
+        }
+
+        /// <summary>
+        /// Loads the World heightmap
+        /// </summary>
+        public void LoadWorldMap()
+        {
+            try
+            {
+                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, false);
+                if (map == null)
+                {
+                    m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                    m_scene.Heightmap = new TerrainChannel(m_scene);
+
+                    m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                }
+                else
+                {
+                    m_scene.Heightmap = new TerrainChannel(map, m_scene);
+                }
+            }
+            catch (IOException e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+
+                // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
+                if ((int)Constants.RegionSize != 256)
+                {
+                    m_scene.Heightmap = new TerrainChannel(m_scene);
+
+                    m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
+            }
+        }
 
         public void UndoTerrain(ITerrainChannel channel)
         {
@@ -500,7 +579,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void FindRevertMap()
         {
-            m_revert = m_scene.LoadRevertMap();
+            m_revert = LoadRevertMap();
         }
 
         /// <summary>
@@ -517,7 +596,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_revert[x, y] = m_channel[x, y];
                 }
             }
-            m_scene.SaveRevertTerrain(m_revert);
+            SaveRevertTerrain(m_revert);
         }
 
         /// <summary>
@@ -566,7 +645,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_tainted = false;
                 m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
-                m_scene.SaveTerrain();
+                SaveTerrain();
             }
         }
 

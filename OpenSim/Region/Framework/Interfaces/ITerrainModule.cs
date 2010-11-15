@@ -64,5 +64,10 @@ namespace OpenSim.Region.Framework.Interfaces
         void InstallPlugin(string name, ITerrainEffect plug);
 
         void UndoTerrain(ITerrainChannel channel);
+
+        void SaveTerrain();
+        void SaveRevertTerrain(ITerrainChannel channel);
+        ITerrainChannel LoadRevertMap();
+        void LoadWorldMap();
     }
 }
