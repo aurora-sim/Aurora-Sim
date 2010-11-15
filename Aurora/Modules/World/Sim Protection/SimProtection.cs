@@ -31,6 +31,8 @@ namespace Aurora.Modules
         private float MinutesBeforeZeroFPSKills = 1;
         private bool KillSimOnZeroFPS = true;
         private DateTime SimZeroFPSStartTime = DateTime.MinValue;
+        private Timer TimerToCheckHeartbeat = null;
+        private float TimeBetweenChecks = 1;
 
         #endregion
 
@@ -49,6 +51,7 @@ namespace Aurora.Modules
             AllowDisablePhysics = config.GetBoolean("AllowDisablePhysics", true);
             KillSimOnZeroFPS = config.GetBoolean("RestartSimIfZeroFPS", true);
             MinutesBeforeZeroFPSKills = config.GetFloat("TimeBeforeZeroFPSKills", 1);
+            TimeBetweenChecks = config.GetFloat("TimeBetweenChecks", 1);
         }
 
         public void Close()
@@ -77,7 +80,7 @@ namespace Aurora.Modules
         {
             if (!m_Enabled)
                 return;
-            scene.EventManager.OnFrame -= EventManager_OnFrame;
+            TimerToCheckHeartbeat.Stop();
         }
 
         public void RegionLoaded(Scene scene)
@@ -85,16 +88,17 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
             m_scene = scene;
-            scene.EventManager.OnFrame += new EventManager.OnFrameDelegate(EventManager_OnFrame);
-
-            
+            TimerToCheckHeartbeat = new Timer();
+            TimerToCheckHeartbeat.Interval = TimeBetweenChecks * 1000 * 60;//minutes
+            TimerToCheckHeartbeat.Elapsed += OnCheck;
+            TimerToCheckHeartbeat.Start();
         }
 
         #endregion
 
         #region Protection
 
-        private void EventManager_OnFrame()
+        private void OnCheck(object sender, ElapsedEventArgs e)
         {
             if (m_scene.StatsReporter.getLastReportedSimFPS() < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) && m_scene.StatsReporter.getLastReportedSimFPS() != 0 && AllowDisableScripts)
             {
