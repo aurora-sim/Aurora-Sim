@@ -87,7 +87,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.Running = save.Running;
 
             if (vars != null && vars.Count != 0)
-                instance.Script.SetVars(vars);
+                instance.Script.SetStoreVars(vars);
 
             instance.PluginData = (object[])save.Plugins;
             if (save.Permissions != " " && save.Permissions != "")
