@@ -997,7 +997,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //{
                         vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
                         vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
-                        vec.Z = 0.1f;
                         vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
                         //if (flying)
                         //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
@@ -1216,6 +1215,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         vec = new Vector3(0, 0, 0);
                         d.BodySetLinearVel(Body, 0, 0, 0);
                     }
+
+                    //Reduce insanely small values to 0
+                    if (Math.Abs(vec.Z) < 0.01)
+                        vec.Z = 0;
 
                     doForce(vec);
 
