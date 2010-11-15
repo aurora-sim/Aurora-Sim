@@ -116,6 +116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             m_FunctionPerms[function] = new List<UUID>();
                             m_FunctionPerms[function].Add(UUID.Zero);
+                            FunctionPerms = new List<UUID>();
                             FunctionPerms.Add(UUID.Zero);
                         }
                         else
