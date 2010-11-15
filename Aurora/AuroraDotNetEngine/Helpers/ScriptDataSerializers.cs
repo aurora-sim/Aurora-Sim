@@ -41,7 +41,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Vars
             Dictionary<string, Object> vars = new Dictionary<string, object>();
             if (instance.Script != null)
-                vars = instance.Script.GetVars();
+                vars = instance.Script.GetStoreVars();
             string varsmap = "";
             foreach (KeyValuePair<string, Object> var in vars)
             {
