@@ -163,8 +163,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void CloseTimeSlice()
         {
-            if (!InTimeSlice) //Make sure this hasn't already been called by another thread
-                return;
             InTimeSlice = false;
         }
 
@@ -265,7 +263,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         m_enumerators.Remove(Start.Key);
                         }
                     }
-                InTimeSlice = false;
+                CloseTimeSlice();
                 return null;
                 }
 
