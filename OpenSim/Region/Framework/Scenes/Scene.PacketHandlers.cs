@@ -151,29 +151,11 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (uint primLocalID in primLocalIDs)
             {
                 ISceneEntity entity = null;
-                if (Entities.TryGetChildPrim(primLocalID, out entity))
+                if(m_sceneGraph.TryGetPart(primLocalID, out entity))
                 {
                     if (entity is SceneObjectPart)
                     {
                         prim = entity as SceneObjectPart;
-                        if (prim.IsRoot)
-                        {
-                            prim.ParentGroup.IsSelected = true;
-                            if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
-                                || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
-                            {
-                                EventManager.TriggerParcelPrimCountTainted();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(primLocalID);
-                    if (grp != null)
-                    {
-                        prim = grp.GetChildPart(primLocalID);
-                        entity = prim;
                         if (prim.IsRoot)
                         {
                             prim.ParentGroup.IsSelected = true;
@@ -197,7 +179,6 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (((SceneObjectGroup)ent).LocalId == primLocalID)
                             {
-
                                 ((SceneObjectGroup)ent).GetProperties(remoteClient);
                                 ((SceneObjectGroup)ent).IsSelected = true;
                                 // A prim is only tainted if it's allowed to be edited by the person clicking it.
@@ -218,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 {
                                     if (child.LocalId == primLocalID)
                                     {
-                                        child.GetProperties(remoteClient);
+                                        EntitiesToUpdate.Add(child);
                                         foundPrim = true;
                                         prim = child;
                                         break;
@@ -325,16 +306,7 @@ namespace OpenSim.Region.Framework.Scenes
                 surfaceArg = surfaceArgs[0];
             ISceneEntity childPrim;
             SceneObjectPart part;
-            if (!Entities.TryGetChildPrim(localID, out childPrim))
-            {
-                SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(localID);
-                if (grp != null)
-                {
-                    part = grp.GetChildPart(localID);
-                    childPrim = part;
-                }
-            }
-            if (childPrim != null)
+            if (m_sceneGraph.TryGetPart(localID, out childPrim))
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
@@ -428,13 +400,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISceneEntity childPrim;
             SceneObjectPart part;
-            if(!Entities.TryGetChildPrim(objectID, out childPrim))
-            {
-                part = m_sceneGraph.GetSceneObjectPart(objectID);
-                if (part != null)
-                    childPrim = part;
-            }
-            if (childPrim != null)
+
+            if (m_sceneGraph.TryGetPart(objectID, out childPrim))
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
@@ -521,16 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ISceneEntity childPrim;
             SceneObjectPart part;
-            if(!Entities.TryGetChildPrim(localID, out childPrim))
-            {
-                SceneObjectGroup grp = m_sceneGraph.GetGroupByPrim(localID);
-                if (grp != null)
-                {
-                    part = grp.GetChildPart(localID);
-                    childPrim = part;
-                }
-            }
-            if (childPrim != null)
+            if (m_sceneGraph.TryGetPart(localID, out childPrim))
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;

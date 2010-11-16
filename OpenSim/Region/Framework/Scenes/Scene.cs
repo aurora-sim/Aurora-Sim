@@ -4813,7 +4813,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public SceneObjectPart GetSceneObjectPart(uint localID)
         {
-            return m_sceneGraph.GetSceneObjectPart(localID);
+            ISceneEntity entity;
+            m_sceneGraph.TryGetPart(localID, out entity);
+            return entity as SceneObjectPart;
         }
 
         /// <summary>
@@ -4821,9 +4823,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="fullID"></param>
         /// <returns></returns>
-        public SceneObjectPart GetSceneObjectPart(UUID fullID)
+        public SceneObjectPart GetSceneObjectPart(UUID ObjectID)
         {
-            return m_sceneGraph.GetSceneObjectPart(fullID);
+            ISceneEntity entity;
+            m_sceneGraph.TryGetPart(ObjectID, out entity);
+            return entity as SceneObjectPart;
         }
 
         /// <summary>
@@ -4833,7 +4837,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if no scene object group containing that prim is found</returns>
         public SceneObjectGroup GetGroupByPrim(uint localID)
         {
-            return m_sceneGraph.GetGroupByPrim(localID);
+            SceneObjectPart part = GetSceneObjectPart(localID);
+            if (part != null)
+                return part.ParentGroup;
+            return null;
         }
 
         public override bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)

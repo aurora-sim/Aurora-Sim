@@ -226,12 +226,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool TryGetValue(UUID key, out EntityBase obj)
         {
-            return m_entities.TryGetValue(key, out obj);
+            if (!m_entities.TryGetValue(key, out obj))
+            {
+                //Deal with the possibility we may have been asked for a child prim
+                return TryGetChildPrimParent(key, out obj);
+            }
+            obj = null;
+            return false;
         }
 
         public bool TryGetValue(uint key, out EntityBase obj)
         {
-            return m_entities.TryGetValue(key, out obj);
+            if (!m_entities.TryGetValue(key, out obj))
+            {
+                //Deal with the possibility we may have been asked for a child prim
+                return TryGetChildPrimParent(key, out obj);
+            }
+            obj = null;
+            return false;
         }
 
         /// <summary>

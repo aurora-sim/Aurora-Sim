@@ -301,20 +301,18 @@ namespace OpenSim.Region.Framework.Scenes
             m_activeScripts += number;
         }
 
-        public void DropObject(uint objectLocalID, IClientAPI remoteClient)
+        public void DropObject(uint LocalID, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(objectLocalID);
-            if (group != null)
-                m_parentScene.AttachmentsModule.DetachSingleAttachmentToGround(group.UUID, remoteClient);
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
+                m_parentScene.AttachmentsModule.DetachSingleAttachmentToGround(entity.UUID, remoteClient);
         }
 
-        protected internal void DetachObject(uint objectLocalID, IClientAPI remoteClient)
+        protected internal void DetachObject(uint LocalID, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(objectLocalID);
-            if (group != null)
-            {
-                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(group.GetFromItemID(), remoteClient);
-            }
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
+                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(((SceneObjectGroup)entity).GetFromItemID(), remoteClient);
         }
 
         protected internal void HandleUndo(IClientAPI remoteClient, UUID primId)
@@ -341,16 +339,16 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         protected internal void HandleObjectGroupUpdate(
-            IClientAPI remoteClient, UUID GroupID, uint objectLocalID, UUID Garbage)
+            IClientAPI remoteClient, UUID GroupID, uint LocalID, UUID Garbage)
         {
             if (!remoteClient.IsGroupMember(GroupID))
                 return; // No settings to groups you arn't in
-            SceneObjectGroup group = GetGroupByPrim(objectLocalID);
-            if (group != null)
-            { 
-                if(m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
-                    if (group.OwnerID == remoteClient.AgentId)
-                        group.SetGroup(GroupID, remoteClient);
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
+            {
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                    if (((SceneObjectGroup)entity).OwnerID == remoteClient.AgentId)
+                        ((SceneObjectGroup)entity).SetGroup(GroupID, remoteClient);
             }
         }
 
@@ -640,58 +638,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         protected internal Dictionary<uint, SceneObjectGroup> SceneObjectGroupsByLocalID = new Dictionary<uint, SceneObjectGroup>();
-        /// <summary>
-        /// Get a scene object group that contains the prim with the given local id
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns>null if no scene object group containing that prim is found</returns>
-        public SceneObjectGroup GetGroupByPrim(uint localID)
-        {
-            if (localID == 0)
-            {
-                m_log.Warn("[SCENEGRAPH]: Found localID 0 in GetGroupByPrim " + Environment.StackTrace);
-                return null;
-            }
-            EntityBase entity;
-            if (Entities.TryGetValue(localID, out entity))
-                return entity as SceneObjectGroup;
-
-            if (Entities.TryGetChildPrimParent(localID, out entity))
-                return entity as SceneObjectGroup;
-
-            //m_log.DebugFormat("Entered deprecated GetGroupByPrim with localID {0}", localID);
-
-            SceneObjectGroup sog;
-            lock (SceneObjectGroupsByLocalID)
-                SceneObjectGroupsByLocalID.TryGetValue(localID, out sog);
-
-            if (sog != null)
-            {
-                if (sog.HasChildPrim(localID))
-                    return sog;
-                SceneObjectGroupsByLocalID.Remove(localID);
-            }
-
-            EntityBase[] entityList = GetEntities();
-            foreach (EntityBase ent in entityList)
-            {
-                //m_log.DebugFormat("Looking at entity {0}", ent.UUID);
-                if (ent is SceneObjectGroup)
-                {
-                    sog = (SceneObjectGroup)ent;
-                    if (sog.HasChildPrim(localID))
-                    {
-                        lock (SceneObjectGroupsByLocalID)
-                            SceneObjectGroupsByLocalID[localID] = sog;
-                        return sog;
-                    }
-                }
-            }
-
-            m_log.Warn("[SCENEGRAPH]: Could not find a SOG for prim " + localID);
-            return null;
-        }
-
+        
         /// <summary>
         /// Get a scene object group that contains the prim with the given uuid
         /// </summary>
@@ -869,26 +816,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="scale"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimScale(uint localID, Vector3 scale, IClientAPI remoteClient)
+        protected internal void UpdatePrimScale(uint LocalID, Vector3 scale, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.Resize(scale, localID);
+                    ((SceneObjectGroup)entity).Resize(scale, LocalID);
                 }
             }
         }
 
-        protected internal void UpdatePrimGroupScale(uint localID, Vector3 scale, IClientAPI remoteClient)
+        protected internal void UpdatePrimGroupScale(uint LocalID, Vector3 scale, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                 {
-                    group.GroupResize(scale, localID);
+                    ((SceneObjectGroup)entity).GroupResize(scale, LocalID);
                 }
             }
         }
@@ -904,10 +851,10 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void RequestObjectPropertiesFamily(
              IClientAPI remoteClient, UUID AgentID, uint RequestFlags, UUID ObjectID)
         {
-            SceneObjectGroup group = GetGroupByPrim(ObjectID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(ObjectID, out group))
             {
-                group.ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
+                ((SceneObjectGroup)group).ServiceObjectPropertiesFamilyRequest(remoteClient, AgentID, RequestFlags);
             }
         }
 
@@ -917,14 +864,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimSingleRotation(uint localID, Quaternion rot, IClientAPI remoteClient)
+        protected internal void UpdatePrimSingleRotation(uint LocalID, Quaternion rot, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdateSingleRotation(rot, localID);
+                    ((SceneObjectGroup)entity).UpdateSingleRotation(rot, LocalID);
                 }
             }
         }
@@ -935,14 +882,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimSingleRotationPosition(uint localID, Quaternion rot, Vector3 pos, IClientAPI remoteClient)
+        protected internal void UpdatePrimSingleRotationPosition(uint LocalID, Quaternion rot, Vector3 pos, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdateSingleRotation(rot,pos, localID);
+                    ((SceneObjectGroup)entity).UpdateSingleRotation(rot, pos, LocalID);
                 }
             }
         }
@@ -953,14 +900,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimRotation(uint localID, Quaternion rot, IClientAPI remoteClient)
+        protected internal void UpdatePrimRotation(uint LocalID, Quaternion rot, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdateGroupRotationR(rot);
+                    ((SceneObjectGroup)entity).UpdateGroupRotationR(rot);
                 }
             }
         }
@@ -972,14 +919,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="pos"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimRotation(uint localID, Vector3 pos, Quaternion rot, IClientAPI remoteClient)
+        protected internal void UpdatePrimRotation(uint LocalID, Vector3 pos, Quaternion rot, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdateGroupRotationPR(pos, rot);
+                    ((SceneObjectGroup)entity).UpdateGroupRotationPR(pos, rot);
                 }
             }
         }
@@ -990,14 +937,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimSinglePosition(uint localID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
+        protected internal void UpdatePrimSinglePosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId) || group.IsAttachment)
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId) || ((SceneObjectGroup)entity).IsAttachment)
                 {
-                    group.UpdateSinglePosition(pos, localID, SaveUpdate);
+                    ((SceneObjectGroup)entity).UpdateSinglePosition(pos, LocalID, SaveUpdate);
                 }
             }
         }
@@ -1008,29 +955,28 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimPosition(uint localID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
+        protected internal void UpdatePrimPosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
                 //Move has edit permission as well
-                if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    if (group.IsAttachment || (group.RootPart.Shape.PCode == 9 && group.RootPart.Shape.State != 0))
+                    if (((SceneObjectGroup)entity).IsAttachment || (((SceneObjectGroup)entity).RootPart.Shape.PCode == 9 && ((SceneObjectGroup)entity).RootPart.Shape.State != 0))
                     {
                         if (m_parentScene.AttachmentsModule != null)
-                            m_parentScene.AttachmentsModule.UpdateAttachmentPosition(remoteClient, group, pos);
+                            m_parentScene.AttachmentsModule.UpdateAttachmentPosition(remoteClient, ((SceneObjectGroup)entity), pos);
                     }
                     else
                     {
-                        group.UpdateGroupPosition(pos, SaveUpdate);
+                        ((SceneObjectGroup)entity).UpdateGroupPosition(pos, SaveUpdate);
                     }
                 }
                 else
                 {
                     ScenePresence SP = GetScenePresence(remoteClient.AgentId);
-                    group.ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    ((SceneObjectGroup)entity).ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                 }
             }
         }
@@ -1045,15 +991,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         /// <param name="texture"></param>
         /// <param name="remoteClient"></param>
-        protected internal void UpdatePrimTexture(uint localID, byte[] texture, IClientAPI remoteClient)
+        protected internal void UpdatePrimTexture(uint LocalID, byte[] texture, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID,remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdateTextureEntry(localID, texture);
+                    ((SceneObjectGroup)entity).UpdateTextureEntry(LocalID, texture);
                 }
             }
         }
@@ -1066,14 +1011,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         /// This routine seems to get called when a user changes object settings in the viewer.
         /// If some one can confirm that, please change the comment according.
-        protected internal void UpdatePrimFlags(uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, IClientAPI remoteClient)
+        protected internal void UpdatePrimFlags(uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(localID);
-            if (group != null)
+            EntityBase entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
+                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    group.UpdatePrimFlags(localID, UsePhysics, IsTemporary, IsPhantom, false); // VolumeDetect can't be set via UI and will always be off when a change is made there
+                    ((SceneObjectGroup)entity).UpdatePrimFlags(LocalID, UsePhysics, IsTemporary, IsPhantom, false); // VolumeDetect can't be set via UI and will always be off when a change is made there
                 }
             }
         }
@@ -1085,20 +1030,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="offset"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
-        protected internal void MoveObject(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        protected internal void MoveObject(UUID ObjectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
-            SceneObjectGroup group = GetGroupByPrim(objectID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(ObjectID, out group))
             {
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
                 {
-                    group.GrabMovement(offset, pos, remoteClient);
+                    ((SceneObjectGroup)group).GrabMovement(offset, pos, remoteClient);
                 }
                 // This is outside the above permissions condition
                 // so that if the object is locked the client moving the object
                 // get's it's position on the simulator even if it was the same as before
                 // This keeps the moving user's client in sync with the rest of the world.
-                group.ScheduleGroupForTerseUpdate();
+                ((SceneObjectGroup)group).ScheduleGroupForTerseUpdate();
             }
         }
 
@@ -1108,14 +1053,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="objectID"></param>
         /// <param name="rotation"></param>
         /// <param name="remoteClient"></param>
-        protected internal void SpinStart(UUID objectID, IClientAPI remoteClient)
+        protected internal void SpinStart(UUID ObjectID, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(objectID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(ObjectID, out group))
             {
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
                 {
-                    group.SpinStart(remoteClient);
+                    ((SceneObjectGroup)group).SpinStart(remoteClient);
                 }
             }
         }
@@ -1126,20 +1071,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="objectID"></param>
         /// <param name="rotation"></param>
         /// <param name="remoteClient"></param>
-        protected internal void SpinObject(UUID objectID, Quaternion rotation, IClientAPI remoteClient)
+        protected internal void SpinObject(UUID ObjectID, Quaternion rotation, IClientAPI remoteClient)
         {
-            SceneObjectGroup group = GetGroupByPrim(objectID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(ObjectID, out group))
             {
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
                 {
-                    group.SpinMovement(rotation, remoteClient);
+                    ((SceneObjectGroup)group).SpinMovement(rotation, remoteClient);
                 }
                 // This is outside the above permissions condition
                 // so that if the object is locked the client moving the object
                 // get's it's position on the simulator even if it was the same as before
                 // This keeps the moving user's client in sync with the rest of the world.
-                group.SendGroupTerseUpdate();
+                ((SceneObjectGroup)group).SendGroupTerseUpdate();
             }
         }
 
@@ -1148,16 +1093,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="primLocalID"></param>
         /// <param name="description"></param>
-        protected internal void PrimName(IClientAPI remoteClient, uint primLocalID, string name)
+        protected internal void PrimName(IClientAPI remoteClient, uint LocalID, string name)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(LocalID, out group))
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    group.SetPartName(Util.CleanString(name), primLocalID);
-                    group.HasGroupChanged = true;
-                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).SetPartName(Util.CleanString(name), LocalID);
+                    ((SceneObjectGroup)group).HasGroupChanged = true;
+                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1167,59 +1112,58 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="primLocalID"></param>
         /// <param name="description"></param>
-        protected internal void PrimDescription(IClientAPI remoteClient, uint primLocalID, string description)
+        protected internal void PrimDescription(IClientAPI remoteClient, uint LocalID, string description)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(LocalID, out group))
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    group.SetPartDescription(Util.CleanString(description), primLocalID);
-                    group.HasGroupChanged = true;
-                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).SetPartDescription(Util.CleanString(description), LocalID);
+                    ((SceneObjectGroup)group).HasGroupChanged = true;
+                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
 
-        protected internal void PrimClickAction(IClientAPI remoteClient, uint primLocalID, string clickAction)
+        protected internal void PrimClickAction(IClientAPI remoteClient, uint LocalID, string clickAction)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(LocalID, out group))
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
+                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
-                    group.HasGroupChanged = true;
-                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).HasGroupChanged = true;
+                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
 
-        protected internal void PrimMaterial(IClientAPI remoteClient, uint primLocalID, string material)
+        protected internal void PrimMaterial(IClientAPI remoteClient, uint LocalID, string material)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-            if (group != null)
+            EntityBase group;
+            if (TryGetEntity(LocalID, out group))
             {
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
-                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
+                    SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.Material = Convert.ToByte(material);
-                    group.HasGroupChanged = true;
-                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).HasGroupChanged = true;
+                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
 
-        protected internal void UpdateExtraParam(UUID agentID, uint primLocalID, ushort type, bool inUse, byte[] data)
+        protected internal void UpdateExtraParam(UUID agentID, uint LocalID, ushort type, bool inUse, byte[] data)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-
-            if (group != null)
+            ISceneEntity part;
+            if (TryGetPart(LocalID, out part))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID,agentID))
+                if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
                 {
-                    group.UpdateExtraParam(primLocalID, type, inUse, data);
+                    ((SceneObjectPart)part).UpdateExtraParam(type, inUse, data);
                 }
             }
         }
@@ -1229,12 +1173,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="primLocalID"></param>
         /// <param name="shapeBlock"></param>
-        protected internal void UpdatePrimShape(UUID agentID, uint primLocalID, UpdateShapeArgs shapeBlock)
+        protected internal void UpdatePrimShape(UUID agentID, uint LocalID, UpdateShapeArgs shapeBlock)
         {
-            SceneObjectGroup group = GetGroupByPrim(primLocalID);
-            if (group != null)
+            ISceneEntity part;
+            if (TryGetPart(LocalID, out part))
             {
-                if (m_parentScene.Permissions.CanEditObject(group.GetPartsFullID(primLocalID), agentID))
+                if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
                 {
                     ObjectShapePacket.ObjectDataBlock shapeData = new ObjectShapePacket.ObjectDataBlock();
                     shapeData.ObjectLocalID = shapeBlock.ObjectLocalID;
@@ -1257,7 +1201,7 @@ namespace OpenSim.Region.Framework.Scenes
                     shapeData.ProfileEnd = shapeBlock.ProfileEnd;
                     shapeData.ProfileHollow = shapeBlock.ProfileHollow;
 
-                    group.UpdateShape(shapeData, primLocalID);
+                    ((SceneObjectPart)part).UpdateShape(shapeData);
                 }
             }
         }
@@ -1470,14 +1414,15 @@ namespace OpenSim.Region.Framework.Scenes
              return a.LinkNum.CompareTo(b.LinkNum);
         }
 
-        protected internal void MakeObjectSearchable(IClientAPI remoteClient, bool IncludeInSearch, uint localID)
+        protected internal void MakeObjectSearchable(IClientAPI remoteClient, bool IncludeInSearch, uint LocalID)
         {
             UUID user = remoteClient.AgentId;
             UUID objid = UUID.Zero;
-            SceneObjectPart obj = null;
-
-            obj = GetSceneObjectPart(localID);
-
+            EntityBase entity;
+            SceneObjectGroup grp;
+            if (!TryGetEntity(LocalID, out entity))
+                return;
+            grp = (SceneObjectGroup)entity;
             //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
             //aka ObjectFlags.JointWheel = IncludeInSearch
 
@@ -1495,23 +1440,26 @@ namespace OpenSim.Region.Framework.Scenes
             #pragma warning disable 0612
             if (IncludeInSearch && m_parentScene.Permissions.CanEditObject(objid, user))
             {
-                obj.ParentGroup.RootPart.AddFlag(PrimFlags.JointWheel);
-                obj.ParentGroup.HasGroupChanged = true;
+                grp.RootPart.AddFlag(PrimFlags.JointWheel);
+                grp.HasGroupChanged = true;
             }
             else if (!IncludeInSearch && m_parentScene.Permissions.CanMoveObject(objid,user))
             {
-                obj.ParentGroup.RootPart.RemFlag(PrimFlags.JointWheel);
-                obj.ParentGroup.HasGroupChanged = true;
+                grp.RootPart.RemFlag(PrimFlags.JointWheel);
+                grp.HasGroupChanged = true;
             }
             #pragma warning restore 0612
         }
 
-        public bool DuplicateObject(uint originalPrimID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
+        public bool DuplicateObject(uint LocalID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
         {
             //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
-            SceneObjectGroup original = GetGroupByPrim(originalPrimID);
-            if (original != null)
+            SceneObjectGroup original;
+            EntityBase entity;
+
+            if (TryGetEntity(LocalID, out entity))
             {
+                original = (SceneObjectGroup)entity;
                 if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
                 {
                     EntityBase duplicatedEntity = DuplicateEntity(original);
