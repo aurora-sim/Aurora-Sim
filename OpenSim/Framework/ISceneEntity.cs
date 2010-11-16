@@ -33,6 +33,7 @@ namespace OpenSim.Framework
     {
         UUID UUID { get; set; }
         uint LocalId { get; set; }
+        int LinkNum { get; set; }
         Vector3 AbsolutePosition { get; }
         void ResetEntityIDs();
     }

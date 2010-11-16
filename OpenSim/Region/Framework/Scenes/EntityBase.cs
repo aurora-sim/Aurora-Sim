@@ -75,6 +75,19 @@ namespace OpenSim.Region.Framework.Scenes
         }
         protected bool m_isDeleted;
 
+        public int LinkNum
+        {
+            get
+            {
+                return m_linkNum;
+            }
+            set
+            {
+                m_linkNum = value;
+            }
+        }
+        private int m_linkNum;
+
         public virtual bool HasGroupChanged
         {
             get { return m_hasGroupChanged; }

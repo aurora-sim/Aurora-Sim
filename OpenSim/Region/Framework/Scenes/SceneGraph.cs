@@ -266,7 +266,12 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         EntityBase e = null;
                         if (TryGetEntity(ID, out e))
+                        {
                             e.Update();
+                        }
+                        else
+                        {
+                        }
                     }
                     catch (Exception e)
                     {
@@ -1411,7 +1416,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int linkSetSorter(SceneObjectPart a, SceneObjectPart b)
         {
-             return a.LinkNum.CompareTo(b.LinkNum);
+            return a.LinkNum.CompareTo(b.LinkNum);
+        }
+
+        private int linkSetSorter(ISceneEntity a, ISceneEntity b)
+        {
+            return a.LinkNum.CompareTo(b.LinkNum);
         }
 
         protected internal void MakeObjectSearchable(IClientAPI remoteClient, bool IncludeInSearch, uint LocalID)
@@ -1654,24 +1664,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void ResetEntityIDs(EntityBase entity)
         {
-            //Keep this so we don't end up with two root parts at the end
-            UUID oldrootID = entity.UUID;
-
-            //Reset root first
             List<ISceneEntity> children = entity.ChildrenEntities();
-            entity.ClearChildren();
+            //Sort so that we rebuild in the same order and the root being first
+            children.Sort(linkSetSorter);
 
-            //Add the root part first so that it is recognized as it
-            entity.ResetEntityIDs();
-            entity.AddChild(entity);
+            entity.ClearChildren();
 
             foreach (ISceneEntity child in children)
             {
-                if (oldrootID != child.UUID) //Do not reset roots
-                {
-                    child.ResetEntityIDs();
-                    entity.AddChild(child);
-                }
+                child.ResetEntityIDs();
+                entity.AddChild(child);
             }
         }
 

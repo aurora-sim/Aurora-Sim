@@ -187,7 +187,8 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                return Dictionary1.TryGetValue(key, out value);
+                Dictionary1.TryGetValue(key, out value);
+                return value != null;
             }
         }
 
@@ -195,7 +196,8 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                return Dictionary2.TryGetValue(key, out value);
+                Dictionary2.TryGetValue(key, out value);
+                return value != null;
             }
         }
 

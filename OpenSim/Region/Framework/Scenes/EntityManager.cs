@@ -226,24 +226,36 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool TryGetValue(UUID key, out EntityBase obj)
         {
-            if (!m_entities.TryGetValue(key, out obj))
+            return InternalTryGetValue(key, true, out obj);
+        }
+
+        private bool InternalTryGetValue(UUID key, bool checkRecursive, out EntityBase obj)
+        {
+            if (!m_entities.TryGetValue(key, out obj) && checkRecursive)
             {
                 //Deal with the possibility we may have been asked for a child prim
                 return TryGetChildPrimParent(key, out obj);
             }
-            obj = null;
-            return false;
+            if (!checkRecursive && obj == null)
+                return false;
+            return true;
         }
 
         public bool TryGetValue(uint key, out EntityBase obj)
         {
-            if (!m_entities.TryGetValue(key, out obj))
+            return InternalTryGetValue(key, true, out obj);
+        }
+
+        private bool InternalTryGetValue(uint key, bool checkRecursive, out EntityBase obj)
+        {
+            if (!m_entities.TryGetValue(key, out obj) && checkRecursive)
             {
                 //Deal with the possibility we may have been asked for a child prim
                 return TryGetChildPrimParent(key, out obj);
             }
-            obj = null;
-            return false;
+            if (!checkRecursive && obj == null)
+                return false;
+            return true;
         }
 
         /// <summary>
@@ -258,7 +270,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 UUID ParentKey = UUID.Zero;
                 if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return TryGetValue(ParentKey, out obj);
+                    return InternalTryGetValue(ParentKey, false, out obj);
 
                 obj = null;
                 return false;
@@ -277,7 +289,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 UUID ParentKey = UUID.Zero;
                 if (m_child_2_parent_entities.TryGetValue(childkey, out ParentKey))
-                    return TryGetValue(ParentKey, out obj);
+                    return InternalTryGetValue(ParentKey, false, out obj);
 
                 obj = null;
                 return false;

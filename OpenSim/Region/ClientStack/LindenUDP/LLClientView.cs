@@ -3687,7 +3687,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
         {
             double priority = m_prioritizer.GetUpdatePriority(this, entity);
-
             lock (m_entityUpdates.SyncRoot)
                 m_entityUpdates.Enqueue(priority, new EntityUpdate(entity, updateFlags), entity.LocalId);
         }

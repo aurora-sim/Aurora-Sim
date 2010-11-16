@@ -325,7 +325,7 @@ namespace OpenSim.Region.Framework.Scenes
             List<ISceneEntity> entities = new List<ISceneEntity>();
             lock (m_partsLock)
             {
-                foreach (SceneObjectPart part in entities)
+                foreach (SceneObjectPart part in m_partsList)
                 {
                     entities.Add(part);
                 }

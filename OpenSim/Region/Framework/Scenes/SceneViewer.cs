@@ -125,6 +125,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     entities = null;
                 }
+                //Do this HERE so that all those updates added are prioritized.
+                m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
             lock (m_pendingObjects)
@@ -155,8 +157,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_updateTimes.ContainsKey(g.UUID))
                         g.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
                 }
-                //Do this HERE so that all those updates added are prioritized.
-                m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
             while (m_partsUpdateQueue.Count > 0)
