@@ -1568,7 +1568,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.ClearChildren();
 
-            AddChild(m_rootPart.Copy(dupe));
+            dupe.AddChild(m_rootPart.Copy(dupe));
 
             dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
 
@@ -1605,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID != m_rootPart.UUID)
                 {
-                    AddChild(part.Copy(dupe));
+                    dupe.AddChild(part.Copy(dupe));
                 }
             }
 
