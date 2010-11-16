@@ -379,6 +379,8 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "backup", "backup", "Persist objects to the database now", RunCommand);
 
+            m_console.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
+
             m_console.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
 
             m_console.Commands.AddCommand("region", false, "restart", "restart", "Restart the current sim selected (all if root)", RunCommand);
@@ -646,6 +648,11 @@ namespace OpenSim
 			cmdparams = args.ToArray();
 
 			switch (command) {
+                case "reset":
+                    if (cmdparams.Length > 0) 
+						if(cmdparams[0] == "region")
+                            m_sceneManager.ResetScene();
+                    break;
 				case "command-script":
 					if (cmdparams.Length > 0) {
 						RunCommandScript(cmdparams[0]);

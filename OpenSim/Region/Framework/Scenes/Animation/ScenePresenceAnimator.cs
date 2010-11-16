@@ -216,11 +216,19 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             bool jumping = m_animTickJump != 0;
             float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
 
-            if (heldTurnLeft && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            if (heldTurnLeft && !heldForward &&
+                !heldBack && !jumping && actor != null &&
+                !actor.Flying && move.Z == 0 &&
+                fallVelocity == 0.0f && !heldUp &&
+                !heldDown && move.CompareTo(Vector3.Zero) == 0)
             {
                 return "TURNLEFT";
             }
-            if (heldTurnRight && !heldForward && !heldBack && !jumping && actor != null && !actor.Flying && move.Z == 0 && fallVelocity == 0.0f)
+            if (heldTurnRight && !heldForward &&
+                !heldBack && !jumping && actor != null &&
+                !actor.Flying && move.Z == 0 &&
+                fallVelocity == 0.0f && !heldUp &&
+                !heldDown && move.CompareTo(Vector3.Zero) == 0)
             {
                 return "TURNRIGHT";
             }

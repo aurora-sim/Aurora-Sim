@@ -309,6 +309,21 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachCurrentScene(delegate(Scene scene) { scene.RestartNow(); });
         }
 
+        public void ResetScene()
+        {
+            if (m_currentScene == null)
+            {
+                m_log.Warn("You must use this command on a region. Use 'change region' to change to the region you would like to change");
+                return;
+            }
+            m_currentScene.DeleteAllSceneObjects();
+            ITerrainModule module = m_currentScene.RequestModuleInterface<ITerrainModule>();
+            if (module != null)
+            {
+                module.ResetTerrain();
+            }
+        }
+
         public void BackupCurrentScene()
         {
             ForEachCurrentScene(delegate(Scene scene)

@@ -116,9 +116,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scenes.Add(scene);
 
             LoadWorldMap();
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
-            scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
-
             // Install terrain module in the simulator
             if (m_scene.Heightmap == null)
             {
@@ -133,6 +130,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_revert = m_scene.Heightmap;
                 FindRevertMap();
             }
+
+            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
+            scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -189,6 +189,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void SaveTerrain()
         {
             m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+        }
+
+        /// <summary>
+        /// Reset the terrain of this region to the default
+        /// </summary>
+        public void ResetTerrain()
+        {
+            TerrainChannel channel = new TerrainChannel(m_scene);
+            SaveRevertTerrain(channel);
+            m_scene.Heightmap = channel;
+            m_channel = channel;
+            CheckForTerrainUpdates(false, true);
         }
 
         /// <summary>
@@ -725,7 +737,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         private void CheckForTerrainUpdates()
         {
-            CheckForTerrainUpdates(false);
+            CheckForTerrainUpdates(false, false);
         }
 
         /// <summary>
@@ -736,7 +748,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// currently invoked by client_OnModifyTerrain only and not the Commander interfaces
         /// <param name="respectEstateSettings">should height map deltas be limited to the estate settings limits</param>
         /// </summary>
-        private void CheckForTerrainUpdates(bool respectEstateSettings)
+        private void CheckForTerrainUpdates(bool respectEstateSettings, bool forceSendOfTerrainInfo)
         {
             bool shouldTaint = false;
             float[] serialised = m_channel.GetFloatsSerialised(m_scene);
@@ -746,12 +758,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 int y;
                 for (y = 0; y < m_channel.Height; y += Constants.TerrainPatchSize)
                 {
-                    if (m_channel.Tainted(x, y))
+                    if (m_channel.Tainted(x, y) || forceSendOfTerrainInfo)
                     {
                         // if we should respect the estate settings then
                         // fixup and height deltas that don't respect them
                         if ((respectEstateSettings && LimitChannelChanges(x, y)) ||
-                            LimitMaxTerrain(x, y))
+                            LimitMaxTerrain(x, y) && !forceSendOfTerrainInfo)
                         {
                             // this has been vetoed, so update
                             // what we are going to send to the client
@@ -763,7 +775,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                 }
             }
-            if (shouldTaint)
+            if (shouldTaint || forceSendOfTerrainInfo)
             {
                 m_tainted = true;
             }
@@ -904,7 +916,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
                             m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
 
-                        CheckForTerrainUpdates(!god); //revert changes outside estate limits
+                        CheckForTerrainUpdates(!god, false); //revert changes outside estate limits
                     }
                 }
                 else
@@ -945,7 +957,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_floodeffects[(StandardTerrainEffects) action].FloodEffect(
                             m_channel, fillArea, size);
 
-                        CheckForTerrainUpdates(!god); //revert changes outside estate limits
+                        CheckForTerrainUpdates(!god, false); //revert changes outside estate limits
                     }
                 }
                 else
