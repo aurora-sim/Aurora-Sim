@@ -1271,7 +1271,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (SceneObjectGroup child in childGroups)
                 {
-                    DeleteSceneObject(child.UUID, true);
+                    DelinkEntity(child);
                 }
 
                 // We need to explicitly resend the newly link prim's object properties since no other actions
@@ -1629,6 +1629,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity.IsPhysical())
                 RemovePhysicalPrim(entity.ChildrenEntities().Count);
             return RemoveEntity(entity);
+        }
+
+        public void DelinkEntity(EntityBase entity)
+        {
+            m_numPrim -= entity.ChildrenEntities().Count;
         }
 
         #endregion

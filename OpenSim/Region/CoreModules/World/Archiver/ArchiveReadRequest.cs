@@ -236,8 +236,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             }
                         }
 
-                        if (m_scene.AddRestoredSceneObject(sceneObject, true, false, true))
+                        if (m_scene.AddPrimToScene(sceneObject))
                         {
+                            sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                             sceneObjectsLoadedCount++;
                             sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
                             sceneObject.ResumeScripts();
