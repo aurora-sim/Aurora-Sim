@@ -3903,8 +3903,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     AssetBase asset = World.AssetService.Get(inventory);
                     SceneObjectGroup group
                                         = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
-                    group.ResetIDs(true);
-
                     group.OwnerID = m_host.OwnerID;
 
                     group.RootPart.AddFlag(PrimFlags.CreateSelected);

@@ -626,7 +626,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override void AddChild(ISceneEntity child)
+        public override bool AddChild(ISceneEntity child)
         {
             lock (m_partsLock)
             {
@@ -638,13 +638,67 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_rootPart = part;
                     }
+                    //Set the parent prim
+                    part.SetParent(this);
+
                     //Set the link num
                     part.LinkNum = m_partsList.Count;
 
                     m_parts.Add(child.UUID, part);
                     m_partsList.Add(part);
+                    return true;
                 }
             }
+            return false;
+        }
+
+        public override bool RemoveChild(ISceneEntity child)
+        {
+            lock (m_partsLock)
+            {
+                if (child is SceneObjectPart)
+                {
+                    SceneObjectPart part = (SceneObjectPart)child;
+                    m_parts.Remove(part.UUID);
+                    m_partsList.Remove(part);
+
+                    //Fix the link numbers now
+                    FixLinkNumbers();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// After a prim is removed, fix the link numbers so that they are correct
+        /// </summary>
+        private void FixLinkNumbers()
+        {
+            int lastSeenLinkNum = 0;
+            m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
+            for(int i = 0; i < m_partsList.Count; i++)
+            {
+                //If it isn't the same as the last seen +1, fix it
+                if (m_partsList[i].LinkNum != lastSeenLinkNum)
+                    m_partsList[i].LinkNum = lastSeenLinkNum;
+
+                //Go onto the next prim
+                lastSeenLinkNum++;
+            }
+        }
+
+        public void UpdatePartList(SceneObjectPart part)
+        {
+            lock (m_partsLock)
+            {
+                m_parts[part.UUID] = part;
+                m_partsList.Add(part);
+            }
+        }
+
+        public void RemovePartList(SceneObjectPart part)
+        {
         }
         
         /// <summary>
@@ -1173,56 +1227,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!IsAttachment)
                 part.SetParentLocalId(0);
             part.LinkNum = 0;
-            AddPart(part, UserExposed);
-        }
-
-        /// <summary>
-        /// Add a new part to this scene object.  The part must already be correctly configured.
-        /// </summary>
-        /// <param name="part"></param>
-        public void AddPart(SceneObjectPart part, bool UserExposed)
-        {
-            part.SetParent(this);
-
-            UpdatePartList(part, UserExposed);
-            
-            if (part != RootPart)
-                part.LinkNum = m_parts.Count;
-
-            if (part.LinkNum == 2 && RootPart != null)
-                RootPart.LinkNum = 1;
-        }
-
-        private void UpdatePartList(SceneObjectPart part, bool UserExposed)
-        {
-            lock (m_partsLock)
-            {
-                m_parts[part.UUID] = part;
-                m_partsList.Add(part);
-            }
-            if (UserExposed)
-            {
-                Scene.Entities.Remove(LocalId);
-                Scene.Entities.Remove(UUID);
-                Scene.Entities.Add(this);
-            }
-        }
-
-        public void RemovePartList(SceneObjectPart part)
-        {
-            lock (m_partsLock)
-            {
-                m_parts.Remove(part.UUID);
-                m_partsList.Remove(part);
-            }
-            //Old prim
-            Scene.Entities.Remove(part.UUID);
-            Scene.Entities.Remove(part.LocalId);
-
-            //Us
-            Scene.Entities.Remove(LocalId);
-            Scene.Entities.Remove(UUID);
-            Scene.Entities.Add(this);
+            AddChild(part);
         }
 
         /// <summary>
@@ -1560,7 +1565,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.ClearChildren();
 
-            AddPart(m_rootPart.Copy(dupe), false);
+            AddChild(m_rootPart.Copy(dupe));
 
             dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
 
@@ -1597,7 +1602,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID != m_rootPart.UUID)
                 {
-                    AddPart(part.Copy(dupe), false);
+                    AddChild(part.Copy(dupe));
                 }
             }
 
@@ -1982,37 +1987,10 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
         {
             SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts, this);
-            AddPart(newPart, userExposed);
+            AddChild(newPart);
 
             SetPartAsNonRoot(newPart);
             return newPart;
-        }
-
-        /// <summary>
-        /// Reset the UUIDs for all the prims that make up this group.
-        ///
-        /// This is called by methods which want to add a new group to an existing scene, in order
-        /// to ensure that there are no clashes with groups already present.
-        /// </summary>
-        public void ResetIDs(bool UserExposed)
-        {
-            // As this is only ever called for prims which are not currently part of the scene (and hence
-            // not accessible by clients), there should be no need to lock
-            List<SceneObjectPart> partsList = new List<SceneObjectPart>(m_partsList);
-            ClearPartsList();
-            foreach (SceneObjectPart part in partsList)
-            {
-                part.ResetIDs(part.LinkNum, false); // Don't change link nums
-                if(m_scene != null)
-                    m_rootPart.LocalId = m_scene.AllocateLocalId();
-                UpdatePartList(part, UserExposed);
-            }
-        }
-
-        public void ClearPartsList()
-        {
-            m_parts.Clear();
-            m_partsList.Clear();
         }
 
         /// <summary>
@@ -2549,7 +2527,7 @@ namespace OpenSim.Region.Framework.Scenes
                 linkPart.LinkNum = 2;
 
                 linkPart.SetParent(this);
-                UpdatePartList(linkPart, UserExposed);
+                m_scene.SceneGraph.LinkPartToEntity(this, linkPart);
                 linkPart.CreateSelected = true;
 
                 //rest of parts
@@ -2647,7 +2625,7 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion worldRot = linkPart.GetWorldRotation();
 
             // Remove the part from this object
-            RemovePartList(linkPart);
+            m_scene.SceneGraph.DeLinkPartToEntity(this, linkPart);
 
             if (m_parts.Count == 1 && RootPart != null) //Single prim is left
                 RootPart.LinkNum = 0;
@@ -2728,8 +2706,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             part.SetParent(this);
             part.SetParentLocalId(m_rootPart.LocalId);
-            
-            UpdatePartList(part, UserExposed);
+
+            m_scene.SceneGraph.LinkPartToEntity(this, part);
 
             part.LinkNum = linkNum;
 

@@ -232,6 +232,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return shuttingdown; }
         }
 
+        public SceneGraph SceneGraph
+        {
+            get { return m_sceneGraph; }
+        }
+
         // an instance to the physics plugin's Scene object.
         public PhysicsScene PhysicsScene
         {
@@ -2543,6 +2548,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return m_sceneGraph.AddPrimToScene(sceneObject);
         }
+
+        public void PrepPrimForAdditionToScene(SceneObjectGroup sceneObject)
+        {
+            m_sceneGraph.PrepPrimForAdditionToScene(sceneObject);
+        }
         
         /// <summary>
         /// Delete every object from the scene.  This does not include attachments worn by avatars.
@@ -3232,11 +3242,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[SCENE]: Problem casting object: {0}", e.Message);
                 return false;
             }
-            if (newObject.LocalId == 0)
-            {
-                newObject.ResetIDs(true);
-                newObject.AttachToScene(this);
-            }
+
             if (!AddSceneObject(newObject))
             {
                 m_log.DebugFormat("[SCENE]: Problem adding scene object {0} in {1} ", sog.UUID, RegionInfo.RegionName);

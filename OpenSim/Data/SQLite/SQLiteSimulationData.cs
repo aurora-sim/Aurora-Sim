@@ -579,7 +579,7 @@ namespace OpenSim.Data.SQLite
                                 continue;
                             }
 
-                            createdObjects[new UUID(objID)].AddPart(prim, true);
+                            createdObjects[new UUID(objID)].AddChild(prim);
                             LoadItems(prim);
                         }
                     }

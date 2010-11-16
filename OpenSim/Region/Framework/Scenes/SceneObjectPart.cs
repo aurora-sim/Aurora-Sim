@@ -2275,7 +2275,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (userExposed)
             {
-                dupe.ResetIDs(linkNum, ChangeScripts);
+                dupe.ResetEntityIDs();
+                dupe.LinkNum = linkNum;
                 dupe.m_inventory.HasInventoryChanged = true;
             }
             else
@@ -3636,20 +3637,6 @@ namespace OpenSim.Region.Framework.Scenes
                     aggregateScriptEvents();
                 }
             }
-        }
-
-        /// <summary>
-        /// Reset UUIDs for this part.  This involves generate this part's own UUID and
-        /// generating new UUIDs for all the items in the inventory.
-        /// </summary>
-        /// <param name="linkNum">Link number for the part</param>
-        public void ResetIDs(int linkNum, bool ChangeScripts)
-        {
-            UUID = UUID.Random();
-            LinkNum = linkNum;
-            Inventory.ResetInventoryIDs(ChangeScripts);
-            LocalId = 0;
-            CRC = 0;
         }
 
         public void ResetEntityIDs()

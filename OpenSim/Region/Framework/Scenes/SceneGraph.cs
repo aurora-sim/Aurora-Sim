@@ -1414,12 +1414,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private int linkSetSorter(SceneObjectPart a, SceneObjectPart b)
+        public int linkSetSorter(SceneObjectPart a, SceneObjectPart b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);
         }
 
-        private int linkSetSorter(ISceneEntity a, ISceneEntity b)
+        public int linkSetSorter(ISceneEntity a, ISceneEntity b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);
         }
@@ -1559,6 +1559,22 @@ namespace OpenSim.Region.Framework.Scenes
             return copiedEntity;
         }
 
+        public bool LinkPartToEntity(EntityBase entity, ISceneEntity part)
+        {
+            RemoveEntity(entity);
+            bool RetVal = entity.AddChild(part);
+            AddEntity(entity, false);
+            return RetVal;
+        }
+
+        public bool DeLinkPartToEntity(EntityBase entity, ISceneEntity part)
+        {
+            RemoveEntity(entity);
+            bool RetVal = entity.RemoveChild(part);
+            AddEntity(entity, false);
+            return RetVal;
+        }
+
         #endregion
 
         #region Public Methods
@@ -1607,6 +1623,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             entity = null;
             return false;
+        }
+
+        public void PrepPrimForAdditionToScene(EntityBase entity)
+        {
+            ResetEntityIDs(entity);
         }
 
         /// <summary>

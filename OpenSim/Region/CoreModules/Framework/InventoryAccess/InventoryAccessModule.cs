@@ -642,8 +642,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             return null;
                         }
 
-                    group.ResetIDs(true);
-
                         if (attachment)
                         {
                             group.RootPart.Flags |= PrimFlags.Phantom;
@@ -817,8 +815,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         remoteClient.SendBulkUpdateInventory(item);
                     return null;
                 }
-
-                group.ResetIDs(true);
 
                 if (attachment)
                 {

@@ -188,8 +188,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public virtual void AddChild(ISceneEntity child)
+        public virtual bool AddChild(ISceneEntity child)
         {
+            return false;
+        }
+
+        public virtual bool RemoveChild(ISceneEntity child)
+        {
+            return false;
         }
 
         public virtual bool GetChildPrim(uint LocalID, out ISceneEntity entity)

@@ -61,13 +61,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     SceneObjectGroup obj = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, scene);
 
-                    if (newIDS)
-                    {
-                        obj.ResetIDs(true);
-                    }
-                    //if we want this to be a import method then we need new uuids for the object to avoid any clashes
-                    //obj.RegenerateFullIDs();
-
                     scene.AddPrimToScene(obj);
                 }
             }
