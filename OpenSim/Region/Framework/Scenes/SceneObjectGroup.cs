@@ -641,8 +641,48 @@ namespace OpenSim.Region.Framework.Scenes
                     //Set the parent prim
                     part.SetParent(this);
 
-                    //Set the link num
+                    //Fix the link num
                     part.LinkNum = m_partsList.Count;
+
+                    if (!m_parts.ContainsKey(child.UUID))
+                    {
+                        m_parts.Add(child.UUID, part);
+                        m_partsList.Add(part);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override bool LinkChild(ISceneEntity child)
+        {
+            lock (m_partsLock)
+            {
+                if (child is SceneObjectPart)
+                {
+                    SceneObjectPart part = (SceneObjectPart)child;
+                    //Root part is first
+                    if (m_partsList.Count == 0)
+                    {
+                        m_rootPart = part;
+                    }
+                    //Set the parent prim
+                    part.SetParent(this);
+
+                    // Insert in terms of link numbers, the new links
+                    // before the current ones (with the exception of 
+                    // the root prim. Shuffle the old ones up
+                    foreach (SceneObjectPart otherPart in m_partsList)
+                    {
+                        if (part.LinkNum != 1)
+                        {
+                            // Don't update root prim link number
+                            otherPart.LinkNum += PrimCount;
+                        }
+                    }
+
+                    part.LinkNum = 2;
 
                     if (!m_parts.ContainsKey(child.UUID))
                     {
@@ -2515,20 +2555,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_partsLock)
             {
-                // Insert in terms of link numbers, the new links
-                // before the current ones (with the exception of 
-                // the root prim. Shuffle the old ones up
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part.LinkNum != 1)
-                    {
-                        // Don't update root prim link number
-                        part.LinkNum += objectGroup.PrimCount;
-                    }
-                }
-
-                linkPart.LinkNum = 2;
-
                 linkPart.SetParent(this);
                 m_scene.SceneGraph.LinkPartToEntity(this, linkPart);
                 linkPart.CreateSelected = true;
@@ -2628,7 +2654,7 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion worldRot = linkPart.GetWorldRotation();
 
             // Remove the part from this object
-            m_scene.SceneGraph.DeLinkPartToEntity(this, linkPart);
+            m_scene.SceneGraph.DeLinkPartFromEntity(this, linkPart);
 
             if (m_parts.Count == 1 && RootPart != null) //Single prim is left
                 RootPart.LinkNum = 0;

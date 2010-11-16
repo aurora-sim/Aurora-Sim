@@ -1562,12 +1562,12 @@ namespace OpenSim.Region.Framework.Scenes
         public bool LinkPartToEntity(EntityBase entity, ISceneEntity part)
         {
             RemoveEntity(entity);
-            bool RetVal = entity.AddChild(part);
+            bool RetVal = entity.LinkChild(part);
             AddEntity(entity, false);
             return RetVal;
         }
 
-        public bool DeLinkPartToEntity(EntityBase entity, ISceneEntity part)
+        public bool DeLinkPartFromEntity(EntityBase entity, ISceneEntity part)
         {
             RemoveEntity(entity);
             bool RetVal = entity.RemoveChild(part);

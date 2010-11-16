@@ -193,6 +193,11 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        public virtual bool LinkChild(ISceneEntity child)
+        {
+            return false;
+        }
+
         public virtual bool RemoveChild(ISceneEntity child)
         {
             return false;
