@@ -644,8 +644,11 @@ namespace OpenSim.Region.Framework.Scenes
                     //Set the link num
                     part.LinkNum = m_partsList.Count;
 
-                    m_parts.Add(child.UUID, part);
-                    m_partsList.Add(part);
+                    if (!m_parts.ContainsKey(child.UUID))
+                    {
+                        m_parts.Add(child.UUID, part);
+                        m_partsList.Add(part);
+                    }
                     return true;
                 }
             }
