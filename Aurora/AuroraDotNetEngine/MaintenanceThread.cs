@@ -54,6 +54,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool RunInMainProcessingThread = false;
         public bool m_Started = false;
 
+        public int MaxScriptThreads = 1;
+        private class WorkersLockClk
+            {
+            public int nWorkers = 0;
+            }
+        private WorkersLockClk WorkersLock = new WorkersLockClk();
+
         public bool Started
         {
             get { return m_Started; }
@@ -61,9 +68,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_Started = true;
 
+                WorkersLock.nWorkers = 0;
+
                 ScriptChangeQueue();
                 StateSaveQueue();
-                EventQueue();
+//                EventQueue();
 
                 //Start the queue because it can't start itself
                 CmdHandlerQueue();
@@ -111,10 +120,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //    as it always must be async, so we must run the pool anyway
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Normal;
-            info.Threads = Engine.Config.GetInt("Threads", 100);
-            if(info.Threads < 4)
-                   info.Threads = 4;  // let's try to have enough threads alive for control, etc
+
+            MaxScriptThreads = Engine.Config.GetInt("Threads", 100); // leave control threads out of user option
+            info.Threads = MaxScriptThreads + 3;
             info.MaxSleepTime = Engine.Config.GetInt("SleepTime", 100);
+
             threadpool = new AuroraThreadPool(info);
 
             AppDomain.CurrentDomain.AssemblyResolve += m_ScriptEngine.AssemblyResolver.OnAssemblyResolve;
@@ -230,7 +240,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             return false;
         }
-
+/*
         public bool EventQueue()
         {
             if (!Started) //Break early
@@ -259,12 +269,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 EventProcessorIsRunning = false;
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.ToString(), m_ScriptEngine.ScriptEngineName);
+                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
             }
             EventProcessorIsRunning = false;
             return SendUpSleepRequest;
         }
-
+*/
         public bool CmdHandlerQueue()
         {
             if (!Started) //Break early
@@ -457,6 +467,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddEvent(QueueItemStruct QIS, EventPriority priority)
         {
+/*
             if (RunInMainProcessingThread)
             {
                 ProcessQIS(QIS);
@@ -467,6 +478,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!EventProcessorIsRunning)
                     StartThread("Event");
             }
+*/
+            AddEventSchQIS(QIS);
         }
 
         #endregion
@@ -506,10 +519,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 threadpool.QueueEvent(ScriptChangeQueue, 2);
             }
+/*
             else if (thread == "Event")
             {
                 threadpool.QueueEvent(EventQueue, 1);
             }
+ */
         }
 
         #endregion
@@ -523,8 +538,533 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 StartThread("State");
             if (LUQueue.Count() != 0 && !ScriptChangeIsRunning)
                 StartThread("Change");
-            if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
-                StartThread("Event");
+//            if (!EventProcessorIsRunning) //Can't check the count on this one, so poke it anyway
+//                StartThread("Event");
+        }
+        #region Scripts events scheduler control
+
+        public class aJob
+            {
+            public QueueItemStruct QIS;
+            }
+
+
+        private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
+        private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
+
+        public void FlushEventSchQueue(ScriptData ID)
+            {
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                ID.EventsProcData.EventsQueue.Clear();
+                ID.EventsProcDataLocked = false;
+                }
+            }
+
+        public void ResetEventSchQueue(ScriptData ID)
+            {
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                ID.EventsProcData.EventsQueue.Clear();
+                if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
+                    ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+                ID.EventsProcDataLocked = false;
+                }
+            }
+
+        public void FlushAndExecNowEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
+            {
+            // Create a structure and add data
+            QueueItemStruct QIS = new QueueItemStruct();
+
+            int i;
+            bool res;
+
+
+            QIS.ID = ID;
+            QIS.functionName = FunctionName;
+            QIS.llDetectParams = qParams;
+            QIS.param = param;
+            QIS.VersionID = VersionID;
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                ID.EventsProcData.EventsQueue.Clear();
+                if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
+                    ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+
+                i = 0;
+
+                while (i++ < 50)
+                    {
+                    try
+                        {
+                        res = EventSchProcessQIS(ref QIS);
+                        }
+                    catch
+                        {
+                        res = false;
+                        }
+                    if (res)
+                        Thread.Sleep(20);
+                    else
+                        break;
+                    }
+
+                ID.EventsProcDataLocked = false;
+                }
+            }
+
+        public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
+            {
+            QueueItemStruct QIS;
+
+            if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
+                return;
+
+            QIS = new QueueItemStruct();
+            QIS.ID = ID;
+            QIS.functionName = FunctionName;
+            QIS.llDetectParams = qParams;
+            QIS.param = param;
+            QIS.VersionID = VersionID;
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                if (!ID.InEventsProcData)
+                    {
+                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    ID.EventsProcData.thread = null;
+                    }
+
+                if (ID.EventsProcData.EventsQueue.Count > 100)
+                    {
+                    ID.EventsProcDataLocked = false;
+                    return;
+                    }
+
+                ID.EventsProcData.EventsQueue.Enqueue(QIS);
+
+                lock (ScriptIDs)
+                    {
+                    if (!ScriptIDs.Contains(ID))
+                        {
+                        ScriptIDs.AddLast(ID);
+                        ID.InEventsProcData = true;
+                        }
+                    }
+                ID.EventsProcDataLocked = false;
+                }
+
+            lock (WorkersLock)
+                {
+                if (WorkersLock.nWorkers < MaxScriptThreads)
+                    {
+                    WorkersLock.nWorkers++;
+                    threadpool.QueueEvent(loop, 2);
+                    }
+                }
+            }
+
+        public void AddEventSchQIS(QueueItemStruct QIS)
+            {
+            ScriptData ID;
+
+            if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
+                return;
+
+            ID = QIS.ID;
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                if (!ID.InEventsProcData)
+                    {
+                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    ID.EventsProcData.thread = null;
+                    }
+
+                if (ID.EventsProcData.EventsQueue.Count > 100)
+                    {
+                    ID.EventsProcDataLocked = false;
+                    return;
+                    }
+
+                ID.EventsProcData.EventsQueue.Enqueue(QIS);
+                lock (ScriptIDs)
+                    {
+                    if (!ScriptIDs.Contains(ID))
+                        {
+                        ScriptIDs.AddLast(ID);
+                        ID.InEventsProcData = true;
+                        }
+                    }
+                ID.EventsProcDataLocked = false;
+                }
+
+            lock (WorkersLock)
+                {
+                if (WorkersLock.nWorkers < MaxScriptThreads)
+                    {
+                    WorkersLock.nWorkers++;
+                    threadpool.QueueEvent(loop, 2);
+                    }
+                }
+            }
+
+        public bool loop()
+            {
+            ScriptData ID;
+            ScriptData doID;
+            DateTime Tnow;
+            TimeSpan ToSleep;
+            bool waslocked;
+            bool WillSleep;
+
+            while (true)
+                {
+                // check one sleeper
+
+                waslocked = false;
+
+                ID = null;
+                lock (SleepingScriptIDs)
+                    {
+                    if (SleepingScriptIDs.Count > 0)
+                        {
+                        ID = SleepingScriptIDs.First.Value;
+                        SleepingScriptIDs.RemoveFirst();
+                        }
+                    }
+
+                if (ID != null)
+                    {
+                    if (ID.EventsProcDataLocked)
+                        {
+                        lock (SleepingScriptIDs)
+                            {
+                            SleepingScriptIDs.AddLast(ID);
+                            waslocked = true;
+                            }
+                        }
+                    else
+                        {
+                        lock (ID.EventsProcData)
+                            {
+                            ID.EventsProcDataLocked = true;
+
+                            // check if we still can exec
+                            if (!ID.InEventsProcData || ID.Suspended || ID.Script == null || ID.Loading || ID.Disabled)
+                                {
+                                // forget this one
+                                ID.InEventsProcData = false;
+                                }
+
+                            else if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
+                                {
+                                Tnow = DateTime.Now;
+                                ToSleep = ID.EventsProcData.TimeCheck.Subtract(Tnow);
+
+                                if (ToSleep.TotalMilliseconds < 0)
+                                    {
+                                    ID.EventsProcData.State = (int)ScriptEventsState.Running;
+                                    ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(100);
+                                    lock (ScriptIDs)
+                                        {
+                                        ScriptIDs.AddLast(ID);
+                                        }
+                                    }
+                                else
+                                    {
+                                    lock (SleepingScriptIDs)
+                                        {
+                                        SleepingScriptIDs.AddLast(ID);
+                                        }
+                                    }
+                                }
+                            ID.EventsProcDataLocked = false;
+                            }
+                        }
+                    }
+
+                // check one active
+
+                doID = null;
+                ID = null;
+
+                lock (ScriptIDs)
+                    {
+                    if (ScriptIDs.Count > 0)
+                        {
+                        ID = ScriptIDs.First.Value;
+                        ScriptIDs.RemoveFirst();
+                        }
+                    }
+
+                if (ID != null)
+                    {
+                    if (ID.EventsProcDataLocked)
+                        {
+                        ScriptIDs.AddLast(ID);
+                        waslocked = true;
+                        }
+                    else
+                        {
+                        lock (ID.EventsProcData)
+                            {
+                            ID.EventsProcDataLocked = true;
+
+                            // check if we still can exec
+                            if (!ID.InEventsProcData || ID.Suspended || ID.Script == null || ID.Loading || ID.Disabled)
+                                {
+                                // forget this one
+                                ID.InEventsProcData = false;
+                                ID.EventsProcDataLocked = false;
+                                }
+                            else
+                                {
+
+                                switch (ID.EventsProcData.State)
+                                    {
+                                    case (int)ScriptEventsState.Running:
+
+                                        ID.EventsProcData.State = (int)ScriptEventsState.InExec;
+                                        ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(100);
+                                        doID = ID;
+                                        lock (ScriptIDs)
+                                            {
+                                            ScriptIDs.AddLast(ID);
+                                            }
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+
+                                    case (int)ScriptEventsState.Sleep:
+
+                                        Tnow = DateTime.Now;
+                                        ToSleep = ID.EventsProcData.TimeCheck.Subtract(Tnow);
+
+                                        if (ToSleep.TotalMilliseconds < 0)
+                                            {
+                                            ID.EventsProcData.State = (int)ScriptEventsState.Running;
+                                            lock (ScriptIDs)
+                                                {
+                                                ScriptIDs.AddLast(ID);
+                                                }
+                                            }
+                                        else
+                                            {
+                                            lock (SleepingScriptIDs)
+                                                {
+                                                SleepingScriptIDs.AddLast(ID);
+                                                }
+                                            }
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+
+                                    case (int)ScriptEventsState.Idle:
+
+                                        if (ID.EventsProcData.EventsQueue.Count > 0)
+                                            {
+                                            ID.EventsProcData.CurExecQIS = (QueueItemStruct)ID.EventsProcData.EventsQueue.Dequeue();
+                                            if (ID.VersionID == ID.EventsProcData.CurExecQIS.VersionID)
+                                                {
+                                                ID.EventsProcData.State = (int)ScriptEventsState.InExec;
+                                                ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(200);
+                                                doID = ID;
+                                                }
+                                            lock (ScriptIDs)
+                                                {
+                                                ScriptIDs.AddLast(ID);
+                                                }
+                                            }
+                                        else
+                                            ID.InEventsProcData = false;
+
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+
+                                    case (int)ScriptEventsState.InExec:
+                                    case (int)ScriptEventsState.InExecAbort:
+                                        //                            if (Tnow < Ev.TimeCheck)
+                                        lock (ScriptIDs)
+                                            {
+                                            ScriptIDs.AddLast(ID);
+                                            }
+                                        //                            else
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+
+                                    case (int)ScriptEventsState.Delete:
+
+                                        lock (ScriptIDs)
+                                            {
+                                            ID.EventsProcData.EventsQueue.Clear();
+                                            ID.InEventsProcData = false;
+                                            }
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+
+                                    default:
+                                        ID.EventsProcDataLocked = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                if (doID != null)
+                    {
+                    try
+                        {
+                        EventSchExec(ID);
+                        }
+                    catch
+                        {
+                        lock (doID.EventsProcData)
+                            {
+                            doID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                            }
+                        }
+                    }
+
+                if (waslocked)
+                    {
+                    Thread.Sleep(20);
+                    continue;
+                    }
+
+                WillSleep = false;
+
+                lock (ScriptIDs)
+                    {
+                    if (ScriptIDs.Count == 0)
+                        {
+                        lock (SleepingScriptIDs)
+                            {
+                            lock (WorkersLock)
+                                {
+                                if (SleepingScriptIDs.Count < WorkersLock.nWorkers)
+                                    break;
+                                else
+                                    WillSleep = true;
+                                }
+                            }
+                        }
+                    }
+
+                if (WillSleep)
+                    Thread.Sleep(20);
+                }
+
+            Interlocked.Decrement(ref WorkersLock.nWorkers);
+
+            return false;
+            }
+
+        public void EventSchExec(ScriptData ID)
+            {
+            QueueItemStruct QIS;
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                QIS = ID.EventsProcData.CurExecQIS;
+                if (!ID.Running)
+                    {
+                    //do only state_entry and on_rez
+                    if (QIS.functionName != "state_entry"
+                        || QIS.functionName != "on_rez")
+                        {
+                        ID.EventsProcDataLocked = false;
+                        return;
+                        }
+                    }
+                ID.EventsProcData.thread = Thread.CurrentThread;
+                ID.EventsProcDataLocked = false;
+                }
+
+            bool res = EventSchProcessQIS(ref QIS);
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcDataLocked = true;
+                ID.EventsProcData.thread = null;
+
+                if (!res || ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort || ID.VersionID != QIS.VersionID)
+                    {
+                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    ID.EventsProcDataLocked = false;
+                    return;
+                    }
+
+                ID.EventsProcData.CurExecQIS = QIS;
+
+                if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
+                    {
+                    ID.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
+                    ID.EventsProcData.State = (int)ScriptEventsState.Sleep;
+                    }
+                else
+                    ID.EventsProcData.State = (int)ScriptEventsState.Running;
+                ID.EventsProcDataLocked = false;
+                return;
+                }
+
+            return;
+            }
+
+        public bool EventSchProcessQIS(ref QueueItemStruct QIS)
+            {
+            try
+                {
+                Exception ex = null;
+                EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.ID.State,
+                            QIS.functionName,
+                            QIS.param, QIS.CurrentlyAt, out ex);
+                if (QIS.ID.VersionID != QIS.VersionID)
+                    return false;
+
+                if (ex != null)
+                    {
+                    //Check exceptions, some are ours to deal with, and others are to be logged
+                    if (ex is SelfDeleteException)
+                        {
+                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                            QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
+                                QIS.ID.part.ParentGroup, false, true);
+                        }
+                    else if (ex is ScriptDeleteException)
+                        {
+                        if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
+                            QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
+                        }
+                    //Log it for the user
+                    else if (!(ex is EventAbortException) &&
+                        !(ex is MinEventDelayException))
+                        QIS.ID.DisplayUserNotification(ex.Message, "", false, true);
+                    return false;
+                    }
+                else if (Running != null)
+                    {
+                    //Did not finish so requeue it
+                    QIS.CurrentlyAt = Running;
+                    return true; //Do the return... otherwise we open the queue for this event back up
+                    }
+                }
+            catch (Exception ex)
+                {
+                //Error, tell the user
+                QIS.ID.DisplayUserNotification(ex.Message, "executing", false, true);
+                }
+            //Tell the event manager about it so that the events will be removed from the queue
+            EventManager.EventComplete(QIS);
+            return false;
+            }
+
+        #endregion
         }
     }
-}

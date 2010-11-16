@@ -329,6 +329,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Continued = 2
     }
 
+    public enum ScriptEventsState : int
+        {
+        Idle = 0,
+        Sleep = 1,
+        Suspended = 2,
+        Running = 3, //?
+        InExec = 4,
+        InExecAbort = 5,
+        Delete = 6,
+        Deleted = -1 //?
+        }
+
+    public class ScriptEventsProcData
+        {
+        public int State;
+        public QueueItemStruct CurExecQIS;
+        public Thread thread;
+        public DateTime TimeCheck;
+        public Queue EventsQueue = new Queue(10);
+        }
+
     public enum LoadPriority : int
     {
         FirstStart = 0,

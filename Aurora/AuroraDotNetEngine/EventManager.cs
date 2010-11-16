@@ -958,6 +958,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return false;
             }
             scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
+
+    // this must be done even if there is no event method
+
+            if (eventType == scriptEvents.touch_start)
+                ID.RemoveTouchEvents = false;
+            else if (eventType == scriptEvents.collision_start)
+                ID.RemoveCollisionEvents = false;
+            else if (eventType == scriptEvents.land_collision_start)
+                ID.RemoveLandCollisionEvents = false;
+
+
             if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
                 return false; //If the script doesn't contain the state, don't even bother queueing it
             
@@ -1009,10 +1020,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!ID.MovingInQueue) //If we get a moving_end after we have sent one event, don't fire another
                     return false;
             }
-            else if (eventType == scriptEvents.collision_start)
-            {
-                ID.RemoveCollisionEvents = false;
-            }
             else if (eventType == scriptEvents.collision_end)
             {
                 if (ID.RemoveCollisionEvents)
@@ -1025,10 +1032,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 ID.TouchInQueue = true;
             }
-            else if (eventType == scriptEvents.touch_start)
-            {
-                ID.RemoveTouchEvents = false;
-            }
             else if (eventType == scriptEvents.touch_end)
             {
                 if (ID.RemoveTouchEvents)
@@ -1040,10 +1043,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return false;
 
                 ID.LandCollisionInQueue = true;
-            }
-            else if (eventType == scriptEvents.land_collision_start)
-            {
-                ID.RemoveLandCollisionEvents = false;
             }
             else if (eventType == scriptEvents.land_collision_end)
             {
@@ -1083,6 +1082,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else if (QIS.functionName == "moving_end")
                 QIS.ID.MovingInQueue = false;
             else if (QIS.functionName == "touch")
+                QIS.ID.TouchInQueue = false;
+            else if (QIS.functionName == "touch_end")
                 QIS.ID.TouchInQueue = false;
             else if (QIS.functionName == "land_collision")
                 QIS.ID.LandCollisionInQueue = false;

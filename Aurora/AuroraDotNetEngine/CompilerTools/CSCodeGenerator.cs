@@ -1508,7 +1508,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for GlobalFunctionDefinition gf.</returns>
         private string GenerateGlobalFunctionDefinition(GlobalFunctionDefinition gf)
         {
-            string retstr = "";
+            StringBuilder retstr = new StringBuilder();
 
             // we need to separate the argument declaration list from other kids
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
@@ -1533,18 +1533,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
              */
 
 
-            retstr += GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf);
+            retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
 
 //            LocalMethods.Add(CheckName(gf.Name), gf.ReturnType);
             IsParentEnumerable = true;
 
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr += GenerateArgumentDeclarationList((ArgumentDeclarationList)kid);
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
 
-            retstr += GenerateLine(")");
+            retstr.Append(GenerateLine(")"));
             foreach (SYMBOL kid in remainingKids)
-                retstr += GenerateNode(kid);
+                retstr.Append(GenerateNode(kid));
+
+            if (gf.ReturnType == "void")
+                {
+                int i;
+                for (i = 1; i < 5; i++)
+                    {
+                    if (retstr[retstr.Length - i] == '}')
+                        {
+                        retstr.Insert(retstr.Length - i, GenerateLine("\n    yield break;\n"));
+                        break;
+                        }
+                    }
+                }
+
             IsParentEnumerable = false;
             return retstr.ToString();
         }
@@ -1688,7 +1702,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for StateEvent se.</returns>
         private string GenerateStateEvent(StateEvent se, string parentStateName)
         {
-            string retstr = "";
+            StringBuilder retstr = new System.Text.StringBuilder();
 
             // we need to separate the argument declaration list from other kids
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
@@ -1701,18 +1715,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     remainingKids.Add(kid);
 
             // "state" (function) declaration
-            retstr += GenerateIndented(String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se);
+            retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se));
 
             IsParentEnumerable = true;
 
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr += GenerateArgumentDeclarationList((ArgumentDeclarationList)kid);
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
 
-            retstr += GenerateLine(")");
+            retstr.Append(GenerateLine(")"));
 
             foreach (SYMBOL kid in remainingKids)
-                retstr += GenerateNode(kid);
+                retstr.Append(GenerateNode(kid));
+
+            if (retstr[retstr.Length - 2] == '}')
+                retstr.Insert(retstr.Length - 2,GenerateLine("    yield break;"));
+
 
             return retstr.ToString();
         }
@@ -1770,8 +1788,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // opening brace
             retstr += GenerateIndentedLine("{");
-            if (IsParentEnumerable)
-                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+//            if (IsParentEnumerable)
+//                retstr += GenerateLine("if (CheckSlice()) yield return null;");
             m_braceCount++;
 
             foreach (SYMBOL kid in cs.kids)
@@ -2036,6 +2054,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             string retstr = "";
             string tmpstr = "";
+            bool DoBrace = false;
             bool marc = FuncCallsMarc();
             tmpstr += GenerateIndented("if (", ifs);
             tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
@@ -2046,19 +2065,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
 
-            bool indentHere = ifs.kids.Top is Statement;
-            if (indentHere) m_braceCount++;
+//            bool indentHere = ifs.kids.Top is Statement;
+//            if (indentHere) m_braceCount++;
+            DoBrace = !(ifs.kids.Top is CompoundStatement);
+            if(DoBrace)
+                retstr += GenerateLine("{");
+
             retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
-            if (indentHere) m_braceCount--;
+//            if (indentHere) m_braceCount--;
+            if (DoBrace)
+                retstr += GenerateLine("}");
+
 
             if (0 < ifs.kids.Count) // do it again for an else
             {
                 retstr += GenerateIndentedLine("else", ifs);
 
-                indentHere = ifs.kids.Top is Statement;
-                if (indentHere) m_braceCount++;
+//                indentHere = ifs.kids.Top is Statement;
+//                if (indentHere) m_braceCount++;
+                DoBrace = !(ifs.kids.Top is CompoundStatement || ifs.kids.Top is IfStatement);
+                if (DoBrace)
+                    retstr += GenerateLine("{");
+
                 retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
-                if (indentHere) m_braceCount--;
+
+                if (DoBrace)
+                    retstr += GenerateLine("}");
+
+
+//                if (indentHere) m_braceCount--;
             }
 
             return retstr.ToString();

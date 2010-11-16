@@ -22,6 +22,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex);
         Dictionary<string, Object> GetVars();
         void SetVars(Dictionary<string, Object> vars);
+        Dictionary<string, Object> GetStoreVars();
+        void SetStoreVars(Dictionary<string, Object> vars);
         void ResetVars();
 
         void Close();

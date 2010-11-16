@@ -98,9 +98,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private bool InTimeSlice = false;
         private DateTime TimeSliceEnd = new DateTime();
         private DateTime TimeSliceStart = new DateTime();
-        private TimeSpan TimeSliceTotal = new TimeSpan();
 
-        private Double MaxTimeSlice = 25.0;    // script timeslice execution time in ms , hardwired for now
+        private Double MaxTimeSlice = 100;    // script timeslice execution time in ms , hardwired for now
   
 
         public Executor(IScript script)
@@ -164,10 +163,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void CloseTimeSlice()
         {
-            if (!InTimeSlice) //Make sure this hasn't already been called by another thread
-                return;
-
-            TimeSliceTotal += DateTime.Now - TimeSliceStart;
             InTimeSlice = false;
         }
 
@@ -227,44 +222,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public EnumeratorInfo FireAsEnumerator(EnumeratorInfo Start, MethodInfo ev, object[] args, out Exception ex)
-        {
+            {
             IEnumerator thread = null;
 
+            OpenTimeSlice();
             bool running = true;
             ex = null;
 
             try
-            {
-                for(int i = 0; i < 5; i++) //We do 5 so that we do not kill the loops/queues above with many repeated event firings
                 {
-                    if (Start != null) //Make sure we have some info, otherwise start a new thread
+                if (Start != null)
                     {
-                        //Open the slice at the beginning of every iteration
-                        OpenTimeSlice();
-                        InTimeSlice = true;
-
-                        if (thread == null) //Only do this once
+                    lock (m_enumerators)
                         {
-                            lock (m_enumerators)
-                            {
-                                m_enumerators.TryGetValue(Start.Key, out thread);
-                            }
+                        m_enumerators.TryGetValue(Start.Key, out thread);
                         }
-                        if (thread != null) //Push the event forward
-                            running = thread.MoveNext();
-
-                        if (!running) //Break out of the loop as we are done
-                            break;
-
-                        //Close the time slice at the end of every enumeration
-                        CloseTimeSlice();
+                    if (thread != null)
+                        running = thread.MoveNext();
                     }
-                    else
-                        thread = (IEnumerator)ev.Invoke(m_Script, args);
+                else
+                    thread = (IEnumerator)ev.Invoke(m_Script, args);
                 }
-            }
             catch (Exception tie)
-            {
+                {
                 // Grab the inner exception and rethrow it, unless the inner
                 // exception is an EventAbortException as this indicates event
                 // invocation termination due to a state change.
@@ -277,46 +257,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         !(tie is EventAbortException))
                     ex = tie;
                 if (Start != null)
-                {
-                    lock (m_enumerators)
                     {
+                    lock (m_enumerators)
+                        {
                         m_enumerators.Remove(Start.Key);
+                        }
                     }
-                }
-                InTimeSlice = false;
+                CloseTimeSlice();
                 return null;
-            }
+                }
 
             if (running && thread != null)
-            {
-                if (Start == null)
                 {
+                if (Start == null)
+                    {
                     Start = new EnumeratorInfo();
                     Start.Key = System.Guid.NewGuid();
-                }
+                    }
                 lock (m_enumerators)
-                {
+                    {
                     m_enumerators[Start.Key] = thread;
-                }
+                    }
 
                 if (thread.Current is DateTime)
                     Start.SleepTo = (DateTime)thread.Current;
+                CloseTimeSlice();
                 return Start;
-            }
+                }
             else
-            {
+                {
                 //No enumerator.... errr.... something went really wrong here
                 if (Start != null)
-                {
-                    lock (m_enumerators)
                     {
+                    lock (m_enumerators)
+                        {
                         m_enumerators.Remove(Start.Key);
+                        }
                     }
-                }
                 CloseTimeSlice();
                 return null;
+                }
             }
-        }
 
 
         protected void initEventFlags()

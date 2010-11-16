@@ -152,6 +152,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
 
+        public bool EventsProcDataLocked = false;
+        public bool InEventsProcData = false;
+        public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
+
         #endregion
 
         #region Close Script
@@ -162,6 +166,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="Silent">Should we back up this script and fire state_exit?</param>
         public void CloseAndDispose(bool Silent)
         {
+
+// this is still broken
+
             if (!Silent)
             {
                 if (Script != null)
@@ -182,7 +189,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
             VersionID += 5;
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+//            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
             //Give the user back any controls we took
             ReleaseControls();
 
@@ -284,7 +291,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Release controls over people.
             ReleaseControls();
             //Remove other items from the queue.
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+
+            m_ScriptEngine.MaintenanceThread.ResetEventSchQueue(this);
+//            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+
             VersionID++;
             //Reset the state to default
             State = "default";
@@ -317,6 +327,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         internal void ChangeState(string state)
         {
+
+// still broken
+
             if (State != state)
             {
                 m_ScriptEngine.AddToScriptQueue(this, "state_exit",
@@ -330,7 +343,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 RemoveTouchEvents = true;
 
                 //Wipe out old events
-                m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+//                m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
                 VersionID++;
 
                 //Tell the SOP about the change.

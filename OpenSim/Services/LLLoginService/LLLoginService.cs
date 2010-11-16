@@ -543,7 +543,18 @@ namespace OpenSim.Services.LLLoginService
                     avatar = m_AvatarService.GetAvatar(account.PrincipalID);
                     if (avatar == null)
                     {
-                        m_log.Error("[LLLOGINSERVICE]: CANNOT FIND AVATAR APPEARANCE " + account.FirstName + " " + account.LastName);
+                        m_log.Error("[LLLOGINSERVICE]: CANNOT FIND AVATAR APPEARANCE " + account.FirstName + " " + account.LastName + ", SETTING TO DEFAULT");
+                        if (m_DefaultUserAvatarArchive != "")
+                        {
+                            archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, firstName, lastName);
+                        }
+                        else
+                        {
+                            AvatarAppearance appearance = new AvatarAppearance();
+                            appearance.SetDefaultWearables();
+                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
+                        }
+                        avatar = m_AvatarService.GetAvatar(account.PrincipalID);
                     }
                 }
 
@@ -1159,7 +1170,13 @@ namespace AvatarArchives
 
             string FolderNameToLoadInto = "";
 
-            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(file));
+            OSD m = OSDParser.DeserializeLLSDXml(file);
+            if (m.Type != OSDType.Map)
+            {
+                m_log.Warn("[AvatarArchiver]: Failed to load AA from " + FileName + ", text: " + file);
+                return;
+            }
+            OSDMap map = ((OSDMap)m);
 
             OSDMap assetsMap = ((OSDMap)map["Assets"]);
             OSDMap itemsMap = ((OSDMap)map["Items"]);

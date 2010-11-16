@@ -640,8 +640,10 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     //Set the parent prim
                     part.SetParent(this);
-                    if(m_rootPart.LocalId != 0 && !part.IsRoot)
+                    if (m_rootPart.LocalId != 0 && !part.IsRoot)
                         part.SetParentLocalId(m_rootPart.LocalId);
+                    else
+                        part.SetParentLocalId(0);
 
                     //Fix the link num
                     part.LinkNum = m_partsList.Count;
@@ -1516,15 +1518,14 @@ namespace OpenSim.Region.Framework.Scenes
                             "[SCENE]: Storing {0}, {1} in {2} at {3}",
                             Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString());
 
-                    SceneObjectGroup backup_group = Copy(OwnerID, GroupID, false, false, Scene, false);
+                    SceneObjectGroup backup_group = (SceneObjectGroup)base.Copy();
                     //Do this we don't try to re-persist to the DB
                     backup_group.m_isLoaded = false;
                     backup_group.RootPart.Velocity = RootPart.Velocity;
                     backup_group.RootPart.Acceleration = RootPart.Acceleration;
                     backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
                     backup_group.RootPart.ParticleSystem = RootPart.ParticleSystem;
-                    HasGroupChanged = false;
-
+                    
                     datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
 
                     //Backup inventory, no lock as this isn't added ANYWHERE but here
@@ -1533,6 +1534,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.Inventory.ProcessInventoryBackup(datastore);
                     }
 
+                    HasGroupChanged = false;
                     backup_group = null;
                     return true;
                 }
