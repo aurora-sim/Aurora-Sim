@@ -6842,7 +6842,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.AddNewParticleSystem(prules);
                 part.ParentGroup.HasGroupChanged = true;
             }
-            part.SendFullUpdateToAllClients(PrimUpdateFlags.Particles);
+            part.ScheduleFullUpdate(PrimUpdateFlags.Particles);
         }
 
         public void llGroundRepel(double height, int water, double tau)

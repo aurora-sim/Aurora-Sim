@@ -5027,7 +5027,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if ((updateFlags & CompressedFlags.HasParticles) != 0)
             {
                 if (part.ParticleSystem.Length == 0)
-                    updateFlags = updateFlags &~ CompressedFlags.HasParticles;
+                {
+                    Primitive.ParticleSystem Sys = new Primitive.ParticleSystem();
+                    byte[] pdata = Sys.GetBytes();
+                    Buffer.BlockCopy(pdata, 0, objectData, i, pdata.Length);
+                    i += pdata.Length; //86
+                    //updateFlags = updateFlags & ~CompressedFlags.HasParticles;
+                }
                 else
                 {
                     Buffer.BlockCopy(part.ParticleSystem, 0, objectData, i, part.ParticleSystem.Length);
