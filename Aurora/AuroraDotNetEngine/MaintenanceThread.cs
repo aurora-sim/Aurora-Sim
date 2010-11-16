@@ -269,7 +269,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             catch (Exception ex)
             {
                 EventProcessorIsRunning = false;
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.ToString(), m_ScriptEngine.ScriptEngineName);
+                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
             }
             EventProcessorIsRunning = false;
             return SendUpSleepRequest;
@@ -639,7 +639,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                     ID.EventsProcData.State = (int)ScriptEventsState.Idle;
                     ID.EventsProcData.thread = null;
-                    ID.InEventsProcData = true;
                     }
 
                 if (ID.EventsProcData.EventsQueue.Count > 100)
@@ -649,9 +648,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
 
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
+
                 lock (ScriptIDs)
                     {
-                    ScriptIDs.AddLast(ID);
+                    if (!ScriptIDs.Contains(ID))
+                        {
+                        ScriptIDs.AddLast(ID);
+                        ID.InEventsProcData = true;
+                        }
                     }
                 ID.EventsProcDataLocked = false;
                 }
@@ -682,7 +686,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                     ID.EventsProcData.State = (int)ScriptEventsState.Idle;
                     ID.EventsProcData.thread = null;
-                    ID.InEventsProcData = true;
                     }
 
                 if (ID.EventsProcData.EventsQueue.Count > 100)
@@ -694,7 +697,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
                 lock (ScriptIDs)
                     {
-                    ScriptIDs.AddLast(ID);
+                    if (!ScriptIDs.Contains(ID))
+                        {
+                        ScriptIDs.AddLast(ID);
+                        ID.InEventsProcData = true;
+                        }
                     }
                 ID.EventsProcDataLocked = false;
                 }
@@ -910,7 +917,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                     }
                 if (doID != null)
-                    EventSchExec(ID);
+                    {
+                    try
+                        {
+                        EventSchExec(ID);
+                        }
+                    catch
+                        {
+                        lock (doID.EventsProcData)
+                            {
+                            doID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                            }
+                        }
+                    }
 
                 if (waslocked)
                     {
