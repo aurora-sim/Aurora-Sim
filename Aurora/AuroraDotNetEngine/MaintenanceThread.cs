@@ -875,10 +875,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                 ID.EventsProcData.State = (int)ScriptEventsState.InExec;
                                                 ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(200);
                                                 doID = ID;
-                                                lock (ScriptIDs)
-                                                    {
-                                                    ScriptIDs.AddLast(ID);
-                                                    }
+                                                }
+                                            lock (ScriptIDs)
+                                                {
+                                                ScriptIDs.AddLast(ID);
                                                 }
                                             }
                                         else
