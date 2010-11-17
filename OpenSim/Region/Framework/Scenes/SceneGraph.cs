@@ -1580,6 +1580,8 @@ namespace OpenSim.Region.Framework.Scenes
             EntityBase copiedEntity = entity.Copy();
             //Add the entity to the scene and back it up
             AddPrimToScene(copiedEntity);
+            //Fix physics representation now
+            entity.RebuildPhysicalRepresentation();
             return copiedEntity;
         }
 

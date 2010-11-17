@@ -218,6 +218,10 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void ClearUndoState()
         {
         }
+
+        public virtual void RebuildPhysicalRepresentation()
+        {
+        }
     }
 
     //Nested Classes

@@ -1056,6 +1056,21 @@ namespace OpenSim.Region.Framework.Scenes
             m_backingup = true; //Clear out all other threads
             ProcessPrimBackupTaints(true);
 
+            //Now make sure that we delete any prims sitting around
+            lock (m_needsDeleted)
+            {
+                if (m_needsDeleted.Count != 0)
+                {
+                    //Removes all objects in one SQL query
+                    foreach (UUID id in m_needsDeleted)
+                    {
+                        SimulationDataService.RemoveObject(id, RegionInfo.RegionID);
+                    }
+                    //m_scene.DataStore.RemoveObjects(m_scene.m_needsDeleted);
+                    m_needsDeleted.Clear();
+                }
+            }
+
             m_sceneGraph.Close();
 
             //Deregister from the grid server

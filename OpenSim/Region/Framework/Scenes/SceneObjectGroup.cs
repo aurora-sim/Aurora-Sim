@@ -1584,24 +1584,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             partList.Sort(LinkSetCompare);
 
-            /*if (dupe.RootPart.PhysActor != null)
-            {
-                PrimitiveBaseShape pbs = dupe.RootPart.Shape;
-                dupe.RootPart.PhysActor.LocalID = dupe.RootPart.LocalId;
-
-                dupe.RootPart.PhysActor.PIDTarget = RootPart.PhysActor.PIDTarget;
-                dupe.RootPart.PhysActor.PIDTau = RootPart.PhysActor.PIDTau;
-                dupe.RootPart.PhysActor.PIDActive = RootPart.PhysActor.PIDActive;
-
-                if (dupe.RootPart.VolumeDetectActive)
-                    dupe.RootPart.PhysActor.SetVolumeDetect(1);
-
-                dupe.RootPart.PhysActor.Selected = false;
-
-                dupe.RootPart.ScriptSetPhysicsStatus(dupe.RootPart.PhysActor.IsPhysical);
-
-            }*/
-
             foreach (SceneObjectPart part in partList)
             {
                 if (part.UUID != m_rootPart.UUID)
@@ -1616,6 +1598,41 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_isLoaded = true;
 
             return dupe;
+        }
+
+        public override void RebuildPhysicalRepresentation()
+        {
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                if (part.PhysActor != null)
+                {
+                    PhysicsActor oldActor = part.PhysActor;
+                    PrimitiveBaseShape pbs = part.Shape;
+
+                    part.PhysActor
+                        = m_scene.PhysicsScene.AddPrimShape(
+                            string.Format("{0}/{1}", part.Name, part.UUID),
+                            pbs,
+                            part.AbsolutePosition,
+                            part.Scale,
+                            part.RotationOffset,
+                            part.PhysActor.IsPhysical);
+
+                    part.PhysActor.LocalID = part.LocalId;
+                    part.DoPhysicsPropertyUpdate(oldActor.IsPhysical, true);
+
+                    part.PhysActor.PIDTarget = oldActor.PIDTarget;
+                    part.PhysActor.PIDTau = oldActor.PIDTau;
+                    part.PhysActor.PIDActive = oldActor.PIDActive;
+
+                    if (part.VolumeDetectActive)
+                        part.PhysActor.SetVolumeDetect(1);
+
+                    part.PhysActor.Selected = false;
+
+                    part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
+                }
+            }
         }
 
         public int LinkSetCompare(SceneObjectPart p1, SceneObjectPart p2)
