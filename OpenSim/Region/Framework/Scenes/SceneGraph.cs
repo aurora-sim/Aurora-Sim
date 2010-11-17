@@ -1401,7 +1401,6 @@ namespace OpenSim.Region.Framework.Scenes
                     g.TriggerScriptChangedEvent(Changed.LINK);
                     g.HasGroupChanged = true; // Persist
                     g.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-                    g.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
                 foreach (SceneObjectPart part in prims)
                 {
@@ -1647,6 +1646,18 @@ namespace OpenSim.Region.Framework.Scenes
             m_numPrim += entity.ChildrenEntities().Count;
             //Now save the entity that we have 
             return AddEntity(entity, false);
+        }
+
+        internal void DelinkPartToScene(EntityBase entity)
+        {
+            //Force the prim to backup now that it has been added
+            entity.ForcePersistence();
+            //Tell the entity that they are being added to a scene
+            entity.AttachToScene(m_parentScene);
+            //Update our prim count
+            m_numPrim += entity.ChildrenEntities().Count;
+            //Now save the entity that we have 
+            AddEntity(entity, false);
         }
 
         /// <summary>
