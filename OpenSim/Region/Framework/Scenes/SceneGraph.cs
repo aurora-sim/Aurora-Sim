@@ -39,6 +39,8 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
+    #region Delegates
+
     public delegate void PhysicsCrash();
 
     public delegate void ObjectDuplicateDelegate(EntityBase original, EntityBase clone);
@@ -47,12 +49,16 @@ namespace OpenSim.Region.Framework.Scenes
 
     public delegate void ObjectDeleteDelegate(EntityBase obj);
 
+    #endregion
+
     /// <summary>
     /// This class used to be called InnerScene and may not yet truly be a SceneGraph.  The non scene graph components
     /// should be migrated out over time.
     /// </summary>
     public class SceneGraph
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         #region Events
@@ -93,14 +99,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Object m_updateLock = new Object();
 
-        #endregion
-
-        protected internal SceneGraph(Scene parent, RegionInfo regInfo)
-        {
-            m_parentScene = parent;
-            m_regInfo = regInfo;
-        }
-
         public PhysicsScene PhysicsScene
         {
             get { return _PhyScene; }
@@ -108,6 +106,18 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 _PhyScene = value;
             }
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Constructor and close
+
+        protected internal SceneGraph(Scene parent, RegionInfo regInfo)
+        {
+            m_parentScene = parent;
+            m_regInfo = regInfo;
         }
 
         protected internal void Close()
@@ -122,6 +132,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             Entities.Clear();
         }
+
+        #endregion
 
         #region Update Methods
 
@@ -451,6 +463,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Update user counts for this agent
+        /// </summary>
+        /// <param name="direction_RC_CR_T_F">If true, add a child agent to the count, remove a child agent.
+        /// If false, add a root agent, subtract a child agent</param>
         protected internal void SwapRootChildAgent(bool direction_RC_CR_T_F)
         {
             if (direction_RC_CR_T_F)
@@ -465,6 +482,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Remove a user from the count
+        /// </summary>
+        /// <param name="TypeRCTF">If true, remove a root agent. If false, remove a child agent.</param>
         public void removeUserCount(bool TypeRCTF)
         {
             if (TypeRCTF)
@@ -477,6 +498,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Force the rebuilding of the child and root agent stats
+        /// </summary>
         public void RecalculateStats()
         {
             int rootcount = 0;
@@ -494,6 +518,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_numChildAgents = childcount;
         }
 
+        /// <summary>
+        /// Get the number of child agents in this region
+        /// </summary>
+        /// <returns></returns>
         public int GetChildAgentCount()
         {
             // some network situations come in where child agents get closed twice.
@@ -505,6 +533,10 @@ namespace OpenSim.Region.Framework.Scenes
             return m_numChildAgents;
         }
 
+        /// <summary>
+        /// Get the number of root agents in this sim
+        /// </summary>
+        /// <returns></returns>
         public int GetRootAgentCount()
         {
             return m_numRootAgents;
@@ -618,14 +650,11 @@ namespace OpenSim.Region.Framework.Scenes
             return (avatar != null);
         }
 
-        protected internal Dictionary<uint, SceneObjectGroup> SceneObjectGroupsByLocalID = new Dictionary<uint, SceneObjectGroup>();
-        
         /// <summary>
         /// Get a scene object group that contains the prim with the given uuid
         /// </summary>
         /// <param name="fullID"></param>
         /// <returns>null if no scene object group containing that prim is found</returns>
-
         protected internal EntityIntersection GetClosestIntersectingPrim(Ray hray, bool frontFacesOnly, bool faceCenters)
         {
             // Primitive Ray Tracing
@@ -651,6 +680,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Get a named prim contained in this scene (will return the first 
         /// found, if there are more than one prim with the same name)
+        /// Do NOT use this method! This is only kept around so that NINJA physics is not broken
         /// </summary>
         /// <param name="name"></param>
         /// <returns>null if the part was not found</returns>
@@ -722,7 +752,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Other Methods
+        #region ForEach* Methods
 
         /// <summary>
         /// Performs action on all scene object groups.
@@ -746,7 +776,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        
         /// <summary>
         /// Performs action on all scene presences. This can ultimately run the actions in parallel but
         /// any delegates passed in will need to implement their own locking on data they reference and
@@ -787,7 +816,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+        #endregion ForEach* Methods
 
         #region Client Event handlers
 
@@ -1515,7 +1544,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
 
         #region New Scene Entity Manager Code
 

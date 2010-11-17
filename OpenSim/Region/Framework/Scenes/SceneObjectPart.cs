@@ -2405,69 +2405,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (UsePhysics)
                 {
-                    // by turning a joint proxy object physical, we cause creation of a joint in the ODE scene.
-                    // note that, as a special case, joints have no bodies or geoms in the physics scene, even though they are physical.
-
-                    PhysicsJointType jointType;
-                    if (IsHingeJoint())
-                    {
-                        jointType = PhysicsJointType.Hinge;
-                    }
-                    else if (IsBallJoint())
-                    {
-                        jointType = PhysicsJointType.Ball;
-                    }
-                    else
-                    {
-                        jointType = PhysicsJointType.Ball;
-                    }
-
-                    List<string> bodyNames = new List<string>();
-                    string RawParams = Description;
-                    string[] jointParams = RawParams.Split(" ".ToCharArray(), System.StringSplitOptions.RemoveEmptyEntries);
-                    string trackedBodyName = null;
-                    if (jointParams.Length >= 2)
-                    {
-                        for (int iBodyName = 0; iBodyName < 2; iBodyName++)
-                        {
-                            string bodyName = jointParams[iBodyName];
-                            bodyNames.Add(bodyName);
-                            if (bodyName != "NULL")
-                            {
-                                if (trackedBodyName == null)
-                                {
-                                    trackedBodyName = bodyName;
-                                }
-                            }
-                        }
-                    }
-
-                    SceneObjectPart trackedBody = m_parentGroup.Scene.GetSceneObjectPart(trackedBodyName); // FIXME: causes a sequential lookup
-                    Quaternion localRotation = Quaternion.Identity;
-                    if (trackedBody != null)
-                    {
-                        localRotation = Quaternion.Inverse(trackedBody.RotationOffset) * this.RotationOffset;
-                    }
-                    else
-                    {
-                        // error, output it below
-                    }
-
-                    PhysicsJoint joint;
-
-                    joint = m_parentGroup.Scene.PhysicsScene.RequestJointCreation(Name, jointType,
-                        AbsolutePosition,
-                        this.RotationOffset,
-                        Description,
-                        bodyNames,
-                        trackedBodyName,
-                        localRotation);
-
-                    if (trackedBody == null)
-                    {
-                        ParentGroup.Scene.jointErrorMessage(joint, "warning: tracked body name not found! joint location will not be updated properly. joint: " + Name);
-                    }
-
+                    ParentGroup.Scene.jointCreate(this);
                 }
                 else
                 {

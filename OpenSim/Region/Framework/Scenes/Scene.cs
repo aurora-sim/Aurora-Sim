@@ -4803,10 +4803,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Get a named prim contained in this scene (will return the first
         /// found, if there are more than one prim with the same name)
+        /// Do NOT use this method ever! This is only kept around so that NINJA physics is not broken
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public SceneObjectPart GetSceneObjectPart(string name)
+        private SceneObjectPart GetSceneObjectPart(string name)
         {
             return m_sceneGraph.GetSceneObjectPart(name);
         }
@@ -4962,6 +4963,72 @@ namespace OpenSim.Region.Framework.Scenes
                         jointProxyObject.ParentGroup.UpdateGroupRotationR(q); // schedules the entire group for a terse update
                     }
                     break;
+            }
+        }
+
+        protected internal void jointCreate(SceneObjectPart part)
+        {
+            // by turning a joint proxy object physical, we cause creation of a joint in the ODE scene.
+            // note that, as a special case, joints have no bodies or geoms in the physics scene, even though they are physical.
+
+            PhysicsJointType jointType;
+            if (part.IsHingeJoint())
+            {
+                jointType = PhysicsJointType.Hinge;
+            }
+            else if (part.IsBallJoint())
+            {
+                jointType = PhysicsJointType.Ball;
+            }
+            else
+            {
+                jointType = PhysicsJointType.Ball;
+            }
+
+            List<string> bodyNames = new List<string>();
+            string RawParams = part.Description;
+            string[] jointParams = RawParams.Split(" ".ToCharArray(), System.StringSplitOptions.RemoveEmptyEntries);
+            string trackedBodyName = null;
+            if (jointParams.Length >= 2)
+            {
+                for (int iBodyName = 0; iBodyName < 2; iBodyName++)
+                {
+                    string bodyName = jointParams[iBodyName];
+                    bodyNames.Add(bodyName);
+                    if (bodyName != "NULL")
+                    {
+                        if (trackedBodyName == null)
+                        {
+                            trackedBodyName = bodyName;
+                        }
+                    }
+                }
+            }
+
+            SceneObjectPart trackedBody = GetSceneObjectPart(trackedBodyName); // FIXME: causes a sequential lookup
+            Quaternion localRotation = Quaternion.Identity;
+            if (trackedBody != null)
+            {
+                localRotation = Quaternion.Inverse(trackedBody.RotationOffset) * part.RotationOffset;
+            }
+            else
+            {
+                // error, output it below
+            }
+
+            PhysicsJoint joint;
+
+            joint = PhysicsScene.RequestJointCreation(part.Name, jointType,
+                part.AbsolutePosition,
+                part.RotationOffset,
+                part.Description,
+                bodyNames,
+                trackedBodyName,
+                localRotation);
+
+            if (trackedBody == null)
+            {
+                jointErrorMessage(joint, "warning: tracked body name not found! joint location will not be updated properly. joint: " + part.Name);
             }
         }
 
