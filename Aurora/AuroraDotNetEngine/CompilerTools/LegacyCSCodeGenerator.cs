@@ -96,6 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             DTFunctions.Add("llTeleportAgentHome");
             DTFunctions.Add("llTextBox");
             DTFunctions.Add("osTeleportAgent");
+            DTFunctions.Add("osTeleportOwner");
             ResetCounters();
         }
 

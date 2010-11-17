@@ -176,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             }
         }
         
-        protected void OnSceneObjectPartCopy(SceneObjectPart copy, SceneObjectPart original, bool userExposed)
+        protected void OnSceneObjectPartCopy(SceneObjectPart copy, SceneObjectPart original)
         {
             if (original.Shape.Media != null)
             {

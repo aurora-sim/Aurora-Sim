@@ -555,6 +555,7 @@ namespace OpenSim.Framework
                         {
                             y = -1;
                         }
+                        string commandLine = cmdline.ToString();
 
                         if (isCommand)
                         {
@@ -564,7 +565,7 @@ namespace OpenSim.Framework
                                 System.Console.Clear();
                                 return String.Empty;
                             }
-                            string[] cmd = Commands.Resolve(Parser.Parse(cmdline.ToString()));
+                            string[] cmd = Commands.Resolve(Parser.Parse(commandLine));
 
                             if (cmd.Length != 0)
                             {
@@ -575,12 +576,15 @@ namespace OpenSim.Framework
                                     if (cmd[i].Contains(" "))
                                         cmd[i] = "\"" + cmd[i] + "\"";
                                 }
-                                AddToHistory(String.Join(" ", cmd));
-                                return String.Empty;
                             }
+                            AddToHistory(commandLine);
+                            return string.Empty;
                         }
 
-                        //AddToHistory(cmdline.ToString());
+                        // If we're not echoing to screen (e.g. a password) then we probably don't want it in history
+                        if (echo && commandLine != "")
+                            AddToHistory(commandLine);
+
                         return cmdline.ToString();
                     default:
                         break;

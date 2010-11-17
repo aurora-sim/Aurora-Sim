@@ -241,7 +241,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (renderMesh == null)
                 return;
 
-            warp_Vector primPos = ConvertVector(prim.AbsolutePosition);
+            warp_Vector primPos = ConvertVector(prim.GetWorldPosition());
             warp_Quaternion primRot = ConvertQuaternion(prim.RotationOffset);
 
             warp_Matrix m = warp_Matrix.quaternionMatrix(primRot);

@@ -87,13 +87,19 @@ namespace OpenSim.Region.CoreModules.World.Sound
         {
             client.OnSoundTrigger -= TriggerSound;
         }
-        
+
         public virtual void PlayAttachedSound(
             UUID soundID, UUID ownerID, UUID objectID, double gain, Vector3 position, byte flags, float radius)
         {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            if (part == null)
+                return;
+
+            SceneObjectGroup grp = part.ParentGroup;
+
             ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
             bool LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
-            
+
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
                 if (Cones.Count != 0)
@@ -103,7 +109,6 @@ namespace OpenSim.Region.CoreModules.World.Sound
                         if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) > CS.Radius)
                         {
                             // Presence is outside of the Cone of silence
-
                             if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
                             {
                                 //Sound was triggered inside the cone, but avatar is outside
@@ -121,29 +126,38 @@ namespace OpenSim.Region.CoreModules.World.Sound
                         }
                     }
                 }
-                else
+                if (sp.IsChildAgent)
+                    return;
+
+                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                if (dis > 100.0) // Max audio distance
+                    return;
+
+                /*if (grp.IsAttachment)
                 {
-                    if (sp.IsChildAgent)
-                        return;
+                    if (grp.GetAttachmentPoint() > 30) // HUD
+                    {
+                        if (sp.ControllingClient.AgentId != grp.OwnerID)
+                            return;
+                    }
 
-                    double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                    if (dis > 100.0) // Max audio distance
-                        return;
+                    if (sp.ControllingClient.AgentId == grp.OwnerID)
+                        dis = 0;
+                }*/
 
-                    //Check to see if the person is local and the av is in the same parcel
-                    if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
-                        return;
+                //Check to see if the person is local and the av is in the same parcel
+                if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
+                    return;
 
-                    // Scale by distance
-                    if (radius == 0)
-                        gain = (float)((double)gain * ((100.0 - dis) / 100.0));
-                    else
-                        gain = (float)((double)gain * ((radius - dis) / radius));
+                // Scale by distance
+                if (radius == 0)
+                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
+                else
+                    gain = (float)((double)gain * ((radius - dis) / radius));
 
-                    if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
-                        flags += (int)OpenMetaverse.SoundFlags.Queue;
-                    sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
-                }
+                if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
+                    flags += (int)OpenMetaverse.SoundFlags.Queue;
+                sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
             });
         }
 
@@ -181,6 +195,24 @@ namespace OpenSim.Region.CoreModules.World.Sound
             bool LocalOnly = false;
             if (ILO != null) //Check only if null, otherwise this breaks megaregions
                 LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+
+            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            if (part == null)
+            {
+                ScenePresence sp;
+                if (!m_scene.TryGetScenePresence(objectID, out sp))
+                    return;
+            }
+            else
+            {
+                SceneObjectGroup grp = part.ParentGroup;
+
+                if (grp.IsAttachment && grp.GetAttachmentPoint() > 30)
+                {
+                    objectID = ownerID;
+                    parentID = ownerID;
+                }
+            }
 
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {

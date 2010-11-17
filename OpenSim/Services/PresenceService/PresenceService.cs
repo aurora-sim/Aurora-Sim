@@ -47,22 +47,29 @@ namespace OpenSim.Services.PresenceService
 
         private IGridService m_GridService;
 
+        protected bool m_allowDuplicatePresences = false;
+
         public PresenceService(IConfigSource config)
             : base(config)
         {
             IConfig presenceConfig = config.Configs["PresenceService"];
-            string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
-            if (gridServiceDll != string.Empty)
-                m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
-
+            if (presenceConfig != null)
+            {
+                m_allowDuplicatePresences =
+                       presenceConfig.GetBoolean("AllowDuplicatePresences",
+                                                 m_allowDuplicatePresences);
+                string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
+                if (gridServiceDll != string.Empty)
+                    m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
+            }
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
         }
 
         public bool LoginAgent(string userID, UUID sessionID,
                 UUID secureSessionID)
         {
-            //PresenceData[] d = m_Database.Get("UserID", userID);
-            //m_Database.Get("UserID", userID);
+            if (!m_allowDuplicatePresences)
+                m_Database.Delete("UserID", userID.ToString());
 
             PresenceData data = new PresenceData();
 

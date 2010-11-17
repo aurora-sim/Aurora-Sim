@@ -210,9 +210,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public string GetStats()
         {
-            // TODO: ???
-            return string.Format("{0,7} {1,7} {2,7} {3,7} {4,7} {5,7} {6,7} {7,7} {8,7} {9,7}",
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            return string.Format(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}",
+                PacketsSent,
+                PacketsReceived,
+                UnackedBytes,
+                m_throttleCategories[(int)ThrottleOutPacketType.Resend].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Land].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Wind].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Cloud].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Task].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Texture].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.Asset].Content,
+                m_throttleCategories[(int)ThrottleOutPacketType.State].Content);
         }
 
         public void SendPacketStats()

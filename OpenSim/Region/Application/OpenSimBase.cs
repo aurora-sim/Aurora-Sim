@@ -808,9 +808,11 @@ namespace OpenSim
                     MainConsole.Instance.Output("show assets - Show asset information");
                     MainConsole.Instance.Output("show connections - Show connection data");
                     MainConsole.Instance.Output("show users - Show all users connected");
-                    MainConsole.Instance.Output("show users full - Show all users connected, including child agents");
+                    MainConsole.Instance.Output("show users [full] - Without the 'full' option, only users actually on the region are shown."
+                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
                     MainConsole.Instance.Output("show regions - Show all regions");
-                    MainConsole.Instance.Output("show queues - Show queue info");
+                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
+                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
                     MainConsole.Instance.Output("show maturity - Show region maturity levels");
                     MainConsole.Instance.Output("set log level [level] - Change the console logging level only.  For example, off or debug.");
                     MainConsole.Instance.Output("show info - Show server information (e.g. startup path).");
@@ -891,7 +893,7 @@ namespace OpenSim
 					break;
 
 				case "queues":
-					m_console.Output((GetQueuesReport()));
+                    m_console.Output((GetQueuesReport(showParams)));
 					break;
 
 				case "maturity":
@@ -914,12 +916,87 @@ namespace OpenSim
 		/// print UDP Queue data for each client
 		/// </summary>
 		/// <returns></returns>
-		private string GetQueuesReport()
+        private string GetQueuesReport(string[] showParams)
 		{
-			string report = String.Empty;
-			m_sceneManager.ForEachScene(delegate(Scene scene) { scene.ForEachClient(delegate(IClientAPI client) {if (client is IStatsCollector) {report = report + client.FirstName + " " + client.LastName;IStatsCollector stats = (IStatsCollector)client;report = report + string.Format("{0,7} {1,7} {2,7} {3,7} {4,7} {5,7} {6,7} {7,7} {8,7} {9,7}\n", "Send", "In", "Out", "Resend", "Land", "Wind", "Cloud", "Task", "Texture","Asset");report = report + stats.Report() + "\n";}}); });
+            bool showChildren = false;
 
-			return report;
+            if (showParams.Length > 1 && showParams[1] == "full")
+                showChildren = true;
+
+			StringBuilder report = new StringBuilder();
+
+            int columnPadding = 2;
+            int maxNameLength = 18;
+            int maxRegionNameLength = 14;
+            int maxTypeLength = 4;
+            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding + maxTypeLength + columnPadding;
+
+            report.AppendFormat("{0,-" + maxNameLength +  "}{1,-" + columnPadding + "}", "User", "");
+            report.AppendFormat("{0,-" + maxRegionNameLength +  "}{1,-" + columnPadding + "}", "Region", "");
+            report.AppendFormat("{0,-" + maxTypeLength +  "}{1,-" + columnPadding + "}", "Type", "");
+
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Packets",
+                "Packets",
+                "Packets",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes");
+
+            report.AppendFormat("{0,-" + totalInfoFieldsLength +  "}", "");
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Out",
+                "In",
+                "Unacked",
+                "Resend",
+                "Land",
+                "Wind",
+                "Cloud",
+                "Task",
+                "Texture",
+                "Asset",
+                "State");
+
+            m_sceneManager.ForEachScene(
+                delegate(Scene scene)
+                {
+                    scene.ForEachClient(
+                        delegate(IClientAPI client)
+                        {
+                            if (client is IStatsCollector)
+                            {
+                                bool isChild = scene.PresenceChildStatus(client.AgentId);
+                                if (isChild && !showChildren)
+                                    return;
+
+                                string name = client.Name;
+                                string regionName = scene.RegionInfo.RegionName;
+
+                                report.AppendFormat(
+                                    "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
+                                    name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
+                                report.AppendFormat(
+                                    "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
+                                    regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
+                                report.AppendFormat(
+                                    "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
+                                    isChild ? "Child" : "Root", "");
+
+                                IStatsCollector stats = (IStatsCollector)client;
+
+                                report.AppendLine(stats.Report());
+                            }
+                        });
+                });
+
+            return report.ToString();
 		}
 
 		/// <summary>

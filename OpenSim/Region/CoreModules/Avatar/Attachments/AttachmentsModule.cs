@@ -283,6 +283,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 if (objatt != null)
                 {
+                    // Loading the inventory from XML will have set this, but
+                    // there is no way the object could have changed yet,
+                    // since scripts aren't running yet. So, clear it here.
+                    objatt.HasGroupChanged = false;
                     bool tainted = false;
                     if (AttachmentPt != 0 && AttachmentPt != objatt.GetAttachmentPoint())
                         tainted = true;
@@ -489,7 +493,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         //Update the saved attach points
                         group.RootPart.SavedAttachedPos = group.RootPart.AttachedPos;
                         group.RootPart.SavedAttachmentPoint = group.RootPart.AttachmentPoint;
-                        
+
+                        // If an item contains scripts, it's always changed.
+                        // This ensures script state is saved on detach
+                        foreach (SceneObjectPart p in group.Parts)
+                            if (p.Inventory.ContainsScripts())
+                                group.HasGroupChanged = true;
+
                         UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
                         
                         m_scene.DeleteSceneObject(group, false, true);
@@ -529,7 +539,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <param name="grp"></param>
         /// <param name="itemID"></param>
         /// <param name="agentID"></param>
-        protected void UpdateKnownItem(IClientAPI remoteClient, SceneObjectGroup grp, UUID itemID, UUID agentID)
+        public void UpdateKnownItem(IClientAPI remoteClient, SceneObjectGroup grp, UUID itemID, UUID agentID)
         {
             if (grp != null)
             {

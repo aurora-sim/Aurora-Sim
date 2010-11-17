@@ -2320,7 +2320,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this, userExposed);
+            ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this);
 
 //            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
 

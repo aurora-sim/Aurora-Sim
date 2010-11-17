@@ -1272,7 +1272,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (SceneObjectGroup child in childGroups)
                 {
-                    parentGroup.LinkToGroup(child, true);
+                    parentGroup.LinkToGroup(child);
 
                     // this is here so physics gets updated!
                     // Don't remove!  Bad juju!  Stay away! or fix physics!

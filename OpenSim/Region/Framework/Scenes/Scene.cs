@@ -174,6 +174,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_lastUpdate;
 
         private object m_deleting_scene_object = new object();
+        private object m_cleaningAttachments = new object();
 
         // the minimum time that must elapse before a changed object will be considered for persisted
         public long m_dontPersistBefore = DEFAULT_MIN_TIME_FOR_PERSISTENCE;
@@ -2707,6 +2708,41 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        public void CleanDroppedAttachments()
+        {
+            List<SceneObjectGroup> objectsToDelete =
+                    new List<SceneObjectGroup>();
+
+            lock (m_cleaningAttachments)
+            {
+                ForEachSOG(delegate(SceneObjectGroup grp)
+                {
+                    if (grp.RootPart.Shape.PCode == 0 && grp.RootPart.Shape.State != 0 && (!objectsToDelete.Contains(grp)))
+                    {
+                        UUID agentID = grp.OwnerID;
+                        if (agentID == UUID.Zero)
+                        {
+                            objectsToDelete.Add(grp);
+                            return;
+                        }
+
+                        ScenePresence sp = GetScenePresence(agentID);
+                        if (sp == null)
+                        {
+                            objectsToDelete.Add(grp);
+                            return;
+                        }
+                    }
+                });
+            }
+
+            foreach (SceneObjectGroup grp in objectsToDelete)
+            {
+                m_log.InfoFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
+                DeleteSceneObject(grp, true, true);
+            }
+        }
+
         /// <summary>
         /// Move the given scene object into a new region depending on which region its absolute position has moved
         /// into.
@@ -4087,6 +4123,8 @@ namespace OpenSim.Region.Framework.Scenes
                         catch (NullReferenceException) { }
                     });
 
+                CleanDroppedAttachments();
+
                 IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
                 if (agentTransactions != null)
                 {
@@ -4179,6 +4217,23 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
         public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
+        {
+            return NewUserConnection(agent, teleportFlags, out reason, true);
+        }
+
+        /// <summary>
+        /// Do the work necessary to initiate a new user connection for a particular scene.
+        /// At the moment, this consists of setting up the caps infrastructure
+        /// The return bool should allow for connections to be refused, but as not all calling paths
+        /// take proper notice of it let, we allowed banned users in still.
+        /// </summary>
+        /// <param name="agent">CircuitData of the agent who is connecting</param>
+        /// <param name="reason">Outputs the reason for the false response on this string</param>
+        /// <param name="requirePresenceLookup">True for normal presence. False for NPC
+        /// or other applications where a full grid/Hypergrid presence may not be required.</param>
+        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
+        /// also return a reason.</returns>
+        public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason, bool requirePresenceLookup)
         {
             bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 ||
                              (teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0);
@@ -4277,6 +4332,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (vialogin) 
             {
+                CleanDroppedAttachments();
                 if (TestBorderCross(agent.startpos, Cardinals.E))
                 {
                     Border crossedBorder = GetCrossedBorder(agent.startpos, Cardinals.E);
@@ -4409,6 +4465,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence
+            
             ScenePresence childAgentUpdate = WaitGetScenePresence(cAgentData.AgentID);
             if (childAgentUpdate != null)
             {

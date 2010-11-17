@@ -3589,8 +3589,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
-                    attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
+                    Util.FireAndForget(DetachWrapper, m_host);
             }
+        }
+
+        private void DetachWrapper(object o)
+        {
+            SceneObjectPart host = (SceneObjectPart)o;
+
+            SceneObjectGroup grp = host.ParentGroup;
+            UUID itemID = grp.GetFromItemID();
+            ScenePresence presence = World.GetScenePresence(host.OwnerID);
+
+            IAttachmentsModule attachmentsModule = World.AttachmentsModule;
+            if (attachmentsModule != null)
+                attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
         }
 
         public void llTakeCamera(string avatar)
@@ -4204,7 +4217,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     childPrim = m_host.ParentGroup;
                 }
 //                byte uf = childPrim.RootPart.UpdateFlag;
-                parentPrim.LinkToGroup(childPrim, true);
+                parentPrim.LinkToGroup(childPrim);
 //                if (uf != (Byte)0)
 //                    parent.RootPart.UpdateFlag = uf;
             }
@@ -4294,7 +4307,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     parts.Remove(newRoot);
                     foreach (SceneObjectPart part in parts)
                     {
-                        newRoot.ParentGroup.LinkToGroup(part.ParentGroup, true);
+                        newRoot.ParentGroup.LinkToGroup(part.ParentGroup);
                     }
                     newRoot.ParentGroup.HasGroupChanged = true;
                     newRoot.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);

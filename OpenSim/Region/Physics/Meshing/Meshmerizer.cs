@@ -31,13 +31,16 @@ using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO.Compression;
 using PrimMesher;
 using log4net;
 using Nini.Config;
 using System.Reflection;
 using System.IO;
+using ComponentAce.Compression.Libs.zlib;
 
 namespace OpenSim.Region.Physics.Meshing
 {
@@ -72,6 +75,7 @@ namespace OpenSim.Region.Physics.Meshing
 
         private bool cacheSculptMaps = true;
         private string decodedSculptMapPath = null;
+        private bool useMeshiesPhysicsMesh = false;
 
         private float minSizeForComplexMesh = 0.2f; // prims with all dimensions smaller than this will have a bounding box mesh
 
@@ -81,8 +85,9 @@ namespace OpenSim.Region.Physics.Meshing
         {
             IConfig start_config = config.Configs["Meshing"];
 
-            decodedSculptMapPath = start_config.GetString("DecodedSculptMapPath","j2kDecodeCache");
+            decodedSculptMapPath = start_config.GetString("DecodedSculptMapPath", "j2kDecodeCache");
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
+            useMeshiesPhysicsMesh = start_config.GetBoolean("UseMeshiesPhysicsMesh", useMeshiesPhysicsMesh);
 
             try
             {
@@ -266,10 +271,114 @@ namespace OpenSim.Region.Physics.Meshing
             {
                 if (((OpenMetaverse.SculptType)primShape.SculptType) == SculptType.Mesh)
                 {
-                    // add code for mesh physics proxy generation here
-                    m_log.Debug("[MESH]: mesh proxy generation not implemented yet ");
-                    return null;
+                    if (!useMeshiesPhysicsMesh)
+                        return null;
 
+                    m_log.Debug("[MESH]: experimental mesh proxy generation");
+
+                    OSD meshOsd;
+
+                    if (primShape.SculptData.Length <= 0)
+                    {
+                        m_log.Error("[MESH]: asset data is zero length");
+                        return null;
+                    }
+
+                    long start = 0;
+                    using (MemoryStream data = new MemoryStream(primShape.SculptData))
+                    {
+                        meshOsd = (OSDMap)OSDParser.DeserializeLLSDBinary(data);
+                        start = data.Position;
+                    }
+
+                    if (meshOsd is OSDMap)
+                    {
+                        OSDMap map = (OSDMap)meshOsd;
+                        OSDMap physicsParms = (OSDMap)map["physics_shape"];
+                        int physOffset = physicsParms["offset"].AsInteger() + (int)start;
+                        int physSize = physicsParms["size"].AsInteger();
+
+                        if (physOffset < 0 || physSize == 0)
+                            return null; // no mesh data in asset
+
+                        OSD decodedMeshOsd = new OSD();
+                        byte[] meshBytes = new byte[physSize];
+                        System.Buffer.BlockCopy(primShape.SculptData, physOffset, meshBytes, 0, physSize);
+                        byte[] decompressed = new byte[physSize * 5];
+                        try
+                        {
+                            using (MemoryStream inMs = new MemoryStream(meshBytes))
+                            {
+                                using (MemoryStream outMs = new MemoryStream())
+                                {
+                                    using (ZOutputStream zOut = new ZOutputStream(outMs))
+                                    {
+                                        byte[] readBuffer = new byte[2048];
+                                        int readLen = 0;
+                                        while ((readLen = inMs.Read(readBuffer, 0, readBuffer.Length)) > 0)
+                                        {
+                                            zOut.Write(readBuffer, 0, readLen);
+                                        }
+                                        zOut.Flush();
+                                        outMs.Seek(0, SeekOrigin.Begin);
+
+                                        byte[] decompressedBuf = outMs.GetBuffer();
+
+                                        decodedMeshOsd = OSDParser.DeserializeLLSDBinary(decompressedBuf);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.Error("[MESH]: exception decoding physical mesh: " + e.ToString());
+                            return null;
+                        }
+
+                        OSDArray decodedMeshOsdArray = null;
+
+                        // physics_shape is an array of OSDMaps, one for each submesh
+                        if (decodedMeshOsd is OSDArray)
+                        {
+                            decodedMeshOsdArray = (OSDArray)decodedMeshOsd;
+                            foreach (OSD subMeshOsd in decodedMeshOsdArray)
+                            {
+                                if (subMeshOsd is OSDMap)
+                                {
+                                    OSDMap subMeshMap = (OSDMap)subMeshOsd;
+
+                                    OpenMetaverse.Vector3 posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
+                                    OpenMetaverse.Vector3 posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
+                                    ushort faceIndexOffset = (ushort)coords.Count;
+
+                                    byte[] posBytes = subMeshMap["Position"].AsBinary();
+                                    for (int i = 0; i < posBytes.Length; i += 6)
+                                    {
+                                        ushort uX = Utils.BytesToUInt16(posBytes, i);
+                                        ushort uY = Utils.BytesToUInt16(posBytes, i + 2);
+                                        ushort uZ = Utils.BytesToUInt16(posBytes, i + 4);
+
+                                        Coord c = new Coord(
+                                        Utils.UInt16ToFloat(uX, posMin.X, posMax.X) * size.X,
+                                        Utils.UInt16ToFloat(uY, posMin.Y, posMax.Y) * size.Y,
+                                        Utils.UInt16ToFloat(uZ, posMin.Z, posMax.Z) * size.Z);
+
+                                        coords.Add(c);
+                                    }
+
+                                    byte[] triangleBytes = subMeshMap["TriangleList"].AsBinary();
+                                    for (int i = 0; i < triangleBytes.Length; i += 6)
+                                    {
+                                        ushort v1 = (ushort)(Utils.BytesToUInt16(triangleBytes, i) + faceIndexOffset);
+                                        ushort v2 = (ushort)(Utils.BytesToUInt16(triangleBytes, i + 2) + faceIndexOffset);
+                                        ushort v3 = (ushort)(Utils.BytesToUInt16(triangleBytes, i + 4) + faceIndexOffset);
+                                        Face f = new Face(v1, v2, v3);
+                                        faces.Add(f);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -347,15 +456,12 @@ namespace OpenSim.Region.Physics.Meshing
                             sculptType = PrimMesher.SculptMesh.SculptType.plane;
                             break;
                     }
-                    //Break!
-                    if (idata == null)
-                        return null;
 
                     bool mirror = ((primShape.SculptType & 128) != 0);
                     bool invert = ((primShape.SculptType & 64) != 0);
 
                     sculptMesh = new PrimMesher.SculptMesh((Bitmap)idata, sculptType, (int)lod, false, mirror, invert);
-                    
+
                     idata.Dispose();
 
                     sculptMesh.DumpRaw(baseDir, primName, "primMesh");
@@ -414,7 +520,7 @@ namespace OpenSim.Region.Physics.Meshing
                 primMesh.pathCutBegin = pathBegin;
                 primMesh.pathCutEnd = pathEnd;
 
-                if (primShape.PathCurve == (byte)Extrusion.Straight || primShape.PathCurve == (byte) Extrusion.Flexible)
+                if (primShape.PathCurve == (byte)Extrusion.Straight || primShape.PathCurve == (byte)Extrusion.Flexible)
                 {
                     primMesh.twistBegin = primShape.PathTwistBegin * 18 / 10;
                     primMesh.twistEnd = primShape.PathTwist * 18 / 10;

@@ -330,10 +330,12 @@
       <Reference name="CSJ2K" path="../../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="Nini" path="../../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="log4net" path="../../../../bin/"/>
+      <Reference name="zlib.net" path="../../../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -1081,6 +1083,7 @@
       <Reference name="Aurora.Framework"/>
 
       <Reference name="GlynnTucker.Cache" path="../../../bin/"/>
+      <Reference name="zlib.net" path="../../../../bin/"/>
 
       <!-- For scripting in funny languages by default -->
       <Reference name="XMLRPC" path="../../../bin/"/>

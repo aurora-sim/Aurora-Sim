@@ -710,5 +710,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             return m_OSSL_Functions.osAddAgentToGroup(AgentID, GroupID, RequestedRoleID);
         }
+
+        public LSL_String osUnixTimeToTimestamp(long time)
+        {
+            return m_OSSL_Functions.osUnixTimeToTimestamp(time);
+        }
+
+        public DateTime osTeleportOwner(string regionName, vector position, vector lookat)
+        {
+            return m_OSSL_Functions.osTeleportOwner(regionName, position, lookat);
+        }
+
+        public DateTime osTeleportOwner(int regionX, int regionY, vector position, vector lookat)
+        {
+            return m_OSSL_Functions.osTeleportOwner(regionX, regionY, position, lookat);
+        }
+
+        public DateTime osTeleportOwner(vector position, vector lookat)
+        {
+            return m_OSSL_Functions.osTeleportOwner(position, lookat);
+        }
     }
 }

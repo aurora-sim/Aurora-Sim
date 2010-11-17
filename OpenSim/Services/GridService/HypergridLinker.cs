@@ -44,7 +44,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.GridService
 {
-    public class HypergridLinker 
+    public class HypergridLinker
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -98,7 +98,7 @@ namespace OpenSim.Services.GridService
 
         public HypergridLinker(IConfigSource config, GridService gridService, IRegionData db)
         {
-            //m_log.DebugFormat("[HYPERGRID LINKER]: Starting with db {0}", db.GetType());
+            m_log.DebugFormat("[HYPERGRID LINKER]: Starting with db {0}", db.GetType());
 
             m_Database = db;
             m_GridService = gridService;
@@ -121,7 +121,7 @@ namespace OpenSim.Services.GridService
 
                 m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
 
-                //m_log.DebugFormat("[HYPERGRID LINKER]: Loaded all services...");
+                m_log.DebugFormat("[HYPERGRID LINKER]: Loaded all services...");
             }
 
             if (MainConsole.Instance != null)
@@ -153,6 +153,11 @@ namespace OpenSim.Services.GridService
 
         // From the command line link-region
         public GridRegion TryLinkRegionToCoords(UUID scopeID, string mapName, int xloc, int yloc, out string reason)
+        {
+            return TryLinkRegionToCoords(scopeID, mapName, xloc, yloc, UUID.Zero, out reason);
+        }
+
+        public GridRegion TryLinkRegionToCoords(UUID scopeID, string mapName, int xloc, int yloc, UUID ownerID, out string reason)
         {
             reason = string.Empty;
             string host = "127.0.0.1";
@@ -189,7 +194,7 @@ namespace OpenSim.Services.GridService
             //}
 
             GridRegion regInfo;
-            bool success = TryCreateLink(scopeID, xloc, yloc, regionName, port, host, out regInfo, out reason);
+            bool success = TryCreateLink(scopeID, xloc, yloc, regionName, port, host, ownerID, out regInfo, out reason);
             if (success)
             {
                 regInfo.RegionName = mapName;
@@ -202,7 +207,8 @@ namespace OpenSim.Services.GridService
 
         // From the command line and the 2 above
         public bool TryCreateLink(UUID scopeID, int xloc, int yloc,
-            string externalRegionName, uint externalPort, string externalHostName, out GridRegion regInfo, out string reason)
+            string externalRegionName, uint externalPort, string externalHostName, UUID ownerID,
+            out GridRegion regInfo, out string reason)
         {
             m_log.DebugFormat("[HYPERGRID LINKER]: Link to {0}:{1}:{2}, in {3}-{4}", externalHostName, externalPort, externalRegionName, xloc, yloc);
 
@@ -214,11 +220,21 @@ namespace OpenSim.Services.GridService
             regInfo.RegionLocX = xloc;
             regInfo.RegionLocY = yloc;
             regInfo.ScopeID = scopeID;
+            regInfo.EstateOwner = ownerID;
 
             // Big HACK for Simian Grid !!!
             // We need to clean up all URLs used in OpenSim !!!
             if (externalHostName.Contains("/"))
                 regInfo.ServerURI = externalHostName;
+
+            // Check for free coordinates
+            GridRegion region = m_GridService.GetRegionByPosition(regInfo.ScopeID, regInfo.RegionLocX, regInfo.RegionLocY);
+            if (region != null)
+            {
+                m_log.WarnFormat("[HYPERGRID LINKER]: Coordinates {0}-{1} are already occupied by region {2} with uuid {3}", regInfo.RegionLocX, regInfo.RegionLocY, region.RegionName, region.RegionID);
+                reason = "Coordinates are already in use";
+                return false;
+            }
 
             try
             {
@@ -241,11 +257,11 @@ namespace OpenSim.Services.GridService
 
             if (regionID != UUID.Zero)
             {
-                GridRegion r = m_GridService.GetRegionByUUID(scopeID, regionID);
-                if (r != null)
+                region = m_GridService.GetRegionByUUID(scopeID, regionID);
+                if (region != null)
                 {
-                    m_log.DebugFormat("[HYPERGRID LINKER]: Region already exists in coordinates {0} {1}", r.RegionLocX / Constants.RegionSize, r.RegionLocY / Constants.RegionSize);
-                    regInfo = r;
+                    m_log.DebugFormat("[HYPERGRID LINKER]: Region already exists in coordinates {0} {1}", region.RegionLocX / Constants.RegionSize, region.RegionLocY / Constants.RegionSize);
+                    regInfo = region;
                     return true;
                 }
 
@@ -293,7 +309,7 @@ namespace OpenSim.Services.GridService
                 OpenSim.Data.RegionFlags rflags = (OpenSim.Data.RegionFlags)Convert.ToInt32(regions[0].Data["flags"]);
                 if ((rflags & OpenSim.Data.RegionFlags.Hyperlink) != 0)
                 {
-                    regInfo = new GridRegion(); 
+                    regInfo = new GridRegion();
                     regInfo.RegionID = regions[0].RegionID;
                     regInfo.ScopeID = m_ScopeID;
                 }
@@ -355,16 +371,14 @@ namespace OpenSim.Services.GridService
             {
                 // Check for regions which are not linked regions
                 List<GridRegion> hyperlinks = m_GridService.GetHyperlinks(m_ScopeID);
-                // would like to use .Except, but doesn't seem to exist
-                //IEnumerable<GridRegion> availableRegions = regions.Except(hyperlinks);
-                List<GridRegion> availableRegions = regions.FindAll(delegate(GridRegion region) 
+                List<GridRegion> availableRegions = new List<GridRegion>();
+                foreach (GridRegion r in regions)
                 {
-                    // Ewww! n^2
-                    if (hyperlinks.Find(delegate(GridRegion r) { return r.RegionID == region.RegionID; }) == null) // not hyperlink. good.
-                        return true;
-
-                    return false;
-                });
+                    if (!hyperlinks.Contains(r))
+                    {
+                        availableRegions.Add(r);
+                    }
+                }
                 if (availableRegions.Count == 0)
                     return false;
             }
@@ -529,7 +543,7 @@ namespace OpenSim.Services.GridService
                     xloc = xloc * (int)Constants.RegionSize;
                     yloc = yloc * (int)Constants.RegionSize;
                     string reason = string.Empty;
-                    if (TryCreateLink(UUID.Zero, xloc, yloc, "", externalPort, externalHostName, out regInfo, out reason))
+                    if (TryCreateLink(UUID.Zero, xloc, yloc, "", externalPort, externalHostName, UUID.Zero, out regInfo, out reason))
                     {
                         if (cmdparams.Length >= 5)
                         {
@@ -631,8 +645,7 @@ namespace OpenSim.Services.GridService
                 xloc = xloc * (int)Constants.RegionSize;
                 yloc = yloc * (int)Constants.RegionSize;
                 string reason = string.Empty;
-                if (TryCreateLink(UUID.Zero, xloc, yloc, "", externalPort,
-                                                     externalHostName, out regInfo, out reason))
+                if (TryCreateLink(UUID.Zero, xloc, yloc, "", externalPort, externalHostName, UUID.Zero, out regInfo, out reason))
                 {
                     regInfo.RegionName = config.GetString("localName", "");
                 }

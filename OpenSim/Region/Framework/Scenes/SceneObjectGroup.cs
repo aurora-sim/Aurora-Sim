@@ -555,7 +555,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(SceneObjectPart part, Scene scene) :this(scene)
         {
-            SetRootPart(part, false);
+            SetRootPart(part);
         }
 
         /// <summary>
@@ -563,7 +563,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, Scene scene) : this(scene)
         {
-            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName, scene), false);
+            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName, scene));
         }
 
         /// <summary>
@@ -1223,7 +1223,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Set a part to act as the root part for this scene object
         /// </summary>
         /// <param name="part"></param>
-        public void SetRootPart(SceneObjectPart part, bool UserExposed)
+        public void SetRootPart(SceneObjectPart part)
         {
             if (part == null)
                 throw new ArgumentNullException("Cannot give SceneObjectGroup a null root SceneObjectPart");
@@ -1638,17 +1638,6 @@ namespace OpenSim.Region.Framework.Scenes
         public int LinkSetCompare(SceneObjectPart p1, SceneObjectPart p2)
         {
             return p1.LinkNum.CompareTo(p2.LinkNum);
-        }
-
-        /// <summary>
-        /// Copy the given part as the root part of this scene object.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="cAgentID"></param>
-        /// <param name="cGroupID"></param>
-        public void CopyRootPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
-        {
-            SetRootPart(part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts, this), userExposed);
         }
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
@@ -2366,7 +2355,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Link the prims in a given group to this group
         /// </summary>
         /// <param name="objectGroup">The group of prims which should be linked to this group</param>
-        public void LinkToGroup(SceneObjectGroup objectGroup, bool UserExposed)
+        public void LinkToGroup(SceneObjectGroup objectGroup)
         {
             //m_log.DebugFormat(
             //    "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
@@ -2415,7 +2404,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
-                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++, true);
+                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
                     }
                 }
             }
@@ -2540,7 +2529,7 @@ namespace OpenSim.Region.Framework.Scenes
             return objectGroup;
         }
 
-        private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum, bool UserExposed)
+        private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum)
         {
             Quaternion parentRot = oldGroupRotation;
             Quaternion oldRot = part.RotationOffset;

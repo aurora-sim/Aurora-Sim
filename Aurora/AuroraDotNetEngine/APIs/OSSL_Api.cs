@@ -553,7 +553,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater", m_host, "OSSL");
 
-            
             if (m_host.ParentGroup != null)
             {
                 if (m_host.ParentGroup.RootPart != null)
@@ -563,6 +562,68 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        public DateTime TeleportAgent(UUID agentID, ulong regionHandle, Vector3 position, Vector3 lookAt)
+        {
+            ScenePresence presence = World.GetScenePresence(agentID);
+            if (presence != null)
+            {
+                // agent must be over owners land to avoid abuse
+                if (m_host.OwnerID
+                    == World.LandChannel.GetLandObject(
+                        presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                {
+                    presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
+
+                    World.RequestTeleportLocation(presence.ControllingClient,
+                        regionHandle,
+                        position,
+                        lookAt, (uint)TeleportFlags.ViaLocation);
+
+                    return PScriptSleep(5000);
+                }
+            }
+            return DateTime.Now;
+        }
+
+        public DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            // Threat level None because this is what can already be done with the World Map in the viewer
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
+
+            GridRegion regInfo;
+            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
+            // Try to link the region
+            if (regions != null && regions.Count > 0)
+            {
+                regInfo = regions[0];
+
+                ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
+            }
+            return DateTime.Now;
+        }
+
+        public DateTime osTeleportOwner(LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            return osTeleportOwner(World.RegionInfo.RegionName, position, lookat);
+        }
+
+        public DateTime osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
+
+            GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID, regionX, regionY);
+            // Try to link the region
+            if (regInfo != null)
+            {
+                ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
+            }
+            return DateTime.Now;
+        }
+
         // Teleport functions
         public DateTime osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
@@ -570,38 +631,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
 
-            
-            UUID agentId = new UUID();
-            if (UUID.TryParse(agent, out agentId))
+            UUID AgentID;
+            if (UUID.TryParse(agent, out AgentID))
             {
-                ScenePresence presence = World.GetScenePresence(agentId);
-                if (presence != null)
+                GridRegion regInfo;
+                List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
+                // Try to link the region
+                if (regions != null && regions.Count > 0)
                 {
-                    // agent must be over owners land to avoid abuse
-                    if (m_host.OwnerID
-                        == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
-                    {
+                    regInfo = regions[0];
 
-                        // Check for hostname , attempt to make a hglink
-                        // and convert the regionName to the target region
-                        if (regionName.Contains(".") && regionName.Contains(":"))
-                        {
-                            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
-                            // Try to link the region
-                            if (regions != null && regions.Count > 0)
-                            {
-                                GridRegion regInfo = regions[0];
-                                regionName = regInfo.RegionName;
-                            }
-                        }
-                        presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
-                        World.RequestTeleportLocation(presence.ControllingClient, regionName,
-                            new Vector3((float)position.x, (float)position.y, (float)position.z),
-                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), (uint)TPFlags.ViaLocation);
-
-                        return PScriptSleep(5000);
-                    }
+                    ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                    return TeleportAgent(AgentID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                 }
             }
             return DateTime.Now;
@@ -620,22 +662,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
             {
-                ScenePresence presence = World.GetScenePresence(agentId);
-                if (presence != null)
-                {
-                    // agent must be over owners land to avoid abuse
-                    if (m_host.OwnerID
-                        == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
-                    {
-                        presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
-                        World.RequestTeleportLocation(presence.ControllingClient, regionHandle,
-                            new Vector3((float)position.x, (float)position.y, (float)position.z),
-                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), (uint)TPFlags.ViaLocation);
-                        
-                        return PScriptSleep(5000);
-                    }
-                }
+                return TeleportAgent(agentId, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
             return DateTime.Now;
         }
@@ -2159,6 +2187,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos)
         {
             return m_LSL_Api.llRezPrim(inventory, pos, vel, rot, param, isRezAtRoot == 1, doRecoil == 1, SetDieAtEdge == 1, CheckPos == 1);
+        }
+
+        /// <summary>
+        /// Convert a unix time to a llGetTimestamp() like string
+        /// </summary>
+        /// <param name="unixTime"></param>
+        /// <returns></returns>
+        public LSL_String osUnixTimeToTimestamp(long time)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL");
+            long baseTicks = 621355968000000000;
+            long tickResolution = 10000000;
+            long epochTicks = (time * tickResolution) + baseTicks;
+            DateTime date = new DateTime(epochTicks);
+
+            return date.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
     }
 }
