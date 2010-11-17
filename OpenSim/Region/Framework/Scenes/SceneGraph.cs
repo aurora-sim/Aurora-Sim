@@ -1274,11 +1274,6 @@ namespace OpenSim.Region.Framework.Scenes
                     child.AbsolutePosition = child.AbsolutePosition;
                 }
 
-                foreach (SceneObjectGroup child in childGroups)
-                {
-                    DelinkEntity(child);
-                }
-
                 // We need to explicitly resend the newly link prim's object properties since no other actions
                 // occur on link to invoke this elsewhere (such as object selection)
                 parentGroup.RootPart.CreateSelected = true;
@@ -1385,7 +1380,7 @@ namespace OpenSim.Region.Framework.Scenes
                             newSet.RemoveAt(0);
 
                             foreach (SceneObjectPart newChild in newSet)
-                                newChild.UpdateFlag = InternalUpdateFlags.NoUpdate;
+                                newChild.ClearUpdateSchedule();
 
                             LinkObjects(newRoot, newSet);
                             if (!affectedGroups.Contains(newRoot.ParentGroup))
@@ -1547,8 +1542,33 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region New Scene Entity Manager Code
 
+        public bool LinkPartToSOG(SceneObjectGroup grp, SceneObjectPart part)
+        {
+            part.SetParentLocalId(grp.RootPart.LocalId);
+            part.SetParent(grp);
+            // Insert in terms of link numbers, the new links
+            // before the current ones (with the exception of 
+            // the root prim. Shuffle the old ones up
+            foreach (SceneObjectPart otherPart in grp.ChildrenList)
+            {
+                if (otherPart.LinkNum != 1)
+                {
+                    // Don't update root prim link number
+                    otherPart.LinkNum += grp.PrimCount;
+                }
+            }
+            part.LinkNum = 2;
+            grp.ClearUndoState();
+            return LinkPartToEntity(grp, part);
+        }
+
         #region Wrapper Methods
 
+        /// <summary>
+        /// Dupliate the entity and add it to the Scene
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public EntityBase DuplicateEntity(EntityBase entity)
         {
             //Make an exact copy of the entity
@@ -1558,20 +1578,53 @@ namespace OpenSim.Region.Framework.Scenes
             return copiedEntity;
         }
 
+        /// <summary>
+        /// Add the new part to the group in the EntityManager
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="part"></param>
+        /// <returns></returns>
         public bool LinkPartToEntity(EntityBase entity, ISceneEntity part)
         {
+            //Remove the entity so that we can rebuild
             RemoveEntity(entity);
             bool RetVal = entity.LinkChild(part);
             AddEntity(entity, false);
+            //Now that everything is linked, destroy the undo states because it will fry the link otherwise
+            entity.ClearUndoState();
             return RetVal;
         }
 
+        /// <summary>
+        /// Delinks the object from the group in the EntityManager
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="part"></param>
+        /// <returns></returns>
         public bool DeLinkPartFromEntity(EntityBase entity, ISceneEntity part)
         {
+            //Remove the entity so that we can rebuild
             RemoveEntity(entity);
             bool RetVal = entity.RemoveChild(part);
             AddEntity(entity, false);
+            //Now that everything is linked, destroy the undo states because it will fry the object otherwise
+            entity.ClearUndoState();
             return RetVal;
+        }
+
+        /// <summary>
+        /// THIS IS TO ONLY BE CALLED WHEN AN OBJECT UUID IS UPDATED!!!
+        /// This method is HIGHLY unsafe and destroys the integrity of the checks above!
+        /// This is NOT to be used lightly! Do NOT use this unless you have to!
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="newID">new UUID to set the root part to</param>
+        public void UpdateEntity(SceneObjectGroup entity, UUID newID)
+        {
+            RemoveEntity(entity);
+            //Set it to the root so that we don't create an infinite loop as the ONLY place this should be being called is from the setter in SceneObjectGroup.UUID
+            entity.RootPart.UUID = newID;
+            AddEntity(entity, false);
         }
 
         #endregion
@@ -1600,6 +1653,12 @@ namespace OpenSim.Region.Framework.Scenes
             return Entities.TryGetValue(LocalID, out entity);
         }
 
+        /// <summary>
+        /// Get a part (SceneObjectPart) from the EntityManager by LocalID
+        /// </summary>
+        /// <param name="LocalID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public bool TryGetPart(uint LocalID, out ISceneEntity entity)
         {
             EntityBase parent;
@@ -1612,6 +1671,12 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Get a part (SceneObjectPart) from the EntityManager by UUID
+        /// </summary>
+        /// <param name="ID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public bool TryGetPart(UUID ID, out ISceneEntity entity)
         {
             EntityBase parent;
@@ -1624,6 +1689,10 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Get this prim ready to add to the scene
+        /// </summary>
+        /// <param name="entity"></param>
         public void PrepPrimForAdditionToScene(EntityBase entity)
         {
             ResetEntityIDs(entity);
@@ -1648,7 +1717,12 @@ namespace OpenSim.Region.Framework.Scenes
             return AddEntity(entity, false);
         }
 
-        internal void DelinkPartToScene(EntityBase entity)
+        /// <summary>
+        /// Move this group from inside of another group into the Scene as a full member
+        ///  This does not reset IDs so that it is updated correctly in the client
+        /// </summary>
+        /// <param name="entity"></param>
+        public void DelinkPartToScene(EntityBase entity)
         {
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
@@ -1673,27 +1747,37 @@ namespace OpenSim.Region.Framework.Scenes
             return RemoveEntity(entity);
         }
 
-        public void DelinkEntity(EntityBase entity)
-        {
-            m_numPrim -= entity.ChildrenEntities().Count;
-        }
-
         #endregion
 
         #region Private Methods
 
+        /// <summary>
+        /// Remove this entity fully from the EntityManager
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         private bool RemoveEntity(EntityBase entity)
         {
             Entities.Remove(entity.UUID);
             return Entities.Remove(entity.LocalId);
         }
 
+        /// <summary>
+        /// Add this entity to the EntityManager
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="AllowUpdate"></param>
+        /// <returns></returns>
         private bool AddEntity(EntityBase entity, bool AllowUpdate)
         {
             Entities.Add(entity);
             return true;
         }
 
+        /// <summary>
+        /// Reset all of the UUID's, localID's, etc in this group (includes children)
+        /// </summary>
+        /// <param name="entity"></param>
         private void ResetEntityIDs(EntityBase entity)
         {
             List<ISceneEntity> children = entity.ChildrenEntities();

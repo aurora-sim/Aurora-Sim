@@ -567,7 +567,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessUpdateFlag(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.UpdateFlag = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
+            //obj.UpdateFlag = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
         }
 
         private static void ProcessSitTargetOrientation(SceneObjectPart obj, XmlTextReader reader)
@@ -1134,7 +1134,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             WriteShape(writer, sop.Shape, options);
 
             WriteVector(writer, "Scale", sop.Scale);
-            writer.WriteElementString("UpdateFlag", ((byte)sop.UpdateFlag).ToString());
+            writer.WriteElementString("UpdateFlag", ((byte)0).ToString());
             WriteQuaternion(writer, "SitTargetOrientation", sop.SitTargetOrientation);
             WriteVector(writer, "SitTargetPosition", sop.SitTargetPosition);
             WriteVector(writer, "SitTargetPositionLL", sop.SitTargetPositionLL);

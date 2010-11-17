@@ -1605,7 +1605,7 @@ namespace Aurora.Modules
         protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, bool silent)
         {
             bool successYN = false;
-            grp.RootPart.UpdateFlag = InternalUpdateFlags.NoUpdate;
+            grp.RootPart.ClearUpdateSchedule();
 
             if (destination != null)
             {

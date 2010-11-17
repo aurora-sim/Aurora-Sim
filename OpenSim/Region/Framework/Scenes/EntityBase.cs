@@ -214,6 +214,10 @@ namespace OpenSim.Region.Framework.Scenes
             entity = null;
             return false;
         }
+
+        public virtual void ClearUndoState()
+        {
+        }
     }
 
     //Nested Classes

@@ -574,6 +574,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_passTouches;
 
         private InternalUpdateFlags m_updateFlag;
+        private PrimUpdateFlags m_neededUpdateFlags = PrimUpdateFlags.None;
 
         private PhysicsActor m_physActor;
         protected Vector3 m_acceleration;
@@ -826,7 +827,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_currentMediaVersion; }
             set { m_currentMediaVersion = value; }
         }
-        private PrimUpdateFlags m_neededUpdateFlags = PrimUpdateFlags.None;
 
         public UUID CreatorID 
         {
@@ -1589,13 +1589,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
-        [XmlIgnore]
-        public InternalUpdateFlags UpdateFlag
-        {
-            get { return m_updateFlag; }
-            set { m_updateFlag = value; }
-        }
         
         /// <summary>
         /// Used for media on a prim.
@@ -1936,10 +1929,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Clear all pending updates of parts to clients
         /// </summary>
-        private void ClearUpdateSchedule()
+        public void ClearUpdateSchedule()
         {
             m_updateFlag = InternalUpdateFlags.NoUpdate;
             m_neededUpdateFlags = PrimUpdateFlags.None;
+        }
+
+        public void SetUpdateFlag(InternalUpdateFlags flag)
+        {
+            //Full update overrides all and no update overrides all
+            if (m_updateFlag != InternalUpdateFlags.FullUpdate ||
+                flag == InternalUpdateFlags.NoUpdate)
+                m_updateFlag = flag;
         }
 
         private void SendObjectPropertiesToClient(UUID AgentID)
@@ -3751,9 +3752,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Needs to be outside, otherwise compressed updates will be screwy with groups
             if (ParentGroup.ChildrenList.Count != 1)
                 UpdateFlags |= PrimUpdateFlags.ParentID;
-            
+           
             m_neededUpdateFlags |= UpdateFlags;
-
             m_updateFlag = InternalUpdateFlags.FullUpdate;
 
             //Experimental for now
@@ -4421,7 +4421,7 @@ namespace OpenSim.Region.Framework.Scenes
             _groupID = groupID;
             if (client != null)
                 GetProperties(client);
-            m_updateFlag = InternalUpdateFlags.FullUpdate;
+            ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>

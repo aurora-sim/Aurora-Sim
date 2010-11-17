@@ -2283,10 +2283,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_sceneGraph.LinkObjects(root, children);
-            foreach (SceneObjectPart part in root.ParentGroup.ChildrenList)
-            {
-                part.ClearUndoState();
-            }
         }
     }
 }

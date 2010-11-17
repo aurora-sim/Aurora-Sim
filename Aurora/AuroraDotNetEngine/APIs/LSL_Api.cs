@@ -4204,7 +4204,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     childPrim = m_host.ParentGroup;
                 }
 //                byte uf = childPrim.RootPart.UpdateFlag;
-                childPrim.RootPart.UpdateFlag = InternalUpdateFlags.NoUpdate;
                 parentPrim.LinkToGroup(childPrim, true);
 //                if (uf != (Byte)0)
 //                    parent.RootPart.UpdateFlag = uf;
@@ -4295,7 +4294,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     parts.Remove(newRoot);
                     foreach (SceneObjectPart part in parts)
                     {
-                        part.UpdateFlag = InternalUpdateFlags.NoUpdate;
                         newRoot.ParentGroup.LinkToGroup(part.ParentGroup, true);
                     }
                     newRoot.ParentGroup.HasGroupChanged = true;

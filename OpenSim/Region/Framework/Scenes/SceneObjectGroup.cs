@@ -422,12 +422,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_rootPart.UUID; }
             set 
             {
-                lock (m_partsLock)
-                {
-                    m_parts.Remove(m_rootPart.UUID);
-                    m_rootPart.UUID = value;
-                    m_parts.Add(m_rootPart.UUID, m_rootPart);
-                }
+                Scene.SceneGraph.UpdateEntity(this, value);
             }
         }
 
@@ -720,19 +715,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //Go onto the next prim
                 lastSeenLinkNum++;
             }
-        }
-
-        public void UpdatePartList(SceneObjectPart part)
-        {
-            lock (m_partsLock)
-            {
-                m_parts[part.UUID] = part;
-                m_partsList.Add(part);
-            }
-        }
-
-        public void RemovePartList(SceneObjectPart part)
-        {
         }
         
         /// <summary>
@@ -1195,7 +1177,6 @@ namespace OpenSim.Region.Framework.Scenes
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
             m_scene.EventManager.TriggerParcelPrimCountTainted();
             m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
-            m_rootPart.ClearUndoState();
         }
 
         public void DetachToInventoryPrep()
@@ -1225,16 +1206,6 @@ namespace OpenSim.Region.Framework.Scenes
             //m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_scene.m_physicalPrim);
             //AttachToBackup();
             //m_rootPart.ScheduleFullUpdate();
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="part"></param>
-        private void SetPartAsNonRoot(SceneObjectPart part)
-        {
-            part.SetParentLocalId(m_rootPart.LocalId);
-            part.ClearUndoState();
         }
 
         public override void UpdateMovement()
@@ -1361,15 +1332,14 @@ namespace OpenSim.Region.Framework.Scenes
             // We need to keep track of this state in case this group is still queued for backup.
             m_isDeleted = true;
 
-            DetachFromBackup();
-
             if (!silent)
             {
                 lock (m_partsLock)
                 {
                     foreach (SceneObjectPart part in m_partsList)
                     {
-                        part.UpdateFlag = InternalUpdateFlags.NoUpdate;
+                        //Make sure it isn't going to be updated again
+                        part.ClearUpdateSchedule();
                         if (part == m_rootPart)
                         {
                             Scene.ForEachScenePresence(delegate(ScenePresence avatar)
@@ -1648,119 +1618,6 @@ namespace OpenSim.Region.Framework.Scenes
             return dupe;
         }
 
-        /// <summary>
-        /// Duplicates this object, including operations such as physics set up and attaching to the backup event.
-        /// </summary>
-        /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
-        /// <returns></returns>
-        public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, bool sendUpdate, Scene scene, bool ChangeScripts)
-        {
-            SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
-
-            //Block attempts to persist to the DB
-            dupe.m_isLoaded = false;
-
-            //dupe.m_isBackedUp = false;
-            dupe.m_parts = new Dictionary<OpenMetaverse.UUID, SceneObjectPart>();
-            dupe.m_partsList = new List<SceneObjectPart>();
-
-            dupe.m_scene = this.Scene;
-
-            // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
-            // attachments do not bordercross while they're being duplicated.  This is hacktastic!
-            // Normally, setting AbsolutePosition will bordercross a prim if it's outside the region!
-            // unless IsAttachment is true!, so to prevent border crossing, we save it's attachment state 
-            // (which should be false anyway) set it as an Attachment and then set it's Absolute Position, 
-            // then restore it's attachment state
-
-            // This is only necessary when userExposed is false!
-
-            bool previousAttachmentStatus = dupe.RootPart.IsAttachment;
-            
-            if (!userExposed)
-                dupe.RootPart.IsAttachment = true;
-
-            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
-
-            if (!userExposed)
-            {
-                dupe.RootPart.IsAttachment = previousAttachmentStatus;
-            }
-
-            dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed, ChangeScripts);
-            dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
-
-            if (userExposed)
-                dupe.m_rootPart.TrimPermissions();
-
-            if (userExposed)
-            {
-                dupe.UpdateParentIDs();
-                dupe.HasGroupChanged = true;
-
-                if(sendUpdate)
-                    ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-            }
-
-            if (userExposed)
-                Scene.Entities.Add(dupe);
-
-            List<SceneObjectPart> partList;
-
-            lock (m_partsLock)
-            {
-                partList = new List<SceneObjectPart>(m_partsList);
-            }
-
-            partList.Sort(LinkSetCompare);
-
-            if (userExposed)
-            {
-                /// may need to create a new Physics actor.
-                if (dupe.RootPart.PhysActor != null && userExposed)
-                {
-                    PrimitiveBaseShape pbs = dupe.RootPart.Shape;
-                    dupe.RootPart.PhysActor.LocalID = dupe.RootPart.LocalId;
-
-                    dupe.RootPart.PhysActor.PIDTarget = RootPart.PhysActor.PIDTarget;
-                    dupe.RootPart.PhysActor.PIDTau = RootPart.PhysActor.PIDTau;
-                    dupe.RootPart.PhysActor.PIDActive = RootPart.PhysActor.PIDActive;
-
-                    if (dupe.RootPart.VolumeDetectActive)
-                        dupe.RootPart.PhysActor.SetVolumeDetect(1);
-
-                    dupe.RootPart.PhysActor.Selected = false;
-
-                    dupe.RootPart.ScriptSetPhysicsStatus(dupe.RootPart.PhysActor.IsPhysical);
-
-                }
-            }
-
-            foreach (SceneObjectPart part in partList)
-            {
-                if (part.UUID != m_rootPart.UUID)
-                {
-                    SceneObjectPart newPart = dupe.CopyPart(part, OwnerID, GroupID, userExposed, ChangeScripts);
-                    newPart.LinkNum = part.LinkNum;
-                    newPart.SitTargetAvatar = RootPart.SitTargetAvatar;
-
-                    if (userExposed)
-                    {
-                        SetPartOwner(newPart, cAgentID, cGroupID);
-                    }
-                }
-            }
-
-            dupe.m_isLoaded = true;
-            //Now let it persist if it is needed
-            if (userExposed)
-            {
-                dupe.HasGroupChanged = true;
-            }
-
-            return dupe;
-        }
-
         public int LinkSetCompare(SceneObjectPart p1, SceneObjectPart p2)
         {
             return p1.LinkNum.CompareTo(p2.LinkNum);
@@ -2015,21 +1872,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Make a copy of the given part.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="cAgentID"></param>
-        /// <param name="cGroupID"></param>
-        public SceneObjectPart CopyPart(SceneObjectPart part, UUID cAgentID, UUID cGroupID, bool userExposed, bool ChangeScripts)
-        {
-            SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_parts.Count, userExposed, ChangeScripts, this);
-            AddChild(newPart);
-
-            SetPartAsNonRoot(newPart);
-            return newPart;
-        }
-
-        /// <summary>
         ///
         /// </summary>
         /// <param name="part"></param>
@@ -2069,15 +1911,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
             {
-                if (m_rootPart.UpdateFlag != InternalUpdateFlags.FullUpdate)
-                    m_rootPart.UpdateFlag = InternalUpdateFlags.TerseUpdate;
+                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
                 lastPhysGroupPos = AbsolutePosition;
             }
 
             if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
             {
-                if (m_rootPart.UpdateFlag != InternalUpdateFlags.FullUpdate)
-                    m_rootPart.UpdateFlag = InternalUpdateFlags.TerseUpdate;
+                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
                 lastPhysGroupRot = GroupRotation;
             }
 
@@ -2511,20 +2351,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="objectGroup">The group of prims which should be linked to this group</param>
         public void LinkToGroup(SceneObjectGroup objectGroup, bool UserExposed)
         {
-            // Make sure we have sent any pending unlinks or stuff.
-            //if (objectGroup.RootPart.UpdateFlag > 0)
-            //{
-            //    m_log.WarnFormat(
-            //        "[SCENE OBJECT GROUP]: Forcing send of linkset {0}, {1} to {2}, {3} as its still waiting.",
-            //        objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
-
-            //    objectGroup.RootPart.SendScheduledUpdates();
-            //}
-
             //m_log.DebugFormat(
             //    "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
             //    objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
+            //Clear the update schedule so that we don't send wrong updates later about how this group is set up
+            objectGroup.RootPart.ClearUpdateSchedule();
+            
             SceneObjectPart linkPart = objectGroup.m_rootPart;
 
             Vector3 oldGroupPosition = linkPart.GroupPosition;
@@ -2542,35 +2375,21 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             linkPart.RotationOffset = newRot;
 
+            //Fix the link number for the root
             if (m_rootPart.LinkNum == 0)
                 m_rootPart.LinkNum = 1;
 
+            //Destroy the old group
             m_scene.UnlinkSceneObject(objectGroup, true);
             m_scene.SceneGraph.DeleteEntity(objectGroup);
             objectGroup.m_isDeleted = true;
-            lock (objectGroup.m_partsLock)
-            {
-                objectGroup.m_parts.Clear();
-                objectGroup.m_partsList.Clear();
-            }
+            objectGroup.ClearChildren();
+
 
             lock (m_partsLock)
             {
-                linkPart.SetParent(this);
-                // Insert in terms of link numbers, the new links
-                // before the current ones (with the exception of 
-                // the root prim. Shuffle the old ones up
-                foreach (SceneObjectPart otherPart in m_partsList)
-                {
-                    if (otherPart.LinkNum != 1)
-                    {
-                        // Don't update root prim link number
-                        otherPart.LinkNum += PrimCount;
-                    }
-                }
-
-                linkPart.LinkNum = 2;
-                m_scene.SceneGraph.LinkPartToEntity(this, linkPart);
+                //Add this to our group!
+                m_scene.SceneGraph.LinkPartToSOG(this, linkPart);
                 linkPart.CreateSelected = true;
 
                 //rest of parts
@@ -2588,9 +2407,6 @@ namespace OpenSim.Region.Framework.Scenes
             // position of linkset prims.  IF YOU CHANGE THIS, YOU MUST TEST colliding with just linked and 
             // unmoved prims!
             ResetChildPrimPhysicsPositions();
-
-            //HasGroupChanged = true;
-            //ScheduleGroupForFullUpdate();
         }
 
         /// <summary>
@@ -2630,6 +2446,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Clears all undo states from this group
+        /// </summary>
+        public override void ClearUndoState()
+        {
+            foreach (SceneObjectPart child in ChildrenList)
+            {
+                child.ClearUndoState();
+            }
+        }
+
+        /// <summary>
         /// Delink the given prim from this group.  The delinked prim is established as
         /// an independent SceneObjectGroup.
         /// </summary>
@@ -2641,14 +2468,6 @@ namespace OpenSim.Region.Framework.Scenes
 //                m_log.DebugFormat(
 //                    "[SCENE OBJECT GROUP]: Delinking part {0}, {1} from group with root part {2}, {3}",
 //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);
-            
-            linkPart.ClearUndoState();
-
-            foreach (SceneObjectPart child in ChildrenList)
-            {
-                child.ClearUndoState();
-            }
-            
 
             Quaternion worldRot = linkPart.GetWorldRotation();
 
@@ -2704,18 +2523,6 @@ namespace OpenSim.Region.Framework.Scenes
             return objectGroup;
         }
 
-        /// <summary>
-        /// Stop this object from being persisted over server restarts.
-        /// </summary>
-        /// <param name="objectGroup"></param>
-        public virtual void DetachFromBackup()
-        {
-            /*if (m_isBackedUp)
-                m_scene.EventManager.OnBackup -= ProcessBackup;
-            
-            m_isBackedUp = false;*/
-        }
-
         private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum, bool UserExposed)
         {
             Quaternion parentRot = oldGroupRotation;
@@ -2732,23 +2539,7 @@ namespace OpenSim.Region.Framework.Scenes
             part.OffsetPosition = Vector3.Zero;
             part.RotationOffset = worldRot;
 
-            part.SetParent(this);
-            part.SetParentLocalId(m_rootPart.LocalId);
-
-            // Insert in terms of link numbers, the new links
-            // before the current ones (with the exception of 
-            // the root prim. Shuffle the old ones up
-            foreach (SceneObjectPart otherPart in m_partsList)
-            {
-                if (otherPart.LinkNum != 1)
-                {
-                    // Don't update root prim link number
-                    otherPart.LinkNum += PrimCount;
-                }
-            }
-
-            part.LinkNum = 2;
-            m_scene.SceneGraph.LinkPartToEntity(this, part);
+            m_scene.SceneGraph.LinkPartToSOG(this, part);
 
             part.LinkNum = linkNum;
 
@@ -2990,7 +2781,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (IsTemporary)
             {
-                DetachFromBackup();
                 // Remove from database and parcel prim count
                 //
                 m_scene.DeleteFromStorage(UUID);
@@ -3907,7 +3697,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
             Scene s = (Scene)scene;
-            SceneObjectGroup sog = Copy(this.OwnerID, this.GroupID, true, true, s, true);
+            SceneObjectGroup sog = (SceneObjectGroup)Copy();
             sog.m_isDeleted = false;
             return sog;
         }
