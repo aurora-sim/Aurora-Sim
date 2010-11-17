@@ -170,7 +170,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <returns></returns>
         public bool ScriptChangeQueue()
-        {
+            {
             if (!Started) //Break early
                 return true;
 
@@ -181,100 +181,66 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             object oitems;
             if (LUQueue.GetNext(out oitems))
-            {
+                {
                 LUStruct[] items = oitems as LUStruct[];
                 List<LUStruct> NeedsFired = new List<LUStruct>();
                 foreach (LUStruct item in items)
-                {
-                    if (item.Action == LUType.Unload)
                     {
+                    if (item.Action == LUType.Unload)
+                        {
                         //Close
                         item.ID.CloseAndDispose(false);
-                    }
+                        }
                     else if (item.Action == LUType.Load)
-                    {
-                        try
                         {
+                        try
+                            {
                             //Start
                             item.ID.Start(false);
                             NeedsFired.Add(item);
-                        }
+                            }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                    }
+                        }
                     else if (item.Action == LUType.Reupload)
-                    {
-                        try
                         {
+                        try
+                            {
                             //Start, but don't add to the queue's again
                             item.ID.Start(true);
                             NeedsFired.Add(item);
-                        }
+                            }
                         catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                        }
                     }
-                }
                 foreach (LUStruct item in NeedsFired)
-                {
+                    {
                     //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
-                }
+                    }
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
-            }
+                }
             else
                 ScriptChangeIsRunning = false;
 
             if (!FiredStartupEvent)
-            {
+                {
                 //If we are empty, we are all done with script startup and can tell the region that we are all done
                 if (LUQueue.Count() == 0)
-                {
+                    {
                     FiredStartupEvent = true;
                     foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
-                    {
+                        {
                         scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                         m_ScriptEngine.ScriptErrorMessages);
                         
                         scene.EventManager.TriggerFinishedStartup("ScriptEngine", new List<string>(){m_ScriptEngine.ScriptFailCount.ToString(),
                                                                     m_ScriptEngine.ScriptErrorMessages}); //Tell that we are done
+                        }
                     }
                 }
-            }
             return false;
-        }
-/*
-        public bool EventQueue()
-        {
-            if (!Started) //Break early
-                return true;
-
-            if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
-                return true;
-
-            bool SendUpSleepRequest = false;
-            try
-            {
-                EventProcessorIsRunning = true;
-                object QIS = null;
-                if (EventProcessorQueue.GetNext(out QIS))
-                {
-                    if (QIS != null)
-                    {
-                        //This sets up a part to determine whether we should sleep on the next run so we don't kill the CPU
-                        SendUpSleepRequest = ProcessQIS((QueueItemStruct)QIS);
-                        threadpool.QueueEvent(EventQueue, 1);
-                    }
-                }
-                else
-                    EventProcessorIsRunning = false;
             }
-            catch (Exception ex)
-            {
-                EventProcessorIsRunning = false;
-                m_log.WarnFormat("[{0}]: Handled exception stage 2 in the Event Queue: " + ex.Message, m_ScriptEngine.ScriptEngineName);
-            }
-            EventProcessorIsRunning = false;
-            return SendUpSleepRequest;
-        }
-*/
+
         public bool CmdHandlerQueue()
         {
             if (!Started) //Break early
@@ -299,102 +265,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region Queue processing
-
-        /// <summary>
-        /// Processes and fires an event
-        /// </summary>
-        /// <param name="QIS"></param>
-        /// <returns>Returns whether the calling thread should sleep after processing this request</returns>
-        public bool ProcessQIS(QueueItemStruct QIS)
-        {
-            //Disabled, not running, suspended, null scripts, or loading scripts dont get events fired.
-            if (QIS.ID.Suspended || QIS.ID.Script == null || 
-                QIS.ID.Loading || QIS.ID.Disabled)
-                return true;
-
-            if (!QIS.ID.Running)
-            {
-                //Readd only state_entry and on_rez
-                if (QIS.functionName == "state_entry"
-                    || QIS.functionName == "on_rez")
-                    EventProcessorQueue.Add(QIS, EventPriority.Continued);
-                return true;
-            }
-
-            //Check if this event was fired with an old versionID
-            if (NeedsRemoved.ContainsKey(QIS.ID.ItemID))
-                if(NeedsRemoved[QIS.ID.ItemID] >= QIS.VersionID)
-                    return true;
-
-            try
-            {
-                //Either its currently doing something, or the script has set the event params for the new event
-                if (QIS.CurrentlyAt != null || QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams))
-                {
-                    //If this is true, there is/was a sleep occuring
-                    if (QIS.CurrentlyAt != null && QIS.CurrentlyAt.SleepTo.Ticks != 0)
-                    {
-                        DateTime nowTicks = DateTime.Now;
-                        if ((QIS.CurrentlyAt.SleepTo - nowTicks).TotalMilliseconds > 0)
-                        {
-                            //Its supposed to be sleeping....
-                            // No processing!
-                            EventProcessorQueue.Add(QIS, EventPriority.Continued);
-                            return true;
-                        }
-                        else
-                        {
-                            //Reset the time so we don't keep checking
-                            QIS.CurrentlyAt.SleepTo = DateTime.MinValue;
-                        }
-                    }
-                    Exception ex = null;
-                    EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.ID.State,
-                                QIS.functionName,
-                                QIS.param, QIS.CurrentlyAt, out ex);
-                    if (ex != null)
-                    {
-                        //Check exceptions, some are ours to deal with, and others are to be logged
-                        if (ex is SelfDeleteException)
-                        {
-                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
-                                    QIS.ID.part.ParentGroup, false, true);
-                        }
-                        else if (ex is ScriptDeleteException)
-                        {
-                            if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                                QIS.ID.part.Inventory.RemoveInventoryItem(QIS.ID.ItemID);
-                        }
-                        //Log it for the user
-                        else if(!(ex is EventAbortException) &&
-                            !(ex is MinEventDelayException))
-                            QIS.ID.DisplayUserNotification(ex.ToString(), "", false, true);
-                        return false;
-                    }
-                    else if (Running != null)
-                    {
-                        //Did not finish so requeue it
-                        QIS.CurrentlyAt = Running;
-                        EventProcessorQueue.Add(QIS, EventPriority.Continued);
-                        return false; //Do the return... otherwise we open the queue for this event back up
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                //Error, tell the user
-                QIS.ID.DisplayUserNotification(ex.ToString(), "executing", false, true);
-            }
-            //Tell the event manager about it so that the events will be removed from the queue
-            EventManager.EventComplete(QIS);
-            return false;
-        }
-
-        #endregion
-
-        #region Add
+         #region Add
 
         /// <summary>
         /// Adds the given item to the queue.
@@ -467,18 +338,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddEvent(QueueItemStruct QIS, EventPriority priority)
         {
-/*
-            if (RunInMainProcessingThread)
-            {
-                ProcessQIS(QIS);
-            }
-            else
-            {
-                EventProcessorQueue.Add(QIS, priority);
-                if (!EventProcessorIsRunning)
-                    StartThread("Event");
-            }
-*/
             AddEventSchQIS(QIS);
         }
 
@@ -552,36 +411,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
         private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
 
-        public void FlushEventSchQueue(ScriptData ID)
+        public void FlushEventSchQueue(ScriptData ID, bool abortcur)
             {
+            if (ID == null)
+                return;
             lock (ID.EventsProcData)
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.EventsQueue.Clear();
-                ID.EventsProcDataLocked = false;
-                }
-            }
-
-        public void ResetEventSchQueue(ScriptData ID)
-            {
-            lock (ID.EventsProcData)
-                {
-                ID.EventsProcDataLocked = true;
-                ID.EventsProcData.EventsQueue.Clear();
-                if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
+                if (abortcur && ID.EventsProcData.State == (int)ScriptEventsState.InExec)
                     ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+
                 ID.EventsProcDataLocked = false;
                 }
             }
 
-        public void FlushAndExecNowEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
+        public void SetEventSchSetIgnoreNew(ScriptData ID, bool yes)
+            {
+            if (ID != null)
+                {
+                lock (ID.EventsProcData)
+                    {
+                    ID.EventsProcData.IgnoreNew = yes;
+                    }
+                }
+            }
+/*
+        public void DoNowEventSch(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
             {
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct();
 
-            int i;
+            int i,j;
             bool res;
-
+            bool wasIgnore;
 
             QIS.ID = ID;
             QIS.functionName = FunctionName;
@@ -591,36 +454,53 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             lock (ID.EventsProcData)
                 {
-                ID.EventsProcDataLocked = true;
-                ID.EventsProcData.EventsQueue.Clear();
-                if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
-                    ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+                wasIgnore = ID.EventsProcData.IgnoreNew;
+                }
+            i = 0;
+            // we can't lock here
+            while (ID.InEventsProcData && ID.EventsProcData.State != (int)ScriptEventsState.Idle && i++ < 50)
+                Thread.Sleep(20);
 
-                i = 0;
-
-                while (i++ < 50)
+            if (i < 50)
+                {
+                lock (ID.EventsProcData)
                     {
-                    try
+                    ID.EventsProcDataLocked = true;
+                    j = 0;
+                    while (j++ < 50)
                         {
-                        res = EventSchProcessQIS(ref QIS);
+                        try
+                            {
+                            res = EventSchProcessQIS(ref QIS);
+                            }
+                        catch
+                            {
+                            res = false;
+                            }
+                        if (res)
+                            Thread.Sleep(20);
+                        else
+                            break;
                         }
-                    catch
-                        {
-                        res = false;
-                        }
-                    if (res)
-                        Thread.Sleep(20);
-                    else
-                        break;
-                    }
 
-                ID.EventsProcDataLocked = false;
+                    ID.EventsProcData.IgnoreNew = wasIgnore;
+                    ID.EventsProcDataLocked = false;
+                    }
+                }
+
+            lock (ID.EventsProcData)
+                {
+                ID.EventsProcData.IgnoreNew = wasIgnore;
                 }
             }
+*/
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
             {
             QueueItemStruct QIS;
+
+            if (ID.EventsProcData.IgnoreNew)
+                return;
 
             if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
                 return;
@@ -631,6 +511,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.llDetectParams = qParams;
             QIS.param = param;
             QIS.VersionID = VersionID;
+            QIS.State = ID.State;
 
             lock (ID.EventsProcData)
                 {
@@ -648,7 +529,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
 
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
-
                 lock (ScriptIDs)
                     {
                     if (!ScriptIDs.Contains(ID))
@@ -670,14 +550,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
+
         public void AddEventSchQIS(QueueItemStruct QIS)
             {
             ScriptData ID;
 
-            if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
+            ID = QIS.ID;
+
+            if (ID.EventsProcData.IgnoreNew)
                 return;
 
-            ID = QIS.ID;
+            if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
+                return;
 
             lock (ID.EventsProcData)
                 {
@@ -1022,7 +906,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             try
                 {
                 Exception ex = null;
-                EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.ID.State,
+                EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.State,
                             QIS.functionName,
                             QIS.param, QIS.CurrentlyAt, out ex);
                 if (QIS.ID.VersionID != QIS.VersionID)

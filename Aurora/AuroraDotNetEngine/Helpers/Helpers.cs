@@ -292,6 +292,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public EnumeratorInfo CurrentlyAt;
         //This is used to check whether the script has been updated since the last attempt to start
         public int VersionID;
+        public string State;
     }
 
     public struct StateQueueItem
@@ -344,6 +345,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class ScriptEventsProcData
         {
         public int State;
+        public bool IgnoreNew=false;
         public QueueItemStruct CurExecQIS;
         public Thread thread;
         public DateTime TimeCheck;
