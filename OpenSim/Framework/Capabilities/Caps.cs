@@ -55,17 +55,11 @@ namespace OpenSim.Framework.Capabilities
     public delegate string ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
 
     public delegate ArrayList TaskScriptUpdatedCallback(UUID userID, UUID itemID, UUID primID,
-                                                   bool isScriptRunning, byte[] data);
+                                                    bool isScriptRunning, byte[] data);
 
     public delegate InventoryCollection FetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
-                                                                          bool fetchFolders, bool fetchItems, int sortOrder, out int version);
-    /// <summary>
-    /// XXX Probably not a particularly nice way of allow us to get the scene presence from the scene (chiefly so that
-    /// we can popup a message on the user's client if the inventory service has permanently failed).  But I didn't want
-    /// to just pass the whole Scene into CAPS.
-    /// </summary>
-    public delegate IClientAPI GetClientDelegate(UUID agentID);
-
+                                                    bool fetchFolders, bool fetchItems, int sortOrder, out int version);
+    
     public class Caps
     {
         private static readonly ILog m_log =
@@ -129,8 +123,7 @@ namespace OpenSim.Framework.Capabilities
         public ItemUpdatedCallback ItemUpdatedCall = null;
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
         public FetchInventoryDescendentsCAPS CAPSFetchInventoryDescendents = null;
-        public GetClientDelegate GetClient = null;
-
+        
         public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,
                     UUID agent, string regionName)
         {
@@ -573,11 +566,11 @@ namespace OpenSim.Framework.Capabilities
                 llsdRequest.asset_type == "sound")
             {
                 IClientAPI client = null;
-                IScene scene = null;
-                if (GetClient != null)
+                IScenePresence sp = null;
+                if(m_Scene.TryGetScenePresence(m_agentID, out sp))
                 {
-                    client = GetClient(m_agentID);
-                    scene = client.Scene;
+                    client = sp.ControllingClient;
+                    IScene scene = client.Scene;
 
                     IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
 
@@ -699,17 +692,17 @@ namespace OpenSim.Framework.Capabilities
         public void BakedTextureUploaded(UUID assetID, byte[] data)
         {
             m_log.InfoFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
-            IClientAPI client = GetClient(m_agentID);
-            if (client != null && client.Scene != null)
+            IScenePresence sp = null;
+            if(m_Scene.TryGetScenePresence(m_agentID, out sp))
             {
-                IJ2KDecoder j2kDecoder = GetClient(m_agentID).Scene.RequestModuleInterface<IJ2KDecoder>();
+                IJ2KDecoder j2kDecoder = sp.ControllingClient.Scene.RequestModuleInterface<IJ2KDecoder>();
                 if (j2kDecoder != null)
                 {
                     if (!j2kDecoder.Decode(assetID, data))
                     {
                         //Uhoh, bad upload, rerequest them from the client
                         m_log.DebugFormat("[CAPS]: Received corrupted baked texture {0}", assetID.ToString());
-                        GetClient(m_agentID).SendRebakeAvatarTextures(assetID);
+                        sp.ControllingClient.SendRebakeAvatarTextures(assetID);
                         return;
                     }
                 }

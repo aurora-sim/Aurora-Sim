@@ -91,14 +91,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
         {
             if (client.IsLoggingOut)
             {
-                object sp = null;
+                IScenePresence sp = null;
                 if (client.Scene.TryGetScenePresence(client.AgentId, out sp))
                 {
-                    if (sp is ScenePresence)
-                    {
-                        if (((ScenePresence)sp).IsChildAgent)
-                            return;
-                    }
+                    if (sp.IsChildAgent)
+                        return;
                 }
 
                 //m_log.DebugFormat("[PRESENCE DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);

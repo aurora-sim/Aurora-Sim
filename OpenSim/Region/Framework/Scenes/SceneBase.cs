@@ -165,7 +165,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="agentID"></param>
         public abstract void RemoveClient(UUID agentID);
 
-        public bool TryGetScenePresence(UUID agentID, out object scenePresence)
+        public bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence)
         {
             scenePresence = null;
             ScenePresence sp = null;

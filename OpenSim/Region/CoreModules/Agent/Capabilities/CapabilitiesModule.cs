@@ -120,8 +120,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             caps.ItemUpdatedCall = m_scene.CapsUpdateInventoryItemAsset;
             caps.TaskScriptUpdatedCall = m_scene.CapsUpdateTaskInventoryScriptAsset;
             caps.CAPSFetchInventoryDescendents = m_scene.HandleFetchInventoryDescendentsCAPS;
-            caps.GetClient = m_scene.GetControllingClient;
-
+            
             m_capsHandlers[agentId] = caps;
         }
 

@@ -77,7 +77,7 @@ namespace OpenSim.Framework
 
         string GetSimulatorVersion();
 
-        bool TryGetScenePresence(UUID agentID, out object scenePresence);
+        bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
 
         T RequestModuleInterface<T>();
         T[] RequestModuleInterfaces<T>();

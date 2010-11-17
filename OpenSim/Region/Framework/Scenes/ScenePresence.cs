@@ -67,7 +67,7 @@ namespace OpenSim.Region.Framework.Scenes
 
     public delegate void SendCourseLocationsMethod(UUID scene, ScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
 
-    public class ScenePresence : EntityBase, ISceneEntity
+    public class ScenePresence : EntityBase, IScenePresence
     {
 //        ~ScenePresence()
 //        {

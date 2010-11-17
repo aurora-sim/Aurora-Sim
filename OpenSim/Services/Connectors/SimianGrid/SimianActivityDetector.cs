@@ -82,20 +82,17 @@ namespace OpenSim.Services.Connectors.SimianGrid
             client.OnConnectionClosed -= OnConnectionClose;
             if (client.IsLoggingOut)
             {
-                object sp = null;
+                IScenePresence sp = null;
                 Vector3 position = new Vector3(128, 128, 0);
                 Vector3 lookat = new Vector3(0, 1, 0);
 
                 if (client.Scene.TryGetScenePresence(client.AgentId, out sp))
                 {
-                    if (sp is ScenePresence)
-                    {
-                        if (((ScenePresence)sp).IsChildAgent)
-                            return;
+                    if (sp.IsChildAgent)
+                        return;
 
-                        position = ((ScenePresence)sp).AbsolutePosition;
-                        lookat = ((ScenePresence)sp).Lookat;
-                    }
+                    position = sp.AbsolutePosition;
+                    lookat = sp.Lookat;
                 }
 
                 m_log.DebugFormat("[SIMIAN ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);

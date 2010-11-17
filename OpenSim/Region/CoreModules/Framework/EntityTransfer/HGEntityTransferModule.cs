@@ -251,10 +251,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             if (obj.IsLoggingOut)
             {
-                object sp = null;
+                IScenePresence sp = null;
                 if (obj.Scene.TryGetScenePresence(obj.AgentId, out sp))
                 {
-                    if (((ScenePresence)sp).IsChildAgent)
+                    if (sp.IsChildAgent)
                         return;
                 }
 

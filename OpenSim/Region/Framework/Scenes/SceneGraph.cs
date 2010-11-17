@@ -535,30 +535,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Get Methods
-        /// <summary>
-        /// Get the controlling client for the given avatar, if there is one.
-        ///
-        /// FIXME: The only user of the method right now is Caps.cs, in order to resolve a client API since it can't
-        /// use the ScenePresence.  This could be better solved in a number of ways - we could establish an
-        /// OpenSim.Framework.IScenePresence, or move the caps code into a region package (which might be the more
-        /// suitable solution).
-        /// </summary>
-        /// <param name="agentId"></param>
-        /// <returns>null if either the avatar wasn't in the scene, or
-        /// they do not have a controlling client</returns>
-        /// <remarks>this used to be protected internal, but that
-        /// prevents CapabilitiesModule from accessing it</remarks>
-        public IClientAPI GetControllingClient(UUID agentId)
-        {
-            ScenePresence presence = GetScenePresence(agentId);
-
-            if (presence != null)
-            {
-                return presence.ControllingClient;
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// Get a reference to the scene presence list. Changes to the list will be done in a copy
@@ -1408,11 +1384,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public int linkSetSorter(SceneObjectPart a, SceneObjectPart b)
-        {
-            return a.LinkNum.CompareTo(b.LinkNum);
-        }
-
+        /// <summary>
+        /// Sorts a list of Parts by Link Number so they end up in the correct order
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
         public int linkSetSorter(ISceneEntity a, ISceneEntity b)
         {
             return a.LinkNum.CompareTo(b.LinkNum);

@@ -2377,8 +2377,7 @@ namespace OpenSim.Region.Framework.Scenes
                 group.CheckSculptAndLoad();
             }
             LoadingPrims = false;
-            EntityBase[] e = m_sceneGraph.GetEntities();
-            m_log.Info("[SCENE]: Loaded " + e.Length.ToString() + " SceneObject(s)");
+            m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
         }
 
 
@@ -2459,7 +2458,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), true, false);
 
                     // Un-comment the following line to print the raytrace results to the console.
-                    m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
 
                     if (ei.HitTF)
                     {
@@ -4887,11 +4886,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
         {
             m_sceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, maxLocations);
-        }
-
-        public IClientAPI GetControllingClient(UUID agentId)
-        {
-            return m_sceneGraph.GetControllingClient(agentId);
         }
 
         /// <summary>

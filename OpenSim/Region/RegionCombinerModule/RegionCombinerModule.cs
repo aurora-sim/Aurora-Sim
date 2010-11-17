@@ -1017,16 +1017,15 @@ namespace OpenSim.Region.RegionCombinerModule
         /// <returns>IClientAPI or null</returns>
         private IClientAPI LocateUsersChildAgentIClientAPI(Vector2 offset, UUID uUID, RegionData[] rdata)
         {
-            IClientAPI returnclient = null;
             foreach (RegionData r in rdata)
             {
                 if (r.Offset.X == offset.X && r.Offset.Y == offset.Y)
                 {
-                    return r.RegionScene.GetControllingClient(uUID);
+                    return r.RegionScene.GetScenePresence(uUID).ControllingClient;
                 }
             }
 
-            return returnclient;
+            return null;
         }
 
         public void PostInitialise()
