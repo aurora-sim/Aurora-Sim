@@ -130,15 +130,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private bool IsParentEnumerable = false;
         private string OriginalScript = "";
         private bool m_SLCompatabilityMode = false;
-        private List<string> DTFunctions = new List<string>();
         private Parser p = null;
         private Random random = new Random();
-        public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private class GlobalVar
         {
             public string Type;
             public string Value;
         }
+        private HashSet<string> DTFunctions = new HashSet<string>();
+        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
+        public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
         private bool FuncCntr = false;
@@ -147,7 +148,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
         public CSCodeGenerator(bool compatMode)
-        {
+            {
+            // api funtions that can return a time delay only
+            // must be type DateTime in stub files and implementation
             DTFunctions.Add("llAddToLandBanList");
             DTFunctions.Add("llAddToLandPassList");
             DTFunctions.Add("llAdjustSoundVolume");
@@ -191,6 +194,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             DTFunctions.Add("llTeleportAgentHome");
             DTFunctions.Add("llTextBox");
             DTFunctions.Add("osTeleportAgent");
+
+
+            // Api functions that can return a delay, a value or breakable in timeslices
+            // must be IEnumerator in stub, interface and implementation files
+
+            IenFunctions.Add("llRequestAgentData", "LSL_Types.key");
+            IenFunctions.Add("llRequestInventoryData", "LSL_Types.key");
+            IenFunctions.Add("llSendRemoteData", "LSL_Types.key");
+            IenFunctions.Add("llXorBase64Strings", "LSL_Types.LSLString");
+            IenFunctions.Add("llRequestSimulatorData", "LSL_Types.key");
+            IenFunctions.Add("llParcelMediaQuery", "LSL_Types.list");
+            IenFunctions.Add("llGetPrimMediaParams", "LSL_Types.list");
+            IenFunctions.Add("llSetPrimMediaParams", "LSL_Types.LSLInteger");
+            IenFunctions.Add("llClearPrimMedia", "LSL_Types.LSLInteger");
+            IenFunctions.Add("llModPow", "LSL_Types.LSLInteger");
+            IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.key");
+            IenFunctions.Add("llGetParcelPrimOwners", "LSL_Types.list");
+            IenFunctions.Add("llGetNotecardLine", "LSL_Types.key");
+
+
+
+            // the rest will be directly called
+            
             m_SLCompatabilityMode = compatMode;
             ResetCounters();
         }
@@ -1575,7 +1601,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (SYMBOL s in gv.kids)
             {
                 retstr += Indent();
-                retstr += "public ";
+                retstr += "public static ";
                 if (s is Assignment)
                 {
                     string innerretstr = "";
@@ -1642,8 +1668,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         }
                         else if (kid is IdentExpression)
                         {
+
                             IdentExpression c = kid as IdentExpression;
                             globalVarValue = c.Name;
+/*
                             if (GlobalVariables.ContainsKey(globalVarValue))
                             {
                                 //Its an assignment to another global var!
@@ -1656,7 +1684,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     globalVarValue = var.Value;
                                 }
                             }
+ */
                             innerretstr += globalVarValue;
+ 
                         }
                         else
                             innerretstr += GenerateNode(kid);
@@ -2506,6 +2536,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             string rettype = "void";
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
+                isEnumerable = true;
+
+            if (IenFunctions.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
 
             else if (DTFunctions.Contains(fc.Id))
