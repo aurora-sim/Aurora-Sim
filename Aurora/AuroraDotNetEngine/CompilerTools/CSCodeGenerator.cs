@@ -1601,7 +1601,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (SYMBOL s in gv.kids)
             {
                 retstr += Indent();
-                retstr += "public static ";
+                retstr += "public ";
                 if (s is Assignment)
                 {
                     string innerretstr = "";
@@ -1671,7 +1671,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                             IdentExpression c = kid as IdentExpression;
                             globalVarValue = c.Name;
-/*
+
                             if (GlobalVariables.ContainsKey(globalVarValue))
                             {
                                 //Its an assignment to another global var!
@@ -1684,7 +1684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     globalVarValue = var.Value;
                                 }
                             }
- */
+
                             innerretstr += globalVarValue;
  
                         }
@@ -2534,11 +2534,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             isEnumerable = false;
             bool DTFunction = false;
 
-            string rettype = "void";
+            string rettype = "void";            
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
-
-            if (IenFunctions.TryGetValue(fc.Id, out rettype))
+            else if (IenFunctions.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
 
             else if (DTFunctions.Contains(fc.Id))
