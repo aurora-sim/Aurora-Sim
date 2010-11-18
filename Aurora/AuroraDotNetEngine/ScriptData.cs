@@ -167,29 +167,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void CloseAndDispose(bool Silent)
         {
 
-// this is still broken
+// this is still broken ?
+            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, true);
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
 
             if (!Silent)
             {
                 if (Script != null)
-                {
-                    //Save the state
-                    ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
-                    //Fire this directly so its not closed before its fired
-                    SetEventParams("state_exit", new DetectParams[0]);
-                    m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
                     {
-                        ID = this,
-                        CurrentlyAt = null,
-                        functionName = "state_exit",
-                        param = new object[0],
-                        llDetectParams = new DetectParams[0],
-                        VersionID = VersionID
-                    });
+                    /*
+                                        //Save the state
+                                        ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
+                                        //Fire this directly so its not closed before its fired
+                                        SetEventParams("state_exit", new DetectParams[0]);
+
+                                        m_ScriptEngine.MaintenanceThread.ProcessQIS(new QueueItemStruct()
+                                        {
+                                            ID = this,
+                                            CurrentlyAt = null,
+                                            functionName = "state_exit",
+                                            param = new object[0],
+                                            llDetectParams = new DetectParams[0],
+                                            VersionID = VersionID
+                                        });
+                     */
+// dont think we should fire state_exit here
+//                    m_ScriptEngine.MaintenanceThread.DoAndWaitEventSch(this, "state_exit",
+//                        new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0]);
+                    ScriptDataSQLSerializer.SaveState(this, m_ScriptEngine);
                 }
             }
             VersionID += 5;
-//            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
+            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false);
+
             //Give the user back any controls we took
             ReleaseControls();
 
@@ -292,9 +302,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ReleaseControls();
             //Remove other items from the queue.
 
-            m_ScriptEngine.MaintenanceThread.ResetEventSchQueue(this);
-//            m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
-
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
+            
             VersionID++;
             //Reset the state to default
             State = "default";
@@ -317,7 +326,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //Unset the events that may still be firing after the change.
             m_ScriptEngine.RemoveScript(part.UUID, ItemID);
-            
+
             //Fire state_entry
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
@@ -327,13 +336,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         internal void ChangeState(string state)
         {
-
-// still broken
-
             if (State != state)
-            {
-                m_ScriptEngine.AddToScriptQueue(this, "state_exit",
+                {
+                m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
+                m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_exit",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
+                
                 State = state;
 
                 //Remove events that may be fired again after the user stops touching the prim, etc
@@ -343,16 +351,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 RemoveTouchEvents = true;
 
                 //Wipe out old events
-//                m_ScriptEngine.MaintenanceThread.RemoveFromEventQueue(ItemID, VersionID);
-                VersionID++;
+//                VersionID++;
 
                 //Tell the SOP about the change.
                 part.SetScriptEvents(ItemID, Script.GetStateEventFlags(state));
                 ScriptEngine.ScriptProtection.AddNewScript(this);
 
-                m_ScriptEngine.AddToScriptQueue(this, "state_entry",
+                m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_entry",
                     new DetectParams[0], VersionID, EventPriority.FirstStart, new object[0] { });
-            }
+                }
         }
 
         #endregion
@@ -655,7 +662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 //Make a new state save now
-                m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
+            m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
             }
 
             // Add it to our script memstruct so it can be found by other scripts
