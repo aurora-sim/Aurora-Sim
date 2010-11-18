@@ -199,19 +199,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // Api functions that can return a delay, a value or breakable in timeslices
             // must be IEnumerator in stub, interface and implementation files
 
-            IenFunctions.Add("llRequestAgentData", "LSL_Types.key");
-            IenFunctions.Add("llRequestInventoryData", "LSL_Types.key");
-            IenFunctions.Add("llSendRemoteData", "LSL_Types.key");
+            IenFunctions.Add("llRequestAgentData", "LSL_Types.LSLString");
+            IenFunctions.Add("llRequestInventoryData", "LSL_Types.LSLString");
+            IenFunctions.Add("llSendRemoteData", "LSL_Types.LSLString");
             IenFunctions.Add("llXorBase64Strings", "LSL_Types.LSLString");
-            IenFunctions.Add("llRequestSimulatorData", "LSL_Types.key");
+            IenFunctions.Add("llRequestSimulatorData", "LSL_Types.LSLString");
             IenFunctions.Add("llParcelMediaQuery", "LSL_Types.list");
             IenFunctions.Add("llGetPrimMediaParams", "LSL_Types.list");
             IenFunctions.Add("llSetPrimMediaParams", "LSL_Types.LSLInteger");
             IenFunctions.Add("llClearPrimMedia", "LSL_Types.LSLInteger");
             IenFunctions.Add("llModPow", "LSL_Types.LSLInteger");
-            IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.key");
+            IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.LSLString");
             IenFunctions.Add("llGetParcelPrimOwners", "LSL_Types.list");
-            IenFunctions.Add("llGetNotecardLine", "LSL_Types.key");
+            IenFunctions.Add("llGetNotecardLine", "LSL_Types.LSLString");
 
 
 
