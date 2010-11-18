@@ -567,7 +567,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessUpdateFlag(SceneObjectPart obj, XmlTextReader reader)
         {
-            //obj.UpdateFlag = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
+            InternalUpdateFlags flags = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
         }
 
         private static void ProcessSitTargetOrientation(SceneObjectPart obj, XmlTextReader reader)
