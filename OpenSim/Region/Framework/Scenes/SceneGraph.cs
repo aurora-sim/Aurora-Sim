@@ -1766,7 +1766,8 @@ namespace OpenSim.Region.Framework.Scenes
         private bool RemoveEntity(EntityBase entity)
         {
             Entities.Remove(entity.UUID);
-            return Entities.Remove(entity.LocalId);
+            Entities.Remove(entity.LocalId);
+            return true;
         }
 
         /// <summary>

@@ -302,7 +302,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             string components = reader.ReadElementContentAsString("Components", String.Empty);
             if (components != "")
             {
-                m_log.Info("[COMPONENTMANAGER]: Found components for SOP " + obj.Name + " > " + components);
+                //m_log.Info("[COMPONENTMANAGER]: Found components for SOP " + obj.Name + " > " + components);
 
                 try
                 {

@@ -155,6 +155,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 module.Disabled = true;
             }
+            //Disable backup for now as well
+            m_scene.LoadingPrims = true;
 
             IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
             int sceneObjectsLoadedCount = 0;
@@ -299,6 +301,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 module.Disabled = false;
             }
+            m_scene.LoadingPrims = false;
 
             if (!m_skipAssets)
             {

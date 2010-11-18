@@ -1609,6 +1609,8 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysicsActor oldActor = part.PhysActor;
                     PrimitiveBaseShape pbs = part.Shape;
 
+                    m_scene.PhysicsScene.RemovePrim(part.PhysActor);
+
                     part.PhysActor
                         = m_scene.PhysicsScene.AddPrimShape(
                             string.Format("{0}/{1}", part.Name, part.UUID),
