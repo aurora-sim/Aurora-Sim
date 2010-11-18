@@ -474,7 +474,7 @@
       <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>   
+      <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="OpenSim.Server.Base"/>
 
@@ -484,7 +484,7 @@
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
-      
+
       <Files>
         <Match pattern="*.cs" recurse="true">
           <Exclude name="Tests" pattern="Tests"/>
@@ -1306,24 +1306,23 @@
       </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="Mono.Addins" path="../../../bin"/>
+      <Reference name="Mono.Addins" path="../../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Windows.Forms"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin"/>
-      <Reference name="Nini" path="../../../bin"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="log4net" path="../../../bin"/>
+      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="OpenSim"/>
       <Reference name="System.Drawing"/>
-
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-        <Match pattern="*.resx" recurse="true"/>
+       <!-- <Match pattern="*.resx" recurse="true"/>-->
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
@@ -1356,7 +1355,7 @@
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
       </Files>
     </Project>
-    
+
     <Project frameworkVersion="v3_5" name="OpenSim.ApplicationPlugins.RemoteController" path="OpenSim/ApplicationPlugins/RemoteController" type="Library">
       <Configuration name="Debug">
         <Options>
@@ -1509,14 +1508,14 @@
           <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      
+
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
-      <Reference name="OpenSim.Data"/>
+      <Reference name="OpenSim.Data" path="../../../bin/"/>
       <Reference name="System.Drawing"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Framework"/>
+      <Reference name="OpenSim.Framework" path="../../../bin/"/>
+      <Reference name="OpenSim.Region.Framework" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -2106,7 +2105,7 @@
     </Project>
 
     -->
-    
+
     <Project frameworkVersion="v3_5" name="Aurora.ScriptEngine.AuroraDotNetEngine" path="Aurora/AuroraDotNetEngine" type="Library">
       <Configuration name="Debug">
         <Options>
