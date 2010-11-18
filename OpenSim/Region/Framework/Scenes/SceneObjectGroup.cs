@@ -95,20 +95,18 @@ namespace OpenSim.Region.Framework.Scenes
         public uint handle;
     }
 
-    public delegate void PrimCountTaintedDelegate();
-
     /// <summary>
     /// A scene object group is conceptually an object in the scene.  The object is constituted of SceneObjectParts
     /// (often known as prims), one of which is considered the root part.
     /// </summary>
     public partial class SceneObjectGroup : EntityBase, ISceneObject
     {
-        // private PrimCountTaintedDelegate handlerPrimCountTainted = null;
-
         private DateTime timeFirstChanged;
         private DateTime timeLastChanged;
         public bool m_forceBackupNow = false;
         public bool m_isLoaded = false;
+        public Vector3 m_lastSignificantPosition = Vector3.Zero;
+        public UUID m_lastParcelUUID = UUID.Zero;
 
         public override bool HasGroupChanged
         {
@@ -145,6 +143,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Clears all undo states from this group
+        /// </summary>
+        public override void ClearUndoState()
+        {
+            foreach (SceneObjectPart child in ChildrenList)
+            {
+                child.ClearUndoState();
+            }
+        }
+
+        /// <summary>
         /// Returns whether it is time to backup or not
         /// </summary>
         /// <param name="shouldReaddToLoop">Should this prim even be checked again for backup in the secondary loop?</param>
@@ -155,19 +164,22 @@ namespace OpenSim.Region.Framework.Scenes
             shouldReaddToLoop = true;
             shouldReaddToLoopNow = false;
 
-            //Forced NOW
-            if (m_forceBackupNow && !IsAttachment)
-            {
-                //Revert it
-                m_forceBackupNow = false;
-                return true;
-            }
             if (IsDeleted || IsAttachment)
             {
                 //Do not readd under these circumstances as we don't deal with backing up either of those into sim storage
                 shouldReaddToLoop = false;
                 return false;
             }
+
+            //Forced to backup NOW
+            if (m_forceBackupNow)
+            {
+                //Revert it
+                m_forceBackupNow = false;
+                return true;
+            }
+            //If we are shutting down, no more additions should occur
+            // NOTE: When we call backup on shutdown, we do a force backup, which ignores this switch, which is why we can safely block this
             if (m_scene.ShuttingDown)
             {
                 //Do not readd now
@@ -176,15 +188,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             DateTime currentTime = DateTime.Now;
+            //If it selected, we want to back it up... but not immediately
             if (IsSelected)
             {
-                //Check the max time for backup as well
+                //Check the max time for backup as well as it should override IsSelected
                 if ((currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
                     return true;
                 //Selected prims are probably being changed, add them back for tte next backup
                 shouldReaddToLoopNow = true;
                 return false;
             }
+            //Check whether it is between the Min Time and Max Time to backup
             if ((currentTime - timeLastChanged).TotalMinutes > m_scene.m_dontPersistBefore || (currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
                 return true;
             return false;
@@ -563,15 +577,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectGroup(UUID ownerID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, Scene scene) : this(scene)
         {
-            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene.DefaultObjectName, scene));
-        }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public SceneObjectGroup(UUID ownerID, Vector3 pos, PrimitiveBaseShape shape, Scene scene)
-            : this(ownerID, pos, Quaternion.Identity, shape, scene)
-        {
+            SetRootPart(new SceneObjectPart(ownerID, shape, pos, rot, Vector3.Zero, scene));
         }
 
         public void LoadScriptState(XmlDocument doc)
@@ -612,6 +618,11 @@ namespace OpenSim.Region.Framework.Scenes
             return ((RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics);
         }
 
+        #region Adding/Removing children from this group
+
+        /// <summary>
+        /// Clear all children from this group
+        /// </summary>
         public override void ClearChildren()
         {
             lock (m_partsLock)
@@ -621,6 +632,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Add a child to the group, set the parent id's and then set the link number
+        /// </summary>
+        /// <param name="child"></param>
+        /// <returns></returns>
         public override bool AddChild(ISceneEntity child)
         {
             lock (m_partsLock)
@@ -654,6 +670,13 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Add this child to the group and set the parent ID's,
+        /// but do NOT set the link number,
+        /// the caller wants to deal with it if they call this
+        /// </summary>
+        /// <param name="child"></param>
+        /// <returns></returns>
         public override bool LinkChild(ISceneEntity child)
         {
             lock (m_partsLock)
@@ -681,6 +704,11 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Remove this child from the group and then update the link numbers so that there is not a hole
+        /// </summary>
+        /// <param name="child"></param>
+        /// <returns></returns>
         public override bool RemoveChild(ISceneEntity child)
         {
             lock (m_partsLock)
@@ -716,7 +744,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lastSeenLinkNum++;
             }
         }
-        
+
+        #endregion
+
         /// <summary>
         /// Attach this object to a scene.  It will also now appear to agents.
         /// </summary>
@@ -811,6 +841,7 @@ namespace OpenSim.Region.Framework.Scenes
             return finalScale;
 
         }
+
         public EntityIntersection TestIntersection(Ray hRay, bool frontFacesOnly, bool faceCenters)
         {
             // We got a request from the inner_scene to raytrace along the Ray hRay
@@ -1235,35 +1266,6 @@ namespace OpenSim.Region.Framework.Scenes
             AddChild(part);
         }
 
-        /// <summary>
-        /// Make sure that every non root part has the proper parent root part local id
-        /// </summary>
-        private void UpdateParentIDs()
-        {
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part.UUID != m_rootPart.UUID)
-                    {
-                        part.SetParentLocalId(m_rootPart.LocalId);
-                    }
-                }
-            }
-        }
-
-        public void RegenerateFullIDs()
-        {
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.UUID = UUID.Random();
-
-                }
-            }
-        }
-
         // justincc: I don't believe this hack is needed any longer, especially since the physics
         // parts of set AbsolutePosition were already commented out.  By changing HasGroupChanged to false
         // this method was preventing proper reload of scene objects.
@@ -1287,16 +1289,6 @@ namespace OpenSim.Region.Framework.Scenes
             // teravus: AbsolutePosition is NOT a normal property!
             // the code in the getter of AbsolutePosition is significantly different then the code in the setter!
             // jhurliman: Then why is it a property instead of two methods?
-        }
-
-        public UUID GetPartsFullID(uint localID)
-        {
-            SceneObjectPart part = GetChildPart(localID);
-            if (part != null)
-            {
-                return part.UUID;
-            }
-            return UUID.Zero;
         }
 
         public void ObjectGrabHandler(uint localId, Vector3 offsetPos, IClientAPI remoteClient)
@@ -1340,6 +1332,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         //Make sure it isn't going to be updated again
                         part.ClearUpdateSchedule();
+                        //If it is the root part, kill the object in the client
                         if (part == m_rootPart)
                         {
                             Scene.ForEachScenePresence(delegate(ScenePresence avatar)
@@ -1538,6 +1531,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Copying
 
+        /// <summary>
+        /// Make an exact copy of this group.
+        /// This does NOT reset any UUIDs, localIDs, or anything, as this is an EXACT copy.
+        /// </summary>
+        /// <returns></returns>
         public override EntityBase Copy()
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
@@ -1582,7 +1580,8 @@ namespace OpenSim.Region.Framework.Scenes
                 partList = new List<SceneObjectPart>(m_partsList);
             }
 
-            partList.Sort(LinkSetCompare);
+            //Sort the list by link number so that we get them in the right order
+            partList.Sort(Scene.SceneGraph.linkSetSorter);
 
             foreach (SceneObjectPart part in partList)
             {
@@ -1600,6 +1599,10 @@ namespace OpenSim.Region.Framework.Scenes
             return dupe;
         }
 
+        /// <summary>
+        /// Rebuild the physical representation of all the prims.
+        /// This is used after copying the prim so that all of the object is readded to the physics scene.
+        /// </summary>
         public override void RebuildPhysicalRepresentation()
         {
             foreach (SceneObjectPart part in m_partsList)
@@ -1609,8 +1612,11 @@ namespace OpenSim.Region.Framework.Scenes
                     PhysicsActor oldActor = part.PhysActor;
                     PrimitiveBaseShape pbs = part.Shape;
 
+                    //Remove the old one so that we don't have more than we should,
+                    //  as when we copy, it readds it to the PhysicsScene somehow
                     m_scene.PhysicsScene.RemovePrim(part.PhysActor);
 
+                    //Now readd the physics actor to the physics scene
                     part.PhysActor
                         = m_scene.PhysicsScene.AddPrimShape(
                             string.Format("{0}/{1}", part.Name, part.UUID),
@@ -1620,16 +1626,18 @@ namespace OpenSim.Region.Framework.Scenes
                             part.RotationOffset,
                             part.PhysActor.IsPhysical);
 
+                    //Fix the localID!
                     part.PhysActor.LocalID = part.LocalId;
+                    //Set physical and etc up correctly
                     part.DoPhysicsPropertyUpdate(oldActor.IsPhysical, true);
 
                     part.PhysActor.PIDTarget = oldActor.PIDTarget;
                     part.PhysActor.PIDTau = oldActor.PIDTau;
                     part.PhysActor.PIDActive = oldActor.PIDActive;
 
-                    if (part.VolumeDetectActive)
-                        part.PhysActor.SetVolumeDetect(1);
+                    part.PhysActor.SetVolumeDetect(part.VolumeDetectActive ? 1 : 0);
 
+                    //Force deselection here so that it isn't stuck forever
                     part.PhysActor.Selected = false;
 
                     part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
@@ -1637,10 +1645,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public int LinkSetCompare(SceneObjectPart p1, SceneObjectPart p2)
-        {
-            return p1.LinkNum.CompareTo(p2.LinkNum);
-        }
+        #endregion
+
+        #region Script methods
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
         {
@@ -1857,6 +1864,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void SetPartOwner(SceneObjectPart part, UUID cAgentID, UUID cGroupID)
+        {
+            part.OwnerID = cAgentID;
+            part.GroupID = cGroupID;
+        }
+
         /// <summary>
         /// Set the owner of the root part.
         /// </summary>
@@ -1879,6 +1892,10 @@ namespace OpenSim.Region.Framework.Scenes
             part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
         }
 
+        #endregion
+
+        #region Scheduling
+
         /// <summary>
         ///
         /// </summary>
@@ -1890,16 +1907,6 @@ namespace OpenSim.Region.Framework.Scenes
                                                         RootPart.OwnershipCost, RootPart.ObjectSaleType, RootPart.SalePrice, RootPart.Category,
                                                         RootPart.CreatorID, RootPart.Name, RootPart.Description);
         }
-
-        public void SetPartOwner(SceneObjectPart part, UUID cAgentID, UUID cGroupID)
-        {
-            part.OwnerID = cAgentID;
-            part.GroupID = cGroupID;
-        }
-
-        #endregion
-
-        #region Scheduling
 
         public override void Update()
         {
@@ -1949,11 +1956,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public Vector3 m_lastSignificantPosition = Vector3.Zero;
-        public UUID m_lastParcelUUID = UUID.Zero;
-
+        /// <summary>
+        /// See if the object has moved enough to trigger the Significant Movement event
+        /// </summary>
         private void CheckForSignificantMovement()
         {
+            //How far the object can move before it triggers an update
             const float SIGNIFICANT_MOVEMENT = 1.0f;
 
             if (Util.GetDistanceTo(AbsolutePosition, m_lastSignificantPosition) > SIGNIFICANT_MOVEMENT)
@@ -1966,6 +1974,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Check to see if we should be returned because of parcel auto returning
+        /// </summary>
+        /// <returns></returns>
         public bool CheckParcelReturn()
         {
             if (!m_scene.ShuttingDown && !IsDeleted && !IsAttachment && !m_isReturned) // if shutting down then there will be nothing to handle the return so leave till next restart
@@ -1979,6 +1991,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (parcel.LandData.OwnerID != OwnerID &&
                             (parcel.LandData.GroupID != GroupID ||
                             parcel.LandData.GroupID != OwnerID || //Allow group deeded prims!
+                            parcel.LandData.OwnerID != GroupID || //Allow group deeded prims!
                             parcel.LandData.GroupID == UUID.Zero))
                     {
                         if ((DateTime.UtcNow - RootPart.Rezzed).TotalMinutes >
@@ -2198,6 +2211,9 @@ namespace OpenSim.Region.Framework.Scenes
             RootPart.SendTerseUpdateToAllClients();
         }
 
+        /// <summary>
+        /// Queue a check to see if we should send this prim to clients
+        /// </summary>
         public void QueueForUpdateCheck()
         {
             if (m_scene == null) // Need to check here as it's null during object creation
@@ -2225,7 +2241,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region SceneGroupPart Methods
+        #region Get Children Methods
 
         /// <summary>
         /// Get the child part by LinkNum
@@ -2266,12 +2282,24 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
+        /// <summary>
+        /// Get a child prim of this group by LocalID
+        /// </summary>
+        /// <param name="LocalID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public override bool GetChildPrim(uint LocalID, out ISceneEntity entity)
         {
             entity = GetChildPart(LocalID);
             return entity != null;
         }
 
+        /// <summary>
+        /// Get a child prim of this group by UUID
+        /// </summary>
+        /// <param name="UUID"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public override bool GetChildPrim(UUID UUID, out ISceneEntity entity)
         {
             entity = GetChildPart(UUID);
@@ -2312,46 +2340,11 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        /// <summary>
-        /// Does this group contain the child prim
-        /// should be able to remove these methods once we have a entity index in scene
-        /// </summary>
-        /// <param name="primID"></param>
-        /// <returns></returns>
-        [Obsolete("Use EntityManager.TryGetChildPrim instead.")]
-        public bool HasChildPrim(UUID primID)
-        {
-            return m_parts.ContainsKey(primID);
-        }
-
-        /// <summary>
-        /// Does this group contain the child prim
-        /// should be able to remove these methods once we have a entity index in scene
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <returns></returns>
-        //[Obsolete("Use EntityManager.TryGetChildPrim instead.")]
-        public bool HasChildPrim(uint localID)
-        {
-            //m_log.DebugFormat("Entered HasChildPrim looking for {0}", localID);
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    //m_log.DebugFormat("Found {0}", part.LocalId);
-                    if (part.LocalId == localID)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         #endregion
 
         #region Packet Handlers
+
+        #region Linking and Delinking
 
         /// <summary>
         /// Link the prims in a given group to this group
@@ -2422,53 +2415,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// an independent SceneObjectGroup.
         /// </summary>
         /// <param name="partID"></param>
-        /// <returns>The object group of the newly delinked prim.  Null if part could not be found</returns>
-        public SceneObjectGroup DelinkFromGroup(uint partID)
-        {
-            return DelinkFromGroup(partID, true);
-        }
-
-        /// <summary>
-        /// Delink the given prim from this group.  The delinked prim is established as
-        /// an independent SceneObjectGroup.
-        /// </summary>
-        /// <param name="partID"></param>
-        /// <param name="sendEvents"></param>
-        /// <returns>The object group of the newly delinked prim.  Null if part could not be found</returns>
-        public SceneObjectGroup DelinkFromGroup(uint partID, bool sendEvents)
-        {
-            SceneObjectPart linkPart = GetChildPart(partID);
-
-            if (linkPart != null)
-            {
-                return DelinkFromGroup(linkPart, sendEvents);
-            }
-            else
-            {
-                m_log.WarnFormat("[SCENE OBJECT GROUP]: " +
-                                 "DelinkFromGroup(): Child prim {0} not found in object {1}, {2}",
-                                 partID, LocalId, UUID);
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Clears all undo states from this group
-        /// </summary>
-        public override void ClearUndoState()
-        {
-            foreach (SceneObjectPart child in ChildrenList)
-            {
-                child.ClearUndoState();
-            }
-        }
-
-        /// <summary>
-        /// Delink the given prim from this group.  The delinked prim is established as
-        /// an independent SceneObjectGroup.
-        /// </summary>
-        /// <param name="partID"></param>
         /// <param name="sendEvents"></param>
         /// <returns>The object group of the newly delinked prim.</returns>
         public SceneObjectGroup DelinkFromGroup(SceneObjectPart linkPart, bool sendEvents)
@@ -2525,8 +2471,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             linkPart.Rezzed = RootPart.Rezzed;
 
+            //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
-            //ScheduleGroupForFullUpdate();
+            //We need to send this so that we don't have issues with the client not realizing that the prims were unlinked
+            ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
 
             return objectGroup;
         }
@@ -2564,6 +2512,8 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             part.RotationOffset = newRot;
         }
+
+        #endregion
 
         /// <summary>
         /// If object is physical, apply force to move it around
@@ -2835,18 +2785,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part.UpdateExtraParam(type, inUse, data);
             }
-        }
-
-        /// <summary>
-        /// Get the parts of this scene object
-        /// </summary>
-        /// <returns></returns>
-        public SceneObjectPart[] GetParts()
-        {
-            int numParts = ChildrenList.Count;
-            SceneObjectPart[] partArray = new SceneObjectPart[numParts];
-            ChildrenList.CopyTo(partArray, 0);
-            return partArray;
         }
 
         /// <summary>
@@ -3733,29 +3671,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        /// <summary>
-        /// Get the sum of the size of all parts, not really that effective
-        /// </summary>
-        /// <returns></returns>
-        public Vector3 GetFakeTotalSize()
-        {
-            Vector3 totalSize = new Vector3();
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    //Find the position of the prim and determine how far away it is from the absolute position of the group, then add the scale
-                    if ((part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2) > totalSize.X)
-                        totalSize.X = (part.AbsolutePosition.X - AbsolutePosition.X) + (part.Scale.X / 2);
-                    if ((part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2) > totalSize.Y)
-                        totalSize.Y = (part.AbsolutePosition.Y - AbsolutePosition.Y) + (part.Scale.Y / 2);
-                    if ((part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2) > totalSize.Z)
-                        totalSize.Z = (part.AbsolutePosition.Z - AbsolutePosition.Z) + (part.Scale.Z / 2);
-                }
-            }
-            return totalSize;
-        }
 
         private readonly List<uint> m_lastColliders = new List<uint>();
 

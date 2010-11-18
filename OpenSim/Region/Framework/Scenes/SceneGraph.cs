@@ -1216,6 +1216,126 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Make this object be added to search
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="IncludeInSearch"></param>
+        /// <param name="LocalID"></param>
+        protected internal void MakeObjectSearchable(IClientAPI remoteClient, bool IncludeInSearch, uint LocalID)
+        {
+            UUID user = remoteClient.AgentId;
+            UUID objid = UUID.Zero;
+            EntityBase entity;
+            SceneObjectGroup grp;
+            if (!TryGetEntity(LocalID, out entity))
+                return;
+            grp = (SceneObjectGroup)entity;
+            //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
+            //aka ObjectFlags.JointWheel = IncludeInSearch
+
+            //Permissions model: Object can be REMOVED from search IFF:
+            // * User owns object
+            //use CanEditObject
+
+            //Object can be ADDED to search IFF:
+            // * User owns object
+            // * Asset/DRM permission bit "modify" is enabled
+            //use CanEditObjectPosition
+
+            // libomv will complain about PrimFlags.JointWheel being
+            // deprecated, so we
+#pragma warning disable 0612
+            if (IncludeInSearch && m_parentScene.Permissions.CanEditObject(objid, user))
+            {
+                grp.RootPart.AddFlag(PrimFlags.JointWheel);
+            }
+            else if (!IncludeInSearch && m_parentScene.Permissions.CanEditObject(objid, user))
+            {
+                grp.RootPart.RemFlag(PrimFlags.JointWheel);
+            }
+#pragma warning restore 0612
+        }
+
+        /// <summary>
+        /// Duplicate the given entity and add it to the world
+        /// </summary>
+        /// <param name="LocalID">LocalID of the object to duplicate</param>
+        /// <param name="offset">Duplicated objects position offset from the original entity</param>
+        /// <param name="flags">Flags to give the Duplicated object</param>
+        /// <param name="AgentID"></param>
+        /// <param name="GroupID"></param>
+        /// <param name="rot">Rotation to have the duplicated entity set to</param>
+        /// <returns></returns>
+        public bool DuplicateObject(uint LocalID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
+        {
+            //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
+            SceneObjectGroup original;
+            EntityBase entity;
+
+            if (TryGetEntity(LocalID, out entity))
+            {
+                original = (SceneObjectGroup)entity;
+                if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
+                {
+                    EntityBase duplicatedEntity = DuplicateEntity(original);
+
+                    duplicatedEntity.AbsolutePosition = duplicatedEntity.AbsolutePosition + offset;
+
+                    SceneObjectGroup duplicatedGroup = (SceneObjectGroup)duplicatedEntity;
+
+                    if (original.OwnerID != AgentID)
+                    {
+                        duplicatedGroup.SetOwnerId(AgentID);
+                        duplicatedGroup.SetRootPartOwner(duplicatedGroup.RootPart, AgentID, GroupID);
+
+                        List<SceneObjectPart> partList =
+                            new List<SceneObjectPart>(duplicatedGroup.ChildrenList);
+
+                        if (m_parentScene.Permissions.PropagatePermissions())
+                        {
+                            foreach (SceneObjectPart child in partList)
+                            {
+                                child.Inventory.ChangeInventoryOwner(AgentID);
+                                child.TriggerScriptChangedEvent(Changed.OWNER);
+                                child.ApplyNextOwnerPermissions();
+                            }
+                        }
+
+                        duplicatedGroup.RootPart.ObjectSaleType = 0;
+                        duplicatedGroup.RootPart.SalePrice = 10;
+                    }
+
+                    // Since we copy from a source group that is in selected
+                    // state, but the copy is shown deselected in the viewer,
+                    // We need to clear the selection flag here, else that
+                    // prim never gets persisted at all. The client doesn't
+                    // think it's selected, so it will never send a deselect...
+                    duplicatedGroup.IsSelected = false;
+
+                    if (rot != Quaternion.Identity)
+                    {
+                        duplicatedGroup.UpdateGroupRotationR(rot);
+                    }
+
+                    duplicatedGroup.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
+                    duplicatedGroup.HasGroupChanged = true;
+                    duplicatedGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    duplicatedGroup.ResumeScripts();
+
+                    // required for physics to update it's position
+                    duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
+
+                    m_parentScene.EventManager.TriggerParcelPrimCountUpdate();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Check all Scene Objects to see whether they should be returned by the parcel auto return
+        /// </summary>
         protected internal void CheckParcelReturns()
         {
             ForEachSOG(delegate(SceneObjectGroup sog)
@@ -1232,6 +1352,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             });
         }
+
+        #region Linking and Delinking
 
         /// <summary>
         /// Initial method invoked when we receive a link objects request from the client.
@@ -1402,6 +1524,7 @@ namespace OpenSim.Region.Framework.Scenes
                     g.HasGroupChanged = true; // Persist
                     g.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
+                //Fix undo states now that the linksets have been changed
                 foreach (SceneObjectPart part in prims)
                 {
                     part.StoreUndoState();
@@ -1424,128 +1547,13 @@ namespace OpenSim.Region.Framework.Scenes
             return a.LinkNum.CompareTo(b.LinkNum);
         }
 
-        protected internal void MakeObjectSearchable(IClientAPI remoteClient, bool IncludeInSearch, uint LocalID)
-        {
-            UUID user = remoteClient.AgentId;
-            UUID objid = UUID.Zero;
-            EntityBase entity;
-            SceneObjectGroup grp;
-            if (!TryGetEntity(LocalID, out entity))
-                return;
-            grp = (SceneObjectGroup)entity;
-            //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
-            //aka ObjectFlags.JointWheel = IncludeInSearch
-
-            //Permissions model: Object can be REMOVED from search IFF:
-            // * User owns object
-            //use CanEditObject
-
-            //Object can be ADDED to search IFF:
-            // * User owns object
-            // * Asset/DRM permission bit "modify" is enabled
-            //use CanEditObjectPosition
-
-            // libomv will complain about PrimFlags.JointWheel being
-            // deprecated, so we
-            #pragma warning disable 0612
-            if (IncludeInSearch && m_parentScene.Permissions.CanEditObject(objid, user))
-            {
-                grp.RootPart.AddFlag(PrimFlags.JointWheel);
-                grp.HasGroupChanged = true;
-            }
-            else if (!IncludeInSearch && m_parentScene.Permissions.CanMoveObject(objid,user))
-            {
-                grp.RootPart.RemFlag(PrimFlags.JointWheel);
-                grp.HasGroupChanged = true;
-            }
-            #pragma warning restore 0612
-        }
-
-        public bool DuplicateObject(uint LocalID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
-        {
-            //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
-            SceneObjectGroup original;
-            EntityBase entity;
-
-            if (TryGetEntity(LocalID, out entity))
-            {
-                original = (SceneObjectGroup)entity;
-                if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
-                {
-                    EntityBase duplicatedEntity = DuplicateEntity(original);
-                    
-                    duplicatedEntity.AbsolutePosition = duplicatedEntity.AbsolutePosition + offset;
-                    
-                    SceneObjectGroup duplicatedGroup = (SceneObjectGroup)duplicatedEntity;
-
-                    if (original.OwnerID != AgentID)
-                    {
-                        duplicatedGroup.SetOwnerId(AgentID);
-                        duplicatedGroup.SetRootPartOwner(duplicatedGroup.RootPart, AgentID, GroupID);
-
-                        List<SceneObjectPart> partList =
-                            new List<SceneObjectPart>(duplicatedGroup.ChildrenList);
-
-                        if (m_parentScene.Permissions.PropagatePermissions())
-                        {
-                            foreach (SceneObjectPart child in partList)
-                            {
-                                child.Inventory.ChangeInventoryOwner(AgentID);
-                                child.TriggerScriptChangedEvent(Changed.OWNER);
-                                child.ApplyNextOwnerPermissions();
-                            }
-                        }
-
-                        duplicatedGroup.RootPart.ObjectSaleType = 0;
-                        duplicatedGroup.RootPart.SalePrice = 10;
-                    }
-
-                    // Since we copy from a source group that is in selected
-                    // state, but the copy is shown deselected in the viewer,
-                    // We need to clear the selection flag here, else that
-                    // prim never gets persisted at all. The client doesn't
-                    // think it's selected, so it will never send a deselect...
-                    duplicatedGroup.IsSelected = false;
-
-                    if (rot != Quaternion.Identity)
-                    {
-                        duplicatedGroup.UpdateGroupRotationR(rot);
-                    }
-
-                    duplicatedGroup.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
-                    duplicatedGroup.HasGroupChanged = true;
-                    duplicatedGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
-                    duplicatedGroup.ResumeScripts();
-
-                    // required for physics to update it's position
-                    duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
-
-                    m_parentScene.EventManager.TriggerParcelPrimCountUpdate();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Calculates the distance between two Vector3s
-        /// </summary>
-        /// <param name="v1"></param>
-        /// <param name="v2"></param>
-        /// <returns></returns>
-        protected internal float Vector3Distance(Vector3 v1, Vector3 v2)
-        {
-            // We don't really need the double floating point precision...
-            // so casting it to a single
-
-            return
-                (float)
-                Math.Sqrt((v1.X - v2.X) * (v1.X - v2.X) + (v1.Y - v2.Y) * (v1.Y - v2.Y) + (v1.Z - v2.Z) * (v1.Z - v2.Z));
-        }
+        #endregion
 
         #endregion
 
         #region New Scene Entity Manager Code
+
+        #region Non EntityBase methods that need cleaned up later
 
         public bool LinkPartToSOG(SceneObjectGroup grp, SceneObjectPart part)
         {
@@ -1554,7 +1562,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Insert in terms of link numbers, the new links
             // before the current ones (with the exception of 
             // the root prim. Shuffle the old ones up
-            foreach (SceneObjectPart otherPart in grp.ChildrenList)
+            foreach (ISceneEntity otherPart in grp.ChildrenEntities())
             {
                 if (otherPart.LinkNum != 1)
                 {
@@ -1563,9 +1571,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             part.LinkNum = 2;
-            grp.ClearUndoState();
             return LinkPartToEntity(grp, part);
         }
+
+        #endregion
 
         #region Wrapper Methods
 
@@ -1757,6 +1766,9 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Private Methods
+        ///These methods are UNSAFE to be accessed from outside this manager, if they are, BAD things WILL happen.
+        /// If these are changed so that they can be accessed from the outside, ghost prims and other nasty things will occur unless you are EXTREMELY careful.
+        /// If more changes need to occur in this area, you must use public methods to safely add/update/remove objects from the EntityManager
 
         /// <summary>
         /// Remove this entity fully from the EntityManager

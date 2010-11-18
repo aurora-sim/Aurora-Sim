@@ -310,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes
                             priority /= 2; //Emphasize physical objs
 
                         //Factor in the size of objects as well, big ones are MUCH more important than small ones
-                        float size = rootPart.ParentGroup.GetFakeTotalSize().Length();
+                        float size = rootPart.ParentGroup.GroupScale().Length() * 0.5f;
                         //Cap size at 10 so that we completely don't overwhelm other objects
                         if (size > 10)
                             size = 10;

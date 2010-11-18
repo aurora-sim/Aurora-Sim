@@ -4295,7 +4295,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 parts.Remove(parentPrim.RootPart);
                 foreach (SceneObjectPart part in parts)
                 {
-                    parentPrim.DelinkFromGroup(part.LocalId, true);
+                    parentPrim.DelinkFromGroup(part, true);
                 }
                 parentPrim.HasGroupChanged = true;
                 parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
@@ -4318,7 +4318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (childPrim == null)
                     return;
 
-                parentPrim.DelinkFromGroup(childPrim.LocalId, true);
+                parentPrim.DelinkFromGroup(childPrim, true);
                 parentPrim.HasGroupChanged = true;
                 parentPrim.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
@@ -4338,7 +4338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             foreach (SceneObjectPart part in parts)
             {
-                parentPrim.DelinkFromGroup(part.LocalId, true);
+                parentPrim.DelinkFromGroup(part, true);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
             parentPrim.HasGroupChanged = true;
