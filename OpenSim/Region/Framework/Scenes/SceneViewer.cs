@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneViewer(ScenePresence presence)
         {
             m_presence = presence;
-            //if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
+            if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
         }
 
@@ -73,6 +73,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         void SignificantClientMovement(IClientAPI remote_client)
         {
+            if (!m_presence.Scene.CheckForObjectCulling)
+                return;
+
             if (remote_client.AgentId != m_presence.UUID)
                 return;
 
