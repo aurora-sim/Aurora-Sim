@@ -565,12 +565,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llGetNextEmail(address, subject);
         }
 
-        public LSL_String llGetNotecardLine(string name, int line)
+        public IEnumerator llGetNotecardLine(string name, int line)
         {
             return m_LSL_Functions.llGetNotecardLine(name, line);
         }
 
-        public LSL_Key llGetNumberOfNotecardLines(string name)
+        public IEnumerator llGetNumberOfNotecardLines(string name)
         {
             return m_LSL_Functions.llGetNumberOfNotecardLines(name);
         }
@@ -650,7 +650,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llGetParcelPrimCount(pos, category, sim_wide);
         }
 
-        public LSL_List llGetParcelPrimOwners(LSL_Vector pos)
+        public IEnumerator llGetParcelPrimOwners(LSL_Vector pos)
         {
             return m_LSL_Functions.llGetParcelPrimOwners(pos);
         }
@@ -1075,7 +1075,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_LSL_Functions.llModifyLand(action, brush);
         }
 
-        public LSL_Integer llModPow(int a, int b, int c)
+        public IEnumerator llModPow(int a, int b, int c)
         {
             return m_LSL_Functions.llModPow(a, b, c);
         }
@@ -1110,7 +1110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llParcelMediaCommandList(commandList);
         }
 
-        public LSL_List llParcelMediaQuery(LSL_List aList)
+        public IEnumerator llParcelMediaQuery(LSL_List aList)
         {
             return m_LSL_Functions.llParcelMediaQuery(aList);
         }
@@ -1231,16 +1231,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public void llRemoveVehicleFlags(int flags)
-        {
+        {   
             m_LSL_Functions.llRemoveVehicleFlags(flags);
         }
 
-        public LSL_Key llRequestAgentData(string id, int data)
-        {
-            return m_LSL_Functions.llRequestAgentData(id, data);
-        }
+        public IEnumerator llRequestAgentData(string id, int data)
+            {
+            return m_LSL_Functions.llRequestAgentData(id,data);
+            }
 
-        public LSL_Key llRequestInventoryData(string name)
+        public IEnumerator llRequestInventoryData(string name)
         {
             return m_LSL_Functions.llRequestInventoryData(name);
         }
@@ -1255,7 +1255,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llRequestSecureURL();
         }
 
-        public LSL_Key llRequestSimulatorData(string simulator, int data)
+        public IEnumerator llRequestSimulatorData(string simulator, int data)
         {
             return m_LSL_Functions.llRequestSimulatorData(simulator, data);
         }
@@ -1379,7 +1379,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llScriptDanger(pos);
         }
 
-        public LSL_Key llSendRemoteData(string channel, string dest, int idata, string sdata)
+        public IEnumerator llSendRemoteData(string channel, string dest, int idata, string sdata)
         {
             return m_LSL_Functions.llSendRemoteData(channel, dest, idata, sdata);
         }
@@ -1824,7 +1824,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llWind(offset);
         }
 
-        public LSL_String llXorBase64Strings(string str1, string str2)
+        public IEnumerator llXorBase64Strings(string str1, string str2)
         {
             return m_LSL_Functions.llXorBase64Strings(str1, str2);
         }
@@ -1834,17 +1834,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_LSL_Functions.llXorBase64StringsCorrect(str1, str2);
         }
 
-        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        public IEnumerator llSetPrimMediaParams(LSL_Integer face, LSL_List commandList)
         {
             return m_LSL_Functions.llSetPrimMediaParams(face, commandList);
         }
 
-        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        public IEnumerator llClearPrimMedia(LSL_Integer face)
         {
             return m_LSL_Functions.llClearPrimMedia(face);
         }
 
-        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List commandList)
+        public IEnumerator llGetPrimMediaParams(LSL_Integer face, LSL_List commandList)
         {
             return m_LSL_Functions.llGetPrimMediaParams(face, commandList);
         }

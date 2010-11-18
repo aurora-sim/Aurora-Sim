@@ -425,7 +425,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ID.EventsProcData.EventsQueue.Clear();
                 if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
                     ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
-                if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
+                else if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
                     SleepingScriptIDs.Remove(ID);
                 else
                     ScriptIDs.Remove(ID);
@@ -450,8 +450,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.EventsQueue.Clear();
-                if (abortcur && ID.EventsProcData.State == (int)ScriptEventsState.InExec)
-                    ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
 
                 ID.EventsProcDataLocked = false;
                 }
@@ -818,8 +816,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Thread.Sleep(20);
                 }
 
-            Interlocked.Decrement(ref WorkersLock.nWorkers);
-
+            lock(WorkersLock)
+                {
+                WorkersLock.nWorkers--;
+                if(WorkersLock.nWorkers<0)
+                    WorkersLock.nWorkers++;
+                }
             return false;
             }
 
