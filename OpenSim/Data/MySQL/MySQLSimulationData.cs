@@ -432,23 +432,27 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        for (int i = 0; i < uuids.Count; i++)
+                        for (int cntr = 0; cntr < uuids.Count; cntr += 10)
                         {
-                            if ((i + 1) == uuids.Count)
-                            {// end of the list
-                                sql += "(UUID = ?UUID" + i + ")";
-                            }
-                            else
+                            int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                            for (int i = 0; i < max; i++)
                             {
-                                sql += "(UUID = ?UUID" + i + ") or ";
+                                if ((i + 1) == max)
+                                {// end of the list
+                                    sql += "(UUID = ?UUID" + i + ")";
+                                }
+                                else
+                                {
+                                    sql += "(UUID = ?UUID" + i + ") or ";
+                                }
+                                cmd.Parameters.AddWithValue("UUID" + i, uuids[cntr + i].ToString());
                             }
+                            cmd.CommandText = sql;
+
+                            ExecuteNonQuery(cmd);
+                            sql = "delete from primshapes where ";
+                            cmd.Parameters.Clear();
                         }
-                        cmd.CommandText = sql;
-
-                        for (int i = 0; i < uuids.Count; i++)
-                            cmd.Parameters.AddWithValue("UUID" + i, uuids[i].ToString());
-
-                        ExecuteNonQuery(cmd);
                     }
                 }
             }
@@ -470,24 +474,28 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        for (int i = 0; i < uuids.Count; i++)
+                        for (int cntr = 0; cntr < uuids.Count; cntr += 10)
                         {
-                            if ((i + 1) == uuids.Count)
+                            int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                            for (int i = 0; i < max; i++)
                             {
-                                // end of the list
-                                sql += "(PrimID = ?PrimID" + i + ")";
+                                if ((i + 1) == max)
+                                {
+                                    // end of the list
+                                    sql += "(PrimID = ?PrimID" + i + ")";
+                                }
+                                else
+                                {
+                                    sql += "(PrimID = ?PrimID" + i + ") or ";
+                                }
+                                cmd.Parameters.AddWithValue("PrimID" + i, uuids[cntr + i].ToString());
                             }
-                            else
-                            {
-                                sql += "(PrimID = ?PrimID" + i + ") or ";
-                            }
+                            cmd.CommandText = sql;
+
+                            ExecuteNonQuery(cmd);
+                            sql = "delete from primitems where ";
+                            cmd.Parameters.Clear();
                         }
-                        cmd.CommandText = sql;
-
-                        for (int i = 0; i < uuids.Count; i++)
-                            cmd.Parameters.AddWithValue("PrimID" + i, uuids[i].ToString());
-
-                        ExecuteNonQuery(cmd);
                     }
                 }
             }
