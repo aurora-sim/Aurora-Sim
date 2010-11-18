@@ -307,10 +307,8 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public void RemoveObjects(List<UUID> objGroups)
+        public void RemoveObjects(List<UUID> uuids)
         {
-            List<UUID> uuids = new List<UUID>();
-
             // Formerly, this used to check the region UUID.
             // That makes no sense, as we remove the contents of a prim
             // unconditionally, but the prim dependent on the region ID.
@@ -327,25 +325,27 @@ namespace OpenSim.Data.MySQL
 
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
-                        string deletePrims = "";
-                        int i = 0;
-                        foreach (UUID obj in objGroups)
+                        for (int cntr = 0; cntr < uuids.Count; cntr += 10)
                         {
-                            cmd.CommandText = "select UUID from prims where SceneGroupID= ?UUID";
-                            cmd.Parameters.AddWithValue("UUID" + i, obj.ToString());
-
-                            using (IDataReader reader = ExecuteReader(cmd))
+                            string sql = "delete from prims where ";
+                            int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                            for (int i = 0; i < max; i++)
                             {
-                                while (reader.Read())
-                                    uuids.Add(DBGuid.FromDB(reader["UUID"].ToString()));
+                                if ((i + 1) == max)
+                                {// end of the list
+                                    sql += "(SceneGroupID = ?UUID" + i + ")";
+                                }
+                                else
+                                {
+                                    sql += "(SceneGroupID = ?UUID" + i + ") or ";
+                                }
+                                cmd.Parameters.AddWithValue("UUID" + i, uuids[cntr + i].ToString());
                             }
-                            i++;
-                            deletePrims += "SceneGroupID = ?UUID" + i + " or ";
+                            cmd.CommandText = sql;
+
+                            ExecuteNonQuery(cmd);
+                            cmd.Parameters.Clear();
                         }
-                        deletePrims = deletePrims.Remove(deletePrims.Length - 4, 4);
-                        // delete the main prims
-                        cmd.CommandText = "delete from prims where " + deletePrims;
-                        ExecuteNonQuery(cmd);
                     }
                 }
             }

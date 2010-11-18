@@ -401,41 +401,33 @@ namespace OpenSim.Data.SQLite
             }
         }
 
-        public void RemoveObjects(List<UUID> objGroups)
+        public void RemoveObjects(List<UUID> uuids)
         {
             // m_log.InfoFormat(":[REGION DB]: Removing obj: {0} from region: {1}", obj.Guid, regionUUID);
 
-            List<UUID> uuids = new List<UUID>();
-
             using (SqliteCommand cmd = new SqliteCommand())
             {
-                string selectExp = "select UUID from prims where ";
-                for (int i = 0; i < objGroups.Count; i++)
+                for (int cntr = 0; cntr < uuids.Count; cntr += 10)
                 {
-                    cmd.Parameters.Add(new SqliteParameter(":SceneGroupID" + i, objGroups[i]));
-                    selectExp += "SceneGroupID=:SceneGroupID" + i + " or ";
+                    string sql = "delete from prims where ";
+                    int max = (uuids.Count - cntr) < 10 ? (uuids.Count - cntr) : 10;
+                    for (int i = 0; i < max; i++)
+                    {
+                        if ((i + 1) == max)
+                        {// end of the list
+                            sql += "(SceneGroupID = :UUID" + i + ")";
+                        }
+                        else
+                        {
+                            sql += "(SceneGroupID = :UUID" + i + ") or ";
+                        }
+                        cmd.Parameters.AddWithValue("UUID" + i, uuids[cntr + i].ToString());
+                    }
+                    cmd.CommandText = sql;
+
+                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
                 }
-
-                selectExp = selectExp.Remove(selectExp.Length - 4, 4);
-
-                cmd.CommandText = selectExp;
-                cmd.Connection = m_conn;
-
-                using (IDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                        uuids.Add(DBGuid.FromDB(reader["UUID"].ToString()));
-                }
-
-                // delete the main prims
-                selectExp = "delete from prims where ";
-                for (int i = 0; i < objGroups.Count; i++)
-                    selectExp += "SceneGroupID=:SceneGroupID" + i + " or ";
-
-                selectExp = selectExp.Remove(selectExp.Length - 4, 4);
-                cmd.CommandText = selectExp;
-
-                cmd.ExecuteNonQuery();
             }
 
             // there is no way this should be < 1 unless there is

@@ -91,6 +91,11 @@ namespace OpenSim.Services.Connectors
             m_database.RemoveObject(uuid, regionUUID);
         }
 
+        public void RemoveObjects(List<UUID> uuids)
+        {
+            m_database.RemoveObjects(uuids);
+        }
+
         public void StorePrimInventory(UUID primID, ICollection<TaskInventoryItem> items)
         {
             m_database.StorePrimInventory(primID, items);

@@ -1057,21 +1057,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_backingup = true; //Clear out all other threads
             ProcessPrimBackupTaints(true);
 
-            //Now make sure that we delete any prims sitting around
-            lock (m_needsDeleted)
-            {
-                if (m_needsDeleted.Count != 0)
-                {
-                    //Removes all objects in one SQL query
-                    foreach (UUID id in m_needsDeleted)
-                    {
-                        SimulationDataService.RemoveObject(id, RegionInfo.RegionID);
-                    }
-                    //m_scene.DataStore.RemoveObjects(m_scene.m_needsDeleted);
-                    m_needsDeleted.Clear();
-                }
-            }
-
             m_sceneGraph.Close();
 
             //Deregister from the grid server
@@ -1401,19 +1386,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
                             }
                             CheckExit();
-                            lock (m_scene.m_needsDeleted)
-                            {
-                                if (m_scene.m_needsDeleted.Count != 0)
-                                {
-                                    //Removes all objects in one SQL query
-                                    foreach (UUID id in m_scene.m_needsDeleted)
-                                    {
-                                        m_scene.SimulationDataService.RemoveObject(id, m_scene.RegionInfo.RegionID);
-                                    }
-                                    //m_scene.DataStore.RemoveObjects(m_scene.m_needsDeleted);
-                                    m_scene.m_needsDeleted.Clear();
-                                }
-                            }
 
                             if (m_scene.PhysicsReturns.Count != 0)
                             {
@@ -5385,6 +5357,17 @@ namespace OpenSim.Region.Framework.Scenes
                             if (!m_backupTaintedPrims.ContainsKey(grp.UUID))
                                 m_backupTaintedPrims.Add(grp.UUID, grp);
                     }
+                }
+            }
+            //Now make sure that we delete any prims sitting around
+            // Bit ironic that backup deals with deleting of objects too eh? 
+            lock (m_needsDeleted)
+            {
+                if (m_needsDeleted.Count != 0)
+                {
+                    //Removes all objects in one call
+                    SimulationDataService.RemoveObjects(m_needsDeleted);
+                    m_needsDeleted.Clear();
                 }
             }
         }
