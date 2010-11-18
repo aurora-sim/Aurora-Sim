@@ -673,18 +673,25 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             bool permission = false;
             bool locked = false;
 
+            SceneObjectGroup group;
             if (!m_scene.Entities.ContainsKey(objId))
             {
-                return false;
+                EntityBase entity;
+                if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
+                {
+                    return false;
+                }
+                group = (SceneObjectGroup)entity;
             }
-
-            // If it's not an object, we cant edit it.
-            if ((!(m_scene.Entities[objId] is SceneObjectGroup)))
+            else
             {
-                return false;
+                // If it's not an object, we cant edit it.
+                if ((!(m_scene.Entities[objId] is SceneObjectGroup)))
+                {
+                    return false;
+                }
+                group = (SceneObjectGroup)m_scene.Entities[objId];
             }
-
-            SceneObjectGroup group = (SceneObjectGroup)m_scene.Entities[objId];
 
             UUID objectOwner = group.OwnerID;
             locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);
