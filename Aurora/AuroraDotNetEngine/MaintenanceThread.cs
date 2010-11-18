@@ -410,6 +410,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
         private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
+        private HashSet<ScriptData> ScriptInExec = new HashSet<ScriptData>();
+
+        public void RemoveFromEventSchQueue(ScriptData ID)
+            {
+            if (ID == null)
+                return;
+            bool wasign;
+            lock (ID.EventsProcData)
+                {
+                wasign = ID.EventsProcData.IgnoreNew;
+                ID.EventsProcData.IgnoreNew = true;
+                ID.EventsProcDataLocked = true;
+                ID.EventsProcData.EventsQueue.Clear();
+                if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
+                    ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+                if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
+                    SleepingScriptIDs.Remove(ID);
+                else
+                    ScriptIDs.Remove(ID);
+                ID.InEventsProcData = false;
+                ID.EventsProcData.IgnoreNew = wasign;
+                ID.EventsProcDataLocked = false;
+                }
+
+            lock (WorkersLock)      // this may leave lost workers if timeslice doesn't return
+                {
+                WorkersLock.nWorkers--;
+                if (WorkersLock.nWorkers < 0)
+                    WorkersLock.nWorkers++;
+                }
+            }
 
         public void FlushEventSchQueue(ScriptData ID, bool abortcur)
             {
@@ -436,64 +467,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
             }
-/*
-        public void DoNowEventSch(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
-            {
-            // Create a structure and add data
-            QueueItemStruct QIS = new QueueItemStruct();
 
-            int i,j;
-            bool res;
-            bool wasIgnore;
-
-            QIS.ID = ID;
-            QIS.functionName = FunctionName;
-            QIS.llDetectParams = qParams;
-            QIS.param = param;
-            QIS.VersionID = VersionID;
-
-            lock (ID.EventsProcData)
-                {
-                wasIgnore = ID.EventsProcData.IgnoreNew;
-                }
-            i = 0;
-            // we can't lock here
-            while (ID.InEventsProcData && ID.EventsProcData.State != (int)ScriptEventsState.Idle && i++ < 50)
-                Thread.Sleep(20);
-
-            if (i < 50)
-                {
-                lock (ID.EventsProcData)
-                    {
-                    ID.EventsProcDataLocked = true;
-                    j = 0;
-                    while (j++ < 50)
-                        {
-                        try
-                            {
-                            res = EventSchProcessQIS(ref QIS);
-                            }
-                        catch
-                            {
-                            res = false;
-                            }
-                        if (res)
-                            Thread.Sleep(20);
-                        else
-                            break;
-                        }
-
-                    ID.EventsProcData.IgnoreNew = wasIgnore;
-                    ID.EventsProcDataLocked = false;
-                    }
-                }
-
-            lock (ID.EventsProcData)
-                {
-                ID.EventsProcData.IgnoreNew = wasIgnore;
-                }
-            }
-*/
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
             {
@@ -849,6 +823,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return false;
             }
 
+
+
         public void EventSchExec(ScriptData ID)
             {
             QueueItemStruct QIS;
@@ -868,15 +844,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                     }
                 ID.EventsProcData.thread = Thread.CurrentThread;
+                lock (ScriptInExec)
+                    {
+                    ScriptInExec.Remove(ID);
+                    }
                 ID.EventsProcDataLocked = false;
+                }
+            lock (ScriptInExec)
+                {
+                ScriptInExec.Add(ID);
                 }
 
             bool res = EventSchProcessQIS(ref QIS);
+
 
             lock (ID.EventsProcData)
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.thread = null;
+
+                lock (ScriptInExec)
+                    {
+                    ScriptInExec.Remove(ID);
+                    }
 
                 if (!res || ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort || ID.VersionID != QIS.VersionID)
                     {

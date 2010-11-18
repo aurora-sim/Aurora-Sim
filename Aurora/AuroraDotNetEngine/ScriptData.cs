@@ -169,7 +169,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 // this is still broken ?
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, true);
-            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
 
             if (!Silent)
             {
@@ -302,10 +302,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ReleaseControls();
             //Remove other items from the queue.
 
-            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, true);
-            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, true);
-            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false);
-
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
+            
             VersionID++;
             //Reset the state to default
             State = "default";
