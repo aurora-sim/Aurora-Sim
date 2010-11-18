@@ -239,6 +239,8 @@ namespace OpenSim.Region.Framework.Scenes
         public event FinishedStartup OnFinishedStartup;
         public event AddToStartupQueue OnAddToStartupQueue;
         public event StartupComplete OnStartupComplete;
+        //This is called after OnStartupComplete is done, it should ONLY be registered to the Scene
+        public event StartupComplete OnStartupFullyComplete;
 
 //        public delegate void ScriptTimerEvent(uint localID, double timerinterval);
 
@@ -2111,6 +2113,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void TriggerStartupComplete(List<string> StartupData)
         {
             StartupComplete handlerOnStartupComplete = OnStartupComplete;
+            StartupComplete handlerOnStartupFullyComplete = OnStartupFullyComplete;
             if (handlerOnStartupComplete != null)
             {
                 foreach (StartupComplete d in handlerOnStartupComplete.GetInvocationList())
@@ -2124,6 +2127,22 @@ namespace OpenSim.Region.Framework.Scenes
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for StartupComplete failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
+                    }
+                }
+                if (handlerOnStartupFullyComplete != null)
+                {
+                    foreach (StartupComplete d in handlerOnStartupFullyComplete.GetInvocationList())
+                    {
+                        try
+                        {
+                            d(StartupData);
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.ErrorFormat(
+                                "[EVENT MANAGER]: Delegate for StartupComplete failed - continuing.  {0} {1}",
+                                e.Message, e.StackTrace);
+                        }
                     }
                 }
             }

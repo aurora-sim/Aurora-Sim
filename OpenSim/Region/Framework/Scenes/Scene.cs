@@ -714,7 +714,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             EventManager.OnAddToStartupQueue += AddToStartupQueue;
             EventManager.OnFinishedStartup += FinishedStartup;
-            EventManager.OnStartupComplete += StartupComplete;
+            EventManager.OnStartupFullyComplete += StartupComplete;
 
             AddToStartupQueue("Startup");
 
