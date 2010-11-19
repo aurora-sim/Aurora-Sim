@@ -3661,8 +3661,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 TimeStampFull = (uint)timeNow;
             }
-            //if (SitTargetAvatar.Count != 0)
-            //    UpdateFlags = PrimUpdateFlags.FullUpdate;
+            
             if (UpdateFlags == PrimUpdateFlags.FindBest)
             {
                 //Add the defaults
@@ -3676,6 +3675,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
             }
+
             //Must send these as well
             if (Text != "")
                 UpdateFlags |= PrimUpdateFlags.Text;
@@ -3688,16 +3688,15 @@ namespace OpenSim.Region.Framework.Scenes
             if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
                 UpdateFlags |= PrimUpdateFlags.MediaURL;
 
-            //Needs to be outside, otherwise compressed updates will be screwy with groups
-            if (ParentGroup.ChildrenList.Count != 1)
-                UpdateFlags |= PrimUpdateFlags.ParentID;
+            if (m_parentGroup != null)
+                if (ParentGroup.ChildrenList.Count != 1)
+                    UpdateFlags |= PrimUpdateFlags.ParentID;
            
             m_neededUpdateFlags |= UpdateFlags;
             m_updateFlag = InternalUpdateFlags.FullUpdate;
 
-            //Experimental for now
-            //if ((UpdateFlags & PrimUpdateFlags.FullUpdate) == 0)
-                CRC++;
+            //Increment the CRC code so that the client won't be sent a cached update
+            CRC++;
 
             //            m_log.DebugFormat(
             //                "[SCENE OBJECT PART]: Scheduling full  update for {0}, {1} at {2}",
