@@ -3041,6 +3041,18 @@ namespace OpenSim.Region.Framework.Scenes
             //we need to do a terse update even if the move wasn't allowed
             // so that the position is reset in the client (the object snaps back)
             ScheduleGroupForTerseUpdate();
+            if (this.RootPart.SitTargetAvatar.Count != 0)
+            {
+                foreach (UUID clientID in this.RootPart.SitTargetAvatar)
+                {
+                    //Send full updates to the avatar as well so that they move as well
+                    ScenePresence SP;
+                    if (m_scene.TryGetScenePresence(clientID, out SP))
+                    {
+                        SP.SendFullUpdateToAllClients();
+                    }
+                }
+            }
         }
 
         /// <summary>
