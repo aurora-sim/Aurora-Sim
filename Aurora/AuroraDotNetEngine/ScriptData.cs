@@ -100,6 +100,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        //This is the UUID of the actual script.
+        public UUID ItemID;
+        public SceneObjectPart part;
+
         private ScriptEngine m_ScriptEngine;
         public Scene World;
         public IScript Script;
@@ -130,13 +134,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public int VersionID = 0;
 
-        public SceneObjectPart part;
 
         public long EventDelayTicks = 0;
         public long NextEventTimeTicks = 0;
         public string AssemblyName;
-        //This is the UUID of the actual script.
-        public UUID ItemID;
         public UUID UserInventoryItemID;
         public bool PostOnRez;
         public TaskInventoryItem InventoryItem;

@@ -2005,7 +2005,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RemoveParticleSystem()
         {
-            ParticleSystem = new byte[0];
+        ParticleSystem = Utils.EmptyBytes;
         }
 
         /// Terse updates
@@ -2241,8 +2241,13 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_parentGroup = parent;
             dupe.m_shape = m_shape.Copy();
             dupe.m_regionHandle = m_regionHandle;
+
             if (userExposed)
-                dupe.UUID = UUID.Random();
+                {
+                //                dupe.UUID = UUID.Random();  can't whould mess original inventory
+                dupe.m_uuid = UUID.Random();
+                dupe.ParentGroup.HasGroupChanged = true;
+                }
 
             //memberwiseclone means it also clones the physics actor reference
             // This will make physical prim 'bounce' if not set to null.
@@ -2268,15 +2273,17 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
 
-            // Move afterwards ResetIDs as it clears the localID
-            dupe.LocalId = localID;
-            if (dupe.PhysActor != null)
-                dupe.PhysActor.LocalID = localID;
-
             if (userExposed)
             {
-                dupe.ResetIDs(linkNum, ChangeScripts);
+//              dupe.ResetIDs(linkNum, false); // must be false or whould kill original part scripts
+                dupe.LinkNum = linkNum;
+                dupe.Inventory.ResetInventoryIDs(false);
+                dupe.LocalId = 0;
+                dupe.CRC = 0;
+
+//              dupe.CloneScrips(this);  // go to fix our scripts
                 dupe.m_inventory.HasInventoryChanged = true;
+
             }
             else
             {
@@ -2301,7 +2308,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 PrimitiveBaseShape pbs = dupe.Shape;
                 if (dupe.PhysActor != null)
-                {
+                    {
+                    dupe.PhysActor.LocalID = localID;
                     dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
                         dupe.Name,
                         pbs,

@@ -573,6 +573,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.llDetectParams = qParams;
             QIS.param = param;
             QIS.VersionID = VersionID;
+            QIS.State = ID.State;
 
             MaintenanceThread.AddEvent(QIS, priority);
             return true;
@@ -900,6 +901,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptData SD = ScriptProtection.GetScript(olditemID);
                     if (SD == null)
                         return;
+// forgotten ??
+                    ScriptProtection.RemoveScript(SD);
+
                     SD.presence = SD.World.GetScenePresence(SD.presence.UUID);
                     ScriptControllers SC = SD.presence.GetScriptControler(SD.ItemID);
                     if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
