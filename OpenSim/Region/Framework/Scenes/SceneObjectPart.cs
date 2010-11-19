@@ -3590,7 +3590,8 @@ namespace OpenSim.Region.Framework.Scenes
                 m_physActor.LocalID = LocalId;
             //TODO: Check to make sure the physics engine is fully updated here
 
-            CRC = 0;
+            //Don't reset this for now
+            //CRC = 0;
         }
 
         /// <summary>

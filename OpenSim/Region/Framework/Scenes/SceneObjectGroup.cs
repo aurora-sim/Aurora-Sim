@@ -1484,11 +1484,6 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup backup_group = (SceneObjectGroup)base.Copy();
                     //Do this we don't try to re-persist to the DB
                     backup_group.m_isLoaded = false;
-                    backup_group.RootPart.Velocity = RootPart.Velocity;
-                    backup_group.RootPart.Acceleration = RootPart.Acceleration;
-                    backup_group.RootPart.AngularVelocity = RootPart.AngularVelocity;
-                    backup_group.RootPart.ParticleSystem = RootPart.ParticleSystem;
-                    
                     datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
 
                     //Backup inventory, no lock as this isn't added ANYWHERE but here

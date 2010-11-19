@@ -849,8 +849,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             object[] array = (object[])o;
             UDPPacketBuffer buffer = (UDPPacketBuffer)array[0];
             UseCircuitCodePacket packet = (UseCircuitCodePacket)array[1];
-            m_log.DebugFormat("[LLUDPSERVER]: Handling UseCircuitCode request from {0}", buffer.RemoteEndPoint);
-
+            
             IPEndPoint remoteEndPoint = (IPEndPoint)buffer.RemoteEndPoint;
 
             // Begin the process of adding the client to the simulator

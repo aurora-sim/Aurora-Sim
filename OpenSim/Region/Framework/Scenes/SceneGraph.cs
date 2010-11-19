@@ -81,7 +81,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected List<ScenePresence> m_scenePresenceArray = new List<ScenePresence>();
 
         protected internal EntityManager Entities = new EntityManager();
-        
+
         protected RegionInfo m_regInfo;
         protected Scene m_parentScene;
         protected List<UUID> m_updateList = new List<UUID>();
@@ -165,7 +165,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Update DisableCollisions 
                 _PhyScene.DisableCollisions = m_regInfo.RegionSettings.DisableCollisions;
-               
+
                 // Here is where the Scene calls the PhysicsScene. This is a one-way
                 // interaction; the PhysicsScene cannot access the calling Scene directly.
                 // But with joints, we want a PhysicsActor to be able to influence a
@@ -235,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Entity Methods
-        
+
         /// <summary>
         /// Add an object to the list of prims to process on the next update
         /// </summary>
@@ -245,7 +245,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void AddToUpdateList(SceneObjectGroup obj)
         {
             lock (m_updateList)
-                if(!m_updateList.Contains(obj.UUID))
+                if (!m_updateList.Contains(obj.UUID))
                     m_updateList.Add(obj.UUID);
         }
 
@@ -336,7 +336,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (primId != UUID.Zero)
             {
-                SceneObjectPart part =  m_parentScene.GetSceneObjectPart(primId);
+                SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
 
                     if (m_parentScene.Permissions.CanEditObject(part.UUID, remoteClient.AgentId))
@@ -443,7 +443,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Dictionary<UUID, ScenePresence> newmap = new Dictionary<UUID, ScenePresence>(m_scenePresenceMap);
                 List<ScenePresence> newlist = new List<ScenePresence>(m_scenePresenceArray);
-                
+
                 // Remove the presence reference from the dictionary
                 if (newmap.ContainsKey(agentID))
                 {
@@ -765,7 +765,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    if(obj is SceneObjectGroup)
+                    if (obj is SceneObjectGroup)
                         action(obj as SceneObjectGroup);
                 }
                 catch (Exception e)
@@ -1657,7 +1657,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return Entities.TryGetValue(ID, out entity);
         }
-        
+
         /// <summary>
         /// Try to get an EntityBase as given by it's LocalID
         /// </summary>
@@ -1723,6 +1723,37 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Reset the entity IDs
             ResetEntityIDs(entity);
+            //Force the prim to backup now that it has been added
+            entity.ForcePersistence();
+            //Tell the entity that they are being added to a scene
+            entity.AttachToScene(m_parentScene);
+            //Update our prim count
+            m_numPrim += entity.ChildrenEntities().Count;
+            //Now save the entity that we have 
+            return AddEntity(entity, false);
+        }
+
+        /// <summary>
+        /// Add the Entity to the Scene and back it up, but do NOT reset its ID's
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public bool RestorePrimToScene(EntityBase entity)
+        {
+            List<ISceneEntity> children = entity.ChildrenEntities();
+            //Sort so that we rebuild in the same order and the root being first
+            children.Sort(linkSetSorter);
+
+            entity.ClearChildren();
+
+            foreach (ISceneEntity child in children)
+            {
+                child.LocalId = m_parentScene.AllocateLocalId();
+                if (((SceneObjectPart)child).PhysActor != null)
+                    ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
+                //((SceneObjectPart)child).CRC = 0;
+                entity.AddChild(child);
+            }
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene

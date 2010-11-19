@@ -287,7 +287,7 @@ namespace OpenSim.Data.SQLite
                         cmd.Parameters.Clear();
 
                         //Remove the old prim
-                        cmd.CommandText = "delete from prims where UUID = '" + prim.UUID + "'";
+                        cmd.CommandText = "delete from prims where UUID = '" + prim.UUID + "' OR SceneGroupID = '" + prim.UUID + "'";
                         cmd.ExecuteNonQuery();
 
                         cmd.CommandText = "replace into prims (" +
