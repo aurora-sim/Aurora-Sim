@@ -813,6 +813,9 @@ namespace OpenSim.Framework
         private delegate void PromptEvent();
         private IAsyncResult result = null;
         private PromptEvent action = null;
+        private Object m_consoleLock = new Object();
+        private bool m_calledEndInvoke = false;
+
         /// <summary>
         /// Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
@@ -826,22 +829,29 @@ namespace OpenSim.Framework
                 }
                 try
                 {
-                    if (action == null)
+                    lock (m_consoleLock)
                     {
-                        action = Prompt;
-                        result = action.BeginInvoke(null, null);
-                    }
+                        if (action == null)
+                        {
+                            action = Prompt;
+                            result = action.BeginInvoke(null, null);
+                            m_calledEndInvoke = false;
+                        }
 
-                    if ((!result.IsCompleted) &&
-                        (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
-                    {
-                        
-                    }
-                    else if(action != null)
-                    {
-                        action.EndInvoke(result);
-                        action = null;
-                        result = null;
+                        if ((!result.IsCompleted) &&
+                            (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
+                        {
+
+                        }
+                        else if (action != null &&
+                            !result.CompletedSynchronously &&
+                            !m_calledEndInvoke)
+                        {
+                            m_calledEndInvoke = true;
+                            action.EndInvoke(result);
+                            action = null;
+                            result = null;
+                        }
                     }
                 }
                 catch (Exception e)

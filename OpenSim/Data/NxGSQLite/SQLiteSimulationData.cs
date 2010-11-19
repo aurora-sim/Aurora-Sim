@@ -407,6 +407,7 @@ namespace OpenSim.Data.SQLite
 
             using (SqliteCommand cmd = new SqliteCommand())
             {
+                cmd.Connection = m_conn;
                 for (int cntr = 0; cntr < uuids.Count; cntr += 10)
                 {
                     string sql = "delete from prims where ";
@@ -419,7 +420,7 @@ namespace OpenSim.Data.SQLite
                         }
                         else
                         {
-                            sql += "(SceneGroupID = :UUID" + i + ") or ";
+                            sql += "(SceneGroupID = :UUID" + i + ") OR ";
                         }
                         cmd.Parameters.AddWithValue("UUID" + i, uuids[cntr + i].ToString());
                     }
