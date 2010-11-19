@@ -1484,12 +1484,9 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         {
             m_log.DebugFormat("[RADMIN] Initializing inventory for {0} from {1}", destination, source);
             Scene scene = manager.CurrentOrFirstScene;
-            AvatarAppearance avatarAppearance = null;
-            AvatarData avatar = scene.AvatarService.GetAvatar(source);
-            if (avatar != null)
-                avatarAppearance = avatar.ToAvatarAppearance(source);
 
             // If the model has no associated appearance we're done.
+            AvatarAppearance avatarAppearance = scene.AvatarService.GetAppearance(source);
             if (avatarAppearance == null)
                 return;
 
@@ -1503,8 +1500,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                 {
                     CopyWearablesAndAttachments(destination, source, avatarAppearance);
 
-                    AvatarData avatarData = new AvatarData(avatarAppearance);
-                    scene.AvatarService.SetAvatar(destination, avatarData);
+                    scene.AvatarService.SetAppearance(destination, avatarAppearance);
                 }
                 catch (Exception e)
                 {
@@ -1518,30 +1514,29 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             // Copy Clothing and Bodypart folders and appearance update
             try
             {
-                Dictionary<UUID,UUID> inventoryMap = new Dictionary<UUID,UUID>();
+                Dictionary<UUID, UUID> inventoryMap = new Dictionary<UUID, UUID>();
                 CopyInventoryFolders(destination, source, AssetType.Clothing, inventoryMap, avatarAppearance);
                 CopyInventoryFolders(destination, source, AssetType.Bodypart, inventoryMap, avatarAppearance);
 
                 AvatarWearable[] wearables = avatarAppearance.Wearables;
 
-                for (int i=0; i<wearables.Length; i++)
+                for (int i = 0; i < wearables.Length; i++)
                 {
-                    if (inventoryMap.ContainsKey(wearables[i].ItemID))
+                    if (inventoryMap.ContainsKey(wearables[i][0].ItemID))
                     {
                         AvatarWearable wearable = new AvatarWearable();
-                        wearable.AssetID = wearables[i].AssetID;
-                        wearable.ItemID  = inventoryMap[wearables[i].ItemID];
+                        wearable.Wear(inventoryMap[wearables[i][0].ItemID],
+                                wearables[i][0].AssetID);
                         avatarAppearance.SetWearable(i, wearable);
                     }
                 }
 
-                AvatarData avatarData = new AvatarData(avatarAppearance);
-                scene.AvatarService.SetAvatar(destination, avatarData);
+                scene.AvatarService.SetAppearance(destination, avatarAppearance);
             }
             catch (Exception e)
             {
-               m_log.WarnFormat("[RADMIN] Error transferring appearance for {0} : {1}",
-                                  destination, e.Message);
+                m_log.WarnFormat("[RADMIN] Error transferring appearance for {0} : {1}",
+                                   destination, e.Message);
             }
 
             return;
@@ -1567,13 +1562,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             if (destinationFolder.Type != (short)AssetType.Clothing)
             {
                 destinationFolder = new InventoryFolderBase();
-                
-                destinationFolder.ID       = UUID.Random();
-                destinationFolder.Name     = "Clothing";
-                destinationFolder.Owner    = destination;
-                destinationFolder.Type     = (short)AssetType.Clothing;
+
+                destinationFolder.ID = UUID.Random();
+                destinationFolder.Name = "Clothing";
+                destinationFolder.Owner = destination;
+                destinationFolder.Type = (short)AssetType.Clothing;
                 destinationFolder.ParentID = inventoryService.GetRootFolder(destination).ID;
-                destinationFolder.Version  = 1;
+                destinationFolder.Version = 1;
                 inventoryService.AddFolder(destinationFolder);     // store base record
                 m_log.ErrorFormat("[RADMIN] Created folder for destination {0}", source);
             }
@@ -1582,13 +1577,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             AvatarWearable[] wearables = avatarAppearance.Wearables;
             AvatarWearable wearable;
 
-            for (int i=0; i<wearables.Length; i++)
+            for (int i = 0; i < wearables.Length; i++)
             {
                 wearable = wearables[i];
-                if (wearable.ItemID != UUID.Zero)
+                if (wearable[0].ItemID != UUID.Zero)
                 {
                     // Get inventory item and copy it
-                    InventoryItemBase item = new InventoryItemBase(wearable.ItemID, source);
+                    InventoryItemBase item = new InventoryItemBase(wearable[0].ItemID, source);
                     item = inventoryService.GetItem(item);
 
                     if (item != null)
@@ -1619,24 +1614,23 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
                         // Wear item
                         AvatarWearable newWearable = new AvatarWearable();
-                        newWearable.AssetID = wearable.AssetID;
-                        newWearable.ItemID  = destinationItem.ID;
+                        newWearable.Wear(destinationItem.ID, wearable[0].AssetID);
                         avatarAppearance.SetWearable(i, newWearable);
                     }
                     else
                     {
-                        m_log.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}", wearable.ItemID, destinationFolder.ID);
+                        m_log.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}", wearable[0].ItemID, destinationFolder.ID);
                     }
                 }
             }
 
             // Attachments
-            Dictionary<int, UUID[]> attachments = avatarAppearance.GetAttachmentDictionary();
+            List<AvatarAttachment> attachments = avatarAppearance.GetAttachments();
 
-            foreach (KeyValuePair<int, UUID[]> attachment in attachments)
+            foreach (AvatarAttachment attachment in attachments)
             {
-                int attachpoint = attachment.Key;
-                UUID itemID = attachment.Value[0];
+                int attachpoint = attachment.AttachPoint;
+                UUID itemID = attachment.ItemID;
 
                 if (itemID != UUID.Zero)
                 {
@@ -1680,8 +1674,6 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     }
                 }
             }
-
-
         }
 
         /// <summary>
@@ -2074,10 +2066,9 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                                         // Record whether or not the item is to be initially worn
                                         try
                                         {
-                                        if (select && (GetStringAttribute(item, "wear", "false") == "true"))
+                                            if (select && (GetStringAttribute(item, "wear", "false") == "true"))
                                             {
-                                                avatarAppearance.Wearables[inventoryItem.Flags].ItemID = inventoryItem.ID;
-                                                avatarAppearance.Wearables[inventoryItem.Flags].AssetID = inventoryItem.AssetID;
+                                                avatarAppearance.Wearables[inventoryItem.Flags].Wear(inventoryItem.ID, inventoryItem.AssetID);
                                             }
                                         }
                                         catch (Exception e)

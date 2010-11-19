@@ -124,17 +124,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (AttachObject(remoteClient, part.ParentGroup, AttachmentPt, false))
                 {
                     m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
-                    
-                    // Save avatar attachment information
-                    ScenePresence presence;
-                    if (AvatarFactory != null && m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
-                    {
-                        m_log.Info(
-                            "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
-                                + ", AttachmentPoint: " + AttachmentPt);
 
-                        AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
-                    }
+                    m_log.Info(
+                        "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
+                        + ", AttachmentPoint: " + AttachmentPt);
+
+                    if (AvatarFactory != null)
+                        AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
                 }
             }
             catch (Exception e)
@@ -399,7 +395,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 item = m_scene.InventoryService.GetItem(item);
                 presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID /* att.UUID */);
 
-                AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
         }
 
@@ -420,12 +416,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 presence.Appearance.DetachAttachment(itemID);
 
-                // Save avatar attachment information
+                m_log.Debug("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
-                {
-                    m_log.Debug("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
-                    AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
-                }
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
             DetachSingleAttachmentToInv(itemID, remoteClient);
@@ -452,8 +445,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 presence.Appearance.DetachAttachment(itemID);
 
-                AvatarFactory.UpdateDatabase(remoteClient.AgentId, presence.Appearance);
-
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                
                 part.ParentGroup.DetachToGround();
 
                 List<UUID> uuids = new List<UUID>();

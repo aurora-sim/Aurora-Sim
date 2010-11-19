@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,15 +25,54 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using OpenMetaverse;
-using OpenSim.Framework;
+using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Framework
 {
-    public interface IAvatarFactory
+    public class AvatarAttachment
     {
-        bool ValidateBakedTextureCache(IClientAPI client);
-        void QueueAppearanceSend(UUID agentid);
-        void QueueAppearanceSave(UUID agentid);
+        public int AttachPoint;
+        public UUID ItemID;
+        public UUID AssetID;
+
+        public AvatarAttachment(AvatarAttachment attach)
+        {
+            AttachPoint = attach.AttachPoint;
+            ItemID = attach.ItemID;
+            AssetID = attach.AssetID;
+        }
+
+        public AvatarAttachment(int point, UUID item, UUID asset)
+        {
+            AttachPoint = point;
+            ItemID = item;
+            AssetID = asset;
+        }
+
+        public AvatarAttachment(OSDMap args)
+        {
+            Unpack(args);
+        }
+
+        public OSDMap Pack()
+        {
+            OSDMap attachdata = new OSDMap();
+            attachdata["point"] = OSD.FromInteger(AttachPoint);
+            attachdata["item"] = OSD.FromUUID(ItemID);
+            attachdata["asset"] = OSD.FromUUID(AssetID);
+
+            return attachdata;
+        }
+
+
+        public void Unpack(OSDMap args)
+        {
+            if (args["point"] != null)
+                AttachPoint = args["point"].AsInteger();
+            ItemID = (args["item"] != null) ? args["item"].AsUUID() : UUID.Zero;
+            AssetID = (args["asset"] != null) ? args["asset"].AsUUID() : UUID.Zero;
+        }
     }
 }

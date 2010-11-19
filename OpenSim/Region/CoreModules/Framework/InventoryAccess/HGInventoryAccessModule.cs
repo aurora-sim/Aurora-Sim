@@ -131,13 +131,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             // HACK: Only works for lists of length one.
             // Intermediate version, just to make things compile
             foreach (SceneObjectGroup g in objectGroups)
-                ret = DeleteToInventory(action, folderID, g, agentID);
+                ret = InternalDeleteToInventory(action, folderID, g, agentID);
             
             return ret;
         }
 
-        // DO NOT OVERRIDE THE BASE METHOD
-        public new virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
+        public UUID InternalDeleteToInventory(DeRezAction action, UUID folderID,
                 SceneObjectGroup objectGroup, UUID agentID)
         {
             UUID assetID = base.DeleteToInventory(action, folderID, new List<SceneObjectGroup>() { objectGroup }, agentID);

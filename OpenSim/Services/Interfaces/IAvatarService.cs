@@ -42,6 +42,21 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
+        AvatarAppearance GetAppearance(UUID userID);
+
+        /// <summary>
+        /// Called by everyone who can change the avatar data (so, regions)
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="appearance"></param>
+        /// <returns></returns>
+        bool SetAppearance(UUID userID, AvatarAppearance appearance);
+
+        /// <summary>
+        /// Called by the login service
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <returns></returns>
         AvatarData GetAvatar(UUID userID);
 
         /// <summary>
@@ -90,7 +105,7 @@ namespace OpenSim.Services.Interfaces
         // function. Closed, LL-based  grids will never need URLs here.
 
         public int AvatarType;
-        public Dictionary<string,string> Data;
+        public Dictionary<string, string> Data;
 
         public AvatarData()
         {
@@ -134,116 +149,194 @@ namespace OpenSim.Services.Interfaces
             Data["Serial"] = appearance.Serial.ToString();
             // Wearables
             Data["AvatarHeight"] = appearance.AvatarHeight.ToString();
-            Data["BodyItem"] = appearance.BodyItem.ToString();
-            Data["EyesItem"] = appearance.EyesItem.ToString();
-            Data["GlovesItem"] = appearance.GlovesItem.ToString();
-            Data["HairItem"] = appearance.HairItem.ToString();
-            Data["JacketItem"] = appearance.JacketItem.ToString();
-            Data["PantsItem"] = appearance.PantsItem.ToString();
-            Data["ShirtItem"] = appearance.ShirtItem.ToString();
-            Data["ShoesItem"] = appearance.ShoesItem.ToString();
-            Data["SkinItem"] = appearance.SkinItem.ToString();
-            Data["SkirtItem"] = appearance.SkirtItem.ToString();
-            Data["SocksItem"] = appearance.SocksItem.ToString();
-            Data["UnderPantsItem"] = appearance.UnderPantsItem.ToString();
-            Data["UnderShirtItem"] = appearance.UnderShirtItem.ToString();
 
-            Data["BodyAsset"] = appearance.BodyAsset.ToString();
-            Data["EyesAsset"] = appearance.EyesAsset.ToString();
-            Data["GlovesAsset"] = appearance.GlovesAsset.ToString();
-            Data["HairAsset"] = appearance.HairAsset.ToString();
-            Data["JacketAsset"] = appearance.JacketAsset.ToString();
-            Data["PantsAsset"] = appearance.PantsAsset.ToString();
-            Data["ShirtAsset"] = appearance.ShirtAsset.ToString();
-            Data["ShoesAsset"] = appearance.ShoesAsset.ToString();
-            Data["SkinAsset"] = appearance.SkinAsset.ToString();
-            Data["SkirtAsset"] = appearance.SkirtAsset.ToString();
-            Data["SocksAsset"] = appearance.SocksAsset.ToString();
-            Data["UnderPantsAsset"] = appearance.UnderPantsAsset.ToString();
-            Data["UnderShirtAsset"] = appearance.UnderShirtAsset.ToString();
+            for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
+            {
+                for (int j = 0; j < appearance.Wearables[i].Count; j++)
+                {
+                    string fieldName = String.Format("Wearable {0}:{1}", i, j);
+                    Data[fieldName] = String.Format("{0}:{1}",
+                            appearance.Wearables[i][j].ItemID.ToString(),
+                            appearance.Wearables[i][j].AssetID.ToString());
+                }
+            }
 
-            Data["AlphaAsset"] = appearance.AlphaAsset.ToString();
-            Data["AlphaItem"] = appearance.AlphaItem.ToString();
-            Data["TattooAsset"] = appearance.TattooAsset.ToString();
-            Data["TattooItem"] = appearance.TattooItem.ToString();
+            // Visual Params
+            string[] vps = new string[AvatarAppearance.VISUALPARAM_COUNT];
+            byte[] binary = appearance.VisualParams;
+
+            for (int i = 0; i < AvatarAppearance.VISUALPARAM_COUNT; i++)
+            {
+                vps[i] = binary[i].ToString();
+            }
+
+            Data["VisualParams"] = String.Join(",", vps);
 
             // Attachments
-            Hashtable attachs = appearance.GetAttachments();
-            if (attachs != null)
-                foreach (DictionaryEntry dentry in attachs)
-                {
-                    if (dentry.Value != null)
-                    {
-                        Hashtable tab = (Hashtable)dentry.Value;
-                        if (tab.ContainsKey("item") && tab["item"] != null)
-                            Data["_ap_" + dentry.Key] = tab["item"].ToString();
-                    }
-                }
+            List<AvatarAttachment> attachments = appearance.GetAttachments();
+            foreach (AvatarAttachment attach in attachments)
+            {
+                Data["_ap_" + attach.AttachPoint] = attach.ItemID.ToString();
+            }
         }
 
         public AvatarAppearance ToAvatarAppearance(UUID owner)
         {
             AvatarAppearance appearance = new AvatarAppearance(owner);
+
+            if (Data.Count == 0)
+                return appearance;
+
+            appearance.ClearWearables();
             try
             {
-                appearance.Serial = Int32.Parse(Data["Serial"]);
+                if (Data.ContainsKey("Serial"))
+                    appearance.Serial = Int32.Parse(Data["Serial"]);
 
-                // Wearables
-                appearance.BodyItem = UUID.Parse(Data["BodyItem"]);
-                appearance.EyesItem = UUID.Parse(Data["EyesItem"]);
-                appearance.GlovesItem = UUID.Parse(Data["GlovesItem"]);
-                appearance.HairItem = UUID.Parse(Data["HairItem"]);
-                appearance.JacketItem = UUID.Parse(Data["JacketItem"]);
-                appearance.PantsItem = UUID.Parse(Data["PantsItem"]);
-                appearance.ShirtItem = UUID.Parse(Data["ShirtItem"]);
-                appearance.ShoesItem = UUID.Parse(Data["ShoesItem"]);
-                appearance.SkinItem = UUID.Parse(Data["SkinItem"]);
-                appearance.SkirtItem = UUID.Parse(Data["SkirtItem"]);
-                appearance.SocksItem = UUID.Parse(Data["SocksItem"]);
-                appearance.UnderPantsItem = UUID.Parse(Data["UnderPantsItem"]);
-                appearance.UnderShirtItem = UUID.Parse(Data["UnderShirtItem"]);
+                if (Data.ContainsKey("AvatarHeight"))
+                    appearance.AvatarHeight = float.Parse(Data["AvatarHeight"]);
 
-                appearance.BodyAsset = UUID.Parse(Data["BodyAsset"]);
-                appearance.EyesAsset = UUID.Parse(Data["EyesAsset"]);
-                appearance.GlovesAsset = UUID.Parse(Data["GlovesAsset"]);
-                appearance.HairAsset = UUID.Parse(Data["HairAsset"]);
-                appearance.JacketAsset = UUID.Parse(Data["JacketAsset"]);
-                appearance.PantsAsset = UUID.Parse(Data["PantsAsset"]);
-                appearance.ShirtAsset = UUID.Parse(Data["ShirtAsset"]);
-                appearance.ShoesAsset = UUID.Parse(Data["ShoesAsset"]);
-                appearance.SkinAsset = UUID.Parse(Data["SkinAsset"]);
-                appearance.SkirtAsset = UUID.Parse(Data["SkirtAsset"]);
-                appearance.SocksAsset = UUID.Parse(Data["SocksAsset"]);
-                appearance.UnderPantsAsset = UUID.Parse(Data["UnderPantsAsset"]);
-                appearance.UnderShirtAsset = UUID.Parse(Data["UnderShirtAsset"]);
+                // Legacy Wearables
+                if (Data.ContainsKey("BodyItem"))
+                    appearance.Wearables[AvatarWearable.BODY].Wear(
+                            UUID.Parse(Data["BodyItem"]),
+                            UUID.Parse(Data["BodyAsset"]));
 
-                appearance.AlphaAsset = UUID.Parse(Data["AlphaAsset"]);
-                appearance.AlphaItem = UUID.Parse(Data["AlphaItem"]);
-                appearance.TattooAsset = UUID.Parse(Data["TattooAsset"]);
-                appearance.TattooItem = UUID.Parse(Data["TattooItem"]);
+                if (Data.ContainsKey("SkinItem"))
+                    appearance.Wearables[AvatarWearable.SKIN].Wear(
+                            UUID.Parse(Data["SkinItem"]),
+                            UUID.Parse(Data["SkinAsset"]));
+
+                if (Data.ContainsKey("HairItem"))
+                    appearance.Wearables[AvatarWearable.HAIR].Wear(
+                            UUID.Parse(Data["HairItem"]),
+                            UUID.Parse(Data["HairAsset"]));
+
+                if (Data.ContainsKey("EyesItem"))
+                    appearance.Wearables[AvatarWearable.EYES].Wear(
+                            UUID.Parse(Data["EyesItem"]),
+                            UUID.Parse(Data["EyesAsset"]));
+
+                if (Data.ContainsKey("ShirtItem"))
+                    appearance.Wearables[AvatarWearable.SHIRT].Wear(
+                            UUID.Parse(Data["ShirtItem"]),
+                            UUID.Parse(Data["ShirtAsset"]));
+
+                if (Data.ContainsKey("PantsItem"))
+                    appearance.Wearables[AvatarWearable.PANTS].Wear(
+                            UUID.Parse(Data["PantsItem"]),
+                            UUID.Parse(Data["PantsAsset"]));
+
+                if (Data.ContainsKey("ShoesItem"))
+                    appearance.Wearables[AvatarWearable.SHOES].Wear(
+                            UUID.Parse(Data["ShoesItem"]),
+                            UUID.Parse(Data["ShoesAsset"]));
+
+                if (Data.ContainsKey("SocksItem"))
+                    appearance.Wearables[AvatarWearable.SOCKS].Wear(
+                            UUID.Parse(Data["SocksItem"]),
+                            UUID.Parse(Data["SocksAsset"]));
+
+                if (Data.ContainsKey("JacketItem"))
+                    appearance.Wearables[AvatarWearable.JACKET].Wear(
+                            UUID.Parse(Data["JacketItem"]),
+                            UUID.Parse(Data["JacketAsset"]));
+
+                if (Data.ContainsKey("GlovesItem"))
+                    appearance.Wearables[AvatarWearable.GLOVES].Wear(
+                            UUID.Parse(Data["GlovesItem"]),
+                            UUID.Parse(Data["GlovesAsset"]));
+
+                if (Data.ContainsKey("UnderShirtItem"))
+                    appearance.Wearables[AvatarWearable.UNDERSHIRT].Wear(
+                            UUID.Parse(Data["UnderShirtItem"]),
+                            UUID.Parse(Data["UnderShirtAsset"]));
+
+                if (Data.ContainsKey("UnderPantsItem"))
+                    appearance.Wearables[AvatarWearable.UNDERPANTS].Wear(
+                            UUID.Parse(Data["UnderPantsItem"]),
+                            UUID.Parse(Data["UnderPantsAsset"]));
+
+                if (Data.ContainsKey("SkirtItem"))
+                    appearance.Wearables[AvatarWearable.SKIRT].Wear(
+                            UUID.Parse(Data["SkirtItem"]),
+                            UUID.Parse(Data["SkirtAsset"]));
+
+
+                if (Data.ContainsKey("VisualParams"))
+                {
+                    string[] vps = Data["VisualParams"].Split(new char[] { ',' });
+                    byte[] binary = new byte[AvatarAppearance.VISUALPARAM_COUNT];
+
+                    for (int i = 0; i < vps.Length && i < binary.Length; i++)
+                        binary[i] = (byte)Convert.ToInt32(vps[i]);
+
+                    appearance.VisualParams = binary;
+                }
+
+                // New style wearables
+                foreach (KeyValuePair<string, string> _kvp in Data)
+                {
+                    if (_kvp.Key.StartsWith("Wearable "))
+                    {
+                        string wearIndex = _kvp.Key.Substring(9);
+                        string[] wearIndices = wearIndex.Split(new char[] { ':' });
+                        int index = Convert.ToInt32(wearIndices[0]);
+
+                        string[] ids = _kvp.Value.Split(new char[] { ':' });
+                        UUID itemID = new UUID(ids[0]);
+                        UUID assetID = new UUID(ids[1]);
+
+                        appearance.Wearables[index].Add(itemID, assetID);
+                    }
+                }
+
 
                 // Attachments
                 Dictionary<string, string> attchs = new Dictionary<string, string>();
                 foreach (KeyValuePair<string, string> _kvp in Data)
                     if (_kvp.Key.StartsWith("_ap_"))
                         attchs[_kvp.Key] = _kvp.Value;
-                Hashtable aaAttachs = new Hashtable();
+
                 foreach (KeyValuePair<string, string> _kvp in attchs)
                 {
                     string pointStr = _kvp.Key.Substring(4);
                     int point = 0;
                     if (!Int32.TryParse(pointStr, out point))
                         continue;
-                    Hashtable tmp = new Hashtable();
+
                     UUID uuid = UUID.Zero;
                     UUID.TryParse(_kvp.Value, out uuid);
-                    tmp["item"] = uuid;
-                    tmp["asset"] = UUID.Zero.ToString();
-                    aaAttachs[point] = tmp;
+
+                    appearance.SetAttachment(point, uuid, UUID.Zero);
                 }
-                appearance.SetAttachments(aaAttachs);
+
+                if (appearance.Wearables[AvatarWearable.BODY].Count == 0)
+                    appearance.Wearables[AvatarWearable.BODY].Wear(
+                            AvatarWearable.DefaultWearables[
+                            AvatarWearable.BODY][0]);
+
+                if (appearance.Wearables[AvatarWearable.SKIN].Count == 0)
+                    appearance.Wearables[AvatarWearable.SKIN].Wear(
+                            AvatarWearable.DefaultWearables[
+                            AvatarWearable.SKIN][0]);
+
+                if (appearance.Wearables[AvatarWearable.HAIR].Count == 0)
+                    appearance.Wearables[AvatarWearable.HAIR].Wear(
+                            AvatarWearable.DefaultWearables[
+                            AvatarWearable.HAIR][0]);
+
+                if (appearance.Wearables[AvatarWearable.EYES].Count == 0)
+                    appearance.Wearables[AvatarWearable.EYES].Wear(
+                            AvatarWearable.DefaultWearables[
+                            AvatarWearable.EYES][0]);
             }
-            catch { }
+            catch
+            {
+                // We really should report something here, returning null
+                // will at least break the wrapper
+                return null;
+            }
 
             return appearance;
         }

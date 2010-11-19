@@ -28,6 +28,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+// DEBUG ON
+using System.Diagnostics;
+// DEBUG OFF
 using System.Reflection;
 using log4net;
 using Nini.Config;
@@ -48,7 +51,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-//        private static string ZeroID = UUID.Zero.ToString();
+        //        private static string ZeroID = UUID.Zero.ToString();
 
         private string m_serverUrl = String.Empty;
         private bool m_Enabled = false;
@@ -104,6 +107,80 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IAvatarService
 
+        // <summary>
+        // Retrieves the LLPackedAppearance field from user data and unpacks
+        // it into an AvatarAppearance structure
+        // </summary>
+        // <param name="userID"></param>
+        public AvatarAppearance GetAppearance(UUID userID)
+        {
+            NameValueCollection requestArgs = new NameValueCollection
+            {
+                { "RequestMethod", "GetUser" },
+                { "UserID", userID.ToString() }
+            };
+
+            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean())
+            {
+                OSDMap map = null;
+                try { map = OSDParser.DeserializeJson(response["LLPackedAppearance"].AsString()) as OSDMap; }
+                catch { }
+
+                if (map != null)
+                {
+                    AvatarAppearance appearance = new AvatarAppearance(map);
+                    // DEBUG ON
+                    m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] retrieved appearance for {0}:\n{1}", userID, appearance.ToString());
+                    // DEBUG OFF
+                    return appearance;
+                }
+
+                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to decode appearance for {0}", userID);
+                return null;
+            }
+
+            m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to get appearance for {0}: {1}",
+                             userID, response["Message"].AsString());
+            return null;
+        }
+
+        // <summary>
+        // </summary>
+        // <param name=""></param>
+        public bool SetAppearance(UUID userID, AvatarAppearance appearance)
+        {
+            OSDMap map = appearance.Pack();
+            if (map == null)
+            {
+                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to encode appearance for {0}", userID);
+                return false;
+            }
+
+            // DEBUG ON
+            m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] save appearance for {0}", userID);
+            // DEBUG OFF
+
+            NameValueCollection requestArgs = new NameValueCollection
+                {
+                        { "RequestMethod", "AddUserData" },
+                        { "UserID", userID.ToString() },
+                        { "LLPackedAppearance", OSDParser.SerializeJsonString(map) }
+                };
+
+            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            bool success = response["Success"].AsBoolean();
+
+            if (!success)
+                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to save appearance for {0}: {1}",
+                                 userID, response["Message"].AsString());
+
+            return success;
+        }
+
+        // <summary>
+        // </summary>
+        // <param name=""></param>
         public AvatarData GetAvatar(UUID userID)
         {
             NameValueCollection requestArgs = new NameValueCollection
@@ -121,7 +198,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
                 if (map != null)
                 {
-                    AvatarWearable[] wearables = new AvatarWearable[15];
+                    AvatarWearable[] wearables = new AvatarWearable[13];
                     wearables[0] = new AvatarWearable(map["ShapeItem"].AsUUID(), map["ShapeAsset"].AsUUID());
                     wearables[1] = new AvatarWearable(map["SkinItem"].AsUUID(), map["SkinAsset"].AsUUID());
                     wearables[2] = new AvatarWearable(map["HairItem"].AsUUID(), map["HairAsset"].AsUUID());
@@ -141,7 +218,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     appearance.AvatarHeight = (float)map["Height"].AsReal();
 
                     AvatarData avatar = new AvatarData(appearance);
-                    
+
                     // Get attachments
                     map = null;
                     try { map = OSDParser.DeserializeJson(response["LLAttachments"].AsString()) as OSDMap; }
@@ -171,6 +248,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return null;
         }
 
+        // <summary>
+        // </summary>
+        // <param name=""></param>
         public bool SetAvatar(UUID userID, AvatarData avatar)
         {
             m_log.Debug("[SIMIAN AVATAR CONNECTOR]: SetAvatar called for " + userID);
@@ -183,32 +263,33 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
                 map["Height"] = OSD.FromReal(appearance.AvatarHeight);
 
-                map["ShapeItem"] = OSD.FromUUID(appearance.BodyItem);
-                map["ShapeAsset"] = OSD.FromUUID(appearance.BodyAsset);
-                map["SkinItem"] = OSD.FromUUID(appearance.SkinItem);
-                map["SkinAsset"] = OSD.FromUUID(appearance.SkinAsset);
-                map["HairItem"] = OSD.FromUUID(appearance.HairItem);
-                map["HairAsset"] = OSD.FromUUID(appearance.HairAsset);
-                map["EyesItem"] = OSD.FromUUID(appearance.EyesItem);
-                map["EyesAsset"] = OSD.FromUUID(appearance.EyesAsset);
-                map["ShirtItem"] = OSD.FromUUID(appearance.ShirtItem);
-                map["ShirtAsset"] = OSD.FromUUID(appearance.ShirtAsset);
-                map["PantsItem"] = OSD.FromUUID(appearance.PantsItem);
-                map["PantsAsset"] = OSD.FromUUID(appearance.PantsAsset);
-                map["ShoesItem"] = OSD.FromUUID(appearance.ShoesItem);
-                map["ShoesAsset"] = OSD.FromUUID(appearance.ShoesAsset);
-                map["SocksItem"] = OSD.FromUUID(appearance.SocksItem);
-                map["SocksAsset"] = OSD.FromUUID(appearance.SocksAsset);
-                map["JacketItem"] = OSD.FromUUID(appearance.JacketItem);
-                map["JacketAsset"] = OSD.FromUUID(appearance.JacketAsset);
-                map["GlovesItem"] = OSD.FromUUID(appearance.GlovesItem);
-                map["GlovesAsset"] = OSD.FromUUID(appearance.GlovesAsset);
-                map["UndershirtItem"] = OSD.FromUUID(appearance.UnderShirtItem);
-                map["UndershirtAsset"] = OSD.FromUUID(appearance.UnderShirtAsset);
-                map["UnderpantsItem"] = OSD.FromUUID(appearance.UnderPantsItem);
-                map["UnderpantsAsset"] = OSD.FromUUID(appearance.UnderPantsAsset);
-                map["SkirtItem"] = OSD.FromUUID(appearance.SkirtItem);
-                map["SkirtAsset"] = OSD.FromUUID(appearance.SkirtAsset);
+                map["BodyItem"] = appearance.Wearables[AvatarWearable.BODY][0].ItemID.ToString();
+                map["EyesItem"] = appearance.Wearables[AvatarWearable.EYES][0].ItemID.ToString();
+                map["GlovesItem"] = appearance.Wearables[AvatarWearable.GLOVES][0].ItemID.ToString();
+                map["HairItem"] = appearance.Wearables[AvatarWearable.HAIR][0].ItemID.ToString();
+                map["JacketItem"] = appearance.Wearables[AvatarWearable.JACKET][0].ItemID.ToString();
+                map["PantsItem"] = appearance.Wearables[AvatarWearable.PANTS][0].ItemID.ToString();
+                map["ShirtItem"] = appearance.Wearables[AvatarWearable.SHIRT][0].ItemID.ToString();
+                map["ShoesItem"] = appearance.Wearables[AvatarWearable.SHOES][0].ItemID.ToString();
+                map["SkinItem"] = appearance.Wearables[AvatarWearable.SKIN][0].ItemID.ToString();
+                map["SkirtItem"] = appearance.Wearables[AvatarWearable.SKIRT][0].ItemID.ToString();
+                map["SocksItem"] = appearance.Wearables[AvatarWearable.SOCKS][0].ItemID.ToString();
+                map["UnderPantsItem"] = appearance.Wearables[AvatarWearable.UNDERPANTS][0].ItemID.ToString();
+                map["UnderShirtItem"] = appearance.Wearables[AvatarWearable.UNDERSHIRT][0].ItemID.ToString();
+                map["BodyAsset"] = appearance.Wearables[AvatarWearable.BODY][0].AssetID.ToString();
+                map["EyesAsset"] = appearance.Wearables[AvatarWearable.EYES][0].AssetID.ToString();
+                map["GlovesAsset"] = appearance.Wearables[AvatarWearable.GLOVES][0].AssetID.ToString();
+                map["HairAsset"] = appearance.Wearables[AvatarWearable.HAIR][0].AssetID.ToString();
+                map["JacketAsset"] = appearance.Wearables[AvatarWearable.JACKET][0].AssetID.ToString();
+                map["PantsAsset"] = appearance.Wearables[AvatarWearable.PANTS][0].AssetID.ToString();
+                map["ShirtAsset"] = appearance.Wearables[AvatarWearable.SHIRT][0].AssetID.ToString();
+                map["ShoesAsset"] = appearance.Wearables[AvatarWearable.SHOES][0].AssetID.ToString();
+                map["SkinAsset"] = appearance.Wearables[AvatarWearable.SKIN][0].AssetID.ToString();
+                map["SkirtAsset"] = appearance.Wearables[AvatarWearable.SKIRT][0].AssetID.ToString();
+                map["SocksAsset"] = appearance.Wearables[AvatarWearable.SOCKS][0].AssetID.ToString();
+                map["UnderPantsAsset"] = appearance.Wearables[AvatarWearable.UNDERPANTS][0].AssetID.ToString();
+                map["UnderShirtAsset"] = appearance.Wearables[AvatarWearable.UNDERSHIRT][0].AssetID.ToString();
+
 
                 OSDMap items = new OSDMap();
                 foreach (KeyValuePair<string, string> kvp in avatar.Data)

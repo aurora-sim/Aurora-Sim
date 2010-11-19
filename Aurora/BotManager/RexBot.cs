@@ -1056,7 +1056,7 @@ namespace Aurora.BotManager
             remove { throw new NotImplementedException(); }
         }
 
-        event GenericCall2 IClientAPI.OnRequestWearables
+        event GenericCall1 IClientAPI.OnRequestWearables
         {
             add { throw new NotImplementedException(); }
             remove { throw new NotImplementedException(); }

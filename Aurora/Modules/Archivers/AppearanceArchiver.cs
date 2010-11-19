@@ -210,83 +210,23 @@ namespace Aurora.Modules
         private AvatarAppearance ConvertXMLToAvatarAppearance(OSDMap map, out string FolderNameToPlaceAppearanceIn)
         {
             AvatarAppearance appearance = new AvatarAppearance();
-
-            appearance.AvatarHeight = (float)map["AvatarHeight"].AsReal();
-            appearance.BodyAsset = map["BodyAsset"].AsUUID();
-            appearance.BodyItem = map["BodyItem"].AsUUID();
-            appearance.EyesAsset = map["EyesAsset"].AsUUID();
-            appearance.EyesItem = map["EyesItem"].AsUUID();
-            appearance.GlovesAsset = map["GlovesAsset"].AsUUID();
-            appearance.GlovesItem = map["GlovesItem"].AsUUID();
-            appearance.HairAsset = map["HairAsset"].AsUUID();
-            appearance.HairItem = map["HairItem"].AsUUID();
-            //Skip Hip Offset
-            appearance.JacketAsset = map["JacketAsset"].AsUUID();
-            appearance.JacketItem = map["JacketItem"].AsUUID();
-            appearance.Owner = map["Owner"].AsUUID();
-            appearance.PantsAsset = map["PantsAsset"].AsUUID();
-            appearance.PantsItem = map["PantsItem"].AsUUID();
-            appearance.Serial = map["Serial"].AsInteger();
-            appearance.ShirtAsset = map["ShirtAsset"].AsUUID();
-            appearance.ShirtItem = map["ShirtItem"].AsUUID();
-            appearance.ShoesAsset = map["ShoesAsset"].AsUUID();
-            appearance.ShoesItem = map["ShoesItem"].AsUUID();
-            appearance.SkinAsset = map["SkinAsset"].AsUUID();
-            appearance.SkinItem = map["SkinItem"].AsUUID();
-            appearance.SkirtAsset = map["SkirtAsset"].AsUUID();
-            appearance.SkirtItem = map["SkirtItem"].AsUUID();
-            appearance.SocksAsset = map["SocksAsset"].AsUUID();
-            appearance.SocksItem = map["SocksItem"].AsUUID();
-            appearance.UnderPantsAsset = map["UnderPantsAsset"].AsUUID();
-            appearance.UnderPantsItem = map["UnderPantsItem"].AsUUID();
-            appearance.UnderShirtAsset = map["UnderShirtAsset"].AsUUID();
-            appearance.UnderShirtItem = map["UnderShirtItem"].AsUUID();
-            appearance.TattooAsset = map["TattooAsset"].AsUUID();
-            appearance.TattooItem = map["TattooItem"].AsUUID();
-            appearance.AlphaAsset = map["AlphaAsset"].AsUUID();
-            appearance.AlphaItem = map["AlphaItem"].AsUUID();
+            appearance.Unpack(map);
             FolderNameToPlaceAppearanceIn = map["FolderName"].AsString();
-            appearance.VisualParams = map["VisualParams"].AsBinary();
-
-            OSDArray wearables = (OSDArray)map["AvatarWearables"];
-            List<AvatarWearable> AvatarWearables = new List<AvatarWearable>();
-            foreach (OSD o in wearables)
-            {
-                OSDMap wearable = (OSDMap)o;
-                AvatarWearable wear = new AvatarWearable();
-                wear.AssetID = wearable["Asset"].AsUUID();
-                wear.ItemID = wearable["Item"].AsUUID();
-                AvatarWearables.Add(wear);
-            }
-            appearance.Wearables = AvatarWearables.ToArray();
-
-            appearance.Texture = Primitive.TextureEntry.FromOSD(map["Texture"]);
-
-            OSDArray attachmentsArray = (OSDArray)map["Attachments"];
-            foreach (OSD o in wearables)
-            {
-                OSDMap attachment = (OSDMap)o;
-                UUID Asset = attachment["Asset"].AsUUID();
-                UUID Item = attachment["Item"].AsUUID();
-                int AttachmentPoint = attachment["Point"].AsInteger();
-
-                appearance.SetAttachment(AttachmentPoint, Item, Asset);
-            }
             return appearance;
         }
 
         protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
-		{
-			if (cmdparams.Length != 7)
+        {
+            if (cmdparams.Length != 7)
             {
-				m_log.Debug("[AvatarArchive] Not enough parameters!");
-			}
-			UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-			if (account == null) 
+                m_log.Debug("[AvatarArchive] Not enough parameters!");
+            }
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            if (account == null)
             {
-				m_log.Error("[AvatarArchive] User not found!");
-				return;
-			}
+                m_log.Error("[AvatarArchive] User not found!");
+                return;
+            }
 
             ScenePresence SP;
             m_scene.TryGetScenePresence(account.PrincipalID, out SP);
@@ -294,96 +234,43 @@ namespace Aurora.Modules
                 return; //Bad people!
             SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
 
-			AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
-			AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
-			StreamWriter writer = new StreamWriter(cmdparams[5]);
+            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
+            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
+            StreamWriter writer = new StreamWriter(cmdparams[5]);
             OSDMap map = new OSDMap();
             OSDMap body = new OSDMap();
             OSDMap assets = new OSDMap();
             OSDMap items = new OSDMap();
-            body.Add("AvatarHeight", OSD.FromReal(appearance.AvatarHeight));
-            body.Add("BodyAsset", OSD.FromUUID(appearance.BodyAsset));
-            body.Add("BodyItem", OSD.FromUUID(appearance.BodyItem));
-            body.Add("EyesAsset", OSD.FromUUID(appearance.EyesAsset));
-            body.Add("EyesItem", OSD.FromUUID(appearance.EyesItem));
-            body.Add("GlovesAsset", OSD.FromUUID(appearance.GlovesAsset));
-            body.Add("GlovesItem", OSD.FromUUID(appearance.GlovesItem));
-            body.Add("HairAsset", OSD.FromUUID(appearance.HairAsset));
-            body.Add("HairItem", OSD.FromUUID(appearance.HairItem));
-            body.Add("HipOffset", OSD.FromReal(appearance.HipOffset));
-            body.Add("JacketAsset", OSD.FromUUID(appearance.JacketAsset));
-            body.Add("JacketItem", OSD.FromUUID(appearance.JacketItem));
-            body.Add("Owner", OSD.FromUUID(appearance.Owner));
-            body.Add("PantsAsset", OSD.FromUUID(appearance.PantsAsset));
-            body.Add("Serial", OSD.FromInteger(appearance.Serial));
-            body.Add("ShirtAsset", OSD.FromUUID(appearance.ShirtAsset));
-            body.Add("ShirtItem", OSD.FromUUID(appearance.ShirtItem));
-            body.Add("ShoesAsset", OSD.FromUUID(appearance.ShoesAsset));
-            body.Add("ShoesItem", OSD.FromUUID(appearance.ShoesItem));
-            body.Add("SkinAsset", OSD.FromUUID(appearance.SkinAsset));
-            body.Add("SkirtAsset", OSD.FromUUID(appearance.SkirtAsset));
-            body.Add("SkirtItem", OSD.FromUUID(appearance.SkirtItem));
-            body.Add("SocksAsset", OSD.FromUUID(appearance.SocksAsset));
-            body.Add("SocksItem", OSD.FromUUID(appearance.SocksItem));
-            body.Add("UnderPantsAsset", OSD.FromUUID(appearance.UnderPantsAsset));
-            body.Add("UnderPantsItem", OSD.FromUUID(appearance.UnderPantsItem));
-            body.Add("UnderShirtAsset", OSD.FromUUID(appearance.UnderShirtAsset));
-            body.Add("UnderShirtItem", OSD.FromUUID(appearance.UnderShirtItem));
-            body.Add("TattooAsset", OSD.FromUUID(appearance.TattooAsset));
-            body.Add("TattooItem", OSD.FromUUID(appearance.TattooItem));
-            body.Add("AlphaAsset", OSD.FromUUID(appearance.AlphaAsset));
-            body.Add("AlphaItem", OSD.FromUUID(appearance.AlphaItem));
+            body = appearance.Pack();
             body.Add("FolderName", OSD.FromString(cmdparams[6]));
-            body.Add("VisualParams", OSD.FromBinary(appearance.VisualParams));
 
-            OSDArray wearables = new OSDArray();
             foreach (AvatarWearable wear in appearance.Wearables)
             {
-                OSDMap wearable = new OSDMap();
-                if (wear.AssetID != UUID.Zero)
+                for (int i = 0; i < wear.Count; i++)
                 {
-                    SaveAsset(wear.AssetID, assets);
-                    SaveItem(wear.ItemID, items);
+                    WearableItem w = wear[i];
+                    if (w.AssetID != UUID.Zero)
+                    {
+                        SaveAsset(w.AssetID, assets);
+                        SaveItem(w.ItemID, items);
+                    }
                 }
-                wearable.Add("Asset", wear.AssetID);
-                wearable.Add("Item", wear.ItemID);
-                wearables.Add(wearable);
             }
-            body.Add("AvatarWearables", wearables);
-
-            body.Add("Texture", appearance.Texture.GetOSD());
-
-            OSDArray attachmentsArray = new OSDArray();
-            
-            Hashtable attachments = appearance.GetAttachments();
-            if (attachments != null)
+            List<AvatarAttachment> attachments = appearance.GetAttachments();
+            foreach (AvatarAttachment a in attachments)
             {
-                foreach (DictionaryEntry element in attachments)
-                {
-                    Hashtable attachInfo = (Hashtable)element.Value;
-                    InventoryItemBase IB = new InventoryItemBase(UUID.Parse(attachInfo["item"].ToString()));
-                    OSDMap attachment = new OSDMap();
-                    SaveAsset(IB.AssetID, assets);
-                    SaveItem(UUID.Parse(attachInfo["item"].ToString()), items);
-                    attachment.Add("Asset", OSD.FromUUID(IB.AssetID));
-                    attachment.Add("Item", OSD.FromUUID(UUID.Parse(attachInfo["item"].ToString())));
-                    attachment.Add("Point", OSD.FromInteger((int)element.Key));
-                    attachmentsArray.Add(attachment);
-                }
+                SaveAsset(a.AssetID, assets);
+                SaveItem(a.ItemID, items);
             }
-
-            body.Add("Attachments", attachmentsArray);
-
-
             map.Add("Body", body);
             map.Add("Assets", assets);
             map.Add("Items", items);
             //Write the map
             writer.Write(OSDParser.SerializeLLSDXmlString(map));
-			writer.Close();
-			writer.Dispose();
-			m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
-		}
+            writer.Close();
+            writer.Dispose();
+            m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
+        }
 
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
         {

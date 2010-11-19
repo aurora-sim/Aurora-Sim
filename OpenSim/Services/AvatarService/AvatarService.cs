@@ -51,14 +51,29 @@ namespace OpenSim.Services.AvatarService
             m_log.Debug("[AVATAR SERVICE]: Starting avatar service");
         }
 
+        public AvatarAppearance GetAppearance(UUID principalID)
+        {
+            AvatarData avatar = GetAvatar(principalID);
+            return avatar.ToAvatarAppearance(principalID);
+        }
+
+        public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
+        {
+            AvatarData avatar = new AvatarData(appearance);
+            return SetAvatar(principalID, avatar);
+        }
+
         public AvatarData GetAvatar(UUID principalID)
         {
             AvatarBaseData[] av = m_Database.Get("PrincipalID", principalID.ToString());
-            if (av.Length == 0)
-                return null;
-
             AvatarData ret = new AvatarData();
-            ret.Data = new Dictionary<string,string>();
+            ret.Data = new Dictionary<string, string>();
+
+            if (av.Length == 0)
+            {
+                ret.AvatarType = 1; // SL avatar
+                return ret;
+            }
 
             foreach (AvatarBaseData b in av)
             {
@@ -82,7 +97,7 @@ namespace OpenSim.Services.AvatarService
             m_Database.Delete("PrincipalID", principalID.ToString());
 
             AvatarBaseData av = new AvatarBaseData();
-            av.Data = new Dictionary<string,string>();
+            av.Data = new Dictionary<string, string>();
 
             av.PrincipalID = principalID;
             av.Data["Name"] = "AvatarType";
@@ -91,15 +106,13 @@ namespace OpenSim.Services.AvatarService
             if (!m_Database.Store(av))
                 return false;
 
-            foreach (KeyValuePair<string,string> kvp in avatar.Data)
+            foreach (KeyValuePair<string, string> kvp in avatar.Data)
             {
                 av.Data["Name"] = kvp.Key;
                 av.Data["Value"] = kvp.Value;
-                
+
                 if (!m_Database.Store(av))
                 {
-                    m_log.Error("[AVATARSERVICE]: Error saving appearance for " + principalID + ", data follows " +
-                        kvp.Key + ", " + kvp.Value);
                     m_Database.Delete("PrincipalID", principalID.ToString());
                     return false;
                 }
@@ -116,13 +129,13 @@ namespace OpenSim.Services.AvatarService
         public bool SetItems(UUID principalID, string[] names, string[] values)
         {
             AvatarBaseData av = new AvatarBaseData();
-            av.Data = new Dictionary<string,string>();
+            av.Data = new Dictionary<string, string>();
             av.PrincipalID = principalID;
 
             if (names.Length != values.Length)
                 return false;
 
-            for (int i = 0 ; i < names.Length ; i++)
+            for (int i = 0; i < names.Length; i++)
             {
                 av.Data["Name"] = names[i];
                 av.Data["Value"] = values[i];

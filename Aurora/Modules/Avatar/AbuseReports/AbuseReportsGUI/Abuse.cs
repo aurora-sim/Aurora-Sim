@@ -25,7 +25,8 @@ namespace Aurora.Modules.AbuseReportsGUI
         {
             InitializeComponent();
             m_assetService = assetService;
-            //AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            Password = "";
             //Abuse.InputBox("Password Input Required", "Password for abuse reports database", ref Password);
         }
 
