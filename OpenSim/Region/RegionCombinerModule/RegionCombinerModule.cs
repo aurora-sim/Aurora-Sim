@@ -1021,7 +1021,8 @@ namespace OpenSim.Region.RegionCombinerModule
             {
                 if (r.Offset.X == offset.X && r.Offset.Y == offset.Y)
                 {
-                    return r.RegionScene.GetScenePresence(uUID).ControllingClient;
+                    if(r.RegionScene.GetScenePresence(uUID) != null)
+                        return r.RegionScene.GetScenePresence(uUID).ControllingClient;
                 }
             }
 

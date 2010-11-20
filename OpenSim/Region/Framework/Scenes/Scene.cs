@@ -2867,6 +2867,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_needsDeleted.Add(uuid);
             }
         }
+
         public void ObjectSaleInfo(IClientAPI client, UUID agentID, UUID sessionID, uint localID, byte saleType, int salePrice)
         {
             SceneObjectPart part = GetSceneObjectPart(localID);
@@ -3512,7 +3513,7 @@ namespace OpenSim.Region.Framework.Scenes
             // HERE!!! Do the initial attachments right here
             // first agent upon login is a root agent by design.
             // All other AddNewClient calls find aCircuit.child to be true
-            if (aCircuit.child == false)
+            if (!aCircuit.child)
             {
                 sp.IsChildAgent = false;
                 Util.FireAndForget(delegate(object o) { sp.RezAttachments(); });
@@ -3562,8 +3563,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             else if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
             {
-                m_log.DebugFormat("[SCENE]: Incoming client {0} {1} in region {2} via regular login. Client IP verification not performed.",
-                    aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                //m_log.DebugFormat("[SCENE]: Incoming client {0} {1} in region {2} via regular login. Client IP verification not performed.",
+                //    aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
                 vialogin = true;
             }
 
@@ -4739,7 +4740,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             return LandChannel.GetLandObject(x, y).LandData;
         }
-
 
         #endregion
 

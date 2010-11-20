@@ -233,8 +233,11 @@ namespace OpenSim.Services.GridService
                 }
             }
 
-            //Update the sessionID
-            SessionID = UUID.Random();
+            //Update the sessionID, use the old so that we don't generate a bunch of these
+            if (oldSessionID == UUID.Zero)
+                SessionID = UUID.Random();
+            else
+                SessionID = oldSessionID;
             rdata.Data["sessionid"] = SessionID.ToString();
 
             // Everything is ok, let's register
