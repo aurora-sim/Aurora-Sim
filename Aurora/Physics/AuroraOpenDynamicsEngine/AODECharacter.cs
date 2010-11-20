@@ -438,14 +438,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    m_pidControllerActive = true;
-
                     Vector3 SetSize = value;
 
                     if (((SetSize.Z * 1.15f) - CAPSULE_RADIUS * 2.0f) == CAPSULE_LENGTH)
-                        return; //It is the same, do not rebuild
+                    {
+                        //It is the same, do not rebuild
+                        m_log.Info("[Physics]: Not rebuilding the avatar capsule, as it is the same size as the previous capsule.");
+                        return;
+                    }
 
-                    m_tainted_CAPSULE_LENGTH = (SetSize.Z*1.15f) - CAPSULE_RADIUS*2.0f;
+                    m_pidControllerActive = true;
+
+                    m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
