@@ -39,7 +39,8 @@ namespace OpenSim.Framework
         Normal = 0,         // Immutable asset
         Maptile = 1,        // What it says
         Rewritable = 2,     // Content can be rewritten
-        Collectable = 4     // Can be GC'ed after some time
+        Collectable = 4,    // Can be GC'ed after some time
+        Deletable = 8       // The asset can be deleted
     }
 
     /// <summary>

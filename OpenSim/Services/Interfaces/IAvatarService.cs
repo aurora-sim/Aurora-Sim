@@ -150,6 +150,8 @@ namespace OpenSim.Services.Interfaces
             // Wearables
             Data["AvatarHeight"] = appearance.AvatarHeight.ToString();
 
+            Data["Textures"] = OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(appearance.Texture.GetOSD());
+
             for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
             {
                 for (int j = 0; j < appearance.Wearables[i].Count; j++)
@@ -272,6 +274,13 @@ namespace OpenSim.Services.Interfaces
                         binary[i] = (byte)Convert.ToInt32(vps[i]);
 
                     appearance.VisualParams = binary;
+                }
+
+                if (Data.ContainsKey("Textures"))
+                {
+                    string t = Data["Textures"];
+                    
+                    appearance.Texture = Primitive.TextureEntry.FromOSD((OpenMetaverse.StructuredData.OSD)OpenMetaverse.StructuredData.OSDParser.DeserializeJson(t));
                 }
 
                 // New style wearables

@@ -81,6 +81,11 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += RemoveClient;
+
+            m_updateTimer.Enabled = false;
+            m_updateTimer.AutoReset = true;
+            m_updateTimer.Interval = m_checkTime; // 500 milliseconds wait to start async ops
+            m_updateTimer.Elapsed += new ElapsedEventHandler(HandleAppearanceUpdateTimer);
         }
 
         public void RemoveRegion(Scene scene)
@@ -98,14 +103,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-            m_updateTimer.Enabled = false;
-            m_updateTimer.AutoReset = true;
-            m_updateTimer.Interval = m_checkTime; // 500 milliseconds wait to start async ops
-            m_updateTimer.Elapsed += new ElapsedEventHandler(HandleAppearanceUpdateTimer);
         }
 
         public void Close()
@@ -191,7 +188,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             {
                 if (textureEntry != null)
                 {
-                    changed = sp.Appearance.SetTextureEntries(textureEntry);
+                    List<UUID> ChangedTextures = new List<UUID>();
+                    changed = sp.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
 
                     // m_log.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
 
@@ -209,13 +207,24 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         }
                     }
 
+                    if (changed)
+                    {
+                        //Delete the old baked textures
+                        foreach (UUID texture in ChangedTextures)
+                        {
+                            m_scene.AssetService.Delete(texture.ToString());
+                        }
+                    }
                     // m_log.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
 
                 // Process the visual params, this may change height as well
                 if (visualParams != null)
                 {
-                    changed = sp.Appearance.SetVisualParams(visualParams);
+                    if (changed)
+                        sp.Appearance.SetVisualParams(visualParams);
+                    else
+                        changed = sp.Appearance.SetVisualParams(visualParams);
                     if (sp.Appearance.AvatarHeight > 0)
                         sp.SetHeight(sp.Appearance.AvatarHeight);
                 }
@@ -397,8 +406,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // m_log.WarnFormat("[AVFACTORY]: Received request for wearables of {0}", client.AgentId);
 
             sp.m_InitialHasWearablesBeenSent = true;
-            m_log.DebugFormat("[SCENE]: Received request for wearables of {0}", Name);
-            client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial++);
+            m_log.DebugFormat("[AVFACTORY]: Received request for wearables of {0}", sp.Name);
+            client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
         }
 
         /// <summary>

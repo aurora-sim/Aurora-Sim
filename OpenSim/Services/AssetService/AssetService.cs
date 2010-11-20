@@ -174,7 +174,8 @@ namespace OpenSim.Services.AssetService
             if (asset == null)
                 return false;
 
-            if ((int)(asset.Flags & AssetFlags.Maptile) != 0)
+            if ((int)(asset.Flags & AssetFlags.Maptile) != 0 ||
+                (int)(asset.Flags & AssetFlags.Deletable) != 0)
             {
                 return m_Database.Delete(id);
             }

@@ -2740,14 +2740,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (AvatarFactory.ValidateBakedTextureCache(m_controllingClient))
                 {
-                    m_log.WarnFormat("[SP] baked textures are in the cache for {0}", Name);
+                    m_log.WarnFormat("[ScenePresence]: Baked textures are in the cache for {0}", Name);
                     m_controllingClient.SendAppearance(
                         m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
                 }
             }
             else
             {
-                m_log.WarnFormat("[SP] AvatarFactory not set");
+                m_log.WarnFormat("[ScenePresence] AvatarFactory not set");
             }
 
             SendInitialFullUpdateToAllClients();
@@ -2789,15 +2789,6 @@ namespace OpenSim.Region.Framework.Scenes
             // DEBUG OFF
             avatar.ControllingClient.SendAppearance(
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
-        }
-
-        public void SetWearable(int wearableId, AvatarWearable wearable)
-        {
-            m_appearance.SetWearable(wearableId, wearable);
-            AvatarData adata = new AvatarData(m_appearance);
-            if (!m_scene.AvatarService.SetAvatar(m_controllingClient.AgentId, adata))
-                m_log.Error("[SCENEPRESENCE]: Error saving appearance for " + Name + ".");
-            m_controllingClient.SendWearables(m_appearance.Wearables, m_appearance.Serial++);
         }
 
         // Because appearance setting is in a module, we actually need

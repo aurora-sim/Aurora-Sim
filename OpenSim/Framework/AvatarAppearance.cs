@@ -251,8 +251,9 @@ namespace OpenSim.Framework
         /// Returns boolean that indicates whether the new entries actually change the
         /// existing values.
         /// </summary>
-        public virtual bool SetTextureEntries(Primitive.TextureEntry textureEntry)
+        public virtual bool SetTextureEntries(Primitive.TextureEntry textureEntry, out List<UUID> ChangedTextures)
         {
+            ChangedTextures = new List<UUID>();
             if (textureEntry == null)
                 return false;
 
@@ -275,9 +276,17 @@ namespace OpenSim.Framework
                 }
 
                 changed = true;
+                if(!ChangedTextures.Contains(oldface.TextureID))
+                    ChangedTextures.Add(oldface.TextureID);
 
                 //                if (newface != null)
                 //                    m_log.WarnFormat("[AVATAR APPEARANCE]: index {0}, new texture id {1}",i,newface.TextureID);
+            }
+
+            if (changed)
+            {
+                Serial++;
+                m_log.Warn("[Appearance]: Incrementing Serial (Textures) to " + Serial);
             }
 
             m_texture = textureEntry;
@@ -313,14 +322,19 @@ namespace OpenSim.Framework
 
             // Reset the height if the visual parameters actually changed
             if (changed)
+            {
                 SetHeight();
+                Serial++;
+                m_log.Warn("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
+            }
 
             return changed;
         }
 
         public virtual void SetAppearance(Primitive.TextureEntry textureEntry, byte[] visualParams)
         {
-            SetTextureEntries(textureEntry);
+            List<UUID> Changed = new List<UUID>();
+            SetTextureEntries(textureEntry, out Changed);
             SetVisualParams(visualParams);
         }
 

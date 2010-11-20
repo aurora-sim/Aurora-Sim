@@ -104,7 +104,7 @@ namespace OpenSim.Framework.Capabilities
         private string m_regionName;
         private object m_fetchLock = new Object();
 
-        private bool m_persistBakedTextures = false;
+        private bool m_persistBakedTextures = true;
 
         public bool SSLCaps
         {
@@ -138,7 +138,6 @@ namespace OpenSim.Framework.Capabilities
 
             m_httpListenPort = httpPort;
 
-            m_persistBakedTextures = false;
             IConfigSource config = m_Scene.Config;
             if (config != null)
             {
@@ -722,7 +721,8 @@ namespace OpenSim.Framework.Capabilities
             AssetBase asset;
             asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
             asset.Data = data;
-            asset.Temporary = true;
+            asset.Temporary = false;
+            asset.Flags = AssetFlags.Deletable;
             asset.Local = !m_persistBakedTextures; // Local assets aren't persisted, non-local are
             m_assetCache.Store(asset);
         }

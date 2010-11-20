@@ -154,8 +154,8 @@ namespace OpenSim.Services.CapsService
                     {
                         if (!registeredCAPS.ContainsKey(key))
                             registeredCAPS[key] = hash[key];
-                        else
-                            m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
+                        //else
+                        //    m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
                     }
                 }
             }

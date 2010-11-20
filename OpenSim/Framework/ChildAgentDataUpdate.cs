@@ -591,7 +591,8 @@ namespace OpenSim.Framework
             {
                 byte[] rawtextures = args["texture_entry"].AsBinary();
                 Primitive.TextureEntry textures = new Primitive.TextureEntry(rawtextures, 0, rawtextures.Length);
-                Appearance.SetTextureEntries(textures);
+                List<UUID> changed = new List<UUID>();
+                Appearance.SetTextureEntries(textures, out changed);
             }
 
             if (args["visual_params"] != null)

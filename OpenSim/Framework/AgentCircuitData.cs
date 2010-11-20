@@ -303,7 +303,7 @@ namespace OpenSim.Framework
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
 
             // DEBUG ON
-            m_log.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
+            //m_log.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
             // DEBUG OFF
 
             try
@@ -320,7 +320,7 @@ namespace OpenSim.Framework
                 {
                     Appearance.Unpack((OSDMap)args["packed_appearance"]);
                     // DEBUG ON
-                    m_log.WarnFormat("[AGENTCIRCUITDATA] unpacked appearance");
+                    //m_log.WarnFormat("[AGENTCIRCUITDATA] unpacked appearance");
                     // DEBUG OFF
                 }
                 // DEBUG ON
