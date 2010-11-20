@@ -168,7 +168,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_colliderarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
+            CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
@@ -440,7 +440,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     Vector3 SetSize = value;
 
-                    if (((SetSize.Z * 1.15f) - CAPSULE_RADIUS * 2.0f) == CAPSULE_LENGTH)
+                    if (((SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f) == CAPSULE_LENGTH)
                     {
                         //It is the same, do not rebuild
                         m_log.Info("[Physics]: Not rebuilding the avatar capsule, as it is the same size as the previous capsule.");
@@ -449,7 +449,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     m_pidControllerActive = true;
 
-                    m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
+                    m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
@@ -579,7 +579,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // disconnect from world gravity so we can apply buoyancy
             d.BodySetGravityMode(Body, false);
-            
+
             _position.X = npositionX;
             _position.Y = npositionY;
             _position.Z = npositionZ;
@@ -1508,8 +1508,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
                     d.BodyDestroy(Body);
                     d.GeomDestroy(Shell);
-                    AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                      _position.Z + (Math.Abs(CAPSULE_LENGTH - prevCapsule) * 2), m_tensor);
+                    AvatarGeomAndBodyCreation(m_taintPosition.X, m_taintPosition.Y,
+                                      m_taintPosition.Z /*+ (Math.Abs(CAPSULE_LENGTH - prevCapsule) * 2)*/, m_tensor);
                     Velocity = Vector3.Zero;
 
                     _parent_scene.geom_name_map[Shell] = m_name;

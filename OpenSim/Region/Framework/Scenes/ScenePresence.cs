@@ -1144,7 +1144,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (Appearance.AvatarHeight != m_avHeight)
                 {
-                    Vector3 SetSize = new Vector3(0.45f, 0.6f, m_avHeight);
+                    Vector3 SetSize = new Vector3(0.45f, 0.6f, Appearance.AvatarHeight);
                     PhysicsActor.Size = SetSize;
                     SendFullUpdateToAllClients();
                 }
