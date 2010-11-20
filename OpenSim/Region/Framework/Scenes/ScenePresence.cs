@@ -1180,6 +1180,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AbsolutePosition = pos;
             }
 
+            //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
             {
                 //m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
@@ -1189,7 +1190,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_isChildAgent = false;
 
-            //Do this and SendInitialData FIRST before MakeRootAgent
+            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
             // Create child agents in neighbouring regions
