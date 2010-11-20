@@ -578,6 +578,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.llDetectParams = qParams;
             QIS.param = param;
             QIS.VersionID = VersionID;
+            QIS.State = ID.State;
 
             MaintenanceThread.AddEvent(QIS, priority);
             return true;
@@ -905,12 +906,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptData SD = ScriptProtection.GetScript(olditemID);
                     if (SD == null)
                         return;
+
+
                     SD.presence = SD.World.GetScenePresence(SD.presence.UUID);
                     ScriptControllers SC = SD.presence.GetScriptControler(SD.ItemID);
                     if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
                         SD.presence.UnRegisterControlEventsToScript(SD.part.LocalId, SD.ItemID);
                     }
+
+                    object[] Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
+                    RemoveScript(SD.part.UUID, SD.ItemID);
+
+                    MaintenanceThread.SetEventSchSetIgnoreNew(SD, true);
+
+                    ScriptProtection.RemoveScript(SD);
 
                     SD.part = newPart;
                     SD.ItemID = newItem.ItemID;
@@ -919,11 +929,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Try to see if this was rezzed from someone's inventory
                     SD.UserInventoryItemID = SD.part.FromUserInventoryItemID;
 
-                    object[] Plugins = GetSerializationData(SD.ItemID, SD.part.UUID);
-                    RemoveScript(SD.part.UUID, SD.ItemID);
                     CreateFromData(SD.part.UUID, SD.ItemID, SD.part.UUID, Plugins);
+
                     SD.World = newPart.ParentGroup.Scene;
                     SD.SetApis();
+
+                    MaintenanceThread.SetEventSchSetIgnoreNew(SD, false);
+
 
                     if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
@@ -933,6 +945,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
 
                     ScriptProtection.AddNewScript(SD);
+
+
                     ScriptDataSQLSerializer.SaveState(SD, this);
                 }
             }

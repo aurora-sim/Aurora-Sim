@@ -119,12 +119,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
         public void ResetInventoryIDs(bool ChangeScripts)
-        {
+            {
             if (null == m_part || null == m_part.ParentGroup)
                 return;
-            
+
             lock (m_items)
-            {
+                {
                 if (0 == m_items.Count)
                     return;
 
@@ -132,28 +132,28 @@ namespace OpenSim.Region.Framework.Scenes
                 m_items.Clear();
 
                 foreach (TaskInventoryItem item in items)
-                {
+                    {
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
                     m_items.Add(item.ItemID, item);
                     /*if (m_part.ParentGroup != null)
                     {
                         lock (m_part.ParentGroup)
-                        {
-                            if (ChangeScripts && m_part.ParentGroup.Scene != null)
                             {
-                                foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                            if (m_part.ParentGroup.Scene != null)
                                 {
+                                foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                                    {
                                     engine.UpdateScriptToNewObject(oldItemID, item, m_part);
+                                    }
                                 }
                             }
                         }
                     }*/
-                }
                 HasInventoryChanged = true;
                 m_part.ParentGroup.HasGroupChanged = true;
+                }
             }
-        }
 
         public void ResetObjectID()
         {
@@ -172,27 +172,30 @@ namespace OpenSim.Region.Framework.Scenes
                 
                 IList<TaskInventoryItem> items = new List<TaskInventoryItem>(Items.Values);
                 Items.Clear();
-    
+
                 foreach (TaskInventoryItem item in items)
-                {
+                    {
+
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
+
                     if (m_part.ParentGroup != null)
-                    {
-                        lock (m_part.ParentGroup)
                         {
-                            if (m_part.ParentGroup.Scene != null)
+                        lock (m_part.ParentGroup)
                             {
-                                foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                            if (m_part.ParentGroup.Scene != null)
                                 {
+                                foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                                    {
                                     engine.UpdateScriptToNewObject(oldItemID, item, m_part);
+                                    }
                                 }
                             }
                         }
-                    }
+                    item.ResetIDs(m_part.UUID);
                     Items.Add(item.ItemID, item);
-                }
-            }
+                    }
+              }
         }
 
         /// <summary>
