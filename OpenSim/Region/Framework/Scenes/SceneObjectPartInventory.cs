@@ -119,12 +119,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="linkNum">Link number for the part</param>
         public void ResetInventoryIDs(bool ChangeScripts)
-            {
+        {
             if (null == m_part || null == m_part.ParentGroup)
                 return;
 
             lock (m_items)
-                {
+            {
                 if (0 == m_items.Count)
                     return;
 
@@ -132,7 +132,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_items.Clear();
 
                 foreach (TaskInventoryItem item in items)
-                    {
+                {
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
                     m_items.Add(item.ItemID, item);
@@ -150,10 +150,11 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
                     }*/
-                HasInventoryChanged = true;
-                m_part.ParentGroup.HasGroupChanged = true;
+                    HasInventoryChanged = true;
+                    m_part.ParentGroup.HasGroupChanged = true;
                 }
             }
+        }
 
         public void ResetObjectID()
         {
