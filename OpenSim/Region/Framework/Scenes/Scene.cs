@@ -39,6 +39,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Communications;
@@ -1042,9 +1043,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (UseTracker)
             {
-                tracker.OnNeedToAddThread -= NeedsNewThread;
-                tracker.Close();
-                tracker = null;
+                if (tracker != null)
+                {
+                    tracker.OnNeedToAddThread -= NeedsNewThread;
+                    tracker.Close();
+                    tracker = null;
+                }
             }
 
             // Stop updating the scene objects and agents.
@@ -2281,16 +2285,63 @@ namespace OpenSim.Region.Framework.Scenes
             //m_sceneGridService.RegisterRegion(m_interregionCommsOut, RegionInfo);
 
             GridRegion region = new GridRegion(RegionInfo);
-            UUID newSessionID = UUID.Zero;
-            string error = GridService.RegisterRegion(RegionInfo.ScopeID, region, RegionInfo.GridSecureSessionID, out newSessionID);
+
+            IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            GridSessionID s = null;
+            if (g != null) //Get the sessionID from the database if possible
+                s = g.GetGeneric<GridSessionID>(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, new GridSessionID());
+
+            if (s == null)
+            {
+                s = new GridSessionID();
+                //Set it from the regionInfo if it knows anything
+                s.SessionID = RegionInfo.GridSecureSessionID;
+            }
+
+            string error = GridService.RegisterRegion(RegionInfo.ScopeID, region, s.SessionID, out s.SessionID);
             if (error != String.Empty)
                 return error;
-            RegionInfo.GridSecureSessionID = newSessionID;
-            RegionInfo.WriteNiniConfig();
+            RegionInfo.GridSecureSessionID = s.SessionID;
+
+            //Save the new SessionID to the database
+            g.AddGeneric(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
 
             m_sceneGridService.SetScene(this);
             m_sceneGridService.InformNeighborsThatRegionisUp(RequestModuleInterface<INeighbourService>(), RegionInfo);
             return "";
+        }
+
+        public class GridSessionID : IDataTransferable
+        {
+            public UUID SessionID;
+            public override void FromOSD(OSDMap map)
+            {
+                SessionID = map["SessionID"].AsUUID();
+            }
+
+            public override OSDMap ToOSD()
+            {
+                OSDMap map = new OSDMap();
+                map.Add("SessionID", SessionID);
+                return map;
+            }
+
+            public override Dictionary<string, object> ToKeyValuePairs()
+            {
+                return Util.OSDToDictionary(ToOSD());
+            }
+
+            public override void FromKVP(Dictionary<string, object> KVP)
+            {
+                FromOSD(Util.DictionaryToOSD(KVP));
+            }
+
+            public override IDataTransferable Duplicate()
+            {
+                GridSessionID m = new GridSessionID();
+                m.FromOSD(ToOSD());
+                return m;
+            }
         }
 
         #endregion

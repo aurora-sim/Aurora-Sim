@@ -45,7 +45,7 @@ namespace Aurora.Services.DataService
                 return null;
 
             OSDMap map = (OSDMap)OSDParser.DeserializeJson(retVal[0]);
-            data.FromKVP(Util.OSDToDictionary(map));
+            data.FromOSD(map);
             return data;
         }
 

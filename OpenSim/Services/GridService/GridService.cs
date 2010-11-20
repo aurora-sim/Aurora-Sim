@@ -253,8 +253,8 @@ namespace OpenSim.Services.GridService
                 m_log.DebugFormat("[GRID SERVICE]: Database exception: {0}", e.ToString());
             }
 
-            m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
-                regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+            //m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
+            //    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
 
             return String.Empty;
         }
@@ -845,6 +845,11 @@ namespace OpenSim.Services.GridService
                 mapItems.Add(mapitem);
             }
             return mapItems;
+        }
+
+        public string GridServiceURL
+        {
+            get { return "Local"; }
         }
 
         public class SimMap

@@ -122,7 +122,7 @@ namespace OpenSim.Services.Connectors
                     }
                     else if (replyData.ContainsKey("Result")&& (replyData["Result"].ToString().ToLower() == "failure"))
                     {
-                        m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
+                        //m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
                         return replyData["Message"].ToString();
                     }
                     else if (!replyData.ContainsKey("Result"))
@@ -864,6 +864,11 @@ namespace OpenSim.Services.Connectors
 
         public virtual void SetRegionUnsafe(UUID regionID)
         {
+        }
+
+        public string GridServiceURL
+        {
+            get { return m_ServerURI; }
         }
 
         #endregion

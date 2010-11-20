@@ -285,5 +285,10 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         {
             m_GridService.AddAgent(regionID, agentID, Position);
         }
+
+        public string GridServiceURL
+        {
+            get { return "Local"; }
+        }
     }
 }

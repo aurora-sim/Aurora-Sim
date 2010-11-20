@@ -106,6 +106,8 @@ namespace OpenSim.Services.Interfaces
         void AddAgent(UUID regionID, UUID agentID, Vector3 Position);
 
         void SetRegionUnsafe(UUID ID);
+
+        string GridServiceURL { get; }
     }
 
     public class GridRegion : Object
