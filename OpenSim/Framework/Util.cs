@@ -1423,8 +1423,10 @@ namespace OpenSim.Framework
             if (FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool &&
                 m_ThreadPool != null)
             {
+                //This stops more tasks and threads from being started
                 m_threadPoolRunning = false;
-                m_ThreadPool.Shutdown();
+                m_ThreadPool.WaitForIdle(60 * 1000); //Wait for the threads to be idle, but don't wait for more than a minute
+                //Destroy the threadpool now
                 m_ThreadPool.Dispose();
                 m_ThreadPool = null;
             }
