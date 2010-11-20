@@ -348,16 +348,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Remove
 
-        /// <summary>
-        /// Sets the newest VersionID to the given versionID so taht we can block out ALL previous scripts
-        /// </summary>
-        /// <param name="ItemID"></param>
-        /// <param name="VersionID"></param>
-        public void RemoveFromEventQueue(UUID ItemID, int VersionID)
-        {
-            NeedsRemoved[ItemID] = VersionID;
-        }
-
         public void RemoveState(ScriptData ID)
         {
             ScriptFrontend.DeleteStateSave(ID.ItemID);
@@ -447,7 +437,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.EventsQueue.Clear();
-
                 ID.EventsProcDataLocked = false;
                 }
             }
@@ -481,6 +470,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             QIS.param = param;
             QIS.VersionID = VersionID;
             QIS.State = ID.State;
+            QIS.CurrentlyAt = null;
 
             lock (ID.EventsProcData)
                 {
@@ -531,6 +521,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
                 return;
+
+            QIS.CurrentlyAt = null;
 
             lock (ID.EventsProcData)
                 {
