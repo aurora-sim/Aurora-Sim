@@ -99,7 +99,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private DateTime TimeSliceEnd = new DateTime();
         private DateTime TimeSliceStart = new DateTime();
 
-        private Double MaxTimeSlice = 100;    // script timeslice execution time in ms , hardwired for now
+        private Double MaxTimeSlice = 60;    // script timeslice execution time in ms , hardwired for now
   
 
         public Executor(IScript script)
@@ -151,13 +151,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return eventFlags;
         }
 
-        public void OpenTimeSlice()
+        public void OpenTimeSlice(EnumeratorInfo Start)
         {
-            if (InTimeSlice) //Make sure this hasn't already been called by another thread
-                return;
 
             TimeSliceStart = DateTime.Now;
-            TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice);
+            if(Start==null)
+                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice);
+            else
+                TimeSliceEnd = TimeSliceStart.AddMilliseconds(MaxTimeSlice/2);
             InTimeSlice = true;
         }
 
@@ -225,7 +226,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             {
             IEnumerator thread = null;
 
-            OpenTimeSlice();
+            OpenTimeSlice(Start);
             bool running = true;
             ex = null;
 
