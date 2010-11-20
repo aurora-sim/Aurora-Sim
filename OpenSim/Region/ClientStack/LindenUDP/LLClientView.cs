@@ -4730,6 +4730,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             pos += 12;
 
             // Velocity
+            //m_log.DebugFormat("Velocity: {0}", velocity);
             Utils.UInt16ToBytes(Utils.FloatToUInt16(velocity.X, -128.0f, 128.0f), data, pos); pos += 2;
             Utils.UInt16ToBytes(Utils.FloatToUInt16(velocity.Y, -128.0f, 128.0f), data, pos); pos += 2;
             Utils.UInt16ToBytes(Utils.FloatToUInt16(velocity.Z, -128.0f, 128.0f), data, pos); pos += 2;
@@ -4776,9 +4777,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             byte[] objectData = new byte[76];
 
+            if (data.CollisionPlane == Vector4.Zero)
+                data.CollisionPlane = Vector4.UnitW;
+            //m_log.DebugFormat("CollisionPlane: {0}", data.CollisionPlane);
             data.CollisionPlane.ToBytes(objectData, 0);
             data.OffsetPosition.ToBytes(objectData, 16);
-            //data.Velocity.ToBytes(objectData, 28);
+            data.Velocity.ToBytes(objectData, 28);
             //data.Acceleration.ToBytes(objectData, 40);
             data.Rotation.ToBytes(objectData, 52);
             //data.AngularVelocity.ToBytes(objectData, 64);
