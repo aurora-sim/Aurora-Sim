@@ -508,6 +508,12 @@ namespace Aurora.Modules
             //parcel permissions
             if (ILO.IsEitherBannedOrRestricted(userID))
             {
+                if (Sp == null)
+                {
+                    reason = "Banned from this parcel.";
+                    return true;
+                }
+
                 if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
                 {
                     //We found a place for them, but we don't need to check any further
@@ -523,6 +529,11 @@ namespace Aurora.Modules
                 //One of these is in play then
                 if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup)
                 {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
                     if (Sp.ControllingClient.ActiveGroupId != ILO.LandData.GroupID)
                     {
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
@@ -532,6 +543,11 @@ namespace Aurora.Modules
                 }
                 else if ((parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList)
                 {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
                     //All but the people on the access list are banned
                     if (!ILO.CreateAccessListArrayByFlag(AccessList.Access).Contains(Sp.UUID))
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
@@ -540,6 +556,11 @@ namespace Aurora.Modules
                 }
                 else if ((parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
                 {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
                     //All but the people on the pass/access list are banned
                     if (!ILO.CreateAccessListArrayByFlag(AccessList.Access).Contains(Sp.UUID))
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
@@ -597,7 +618,7 @@ namespace Aurora.Modules
                             //We need to check here as well for bans, can't toss someone into a parcel they are banned from
                             foreach (ILandObject Parcel in Parcels)
                             {
-                                if (!Parcel.IsBannedFromLand(Sp.UUID))
+                                if (!Parcel.IsBannedFromLand(userID))
                                 {
                                     //Now we have to check their userloc
                                     if (ILO.LandData.LandingType == 2)
@@ -609,8 +630,16 @@ namespace Aurora.Modules
                                     found = true;
                                 }
                             }
-                            if(!found) //Dump them at the edge
-                                newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(Sp); 
+                            if (!found) //Dump them at the edge
+                            {
+                                if(Sp != null)
+                                    newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(Sp);
+                                else
+                                {
+                                    reason = "Banned from this parcel.";
+                                    return true;
+                                }
+                            }
                         }
                     }
                     else if (ILO.LandData.LandingType == 1) //Move to tp spot
