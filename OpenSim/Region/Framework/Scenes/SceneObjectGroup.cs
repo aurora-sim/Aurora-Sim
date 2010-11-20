@@ -805,6 +805,8 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Shape.Scale = scale;
                 }
             }
+            //Check to make sure we have the sculpty info
+            CheckSculptAndLoad();
 
             if (WSModule != null) 
                 ApplyPhysics(WSModule.AllowPhysicalPrims);

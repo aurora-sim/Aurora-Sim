@@ -161,6 +161,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
             int sceneObjectsLoadedCount = 0;
 
+            //We save the groups so that we can back them up later
+            List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
+
             try
             {
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
@@ -236,6 +239,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                         if (m_scene.AddPrimToScene(sceneObject))
                         {
+                            groupsToBackup.Add(sceneObject);
                             sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                             sceneObjectsLoadedCount++;
                             sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
@@ -302,6 +306,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 module.Disabled = false;
             }
             m_scene.LoadingPrims = false;
+
+            //Now back up the prims
+            foreach (SceneObjectGroup grp in groupsToBackup)
+            {
+                //Backup!
+                grp.HasGroupChanged = true;
+            }
 
             if (!m_skipAssets)
             {

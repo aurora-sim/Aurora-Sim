@@ -460,6 +460,9 @@ namespace OpenSim.Region.Physics.Meshing
                     bool mirror = ((primShape.SculptType & 128) != 0);
                     bool invert = ((primShape.SculptType & 64) != 0);
 
+                    if (idata == null)
+                        return null;
+
                     sculptMesh = new PrimMesher.SculptMesh((Bitmap)idata, sculptType, (int)lod, false, mirror, invert);
 
                     idata.Dispose();
