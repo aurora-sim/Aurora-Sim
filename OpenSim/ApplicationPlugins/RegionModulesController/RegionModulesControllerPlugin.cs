@@ -278,8 +278,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
-                                  scene.RegionInfo.RegionName, module.Name);
+                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
+                //                  scene.RegionInfo.RegionName, module.Name);
 
                 module.AddRegion(scene);
                 scene.AddRegionModule(module.Name, module);
@@ -374,8 +374,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
-                                  scene.RegionInfo.RegionName, module.Name);
+                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
+                //                  scene.RegionInfo.RegionName, module.Name);
 
                 // Initialise the module
                 module.Initialise(m_openSim.ConfigSource);

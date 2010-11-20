@@ -139,13 +139,12 @@ namespace OpenSim.Region.Framework.Scenes
                     /*if (m_part.ParentGroup != null)
                     {
                         lock (m_part.ParentGroup)
-                            {
+                        {
                             if (m_part.ParentGroup.Scene != null)
-                                {
+                            {
                                 foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
-                                    {
+                                {
                                     engine.UpdateScriptToNewObject(oldItemID, item, m_part);
-                                    }
                                 }
                             }
                         }
@@ -164,39 +163,38 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     return;
                 }
-    
+
                 HasInventoryChanged = true;
                 if (m_part.ParentGroup != null)
                 {
                     m_part.ParentGroup.HasGroupChanged = true;
                 }
-                
+
                 IList<TaskInventoryItem> items = new List<TaskInventoryItem>(Items.Values);
                 Items.Clear();
 
                 foreach (TaskInventoryItem item in items)
-                    {
-
+                {
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
 
                     if (m_part.ParentGroup != null)
-                        {
+                    {
                         lock (m_part.ParentGroup)
-                            {
+                        {
                             if (m_part.ParentGroup.Scene != null)
-                                {
+                            {
                                 foreach (IScriptModule engine in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
-                                    {
+                                {
                                     engine.UpdateScriptToNewObject(oldItemID, item, m_part);
-                                    }
                                 }
                             }
                         }
+                    }
                     item.ResetIDs(m_part.UUID);
                     Items.Add(item.ItemID, item);
-                    }
-              }
+                }
+            }
         }
 
         /// <summary>

@@ -117,6 +117,7 @@ namespace OpenSim.Services.Connectors
                         {
                             SessionID = UUID.Parse(replyData["Message"].ToString());
                         }
+                        m_log.Info("[GridService]: Successfully registered region " + regionInfo.RegionName + " at " + regionInfo.RegionLocX + "," + regionInfo.RegionLocY + " to the grid server @ " + m_ServerURI);
                         return String.Empty;
                     }
                     else if (replyData.ContainsKey("Result")&& (replyData["Result"].ToString().ToLower() == "failure"))
@@ -708,7 +709,7 @@ namespace OpenSim.Services.Connectors
             return flags;
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
+        public virtual string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
         {
             Dictionary<string, object> sendData = region.ToKeyValuePairs();
 

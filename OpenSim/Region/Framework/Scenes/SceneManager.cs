@@ -884,8 +884,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 RegisterRegionWithGrid(scene);
             }
-            else
-                m_log.Debug("[SCENE]: Registered " + scene.RegionInfo.RegionName + " with the grid server successfully.");
         }
 
         private void SaveChangesFile(RegionInfo regionInfo)

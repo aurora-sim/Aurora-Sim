@@ -143,20 +143,31 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
         public override string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
         {
             m_GridCache.AddRegion(regionInfo);
-            //string msg = m_LocalGridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
+            string msg = m_LocalGridService.RegisterRegion(scopeID, regionInfo, SecureSessionID, out SessionID);
 
-            //if (msg == String.Empty)
+            if (msg == String.Empty)
                 return base.RegisterRegion(scopeID, regionInfo, SecureSessionID,  out SessionID);
 
-            //return msg;
+            return msg;
+        }
+
+        public override string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
+        {
+            m_GridCache.AddRegion(region);
+            string msg = m_LocalGridService.UpdateMap(scopeID, region, sessionID);
+
+            if (msg == String.Empty)
+                return base.UpdateMap(scopeID, region, sessionID);
+
+            return msg;
         }
 
         public override bool DeregisterRegion(UUID regionID, UUID SessionID)
         {
-            //if (m_LocalGridService.DeregisterRegion(regionID, SessionID))
+            if (m_LocalGridService.DeregisterRegion(regionID, SessionID))
                 return base.DeregisterRegion(regionID, SessionID);
 
-            //return false;
+            return false;
         }
 
         public override List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
