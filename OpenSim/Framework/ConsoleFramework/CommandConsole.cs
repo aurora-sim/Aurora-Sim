@@ -837,18 +837,26 @@ namespace OpenSim.Framework
                             result = action.BeginInvoke(null, null);
                             m_calledEndInvoke = false;
                         }
-
-                        if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
+                        try
                         {
+                            if ((!result.IsCompleted) &&
+                                (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
+                            {
 
+                            }
+                            else if (action != null &&
+                                !result.CompletedSynchronously &&
+                                !m_calledEndInvoke)
+                            {
+                                m_calledEndInvoke = true;
+                                action.EndInvoke(result);
+                                action = null;
+                                result = null;
+                            }
                         }
-                        else if (action != null &&
-                            !result.CompletedSynchronously &&
-                            !m_calledEndInvoke)
+                        catch
                         {
-                            m_calledEndInvoke = true;
-                            action.EndInvoke(result);
+                            //Eat the exception and go on
                             action = null;
                             result = null;
                         }

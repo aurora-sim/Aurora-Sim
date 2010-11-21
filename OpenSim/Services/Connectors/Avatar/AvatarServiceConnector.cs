@@ -90,6 +90,8 @@ namespace OpenSim.Services.Connectors
         public AvatarAppearance GetAppearance(UUID userID)
         {
             AvatarData avatar = GetAvatar(userID);
+            if (avatar == null)
+                return null;
             return avatar.ToAvatarAppearance(userID);
         }
 

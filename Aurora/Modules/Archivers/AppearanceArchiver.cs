@@ -234,8 +234,9 @@ namespace Aurora.Modules
                 return; //Bad people!
             SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
 
-            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
-            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
+            AvatarAppearance appearance = m_scene.AvatarService.GetAppearance(SP.UUID);
+            if (appearance == null)
+                appearance = SP.Appearance;
             StreamWriter writer = new StreamWriter(cmdparams[5]);
             OSDMap map = new OSDMap();
             OSDMap body = new OSDMap();
