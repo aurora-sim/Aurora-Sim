@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             m_updateTimer.Enabled = false;
             m_updateTimer.AutoReset = true;
             m_updateTimer.Interval = m_checkTime; // 500 milliseconds wait to start async ops
-            m_updateTimer.Elapsed += new ElapsedEventHandler(HandleAppearanceUpdateTimer);
+            m_updateTimer.Elapsed += HandleAppearanceUpdateTimer;
         }
 
         public void RemoveRegion(Scene scene)
