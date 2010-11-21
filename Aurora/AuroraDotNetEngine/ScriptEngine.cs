@@ -380,6 +380,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         protected void AuroraDotNetConsoleCommands(string module, string[] cmdparams)
         {
+            if (cmdparams.Length == 1)
+            {
+                AuroraDotNetConsoleHelp(module, cmdparams);
+                return;
+            }
             if (cmdparams[1] == "restart")
             {
                 string go = MainConsole.Instance.CmdPrompt("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
@@ -418,12 +423,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (cmdparams[1] == "stats")
             {
-                m_log.Info("Aurora DotNet Script Engine Stats:"
-                    + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
-                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
-                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
-                    + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
-                    + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel);
+
+            m_log.Info("Aurora DotNet Script Engine Stats:"
+                + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
+                + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
+                + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
+                + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
+                + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
+            + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString()
+            + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString()
+            + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString()
+            + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString());
+
             }
             if (cmdparams[1] == "disable")
             {
@@ -1218,6 +1229,71 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return s;
             }
             return null;
+        }
+
+        private bool ScriptDanger(SceneObjectPart part, Vector3 pos)
+        {
+            Scene scene = part.ParentGroup.Scene;
+            if (part.IsAttachment && scene.RunScriptsInAttachments)
+                return true; //Always run as in SL
+            ILandObject parcel = scene.LandChannel.GetLandObject(pos.X, pos.Y);
+            if (parcel != null)
+            {
+                if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
+                    return true;
+                else if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0)
+                {
+                    if (part.OwnerID == parcel.LandData.OwnerID
+                        || (parcel.LandData.IsGroupOwned && part.GroupID == parcel.LandData.GroupID)
+                        || scene.Permissions.IsGod(part.OwnerID))
+                        return true;
+                    else
+                        return false;
+                }
+                else
+                {
+                    //Gods should be able to run scripts. 
+                    // -- Revolution
+                    if (part.OwnerID == parcel.LandData.OwnerID || scene.Permissions.IsGod(part.OwnerID))
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            else
+            {
+                if (pos.X > 0f && pos.X < Constants.RegionSize && pos.Y > 0f && pos.Y < Constants.RegionSize)
+                    // The only time parcel != null when an object is inside a region is when
+                    // there is nothing behind the landchannel.  IE, no land plugin loaded.
+                    return true;
+                else
+                    // The object is outside of this region.  Stop piping events to it.
+                    return false;
+            }
+        }
+
+        public bool PipeEventsForScript(SceneObjectPart part)
+        {
+            // Changed so that child prims of attachments return ScriptDanger for their parent, so that
+            //  their scripts will actually run.
+            //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
+            SceneObjectPart parent = part.ParentGroup.RootPart;
+            if (parent != null && parent.IsAttachment)
+                return PipeEventsForScript(parent, parent.AbsolutePosition);
+            else
+                return PipeEventsForScript(part, part.AbsolutePosition);
+        }
+
+        public bool PipeEventsForScript(SceneObjectPart part, Vector3 position)
+        {
+            // Changed so that child prims of attachments return ScriptDanger for their parent, so that
+            //  their scripts will actually run.
+            //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
+            SceneObjectPart parent = part.ParentGroup.RootPart;
+            if (parent != null && parent.IsAttachment)
+                return ScriptDanger(parent, position);
+            else
+                return ScriptDanger(part, position);
         }
 
         #endregion
