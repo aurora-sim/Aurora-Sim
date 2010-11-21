@@ -174,7 +174,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         /// <returns></returns>
         public bool ScriptChangeQueue()
-            {
+        {
             if (!Started) //Break early
                 return true;
 
@@ -185,65 +185,65 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             object oitems;
             if (LUQueue.GetNext(out oitems))
-                {
+            {
                 LUStruct[] items = oitems as LUStruct[];
                 List<LUStruct> NeedsFired = new List<LUStruct>();
                 foreach (LUStruct item in items)
-                    {
+                {
                     if (item.Action == LUType.Unload)
-                        {
+                    {
                         //Close
                         item.ID.CloseAndDispose(false);
-                        }
+                    }
                     else if (item.Action == LUType.Load)
-                        {
+                    {
                         try
-                            {
+                        {
                             //Start
                             item.ID.Start(false);
                             NeedsFired.Add(item);
-                            }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                         }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                    }
                     else if (item.Action == LUType.Reupload)
-                        {
+                    {
                         try
-                            {
+                        {
                             //Start, but don't add to the queue's again
                             item.ID.Start(true);
                             NeedsFired.Add(item);
-                            }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                         }
+                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                     }
+                }
                 foreach (LUStruct item in NeedsFired)
-                    {
+                {
                     //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
-                    }
+                }
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
                 return false;
-                }
+            }
 
             if (!FiredStartupEvent)
-                {
+            {
                 //If we are empty, we are all done with script startup and can tell the region that we are all done
                 if (LUQueue.Count() == 0)
-                    {
+                {
                     FiredStartupEvent = true;
                     foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
-                        {
+                    {
                         scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                         m_ScriptEngine.ScriptErrorMessages);
-                        
+
                         scene.EventManager.TriggerFinishedStartup("ScriptEngine", new List<string>(){m_ScriptEngine.ScriptFailCount.ToString(),
                                                                     m_ScriptEngine.ScriptErrorMessages}); //Tell that we are done
-                        }
                     }
                 }
+            }
             ScriptChangeIsRunning = false;
             return false;
-            }
+        }
 
         public bool CmdHandlerQueue()
         {
@@ -264,7 +264,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             Thread.Sleep(25);   // don't burn cpu
             threadpool.QueueEvent(CmdHandlerQueue, 2);
-            return false;
+            //Let it rest as well if needed
+            return true;
         }
         #endregion
 

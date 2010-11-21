@@ -30,16 +30,16 @@ namespace Aurora.Framework
         int nthreads;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
-            {
+        {
             m_info = info;
             Threads = new Thread[m_info.Threads];
             Sleeping = new int[m_info.Threads];
             nthreads = 0;
-            }
+        }
 
         private void ThreadStart(object number)
         {
-            int OurSleepTime = 0;
+            int OurSleepTime = m_info.InitialSleepTime;
 
             int[] numbers = number as int[];
             int ThreadNumber = numbers[0];
@@ -64,7 +64,7 @@ namespace Aurora.Framework
 
                     if (item == null && o == null)
                     {
-                        if (OurSleepTime++ > m_info.MaxSleepTime) //Make sure we don't go waay over on how long we sleep
+                        if ((OurSleepTime++) >= m_info.MaxSleepTime) //Make sure we don't go waay over on how long we sleep
                         {
                             Threads[ThreadNumber] = null;
                             Interlocked.Decrement(ref nthreads);
@@ -72,25 +72,33 @@ namespace Aurora.Framework
                         }
                         else
                         {
-                            Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
-                            try { Thread.Sleep(OurSleepTime); }
-                            catch (ThreadInterruptedException e) { }
-                            Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
+                            Rest(OurSleepTime, ThreadNumber);
                             continue;
                         }
                     }
                     else
                     {
-                        bool Rest = false;
-                        OurSleepTime = 0;
+                        bool ShouldRest = false;
+                        OurSleepTime = m_info.InitialSleepTime;
                         if (item != null)
-                            Rest = item.Invoke();
+                            ShouldRest = item.Invoke();
                         else
-                            Rest = (o[0] as QueueItem2).Invoke(o[1]);
+                            ShouldRest = (o[0] as QueueItem2).Invoke(o[1]);
+
+                        if (ShouldRest && queue.Count - 1 <= 0) //Just one item remaining..
+                            Rest(OurSleepTime, ThreadNumber);
                     }
                 }
                 catch { }
             }
+        }
+
+        private void Rest(int OurSleepTime, int ThreadNumber)
+        {
+            Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
+            try { Thread.Sleep(OurSleepTime); }
+            catch (ThreadInterruptedException e) { }
+            Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
         }
 
         public void QueueEvent(QueueItem delegat, int Priority)
