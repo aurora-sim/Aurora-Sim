@@ -425,12 +425,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (cmdparams[1] == "stats")
             {
-                m_log.Info("Aurora DotNet Script Engine Stats:"
-                    + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
-                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
-                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
-                    + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
-                    + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel);
+
+            m_log.Info("Aurora DotNet Script Engine Stats:"
+                + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
+                + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel().ToString()
+                + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
+                + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
+                + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
+            + "\nNumber Engine threads/sleeping: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nthreads).ToString()
+            + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.threadpool.nSleepingthreads).ToString()
+            + "\nNumber Script threads: " + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nthreads).ToString()
+            + "/" + (MaintenanceThread.threadpool == null ? 0 : MaintenanceThread.Scriptthreadpool.nSleepingthreads).ToString());
+
             }
             if (cmdparams[1] == "disable")
             {
