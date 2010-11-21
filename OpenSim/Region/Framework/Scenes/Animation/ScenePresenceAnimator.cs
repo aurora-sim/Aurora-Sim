@@ -521,7 +521,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 // -- Revolution
                 //Note: we use m_scenePresence.LastVelocity for a reason! The PhysActor and SP Velocity are both cleared before this is called.
                 float Z = Math.Abs(m_scenePresence.LastVelocity.LengthSquared());
-                Console.WriteLine(Z);
                 if (Z < SOFTLAND_FORCE)
                 {
                     m_animTickFall = Util.EnvironmentTickCount();

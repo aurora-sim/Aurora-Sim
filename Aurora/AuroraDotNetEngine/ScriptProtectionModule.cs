@@ -173,7 +173,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 		internal void Error(string surMessage, string msg)
         {
-            throw new ScriptPermissionsException(surMessage + msg);
+            throw new Exception(surMessage + msg);
         }
 
 		#endregion

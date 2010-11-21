@@ -223,7 +223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public EnumeratorInfo FireAsEnumerator(EnumeratorInfo Start, MethodInfo ev, object[] args, out Exception ex)
-            {
+        {
             IEnumerator thread = null;
 
             OpenTimeSlice(Start);
@@ -231,21 +231,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             ex = null;
 
             try
-                {
+            {
                 if (Start != null)
-                    {
+                {
                     lock (m_enumerators)
-                        {
+                    {
                         m_enumerators.TryGetValue(Start.Key, out thread);
-                        }
+                    }
                     if (thread != null)
                         running = thread.MoveNext();
-                    }
+                }
                 else
                     thread = (IEnumerator)ev.Invoke(m_Script, args);
-                }
+            }
             catch (Exception tie)
-                {
+            {
                 // Grab the inner exception and rethrow it, unless the inner
                 // exception is an EventAbortException as this indicates event
                 // invocation termination due to a state change.
@@ -258,47 +258,56 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         !(tie is EventAbortException))
                     ex = tie;
                 if (Start != null)
-                    {
+                {
                     lock (m_enumerators)
-                        {
+                    {
                         m_enumerators.Remove(Start.Key);
-                        }
                     }
+                }
                 CloseTimeSlice();
                 return null;
-                }
+            }
 
             if (running && thread != null)
-                {
+            {
                 if (Start == null)
-                    {
+                {
                     Start = new EnumeratorInfo();
                     Start.Key = System.Guid.NewGuid();
-                    }
+                }
                 lock (m_enumerators)
-                    {
+                {
                     m_enumerators[Start.Key] = thread;
-                    }
+                }
 
                 if (thread.Current is DateTime)
                     Start.SleepTo = (DateTime)thread.Current;
+                else if (thread.Current is string)
+                {
+                    ex = new Exception((string)thread.Current);
+                    running = false;
+                    lock (m_enumerators)
+                    {
+                        m_enumerators.Remove(Start.Key);
+                    }
+                }
                 CloseTimeSlice();
                 return Start;
-                }
+            }
             else
-                {
+            {
                 //No enumerator.... errr.... something went really wrong here
                 if (Start != null)
-                    {
+                {
                     lock (m_enumerators)
-                        {
+                    {
                         m_enumerators.Remove(Start.Key);
-                        }
                     }
+                }
                 CloseTimeSlice();
                 return null;
-                }
             }
+        }
 
 
         protected void initEventFlags()

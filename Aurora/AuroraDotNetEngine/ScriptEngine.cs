@@ -403,6 +403,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                         catch (Exception) { }
                     }
+                    m_log.Warn("[ADNE]: All scripts have been restarted.");
                 }
                 else
                 {
@@ -415,6 +416,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (go.Contains("yes") || go.Contains("Yes"))
                 {
                     StopAllScripts();
+                    m_log.Warn("[ADNE]: All scripts have been stopped.");
                 }
                 else
                 {
@@ -433,10 +435,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (cmdparams[1] == "disable")
             {
                 ConsoleDisabled = true;
+                m_log.Warn("[ADNE]: ADNE has been disabled.");
             }
             if (cmdparams[1] == "enable")
             {
                 ConsoleDisabled = false;
+                m_log.Warn("[ADNE]: ADNE has been enabled.");
             }
             if (cmdparams[1] == "help")
             {

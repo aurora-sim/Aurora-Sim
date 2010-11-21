@@ -164,7 +164,7 @@ namespace OpenSim.Region.Framework.Scenes
             shouldReaddToLoop = true;
             shouldReaddToLoopNow = false;
 
-            if (IsDeleted || IsAttachment)
+            if (IsDeleted || IsAttachment || RootPart.Shape.State != 0)
             {
                 //Do not readd under these circumstances as we don't deal with backing up either of those into sim storage
                 shouldReaddToLoop = false;
@@ -388,8 +388,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (val.Z < m_scene.MaxLowValue)
                     {
-                        m_log.Warn("[Scene Movement]: Disabling prim " + Name + " because Z has fallen too low");
-                        ScriptSetPhysicsStatus(false);
+                        m_log.Warn("[Scene Movement]: Returning prim " + Name + " because Z has fallen too low");
+                        Scene.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                        return;
                     }
                 }
 

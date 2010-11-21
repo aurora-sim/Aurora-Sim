@@ -342,104 +342,109 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             }
 
         public LSL_Types.list ParseValueToList(string inval, int start, out int end)
-            {
+        {
             LSL_Types.list v = new LSL_Types.list();
             int a = start;
             end = -1;
             char c;
             string tr = ",}";
-            char[] charany=tr.ToCharArray();
+            char[] charany = tr.ToCharArray();
             string param = "";
             int totlen = inval.Length;
             int len;
 
             while (true)
-                {
+            {
                 try
+                {
+                    if (inval.Length == 0)
+                        v.Add(new LSL_Types.LSLString(""));
+                    else
                     {
-                    c = inval[start++];
-                    switch (c)
+                        c = inval[start++];
+                        switch (c)
                         {
-                        case 'i':
-                            end = inval.IndexOfAny(charany, start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.LSLInteger(param));
-                            break;
-                        case 'f':
-                            end = inval.IndexOfAny(charany, start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.LSLFloat(param));
-                            break;
-                        case 'v':
-                            end = inval.IndexOf('>', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.Vector3(param));
-                            end++;
-                            break;
-                        case 'q':
-                            end = inval.IndexOf('>', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.Quaternion(param));
-                            end++;
-                            break;
-                        case '"':
-                            end = inval.IndexOf('"', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.LSLString(param));
-                            end++;
-                            break;
-                        case 'k':
-                            start++;
-                            end = inval.IndexOf('"', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring(start, len);
-                            v.Add(new LSL_Types.key(param));
-                            end++;
-                            break;
-                        case '{':
-                            v.Add(ParseValueToList(inval, start, out end));
-                            end++;
-                            break;
+                            case 'i':
+                                end = inval.IndexOfAny(charany, start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLInteger(param));
+                                break;
+                            case 'f':
+                                end = inval.IndexOfAny(charany, start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLFloat(param));
+                                break;
+                            case 'v':
+                                end = inval.IndexOf('>', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.Vector3(param));
+                                end++;
+                                break;
+                            case 'q':
+                                end = inval.IndexOf('>', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.Quaternion(param));
+                                end++;
+                                break;
+                            case '"':
+                                end = inval.IndexOf('"', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLString(param));
+                                end++;
+                                break;
+                            case 'k':
+                                start++;
+                                end = inval.IndexOf('"', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.key(param));
+                                end++;
+                                break;
+                            case '{':
+                                v.Add(ParseValueToList(inval, start, out end));
+                                end++;
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
                         }
+                    }
                     start = end;
                     if (start == -1 || start >= totlen || (inval[start] == '}'))
                         break;
                     else
                         while (inval[start] == ',' || inval[start] == ' ')
                             start++;
-                    }
-                catch
-                    {
-                    }
                 }
-            return v;
+                catch
+                {
+                }
             }
+            return v;
+        }
 
         public void SetStoreVars(Dictionary<string, object> vars)
             {

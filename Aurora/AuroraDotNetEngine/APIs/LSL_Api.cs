@@ -5477,7 +5477,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
 
-            if (src == null)
+            if (src == new LSL_List(new object[0]))
             {
                 return 0;
             }
