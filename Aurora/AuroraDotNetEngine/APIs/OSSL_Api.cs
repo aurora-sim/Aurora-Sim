@@ -597,7 +597,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 regInfo = regions[0];
 
-                ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
                 return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
@@ -613,11 +613,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
 
-            GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID, regionX, regionY);
+            GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID, (int)(regionX * Constants.RegionSize), (int)(regionY * Constants.RegionSize));
             // Try to link the region
             if (regInfo != null)
             {
-                ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
                 return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
@@ -641,7 +641,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     regInfo = regions[0];
 
-                    ulong regionHandle = Util.UIntsToLong(((uint)regInfo.RegionLocX * (uint)Constants.RegionSize), ((uint)regInfo.RegionLocY * (uint)Constants.RegionSize));
+                    ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
                     return TeleportAgent(AgentID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                                 new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                 }
