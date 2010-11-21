@@ -1,4 +1,4 @@
-﻿//Uses the following website for the creation of the encrpyted hashes
+//Uses the following website for the creation of the encrpyted hashes
 //http://www.obviex.com/samples/Encryption.aspx
 using System;
 using System.Collections;
