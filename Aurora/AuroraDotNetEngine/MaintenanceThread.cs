@@ -167,6 +167,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptDataSQLSerializer.SaveState(item.ID, m_ScriptEngine);
             else
                 RemoveState(item.ID);
+
+            Thread.Sleep(10);
             threadpool.QueueEvent(StateSaveQueue, 3);
             return false;
         }
@@ -223,6 +225,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
                     }
+                Thread.Sleep(20);
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
                 return false;
                 }
@@ -438,15 +441,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ID.InEventsProcData = false;
                     }
                 ID.EventsProcData.IgnoreNew = wasign;
-                ID.EventsProcDataLocked = false;
                 }
+            ID.EventsProcDataLocked = false;
 
+/* workers should leave by them selfs, so no worries about going <0
             lock (WorkersLock)      // this may leave lost workers if timeslice doesn't return
                 {
                 WorkersLock.nWorkers--;
                 if (WorkersLock.nWorkers < 0)
-                    WorkersLock.nWorkers++;
+                    WorkersLock.nWorkers=0;
                 }
+ */
             }
 
         public void FlushEventSchQueue(ScriptData ID, bool abortcur)
@@ -457,27 +462,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.EventsQueue.Clear();
-                ID.EventsProcDataLocked = false;
                 }
+            ID.EventsProcDataLocked = false;
             }
 
         public void SetEventSchSetIgnoreNew(ScriptData ID, bool yes)
             {
-            if (ID != null)
+            if (ID == null)
+                return;
+            lock (ID.EventsProcData)
                 {
-                lock (ID.EventsProcData)
-                    {
-                    ID.EventsProcData.IgnoreNew = yes;
-                    }
+                ID.EventsProcData.IgnoreNew = yes;
                 }
             }
-
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
             {
             QueueItemStruct QIS;
 
-            if (ID.EventsProcData.IgnoreNew)
+            if (ID==null || ID.EventsProcData.IgnoreNew)
                 return;
 
             if (!ID.SetEventParams(FunctionName, qParams)) // check events delay rules
@@ -514,14 +517,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ID.InEventsProcData = true;
                         }
                     }
-                ID.EventsProcDataLocked = false;
                 }
+            ID.EventsProcDataLocked = false;
 
             lock (WorkersLock)
                 {
                 if (WorkersLock.nWorkers < MaxScriptThreads)
                     {
-                    WorkersLock.nWorkers++;
                     Scriptthreadpool.QueueEvent(loop, 2);
                     }
                 }
@@ -534,7 +536,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             ID = QIS.ID;
 
-            if (ID.EventsProcData.IgnoreNew)
+            if (ID==null || ID.EventsProcData.IgnoreNew)
                 return;
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
@@ -564,14 +566,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ID.InEventsProcData = true;
                         }
                     }
-                ID.EventsProcDataLocked = false;
                 }
+            ID.EventsProcDataLocked = false;
 
             lock (WorkersLock)
                 {
                 if (WorkersLock.nWorkers < MaxScriptThreads)
                     {
-                    WorkersLock.nWorkers++;
                     Scriptthreadpool.QueueEvent(loop, 2);
                     }
                 }
@@ -586,8 +587,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             bool waslocked;
             bool WillSleep;
 
+            lock (WorkersLock)
+                {
+                WorkersLock.nWorkers++;
+                }
+
             while (true)
                 {
+
+                if (m_ScriptEngine.ConsoleDisabled || m_ScriptEngine.Disabled)
+                    break;
+
                 // check one sleeper
 
                 waslocked = false;
@@ -652,8 +662,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                         }
                                     }
                                 }
-                            ID.EventsProcDataLocked = false;
                             }
+                        ID.EventsProcDataLocked = false;
                         }
                     }
 
@@ -694,11 +704,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 {
                                 // forget this one
                                 ID.InEventsProcData = false;
-                                ID.EventsProcDataLocked = false;
                                 }
                             else
                                 {
-
                                 switch (ID.EventsProcData.State)
                                     {
                                     case (int)ScriptEventsState.Running:
@@ -711,7 +719,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                             ScriptIDs.AddLast(ID);
                                             NScriptIDs++;
                                             }
-                                        ID.EventsProcDataLocked = false;
                                         break;
 
                                     case (int)ScriptEventsState.Sleep:
@@ -736,7 +743,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                 NSleepingScriptIDs++;
                                                 }
                                             }
-                                        ID.EventsProcDataLocked = false;
                                         break;
 
                                     case (int)ScriptEventsState.Idle:
@@ -759,7 +765,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                         else
                                             ID.InEventsProcData = false;
 
-                                        ID.EventsProcDataLocked = false;
                                         break;
 
                                     case (int)ScriptEventsState.InExec:
@@ -771,7 +776,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                             NScriptIDs++;
                                             }
                                         //                            else
-                                        ID.EventsProcDataLocked = false;
                                         break;
 
                                     case (int)ScriptEventsState.Delete:
@@ -781,20 +785,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                             ID.EventsProcData.EventsQueue.Clear();
                                             ID.InEventsProcData = false;
                                             }
-                                        ID.EventsProcDataLocked = false;
                                         break;
 
                                     default:
-                                        ID.EventsProcDataLocked = false;
                                         break;
                                     }
                                 }
                             }
+                        ID.EventsProcDataLocked = false;
                         }
                     }
+
                 if (doID != null)
                     {
-                    try
+                    try // this may not be ok
                         {
                         EventSchExec(ID);
                         }
@@ -840,11 +844,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                 WorkersLock.nWorkers--;
                 if(WorkersLock.nWorkers<0)
-                    WorkersLock.nWorkers++;
+                    WorkersLock.nWorkers=0;
                 }
             return false;
             }
-
 
 
         public void EventSchExec(ScriptData ID)
@@ -869,9 +872,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 lock (ScriptInExec)
                     {
                     ScriptInExec.Remove(ID);
-                    }
-                ID.EventsProcDataLocked = false;
+                    }            
                 }
+            ID.EventsProcDataLocked = false;
+
             lock (ScriptInExec)
                 {
                 ScriptInExec.Add(ID);
@@ -879,44 +883,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             bool res = EventSchProcessQIS(ref QIS);
 
+            lock (ScriptInExec)
+                {
+                ScriptInExec.Remove(ID);
+                }
 
             lock (ID.EventsProcData)
                 {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.thread = null;
 
-                lock (ScriptInExec)
-                    {
-                    ScriptInExec.Remove(ID);
-                    }
-
                 if(ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort)
-                    {
                     ID.EventsProcData.State = (int)ScriptEventsState.Delete;
-                    ID.EventsProcDataLocked = false;
-                    return;
-                    }
 
-                if (!res || ID.VersionID != QIS.VersionID)
-                    {
+                else if (!res || ID.VersionID != QIS.VersionID)
                     ID.EventsProcData.State = (int)ScriptEventsState.Idle;
-                    ID.EventsProcDataLocked = false;
-                    return;
-                    }
 
-                ID.EventsProcData.CurExecQIS = QIS;
-
-                if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
-                    {
-                    ID.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
-                    ID.EventsProcData.State = (int)ScriptEventsState.Sleep;
-                    }
                 else
-                    ID.EventsProcData.State = (int)ScriptEventsState.Running;
-                ID.EventsProcDataLocked = false;
-                return;
+                    {
+                    ID.EventsProcData.CurExecQIS = QIS;
+
+                    if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
+                        {
+                        ID.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
+                        ID.EventsProcData.State = (int)ScriptEventsState.Sleep;
+                        }
+                    else
+                        ID.EventsProcData.State = (int)ScriptEventsState.Running;
+                    }
                 }
 
+            ID.EventsProcDataLocked = false;
             return;
             }
 
