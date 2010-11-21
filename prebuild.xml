@@ -1722,9 +1722,10 @@
       <Reference name="HttpServer" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
+      <Reference name="OpenSim.Services.Connectors"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Server.Base"/>
-	    <Reference name="OpenSim.Data"/>
+      <Reference name="OpenSim.Data"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
