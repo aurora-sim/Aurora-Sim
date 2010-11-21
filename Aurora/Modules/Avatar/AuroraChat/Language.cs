@@ -1,4 +1,4 @@
-﻿//Notice: Fixed version of Language from the Google.Api.Translator project
+//Notice: Fixed version of Language from the Google.Api.Translator project
 //-----------------------------------------------------------------------
 // <copyright file="Language.cs" company="iron9light">
 // Copyright (c) 2010 iron9light

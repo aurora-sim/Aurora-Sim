@@ -1,4 +1,4 @@
-﻿namespace Aurora.Modules.AbuseReportsGUI
+namespace Aurora.Modules.AbuseReportsGUI
 {
     partial class Abuse
     {
