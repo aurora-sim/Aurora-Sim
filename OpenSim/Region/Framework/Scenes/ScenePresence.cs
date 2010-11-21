@@ -3302,8 +3302,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_bodyRot = cAgent.BodyRotation;
             m_AgentControlFlags = (AgentManager.ControlFlags)cAgent.ControlFlags; 
 
-            if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
-                m_godLevel = cAgent.GodLevel;
+            //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
+            //    m_godLevel = cAgent.GodLevel;
             m_speedModifier = cAgent.Speed;
             m_setAlwaysRun = cAgent.AlwaysRun;
             m_appearance = new AvatarAppearance(cAgent.Appearance);

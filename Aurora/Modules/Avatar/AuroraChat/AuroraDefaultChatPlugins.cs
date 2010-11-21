@@ -418,7 +418,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     {
                         if (presence.UUID != client.AgentId && !presence.IsChildAgent)
                         {
-                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + ((Scene)client.Scene).GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
+                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + (((Scene)client.Scene).GetRootAgentCount()+1), 1, SP.AbsolutePosition, "System",
                                                                UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                         }
                     }

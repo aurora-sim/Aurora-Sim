@@ -1545,6 +1545,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         #region Permissions
 
         /// <summary>
+        /// This caches the current group powers that the agent has
+        /// TKey 1 - UUID of the agent
+        /// TKey 2 - UUID of the group
+        /// TValue - Powers of the agent in the given group
+        /// </summary>
+        Dictionary<UUID, Dictionary<UUID, int>> AgentGroupPowersCache = new Dictionary<UUID, Dictionary<UUID, int>>();
+
+        /// <summary>
         /// WARNING: This is not the only place permissions are checked! They are checked in each of the connectors as well!
         /// </summary>
         /// <param name="AgentID"></param>
@@ -1558,16 +1566,56 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (AgentID == UUID.Zero)
                 return false;
 
-            GroupMembershipData GMD = m_groupData.GetAgentGroupMembership(AgentID, GroupID, AgentID);
-            if (GMD == null)
-                return false;
-            else if (permissions == GroupPowers.None)
-                return true;
+            int ourPowers = -1;
 
-            if ((((GroupPowers)GMD.GroupPowers) & permissions) != permissions)
+            Dictionary<UUID, int> groupsCache;
+            lock (AgentGroupPowersCache)
+            {
+                if (AgentGroupPowersCache.TryGetValue(AgentID, out groupsCache))
+                {
+                    if (groupsCache.ContainsKey(GroupID))
+                    {
+                        ourPowers = groupsCache[GroupID];
+                        if (ourPowers == -1)
+                            return false; //-1 means not in the group or not found in the cache, so stop it here so that we don't check every time
+                    }
+                }
+            }
+            //Ask the server as we don't know about this user
+            if (ourPowers == -1)
+            {
+                GroupMembershipData GMD = m_groupData.GetAgentGroupMembership(AgentID, GroupID, AgentID);
+                if (GMD == null)
+                {
+                    AddToGroupPowersCache(AgentID, GroupID, -1);
+                    return false;
+                }
+                ourPowers = (int)((GroupPowers)GMD.GroupPowers);
+                //Add to the cache
+                AddToGroupPowersCache(AgentID, GroupID, ourPowers);
+            }
+
+            //The user is the group, or it would have been weeded out earlier, so check whether we just need to know whether they are in the group
+            if (permissions == GroupPowers.None)
+            {
+                return true;
+            }
+            if ((((GroupPowers)ourPowers) & permissions) != permissions)
                 return false;
 
             return true;
+        }
+
+        private void AddToGroupPowersCache(UUID AgentID, UUID GroupID, int powers)
+        {
+            lock (AgentGroupPowersCache)
+            {
+                Dictionary<UUID, int> Groups = new Dictionary<UUID, int>();
+                if (!AgentGroupPowersCache.TryGetValue(AgentID, out Groups))
+                    Groups = new Dictionary<UUID, int>();
+                Groups.Add(GroupID, powers);
+                AgentGroupPowersCache[AgentID] = Groups;
+            }
         }
 
         #endregion
