@@ -1488,7 +1488,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is FunctionCall)
             {
-                fullretstr += GenerateFunctionCall((FunctionCall)s);
+                fullretstr += GenerateFunctionCall((FunctionCall)s,true);
             }
             else if (s is VectorConstant)
             {
@@ -1922,7 +1922,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 foreach (SYMBOL akid in kid.kids)
                                 {
                                     if (akid is FunctionCall)
-                                        retstr += GenerateFunctionCall(akid as FunctionCall);
+                                        retstr += GenerateFunctionCall(akid as FunctionCall,false);
                                     else
                                         retstr += GenerateNode(akid);
                                 }
@@ -2424,7 +2424,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="fc">The FunctionCall node.</param>
         /// <returns>String containing C# code for FunctionCall fc.</returns>
-        private string GenerateFunctionCall(FunctionCall fc)
+        private string GenerateFunctionCall(FunctionCall fc, bool NeedRetVal)
         {
             string retstr = "";
 
@@ -2558,65 +2558,80 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 //                retstr.Append(GenerateLine("}"));
             }
             else if (isEnumerable)
-            {
-                if (rettype != "void")
                 {
-                    Mname = RandomString(10, true);
-                    FunctionCalls += GenerateLine(rettype + " " + Mname + ";");
-                }
+                /*
+                                if (rettype != "void")
+                                    {
+                                    Mname = RandomString(10, true);
+                                    FunctionCalls += GenerateLine(rettype + " " + Mname + ";");
+                                    }
 
-                FunctionCalls += GenerateLine("{");
+                                FunctionCalls += GenerateLine("{");
 
-                //We can use enumerator here as the { in the above line breaks off possible issues upward in the method (or should anyway)
-                FunctionCalls += Generate("IEnumerator enumerator = ");
+                                //We can use enumerator here as the { in the above line breaks off possible issues upward in the method (or should anyway)
+                                FunctionCalls += Generate("IEnumerator enumerator = ");
+                                FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
+                                FunctionCalls += tempString;
+                                FunctionCalls += Generate(");");
+
+                                FunctionCalls += GenerateLine("while (true) {");
+                                string FunctionName = RandomString(10, true);
+                                FunctionCalls += GenerateLine(" bool " + FunctionName + " = false;");
+
+                                FunctionCalls += GenerateLine(" try");
+                                FunctionCalls += GenerateLine("  {");
+                                FunctionCalls += GenerateLine("  " + FunctionName + " = enumerator.MoveNext();");
+                                FunctionCalls += GenerateLine("  if(!" + FunctionName + ")");
+                                FunctionCalls += GenerateLine("    break;"); //All done, break out of the loop
+                                FunctionCalls += GenerateLine("  }");
+                                FunctionCalls += GenerateLine(" catch");
+                                FunctionCalls += GenerateLine("  {");
+                                FunctionCalls += GenerateLine("  yield break;");//End it since we are erroring out -> now abort 
+                                FunctionCalls += GenerateLine("  }"); //End of catch
+                                FunctionCalls += GenerateLine(" if( enumerator.Current == null || enumerator.Current is DateTime) yield return enumerator.Current;"); //Let the other things process for a bit here at the end of each enumeration
+                                FunctionCalls += GenerateLine(" else break;"); //Let the other things process for a bit here at the end of each enumeration
+                                FunctionCalls += GenerateLine("}"); //End of while
+                                if (rettype != "void")
+                                    {
+                                    FunctionCalls += GenerateLine(Mname + " = (" + rettype + ") enumerator.Current;");
+                                    retstr += Mname;
+                                    }
+                                FunctionCalls += GenerateLine("}");
+                 */
+
+                Mname = RandomString(10, true);
+                FunctionCalls += Generate("IEnumerator "+Mname+" = ");
                 FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 FunctionCalls += tempString;
-                FunctionCalls += Generate(");");
+                FunctionCalls += Generate(");\n");
 
-                FunctionCalls += GenerateLine("while (true)");
-                FunctionCalls += GenerateLine("{");
-                string FunctionName = RandomString(10, true);
-                FunctionCalls += GenerateLine("bool " + FunctionName + " = false;");
-
-                FunctionCalls += GenerateLine("try");
-                FunctionCalls += GenerateLine("{");
-                FunctionCalls += GenerateLine("" + FunctionName + " = enumerator.MoveNext();");
-                FunctionCalls += GenerateLine("if(!" + FunctionName + ")");
-                FunctionCalls += GenerateLine("break;"); //All done, break out of the loop
-                FunctionCalls += GenerateLine("}");
-                FunctionCalls += GenerateLine("catch");
-                FunctionCalls += GenerateLine("{");
-                FunctionCalls += GenerateLine("yield break;");//End it since we are erroring out -> now abort 
-                FunctionCalls += GenerateLine("}"); //End of catch
-                FunctionCalls += GenerateLine("if( enumerator.Current == null || enumerator.Current is DateTime) yield return enumerator.Current;"); //Let the other things process for a bit here at the end of each enumeration
-                FunctionCalls += GenerateLine("else break;"); //Let the other things process for a bit here at the end of each enumeration
-                FunctionCalls += GenerateLine("}"); //End of while
-                if (rettype != "void")
-                {
-                    FunctionCalls += GenerateLine(Mname + " = (" + rettype + ") enumerator.Current;");
-                    retstr += Mname;
-                }
-                FunctionCalls += GenerateLine("}");
-                FuncCalls.Add(FunctionCalls);
+                FunctionCalls += GenerateLine("while (true) {");
+                FunctionCalls += GenerateLine(" try {");
+                FunctionCalls += GenerateLine("  if(!"+Mname+".MoveNext())");
+                FunctionCalls += GenerateLine("   break;");
+                FunctionCalls += GenerateLine("  }"); //End of try
+                FunctionCalls += GenerateLine(" catch");
+                FunctionCalls += GenerateLine("  {");
+                FunctionCalls += GenerateLine("  yield break;");//End it since we are erroring out -> now abort 
+                FunctionCalls += GenerateLine("  }"); //End of catch
+                FunctionCalls += GenerateLine(" if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)");
+                FunctionCalls += GenerateLine("   yield return " + Mname + ".Current;"); //Let the other things process for a bit here at the end of each enumeration
+                FunctionCalls += GenerateLine(" else break;"); //Let the other things process for a bit here at the end of each enumeration
+                FunctionCalls += GenerateLine(" }"); //End while
+                if (NeedRetVal && rettype != "void")
+                    {
+                    retstr +=" (" + rettype + ") " + Mname+".Current";
+                    }
+                 FuncCalls.Add(FunctionCalls);
             }
             else
-            {
+                {
                 retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 retstr += tempString;
 
                 retstr += Generate(")");
-            }
-            /*
-                        if (FunctionCalls != "")
-                        {
-                            retstr.Append(Generate(";")); //We do this because we can't just do ) } .... otherwise we have issues!
-                            // Add it to the end so that everything is covered 
-                            //so that lines like 'if(test) callStatement(FunctionCall());'
-                            //don't error out because of brackets
-                            retstr.Append(GenerateLine("}"));
-                            retstr.Append(GenerateLine("TESTREMOVE")); //Gets removed later and tells it not to print a ; at the end
-                        }
-            */
+                }
+
             //Function calls are first
             return DumpFunc(marc) + retstr.ToString();
         }
