@@ -929,6 +929,7 @@ namespace OpenSim.Framework
         event ParcelGodForceOwner OnParcelGodForceOwner;
         event ParcelReclaim OnParcelReclaim;
         event ParcelReturnObjectsRequest OnParcelReturnObjectsRequest;
+        event ParcelReturnObjectsRequest OnParcelDisableObjectsRequest;
         event ParcelDeedToGroup OnParcelDeedToGroup;
         event RegionInfoRequest OnRegionInfoRequest;
         event EstateCovenantRequest OnEstateCovenantRequest;

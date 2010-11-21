@@ -1408,6 +1408,25 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public void DisableObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
+        {
+            if (localID != -1)
+            {
+                ILandObject selectedParcel = landChannel.GetLandObject(localID);
+
+                if (selectedParcel == null) return;
+
+                selectedParcel.DisableLandObjects(returnType, agentIDs, taskIDs, remoteClient);
+            }
+            else
+            {
+                foreach (ILandObject selectedParcel in AllParcels())
+                {
+                    selectedParcel.DisableLandObjects(returnType, agentIDs, taskIDs, remoteClient);
+                }
+            }
+        }
+
         #endregion
 
         #region CAPS handler

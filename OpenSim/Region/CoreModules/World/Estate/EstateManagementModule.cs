@@ -877,13 +877,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 return;
 
             Dictionary<uint, float> SceneData = new Dictionary<uint,float>();
-            List<UUID> uuidNameLookupList = new List<UUID>();
-
-            if (reportType == 1)
+            
+            if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopColliders)
             {
                 SceneData = m_scene.PhysicsScene.GetTopColliders();
             }
-            else if (reportType == 0)
+            else if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopScripts)
             {
                 SceneData = m_scene.GetTopScripts();
             }
@@ -909,18 +908,24 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 lsri.TaskID = sog.UUID;
                                 lsri.TaskLocalID = sog.LocalId;
                                 lsri.TaskName = sog.GetPartName(obj);
-                                lsri.OwnerName = "waiting";
-                                lock (uuidNameLookupList)
-                                    uuidNameLookupList.Add(sog.OwnerID);
+                                OpenSim.Services.Interfaces.UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
+                                if (account != null)
+                                    lsri.OwnerName = account.Name;
+                                else
+                                    lsri.OwnerName = "Unknown";
 
                                 if (filter.Length != 0)
                                 {
-                                    if ((lsri.OwnerName.Contains(filter) || lsri.TaskName.Contains(filter)))
+                                    //Its in the filter, don't check it
+                                    if (requestFlags == 2) //Owner name
                                     {
+                                        if (!lsri.OwnerName.Contains(filter))
+                                            continue;
                                     }
-                                    else
+                                    if (requestFlags == 4)//Object name
                                     {
-                                        continue;
+                                        if (!lsri.TaskName.Contains(filter))
+                                            continue;
                                     }
                                 }
 
@@ -932,9 +937,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 }
             }
             remoteClient.SendLandStatReply(reportType, requestFlags, (uint)SceneReport.Count,SceneReport.ToArray());
-
-            if (uuidNameLookupList.Count > 0)
-                LookupUUID(uuidNameLookupList);
         }
 
         private static void LookupUUIDSCompleted(IAsyncResult iar)

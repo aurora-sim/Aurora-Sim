@@ -180,6 +180,11 @@ public class RegionCombinerLargeLandChannel : ILandChannel
             return RootRegionLandChannel.GetParcelCenterAtGround(parcel);
         }
 
+        public void DisableObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
+        {
+            RootRegionLandChannel.DisableObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
+        }
+
         #endregion
     }
 }

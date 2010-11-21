@@ -120,16 +120,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     {
                         if (sessionID == controllingClient.SessionId)
                         {
-                            m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + godLike.ToString());
                             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, agentID);
                             if (account != null)
                             {
                                 if (account.UserLevel > 0)
                                     sp.GodLevel = account.UserLevel;
                                 else
-                                    sp.GodLevel = 200;
+                                    sp.GodLevel = 250;
                             }
 
+                            m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
                             sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                         }
                     }

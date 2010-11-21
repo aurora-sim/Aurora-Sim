@@ -396,7 +396,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
-            if (presence != null && (!PostOnRez))
+            if (presence != null && (!PostOnRez) && postScriptCAPSError)
                 presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
 
             if (postScriptCAPSError)

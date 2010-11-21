@@ -172,6 +172,15 @@ namespace OpenSim.Region.Framework.Interfaces
         /// If no inventory item has that name then an empty list is returned.
         /// </returns>
         IList<TaskInventoryItem> GetInventoryItems(string name);
+
+        /// <summary>
+        /// Get all inventory items
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>
+        /// A list of inventory items in this object
+        /// </returns>
+        List<TaskInventoryItem> GetInventoryItems();
         
         /// <summary>
         /// Get the scene object referenced by an inventory item.

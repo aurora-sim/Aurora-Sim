@@ -74,6 +74,7 @@ namespace OpenSim.Region.Framework.Interfaces
         bool IsForcefulBansAllowed();
         void UpdateLandObject(int localID, LandData data);
         void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
+        void DisableObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
         void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);
 
         void Join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id);

@@ -3769,6 +3769,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
             client.OnParcelReturnObjectsRequest += LandChannel.ReturnObjectsInParcel;
+            client.OnParcelDisableObjectsRequest += LandChannel.DisableObjectsInParcel;
             client.OnParcelSetOtherCleanTime += LandChannel.SetParcelOtherCleanTime;
             client.OnParcelBuy += ProcessParcelBuy;
         }
@@ -3894,6 +3895,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
             client.OnParcelReturnObjectsRequest -= LandChannel.ReturnObjectsInParcel;
+            client.OnParcelDisableObjectsRequest -= LandChannel.DisableObjectsInParcel;
             client.OnParcelSetOtherCleanTime -= LandChannel.SetParcelOtherCleanTime;
             client.OnParcelBuy -= ProcessParcelBuy;
         }
@@ -5392,6 +5394,7 @@ namespace OpenSim.Region.Framework.Scenes
                     runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
                 }
             }
+            int PrimsBackedUp = 0;
             foreach (SceneObjectGroup grp in backupPrims)
             {
                 //Check this prim
@@ -5418,7 +5421,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_backupTaintedPrims.Add(grp.UUID, grp);
                     }
                 }
+                else
+                    PrimsBackedUp++;
             }
+            if (PrimsBackedUp != 0)
+                m_log.Info("[Scene]: Processed backup of " + PrimsBackedUp + " prims");
             //Now make sure that we delete any prims sitting around
             // Bit ironic that backup deals with deleting of objects too eh? 
             lock (m_needsDeleted)

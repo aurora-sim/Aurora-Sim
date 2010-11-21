@@ -187,6 +187,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event ParcelGodForceOwner OnParcelGodForceOwner;
         public event ParcelReclaim OnParcelReclaim;
         public event ParcelReturnObjectsRequest OnParcelReturnObjectsRequest;
+        public event ParcelReturnObjectsRequest OnParcelDisableObjectsRequest;
         public event ParcelDeedToGroup OnParcelDeedToGroup;
         public event RegionInfoRequest OnRegionInfoRequest;
         public event EstateCovenantRequest OnEstateCovenantRequest;
@@ -5434,6 +5435,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.SendPostcard, HandleSendPostcard);
             AddLocalPacketHandler(PacketType.TeleportCancel, HandleTeleportCancel);
             AddLocalPacketHandler(PacketType.ViewerStartAuction, HandleViewerStartAuction);
+            AddLocalPacketHandler(PacketType.ParcelDisableObjects, HandleParcelDisableObjects);
         }
 
         #region Packet Handlers
@@ -10362,6 +10364,30 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (handlerStartAuction != null)
             {
                 handlerStartAuction(this, aPacket.ParcelData.LocalID, aPacket.ParcelData.SnapshotID);
+                return true;
+            }
+            return false;
+        }
+
+        private bool HandleParcelDisableObjects(IClientAPI client, Packet packet)
+        {
+            ParcelDisableObjectsPacket aPacket = (ParcelDisableObjectsPacket)packet;
+            ParcelReturnObjectsRequest handlerParcelDisableObjectsRequest = OnParcelDisableObjectsRequest;
+
+            List<UUID> OwnerIDs = new List<UUID>();
+            foreach (ParcelDisableObjectsPacket.OwnerIDsBlock block in aPacket.OwnerIDs)
+            {
+                OwnerIDs.Add(block.OwnerID);
+            }
+            List<UUID> TaskIDs = new List<UUID>();
+            foreach (ParcelDisableObjectsPacket.TaskIDsBlock block in aPacket.TaskIDs)
+            {
+                TaskIDs.Add(block.TaskID);
+            }
+
+            if (handlerParcelDisableObjectsRequest != null)
+            {
+                handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType, OwnerIDs.ToArray(), TaskIDs.ToArray(), this);
                 return true;
             }
             return false;

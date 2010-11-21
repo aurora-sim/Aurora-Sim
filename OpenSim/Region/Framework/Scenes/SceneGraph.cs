@@ -742,7 +742,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 break;
                             }
                         }
-                        grp.scriptScore = 0;
+                        //grp.scriptScore = 0;
                     }
                 }
             }

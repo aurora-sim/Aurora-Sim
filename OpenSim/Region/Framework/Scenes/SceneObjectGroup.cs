@@ -1480,9 +1480,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || (forcedBackup && !IsAttachment)) // forced means FORCED, you don't get a choice!
                 {
                     // don't backup while it's selected or you're asking for changes mid stream.
-                    m_log.DebugFormat(
-                            "[SCENE]: Storing {0}, {1} in {2} at {3}",
-                            Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString());
+                    DateTime startTime = DateTime.Now;
 
                     SceneObjectGroup backup_group = (SceneObjectGroup)base.Copy();
                     //Do this we don't try to re-persist to the DB
@@ -1494,6 +1492,11 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         part.Inventory.ProcessInventoryBackup(datastore);
                     }
+
+                    m_log.DebugFormat(
+                            "[SCENE]: Storied {0}, {1} in {2} at {3} in {4}",
+                            Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString(), (DateTime.Now -startTime).TotalSeconds);
+
 
                     HasGroupChanged = false;
                     backup_group = null;

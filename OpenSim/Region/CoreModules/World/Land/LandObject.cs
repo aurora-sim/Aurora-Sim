@@ -1052,9 +1052,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 else if (type == 1)
                 {
+                    List<UUID> Tasks = new List<UUID>(tasks);
                     foreach (SceneObjectGroup obj in primsOverMe)
                     {
-                        List<UUID> Tasks = new List<UUID>(tasks);
                         if (Tasks.Contains(obj.UUID))
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
@@ -1073,6 +1073,111 @@ namespace OpenSim.Region.CoreModules.World.Land
                     //The return system will take care of the returned objects
                     m_scene.AddReturns(ol[0].OwnerID, ol[0].Name, ol.Count, ol[0].AbsolutePosition, "parcel owner return", ol);
                     //m_scene.returnObjects(ol.ToArray(), remote_client.AgentId);
+                }
+            }
+        }
+
+        public void DisableLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client)
+        {
+            Dictionary<UUID, List<SceneObjectGroup>> disabled =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
+
+            lock (primsOverMe)
+            {
+                if (type == (uint)ObjectReturnType.Owner)
+                {
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        if (obj.OwnerID == m_landData.OwnerID)
+                        {
+                            if (!disabled.ContainsKey(obj.OwnerID))
+                                disabled[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            disabled[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+                {
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        if (obj.GroupID == m_landData.GroupID)
+                        {
+                            if (!disabled.ContainsKey(obj.OwnerID))
+                                disabled[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            disabled[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                else if (type == (uint)ObjectReturnType.Other)
+                {
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        if (obj.OwnerID != m_landData.OwnerID &&
+                            (obj.GroupID != m_landData.GroupID ||
+                            m_landData.GroupID == UUID.Zero))
+                        {
+                            if (!disabled.ContainsKey(obj.OwnerID))
+                                disabled[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            disabled[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                else if (type == (uint)ObjectReturnType.List)
+                {
+                    List<UUID> ownerlist = new List<UUID>(owners);
+
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        if (ownerlist.Contains(obj.OwnerID))
+                        {
+                            if (!disabled.ContainsKey(obj.OwnerID))
+                                disabled[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            disabled[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                else if (type == 1)
+                {
+                    List<UUID> Tasks = new List<UUID>(tasks);
+                    foreach (SceneObjectGroup obj in primsOverMe)
+                    {
+                        if (Tasks.Contains(obj.UUID))
+                        {
+                            if (!disabled.ContainsKey(obj.OwnerID))
+                                disabled[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            disabled[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+            }
+
+            IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+            foreach (List<SceneObjectGroup> ol in disabled.Values)
+            {
+                foreach (SceneObjectGroup group in ol)
+                {
+                    if (m_scene.Permissions.CanEditObject(group.UUID, remote_client.AgentId))
+                    {
+                        foreach (IScriptModule module in modules)
+                        {
+                            //Disable the entire object
+                            foreach (SceneObjectPart part in group.ChildrenList)
+                            {
+                                foreach (TaskInventoryItem item in part.Inventory.GetInventoryItems())
+                                {
+                                    if (item.InvType == (int)InventoryType.LSL)
+                                    {
+                                        module.SuspendScript(item.ItemID);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
