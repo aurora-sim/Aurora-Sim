@@ -1367,7 +1367,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
-            Errors[ItemID] = null;
+            Errors.Remove(ItemID);
         }
     }
 }

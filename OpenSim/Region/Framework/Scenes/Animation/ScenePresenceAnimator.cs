@@ -171,8 +171,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
 
-            const float SOFTLAND_FORCE = 10;
-            const float LAND_FORCE = 20f;
+            const float SOFTLAND_FORCE = 5;
+            const float LAND_FORCE = 8;
 
 
             const float PREJUMP_DELAY = 0.35f;
@@ -254,22 +254,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 m_scenePresence.AllowMovement = false;
                 return "BRUSH";
             }
-            else
+            else if(m_animTickStandup != 0)
             {
                 m_animTickStandup = 0;
                 m_scenePresence.AllowMovement = true;
             }
-
-            float jumpNextElapsed = (float)(Util.EnvironmentTickCount() - m_animTickNextJump) / 1000f;
-            if (jumpNextElapsed > JUMP_NEXT_TIME && m_scenePresence.IsJumping && m_animTickNextJump != 0 && m_hasPreJumped)
-            {
-                //They can jump again now
-                m_animTickNextJump = 0;
-                m_scenePresence.IsJumping = false;
-                m_hasPreJumped = false;
-                m_hasJumpAddedForce = false;
-            }
-            
 
             #endregion Standup
 
@@ -380,7 +369,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             //This needs to be in front of landing, otherwise you get odd landing effects sometimes when one jumps
             // -- Revolution
-            if (move.Z > 0f || m_animTickJump != 0 && m_animTickNextJump == 0)
+            if (move.Z > 0f || m_animTickJump != 0)
             {
                 if (m_scenePresence.Scene.m_usePreJump)
                 {
@@ -389,9 +378,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     {
                         // Jumping
                         float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
-                        if (!jumping || (jumpChange < PREJUMP_DELAY) && !m_hasPreJumped)
+                        if (!jumping || (jumpChange < PREJUMP_DELAY && m_animTickJump > 0))
                         {
-                            m_scenePresence.AllowMovement = false;
                             // Begin prejump
                             if (m_animTickJump == 0)
                                 m_animTickJump = (float)Util.EnvironmentTickCount();
@@ -399,7 +387,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         }
                         else if (m_animTickJump != 0)
                         {
-                            m_hasPreJumped = true;
+                            #region PreJump 
+                            /*m_hasPreJumped = true;
                             if (m_scenePresence.PreJumpForce.Z != 0 && !m_hasJumpAddedForce)
                             {
                                 m_hasJumpAddedForce = true;
@@ -442,7 +431,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                      (m_scenePresence.m_forceToApply.HasValue &&
                                      m_scenePresence.m_forceToApply.Value.X != 0 &&
                                      m_scenePresence.m_forceToApply.Value.Y != 0))
+                                {
+                                    m_scenePresence.PreJumpForce.Z = -1f;
+
                                     m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+                                }
 
                                 m_scenePresence.AllowMovement = false;
                                 return "JUMP";
@@ -458,7 +451,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                      (m_scenePresence.m_forceToApply.HasValue &&
                                      m_scenePresence.m_forceToApply.Value.X != 0 &&
                                      m_scenePresence.m_forceToApply.Value.Y != 0))
+                                {
+                                    m_scenePresence.PreJumpForce.Z = -0.1f;
+
                                     m_scenePresence.m_forceToApply = m_scenePresence.PreJumpForce;
+                                }
 
                                 m_scenePresence.AllowMovement = false;
                                 return "JUMP";
@@ -473,14 +470,19 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                     m_scenePresence.m_velocityIsDecaying = true;
                                 m_animTickNextJump = Util.EnvironmentTickCount();
                                 return "STAND";
+                            }*/
+                            #endregion
+                            if (m_scenePresence.PreJumpForce != Vector3.Zero)
+                            {
+                                Vector3 jumpForce = m_scenePresence.PreJumpForce;
+                                m_scenePresence.PreJumpForce = Vector3.Zero;
+                                m_scenePresence.AddNewMovement(jumpForce, Quaternion.Identity);
+                                m_animTickJump = -21;
+                                return "JUMP";
                             }
-                        }
-                        else
-                        {
-                            m_hasPreJumped = true;
-                            m_animTickJump = 0;
-                            m_animTickNextJump = Util.EnvironmentTickCount();
-                            m_scenePresence.AllowMovement = true;
+
+                            m_animTickJump++;
+                            return "JUMP";
                         }
                     }
                 }
@@ -490,29 +492,36 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
                     if (!jumping)
                     {
-                        // Begin prejump
                         m_animTickJump = Util.EnvironmentTickCount();
                         return "JUMP";
                     }
-                    else if (m_animTickJump != 0)
+                    else
                     {
-                        if (jumpChange < JUMP_END)
+                        // Start actual jump
+                        if (m_animTickJump > 0)
                         {
+                            m_animTickJump = -20;
                             return "JUMP";
                         }
-                        m_animTickJump = 0;
-                        return "STAND";
+
+                        m_animTickJump++;
+                        return "JUMP";
                     }
                 }
             }
+            if (m_scenePresence.IsJumping)
+            {
+                m_scenePresence.IsJumping = false;
+                m_scenePresence.AllowMovement = true;
+            }
 
-            m_animTickJump = 0;
             if (m_movementAnimation == "FALLDOWN")
             {
                 //Experimentally found variables, but it makes soft landings look good.
                 // -- Revolution
                 //Note: we use m_scenePresence.LastVelocity for a reason! The PhysActor and SP Velocity are both cleared before this is called.
-                float Z = Math.Abs(m_scenePresence.LastVelocity.Z);
+                float Z = Math.Abs(m_scenePresence.LastVelocity.LengthSquared());
+                Console.WriteLine(Z);
                 if (Z < SOFTLAND_FORCE)
                 {
                     m_animTickFall = Util.EnvironmentTickCount();

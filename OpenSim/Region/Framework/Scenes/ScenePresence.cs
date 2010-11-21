@@ -1296,9 +1296,6 @@ namespace OpenSim.Region.Framework.Scenes
             #region Inputs
 
             AgentManager.ControlFlags flags = (AgentManager.ControlFlags)agentData.ControlFlags;
-            if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) != AgentManager.ControlFlags.NONE)
-            {
-            }
             Quaternion bodyRotation = agentData.BodyRotation;
 
             // Camera location in world.  We'll need to raytrace
@@ -1378,7 +1375,7 @@ namespace OpenSim.Region.Framework.Scenes
             
             bool update_movementflag = false;
 
-            if (m_allowMovement && !SitGround && !Frozen)
+            if (AllowMovement && !SitGround && !Frozen)
             {
                 if (agentData.UseClientAgentPosition)
                 {
@@ -2354,11 +2351,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_perfMonMS = Util.EnvironmentTickCount();
 
-            Rotation = rotation;
-            Vector3 direc = vec * rotation;
-            direc.Normalize();
-
-            direc *= 0.03f * 128f * m_speedModifier;
+            Vector3 direc = rotation == Quaternion.Identity ? vec : (vec * rotation);
+            if (rotation != Quaternion.Identity)
+            {
+                Rotation = rotation;
+                direc.Normalize();
+                direc *= 0.03f * 128f * m_speedModifier;
+            }
 
             PhysicsActor actor = m_physicsActor;
             if (actor != null)
@@ -2380,37 +2379,27 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else if (!actor.Flying && actor.IsColliding)
                 {
-                    if (direc.Z > 2.0f)
+                    if (direc.Z > 1.0f)
                     {
-                        if (m_scene.m_usePreJump)
+                        if (direc.Z < 2.5f)
+                            direc.Z = 2.5f;
+                        if (m_scene.m_usePreJump && !IsJumping)
                         {
-                            if (!m_overrideUserInput && AllowMovement && !Frozen && !IsJumping) //This check blocks jumping while the jump is occuring
-                            {
-                                IsJumping = true;
-                                //Make jumping straight up less so that avs can't jump 10 meters up
-                                if (direc.X == 0 || direc.Y == 0)
-                                    direc.Z *= 2f;
-                                else
-                                    direc.Z *= 2.5f;
-
-                                //Fix messed up jumps
-                                if (direc.Z <= 0)
-                                    direc.Z = 7;
-
-                                PreJumpForce = direc;
-                                Animator.TrySetMovementAnimation("PREJUMP");
-                                //Leave this here! Otherwise jump will sometimes not occur...
-                                return;
-                            }
-                            else
-                            {
-                                //Can't allow jumps then
-                                return;
-                            }
+                            AllowMovement = false;
+                            IsJumping = true;
+                            PreJumpForce = direc;
+                            Animator.TrySetMovementAnimation("PREJUMP");
+                            //Leave this here! Otherwise jump will sometimes not occur...
+                            return;
                         }
                         else
                         {
-                            Animator.TrySetMovementAnimation("JUMP");
+                            direc.X *= 2f;
+                            direc.Y *= 2f;
+                            direc.Z *= 6.0f;
+
+                            if(!IsJumping)
+                                Animator.TrySetMovementAnimation("JUMP");
                         }
                     }
                 }

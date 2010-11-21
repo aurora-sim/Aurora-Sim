@@ -1018,8 +1018,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D);
                     vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D);
                     //Stop pushing down if we are just standing
-                    if (_target_velocity.Z < 0)
-                        _target_velocity.Z = 0;
+                    //if (_target_velocity.Z < 0)
+                    //    _target_velocity.Z = 0;
                 }
                 else if (m_iscolliding && flying)
                 {
