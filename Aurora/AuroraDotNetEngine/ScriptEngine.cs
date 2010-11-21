@@ -440,6 +440,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (cmdparams[1] == "enable")
             {
                 ConsoleDisabled = false;
+                MaintenanceThread.Started = true;
                 m_log.Warn("[ADNE]: ADNE has been enabled.");
             }
             if (cmdparams[1] == "help")

@@ -64,7 +64,7 @@ namespace Aurora.Framework
 
                     if (item == null && o == null)
                     {
-                        if (OurSleepTime++ > 1) //Make sure we don't go waay over on how long we sleep
+                        if (OurSleepTime++ > m_info.MaxSleepTime) //Make sure we don't go waay over on how long we sleep
                         {
                             Threads[ThreadNumber] = null;
                             Interlocked.Decrement(ref nthreads);
@@ -73,7 +73,7 @@ namespace Aurora.Framework
                         else
                         {
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
-                            try { Thread.Sleep(m_info.MaxSleepTime); }
+                            try { Thread.Sleep(OurSleepTime); }
                             catch (ThreadInterruptedException e) { }
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
                             continue;
