@@ -266,7 +266,6 @@ namespace Aurora.Modules.Avatar.AuroraChat
         private string m_welcomeMessage;
         private bool m_indicategod;
         private string m_godPrefix;
-        private Dictionary<UUID, int> RegionAgentCount = new Dictionary<UUID, int>();
 
         public void Initialize(IChatModule module)
         {
@@ -411,14 +410,6 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     if (!m_authorizedSpeakers.Contains(client.AgentId))
                         m_authorizedSpeakers.Add(client.AgentId);
                 }
-                //Update how many users are in the region
-                int AgentCount = 0;
-                lock (RegionAgentCount)
-                {
-                    RegionAgentCount.TryGetValue(client.Scene.RegionInfo.RegionID, out AgentCount);
-                    AgentCount++;
-                    RegionAgentCount[client.Scene.RegionInfo.RegionID] = AgentCount;
-                }
 
                 //Tell all the clients about the incoming client if it is enabled
                 if (m_announceNewAgents)
@@ -427,7 +418,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     {
                         if (presence.UUID != client.AgentId && !presence.IsChildAgent)
                         {
-                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + ((Scene)client.Scene).GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
                                                                UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                         }
                     }
@@ -456,22 +447,6 @@ namespace Aurora.Modules.Avatar.AuroraChat
             }
 
             ScenePresence presence = scene.GetScenePresence(clientID);
-            int AgentCount = 0;
-            lock (RegionAgentCount)
-            {
-                RegionAgentCount.TryGetValue(scene.RegionInfo.RegionID, out AgentCount);
-                if (!presence.IsChildAgent)
-                {
-                    //Clean up the agent count
-                    AgentCount--;
-
-                    if (AgentCount < 0)
-                        AgentCount = 0;
-
-                    RegionAgentCount[scene.RegionInfo.RegionID] = AgentCount;
-                }
-            }
-
             //Announce the closing agent if enabled
             if (m_announceClosedAgents)
             {
@@ -481,7 +456,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 {
                     if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
-                        SP.ControllingClient.SendChatMessage(account.Name + " has left the region. Total Agents: " + AgentCount, 1, SP.AbsolutePosition, "System",
+                        SP.ControllingClient.SendChatMessage(account.Name + " has left the region. Total Agents: " + scene.GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }

@@ -330,7 +330,7 @@ namespace Aurora.Modules
         {
             newPosition = Position;
             
-            UserAccount account = scene.UserAccountService.GetUserAccount(UUID.Zero, userID);
+            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
 
             ScenePresence Sp = scene.GetScenePresence(userID);
             if (account == null)
