@@ -29,6 +29,7 @@ namespace Aurora.Framework
         Queue queue = new Queue();
         public int nthreads;
         public int nSleepingthreads;
+        private int SleepTimeStep;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
             {
@@ -37,6 +38,8 @@ namespace Aurora.Framework
             Sleeping = new int[m_info.Threads];
             nthreads = 0;
             nSleepingthreads = 0;
+            SleepTimeStep = m_info.MaxSleepTime / 3;
+                // lets threads check for work a bit faster in case we have all sleeping and awake interrupt fails
             }
 
         private void ThreadStart(object number)
@@ -66,7 +69,8 @@ namespace Aurora.Framework
 
                     if (item == null && o == null)
                         {
-                        if (OurSleepTime++ > 2) //Make sure we don't go waay over on how long we sleep
+                        OurSleepTime += SleepTimeStep;
+                        if (OurSleepTime > m_info.MaxSleepTime)
                             {
                             Threads[ThreadNumber] = null;
                             Interlocked.Decrement(ref nthreads);
@@ -85,6 +89,14 @@ namespace Aurora.Framework
                         }
                     else
                         {
+                        // workers have no business on pool waiting times
+                        // that whould make interrelations very hard to debug
+                        // If a worker wants to delay its requeue, then he should for now sleep before
+                        // asking to be requeued.
+                        // in future we should add a trigger time delay as parameter to the queue request.
+                        // so to release the thread sooner, like .net and mono can now do.
+                        // This control loop whould then have to look for those delayed requests.
+                        // UBIT
                         bool Rest = false;
                         OurSleepTime = 0;
                         if (item != null)
