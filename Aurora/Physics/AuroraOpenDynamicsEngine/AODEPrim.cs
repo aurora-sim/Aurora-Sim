@@ -2828,8 +2828,8 @@ Console.WriteLine(" JointCreateFixed");
                         && (Math.Abs(_velocity.X - m_lastVelocity.X) < 0.005)
                         && (Math.Abs(_velocity.Y - m_lastVelocity.Y) < 0.005)
                         && (Math.Abs(_velocity.Z - m_lastVelocity.Z) < 0.005) //Accel
-                        && (1.0 - Math.Abs(Quaternion.Dot(m_lastorientation, l_orientation)) < 0.0001)
-                        && m_vehicle.Type == Vehicle.TYPE_NONE)  // KF 0.01 is far to large
+                        && (1.0 - Math.Abs(Quaternion.Dot(m_lastorientation, l_orientation)) < 0.001) // KF 0.01 is far to large
+                        && m_vehicle.Type == Vehicle.TYPE_NONE) 
                     {
                         _zeroFlag = true;
                         m_throttleUpdates = false;

@@ -1817,7 +1817,7 @@ namespace OpenSim.Region.Framework.Scenes
             set 
             { 
 //                m_log.DebugFormat("[SOP]: Setting flags for {0} {1} to {2}", UUID, Name, value);
-                if (ParentGroup != null)
+                if (ParentGroup != null && _flags != value)
                     ParentGroup.HasGroupChanged = true;
                 _flags = value; 
             }
@@ -3717,7 +3717,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentGroup != null)
                 {
-                    m_parentGroup.HasGroupChanged = true;
+                    //m_parentGroup.HasGroupChanged = true;
                     m_parentGroup.QueueForUpdateCheck();
                 }
                 TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
