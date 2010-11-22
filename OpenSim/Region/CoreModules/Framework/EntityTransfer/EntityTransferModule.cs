@@ -1221,7 +1221,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
                         sp.AddNeighbourRegion(neighbour.RegionHandle, agent.CapsPath);
-                        
+                        if(!seeds.ContainsKey(neighbour.RegionHandle))
                             seeds.Add(neighbour.RegionHandle, agent.CapsPath);
                     }
                     else if (module != null)
