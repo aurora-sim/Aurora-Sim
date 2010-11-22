@@ -1325,10 +1325,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="errors"></param>
         public void AddError(UUID ItemID, ArrayList errors)
         {
-            if (!Errors.ContainsKey(ItemID))
-                Errors.Add(ItemID, errors);
-            else
-                Errors[ItemID] = errors;
+            Errors[ItemID] = errors;
         }
 
         /// <summary>
@@ -1381,7 +1378,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
-            Errors.Remove(ItemID);
+            if(ItemID != null)
+                Errors[ItemID] = null;
         }
     }
 }
