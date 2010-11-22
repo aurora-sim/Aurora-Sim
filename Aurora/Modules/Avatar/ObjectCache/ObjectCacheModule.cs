@@ -4,6 +4,7 @@ using System.Text;
 using log4net;
 using System.Reflection;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
@@ -19,6 +20,7 @@ namespace Aurora.Modules
         protected bool m_Enabled = true;
         //private Dictionary<UUID, ObjectCacheClient> ObjectCacheAgents = new Dictionary<UUID, ObjectCacheClient>();
         private Dictionary<UUID, Dictionary<uint, uint> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
+        //private string m_filePath = "ObjectCache";
 
         #endregion
 
@@ -28,7 +30,10 @@ namespace Aurora.Modules
         {
             IConfig moduleConfig = source.Configs["ObjectCache"];
             if (moduleConfig != null)
+            {
                 m_Enabled = moduleConfig.GetString("Module", "") == Name;
+                //m_filePath = moduleConfig.GetString("PathToSaveFiles", "");
+            }
         }
 
         public virtual void PostInitialise()
@@ -41,6 +46,8 @@ namespace Aurora.Modules
                 return;
 
             scene.RegisterModuleInterface<IObjectCache>(this);
+            //scene.EventManager.OnNewClient += OnNewClient;
+            //scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public virtual void RemoveRegion(Scene scene)
@@ -68,6 +75,55 @@ namespace Aurora.Modules
         {
             get { return "ObjectCacheModule"; }
         }
+
+        //public void OnNewClient(IClientAPI client)
+        //{
+        //    //Create the client's cache
+        //    LoadFromFileForClient(client.AgentId);
+        //}
+
+        //public void OnClosingClient(IClientAPI client)
+        //{
+        //    //Save the cache to the file for the client
+        //    SaveToFileForClient(client.AgentId);
+        //    //Remove the client's cache
+        //    ObjectCacheAgents.Remove(client.AgentId);
+        //}
+
+        //public void SaveToFileForClient(UUID AgentID)
+        //{
+        //    FileStream stream = new FileStream(m_filePath + AgentID , FileMode.Create);
+        //    StreamWriter m_streamWriter = new StreamWriter(stream);
+        //    m_streamWriter.WriteLine(SerializeAgentCache(ObjectCacheAgents[AgentID]);
+        //    m_streamWriter.Close();
+        //}
+
+        //public string SerializeAgentCache(Dictionary<uint, uint> cache)
+        //{
+        //      OSDMap cachedMap = new OSDMap();
+        //      foreach(KeyValuePair<uint, uint> kvp in cache)
+        //      {
+        //           cachedMap.Add(kvp.Key.ToString(), OSD.FromUInteger(kvp.Value));
+        //      }
+        //      return OSDParser.SerializeJsonString(cachedMap);    
+        //}
+
+        //public Dictionary<uint, uint> DeserializeAgentCache(string osdMap)
+        //{
+        //      OSDMap cachedMap = (OSDMap)OSDParser.DeserializeJson(osdMap);
+        //      Dictionary<uint, uint> cache = new Dictionary<uint, uint>();
+        //      foreach(KeyValuePair<string, OSD> kvp in cachedMap)
+        //      {
+        //          cache[uint.Parse(kvp.Key)] = kvp.Value.AsUInteger();
+        //      }
+        //      return cache;
+        //}
+
+        //public void LoadFromFileForClient(UUID AgentID)
+        //{
+        //     //Read file here
+        //     ObjectCacheAgents[AgentID] = DeserializeAgentCache(
+        //}
 
         #endregion
 
