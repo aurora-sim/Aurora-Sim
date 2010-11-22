@@ -143,8 +143,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
       LSL_Rotation llGetLocalRot();
          LSL_Float llGetMass();
               void llGetNextEmail(string address, string subject);
-       IEnumerator llGetNotecardLine(string name, int line);
-       IEnumerator llGetNumberOfNotecardLines(string name);
+           LSL_Key llGetNotecardLine(string name, int line);
+           LSL_Key llGetNumberOfNotecardLines(string name);
        LSL_Integer llGetNumberOfPrims();
        LSL_Integer llGetNumberOfSides();
         LSL_String llGetObjectDesc();
@@ -160,7 +160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
        LSL_Integer llGetParcelFlags(LSL_Vector pos);
        LSL_Integer llGetParcelMaxPrims(LSL_Vector pos, int sim_wide);
        LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide);
-       IEnumerator llGetParcelPrimOwners(LSL_Vector pos);
+          LSL_List llGetParcelPrimOwners(LSL_Vector pos);
        LSL_Integer llGetPermissions();
            LSL_Key llGetPermissionsKey();
         LSL_Vector llGetPos();
@@ -244,14 +244,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llMessageLinked(int linknum, int num, string str, string id);
               void llMinEventDelay(double delay);
               void llModifyLand(int action, int brush);
-       IEnumerator llModPow(int a, int b, int c);
+       LSL_Integer llModPow(int a, int b, int c);
               void llMoveToTarget(LSL_Vector target, double tau);
               DateTime llOffsetTexture(double u, double v, int face);
               DateTime llOpenRemoteDataChannel();
        LSL_Integer llOverMyLand(string id);
               void llOwnerSay(string msg);
           DateTime llParcelMediaCommandList(LSL_List commandList);
-       IEnumerator llParcelMediaQuery(LSL_List aList);
+          LSL_List llParcelMediaQuery(LSL_List aList);
           LSL_List llParseString2List(string str, LSL_List separators, LSL_List spacers);
           LSL_List llParseStringKeepNulls(string src, LSL_List seperators, LSL_List spacers);
               void llParticleSystem(LSL_List rules);
@@ -276,19 +276,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               DateTime llRemoveFromLandPassList(string avatar);
               void llRemoveInventory(string item);
               void llRemoveVehicleFlags(int flags);
-       IEnumerator llRequestAgentData(string id, int data);
-       IEnumerator llRequestInventoryData(string name);
+        LSL_String llRequestAgentData(string id, int data);
+           LSL_Key llRequestInventoryData(string name);
               void llRequestPermissions(string agent, int perm);
         LSL_String llRequestSecureURL();
-       IEnumerator llRequestSimulatorData(string simulator, int data);
+           LSL_Key llRequestSimulatorData(string simulator, int data);
            LSL_Key llRequestURL();
-           DateTime llResetLandBanList();
-              DateTime llResetLandPassList();
+          DateTime llResetLandBanList();
+          DateTime llResetLandPassList();
               void llResetOtherScript(string name);
               void llResetScript();
               void llResetTime();
-              DateTime llRezAtRoot(string inventory, LSL_Vector position, LSL_Vector velocity, LSL_Rotation rot, int param);
-              DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param);
+          DateTime llRezAtRoot(string inventory, LSL_Vector position, LSL_Vector velocity, LSL_Rotation rot, int param);
+          DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param);
          LSL_Float llRot2Angle(LSL_Rotation rot);
         LSL_Vector llRot2Axis(LSL_Rotation rot);
         LSL_Vector llRot2Euler(LSL_Rotation r);
@@ -305,7 +305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
        void llSay(int channelID, object text);
               DateTime llScaleTexture(double u, double v, int face);
        LSL_Integer llScriptDanger(LSL_Vector pos);
-       IEnumerator llSendRemoteData(string channel, string dest, int idata, string sdata);
+           LSL_Key llSendRemoteData(string channel, string dest, int idata, string sdata);
               void llSensor(string name, string id, int type, double range, double arc);
               void llSensorRemove();
               void llSensorRepeat(string name, string id, int type, double range, double arc, double rate);
@@ -394,15 +394,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
          LSL_Float llWater(LSL_Vector offset);
               void llWhisper(int channelID, string text);
         LSL_Vector llWind(LSL_Vector offset);
-       IEnumerator llXorBase64Strings(string str1, string str2);
+        LSL_String llXorBase64Strings(string str1, string str2);
         LSL_String llXorBase64StringsCorrect(string str1, string str2);
 
-        void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
-        LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
-        IEnumerator llSetPrimMediaParams(LSL_Integer face, LSL_List commandList);
-        IEnumerator llClearPrimMedia(LSL_Integer face);
-        IEnumerator llGetPrimMediaParams(LSL_Integer face, LSL_List aList);
-        LSL_Integer llGetLinkNumberOfSides(int LinkNum);
+              void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
+          LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules);
+       LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List commandList);
+       LSL_Integer llClearPrimMedia(LSL_Integer face);
+         LSL_List  llGetPrimMediaParams(LSL_Integer face, LSL_List aList);
+       LSL_Integer llGetLinkNumberOfSides(int LinkNum);
 
         DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos);
     }

@@ -152,7 +152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return lease;
 
         }
-/*
+
        protected virtual void ScriptSleep(int delay)
         {
             delay = (int)((float)delay * m_ScriptDelayFactor);
@@ -161,7 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             System.Threading.Thread.Sleep(delay);
         }
-*/
+
         /// <summary>
         /// This is the new sleep implementation that allows for us to not freeze the script thread while we run
         /// </summary>
@@ -4626,7 +4626,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.PassTouch = pass;
         }
 
-        public IEnumerator llRequestAgentData(string id, int data)
+        public LSL_Key llRequestAgentData(string id, int data)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
@@ -4641,8 +4641,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (account == null)
                 {
                     m_userInfoCache[uuid] = null; // Cache negative
-                    yield return (LSL_Key)UUID.Zero.ToString();
-                    yield break;
+                    return UUID.Zero.ToString();                 
                 }
 
 
@@ -4667,8 +4666,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                 if (ce == null)
                     {
-                    yield return (LSL_Key) UUID.Zero.ToString();
-                    yield break;
+                    return (LSL_Key)UUID.Zero.ToString();
                     }
                     account = ce.account;
                     pinfo = ce.pinfo;
@@ -4719,8 +4717,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     reply = "0";
                     break;
                 default:
-                    yield return (LSL_Key) UUID.Zero.ToString(); // Raise no event
-                    yield break;
+                    return (LSL_Key) UUID.Zero.ToString(); // Raise no event
+                    break;
             }
 
             UUID rq = UUID.Random();
@@ -4731,12 +4729,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             dataserverPlugin.AddReply(rq.ToString(), reply, 100);
 
-            yield return PScriptSleep(200);
-            yield return (LSL_Key)tid.ToString();
-            yield break;
+            ScriptSleep(200);
+            return (LSL_Key)tid.ToString();
+            
         }
 
-        public IEnumerator llRequestInventoryData(string name)
+        public LSL_Key llRequestInventoryData(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -4771,14 +4769,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                              reply, 1000);
                         });
 
-                    yield return PScriptSleep(1000);
-                    yield return (LSL_Key)tid.ToString();
-                    yield break;
+                    ScriptSleep(1000);
+                    return (LSL_Key)tid.ToString();                   
                 }
             }
-            yield return PScriptSleep(1000);
-            yield return (LSL_Key) String.Empty;
-            yield break;
+            ScriptSleep(1000);
+            return (LSL_Key) String.Empty;
         }
 
         public void llSetDamage(double damage)
@@ -7309,14 +7305,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(1000);
         }
 
-        public IEnumerator llSendRemoteData(string channel, string dest, int idata, string sdata)
+        public LSL_Key llSendRemoteData(string channel, string dest, int idata, string sdata)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
-            yield return  PScriptSleep(3000);
-            yield return (LSL_Key) (xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
-            yield break;
+            ScriptSleep(3000);
+            return (LSL_Key)(xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
 
         public DateTime llRemoteDataReply(string channel, string message_id, string sdata, int idata)
@@ -8190,14 +8185,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public IEnumerator llXorBase64Strings(string str1, string str2)
+        public LSL_String llXorBase64Strings(string str1, string str2)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             Deprecated("llXorBase64Strings");
-            yield return PScriptSleep(300);
-            yield return (LSL_String)String.Empty;
-            yield break;
+            ScriptSleep(300);
+            return (LSL_String)String.Empty;
         }
 
         public void llRemoteDataSetRegion()
@@ -9450,7 +9444,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return UUID.Zero.ToString();
         }
 
-        public IEnumerator llRequestSimulatorData(string simulator, int data)
+        public LSL_Key llRequestSimulatorData(string simulator, int data)
             {
             IOSSL_Api ossl = (IOSSL_Api)m_ScriptEngine.GetApi(m_itemID, "OSSL");
             UUID tid = UUID.Zero;
@@ -9521,9 +9515,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 //m_log.Error("[LSL_API]: llRequestSimulatorData" + e.ToString());
                 }
 
-            yield return PScriptSleep(1000);
-            yield return (LSL_Key)tid.ToString();
-            yield break;
+            ScriptSleep(1000);
+            return (LSL_Key)tid.ToString();
             }
 
         public LSL_String llRequestURL()
@@ -9901,7 +9894,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(2000);
         }
 
-        public IEnumerator llParcelMediaQuery(LSL_List aList)
+        public LSL_List llParcelMediaQuery(LSL_List aList)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -9943,24 +9936,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 }
             }
-            yield return PScriptSleep(2000);
-            yield return list;
-            yield break;
+            ScriptSleep(2000);
+            return list;
         }
 
-        public IEnumerator llGetPrimMediaParams(LSL_Integer face, LSL_List rules)
+        public LSL_List llGetPrimMediaParams(LSL_Integer face, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            yield return PScriptSleep(1000);
+            ScriptSleep(1000);
 
             // LSL Spec http://wiki.secondlife.com/wiki/LlGetPrimMediaParams says to fail silently if face is invalid
             // TODO: Need to correctly handle case where a face has no media (which gives back an empty list).
             // Assuming silently fail means give back an empty list.  Ideally, need to check this.
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
-                yield return new LSL_List();
+                return new LSL_List();
             else
-                yield return GetPrimMediaParams(face, rules);
-            yield break;
+                return GetPrimMediaParams(face, rules);
         }
 
         private LSL_List GetPrimMediaParams(int face, LSL_List rules)
@@ -10057,17 +10048,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return res;
         }
 
-        public IEnumerator llClearPrimMedia(LSL_Integer face)
+        public LSL_Integer llClearPrimMedia(LSL_Integer face)
         {
-            yield return PScriptSleep(1000);
+            ScriptSleep(1000);
 
             // LSL Spec http://wiki.secondlife.com/wiki/LlClearPrimMedia says to fail silently if face is invalid
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // FIXME: Don't perform the media check directly
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
                 {
-                yield return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-                yield break;
+                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
                 }
 
             IMoapModule module = World.RequestModuleInterface<IMoapModule>();
@@ -10076,22 +10066,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             module.ClearMediaEntry(m_host, face);
 
-            yield return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-            yield break;
+            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
         }
 
-        public IEnumerator llSetPrimMediaParams(LSL_Integer face, LSL_List rules)
+        public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List rules)
         {
-        yield return PScriptSleep(1000);
+            ScriptSleep(1000);
 
             // LSL Spec http://wiki.secondlife.com/wiki/LlSetPrimMediaParams says to fail silently if face is invalid
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // Don't perform the media check directly
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
-                yield return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
             else
-                yield return (LSL_Integer)SetPrimMediaParams(face, rules);
-            yield break;
+                return (LSL_Integer)SetPrimMediaParams(face, rules);
         }
 
         public LSL_Integer SetPrimMediaParams(int face, LSL_List rules)
@@ -10187,15 +10175,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return ScriptBaseClass.LSL_STATUS_OK;
         }
 
-        public IEnumerator llModPow(int a, int b, int c)
+        public LSL_Integer llModPow(int a, int b, int c)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             Int64 tmp = 0;
             Math.DivRem(Convert.ToInt64(Math.Pow(a, b)), c, out tmp);
-            yield return PScriptSleep(100);
-            yield return (LSL_Integer)Convert.ToInt32(tmp);
-            yield break;
+            ScriptSleep(100);
+            return (LSL_Integer)Convert.ToInt32(tmp);
         }
 
         public LSL_Integer llGetInventoryType(string name)
@@ -10791,7 +10778,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 0;
         }
 
-        public IEnumerator llGetParcelPrimOwners(LSL_Vector pos)
+        public LSL_List llGetParcelPrimOwners(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -10805,9 +10792,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ret.Add(detectedParams.Value);
                 }
             }
-            yield return PScriptSleep(2000);
-            yield return (LSL_List) ret;
-            yield break;
+            ScriptSleep(2000);
+            return (LSL_List) ret;
         }
 
         public LSL_Integer llGetObjectPrimCount(string object_id)
@@ -11038,7 +11024,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 });
         }
 
-        public IEnumerator llGetNumberOfNotecardLines(string name)
+        public LSL_Key llGetNumberOfNotecardLines(string name)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -11064,8 +11050,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Notecard '" + name + "' could not be found.");
 
-                yield return (LSL_Key)UUID.Zero.ToString();
-                yield break;
+                return (LSL_Key)UUID.Zero.ToString();
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
@@ -11076,9 +11061,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 dataserverPlugin.AddReply(assetID.ToString(),
                 NotecardCache.GetLines(assetID).ToString(), 100);
-                yield return PScriptSleep(100);
-                yield return (LSL_Key) tid.ToString();
-                yield break;
+                ScriptSleep(100);
+                return (LSL_Key) tid.ToString();
             }
 
             WithNotecard(assetID, delegate(UUID id, AssetBase a)
@@ -11100,12 +11084,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                 });
 
-            yield return PScriptSleep(100);
-            yield return tid.ToString();
-            yield break;
+            ScriptSleep(100);
+            return tid.ToString();
         }
 
-        public IEnumerator llGetNotecardLine(string name, int line)
+        public LSL_Key llGetNotecardLine(string name, int line)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -11131,8 +11114,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Notecard '" + name + "' could not be found.");
 
-                yield return (LSL_Key) UUID.Zero.ToString();
-                yield break;
+                return (LSL_Key) UUID.Zero.ToString();
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
@@ -11143,9 +11125,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 dataserverPlugin.AddReply(assetID.ToString(),
                                                                NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax), 100);
-                yield return PScriptSleep(100);
-                yield return (LSL_Key)tid.ToString();
-                yield break;
+                ScriptSleep(100);
+                return (LSL_Key)tid.ToString();
             }
 
             WithNotecard(assetID, delegate(UUID id, AssetBase a)
@@ -11166,9 +11147,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                          }
                  });
 
-            yield return PScriptSleep(100);
-            yield return (LSL_Key)tid.ToString();
-            yield break;
+            ScriptSleep(100);
+            return (LSL_Key)tid.ToString();
         }
 
         public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
