@@ -56,6 +56,8 @@ namespace Aurora.Modules
                 return;
 
             scene.UnregisterModuleInterface<IObjectCache>(this);
+            //scene.EventManager.OnNewClient -= OnNewClient;
+            //scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
         public virtual void RegionLoaded(Scene scene)
@@ -94,7 +96,7 @@ namespace Aurora.Modules
         //{
         //    FileStream stream = new FileStream(m_filePath + AgentID , FileMode.Create);
         //    StreamWriter m_streamWriter = new StreamWriter(stream);
-        //    m_streamWriter.WriteLine(SerializeAgentCache(ObjectCacheAgents[AgentID]);
+        //    m_streamWriter.WriteLine(SerializeAgentCache(ObjectCacheAgents[AgentID]));
         //    m_streamWriter.Close();
         //}
 
@@ -122,7 +124,7 @@ namespace Aurora.Modules
         //public void LoadFromFileForClient(UUID AgentID)
         //{
         //     //Read file here
-        //     ObjectCacheAgents[AgentID] = DeserializeAgentCache(
+        //     ObjectCacheAgents[AgentID] = DeserializeAgentCache(file);
         //}
 
         #endregion
@@ -138,19 +140,6 @@ namespace Aurora.Modules
         /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {
-            /*ObjectCacheClient client;
-            //If we have the client in the store, we can check, if not, no cached update
-            lock (ObjectCacheAgents)
-            {
-                if (ObjectCacheAgents.TryGetValue(AgentID, out client))
-                    return client.GetUseCachedObject(localID, CurrentEntityCRC);
-                else
-                {
-                    client = new ObjectCacheClient();
-                    ObjectCacheAgents[AgentID] = client;
-                    return client.GetUseCachedObject(localID, CurrentEntityCRC);
-                }
-            }*/
             lock (ObjectCacheAgents)
             {
                 Dictionary<uint, uint> InternalCache;
