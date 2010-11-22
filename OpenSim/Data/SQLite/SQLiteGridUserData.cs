@@ -46,7 +46,7 @@ namespace OpenSim.Data.SQLite
 
         public SQLiteGridUserData(string connectionString, string realm) : base(connectionString, realm, "UserGrid") { }
 
-        public GridUserData Get(string userID)
+        new public GridUserData Get(string userID)
         {
             GridUserData[] ret = Get("UserID", userID);
 
@@ -54,11 +54,6 @@ namespace OpenSim.Data.SQLite
                 return null;
 
             return ret[0];
-        }
-
-        public bool Store(GridUserData data)
-        {
-            return Store(data);
         }
     }
 }

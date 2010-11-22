@@ -81,7 +81,7 @@ namespace Aurora.Framework
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
                             Interlocked.Increment(ref nSleepingthreads);
                             try { Thread.Sleep(m_info.MaxSleepTime); }
-                            catch (ThreadInterruptedException e) { }
+                            catch (ThreadInterruptedException) { }
                             Interlocked.Decrement(ref nSleepingthreads);
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
                             continue;

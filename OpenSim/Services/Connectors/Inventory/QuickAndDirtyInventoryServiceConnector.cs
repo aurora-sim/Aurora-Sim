@@ -67,7 +67,7 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         public bool CreateUserInventory(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, bool>(
+            return SynchronousRestObjectRequester.MakeRequest<Guid, bool>(
                 "POST", m_ServerURI + "CreateInventory/", userId.Guid);
         }
 
@@ -78,7 +78,7 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         public List<InventoryFolderBase> GetInventorySkeleton(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, List<InventoryFolderBase>>(
+            return SynchronousRestObjectRequester.MakeRequest<Guid, List<InventoryFolderBase>>(
                 "POST", m_ServerURI + "RootFolders/", userId.Guid);
         }
 
@@ -93,17 +93,8 @@ namespace OpenSim.Services.Connectors
         /// </returns>
         public List<InventoryItemBase> GetActiveGestures(UUID userId)
         {
-            return SynchronousRestObjectPoster.BeginPostObject<Guid, List<InventoryItemBase>>(
+            return SynchronousRestObjectRequester.MakeRequest<Guid, List<InventoryItemBase>>(
                 "POST", m_ServerURI + "ActiveGestures/", userId.Guid);
-        }
-
-        public InventoryCollection GetUserInventory(UUID userID)
-        {
-            return null;
-        }
-
-        public void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
-        {
         }
 
         public InventoryFolderBase GetFolderForType(UUID userID, AssetType type)

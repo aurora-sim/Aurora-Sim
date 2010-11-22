@@ -243,15 +243,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             return m_LocalGridInventoryService.GetInventorySkeleton(userId);
         }
 
-        public InventoryCollection GetUserInventory(UUID userID)
-        {
-            return null;
-        }
-
-        public void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
-        {
-        }
-
         public InventoryFolderBase GetRootFolder(UUID userID)
         {
             //m_log.DebugFormat("[HG INVENTORY CONNECTOR]: GetRootFolder for {0}", userID);

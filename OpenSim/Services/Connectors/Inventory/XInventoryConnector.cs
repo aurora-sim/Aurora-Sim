@@ -488,17 +488,6 @@ namespace OpenSim.Services.Connectors
         }
 
 
-        // These are either obsolete or unused
-        //
-        public InventoryCollection GetUserInventory(UUID principalID)
-        {
-            return null;
-        }
-
-        public void GetUserInventory(UUID principalID, InventoryReceiptCallback callback)
-        {
-        }
-
         public bool HasInventoryForUser(UUID principalID)
         {
             return false;

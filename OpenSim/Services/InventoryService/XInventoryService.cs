@@ -510,17 +510,6 @@ namespace OpenSim.Services.InventoryService
             return m_Database.GetAssetPermissions(principalID, assetID);
         }
 
-        // CM never needed those. Left unimplemented.
-        // Obsolete in core
-        //
-        public InventoryCollection GetUserInventory(UUID userID)
-        {
-            return null;
-        }
-        public void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
-        {
-        }
-
         // Unused.
         //
         public bool HasInventoryForUser(UUID userID)

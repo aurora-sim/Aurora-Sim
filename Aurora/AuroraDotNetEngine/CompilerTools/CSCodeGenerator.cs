@@ -1853,7 +1853,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             string retstr = "";
 
-            string FunctionCalls = "";
             bool printSemicolon = true;
 
             bool marc = FuncCallsMarc();
@@ -2435,7 +2434,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string tempString = "";
             string FunctionCalls = "";
 
-            int NeedCloseParent = 0;
+            //int NeedCloseParent = 0;
 
             foreach (SYMBOL kid in fc.kids)
             {

@@ -301,7 +301,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_simulatorVersion;
         }
 
-        protected IConfigSource GetConfig()
+        protected override IConfigSource GetConfig()
         {
             return m_config;
         }

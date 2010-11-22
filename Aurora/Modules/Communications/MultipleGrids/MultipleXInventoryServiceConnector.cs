@@ -125,26 +125,6 @@ namespace Aurora.Modules.Communications.MultipleGrids
             return r;
         }
 
-        public OpenSim.Framework.InventoryCollection GetUserInventory(UUID userID)
-        {
-            OpenSim.Framework.InventoryCollection r = new OpenSim.Framework.InventoryCollection();
-            foreach (IInventoryService service in AllServices)
-            {
-                r = service.GetUserInventory(userID);
-                if (r != null && r.Folders.Count != 0)
-                    return r;
-            }
-            return r;
-        }
-
-        public void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
-        {
-            foreach (IInventoryService service in AllServices)
-            {
-                service.GetUserInventory(userID, callback);
-            }
-        }
-
         public OpenSim.Framework.InventoryFolderBase GetRootFolder(UUID userID)
         {
             OpenSim.Framework.InventoryFolderBase r = new OpenSim.Framework.InventoryFolderBase();

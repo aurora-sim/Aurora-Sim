@@ -119,7 +119,7 @@ namespace Aurora.Modules.Communications.MultipleGrids
             foreach (IGridUserService service in AllServices)
             {
                 r = service.LoggedOut(userID, sessionID, regionID, lastPosition, lastLookAt);
-                if (r != null)
+                if (r)
                     return r;
             }
             return r;
@@ -131,7 +131,7 @@ namespace Aurora.Modules.Communications.MultipleGrids
             foreach (IGridUserService service in AllServices)
             {
                 r = service.SetHome(userID, homeID, homePosition, homeLookAt);
-                if (r != null)
+                if (r)
                     return r;
             }
             return r;
@@ -143,7 +143,7 @@ namespace Aurora.Modules.Communications.MultipleGrids
             foreach (IGridUserService service in AllServices)
             {
                 r = service.SetLastPosition(userID, sessionID, regionID, lastPosition, lastLookAt);
-                if (r != null)
+                if (r)
                     return r;
             }
             return r;

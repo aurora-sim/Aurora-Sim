@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private bool m_dumpAssetsToFile = false;
         private Scene m_scene = null;
 
-        [Obsolete]
+        //[Obsolete] //As long as this is being used to get objects that are not region specific, this is fine to use
         public Scene MyScene
         {
             get{ return m_scene;}

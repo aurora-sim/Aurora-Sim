@@ -50,7 +50,7 @@ namespace OpenSim.Data.MSSQL
         {
         }
 
-        public GridUserData Get(string userID)
+        new public GridUserData Get(string userID)
         {
             GridUserData[] ret = Get("UserID", userID);
 

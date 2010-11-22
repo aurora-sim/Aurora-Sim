@@ -149,29 +149,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
             return new List<InventoryFolderBase>();
         }
 
-        public override InventoryCollection GetUserInventory(UUID userID)
-        {
-            return null;
-        }
-
-        public override void GetUserInventory(UUID userID, InventoryReceiptCallback callback)
-        {
-            UUID sessionID = GetSessionID(userID);
-            try
-            {
-                m_RemoteConnector.GetUserInventory(userID.ToString(), sessionID, callback);
-            }
-            catch (Exception e)
-            {
-                if (StatsManager.SimExtraStats != null)
-                    StatsManager.SimExtraStats.AddInventoryServiceRetrievalFailure();
-
-                m_log.ErrorFormat("[INVENTORY CONNECTOR]: Request inventory operation failed, {0} {1}",
-                    e.Source, e.Message);
-            }
-
-        }
-
         // inherited. See base class
         // public InventoryFolderBase GetFolderForType(UUID userID, AssetType type)
 

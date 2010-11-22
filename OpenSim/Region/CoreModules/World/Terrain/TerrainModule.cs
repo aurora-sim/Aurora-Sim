@@ -258,7 +258,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             catch (IOException e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
-
+#pragma warning disable 0162
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if ((int)Constants.RegionSize != 256)
                 {
@@ -266,6 +266,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
                     m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
+#pragma warning restore 0162
             }
             catch (Exception e)
             {

@@ -46,7 +46,7 @@ namespace OpenSim.Data.MySQL
 
         public MySQLGridUserData(string connectionString, string realm) : base(connectionString, realm, "GridUserStore") {}
 
-        public GridUserData Get(string userID)
+        new public GridUserData Get(string userID)
         {
             GridUserData[] ret = Get("UserID", userID);
 
@@ -55,7 +55,5 @@ namespace OpenSim.Data.MySQL
 
             return ret[0];
         }
-
-
     }
 }

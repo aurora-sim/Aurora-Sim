@@ -1706,7 +1706,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int MAX_ITEMS_PER_PACKET = 5;
             int MAX_FOLDERS_PER_PACKET = 6;
 
-            if (fetchItems == null)
+            if (items == null || folders == null)
                 return; //This DOES happen when things time out!!
 
             int totalItems = fetchItems ? items.Count : 0;

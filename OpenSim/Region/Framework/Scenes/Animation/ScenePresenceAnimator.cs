@@ -72,10 +72,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         private float m_animTickJump;
         private float m_timesBeforeSlowFlyIsOff = 0;
         private float m_animTickStandup = 0;
-        private float m_animTickNextJump = 0;
-        private float m_jumpZ = 0;
-        private bool m_hasPreJumped = false;
-        private bool m_hasJumpAddedForce = false;
         
         /// <value>
         /// The scene presence that this animator applies to
@@ -176,8 +172,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
 
             const float PREJUMP_DELAY = 0.35f;
-            const float JUMP_END = 1.750f;
-            const float JUMP_NEXT_TIME = 0.5f;
 
             #region Inputs
             if (m_scenePresence.SitGround)

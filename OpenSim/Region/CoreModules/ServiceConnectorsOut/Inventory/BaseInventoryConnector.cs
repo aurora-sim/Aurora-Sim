@@ -65,21 +65,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         public abstract List<InventoryFolderBase> GetInventorySkeleton(UUID userId);
 
         /// <summary>
-        /// Synchronous inventory fetch.
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <returns></returns>
-        public abstract InventoryCollection GetUserInventory(UUID userID);
-
-        /// <summary>
-        /// Request the inventory for a user.  This is an asynchronous operation that will call the callback when the
-        /// inventory has been received
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="callback"></param>
-        public abstract void GetUserInventory(UUID userID, InventoryReceiptCallback callback);
-
-        /// <summary>
         /// Retrieve the root inventory folder for the given user.
         /// </summary>
         /// <param name="userID"></param>
