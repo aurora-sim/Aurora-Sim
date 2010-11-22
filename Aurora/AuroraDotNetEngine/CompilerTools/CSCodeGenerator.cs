@@ -138,7 +138,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             public string Value;
         }
         private HashSet<string> DTFunctions = new HashSet<string>();
-        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
+//        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
@@ -197,9 +197,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             DTFunctions.Add("osTeleportOwner");
 
 
+/* suspended:  some API functions are not compatible with IEnum
             // Api functions that can return a delay, a value or breakable in timeslices
-            // must be IEnumerator in stub, interface and implementation files
-
+            // must be IEnumerator in stub, interface and implementation files           
+ 
             IenFunctions.Add("llRequestAgentData", "LSL_Types.LSLString");
             IenFunctions.Add("llRequestInventoryData", "LSL_Types.LSLString");
             IenFunctions.Add("llSendRemoteData", "LSL_Types.LSLString");
@@ -213,7 +214,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.LSLString");
             IenFunctions.Add("llGetParcelPrimOwners", "LSL_Types.list");
             IenFunctions.Add("llGetNotecardLine", "LSL_Types.LSLString");
-
+*/
 
 
             // the rest will be directly called
@@ -2538,9 +2539,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string rettype = "void";
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
+
+/* suspended.. API fails with IEnums
             else if (IenFunctions.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
-
+*/
             else if (DTFunctions.Contains(fc.Id))
             {
                 DTFunction = true;
