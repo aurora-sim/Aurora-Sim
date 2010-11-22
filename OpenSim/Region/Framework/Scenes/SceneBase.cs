@@ -247,6 +247,22 @@ namespace OpenSim.Region.Framework.Scenes
 
             return myID;
         }
+        public void CheckAllocationOfLocalIds(SceneObjectGroup group)
+        {
+            foreach (SceneObjectPart part in group.ChildrenList)
+            {
+                if(part.LocalId != 0)
+                    CheckAllocationOfLocalId(part.LocalId);
+            }
+        }
+
+        private void CheckAllocationOfLocalId(uint LocalID)
+        {
+            _primAllocateMutex.WaitOne();
+            if (LocalID > m_lastAllocatedLocalId)
+                m_lastAllocatedLocalId = LocalID;
+            _primAllocateMutex.ReleaseMutex();
+        }
         
         #region Module Methods
 

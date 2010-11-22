@@ -19,7 +19,6 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected bool m_Enabled = true;
-        //private Dictionary<UUID, ObjectCacheClient> ObjectCacheAgents = new Dictionary<UUID, ObjectCacheClient>();
         private Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
         private string m_filePath = "ObjectCache/";
 
@@ -152,7 +151,8 @@ namespace Aurora.Modules
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();
             //Read file here
-            ObjectCacheAgents[AgentID] = DeserializeAgentCache(file);
+            if(file != "") //New file
+                ObjectCacheAgents[AgentID] = DeserializeAgentCache(file);
         }
 
         #endregion
@@ -195,39 +195,6 @@ namespace Aurora.Modules
                 return false;
             }
         }
-
-        /*private class ObjectCacheClient
-        {
-            //Should we use a dictionary for ObjectUpdateCached checking?
-            Dictionary<uint, uint> m_cachedObjects = new Dictionary<uint, uint>();
-
-            /// <summary>
-            /// Check whether the given object exists in our internal cache
-            /// </summary>
-            /// <param name="localID"></param>
-            /// <param name="CurrentEntityCRC"></param>
-            /// <returns></returns>
-            public bool GetUseCachedObject(uint localID, uint CurrentEntityCRC)
-            {
-                uint CRC = 0;
-                if (!m_cachedObjects.TryGetValue(localID, out CRC))
-                {
-                    //Add to the cache
-                    m_cachedObjects[localID] = CurrentEntityCRC;
-                    return false;
-                }
-                else
-                {
-                    if (CurrentEntityCRC > CRC)
-                    {
-                        m_cachedObjects[localID] = CurrentEntityCRC;
-                        return false; //CRC is greater than the one the client cache has
-                    }
-                    else
-                        return true; //CRC is the same! Send a cache!
-                }
-            }
-        }*/
 
         #endregion
     }

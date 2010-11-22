@@ -1059,7 +1059,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Backup uses the new taints system
             m_backingup = true; //Clear out all other threads
-            ProcessPrimBackupTaints(true);
+            ProcessPrimBackupTaints(true, false);
 
             m_sceneGraph.Close();
 
@@ -2188,7 +2188,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void Backup(bool forced)
         {
             //EventManager.TriggerOnBackup(DataStore);
-            ProcessPrimBackupTaints(forced);
+            ProcessPrimBackupTaints(forced, false);
             m_backingup = false;
         }
 
@@ -2388,9 +2388,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info("[SCENE]: Loading objects from datastore");
 
             List<SceneObjectGroup> PrimsFromDB = SimulationDataService.LoadObjects(regionID, this);
-
             foreach (SceneObjectGroup group in PrimsFromDB)
             {
+                CheckAllocationOfLocalIds(group);
                 if (group.IsAttachment || (group.RootPart.Shape.State != 0 &&
                     (group.RootPart.Shape.PCode == (byte)PCode.None ||
                     group.RootPart.Shape.PCode == (byte)PCode.Prim ||
@@ -5331,18 +5331,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// have been 'tainted' so that it does not waste time
         /// running through as large of a backup loop
         /// </summary>
-        public void ProcessPrimBackupTaints(bool forced)
+        public void ProcessPrimBackupTaints(bool forced, bool backupAll)
         {
             HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
-            if (forced)
+            //Add all
+            if (backupAll)
             {
-                //Add all
-                /*EntityBase[] entities = Entities.GetEntities();
+                EntityBase[] entities = Entities.GetEntities();
                 foreach (EntityBase entity in entities)
                 {
                     if (entity is SceneObjectGroup)
                         backupPrims.Add(entity as SceneObjectGroup);
-                }*/
+                }
+            }
+            else if (forced)
+            {
                 lock (m_backupTaintedPrims)
                 {
                     //Add all these to the backup

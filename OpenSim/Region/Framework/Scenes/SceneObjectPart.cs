@@ -156,7 +156,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_DIE_AT_EDGE;
+                return GetComponentState("DIE_AT_EDGE").AsBoolean();
             }
             set
             {
@@ -171,7 +171,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_RETURN_AT_EDGE;
+                return GetComponentState("RETURN_AT_EDGE").AsBoolean();
             }
             set
             {
@@ -186,7 +186,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_BlockGrab;
+                return GetComponentState("BlockGrab").AsBoolean();
             }
             set
             {
@@ -201,7 +201,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_StatusSandbox;
+                return GetComponentState("StatusSandbox").AsBoolean();
             }
             set
             {
@@ -216,7 +216,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_StatusSandboxPos;
+                return GetComponentState("StatusSandboxPos").AsVector3();
             }
             set
             {
@@ -231,7 +231,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_UseSoundQueue;
+                return GetComponentState("UseSoundQueue").AsInteger();
             }
             set
             {
@@ -261,7 +261,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_Sound;
+                return GetComponentState("Sound").AsUUID();
             }
             set
             {
@@ -270,48 +270,42 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
         
-        private byte m_SoundFlags;
         [XmlIgnore]
         public byte SoundFlags
         {
             get
             {
-                return m_SoundFlags;
+                return (byte)GetComponentState("Sound").AsInteger();
             }
             set
             {
-                SetComponentState("SoundFlags", value);
-                m_SoundFlags = value;
+                SetComponentState("SoundFlags", (int)value);
             }
         }
         
-        private double m_SoundGain;
         [XmlIgnore]
         public double SoundGain
         {
             get
             {
-                return m_SoundGain;
+                return GetComponentState("SoundGain").AsReal();
             }
             set
             {
                 SetComponentState("SoundGain", value);
-                m_SoundGain = value;
             }
         }
 
-        private double m_SoundRadius;
         [XmlIgnore]
         public double SoundRadius
         {
             get
             {
-                return m_SoundRadius;
+                return GetComponentState("SoundRadius").AsReal();
             }
             set
             {
                 SetComponentState("SoundRadius", value);
-                m_SoundRadius = value;
             }
         }
         
@@ -327,48 +321,42 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public UUID FromItemID;
 
-        private int m_STATUS_ROTATE_X;
         [XmlIgnore]
         public int STATUS_ROTATE_X
         {
             get
             {
-                return m_STATUS_ROTATE_X;
+                return GetComponentState("STATUS_ROTATE_X").AsInteger();
             }
             set 
             {
                 SetComponentState("STATUS_ROTATE_X", value);
-                m_STATUS_ROTATE_X = value; 
             }
         }
 
-        private int m_STATUS_ROTATE_Y;
         [XmlIgnore]
         public int STATUS_ROTATE_Y
         {
             get
             {
-                return m_STATUS_ROTATE_Y;
+                return GetComponentState("STATUS_ROTATE_Y").AsInteger();
             }
             set
             {
                 SetComponentState("STATUS_ROTATE_Y", value);
-                m_STATUS_ROTATE_Y = value;
             }
         }
 
-        private int m_STATUS_ROTATE_Z;
         [XmlIgnore]
         public int STATUS_ROTATE_Z
         {
             get
             {
-                return m_STATUS_ROTATE_Z;
+                return GetComponentState("STATUS_ROTATE_Z").AsInteger();
             }
             set
             {
                 SetComponentState("STATUS_ROTATE_Z", value);
-                m_STATUS_ROTATE_Z = value;
             }
         }
 
@@ -385,6 +373,7 @@ namespace OpenSim.Region.Framework.Scenes
                 PhysActor.PIDTarget = value;
             }
         }
+
         [XmlIgnore]
         public bool PIDActive
         {
@@ -398,12 +387,13 @@ namespace OpenSim.Region.Framework.Scenes
                 PhysActor.PIDActive = value;
             }
         }
+
         [XmlIgnore]
         public float PIDTau
         {
             get
             {
-                return PhysActor.PIDTau;
+                return (float)GetComponentState("PIDTau").AsReal();
             }
             set
             {
@@ -507,7 +497,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_VolumeDetectActive;
+                return GetComponentState("VolumeDetectActive").AsBoolean();
             }
             set
             {
@@ -619,7 +609,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_cameraEyeOffset;
+                return GetComponentState("CameraEyeOffset").AsVector3();
             }
             set
             {
@@ -634,7 +624,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_cameraAtOffset;
+                return GetComponentState("CameraAtOffset").AsVector3();
             }
             set
             {
@@ -648,7 +638,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_forceMouselook;
+                return GetComponentState("ForceMouselook").AsBoolean();
             }
             set
             {
@@ -902,22 +892,26 @@ namespace OpenSim.Region.Framework.Scenes
 
         public uint LocalId
         {
-            get { return m_localId; }
-            set { m_localId = value; }
+            get 
+            {
+                return GetComponentState("LocalId").AsUInteger(); 
+            }
+            set
+            {
+                SetComponentState("LocalId", value, true);
+            }
         }
 
-        private uint m_CRC;
         [XmlIgnore]
         public uint CRC
         {
             get
             {
-                return m_CRC;
+                return GetComponentState("CRC").AsUInteger();
             }
             set
             {
                 SetComponentState("CRC", value, false);
-                m_CRC = value;
             }
         }
 
@@ -1018,8 +1012,8 @@ namespace OpenSim.Region.Framework.Scenes
         public Quaternion APIDTarget
         {
             get
-            { 
-                return m_APIDTarget;
+            {
+                return GetComponentState("APIDTarget").AsQuaternion();
             }
             set
             {
@@ -1032,8 +1026,8 @@ namespace OpenSim.Region.Framework.Scenes
         public float APIDDamp
         {
             get 
-            { 
-                return m_APIDDamp;
+            {
+                return (float)GetComponentState("APIDDamp").AsReal();
             }
             set
             {
@@ -1046,8 +1040,8 @@ namespace OpenSim.Region.Framework.Scenes
         public float APIDStrength
         {
             get
-            { 
-                return m_APIDStrength;
+            {
+                return (float)GetComponentState("APIDStrength").AsReal();
             }
             set 
             {
@@ -1110,7 +1104,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_particleSystem;
+                Primitive.ParticleSystem ps = Primitive.ParticleSystem.FromOSD(GetComponentState("ParticleSystem"));
+                return ps.GetBytes();
             }
             set
             {
@@ -1126,7 +1121,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_expires;
+                return GetComponentState("Expires").AsDate();
             }
             set
             {
@@ -1140,7 +1135,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get 
             {
-                return m_rezzed;
+                return GetComponentState("Rezzed").AsDate();
             }
             set
             {
@@ -1153,8 +1148,8 @@ namespace OpenSim.Region.Framework.Scenes
         public float Damage
         {
             get
-            { 
-                return m_damage;
+            {
+                return (float)GetComponentState("Damage").AsReal();
             }
             set
             {
@@ -1648,13 +1643,11 @@ namespace OpenSim.Region.Framework.Scenes
         public Quaternion SitTargetOrientation
         {
             get
-            { 
-                return m_sitTargetOrientation;
+            {
+                return GetComponentState("SitTargetOrientation").AsQuaternion();
             }
             set 
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 SetComponentState("SitTargetOrientation", value);
                 m_sitTargetOrientation = value; 
             }
@@ -1663,14 +1656,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Vector3 SitTargetPosition
         {
-            get 
+            get
             {
-                return m_sitTargetPosition;
+                return GetComponentState("SitTargetPosition").AsVector3();
             }
             set
             {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
                 SetComponentState("SitTargetPosition", value);
                 m_sitTargetPosition = value;
             }
@@ -1681,8 +1672,8 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 SitTargetPositionLL
         {
             get
-            { 
-                return new Vector3(m_sitTargetPosition.X, m_sitTargetPosition.Y,m_sitTargetPosition.Z); 
+            {
+                return GetComponentState("SitTargetPosition").AsVector3();
             }
             set
             {
@@ -1695,12 +1686,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return new Quaternion(
-                                        m_sitTargetOrientation.X,
-                                        m_sitTargetOrientation.Y,
-                                        m_sitTargetOrientation.Z,
-                                        m_sitTargetOrientation.W
-                                        );
+                return GetComponentState("SitTargetOrientationLL").AsQuaternion();
             }
 
             set

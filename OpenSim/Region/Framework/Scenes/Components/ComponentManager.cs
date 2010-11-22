@@ -121,6 +121,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("CRC");
             RegisterComponent(com);
+            com = new DefaultComponents("LocalId");
+            RegisterComponent(com);
         }
 
         public void RemoveRegion(Scene scene)
@@ -234,6 +236,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="State">State to set the Component to</param>
         public void SetComponentState(SceneObjectPart obj, string Name, OSD State)
         {
+            if (obj.UUID == UUID.Zero)
+                return;
             //Check whether a Component exists for this name
             if (m_components.ContainsKey(Name))
             {
@@ -351,7 +355,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             if(m_states.ContainsKey(obj))
                 return m_states[obj];
 
-            return null;
+            return new OSD();
         }
 
         public void SetState(UUID obj, OSD osd)

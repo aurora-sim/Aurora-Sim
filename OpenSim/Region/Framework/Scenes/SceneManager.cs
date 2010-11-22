@@ -324,12 +324,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void BackupCurrentScene()
+        public void BackupCurrentScene(bool backupAll)
         {
             ForEachCurrentScene(delegate(Scene scene)
             {
                 scene.m_backingup = true; //Clear out all other threads
-                scene.ProcessPrimBackupTaints(true);
+                scene.ProcessPrimBackupTaints(true, backupAll);
                 scene.m_backingup = false; //Clear out all other threads
             });
         }

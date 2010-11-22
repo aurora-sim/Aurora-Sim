@@ -4718,7 +4718,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     break;
                 default:
                     return (LSL_Key) UUID.Zero.ToString(); // Raise no event
-                    break;
             }
 
             UUID rq = UUID.Random();

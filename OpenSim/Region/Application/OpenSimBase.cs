@@ -377,7 +377,7 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
 
-            m_console.Commands.AddCommand("region", false, "backup", "backup", "Persist objects to the database now", RunCommand);
+            m_console.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
 
             m_console.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
 
@@ -660,7 +660,7 @@ namespace OpenSim
 					break;
 
 				case "backup":
-					m_sceneManager.BackupCurrentScene();
+                    m_sceneManager.BackupCurrentScene(args.Count == 1);
 					break;
 
 				case "remove-region":

@@ -1749,10 +1749,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (ISceneEntity child in children)
             {
-                child.LocalId = m_parentScene.AllocateLocalId();
                 if (((SceneObjectPart)child).PhysActor != null)
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
-                //((SceneObjectPart)child).CRC = 0;
+                if (child.LocalId == 0)
+                    child.LocalId = m_parentScene.AllocateLocalId();
                 entity.AddChild(child);
             }
             //Force the prim to backup now that it has been added
