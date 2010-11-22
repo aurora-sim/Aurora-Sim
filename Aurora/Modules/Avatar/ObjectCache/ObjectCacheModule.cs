@@ -17,7 +17,8 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected bool m_Enabled = true;
-        private Dictionary<UUID, ObjectCacheClient> ObjectCacheAgents = new Dictionary<UUID, ObjectCacheClient>();
+        //private Dictionary<UUID, ObjectCacheClient> ObjectCacheAgents = new Dictionary<UUID, ObjectCacheClient>();
+        private Dictionary<UUID, Dictionary<uint, uint> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
 
         #endregion
 
@@ -81,7 +82,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {
-            ObjectCacheClient client;
+            /*ObjectCacheClient client;
             //If we have the client in the store, we can check, if not, no cached update
             lock (ObjectCacheAgents)
             {
@@ -93,10 +94,34 @@ namespace Aurora.Modules
                     ObjectCacheAgents[AgentID] = client;
                     return client.GetUseCachedObject(localID, CurrentEntityCRC);
                 }
+            }*/
+            lock (ObjectCacheAgents)
+            {
+                Dictionary<uint, uint> InternalCache;
+                if(ObjectCacheAgents.TryGetValue(AgentID, out InternalCache))
+                {
+                    uint CurrentCachedCRC = 0;
+                    if(InternalCache.TryGetValue(localID, out CurrentCachedCRC ))
+                    {
+                         if (CurrentEntityCRC == CurrentCachedCRC)
+                         {
+                             //The client knows of the newest version
+                             return true;
+                         }
+                         //else, update below
+                    }
+                }
+                else
+                {
+                    InternalCache = new Dictionary<uint, uint>();
+                }
+                InternalCache[localID] = CurrentEntityCRC;
+                ObjectCacheAgents[AgentID] = client;
+                return false;
             }
         }
 
-        private class ObjectCacheClient
+        /*private class ObjectCacheClient
         {
             //Should we use a dictionary for ObjectUpdateCached checking?
             Dictionary<uint, uint> m_cachedObjects = new Dictionary<uint, uint>();
@@ -127,7 +152,7 @@ namespace Aurora.Modules
                         return true; //CRC is the same! Send a cache!
                 }
             }
-        }
+        }*/
 
         #endregion
     }
