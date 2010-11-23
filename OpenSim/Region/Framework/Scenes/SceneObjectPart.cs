@@ -5355,7 +5355,7 @@ namespace OpenSim.Region.Framework.Scenes
                     shapeBlock.ProfileHollow = (ushort)(module.MaximumHollowSize * 500);
                 }
                 if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize * 100)) &&
-                    module.MinimumHoleSize != -1) //This is how the packet is set up... so this is how we check for it...
+                    module.MinimumHoleSize != -1 && shapeBlock.PathCurve == 32) //This is how the packet is set up... so this is how we check for it...
                 {
                     shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize * 100)));
                 }
