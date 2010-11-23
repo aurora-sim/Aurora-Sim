@@ -532,10 +532,6 @@ namespace OpenSim.Data.MySQL
                             while (reader.Read())
                             {
                                 SceneObjectPart prim = BuildPrim(reader, scene);
-                                if (reader["Shape"] is DBNull)
-                                    prim.Shape = PrimitiveBaseShape.Default;
-                                else
-                                    prim.Shape = BuildShape(reader);
 
                                 UUID parentID = DBGuid.FromDB(reader["SceneGroupID"].ToString());
                                 if (parentID != prim.UUID)
@@ -1028,6 +1024,12 @@ namespace OpenSim.Data.MySQL
             float CameraAtOffsetY = 0;
             float CameraAtOffsetZ = 0;
 
+            PrimitiveBaseShape s = new PrimitiveBaseShape();
+
+            float ScaleX = 0;
+            float ScaleY = 0;
+            float ScaleZ = 0;
+
             for (int i = 0; i < o.Length; i++)
             {
                 string name = row.GetName(i);
@@ -1286,13 +1288,97 @@ namespace OpenSim.Data.MySQL
                         break;
                     case "RegionUUID":
                         break;
+                    case "Shape":
+                        break;
+                    case "ScaleX":
+                        ScaleX = Convert.ToSingle(o[i]);
+                        break;
+                    case "ScaleY":
+                        ScaleY = Convert.ToSingle(o[i]);
+                        break;
+                    case "ScaleZ":
+                        ScaleZ = Convert.ToSingle(o[i]);
+                        break;
+                    case "PCode":
+                        s.PCode = Convert.ToByte(o[i]);
+                        break;
+                    case "PathBegin":
+                        s.PathBegin = Convert.ToUInt16(o[i]);
+                        break;
+                    case "PathEnd":
+                        s.PathEnd = Convert.ToUInt16(o[i]);
+                        break;
+                    case "PathScaleX":
+                        s.PathScaleX = Convert.ToByte(o[i]);
+                        break;
+                    case "PathScaleY":
+                        s.PathScaleY = Convert.ToByte(o[i]);
+                        break;
+                    case "PathShearX":
+                        s.PathShearX = Convert.ToByte(o[i]);
+                        break;
+                    case "PathShearY":
+                        s.PathShearY = Convert.ToByte(o[i]);
+                        break;
+                    case "PathSkew":
+                        s.PathSkew = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathCurve":
+                        s.PathCurve = Convert.ToByte(o[i]);
+                        break;
+                    case "PathRadiusOffset":
+                        s.PathRadiusOffset = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathRevolutions":
+                        s.PathRevolutions = Convert.ToByte(o[i]);
+                        break;
+                    case "PathTaperX":
+                        s.PathTaperX = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTaperY":
+                        s.PathTaperY = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTwist":
+                        s.PathTwist = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTwistBegin":
+                        s.PathTwistBegin = Convert.ToSByte(o[i]);
+                        break;
+                    case "ProfileBegin":
+                        s.ProfileBegin = Convert.ToUInt16(o[i]);
+                        break;
+                    case "ProfileEnd":
+                        s.ProfileEnd = Convert.ToUInt16(o[i]);
+                        break;
+                    case "ProfileCurve":
+                        s.ProfileCurve = Convert.ToByte(o[i]);
+                        break;
+                    case "ProfileHollow":
+                        s.ProfileHollow = Convert.ToUInt16(o[i]);
+                        break;
+                    case "State":
+                        s.State = Convert.ToByte(o[i]);
+                        break;
+                    case "Texture":
+                        byte[] textureEntry = (byte[])o[i];
+                        s.TextureEntry = textureEntry;
+                        break;
+                    case "ExtraParams":
+                        s.ExtraParams = (byte[])o[i];
+                        break;
+                    case "Media":
+                        if (!(o[i] is System.DBNull))
+                            s.Media = PrimitiveBaseShape.MediaList.FromXml((string)o[i]);
+                        break;
                     default:
-                        m_log.Warn("[NXGSQLite]: Unknown database row: " + name);
+                        m_log.Warn("[MySQL]: Unknown database row: " + name);
                         break;
                 }
 
                 #endregion
             }
+            s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
+            prim.Shape = s;
             prim.SoundFlags = 1; // If it's persisted at all, it's looped
 
             prim.Color = Color.FromArgb(ColorA, ColorR, ColorG, ColorB);
@@ -1808,126 +1894,6 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("LandUUID", parcelID.ToString());
             cmd.Parameters.AddWithValue("AccessUUID", entry.AgentID.ToString());
             cmd.Parameters.AddWithValue("Flags", entry.Flags);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        private PrimitiveBaseShape BuildShape(IDataReader row)
-        {
-            PrimitiveBaseShape s = new PrimitiveBaseShape();
-
-            float ScaleX = 0;
-            float ScaleY = 0;
-            float ScaleZ = 0;
-
-            object[] o = new object[row.FieldCount];
-            row.GetValues(o);
-            for (int i = 0; i < o.Length; i++)
-            {
-                string name = row.GetName(i);
-
-                #region Switch
-
-                switch (name)
-                {
-                    case "ScaleX":
-                        ScaleX = Convert.ToSingle(o[i]);
-                        break;
-                    case "ScaleY":
-                        ScaleY = Convert.ToSingle(o[i]);
-                        break;
-                    case "ScaleZ":
-                        ScaleZ = Convert.ToSingle(o[i]);
-                        break;
-                    case "PCode":
-                        s.PCode = Convert.ToByte(o[i]);
-                        break;
-                    case "PathBegin":
-                        s.PathBegin = Convert.ToUInt16(o[i]);
-                        break;
-                    case "PathEnd":
-                        s.PathEnd = Convert.ToUInt16(o[i]);
-                        break;
-                    case "PathScaleX":
-                        s.PathScaleX = Convert.ToByte(o[i]);
-                        break;
-                    case "PathScaleY":
-                        s.PathScaleY = Convert.ToByte(o[i]);
-                        break;
-                    case "PathShearX":
-                        s.PathShearX = Convert.ToByte(o[i]);
-                        break;
-                    case "PathShearY":
-                        s.PathShearY = Convert.ToByte(o[i]);
-                        break;
-                    case "PathSkew":
-                        s.PathSkew = Convert.ToSByte(o[i]);
-                        break;
-                    case "PathCurve":
-                        s.PathCurve = Convert.ToByte(o[i]);
-                        break;
-                    case "PathRadiusOffset":
-                        s.PathRadiusOffset = Convert.ToSByte(o[i]);
-                        break;
-                    case "PathRevolutions":
-                        s.PathRevolutions = Convert.ToByte(o[i]);
-                        break;
-                    case "PathTaperX":
-                        s.PathTaperX = Convert.ToSByte(o[i]);
-                        break;
-                    case "PathTaperY":
-                        s.PathTaperY = Convert.ToSByte(o[i]);
-                        break;
-                    case "PathTwist":
-                        s.PathTwist = Convert.ToSByte(o[i]);
-                        break;
-                    case "PathTwistBegin":
-                        s.PathTwistBegin = Convert.ToSByte(o[i]);
-                        break;
-                    case "ProfileBegin":
-                        s.ProfileBegin = Convert.ToUInt16(o[i]);
-                        break;
-                    case "ProfileEnd":
-                        s.ProfileEnd = Convert.ToUInt16(o[i]);
-                        break;
-                    case "ProfileCurve":
-                        s.ProfileCurve = Convert.ToByte(o[i]);
-                        break;
-                    case "ProfileHollow":
-                        s.ProfileHollow = Convert.ToUInt16(o[i]);
-                        break;
-                    case "State":
-                        s.State = Convert.ToByte(o[i]);
-                        break;
-                    case "Texture":
-                        byte[] textureEntry = (byte[])o[i];
-                        s.TextureEntry = textureEntry;
-                        break;
-                    case "ExtraParams":
-                        s.ExtraParams = (byte[])o[i];
-                        break;
-                    case "UUID":
-                        break;
-                    case "Shape":
-                        break;
-                    case "Media":
-                        if (!(o[i] is System.DBNull))
-                            s.Media = PrimitiveBaseShape.MediaList.FromXml((string)o[i]);
-                        break;
-                    default:
-                        m_log.Warn("[NXGSQLite]: Found a row in BuildShape that was not implemented " + name);
-                        break;
-                }
-
-                #endregion
-            }
-            s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
-            
-
-            return s;
         }
 
         /// <summary>
