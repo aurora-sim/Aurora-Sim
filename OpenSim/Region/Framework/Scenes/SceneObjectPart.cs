@@ -5573,7 +5573,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public override string ToString()
         {
-            return String.Format("{0} {1} (parent {2}))", Name, UUID, ParentGroup);
+            return String.Format("{0} {1} linkNum {3} (parent {2}))", Name, UUID, ParentGroup, LinkNum);
         }
 
         #endregion Public Methods

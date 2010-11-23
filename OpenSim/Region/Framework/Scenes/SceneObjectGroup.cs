@@ -699,6 +699,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m_parts.Add(child.UUID, part);
                         m_partsList.Add(part);
                     }
+                    m_partsList.Sort(m_scene.SceneGraph.linkSetSorter);
                     return true;
                 }
             }

@@ -1568,7 +1568,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (otherPart.LinkNum != 1)
                 {
                     // Don't update root prim link number
-                    otherPart.LinkNum += grp.PrimCount;
+                    otherPart.LinkNum += 1;
                 }
             }
             part.LinkNum = 2;

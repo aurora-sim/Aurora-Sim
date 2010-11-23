@@ -427,7 +427,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
                     }
-                    else if (((part.ScriptEvents & scriptEvents.touch) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                     {
                         EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
                     }
@@ -508,7 +508,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
                     }
-                    else if (((part.ScriptEvents & scriptEvents.touch_end) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                     {
                         EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
                     }
