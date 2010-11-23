@@ -95,16 +95,17 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         }
 
         // Called from scripts
-        public void AddAnimation(string name, UUID objectID)
+        public bool AddAnimation(string name, UUID objectID)
         {
             if (m_scenePresence.IsChildAgent)
-                return;
+                return false;
 
             UUID animID = m_scenePresence.ControllingClient.GetDefaultAnimation(name);
             if (animID == UUID.Zero)
-                return;
+                return false;
 
             AddAnimation(animID, objectID);
+            return true;
         }
 
         public void RemoveAnimation(UUID animID)
@@ -117,16 +118,17 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         }
 
         // Called from scripts
-        public void RemoveAnimation(string name)
+        public bool RemoveAnimation(string name)
         {
             if (m_scenePresence.IsChildAgent)
-                return;
+                return false;
 
             UUID animID = m_scenePresence.ControllingClient.GetDefaultAnimation(name);
             if (animID == UUID.Zero)
-                return;
+                return false;
 
             RemoveAnimation(animID);
+            return true;
         }
 
         public void ResetAnimations()

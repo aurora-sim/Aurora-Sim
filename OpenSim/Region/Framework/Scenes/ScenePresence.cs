@@ -2275,6 +2275,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         m_pos = new Vector3(sitTargetPos.X, sitTargetPos.Y, sitTargetPos.Z);
                         m_pos += SIT_TARGET_ADJUSTMENT;
+                        m_pos += new Vector3(0, 0, 0.075f);
                         m_bodyRot = sitTargetOrient;
                         m_parentPosition = part.AbsolutePosition;
                     }
@@ -2296,8 +2297,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Warn(ex);
                 }
 
-                SendFullUpdateToAllClients();
                 Animator.TrySetMovementAnimation(sitAnimation);
+                SendFullUpdateToAllClients();
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.

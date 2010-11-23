@@ -3826,10 +3826,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID animID = InventoryKey(anim, (int)AssetType.Animation);
                     if (animID == UUID.Zero)
                     {
-                        if(UUID.TryParse(anim, out animID))
+                        if (UUID.TryParse(anim, out animID))
                             presence.Animator.AddAnimation(animID, m_host.UUID);
                         else
-                            presence.Animator.AddAnimation(anim, m_host.UUID);
+                        {
+                            bool RetVal = presence.Animator.AddAnimation(anim, m_host.UUID);
+                            if (!RetVal)
+                                World.SimChat("Could not find animation '" + anim + "'.", ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                        }
                     }
                     else
                         presence.Animator.AddAnimation(animID, m_host.UUID);
@@ -3873,7 +3877,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (presence != null)
                 {
                     if (animID == UUID.Zero)
-                        presence.Animator.RemoveAnimation(anim);
+                    {
+                        if (UUID.TryParse(anim, out animID))
+                            presence.Animator.RemoveAnimation(animID);
+                        else
+                        {
+                            bool RetVal = presence.Animator.RemoveAnimation(anim);
+                            if (!RetVal)
+                                World.SimChat("Could not find animation '" + anim + "'.", ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                        }
+                    }
                     else
                         presence.Animator.RemoveAnimation(animID);
                 }
