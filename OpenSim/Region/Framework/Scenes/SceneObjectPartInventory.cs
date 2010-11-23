@@ -136,6 +136,10 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
                     m_items.Add(item.ItemID, item);
+                    //LEAVE THIS COMMENTED!!!
+                    // When an object is duplicated, this will be called and it will destroy the original prims scripts!!
+                    // This needs to be moved to a place that is safer later
+                    //  This was *originally* intended to be used on scripts that were crossing region borders
                     /*if (m_part.ParentGroup != null)
                     {
                         lock (m_part.ParentGroup)
@@ -178,7 +182,11 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
 
-                    if (m_part.ParentGroup != null)
+                    //LEAVE THIS COMMENTED!!!
+                    // When an object is duplicated, this will be called and it will destroy the original prims scripts!!
+                    // This needs to be moved to a place that is safer later
+                    //  This was *originally* intended to be used on scripts that were crossing region borders
+                    /*if (m_part.ParentGroup != null)
                     {
                         lock (m_part.ParentGroup)
                         {
@@ -190,7 +198,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                             }
                         }
-                    }
+                    }*/
                     item.ResetIDs(m_part.UUID);
                     Items.Add(item.ItemID, item);
                 }
