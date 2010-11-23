@@ -2275,7 +2275,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         m_pos = new Vector3(sitTargetPos.X, sitTargetPos.Y, sitTargetPos.Z);
                         m_pos += SIT_TARGET_ADJUSTMENT;
-                        m_pos += new Vector3(0, 0, 0.075f);
                         m_bodyRot = sitTargetOrient;
                         m_parentPosition = part.AbsolutePosition;
                     }
