@@ -959,10 +959,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             ScenePresence sp = scene.GetScenePresence(user);
             IClientAPI client = sp.ControllingClient;
 
-            if ((client.GetGroupPowers(group) & (ulong)GroupPowers.DeedObject) == 0)
-                return false;
-
-            return true;
+            return m_groupsModule.GroupPermissionCheck(user, group, GroupPowers.DeedObject);
         }
 
         private bool IsGod(UUID user, Scene scene)
@@ -1339,10 +1336,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 //
                 if (l.LandData.IsGroupOwned)
                 {
-                    powers = (OpenMetaverse.GroupPowers)client.GetGroupPowers(l.LandData.GroupID);
                     // Not a group member, or no rights at all
                     //
-                    if (powers == (OpenMetaverse.GroupPowers)0)
+                    if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.None))
                     {
                         objects.Remove(g);
                         continue;
@@ -1351,7 +1347,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     // Group deeded object?
                     //
                     if (g.OwnerID == l.LandData.GroupID &&
-                        (powers & OpenMetaverse.GroupPowers.ReturnGroupOwned) == (OpenMetaverse.GroupPowers)0)
+                        !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupOwned))
                     {
                         objects.Remove(g);
                         continue;
@@ -1360,13 +1356,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     // Group set object?
                     //
                     if (g.GroupID == l.LandData.GroupID &&
-                        (powers & OpenMetaverse.GroupPowers.ReturnGroupSet) == (OpenMetaverse.GroupPowers)0)
+                        !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupSet))
                     {
                         objects.Remove(g);
                         continue;
                     }
 
-                    if ((powers & OpenMetaverse.GroupPowers.ReturnNonGroup) == (OpenMetaverse.GroupPowers)0)
+                    if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnNonGroup))
                     {
                         objects.Remove(g);
                         continue;

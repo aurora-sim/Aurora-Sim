@@ -55,7 +55,7 @@ using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : ISharedRegionModule, IScriptModule, ICommandableModule
+    public class ScriptEngine : ISharedRegionModule, IScriptModulePlugin, ICommandableModule
     {
         #region Declares
 

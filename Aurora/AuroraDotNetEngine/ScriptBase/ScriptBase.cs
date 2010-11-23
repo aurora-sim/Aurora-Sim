@@ -47,7 +47,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptSponsor m_sponser;
 
-
         public ISponsor Sponsor
         {
             get

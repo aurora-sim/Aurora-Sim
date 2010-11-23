@@ -39,6 +39,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // Each API has an identifier, which is used to load the
         // proper runtime assembly at load time.
         //
-        void Initialize(ScriptEngine engine, SceneObjectPart part, uint localID, UUID item, ScriptProtectionModule module);
+        void Initialize(IScriptModulePlugin engine, SceneObjectPart part, uint localID, UUID item, ScriptProtectionModule module);
     }
 }

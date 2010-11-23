@@ -773,10 +773,6 @@ namespace OpenSim.Framework
 
         ulong ActiveGroupPowers { get; }
 
-        ulong GetGroupPowers(UUID groupID);
-
-        bool IsGroupMember(UUID GroupID);
-
         string FirstName { get; }
 
         string LastName { get; }

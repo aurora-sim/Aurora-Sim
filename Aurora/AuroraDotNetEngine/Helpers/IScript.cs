@@ -25,7 +25,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Dictionary<string, Object> GetStoreVars();
         void SetStoreVars(Dictionary<string, Object> vars);
         void ResetVars();
-
+        
         void Close();
         string Name { get; }
     }

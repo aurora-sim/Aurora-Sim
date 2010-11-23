@@ -267,7 +267,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
-            Thread.Sleep(25); // don't burn cpu
+            Thread.Sleep(0); // don't burn cpu
             threadpool.QueueEvent(CmdHandlerQueue, 2);
             return false;
         }
@@ -821,24 +821,23 @@ public QueueItemStruct QIS;
 
                 lock (ScriptIDs)
                 {
-                    //if (NScriptIDs == 0)
-                    //{
+                    if (NScriptIDs == 0)
+                    {
                         lock (SleepingScriptIDs)
                         {
                             lock (WorkersLock)
                             {
-                                if (NSleepingScriptIDs < WorkersLock.nWorkers &&
-                                    NScriptIDs == 0)
+                                if (NSleepingScriptIDs < WorkersLock.nWorkers)
                                     break;
                                 else
                                     WillSleep = true;
                             }
                         }
-                    //}
+                    }
                 }
 
                 if (WillSleep)
-                    Thread.Sleep(40);
+                    Thread.Sleep(20);
             }
 
             lock (WorkersLock)
