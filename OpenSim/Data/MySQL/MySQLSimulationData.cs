@@ -1201,11 +1201,11 @@ namespace OpenSim.Data.MySQL
                         break;
                     case "TextureAnimation":
                         if (!(row[i] is DBNull))
-                            prim.TextureAnimation = Convert.FromBase64String(o[i].ToString());
+                            prim.TextureAnimation = (byte[])o[i];
                         break;
                     case "ParticleSystem":
                         if (!(row[i] is DBNull))
-                            prim.ParticleSystem = Convert.FromBase64String(o[i].ToString());
+                            prim.ParticleSystem = (byte[])o[i];
                         break;
                     case "OmegaX":
                         OmegaX = Convert.ToSingle(o[i].ToString());
