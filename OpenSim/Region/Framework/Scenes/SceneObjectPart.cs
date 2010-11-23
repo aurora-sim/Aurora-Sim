@@ -3664,6 +3664,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.Rotation;
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
+                UpdateFlags |= PrimUpdateFlags.AngularVelocity;
             }
 
             //Must send these as well
