@@ -2075,7 +2075,7 @@ namespace OpenSim.Data.SQLite
                         ScaleX = Convert.ToSingle(o[i]);
                         break;
                     case "ScaleY":
-                        ScaleX = Convert.ToSingle(o[i]);
+                        ScaleY = Convert.ToSingle(o[i]);
                         break;
                     case "ScaleZ":
                         ScaleZ = Convert.ToSingle(o[i]);
