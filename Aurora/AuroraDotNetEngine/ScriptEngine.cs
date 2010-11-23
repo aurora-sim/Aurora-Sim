@@ -98,6 +98,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool DisplayErrorsOnConsole = false;
 
+        public bool ChatCompileErrorsToDebugChannel = true;
+
         public bool ShowWarnings = false;
 
         private bool m_consoleDisabled = false;
@@ -214,6 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptEnginesPath = ScriptConfigSource.GetString("PathToLoadScriptsFrom", ScriptEnginesPath);
             ShowWarnings = ScriptConfigSource.GetBoolean("ShowWarnings", false);
             DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", false);
+            ChatCompileErrorsToDebugChannel = ScriptConfigSource.GetBoolean("ChatCompileErrorsToDebugChannel", true);
         }
 
         public void PostInitialise()
