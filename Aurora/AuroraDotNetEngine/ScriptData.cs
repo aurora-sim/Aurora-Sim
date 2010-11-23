@@ -397,10 +397,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
             if (presence != null && (!PostOnRez) && postScriptCAPSError)
-                presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
+                if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
+                    presence.ControllingClient.SendAgentAlertMessage("Script saved with errors, check debug window!", false);
+                else
+                    presence.ControllingClient.SendAgentAlertMessage("Script saved with errors!", false);
 
             if (postScriptCAPSError)
-                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new string[]{message}));
+                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(message.Split('\n')));
 
             // DISPLAY ERROR ON CONSOLE
             if (m_ScriptEngine.DisplayErrorsOnConsole)
@@ -416,7 +419,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (inworldtext.Length > 1100)
                 inworldtext = inworldtext.Substring(0, 1099);
 
-            World.SimChat(inworldtext, ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
+            if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
+                World.SimChat(inworldtext, ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
 
             m_ScriptEngine.ScriptFailCount++;
             m_ScriptEngine.ScriptErrorMessages += inworldtext;
