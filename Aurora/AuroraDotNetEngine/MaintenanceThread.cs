@@ -821,23 +821,24 @@ public QueueItemStruct QIS;
 
                 lock (ScriptIDs)
                 {
-                    if (NScriptIDs == 0)
-                    {
+                    //if (NScriptIDs == 0)
+                    //{
                         lock (SleepingScriptIDs)
                         {
                             lock (WorkersLock)
                             {
-                                if (NSleepingScriptIDs < WorkersLock.nWorkers)
+                                if (NSleepingScriptIDs < WorkersLock.nWorkers &&
+                                    NScriptIDs == 0)
                                     break;
                                 else
                                     WillSleep = true;
                             }
                         }
-                    }
+                    //}
                 }
 
                 if (WillSleep)
-                    Thread.Sleep(20);
+                    Thread.Sleep(40);
             }
 
             lock (WorkersLock)

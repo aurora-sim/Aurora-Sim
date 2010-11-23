@@ -246,7 +246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
             AppDomain = null;
 
-            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName+ "]: Closed Script " + InventoryItem.Name + " in " + part.Name, "None");
+            m_log.Info("[" + m_ScriptEngine.ScriptEngineName+ "]: Closed Script " + InventoryItem.Name + " in " + part.Name);
         }
 
         /// <summary>
@@ -332,7 +332,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
             m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
-            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID, "None");
+            m_log.Info("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
 
         internal void ChangeState(string state)

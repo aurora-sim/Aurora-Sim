@@ -165,7 +165,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     if (account != null)
                         im.fromAgentName = account.Name;
                     else
-                        im.fromAgentName = "(No account found)";
+                        im.fromAgentName = im.fromAgentName + "(No account found for this user)";
                 }
                 else
                     im.fromAgentName = client.Name;
