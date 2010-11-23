@@ -479,16 +479,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             get { return 0; }
         }
 
-        public bool IsGroupMember(UUID groupID)
-        {
-            return false;
-        }
-
-        public ulong GetGroupPowers(UUID groupID)
-        {
-            return 0;
-        }
-
         public virtual int NextAnimationSequenceNumber
         {
             get { return 1; }
@@ -1093,10 +1083,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         }
 
         public void SendCreateGroupReply(UUID groupID, bool success, string message)
-        {
-        }
-
-        public void RefreshGroupMembership()
         {
         }
 

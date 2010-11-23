@@ -1524,7 +1524,9 @@ namespace OpenSim.Framework.Servers.HttpServer
         public void SendHTML404(OSHttpResponse response, string host)
         {
             // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
-            response.StatusCode = 404;
+            //MSIE doesn't allow for 400 pages to show... so we send 200 for now
+            response.StatusCode = 200;
+            //response.StatusCode = 400;
             response.AddHeader("Content-type", "text/html");
 
             string responseString = GetHTTP404(host);

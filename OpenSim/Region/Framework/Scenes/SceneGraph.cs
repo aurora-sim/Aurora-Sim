@@ -359,14 +359,18 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void HandleObjectGroupUpdate(
             IClientAPI remoteClient, UUID GroupID, uint LocalID, UUID Garbage)
         {
-            if (!remoteClient.IsGroupMember(GroupID))
-                return; // No settings to groups you arn't in
-            EntityBase entity;
-            if (TryGetEntity(LocalID, out entity))
+            IGroupsModule module = m_parentScene.RequestModuleInterface<IGroupsModule>();
+            if (module != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
-                    if (((SceneObjectGroup)entity).OwnerID == remoteClient.AgentId)
-                        ((SceneObjectGroup)entity).SetGroup(GroupID, remoteClient);
+                if (!module.GroupPermissionCheck(remoteClient.AgentId, GroupID, GroupPowers.None))
+                    return; // No settings to groups you arn't in
+                EntityBase entity;
+                if (TryGetEntity(LocalID, out entity))
+                {
+                    if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                        if (((SceneObjectGroup)entity).OwnerID == remoteClient.AgentId)
+                            ((SceneObjectGroup)entity).SetGroup(GroupID, remoteClient);
+                }
             }
         }
 

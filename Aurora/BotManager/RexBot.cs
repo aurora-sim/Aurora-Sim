@@ -814,16 +814,6 @@ namespace Aurora.BotManager
             get { throw new NotImplementedException(); }
         }
 
-        ulong IClientAPI.GetGroupPowers(UUID groupID)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IClientAPI.IsGroupMember(UUID GroupID)
-        {
-            throw new NotImplementedException();
-        }
-
         string IClientAPI.FirstName
         {
             get { throw new NotImplementedException(); }
@@ -2834,11 +2824,6 @@ namespace Aurora.BotManager
         }
 
         void IClientAPI.SendAgentDropGroup(UUID groupID)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IClientAPI.RefreshGroupMembership()
         {
             throw new NotImplementedException();
         }

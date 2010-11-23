@@ -1870,7 +1870,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool forceMouselook = false;
 
             SceneObjectPart part =  FindNextAvailableSitTarget(targetID);
-            m_requestedSitTargetUUID = targetID;
+            m_requestedSitTargetUUID = part.UUID;
             if (part != null)
             {
                 // UNTODO: determine position to sit at based on scene geometry; don't trust offset from client
@@ -1897,8 +1897,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (SitTargetisSet && SitTargetUnOccupied)
                 {
-                    m_requestedSitTargetID = part.ParentGroup.RootPart.LocalId;
-                    m_requestedSitTargetUUID = part.ParentGroup.RootPart.UUID;
+                    m_requestedSitTargetID = part.LocalId;
+                    m_requestedSitTargetUUID = part.UUID;
                     offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
                     sitOrientation = avSitOrientation;
                     autopilot = false;
@@ -2275,7 +2275,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         m_pos = new Vector3(sitTargetPos.X, sitTargetPos.Y, sitTargetPos.Z);
                         m_pos += SIT_TARGET_ADJUSTMENT;
-                        m_pos += new Vector3(0, 0, 0.075f);
                         m_bodyRot = sitTargetOrient;
                         m_parentPosition = part.AbsolutePosition;
                     }

@@ -353,7 +353,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         protected UUID m_activeGroupID;
         protected string m_activeGroupName = String.Empty;
         protected ulong m_activeGroupPowers;
-        protected Dictionary<UUID, ulong> m_groupPowers = new Dictionary<UUID, ulong>();
         protected int m_terrainCheckerCount;
         protected uint m_agentFOVCounter;
 
@@ -381,8 +380,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public UUID ActiveGroupId { get { return m_activeGroupID; } }
         public string ActiveGroupName { get { return m_activeGroupName; } }
         public ulong ActiveGroupPowers { get { return m_activeGroupPowers; } }
-        public bool IsGroupMember(UUID groupID) { return m_groupPowers.ContainsKey(groupID); }
-
+        
         /// <summary>
         /// First name of the agent/avatar represented by the client
         /// </summary>
@@ -677,8 +675,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public virtual void Start()
         {
             m_scene.AddNewClient(this);
-
-            RefreshGroupMembership();
         }
 
         # endregion
@@ -2637,14 +2633,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendGroupMembership(GroupMembershipData[] GroupMembership)
         {
-            m_groupPowers.Clear();
-
             AgentGroupDataUpdatePacket Groupupdate = new AgentGroupDataUpdatePacket();
             AgentGroupDataUpdatePacket.GroupDataBlock[] Groups = new AgentGroupDataUpdatePacket.GroupDataBlock[GroupMembership.Length];
             for (int i = 0; i < GroupMembership.Length; i++)
             {
-                m_groupPowers[GroupMembership[i].GroupID] = GroupMembership[i].GroupPowers;
-
                 AgentGroupDataUpdatePacket.GroupDataBlock Group = new AgentGroupDataUpdatePacket.GroupDataBlock();
                 Group.AcceptNotices = GroupMembership[i].AcceptNotices;
                 Group.Contribution = GroupMembership[i].Contribution;
@@ -5183,17 +5175,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             packet.UUIDNameBlock[0].LastName = Util.StringToBytes256(lastname);
 
             OutPacket(packet, ThrottleOutPacketType.Task);
-        }
-
-        public ulong GetGroupPowers(UUID groupID)
-        {
-            if (groupID == m_activeGroupID)
-                return m_activeGroupPowers;
-
-            if (m_groupPowers.ContainsKey(groupID))
-                return m_groupPowers[groupID];
-
-            return 0;
         }
 
         /// <summary>
@@ -12428,25 +12409,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         #endregion
-
-        public void RefreshGroupMembership()
-        {
-            if (m_GroupsModule != null)
-            {
-                GroupMembershipData[] GroupMembership =
-                        m_GroupsModule.GetMembershipData(AgentId);
-
-                m_groupPowers.Clear();
-
-                if (GroupMembership != null)
-                {
-                    for (int i = 0; i < GroupMembership.Length; i++)
-                    {
-                        m_groupPowers[GroupMembership[i].GroupID] = GroupMembership[i].GroupPowers;
-                    }
-                }
-            }
-        }
 
         public string Report()
         {

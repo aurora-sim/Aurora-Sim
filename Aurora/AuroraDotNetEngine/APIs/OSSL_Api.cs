@@ -62,7 +62,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class OSSL_Api : MarshalByRefObject, IOSSL_Api, IScriptApi
     {
-        internal ScriptEngine m_ScriptEngine;
+        internal IScriptModulePlugin m_ScriptEngine;
         internal ILSL_Api m_LSL_Api = null; // get a reference to the LSL API so we can call methods housed there
         internal SceneObjectPart m_host;
         internal uint m_localID;
@@ -71,8 +71,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal float m_ScriptDelayFactor = 1.0f;
         internal float m_ScriptDistanceFactor = 1.0f;
         internal ScriptProtectionModule ScriptProtection;
-        
-        public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+
+        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;

@@ -56,13 +56,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class AA_Api : MarshalByRefObject, IAA_Api, IScriptApi
     {
-        internal ScriptEngine m_ScriptEngine;
+        internal IScriptModulePlugin m_ScriptEngine;
         internal SceneObjectPart m_host;
         internal IAssetConnector AssetConnector;
         internal ScriptProtectionModule ScriptProtection;
         internal UUID m_itemID;
 
-        public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;

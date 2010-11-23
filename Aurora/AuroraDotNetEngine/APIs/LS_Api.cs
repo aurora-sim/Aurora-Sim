@@ -54,7 +54,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class LS_Api : MarshalByRefObject, ILS_Api, IScriptApi
     {
-        internal ScriptEngine m_ScriptEngine;
+        internal IScriptModulePlugin m_ScriptEngine;
         internal SceneObjectPart m_host;
         internal uint m_localID;
         internal UUID m_itemID;
@@ -63,7 +63,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal ScriptProtectionModule ScriptProtection;
         //internal IWindLightSettingsModule m_lightShareModule;
 
-        public void Initialize(ScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public void Initialize(IScriptModulePlugin ScriptEngine, SceneObjectPart host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;

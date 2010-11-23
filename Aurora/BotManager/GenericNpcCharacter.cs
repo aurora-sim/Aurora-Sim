@@ -366,16 +366,6 @@ namespace Aurora.BotManager
             get { return 0; }
         }
 
-        public bool IsGroupMember(UUID groupID)
-        {
-            return false;
-        }
-
-        public ulong GetGroupPowers(UUID groupID)
-        {
-            return 0;
-        }
-
         public virtual int NextAnimationSequenceNumber
         {
             get { return 1; }
@@ -1073,10 +1063,6 @@ namespace Aurora.BotManager
         }
 
         public void FlushPrimUpdates()
-        {
-        }
-
-        public void RefreshGroupMembership()
         {
         }
 

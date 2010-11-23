@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
