@@ -974,138 +974,338 @@ namespace OpenSim.Data.MySQL
 
         private SceneObjectPart BuildPrim(IDataReader row, Scene scene)
         {
+            object[] o = new object[row.FieldCount];
+            row.GetValues(o);
             SceneObjectPart prim = new SceneObjectPart(scene);
+            int ColorA = 0;
+            int ColorR = 0;
+            int ColorG = 0;
+            int ColorB = 0;
 
-            // depending on the MySQL connector version, CHAR(36) may be already converted to Guid! 
-            prim.UUID = DBGuid.FromDB(row["UUID"]);
-            prim.CreatorID = DBGuid.FromDB(row["CreatorID"]);
-            prim.OwnerID = DBGuid.FromDB(row["OwnerID"]);
-            prim.GroupID = DBGuid.FromDB(row["GroupID"]);
-            prim.LastOwnerID = DBGuid.FromDB(row["LastOwnerID"]);
+            float PositionX = 0;
+            float PositionY = 0;
+            float PositionZ = 0;
 
-            // explicit conversion of integers is required, which sort
-            // of sucks.  No idea if there is a shortcut here or not.
-            prim.CreationDate = (int)row["CreationDate"];
-            if (row["Name"] != DBNull.Value)
-                prim.Name = (string)row["Name"];
-            else
-                prim.Name = String.Empty;
-            // Various text fields
-            prim.Text = (string)row["Text"];
-            prim.Color = Color.FromArgb((int)row["ColorA"],
-                                        (int)row["ColorR"],
-                                        (int)row["ColorG"],
-                                        (int)row["ColorB"]);
-            prim.Description = (string)row["Description"];
-            prim.SitName = (string)row["SitName"];
-            prim.TouchName = (string)row["TouchName"];
-            // Permissions
-            prim.Flags = (PrimFlags)(int)row["ObjectFlags"];
-            prim.OwnerMask = (uint)(int)row["OwnerMask"];
-            prim.NextOwnerMask = (uint)(int)row["NextOwnerMask"];
-            prim.GroupMask = (uint)(int)row["GroupMask"];
-            prim.EveryoneMask = (uint)(int)row["EveryoneMask"];
-            prim.BaseMask = (uint)(int)row["BaseMask"];
+            float GroupPositionX = 0;
+            float GroupPositionY = 0;
+            float GroupPositionZ = 0;
 
-            // Vectors
-            prim.OffsetPosition = new Vector3(
-                (float)(double)row["PositionX"],
-                (float)(double)row["PositionY"],
-                (float)(double)row["PositionZ"]
-                );
-            prim.GroupPosition = new Vector3(
-                (float)(double)row["GroupPositionX"],
-                (float)(double)row["GroupPositionY"],
-                (float)(double)row["GroupPositionZ"]
-                );
-            prim.Velocity = new Vector3(
-                (float)(double)row["VelocityX"],
-                (float)(double)row["VelocityY"],
-                (float)(double)row["VelocityZ"]
-                );
-            prim.AngularVelocity = new Vector3(
-                (float)(double)row["AngularVelocityX"],
-                (float)(double)row["AngularVelocityY"],
-                (float)(double)row["AngularVelocityZ"]
-                );
-            prim.Acceleration = new Vector3(
-                (float)(double)row["AccelerationX"],
-                (float)(double)row["AccelerationY"],
-                (float)(double)row["AccelerationZ"]
-                );
-            // quaternions
-            prim.RotationOffset = new Quaternion(
-                (float)(double)row["RotationX"],
-                (float)(double)row["RotationY"],
-                (float)(double)row["RotationZ"],
-                (float)(double)row["RotationW"]
-                );
-            prim.SitTargetPositionLL = new Vector3(
-                (float)(double)row["SitTargetOffsetX"],
-                (float)(double)row["SitTargetOffsetY"],
-                (float)(double)row["SitTargetOffsetZ"]
-                );
-            prim.SitTargetOrientationLL = new Quaternion(
-                (float)(double)row["SitTargetOrientX"],
-                (float)(double)row["SitTargetOrientY"],
-                (float)(double)row["SitTargetOrientZ"],
-                (float)(double)row["SitTargetOrientW"]
-                );
+            float VelocityX = 0;
+            float VelocityY = 0;
+            float VelocityZ = 0;
 
-            prim.PayPrice[0] = (int)row["PayPrice"];
-            prim.PayPrice[1] = (int)row["PayButton1"];
-            prim.PayPrice[2] = (int)row["PayButton2"];
-            prim.PayPrice[3] = (int)row["PayButton3"];
-            prim.PayPrice[4] = (int)row["PayButton4"];
+            float AngularVelocityX = 0;
+            float AngularVelocityY = 0;
+            float AngularVelocityZ = 0;
 
-            prim.Sound = DBGuid.FromDB(row["LoopedSound"].ToString());
-            prim.SoundGain = (float)(double)row["LoopedSoundGain"];
+            float AccelerationX = 0;
+            float AccelerationY = 0;
+            float AccelerationZ = 0;
+
+            float RotationX = 0;
+            float RotationY = 0;
+            float RotationZ = 0;
+            float RotationW = 0;
+
+            float SitTargetOffsetX = 0;
+            float SitTargetOffsetY = 0;
+            float SitTargetOffsetZ = 0;
+
+            float SitTargetOrientX = 0;
+            float SitTargetOrientY = 0;
+            float SitTargetOrientZ = 0;
+            float SitTargetOrientW = 0;
+
+            float OmegaX = 0;
+            float OmegaY = 0;
+            float OmegaZ = 0;
+
+            float CameraEyeOffsetX = 0;
+            float CameraEyeOffsetY = 0;
+            float CameraEyeOffsetZ = 0;
+
+            float CameraAtOffsetX = 0;
+            float CameraAtOffsetY = 0;
+            float CameraAtOffsetZ = 0;
+
+            for (int i = 0; i < o.Length; i++)
+            {
+                string name = row.GetName(i);
+
+                #region Switch
+
+                switch (name)
+                {
+                    case "UUID":
+                        prim.UUID = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "CreatorID":
+                        prim.CreatorID = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "OwnerID":
+                        prim.OwnerID = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "GroupID":
+                        prim.GroupID = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "LastOwnerID":
+                        prim.LastOwnerID = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "CreationDate":
+                        prim.CreationDate = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "Name":
+                        if (!(o[i] is DBNull))
+                            prim.Name = o[i].ToString();
+                        break;
+                    case "Text":
+                        prim.Text = o[i].ToString();
+                        break;
+                    case "ColorA":
+                        ColorA = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "ColorR":
+                        ColorR = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "ColorG":
+                        ColorG = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "ColorB":
+                        ColorB = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "Description":
+                        prim.Description = o[i].ToString();
+                        break;
+                    case "SitName":
+                        prim.SitName = o[i].ToString();
+                        break;
+                    case "TouchName":
+                        prim.TouchName = o[i].ToString();
+                        break;
+                    case "ObjectFlags":
+                        prim.Flags = (PrimFlags)Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "OwnerMask":
+                        prim.OwnerMask = Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "NextOwnerMask":
+                        prim.NextOwnerMask = Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "GroupMask":
+                        prim.GroupMask = Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "EveryoneMask":
+                        prim.EveryoneMask = Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "BaseMask":
+                        prim.BaseMask = Convert.ToUInt32(o[i].ToString());
+                        break;
+                    case "PositionX":
+                        PositionX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "PositionY":
+                        PositionY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "PositionZ":
+                        PositionZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "GroupPositionX":
+                        GroupPositionX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "GroupPositionY":
+                        GroupPositionY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "GroupPositionZ":
+                        GroupPositionZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "VelocityX":
+                        VelocityX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "VelocityY":
+                        VelocityY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "VelocityZ":
+                        VelocityZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AngularVelocityX":
+                        AngularVelocityX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AngularVelocityY":
+                        AngularVelocityY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AngularVelocityZ":
+                        AngularVelocityZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AccelerationX":
+                        AccelerationX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AccelerationY":
+                        AccelerationY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "AccelerationZ":
+                        AccelerationZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "RotationX":
+                        RotationX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "RotationY":
+                        RotationY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "RotationZ":
+                        RotationZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "RotationW":
+                        RotationW = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOffsetX":
+                        SitTargetOffsetX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOffsetY":
+                        SitTargetOffsetY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOffsetZ":
+                        SitTargetOffsetZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOrientX":
+                        SitTargetOrientX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOrientY":
+                        SitTargetOrientY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOrientZ":
+                        SitTargetOrientZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "SitTargetOrientW":
+                        SitTargetOrientW = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "PayPrice":
+                        prim.PayPrice[0] = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "PayButton1":
+                        prim.PayPrice[1] = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "PayButton2":
+                        prim.PayPrice[2] = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "PayButton3":
+                        prim.PayPrice[3] = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "PayButton4":
+                        prim.PayPrice[4] = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "LoopedSound":
+                        prim.Sound = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "LoopedSoundGain":
+                        prim.SoundGain = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "TextureAnimation":
+                        if (!(row[i] is DBNull))
+                            prim.TextureAnimation = Convert.FromBase64String(o[i].ToString());
+                        break;
+                    case "ParticleSystem":
+                        if (!(row[i] is DBNull))
+                            prim.ParticleSystem = Convert.FromBase64String(o[i].ToString());
+                        break;
+                    case "OmegaX":
+                        OmegaX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "OmegaY":
+                        OmegaY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "OmegaZ":
+                        OmegaZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraEyeOffsetX":
+                        CameraEyeOffsetX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraEyeOffsetY":
+                        CameraEyeOffsetY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraEyeOffsetZ":
+                        CameraEyeOffsetZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraAtOffsetX":
+                        CameraAtOffsetX = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraAtOffsetY":
+                        CameraAtOffsetY = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "CameraAtOffsetZ":
+                        CameraAtOffsetZ = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "ForceMouselook":
+                        prim.ForceMouselook = Convert.ToInt32(o[i].ToString()) != 0;
+                        break;
+                    case "ScriptAccessPin":
+                        prim.ScriptAccessPin = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "AllowedDrop":
+                        prim.AllowedDrop = Convert.ToInt32(o[i].ToString()) != 0;
+                        break;
+                    case "DieAtEdge":
+                        prim.DIE_AT_EDGE = Convert.ToInt32(o[i].ToString()) != 0;
+                        break;
+                    case "SalePrice":
+                        prim.SalePrice = Convert.ToInt32(o[i].ToString());
+                        break;
+                    case "SaleType":
+                        prim.ObjectSaleType = Convert.ToByte(o[i].ToString());
+                        break;
+                    case "Material":
+                        prim.Material = Convert.ToByte(o[i].ToString());
+                        break;
+                    case "ClickAction":
+                        if (!(row[i] is DBNull))
+                            prim.ClickAction = Convert.ToByte(o[i].ToString());
+                        break;
+                    case "CollisionSound":
+                        prim.CollisionSound = DBGuid.FromDB(o[i].ToString());
+                        break;
+                    case "CollisionSoundVolume":
+                        prim.CollisionSoundVolume = Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "PassTouches":
+                        prim.PassTouch = (int)Convert.ToSingle(o[i].ToString());
+                        break;
+                    case "VolumeDetect":
+                        if (!(row[i] is DBNull))
+                            prim.VolumeDetectActive = Convert.ToInt32(o[i].ToString()) == 1;
+                        break;
+                    case "LinkNumber":
+                        prim.LinkNum = int.Parse(o[i].ToString());
+                        break;
+                    case "Generic":
+                        prim.GenericData = o[i].ToString();
+                        break;
+                    case "MediaURL":
+                        if (!(o[i] is System.DBNull))
+                            prim.MediaUrl = (string)o[i];
+                        break;
+                    case "SceneGroupID":
+                        break;
+                    case "RegionUUID":
+                        break;
+                    default:
+                        m_log.Warn("[NXGSQLite]: Unknown database row: " + name);
+                        break;
+                }
+
+                #endregion
+            }
             prim.SoundFlags = 1; // If it's persisted at all, it's looped
 
-            if (!(row["TextureAnimation"] is DBNull))
-                prim.TextureAnimation = (byte[])row["TextureAnimation"];
-            if (!(row["ParticleSystem"] is DBNull))
-                prim.ParticleSystem = (byte[])row["ParticleSystem"];
-
-            prim.AngularVelocity = new Vector3(
-                (float)(double)row["OmegaX"],
-                (float)(double)row["OmegaY"],
-                (float)(double)row["OmegaZ"]
-                );
-
-            prim.CameraEyeOffset = new Vector3(
-                (float)(double)row["CameraEyeOffsetX"],
-                (float)(double)row["CameraEyeOffsetY"],
-                (float)(double)row["CameraEyeOffsetZ"]
-                );
-
-            prim.CameraAtOffset = new Vector3(
-                (float)(double)row["CameraAtOffsetX"],
-                (float)(double)row["CameraAtOffsetY"],
-                (float)(double)row["CameraAtOffsetZ"]
-                );
-
-            prim.ForceMouselook = ((sbyte)row["ForceMouselook"] != 0);
-            prim.ScriptAccessPin = (int)row["ScriptAccessPin"];
-            prim.AllowedDrop = ((sbyte)row["AllowedDrop"] != 0);
-            prim.DIE_AT_EDGE = ((sbyte)row["DieAtEdge"] != 0);
-
-            prim.SalePrice = (int)row["SalePrice"];
-            prim.ObjectSaleType = unchecked((byte)(sbyte)row["SaleType"]);
-
-            prim.Material = unchecked((byte)(sbyte)row["Material"]);
-
-            if (!(row["ClickAction"] is DBNull))
-                prim.ClickAction = unchecked((byte)(sbyte)row["ClickAction"]);
-
-            prim.CollisionSound = DBGuid.FromDB(row["CollisionSound"]);
-            prim.CollisionSoundVolume = (float)(double)row["CollisionSoundVolume"];
-
-            prim.PassTouch = (int)(double)row["CollisionSoundVolume"];
-            prim.LinkNum = (int)row["LinkNumber"];
-            prim.GenericData = row["Generic"].ToString();
-            if (!(row["MediaURL"] is System.DBNull))
-                prim.MediaUrl = (string)row["MediaURL"];
+            prim.Color = Color.FromArgb(ColorA, ColorR, ColorG, ColorB);
+            prim.OffsetPosition = new Vector3(PositionX, PositionY, PositionZ);
+            prim.GroupPosition = new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ);
+            prim.Velocity = new Vector3(VelocityX, VelocityY, VelocityZ);
+            prim.AngularVelocity = new Vector3(AngularVelocityX, AngularVelocityY, AngularVelocityZ);
+            prim.RotationOffset = new Quaternion(RotationX, RotationY, RotationZ, RotationW);
+            prim.SitTargetPositionLL = new Vector3(SitTargetOffsetX, SitTargetOffsetY, SitTargetOffsetZ);
+            prim.SitTargetOrientationLL = new Quaternion(SitTargetOrientX, SitTargetOrientY, SitTargetOrientZ, SitTargetOrientW);
+            prim.AngularVelocity = new Vector3(OmegaX, OmegaY, OmegaZ);
+            prim.CameraEyeOffset = new Vector3(CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ);
+            prim.CameraAtOffset = new Vector3(CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ);
 
             return prim;
         }
@@ -1618,40 +1818,114 @@ namespace OpenSim.Data.MySQL
         private PrimitiveBaseShape BuildShape(IDataReader row)
         {
             PrimitiveBaseShape s = new PrimitiveBaseShape();
-            s.Scale = new Vector3(
-                (float)(double)row["ScaleX"],
-                (float)(double)row["ScaleY"],
-                (float)(double)row["ScaleZ"]
-            );
-            // paths
-            s.PCode = (byte)(int)row["PCode"];
-            s.PathBegin = (ushort)(int)row["PathBegin"];
-            s.PathEnd = (ushort)(int)row["PathEnd"];
-            s.PathScaleX = (byte)(int)row["PathScaleX"];
-            s.PathScaleY = (byte)(int)row["PathScaleY"];
-            s.PathShearX = (byte)(int)row["PathShearX"];
-            s.PathShearY = (byte)(int)row["PathShearY"];
-            s.PathSkew = (sbyte)(int)row["PathSkew"];
-            s.PathCurve = (byte)(int)row["PathCurve"];
-            s.PathRadiusOffset = (sbyte)(int)row["PathRadiusOffset"];
-            s.PathRevolutions = (byte)(int)row["PathRevolutions"];
-            s.PathTaperX = (sbyte)(int)row["PathTaperX"];
-            s.PathTaperY = (sbyte)(int)row["PathTaperY"];
-            s.PathTwist = (sbyte)(int)row["PathTwist"];
-            s.PathTwistBegin = (sbyte)(int)row["PathTwistBegin"];
-            // profile
-            s.ProfileBegin = (ushort)(int)row["ProfileBegin"];
-            s.ProfileEnd = (ushort)(int)row["ProfileEnd"];
-            s.ProfileCurve = (byte)(int)row["ProfileCurve"];
-            s.ProfileHollow = (ushort)(int)row["ProfileHollow"];
-            s.TextureEntry = (byte[])row["Texture"];
 
-            s.ExtraParams = (byte[])row["ExtraParams"];
+            float ScaleX = 0;
+            float ScaleY = 0;
+            float ScaleZ = 0;
 
-            s.State = (byte)(int)row["State"];
+            object[] o = new object[row.FieldCount];
+            row.GetValues(o);
+            for (int i = 0; i < o.Length; i++)
+            {
+                string name = row.GetName(i);
+
+                #region Switch
+
+                switch (name)
+                {
+                    case "ScaleX":
+                        ScaleX = Convert.ToSingle(o[i]);
+                        break;
+                    case "ScaleY":
+                        ScaleX = Convert.ToSingle(o[i]);
+                        break;
+                    case "ScaleZ":
+                        ScaleZ = Convert.ToSingle(o[i]);
+                        break;
+                    case "PCode":
+                        s.PCode = Convert.ToByte(o[i]);
+                        break;
+                    case "PathBegin":
+                        s.PathBegin = Convert.ToUInt16(o[i]);
+                        break;
+                    case "PathEnd":
+                        s.PathEnd = Convert.ToUInt16(o[i]);
+                        break;
+                    case "PathScaleX":
+                        s.PathScaleX = Convert.ToByte(o[i]);
+                        break;
+                    case "PathScaleY":
+                        s.PathScaleY = Convert.ToByte(o[i]);
+                        break;
+                    case "PathShearX":
+                        s.PathShearX = Convert.ToByte(o[i]);
+                        break;
+                    case "PathShearY":
+                        s.PathShearY = Convert.ToByte(o[i]);
+                        break;
+                    case "PathSkew":
+                        s.PathSkew = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathCurve":
+                        s.PathCurve = Convert.ToByte(o[i]);
+                        break;
+                    case "PathRadiusOffset":
+                        s.PathRadiusOffset = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathRevolutions":
+                        s.PathRevolutions = Convert.ToByte(o[i]);
+                        break;
+                    case "PathTaperX":
+                        s.PathTaperX = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTaperY":
+                        s.PathTaperY = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTwist":
+                        s.PathTwist = Convert.ToSByte(o[i]);
+                        break;
+                    case "PathTwistBegin":
+                        s.PathTwistBegin = Convert.ToSByte(o[i]);
+                        break;
+                    case "ProfileBegin":
+                        s.ProfileBegin = Convert.ToUInt16(o[i]);
+                        break;
+                    case "ProfileEnd":
+                        s.ProfileEnd = Convert.ToUInt16(o[i]);
+                        break;
+                    case "ProfileCurve":
+                        s.ProfileCurve = Convert.ToByte(o[i]);
+                        break;
+                    case "ProfileHollow":
+                        s.ProfileHollow = Convert.ToUInt16(o[i]);
+                        break;
+                    case "State":
+                        s.State = Convert.ToByte(o[i]);
+                        break;
+                    case "Texture":
+                        byte[] textureEntry = (byte[])o[i];
+                        s.TextureEntry = textureEntry;
+                        break;
+                    case "ExtraParams":
+                        s.ExtraParams = (byte[])o[i];
+                        break;
+                    case "UUID":
+                        break;
+                    case "Shape":
+                        break;
+                    case "Media":
+                        if (!(o[i] is System.DBNull))
+                            s.Media = PrimitiveBaseShape.MediaList.FromXml((string)o[i]);
+                        break;
+                    default:
+                        m_log.Warn("[NXGSQLite]: Found a row in BuildShape that was not implemented " + name);
+                        break;
+                }
+
+                #endregion
+            }
+            s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
             
-            if (!(row["Media"] is System.DBNull))
-                s.Media = PrimitiveBaseShape.MediaList.FromXml((string)row["Media"]);
 
             return s;
         }
