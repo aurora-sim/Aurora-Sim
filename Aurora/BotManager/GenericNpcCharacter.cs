@@ -1066,10 +1066,6 @@ namespace Aurora.BotManager
         {
         }
 
-        public void RefreshGroupMembership()
-        {
-        }
-
         public void SendDialog(string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
         {
         }

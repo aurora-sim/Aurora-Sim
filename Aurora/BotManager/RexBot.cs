@@ -2828,11 +2828,6 @@ namespace Aurora.BotManager
             throw new NotImplementedException();
         }
 
-        void IClientAPI.RefreshGroupMembership()
-        {
-            throw new NotImplementedException();
-        }
-
         void IClientAPI.SendAvatarNotesReply(UUID targetID, string text)
         {
             throw new NotImplementedException();
