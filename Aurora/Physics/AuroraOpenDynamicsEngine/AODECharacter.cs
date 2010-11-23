@@ -1129,6 +1129,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if ((_position.Z - CAPSULE_LENGTH) < target_altitude)
                         vec.Z += (target_altitude - _position.Z) * PID_D / 2;
                 }
+                else
+                {
+                    //Straight up and down, only apply when they are very close to the ground
+                    float target_altitude = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
+
+                    if ((_position.Z - CAPSULE_LENGTH + (MinimumGroundFlightOffset / 1.5)) < target_altitude + MinimumGroundFlightOffset)
+                    {
+                        if ((_position.Z - CAPSULE_LENGTH) < target_altitude + 1)
+                        {
+                            vec.Z += ((target_altitude+4) - (_position.Z - CAPSULE_LENGTH)) * PID_D;
+                        }
+                        else
+                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (_position.Z - CAPSULE_LENGTH)) * PID_D / 2;
+                    }
+                }
 
                 #endregion
             }
