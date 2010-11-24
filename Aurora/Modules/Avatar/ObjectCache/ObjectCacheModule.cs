@@ -138,6 +138,8 @@ namespace Aurora.Modules
 
         public void SaveToFileForClient(UUID AgentID)
         {
+            if (!ObjectCacheAgents.ContainsKey(AgentID))
+                return;
             FileStream stream = new FileStream(m_filePath + AgentID + ".oc", FileMode.OpenOrCreate);
             StreamWriter m_streamWriter = new StreamWriter(stream);
             m_streamWriter.WriteLine(SerializeAgentCache(ObjectCacheAgents[AgentID]));
