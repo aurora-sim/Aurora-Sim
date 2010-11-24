@@ -584,10 +584,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _position.Y = npositionY;
             _position.Z = npositionZ;
 
-            
-            m_taintPosition.X = npositionX;
-            m_taintPosition.Y = npositionY;
-            m_taintPosition.Z = npositionZ;
+
+            m_taintPosition.X = _position.X;
+            m_taintPosition.Y = _position.Y;
+            m_taintPosition.Z = _position.Z;
 
             d.BodySetMass(Body, ref ShellMass);
             d.Matrix3 m_caprot;
@@ -1523,8 +1523,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
                     d.BodyDestroy(Body);
                     d.GeomDestroy(Shell);
-                    AvatarGeomAndBodyCreation(m_taintPosition.X, m_taintPosition.Y,
-                                      m_taintPosition.Z /*+ (Math.Abs(CAPSULE_LENGTH - prevCapsule) * 2)*/, m_tensor);
+                    AvatarGeomAndBodyCreation(_position.X, _position.Y,
+                                      _position.Z + (CAPSULE_LENGTH - prevCapsule), m_tensor);
                     Velocity = Vector3.Zero;
 
                     _parent_scene.geom_name_map[Shell] = m_name;

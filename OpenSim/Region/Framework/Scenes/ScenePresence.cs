@@ -1128,7 +1128,7 @@ namespace OpenSim.Region.Framework.Scenes
             //If the av exists, set their new size, if not, add them to the region
             if (PhysicsActor != null && !IsChildAgent)
             {
-                if (Appearance.AvatarHeight != m_avHeight)
+                if (height != m_avHeight)
                 {
                     Vector3 SetSize = new Vector3(0.45f, 0.6f, Appearance.AvatarHeight);
                     PhysicsActor.Size = SetSize;
