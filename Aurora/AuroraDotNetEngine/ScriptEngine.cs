@@ -1343,7 +1343,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="errors"></param>
         public void AddError(UUID ItemID, ArrayList errors)
         {
-            Errors[ItemID] = errors;
+            lock (Errors)
+            {
+                Errors[ItemID] = errors;
+            }
         }
 
         /// <summary>
@@ -1375,8 +1378,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool TryFindError(UUID ItemID, out ArrayList error)
         {
             error = null;
-            if (!Errors.ContainsKey(ItemID))
-                Errors.Add(ItemID, null); //Add it so that it does not error out with no key
+            lock (Errors)
+            {
+                if (!Errors.ContainsKey(ItemID))
+                    Errors[ItemID] = null; //Add it so that it does not error out with no key
+            }
 
             int i = 0;
             while ((error = Errors[ItemID]) == null && i < Timeout)
@@ -1396,8 +1402,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
-            if(ItemID != null)
-                Errors[ItemID] = null;
+            if (ItemID != null && Errors.ContainsKey(ItemID))
+            {
+                lock (Errors)
+                {
+                    Errors[ItemID] = null;
+                }
+            }
         }
     }
 }
