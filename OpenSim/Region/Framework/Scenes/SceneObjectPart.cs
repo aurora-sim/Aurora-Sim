@@ -144,7 +144,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         // use only one serializer to give the runtime a chance to optimize it (it won't do that if you
         // use a new instance every time)
-        private static XmlSerializer serializer = new XmlSerializer(typeof (SceneObjectPart));
+        //private static XmlSerializer serializer = new XmlSerializer(typeof (SceneObjectPart));
 
         #region Fields
 

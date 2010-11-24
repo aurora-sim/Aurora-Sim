@@ -73,6 +73,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_comms = World.RequestModuleInterface<IScriptModuleComms>();
         }
 
+        public IScriptApi Copy()
+        {
+            return new MOD_Api();
+        }
+
         public string Name
         {
             get { return "MOD"; }

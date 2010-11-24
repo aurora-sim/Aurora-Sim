@@ -76,6 +76,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return "AA"; }
         }
 
+        public IScriptApi Copy()
+        {
+            return new AA_Api();
+        }
+
         public void Dispose()
         {
         }

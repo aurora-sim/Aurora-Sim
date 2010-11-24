@@ -89,6 +89,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection = module;
         }
 
+        public IScriptApi Copy()
+        {
+            return new OSSL_Api();
+        }
+
         public string Name
         {
             get { return "OSSL"; }

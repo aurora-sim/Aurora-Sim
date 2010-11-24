@@ -101,6 +101,17 @@ namespace Aurora.Services.DataService
         /// Removes a generic from the database
         /// </summary>
         /// <param name="AgentID"></param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
+        public static void RemoveGenericByKey(UUID AgentID, string Key, IGenericData GD)
+        {
+            GD.Delete("generics", new string[] { "OwnerID", "`Key`" }, new object[] { AgentID, Key });
+        }
+
+        /// <summary>
+        /// Removes a generic from the database
+        /// </summary>
+        /// <param name="AgentID"></param>
         /// <param name="Type"></param>
         /// <param name="GD"></param>
         public static void RemoveGeneric(UUID AgentID, string Type, IGenericData GD)

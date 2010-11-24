@@ -41,8 +41,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
     public class Executor
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
         /// <summary>
         /// Contains the script to execute functions in.
         /// </summary>
@@ -187,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // not sure it's need
             if (InTimeSlice)
             {
-                m_log.Debug("ScriptEngine TimeSlice Overlap" + FunctionName);
+                OpenSim.Framework.Console.MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap" + FunctionName);
                 return Start;
             }
 

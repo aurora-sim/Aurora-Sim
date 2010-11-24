@@ -225,8 +225,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Fire the events afterward so that they all start at the same time
                     item.ID.FireEvents();
                 }
-                Thread.Sleep(20);
                 threadpool.QueueEvent(ScriptChangeQueue, 2); //Requeue us
+                Thread.Sleep(5);
                 return false;
             }
 
@@ -247,6 +247,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
             ScriptChangeIsRunning = false;
+            Thread.Sleep(20);
             return false;
         }
 

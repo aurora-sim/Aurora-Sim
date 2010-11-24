@@ -69,6 +69,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection = module;
         }
 
+        public IScriptApi Copy()
+        {
+            return new Bot_Api();
+        }
+
         public string Name
         {
             get { return "bot"; }

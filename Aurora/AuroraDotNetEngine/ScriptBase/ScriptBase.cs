@@ -44,7 +44,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
     [Serializable]
     public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ScriptSponsor m_sponser;
 
         public ISponsor Sponsor

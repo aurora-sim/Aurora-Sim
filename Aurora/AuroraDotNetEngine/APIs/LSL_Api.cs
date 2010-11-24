@@ -130,6 +130,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_comms = World.RequestModuleInterface<IWorldComm>();
         }
 
+        public IScriptApi Copy()
+        {
+            return new LSL_Api();
+        }
+
         public string Name
         {
             get { return "LSL"; }

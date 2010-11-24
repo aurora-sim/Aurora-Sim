@@ -40,5 +40,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // proper runtime assembly at load time.
         //
         void Initialize(IScriptModulePlugin engine, SceneObjectPart part, uint localID, UUID item, ScriptProtectionModule module);
+
+        IScriptApi Copy();
     }
 }

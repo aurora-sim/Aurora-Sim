@@ -1187,9 +1187,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         if (m_server.packetInbox.Dequeue(100, ref incomingPacket))
                         {
-                            if (m_server.m_asyncPacketHandling)
-                                Util.FireAndForget(ProcessInPacket, incomingPacket);
-                            else
+                            //Async is dealt with other places, we shouldn't be calling for the threadpool here, it will call down lower...
+                            //if (m_server.m_asyncPacketHandling)
+                            //    Util.FireAndForget(ProcessInPacket, incomingPacket);
+                            //else
                                 ProcessInPacket(incomingPacket);
                         }
                     }

@@ -152,6 +152,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         public string ScriptErrorMessages = "";
 
+        private IScriptApi[] m_APIs = new IScriptApi[0];
+
         /// <summary>
         /// Path to the script binaries.
         /// </summary>
@@ -282,6 +284,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MaintenanceThread = new MaintenanceThread(this);
 
                 FindDefaultLSLScript();
+
+                IScriptDataConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IScriptDataConnector>();
+                if (connector != null)
+                    connector.CacheStateSaves();
             }
 
             scene.EventManager.OnStartupComplete += new OpenSim.Region.Framework.Scenes.EventManager.StartupComplete(EventManager_OnStartupComplete);
@@ -1025,7 +1031,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptApi[] GetAPIs()
         {
-            return AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
+            if (m_APIs.Length == 0)
+                m_APIs = AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
+            IScriptApi[] apis = new IScriptApi[m_APIs.Length];
+            int i = 0;
+            foreach(IScriptApi api in m_APIs)
+            {
+                apis[i] = api.Copy();
+                i++;
+            }
+            return apis;
         }
 
         public List<string> GetAllFunctionNames()
