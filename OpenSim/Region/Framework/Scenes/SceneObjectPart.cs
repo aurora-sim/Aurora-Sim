@@ -3668,6 +3668,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Must send these as well
             if (Text != "")
                 UpdateFlags |= PrimUpdateFlags.Text;
+            if (AngularVelocity != Vector3.Zero)
+                UpdateFlags |= PrimUpdateFlags.AngularVelocity;
             if (TextureAnimation != null && TextureAnimation.Length != 0)
                 UpdateFlags |= PrimUpdateFlags.TextureAnim;
             if (Sound != UUID.Zero)
