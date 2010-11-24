@@ -92,6 +92,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         
         private IGroupsServicesConnector m_groupData = null;
 
+        private Dictionary<UUID, string> m_cachedGroupTitles = new Dictionary<UUID, string>();
+
         // Configuration settings
         private bool m_groupsEnabled = false;
         private bool m_groupNoticesEnabled = true;
@@ -282,6 +284,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage -= OnInstantMessage;
+
+            //Remove them from the cache
+            m_cachedGroupTitles.Remove(client.AgentId);
         }
 
         private void OnRequestAvatarProperties(IClientAPI remoteClient, UUID avatarID)
@@ -889,6 +894,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// </summary>
         public string GetGroupTitle(UUID avatarID)
         {
+            //Check the cache first
+            if (m_cachedGroupTitles.ContainsKey(avatarID))
+                return m_cachedGroupTitles[avatarID];
+
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             GroupMembershipData membership = m_groupData.GetAgentActiveMembership(UUID.Zero, avatarID);
@@ -1408,9 +1417,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 presence = scene.GetScenePresence(AgentID);
                 if (presence != null)
                 {
-                    presence.Grouptitle = Title;
-
-                    presence.SendFullUpdateToAllClients();
+                    if (!m_cachedGroupTitles.ContainsKey(presence.UUID) || m_cachedGroupTitles[presence.UUID] != Title)
+                    {
+                        m_cachedGroupTitles[presence.UUID] = Title;
+                        if (!presence.IsChildAgent)
+                            presence.SendAvatarDataToAllAgents();
+                    }
                 }
             }
         }

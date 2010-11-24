@@ -145,10 +145,8 @@ namespace Aurora.BotManager
 
             ScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
             SP.Appearance.SetAppearance(SP.Appearance.Texture, SP.Appearance.VisualParams);
-            SP.SendInitialFullUpdateToAllClients();
             SP.SendAppearanceToAllOtherAgents();
-            SP.SendFullUpdateToAllClients();
-            SP.SendTerseUpdateToAllClients();
+            SP.SendAvatarDataToAllAgents();
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);
@@ -193,10 +191,8 @@ namespace Aurora.BotManager
 
             ScenePresence SP = m_scene.GetScenePresence(m_character.AgentId);
             SP.Appearance.SetAppearance(SP.Appearance.Texture, SP.Appearance.VisualParams);
-            SP.SendInitialFullUpdateToAllClients();
             SP.SendAppearanceToAllOtherAgents();
-            SP.SendFullUpdateToAllClients();
-            SP.SendTerseUpdateToAllClients();
+            SP.SendAvatarDataToAllAgents();
             m_character.Initialize(SP);//Tell the bot about the SP
 
             //Save them in the bots list
