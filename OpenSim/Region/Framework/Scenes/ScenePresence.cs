@@ -2365,27 +2365,32 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else if (!actor.Flying && actor.IsColliding)
                 {
-                    if (direc.Z > 1.0f)
+                    if (direc.Z > 2.0f)
                     {
                         if (direc.Z < 2.5f)
                             direc.Z = 2.5f;
                         if (m_scene.m_usePreJump && !IsJumping)
                         {
-                            AllowMovement = false;
+                            //AllowMovement = false;
                             IsJumping = true;
                             PreJumpForce = direc;
                             Animator.TrySetMovementAnimation("PREJUMP");
                             //Leave this here! Otherwise jump will sometimes not occur...
                             return;
                         }
-                        else
+                        else if(PreJumpForce.Equals(Vector3.Zero))
                         {
-                            direc.X *= 2f;
+                            direc.X *= direc.X < 0 ? 2.5f : 2f;
                             direc.Y *= 2f;
-                            direc.Z *= 6.0f;
+                            direc.Z *= 3.0f;
 
                             if(!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
+
+                            m_forceToApply = direc;
+                            m_velocityIsDecaying = false;
+                            m_overrideUserInput = true;
+                            return;
                         }
                     }
                 }
@@ -2415,7 +2420,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-
             m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
@@ -3394,7 +3398,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_forceToApply.HasValue)
             {
                 Vector3 force = m_forceToApply.Value;
-
                 m_updateflag = true;
                 if (m_velocityIsDecaying)
                 {

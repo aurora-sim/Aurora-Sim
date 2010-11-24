@@ -473,11 +473,16 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                 Vector3 jumpForce = m_scenePresence.PreJumpForce;
                                 m_scenePresence.PreJumpForce = Vector3.Zero;
                                 m_scenePresence.AddNewMovement(jumpForce, Quaternion.Identity);
-                                m_animTickJump = -21;
+                                m_animTickJump = -22;
                                 return "JUMP";
                             }
 
                             m_animTickJump++;
+                            if (m_scenePresence.Velocity.Z < -0.50)
+                            {
+                                m_scenePresence.m_forceToApply = Vector3.Zero;
+                                m_scenePresence.m_overrideUserInput = false;
+                            }
                             return "JUMP";
                         }
                     }
