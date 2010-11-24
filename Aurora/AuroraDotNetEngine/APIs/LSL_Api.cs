@@ -6472,7 +6472,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
                         // Lets avoid the popcorn avatar scenario.
-                        av.StandUp();
+                        av.StandUp(true);
                     }
                     else
                     {
@@ -6489,7 +6489,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                 (m_host.OwnerID == m_host.GroupID && m_host.GroupID == parcel.LandData.GroupID
                                 && parcel.LandData.IsGroupOwned) || World.Permissions.IsGod(m_host.OwnerID))
                             {
-                                av.StandUp();
+                                av.StandUp(true);
                             }
                         }
                     }

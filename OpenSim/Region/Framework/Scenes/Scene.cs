@@ -2672,7 +2672,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ScenePresence SP = GetScenePresence(avID);
                         if (SP != null)
-                            SP.StandUp();
+                            SP.StandUp(false);
                     }
                 }
             }
@@ -4109,7 +4109,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (avatar.ParentID != UUID.Zero)
                 {
-                    avatar.StandUp();
+                    avatar.StandUp(true);
                 }
 
                 try

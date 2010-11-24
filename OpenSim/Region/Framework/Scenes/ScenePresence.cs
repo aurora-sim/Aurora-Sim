@@ -1314,7 +1314,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
             {
-                StandUp();
+                StandUp(true);
             }
 
             //m_log.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
@@ -1696,19 +1696,19 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
+
         /// <summary>
         /// Perform the logic necessary to stand the avatar up.  This method also executes
         /// the stand animation.
         /// </summary>
-        public void StandUp()
+        /// <param name="RemoveFromSittingList">Should we remove ourselves from the prim's sit list</param>
+        public void StandUp(bool RemoveFromSittingList)
         {
             SitGround = false;
 
             if (m_parentID != UUID.Zero)
             {
-                //m_log.Debug("StandupCode Executed");
                 SceneObjectPart part = m_scene.GetSceneObjectPart(m_parentID);
-                //m_log.Debug("StandupCode Executed part 2");
                 if (part != null)
                 {
                     //Block movement of vehicles for a bit until after the changed event has fired
@@ -1730,8 +1730,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                     }
                     // Reset sit target.
-                    if (part.GetAvatarOnSitTarget().Contains(UUID))
-                        part.RemoveAvatarOnSitTarget(UUID);
+                    if (RemoveFromSittingList)
+                    {
+                        if (part.GetAvatarOnSitTarget().Contains(UUID))
+                            part.RemoveAvatarOnSitTarget(UUID);
+                    }
 
                     m_parentPosition = part.GetWorldPosition();
                     Vector3 MovePos = new Vector3();
@@ -1966,7 +1969,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
         {
             if (m_parentID != UUID.Zero)
-                StandUp();
+                StandUp(true);
 
             m_nextSitAnimation = "SIT";
             
@@ -2192,7 +2195,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
         {
             if (m_parentID != UUID.Zero)
-                StandUp();
+                StandUp(true);
 
             if (!String.IsNullOrEmpty(sitAnimation))
             {

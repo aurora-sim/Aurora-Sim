@@ -296,7 +296,7 @@ namespace Aurora.Modules
                 // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
                 // both regions
                 if (sp.ParentID != UUID.Zero)
-                    sp.StandUp();
+                    sp.StandUp(true);
 
                 if (!sp.ValidateAttachments())
                 {
