@@ -246,7 +246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AppDomainManager.UnloadScriptAppDomain(AppDomain);
             AppDomain = null;
 
-            m_log.Info("[" + m_ScriptEngine.ScriptEngineName+ "]: Closed Script " + InventoryItem.Name + " in " + part.Name);
+            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " + part.Name, "AppendTimeStamp");
         }
 
         /// <summary>
@@ -332,7 +332,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
             m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
-            m_log.Info("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
+            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID, "AppendTimeStamp");
         }
 
         internal void ChangeState(string state)
@@ -678,12 +678,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
+            MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
                     " in object " + part.Name +
                     (presence != null ? " by " + presence.Name : "") + 
                     " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
-                    " in " + time.TotalSeconds + " seconds.");
+                    " in " + time.TotalSeconds + " seconds.", "AppendTimeStamp");
         }
 
         #endregion

@@ -4789,7 +4789,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             update.Material = (byte)Material.Flesh;
             update.MediaURL = Utils.EmptyBytes;
             update.NameValue = Utils.StringToBytes("FirstName STRING RW SV " + data.Firstname + "\nLastName STRING RW SV " +
-                data.Lastname + "\nTitle STRING RW SV " + data.Grouptitle);
+                data.Lastname + "\nTitle STRING RW SV " + m_GroupsModule == null ? "" : m_GroupsModule.GetGroupTitle(data.UUID));
             update.ObjectData = objectData;
             if (data.ParentID == UUID.Zero)
                 update.ParentID = 0;

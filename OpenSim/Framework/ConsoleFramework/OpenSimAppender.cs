@@ -50,7 +50,6 @@ namespace OpenSim.Framework
                 m_console.LockOutput();
 
             string loggingMessage = RenderLoggingEvent(le);
-
             try
             {
                 if (m_console != null)

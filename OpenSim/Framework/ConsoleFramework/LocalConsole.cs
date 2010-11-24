@@ -300,6 +300,10 @@ namespace OpenSim.Framework
         private void WriteLocalText(string text, string level)
         {
             string logtext = "";
+            if (level == "AppendTimeStamp")
+            {
+                text = DateTime.Now.ToLongTimeString() + " - " + text;
+            }
             if (level == "noTimeStamp" && text != "")
             {
                 logtext = text;
@@ -307,17 +311,17 @@ namespace OpenSim.Framework
             }
             else if (level == "None" && text != "") //No color or flowers or whisles, just basic writing plus the DT must be added manually
             {
-                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text;
+                logtext = DateTime.Now.ToLongTimeString() + " - " + text;
                 System.Console.Write(logtext);
             }
             else if (level == LOGLEVEL_NONE && text != "")
             {
-                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - " + text;
+                logtext = DateTime.Now.ToLongTimeString() + " - " + text;
                 System.Console.Write(logtext);
             }
 			else if (level == "Notice")
             {
-                logtext = DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second + " - ";
+                logtext = DateTime.Now.ToLongTimeString() + " - ";
                 WriteColorText(ConsoleColor.Gray, logtext);
                 string[] Split = text.Split(new string[]{" - "}, StringSplitOptions.RemoveEmptyEntries);
                 if (Split.Length != 0)
