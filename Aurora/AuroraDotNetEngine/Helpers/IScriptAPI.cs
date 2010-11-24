@@ -42,5 +42,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         void Initialize(IScriptModulePlugin engine, SceneObjectPart part, uint localID, UUID item, ScriptProtectionModule module);
 
         IScriptApi Copy();
+
+        //string InterfaceName { get; }
     }
 }

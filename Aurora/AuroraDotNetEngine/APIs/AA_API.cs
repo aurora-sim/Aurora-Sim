@@ -76,6 +76,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return "AA"; }
         }
 
+        public string InterfaceName
+        {
+            get { return "IAA_Api"; }
+        }
+
         public IScriptApi Copy()
         {
             return new AA_Api();

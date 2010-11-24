@@ -81,6 +81,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NextEventDelay.Add("moving_start", 0);
             NextEventDelay.Add("no_sensor", 0);
             NextEventDelay.Add("not_at_rot_target", 0);
+            NextEventDelay.Add("not_at_target", 0);
             NextEventDelay.Add("object_rez", 0);
             NextEventDelay.Add("on_rez", 0);
             NextEventDelay.Add("remote_data", 0);

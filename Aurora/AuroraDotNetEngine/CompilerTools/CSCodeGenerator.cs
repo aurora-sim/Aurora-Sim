@@ -142,13 +142,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
+        /// <summary>
+        /// Param 1 - the API function name, Param 2 - the API name
+        /// </summary>
+        private Dictionary<string, string> m_apiFunctions = new Dictionary<string, string>();
+        private IScriptApi[] m_Apis = new IScriptApi[0];
+
         private bool FuncCntr = false;
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
-        public CSCodeGenerator(bool compatMode)
-            {
+        public CSCodeGenerator(bool compatMode, IScriptApi[] Apis)
+        {
+            #region DTFunctions
+
             // api funtions that can return a time delay only
             // must be type DateTime in stub files and implementation
             DTFunctions.Add("llAddToLandBanList");
@@ -218,9 +226,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
 
             // the rest will be directly called
-            
+
+            #endregion
+
             m_SLCompatabilityMode = compatMode;
             ResetCounters();
+            m_Apis = Apis;
         }
 
         /// <summary>
@@ -278,6 +289,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "[Serializable]\n";
             compiledScript += "public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass\n";
             compiledScript += "{\n";
+            compiledScript += "List<IScriptApi> m_apis = new List<IScriptApi>();\n";
 
             compiledScript += ScriptClass;
 
@@ -2546,6 +2558,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             else if (DTFunctions.Contains(fc.Id))
             {
                 DTFunction = true;
+            }
+
+            //Check whether this function is an API function
+            if (m_apiFunctions.ContainsKey(CheckName(fc.Id)))
+            {
+                //Add the m_apis link
+                fc.Id = String.Format("m_apis[{0}].{1}", m_apiFunctions[CheckName(fc.Id)], fc.Id);
             }
 
             if (DTFunction)

@@ -393,6 +393,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                     "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
             parameters.ReferencedAssemblies.Add("System.dll");
+            parameters.ReferencedAssemblies.Add("OpenSim.Framework.dll");
 
             if (converter.Name == "yp")
             {

@@ -19,41 +19,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class LSLConverter : IScriptConverter
     {
-        //private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
+        private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private Compiler m_compiler;
-        //private ICSCodeGenerator LSL_Converter;
+        private ICSCodeGenerator LSL_Converter;
 
         public void Initialise(Compiler compiler)
         {
             m_compiler = compiler;
-            //if (m_compiler.m_XEngineLSLCompatabilityModule)
-            //    LSL_Converter = new LegacyCSCodeGenerator();
-            //else
-            //    LSL_Converter = new CSCodeGenerator(m_compiler.m_SLCompatabilityMode);
+            if (m_compiler.m_XEngineLSLCompatabilityModule)
+                LSL_Converter = new LegacyCSCodeGenerator();
+            else
+                LSL_Converter = new CSCodeGenerator(m_compiler.m_SLCompatabilityMode, null);
         }
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
-            //CompiledScript = LSL_Converter.Convert(Script);
-            //Warnings = LSL_Converter.GetWarnings();
-            //PositionMap = LSL_Converter.PositionMap;
-
-            //LSL_Converter.Dispose(); //Resets it for next time
-
-            //HACK for now to see what this does to memory
-            ICSCodeGenerator LSL_Converter;
-            if (m_compiler.m_XEngineLSLCompatabilityModule)
-                LSL_Converter = new LegacyCSCodeGenerator();
-            else
-                LSL_Converter = new CSCodeGenerator(m_compiler.m_SLCompatabilityMode);
-            
             CompiledScript = LSL_Converter.Convert(Script);
             Warnings = LSL_Converter.GetWarnings();
             PositionMap = LSL_Converter.PositionMap;
 
-            LSL_Converter.Dispose();
-            LSL_Converter = null;
+            LSL_Converter.Dispose(); //Resets it for next time
         }
 
         public string Name
@@ -67,7 +53,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public CompilerResults Compile(CompilerParameters parameters, string Script)
         {
-            CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
             bool complete = false;
             bool retried = false;
             CompilerResults results;
