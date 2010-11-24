@@ -3572,7 +3572,15 @@ namespace OpenSim.Region.Framework.Scenes
                                     lowest = contact;
                                 }
                             }
-
+                            if (lowest.Position.Z == 0)
+                            {
+                                if (m_forceToApply.HasValue && m_forceToApply.Value.Z < 0)
+                                {
+                                    lowest.SurfaceNormal.Z = ((int)AbsolutePosition.Z) - (PhysicsActor.Size.Z * 1.65f) - (int)Scene.GetGroundHeight(AbsolutePosition.X, AbsolutePosition.Y);
+                                }
+                                else
+                                    lowest.SurfaceNormal.Z = ((int)AbsolutePosition.Z) - (PhysicsActor.Size.Z * 1.75f) - (int)Scene.GetGroundHeight(AbsolutePosition.X, AbsolutePosition.Y);
+                            }
                             CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
                         }
                         break;

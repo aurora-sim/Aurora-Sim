@@ -1289,7 +1289,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            OpenMetaverse.GroupPowers powers;
             ILandObject l;
 
             ScenePresence sp = scene.GetScenePresence(user);
