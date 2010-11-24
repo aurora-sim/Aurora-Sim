@@ -712,7 +712,10 @@ namespace OpenSim.Region.Framework.Scenes
             Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
             IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
             if (manager != null)
-                manager.SetComponentState(this, Name, OSD.FromObject(State));
+            {
+                OSD state = (State is OSD) ? (OSD)State : OSD.FromObject(State);
+                manager.SetComponentState(this, Name, state);
+            }
         }
 
         #endregion Fields
@@ -771,8 +774,6 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
-            m_TextureAnimation = Utils.EmptyBytes;
-            ParticleSystem = Utils.EmptyBytes;
 
             // Prims currently only contain a single folder (Contents).  From looking at the Second Life protocol,
             // this appears to have the same UUID (!) as the prim.  If this isn't the case, one can't drag items from
@@ -1104,15 +1105,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                Primitive.ParticleSystem ps = Primitive.ParticleSystem.FromOSD(GetComponentState("ParticleSystem"));
-                return ps.GetBytes();
+                return GetComponentState("ParticleSystem").AsBinary();
             }
             set
             {
                 //MUST set via the OSD
-                Primitive.ParticleSystem ps = new Primitive.ParticleSystem(value, 0);
-                SetComponentState("ParticleSystem", ps.GetOSD());
-                m_particleSystem = value;
+                SetComponentState("ParticleSystem", OSD.FromBinary(value));
             }
         }
 
