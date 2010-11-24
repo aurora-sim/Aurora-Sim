@@ -310,6 +310,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (SimianAddGeneric(GroupID, "Group", name, GroupInfoMap))
             {
                 AddGroupRole(requestingAgentID, GroupID, UUID.Zero, "Everyone", "Members of " + name, "Member of " + name, (ulong)m_DefaultEveryonePowers);
+                ulong groupPowers = 296868139497678;
+                AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
                 AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, (ulong)m_DefaultOwnerPowers);
                 
                 AddAgentToGroup(requestingAgentID, requestingAgentID, GroupID, OwnerRoleID);

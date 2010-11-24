@@ -90,10 +90,15 @@ namespace Aurora.Services.DataService
 			Values.Add(OwnerRoleID);
             data.Insert("osgroup", Keys.ToArray(), Values.ToArray());
 
-			//Add owner role to group
-			AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
+            //Add everyone role to group
+            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
 
-			//Add owner role to group
+            ulong groupPowers = 296868139497678;
+
+            //Add officers role to group
+            AddRoleToGroup(founderID, groupID, UUID.Zero, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
+
+            //Add owner role to group
 			AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, OwnerPowers);
 
             //Add owner to the group as owner
