@@ -2385,15 +2385,13 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             direc.X *= direc.X < 0 ? 2.5f : 2f;
                             direc.Y *= 2f;
-                            direc.Z *= 3.0f;
+                            direc.Z *= 8.0f;
 
                             if(!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
 
                             m_forceToApply = direc;
                             m_velocityIsDecaying = false;
-                            m_overrideUserInput = true;
-                            return;
                         }
                     }
                 }
@@ -3413,8 +3411,15 @@ namespace OpenSim.Region.Framework.Scenes
                     force *= .9F;
                     if (force.ApproxEquals(Vector3.Zero, 0.4f))
                     {
-                        m_velocityIsDecaying = false;
-                        force = Vector3.Zero;
+                        //Add a slight downward push so that we go down if we really need to in the physics engine
+                        if (force.Z == (-0.2f*0.9f))
+                        {
+                            //Stop it after one iteration
+                            m_velocityIsDecaying = false;
+                            force = Vector3.Zero;
+                        }
+                        else
+                            force = new Vector3(0,0, -0.2f);
                     }
                 }
                 

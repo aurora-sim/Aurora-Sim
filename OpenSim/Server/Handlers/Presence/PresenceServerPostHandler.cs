@@ -78,8 +78,8 @@ namespace OpenSim.Server.Handlers.Presence
 
                 switch (method)
                 {
-                    case "login":
-                        return LoginAgent(request);
+                    //case "login":
+                    //    return LoginAgent(request);
                     case "logout":
                         return LogoutAgent(request);
                     case "logoutregion":
