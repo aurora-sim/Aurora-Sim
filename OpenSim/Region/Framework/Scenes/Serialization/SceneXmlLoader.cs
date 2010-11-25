@@ -211,7 +211,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 if (scene.AddRestoredSceneObject(obj, true, false, true))
                     return obj;
             }*/
-            return null;
+            return obj;
         }
 
         public static void SavePrimsToXml2(Scene scene, string fileName)

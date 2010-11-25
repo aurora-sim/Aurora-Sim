@@ -716,13 +716,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
                     string localfilename = filename + ".raw";
 
-                    if (terrainData.Length == 851968)
-                    {
-                        localfilename = Path.Combine(Util.dataDir(), filename + ".raw"); // It's a .LLRAW
-                    }
-
                     bool OARUpload = false;
-                    if (terrainData.Length == 196662) // 24-bit 256x256 Bitmap
+                    if (terrainData.Length == 851968)
+                        localfilename = Path.Combine(Util.dataDir(), filename); // It's a .LLRAW
+                    else if (terrainData.Length == 196662) // 24-bit 256x256 Bitmap
                         localfilename = Path.Combine(Util.dataDir(), filename + ".bmp");
 
                     else if (terrainData.Length == 256 * 256 * 4) // It's a .R32
@@ -797,7 +794,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (TerrainUploader == null)
             {
-
+                remote_client.SendAlertMessage("Uploading terrain file...");
                 TerrainUploader = new EstateTerrainXferHandler(remote_client, clientFileName);
                 lock (TerrainUploader)
                 {
@@ -806,7 +803,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     TerrainUploader.TerrainUploadDone += HandleTerrainApplication;
                 }
                 TerrainUploader.RequestStartXfer(remote_client);
-
             }
             else
             {
