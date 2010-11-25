@@ -127,7 +127,7 @@ namespace Aurora.Services.DataService
                     if (value == "")
                         continue;
                     value = value.Remove(value.Length - 1, 1);
-                    vars.Add(var.Split(',')[0], (object)value);
+                    vars[var.Split(',')[0]] = (object)value;
                 }
             }
             StateSave.Variables = vars;
