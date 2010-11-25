@@ -2103,8 +2103,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
             tmpstr += GenerateLine(")");
 
-            retstr += DumpFunc(marc) + tmpstr.ToString();
-
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
 
@@ -2112,32 +2110,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 //            if (indentHere) m_braceCount++;
             DoBrace = !(ifs.kids.Top is CompoundStatement);
             if(DoBrace)
-                retstr += GenerateLine("{");
+                tmpstr += GenerateLine("{");
 
-            retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
 //            if (indentHere) m_braceCount--;
             if (DoBrace)
-                retstr += GenerateLine("}");
+                tmpstr += GenerateLine("}");
 
 
             if (0 < ifs.kids.Count) // do it again for an else
             {
-                retstr += GenerateIndentedLine("else", ifs);
+                tmpstr += GenerateIndentedLine("else", ifs);
 
 //                indentHere = ifs.kids.Top is Statement;
 //                if (indentHere) m_braceCount++;
                 DoBrace = !(ifs.kids.Top is CompoundStatement || ifs.kids.Top is IfStatement);
                 if (DoBrace)
-                    retstr += GenerateLine("{");
+                    tmpstr += GenerateLine("{");
 
-                retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+                tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
 
                 if (DoBrace)
-                    retstr += GenerateLine("}");
+                    tmpstr += GenerateLine("}");
 
 
 //                if (indentHere) m_braceCount--;
             }
+
+            retstr += DumpFunc(marc) + tmpstr.ToString();
 
             return retstr.ToString();
         }
@@ -2622,7 +2622,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 Mname = RandomString(10, true);
                 string Exname = RandomString(10, true);
-                FunctionCalls += Generate("string " + Exname + " =  null;");
+                FunctionCalls += Generate("string " + Exname + " =  \"\";");
                 FunctionCalls += Generate("IEnumerator " + Mname + " = ");
                 FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 FunctionCalls += tempString;
@@ -2637,9 +2637,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 FunctionCalls += GenerateLine("  {");
                 FunctionCalls += GenerateLine("  " + Exname + " = ex.Message;");
                 FunctionCalls += GenerateLine("  }"); //End of catch
-                FunctionCalls += GenerateLine(" if(" + Exname + " != null)");
+                FunctionCalls += GenerateLine(" if(" + Exname + " != \"\")");
                 FunctionCalls += GenerateLine("   yield return " + Exname + ";"); //Exceptions go first
-                FunctionCalls += GenerateLine(" if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)");
+                FunctionCalls += GenerateLine(" else if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)");
                 FunctionCalls += GenerateLine("   yield return " + Mname + ".Current;"); //Let the other things process for a bit here at the end of each enumeration
                 FunctionCalls += GenerateLine(" else break;"); //Let the other things process for a bit here at the end of each enumeration
                 FunctionCalls += GenerateLine(" }"); //End while
