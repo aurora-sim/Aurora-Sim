@@ -106,16 +106,23 @@ namespace Aurora.Modules
         public void OnNewClient(IClientAPI client)
         {
             ScenePresence us = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-            IUserProfileInfo info = m_profileConnector.GetUserProfile(client.AgentId);
-            if(info != null)
-                DisplayNameUpdate(info.DisplayName, info.DisplayName, us, client.AgentId);
+            if (us.IsChildAgent)
+                return;
+            IUserProfileInfo usProfile = m_profileConnector.GetUserProfile(client.AgentId);
+            //Send our name to us
+            if (usProfile != null)
+                DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, client.AgentId);
 
             foreach (ScenePresence SP in ((Scene)client.Scene).ScenePresences)
             {
-                info = m_profileConnector.GetUserProfile(SP.UUID);
-                //Send to the incoming user all known display names of avatar's around the client
-                if(info != null)
-                    DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, client.AgentId);
+                if (SP.UUID != client.AgentId)
+                {
+                    IUserProfileInfo info = m_profileConnector.GetUserProfile(SP.UUID);
+                    //Send to the incoming user all known display names of avatar's around the client
+                    if (info != null)
+                        DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, client.AgentId);
+                    DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, SP.UUID);
+                }
             }
         }
 
