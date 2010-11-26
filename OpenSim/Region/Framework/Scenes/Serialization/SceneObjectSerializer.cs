@@ -73,7 +73,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 XmlTextReader reader;
                 XmlNodeList parts;
                 XmlDocument doc;
-                int linkNum;
 
                 doc = new XmlDocument();
                 doc.LoadXml(xmlData);

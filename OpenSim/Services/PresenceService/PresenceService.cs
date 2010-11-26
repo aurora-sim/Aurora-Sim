@@ -47,7 +47,7 @@ namespace OpenSim.Services.PresenceService
 
         private IGridService m_GridService;
 
-        protected bool m_allowDuplicatePresences = false;
+        protected bool m_allowDuplicatePresences = true;
         protected bool m_checkLastSeen = true;
 
         public PresenceService(IConfigSource config)

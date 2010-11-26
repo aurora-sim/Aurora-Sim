@@ -13,18 +13,22 @@ namespace Aurora.Modules
     /// This module fixes issues with avatars not being logged out if they crash or the region crashing.
     /// All this module does is update all presences in the region in the PresenceService.
     /// </summary>
-    public class PresenceModule : INonSharedRegionModule
+    public class PresenceModule : ISharedRegionModule
     {
         #region Declares
 
         private System.Timers.Timer timer = null;
-        private Scene m_scene;
+        private List<Scene> m_scenes = new List<Scene>();
 
         #endregion
 
         #region ISharedRegionModule
 
         public void Initialise(Nini.Config.IConfigSource source)
+        {
+        }
+
+        public void PostInitialise()
         {
         }
 
@@ -43,8 +47,8 @@ namespace Aurora.Modules
                 timer = new Timer(1000 * 60 * 55); //Every 55 minutes to reload all avatars
                 timer.Elapsed += new ElapsedEventHandler(UpdateAgents);
                 timer.Start();
-                m_scene = scene;
             }
+            m_scenes.Add(scene);
         }
 
         public void RemoveRegion(Scene scene)
@@ -66,10 +70,13 @@ namespace Aurora.Modules
 
         private void UpdateAgents(object sender, ElapsedEventArgs e)
         {
-            foreach (ScenePresence SP in m_scene.ScenePresences)
+            foreach (Scene scene in m_scenes)
             {
-                //Give them the new LastSeen value in the database
-                m_scene.PresenceService.ReportAgent(SP.ControllingClient.SessionId, m_scene.RegionInfo.RegionID);
+                foreach (ScenePresence SP in scene.ScenePresences)
+                {
+                    //Give them the new LastSeen value in the database
+                    scene.PresenceService.ReportAgent(SP.ControllingClient.SessionId, scene.RegionInfo.RegionID);
+                }
             }
         }
 
