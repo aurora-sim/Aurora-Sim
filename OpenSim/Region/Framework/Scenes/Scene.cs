@@ -4423,6 +4423,12 @@ namespace OpenSim.Region.Framework.Scenes
                             agent.startpos.Z = 720;
                     }
                 }
+                //Keep users from being underground
+                if (agent.startpos.Z < GetGroundHeight(agent.startpos.X, agent.startpos.Y))
+                {
+                    m_log.Warn("FIX Agent Z POSITION");
+                    agent.startpos.Z = GetGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                }
             }
 
             return true;
