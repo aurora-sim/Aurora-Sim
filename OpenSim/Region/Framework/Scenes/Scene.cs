@@ -2396,9 +2396,10 @@ namespace OpenSim.Region.Framework.Scenes
                     group.RootPart.Shape.PCode == (byte)PCode.Prim ||
                     group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
                 {
-                    m_log.Warn("[SCENE]: Fixing State for object " + group.Name + " while loading objects.");
-                    //WTF went wrong here?
-                    group.RootPart.Shape.State = 0;
+                    m_log.Warn("[SCENE]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
+                    //WTF went wrong here? Remove it and then pass it by on loading
+                    SimulationDataService.RemoveObject(group.UUID, this.RegionInfo.RegionID);
+                    continue;
                 }
                 group.Scene = this;
                 EventManager.TriggerOnSceneObjectLoaded(group);
