@@ -259,8 +259,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if(item.InvType == (int)InventoryType.LSL)
                     remoteClient.SendAgentAlertMessage("Script saved", false);                        
             
-            part.GetProperties(remoteClient);
-
             // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
             ArrayList errors = new ArrayList();
 
@@ -275,6 +273,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 remoteClient.SendAgentAlertMessage("Script saved", false);
             }
+            part.GetProperties(remoteClient);
 
             part.ParentGroup.ResumeScripts();
             return errors;

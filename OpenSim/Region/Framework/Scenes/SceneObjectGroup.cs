@@ -1266,7 +1266,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart = part;
             if (!IsAttachment)
                 part.SetParentLocalId(0);
-            AddChild(part, 0);
+            AddChild(part, part.LinkNum);
         }
 
         // justincc: I don't believe this hack is needed any longer, especially since the physics
@@ -1494,7 +1494,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     m_log.DebugFormat(
-                            "[SCENE]: Storied {0}, {1} in {2} at {3} in {4}",
+                            "[SCENE]: Stored {0}, {1} in {2} at {3} in {4} seconds",
                             Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString(), (DateTime.Now -startTime).TotalSeconds);
 
 

@@ -151,11 +151,7 @@ namespace OpenSim.Data.MSSQL
                         }
                         else
                         {
-                            // Black magic to preserve link numbers
-                            // Why is this needed, fix this in AddPart method.
-                            int link = sceneObjectPart.LinkNum;
-
-                            grp.AddChild(sceneObjectPart, link);
+                            grp.AddChild(sceneObjectPart, sceneObjectPart.LinkNum);
                         }
                     }
                 }

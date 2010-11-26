@@ -1752,7 +1752,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
                 if (child.LocalId == 0)
                     child.LocalId = m_parentScene.AllocateLocalId();
-                entity.AddChild(child, entity.ChildrenEntities().Count);
+                entity.AddChild(child, child.LinkNum);
             }
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();

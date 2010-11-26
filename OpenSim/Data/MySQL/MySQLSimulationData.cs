@@ -567,9 +567,7 @@ namespace OpenSim.Data.MySQL
                 {
                     if (objects.TryGetValue(prim.ParentUUID, out sog))
                     {
-                        int link = prim.LinkNum;
-
-                        sog.AddChild(prim, link);
+                        sog.AddChild(prim, prim.LinkNum);
                     }
                     else
                     {
