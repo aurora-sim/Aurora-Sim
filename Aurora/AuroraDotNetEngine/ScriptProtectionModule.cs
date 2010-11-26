@@ -212,11 +212,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData GetScript(UUID primID, UUID itemID)
         {
             Dictionary<UUID, ScriptData> Instances;
-            if (Scripts.TryGetValue(primID, out Instances))
+            lock (Scripts)
             {
-                ScriptData ID = null;
-                Instances.TryGetValue(itemID, out ID);
-                return ID;
+                if (Scripts.TryGetValue(primID, out Instances))
+                {
+                    ScriptData ID = null;
+                    Instances.TryGetValue(itemID, out ID);
+                    return ID;
+                }
             }
             return null;
         }
@@ -235,24 +238,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData[] GetScripts(UUID primID)
         {
             Dictionary<UUID, ScriptData> Instances;
-            if (Scripts.TryGetValue(primID, out Instances))
-                return new List<ScriptData>(Instances.Values).ToArray();
+            lock (Scripts)
+            {
+                if (Scripts.TryGetValue(primID, out Instances))
+                    return new List<ScriptData>(Instances.Values).ToArray();
+            }
             return null;
         }
         
         public void AddNewScript(ScriptData ID)
         {
+            lock (ScriptsItems)
+            {
+                if(ID.part != null)
+                    ScriptsItems[ID.ItemID] = ID.part.UUID;
+            }
             lock (Scripts)
             {
-                lock (ScriptsItems)
-                {
-                    ScriptsItems[ID.ItemID] = ID.part.UUID;
-                }
                 Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
                 if (!Scripts.TryGetValue(ID.part.UUID, out Instances))
-                {
                     Instances = new Dictionary<UUID, ScriptData>();
-                }
+
                 Instances[ID.ItemID] = ID;
                 Scripts[ID.part.UUID] = Instances;
             }
@@ -261,13 +267,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ScriptData[] GetAllScripts()
         {
         	List<ScriptData> Ids = new List<ScriptData>();
-        	foreach(Dictionary<UUID, ScriptData> Instances in Scripts.Values)
-        	{
-        		foreach(ScriptData ID in Instances.Values)
-        		{
-        			Ids.Add(ID);
-        		}
-        	}
+            lock (Scripts)
+            {
+                foreach (Dictionary<UUID, ScriptData> Instances in Scripts.Values)
+                {
+                    foreach (ScriptData ID in Instances.Values)
+                    {
+                        Ids.Add(ID);
+                    }
+                }
+            }
         	return Ids.ToArray();
         }
         
@@ -277,13 +286,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 ScriptsItems.Remove(Data.ItemID);
             }
-        	Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
-            if (Scripts.ContainsKey(Data.part.UUID))
-        	{
-                Instances = Scripts[Data.part.UUID];
-                Instances.Remove(Data.ItemID);
-        	}
-            Scripts[Data.part.UUID] = Instances;
+            lock (Scripts)
+            {
+                Dictionary<UUID, ScriptData> Instances = new Dictionary<UUID, ScriptData>();
+                if (Scripts.ContainsKey(Data.part.UUID))
+                {
+                    Instances = Scripts[Data.part.UUID];
+                    Instances.Remove(Data.ItemID);
+                }
+                Scripts[Data.part.UUID] = Instances;
+            }
         }
         
         #endregion
