@@ -229,7 +229,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_start";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(1) };
+            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
             foreach (ScriptData ID in datas)
             {

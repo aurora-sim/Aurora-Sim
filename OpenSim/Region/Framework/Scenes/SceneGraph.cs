@@ -1054,11 +1054,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ((SceneObjectGroup)group).GrabMovement(offset, pos, remoteClient);
                 }
-                // This is outside the above permissions condition
-                // so that if the object is locked the client moving the object
-                // get's it's position on the simulator even if it was the same as before
-                // This keeps the moving user's client in sync with the rest of the world.
-                ((SceneObjectGroup)group).ScheduleGroupForTerseUpdate();
             }
         }
 
@@ -1410,7 +1405,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // occur on link to invoke this elsewhere (such as object selection)
                 parentGroup.RootPart.CreateSelected = true;
                 parentGroup.HasGroupChanged = true;
-                parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
+                //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);

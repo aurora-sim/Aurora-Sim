@@ -3729,6 +3729,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_updateFlag != InternalUpdateFlags.FullUpdate)
             {
+                if (m_updateFlag != InternalUpdateFlags.TerseUpdate)
+                    CRC++;
                 if (m_parentGroup != null)
                 {
                     //m_parentGroup.HasGroupChanged = true;
@@ -3736,8 +3738,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
                 m_updateFlag = InternalUpdateFlags.TerseUpdate;
-
-                CRC++;
             }
         }
 

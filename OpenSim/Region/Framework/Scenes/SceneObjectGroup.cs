@@ -658,7 +658,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.SetParentLocalId(0);
 
                     //Fix the link num
-                    part.LinkNum = m_partsList.Count;
+                    part.LinkNum = m_partsList.Count + 1;
 
                     if (!m_parts.ContainsKey(child.UUID))
                     {
@@ -2385,6 +2385,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Destroy the old group
             m_scene.UnlinkSceneObject(objectGroup, true);
             m_scene.SceneGraph.DeleteEntity(objectGroup);
+            SceneObjectPart[] objectGroupChildren = new SceneObjectPart[objectGroup.ChildrenList.Count];
+            objectGroup.ChildrenList.CopyTo(objectGroupChildren, 0);
             objectGroup.m_isDeleted = true;
             objectGroup.ClearChildren();
 
@@ -2394,10 +2396,9 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add this to our group!
                 m_scene.SceneGraph.LinkPartToSOG(this, linkPart);
                 linkPart.CreateSelected = true;
-
                 //rest of parts
                 int linkNum = 3;
-                foreach (SceneObjectPart part in objectGroup.ChildrenList)
+                foreach (SceneObjectPart part in objectGroupChildren)
                 {
                     if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
@@ -2405,7 +2406,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-
             // Here's the deal, this is ABSOLUTELY CRITICAL so the physics scene gets the update about the 
             // position of linkset prims.  IF YOU CHANGE THIS, YOU MUST TEST colliding with just linked and 
             // unmoved prims!
@@ -2499,7 +2499,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scene.SceneGraph.LinkPartToSOG(this, part);
 
-            part.LinkNum = linkNum;
+            //part.LinkNum = linkNum;
 
             part.OffsetPosition = part.GroupPosition - AbsolutePosition;
 
@@ -2538,6 +2538,11 @@ namespace OpenSim.Region.Framework.Scenes
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
                             m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                            // This is outside the above permissions condition
+                            // so that if the object is locked the client moving the object
+                            // get's it's position on the simulator even if it was the same as before
+                            // This keeps the moving user's client in sync with the rest of the world.
+                            ScheduleGroupForTerseUpdate();
                         }
                     }
                     else
