@@ -32,7 +32,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Remoting.Lifetime;
 using System.Threading;
-using log4net;
+using OpenMetaverse;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
@@ -236,11 +236,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     {
                         m_enumerators.TryGetValue(Start.Key, out thread);
                     }
-                    if (thread != null)
-                        running = thread.MoveNext();
                 }
                 else
                     thread = (IEnumerator)ev.Invoke(m_Script, args);
+                if (thread != null)
+                    running = thread.MoveNext();
             }
             catch (Exception tie)
             {
@@ -271,7 +271,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 if (Start == null)
                 {
                     Start = new EnumeratorInfo();
-                    Start.Key = System.Guid.NewGuid();
+                    Start.Key = UUID.Random().Guid;
                 }
                 lock (m_enumerators)
                 {
