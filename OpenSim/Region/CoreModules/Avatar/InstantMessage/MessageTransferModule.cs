@@ -534,6 +534,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         lock (m_UserRegionMap)
                         {
                             m_UserRegionMap[toAgentID] = new IMPresenceInfo();
+                            m_UserRegionMap[toAgentID].Region = cachedRegion;
                             m_UserRegionMap[toAgentID].HTTPPath = "http://" + cachedRegion.ExternalHostName + ":" + cachedRegion.HttpPort;
                         }
                         result(true);
