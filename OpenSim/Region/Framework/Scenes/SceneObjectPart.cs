@@ -3163,7 +3163,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if (m_parentGroup.Scene == null)
                                 return;
 
-                            m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this, CollidingMessage);
+                            m_parentGroup.Scene.EventManager.TriggerScriptColliding(this, CollidingMessage);
                             
                             if ((this.UUID != this.ParentGroup.RootPart.UUID))
                             {
@@ -3321,11 +3321,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, EndCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingEnd(this.ParentGroup.RootPart, EndCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.collision_end) == 0) && this.PassCollisions == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, EndCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingEnd(this.ParentGroup.RootPart, EndCollidingMessage);
                                 }
                             }
                         }
@@ -3377,11 +3377,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandStartCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandCollidingStart(this.ParentGroup.RootPart, LandStartCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.land_collision_start) == 0) && this.PassCollisions == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandStartCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandCollidingStart(this.ParentGroup.RootPart, LandStartCollidingMessage);
                                 }
                             }
                         }
@@ -3433,11 +3433,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptColliding(this.ParentGroup.RootPart, LandCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.land_collision) == 0) && this.PassCollisions == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptColliding(this.ParentGroup.RootPart, LandCollidingMessage);
                                 }
                             }
                         }
@@ -3489,11 +3489,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandEndCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandCollidingEnd(this.ParentGroup.RootPart, LandEndCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.land_collision_end) == 0) && this.PassCollisions == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptCollidingStart(this.ParentGroup.RootPart, LandEndCollidingMessage);
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandCollidingEnd(this.ParentGroup.RootPart, LandEndCollidingMessage);
                                 }
                             }
                         }

@@ -318,7 +318,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // If the touched prim handles touches, deliver it
                 // If not, deliver to root prim
-                EventManager.TriggerObjectGrab(part, part.OffsetPosition, remoteClient, surfaceArg);
+                EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient, surfaceArg);
                 // Deliver to the root prim if the touched prim doesn't handle touches
                 // or if we're meant to pass on touches anyway. Don't send to root prim
                 // if prim touched is the root prim as we just did it
@@ -332,11 +332,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (part.PassTouch == PASS_ALWAYS)
                     {
-                        EventManager.TriggerObjectGrab(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
                     }
                     else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                     {
-                        EventManager.TriggerObjectGrab(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
                     }
                 }
             }
@@ -410,7 +410,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // If the touched prim handles touches, deliver it
                 // If not, deliver to root prim
-                EventManager.TriggerObjectGrabbing(part, part.OffsetPosition, remoteClient, surfaceArg);
+                EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient, surfaceArg);
                 // Deliver to the root prim if the touched prim doesn't handle touches
                 // or if we're meant to pass on touches anyway. Don't send to root prim
                 // if prim touched is the root prim as we just did it
@@ -425,11 +425,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (part.PassTouch == PASS_ALWAYS)
                     {
-                        EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
                     }
                     else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                     {
-                        EventManager.TriggerObjectGrabbing(obj.RootPart, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
                     }
                 }
             }
@@ -494,7 +494,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectGroup obj = part.ParentGroup;
                 // If the touched prim handles touches, deliver it
                 // If not, deliver to root prim
-                EventManager.TriggerObjectDeGrab(part, remoteClient, surfaceArg);
+                EventManager.TriggerObjectDeGrab(part, part, remoteClient, surfaceArg);
 
                 if ((part.LocalId != obj.RootPart.LocalId))
                 {
@@ -506,11 +506,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (part.PassTouch == PASS_ALWAYS)
                     {
-                        EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
                     }
                     else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
                     {
-                        EventManager.TriggerObjectDeGrab(obj.RootPart, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
                     }
                 }
             }

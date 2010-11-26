@@ -101,7 +101,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnShutdownDelegate OnShutdown;
 
-        public delegate void ObjectDeGrabDelegate(SceneObjectPart part, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
         public delegate void ScriptResetDelegate(uint localID, UUID itemID);
 
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
@@ -111,13 +110,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Fired when an object is touched/grabbed.
         /// </summary>
-        /// The originalID is the local ID of the part that was actually touched.  The localID itself is always that of
-        /// the root part.
+        /// The child is the part that was actually touched.
         public event ObjectGrabDelegate OnObjectGrab;
-        public delegate void ObjectGrabDelegate(SceneObjectPart part, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
+        public delegate void ObjectGrabDelegate(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
         
         public event ObjectGrabDelegate OnObjectGrabbing;
         public event ObjectDeGrabDelegate OnObjectDeGrab;
+        public delegate void ObjectDeGrabDelegate(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
         public event ScriptResetDelegate OnScriptReset;
 
         public event OnPermissionErrorDelegate OnPermissionError;
@@ -899,7 +898,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectGrab(SceneObjectPart part, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrab(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrab = OnObjectGrab;
             if (handlerObjectGrab != null)
@@ -908,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(part, offsetPos, remoteClient, surfaceArgs);
+                        d(part, child, offsetPos, remoteClient, surfaceArgs);
                     }
                     catch (Exception e)
                     {
@@ -920,7 +919,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerObjectGrabbing(SceneObjectPart part, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectGrabbing(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectGrabDelegate handlerObjectGrabbing = OnObjectGrabbing;
             if (handlerObjectGrabbing != null)
@@ -929,7 +928,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(part, offsetPos, remoteClient, surfaceArgs);
+                        d(part, child, offsetPos, remoteClient, surfaceArgs);
                     }
                     catch (Exception e)
                     {
@@ -941,7 +940,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
          }
 
-        public void TriggerObjectDeGrab(SceneObjectPart part, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void TriggerObjectDeGrab(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             ObjectDeGrabDelegate handlerObjectDeGrab = OnObjectDeGrab;
             if (handlerObjectDeGrab != null)
@@ -950,7 +949,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(part, remoteClient, surfaceArgs);
+                        d(part, child, remoteClient, surfaceArgs);
                     }
                     catch (Exception e)
                     {
