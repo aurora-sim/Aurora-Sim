@@ -3553,10 +3553,12 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         ScenePresence sp = GetScenePresence(agentID);
-                        PresenceService.LogoutAgent(sp.ControllingClient.SessionId);
-
                         if (sp != null)
+                        {
+                            m_log.Warn("[Scene]: Could not verify client " + sp.Name + " in region " + RegionInfo.RegionName + ", logging them out of the grid");
+                            PresenceService.LogoutAgent(sp.ControllingClient.SessionId);
                             sp.ControllingClient.Close();
+                        }
 
                         // BANG! SLASH!
                         m_authenticateHandler.RemoveCircuit(agentID);

@@ -191,11 +191,13 @@ namespace OpenSim.Services.PresenceService
 
                     if (int.Parse(d.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
                     {
+                        m_log.Warn("[PresenceService]: Found a user (" + d.UserID + ") that was not seen within the last hour! Logging them out.");
                         LogoutAgent(d.SessionID);
                         continue;
                     }
                     if (ret.RegionID == UUID.Zero) //Bad logout
                     {
+                        m_log.Warn("[PresenceService]: Found a user (" + d.UserID + ") that does not have a region (UUID.Zero)! Logging them out.");
                         LogoutAgent(d.SessionID);
                         continue;
                     }
