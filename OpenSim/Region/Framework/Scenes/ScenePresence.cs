@@ -3197,6 +3197,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             cAgent.Speed = SpeedModifier;
             cAgent.AlwaysRun = m_setAlwaysRun;
+            cAgent.SentInitialWearables = m_InitialHasWearablesBeenSent;
             
             cAgent.Appearance = new AvatarAppearance(m_appearance);
             
@@ -3299,6 +3300,7 @@ namespace OpenSim.Region.Framework.Scenes
             //    m_godLevel = cAgent.GodLevel;
             m_speedModifier = cAgent.Speed;
             m_setAlwaysRun = cAgent.AlwaysRun;
+            m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
             m_appearance = new AvatarAppearance(cAgent.Appearance);
             
 /*

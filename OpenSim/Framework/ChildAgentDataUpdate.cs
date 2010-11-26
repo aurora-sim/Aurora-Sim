@@ -304,6 +304,7 @@ namespace OpenSim.Framework
         public UUID PreyAgent;
         public Byte AgentAccess;
         public UUID ActiveGroupID;
+        public bool SentInitialWearables;
 
         public AgentGroupData[] Groups;
         public Animation[] Anims;
@@ -369,6 +370,7 @@ namespace OpenSim.Framework
             args["speed"] = OSD.FromString(Speed.ToString());
             args["god_level"] = OSD.FromString(GodLevel.ToString());
             args["always_run"] = OSD.FromBoolean(AlwaysRun);
+            args["sent_initial_wearables"] = OSD.FromBoolean(SentInitialWearables);
             args["prey_agent"] = OSD.FromUUID(PreyAgent);
             args["agent_access"] = OSD.FromString(AgentAccess.ToString());
 
@@ -535,6 +537,11 @@ namespace OpenSim.Framework
 
             if (args["always_run"] != null)
                 AlwaysRun = args["always_run"].AsBoolean();
+
+            if (args["sent_initial_wearables"] != null)
+                SentInitialWearables = args["sent_initial_wearables"].AsBoolean();
+            else
+                SentInitialWearables = false;
 
             if (args["prey_agent"] != null)
                 PreyAgent = args["prey_agent"].AsUUID();
