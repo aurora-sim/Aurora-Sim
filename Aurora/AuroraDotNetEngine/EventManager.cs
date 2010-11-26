@@ -355,6 +355,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
 
@@ -389,6 +390,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
 
@@ -423,6 +425,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 DetectParams d = new DetectParams();
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
 
@@ -459,6 +462,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
             if (det.Count != 0)
@@ -494,6 +498,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
             if (det.Count != 0)
@@ -529,6 +534,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     detobj.posVector.Z);
                 d.Key = detobj.keyUUID;
                 d.Populate(part.ParentGroup.Scene);
+                d.LinkNum = part.LinkNum;
                 det.Add(d);
             }
             if (det.Count != 0)
