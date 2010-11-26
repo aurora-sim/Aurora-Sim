@@ -567,14 +567,9 @@ namespace OpenSim.Data.MySQL
                 {
                     if (objects.TryGetValue(prim.ParentUUID, out sog))
                     {
-                        int originalLinkNum = prim.LinkNum;
+                        int link = prim.LinkNum;
 
-                        sog.AddChild(prim);
-
-                        // SceneObjectGroup.AddPart() tries to be smart and automatically set the LinkNum.
-                        // We override that here
-                        if (originalLinkNum != 0)
-                            prim.LinkNum = originalLinkNum;
+                        sog.AddChild(prim, link);
                     }
                     else
                     {

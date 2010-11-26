@@ -1555,7 +1555,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Non EntityBase methods that need cleaned up later
 
-        public bool LinkPartToSOG(SceneObjectGroup grp, SceneObjectPart part)
+        public bool LinkPartToSOG(SceneObjectGroup grp, SceneObjectPart part, int linkNum)
         {
             part.SetParentLocalId(grp.RootPart.LocalId);
             part.SetParent(grp);
@@ -1564,13 +1564,13 @@ namespace OpenSim.Region.Framework.Scenes
             // the root prim. Shuffle the old ones up
             foreach (ISceneEntity otherPart in grp.ChildrenEntities())
             {
-                if (otherPart.LinkNum != 1)
+                if (otherPart.LinkNum >= linkNum)
                 {
                     // Don't update root prim link number
                     otherPart.LinkNum += 1;
                 }
             }
-            part.LinkNum = 2;
+            part.LinkNum = linkNum;
             return LinkPartToEntity(grp, part);
         }
 
@@ -1752,7 +1752,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
                 if (child.LocalId == 0)
                     child.LocalId = m_parentScene.AllocateLocalId();
-                entity.AddChild(child);
+                entity.AddChild(child, entity.ChildrenEntities().Count);
             }
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
@@ -1840,7 +1840,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ISceneEntity child in children)
             {
                 child.ResetEntityIDs();
-                entity.AddChild(child);
+                entity.AddChild(child, child.LinkNum);
             }
         }
 

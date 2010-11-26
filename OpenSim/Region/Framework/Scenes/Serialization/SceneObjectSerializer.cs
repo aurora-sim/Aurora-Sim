@@ -95,9 +95,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     sr = new StringReader(parts[i].InnerXml);
                     reader = new XmlTextReader(sr);
                     SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
-                    linkNum = part.LinkNum;
-                    sceneObject.AddChild(part);
-                    part.LinkNum = linkNum;
+                    sceneObject.AddChild(part, part.LinkNum);
                     part.TrimPermissions();
                     part.StoreUndoState();
                     reader.Close();
@@ -208,14 +206,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     reader = new XmlTextReader(sr);
                     SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
 
-                    int originalLinkNum = part.LinkNum;
-
-                    sceneObject.AddChild(part);
-
-                    // SceneObjectGroup.AddPart() tries to be smart and automatically set the LinkNum.
-                    // We override that here
-                    if (originalLinkNum != 0)
-                        part.LinkNum = originalLinkNum;
+                    sceneObject.AddChild(part, part.LinkNum);
 
                     part.StoreUndoState();
                     reader.Close();
@@ -1372,7 +1363,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                         {
                             SceneObjectPart child = Xml2ToSOP(reader, sog.Scene);
                             if (child != null)
-                                sog.AddChild(child);
+                                sog.AddChild(child, child.LinkNum);
                         }
                         else
                         {

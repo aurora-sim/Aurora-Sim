@@ -638,7 +638,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="child"></param>
         /// <returns></returns>
-        public override bool AddChild(ISceneEntity child)
+        public override bool AddChild(ISceneEntity child, int linkNum)
         {
             lock (m_partsLock)
             {
@@ -658,7 +658,7 @@ namespace OpenSim.Region.Framework.Scenes
                         part.SetParentLocalId(0);
 
                     //Fix the link num
-                    part.LinkNum = m_partsList.Count + 1;
+                    part.LinkNum = linkNum;
 
                     if (!m_parts.ContainsKey(child.UUID))
                     {
@@ -1266,8 +1266,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart = part;
             if (!IsAttachment)
                 part.SetParentLocalId(0);
-            part.LinkNum = 0;
-            AddChild(part);
+            AddChild(part, 0);
         }
 
         // justincc: I don't believe this hack is needed any longer, especially since the physics
@@ -1569,9 +1568,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.ClearChildren();
 
-            dupe.AddChild(m_rootPart.Copy(dupe));
-
-            dupe.m_rootPart.LinkNum = m_rootPart.LinkNum;
+            dupe.AddChild(m_rootPart.Copy(dupe), m_rootPart.LinkNum);
 
             dupe.m_rootPart.TrimPermissions();
 
@@ -2393,11 +2390,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_partsLock)
             {
-                //Add this to our group!
-                m_scene.SceneGraph.LinkPartToSOG(this, linkPart);
+                int linkNum = 2;
+                //Add the root part to our group!
+                m_scene.SceneGraph.LinkPartToSOG(this, linkPart, linkNum++);
                 linkPart.CreateSelected = true;
                 //rest of parts
-                int linkNum = 3;
                 foreach (SceneObjectPart part in objectGroupChildren)
                 {
                     if (part.UUID != objectGroup.m_rootPart.UUID)
@@ -2430,7 +2427,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Remove the part from this object
             m_scene.SceneGraph.DeLinkPartFromEntity(this, linkPart);
 
-            if (m_parts.Count == 1 && RootPart != null) //Single prim is left
+            if (m_partsList.Count == 1 && RootPart != null) //Single prim is left
                 RootPart.LinkNum = 0;
             else
             {
@@ -2497,9 +2494,7 @@ namespace OpenSim.Region.Framework.Scenes
             part.OffsetPosition = Vector3.Zero;
             part.RotationOffset = worldRot;
 
-            m_scene.SceneGraph.LinkPartToSOG(this, part);
-
-            //part.LinkNum = linkNum;
+            m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
 
             part.OffsetPosition = part.GroupPosition - AbsolutePosition;
 

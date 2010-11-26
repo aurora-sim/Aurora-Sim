@@ -155,10 +155,7 @@ namespace OpenSim.Data.MSSQL
                             // Why is this needed, fix this in AddPart method.
                             int link = sceneObjectPart.LinkNum;
 
-                            grp.AddChild(sceneObjectPart);
-
-                            if (link != 0)
-                                sceneObjectPart.LinkNum = link;
+                            grp.AddChild(sceneObjectPart, link);
                         }
                     }
                 }

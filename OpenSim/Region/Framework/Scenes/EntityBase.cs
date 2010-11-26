@@ -188,7 +188,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public virtual bool AddChild(ISceneEntity child)
+        public virtual bool AddChild(ISceneEntity child, int linkNum)
         {
             return false;
         }
