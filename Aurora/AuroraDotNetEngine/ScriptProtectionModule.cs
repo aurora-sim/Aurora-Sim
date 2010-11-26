@@ -102,8 +102,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string perm = m_config.GetString("Allow_" + function, "");
                 if (perm == "")
                 {
-                    m_FunctionPerms[function] = null; // a null value is default
-                    FunctionPerms = null;
+                    FunctionPerms = null;// a null value is default
                 }
                 else
                 {
@@ -114,17 +113,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         // Boolean given
                         if (allowed)
                         {
-                            m_FunctionPerms[function] = new List<UUID>();
-                            m_FunctionPerms[function].Add(UUID.Zero);
-//                            FunctionPerms = new List<UUID>();
-//                            FunctionPerms.Add(UUID.Zero);
+                            FunctionPerms = new List<UUID>();
+                            FunctionPerms.Add(UUID.Zero);
                         }
                         else
-                            m_FunctionPerms[function] = new List<UUID>(); // Empty list = none
+                            FunctionPerms = new List<UUID>(); // Empty list = none
                     }
                     else
                     {
-                        m_FunctionPerms[function] = new List<UUID>();
+                        FunctionPerms = new List<UUID>();
 
                         string[] ids = perm.Split(new char[] {','});
                         foreach (string id in ids)
@@ -135,11 +132,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             if (UUID.TryParse(current, out uuid))
                             {
                                 if (uuid != UUID.Zero)
-                                    m_FunctionPerms[function].Add(uuid);
+                                    FunctionPerms.Add(uuid);
                             }
                         }
                     }
                 }
+                m_FunctionPerms[function] = FunctionPerms;
             }
 
             // If the list is null, then the value was true / undefined
