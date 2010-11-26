@@ -195,6 +195,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private bool m_IsLoading = false;
+        [XmlIgnore]
+        public bool IsLoading
+        {
+            get { return m_IsLoading; }
+            set { m_IsLoading = value; }
+        }
+
         private bool m_StatusSandbox;
         [XmlIgnore]
         public bool StatusSandbox
@@ -704,6 +712,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="shouldBackup">Should this be backed up now</param>
         public void SetComponentState(string Name, object State, bool shouldBackup)
         {
+            if (IsLoading) //No saving while loading
+                return;
             //Back up the object later
             if (ParentGroup != null && shouldBackup)
                 ParentGroup.HasGroupChanged = true;
@@ -715,6 +725,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 OSD state = (State is OSD) ? (OSD)State : OSD.FromObject(State);
                 manager.SetComponentState(this, Name, state);
+            }
+        }
+
+        public void ResetComponentsToNewID(UUID oldID)
+        {
+            if (oldID == UUID.Zero)
+                return;
+            if (IsLoading)
+                return;
+            Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
+            IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
+            if (manager != null)
+            {
+                manager.ResetComponentIDsToNewObject(oldID, this);
             }
         }
 
@@ -881,6 +905,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_uuid; }
             set 
             {
+                UUID oldID = m_uuid;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 m_uuid = value; 
@@ -888,6 +913,8 @@ namespace OpenSim.Region.Framework.Scenes
                 // This is necessary so that TaskInventoryItem parent ids correctly reference the new uuid of this part
                 if (Inventory != null)
                     Inventory.ResetObjectID();
+
+                ResetComponentsToNewID(oldID);
             }
         }
 

@@ -247,6 +247,24 @@ namespace OpenSim.Region.Framework.Scenes.Components
         }
 
         /// <summary>
+        /// Change/add all references from the oldID to the new UUID
+        /// </summary>
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        public void ResetComponentIDsToNewObject(UUID oldID, SceneObjectPart part)
+        {
+            OSDMap ComponentsBody = new OSDMap();
+            //Run through the list of components and serialize them
+            foreach (IComponent component in m_components.Values)
+            {
+                //Add the componet to the map by its name
+                OSD o = component.GetState(oldID);
+                if (o != null)
+                    SetComponentState(part, component.Name, o); 
+            }
+        }
+
+        /// <summary>
         /// Take the serialized string and set up the Components for this object
         /// </summary>
         /// <param name="obj"></param>

@@ -1393,6 +1393,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, Scene scene)
         {
             SceneObjectPart obj = new SceneObjectPart(scene);
+            obj.IsLoading = true;
             reader.ReadStartElement("SceneObjectPart");
 
             string nodeName = string.Empty;
@@ -1423,6 +1424,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
 
             reader.ReadEndElement(); // SceneObjectPart
+            obj.IsLoading = false;
 
             //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
             return obj;

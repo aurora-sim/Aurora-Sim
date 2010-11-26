@@ -670,14 +670,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Packet Handling
 
-        # region Setup
-
         public virtual void Start()
         {
             m_scene.AddNewClient(this);
         }
-
-        # endregion
 
         public void ActivateGesture(UUID assetId, UUID gestureId)
         {

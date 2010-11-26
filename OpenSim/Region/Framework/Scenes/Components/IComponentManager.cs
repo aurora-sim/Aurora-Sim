@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Scenes.Components
 {
@@ -56,5 +57,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="obj">The object to serialize</param>
         /// <returns>The serialized string</returns>
         string SerializeComponents(SceneObjectPart obj);
+
+        void ResetComponentIDsToNewObject(UUID oldID, SceneObjectPart part);
     }
 }
