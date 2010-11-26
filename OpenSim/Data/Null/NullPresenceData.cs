@@ -96,6 +96,23 @@ namespace OpenSim.Data.Null
                 m_presenceData.Remove(u);
         }
 
+        public void LogoutAgent(UUID userID)
+        {
+            if (Instance != this)
+            {
+                Instance.LogoutAgent(userID);
+                return;
+            }
+
+            List<UUID> toBeDeleted = new List<UUID>();
+            foreach (KeyValuePair<UUID, PresenceData> kvp in m_presenceData)
+                if (kvp.Value.UserID == userID.ToString())
+                    toBeDeleted.Add(kvp.Key);
+
+            foreach (UUID u in toBeDeleted)
+                m_presenceData.Remove(u);
+        }
+
         public bool ReportAgent(UUID sessionID, UUID regionID)
         {
             if (Instance != this)

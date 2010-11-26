@@ -61,12 +61,26 @@ namespace OpenSim.Data.MSSQL
             return ret[0];
         }
 
-        public void LogoutRegionAgents(UUID regionID)
+        public void LogoutAgent(UUID userID)
         {
             using (SqlConnection conn = new SqlConnection(m_ConnectionString))
             using (SqlCommand cmd = new SqlCommand())
             {
 
+                cmd.CommandText = String.Format("DELETE FROM {0} WHERE [UserID]=@UserID", m_Realm);
+
+                cmd.Parameters.Add(m_database.CreateParameter("@UserID", userID.ToString()));
+                cmd.Connection = conn;
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void LogoutRegionAgents(UUID regionID)
+        {
+            using (SqlConnection conn = new SqlConnection(m_ConnectionString))
+            using (SqlCommand cmd = new SqlCommand())
+            {
                 cmd.CommandText = String.Format("DELETE FROM {0} WHERE [RegionID]=@RegionID", m_Realm);
 
                 cmd.Parameters.Add(m_database.CreateParameter("@RegionID", regionID.ToString()));

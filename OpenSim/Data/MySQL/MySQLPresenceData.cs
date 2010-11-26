@@ -72,6 +72,17 @@ namespace OpenSim.Data.MySQL
             ExecuteNonQuery(cmd);
         }
 
+        public void LogoutAgent(UUID userID)
+        {
+            MySqlCommand cmd = new MySqlCommand();
+
+            cmd.CommandText = String.Format("delete from {0} where `UserID`=?UserID", m_Realm);
+
+            cmd.Parameters.AddWithValue("?UserID", userID.ToString());
+
+            ExecuteNonQuery(cmd);
+        }
+
         public bool ReportAgent(UUID sessionID, UUID regionID)
         {
             PresenceData[] pd = Get("SessionID", sessionID.ToString());

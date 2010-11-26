@@ -34,6 +34,17 @@ namespace OpenSim.Data.SQLite
             return ret[0];
         }
 
+        public void LogoutAgent(UUID userID)
+        {
+            SqliteCommand cmd = new SqliteCommand();
+
+            cmd.CommandText = String.Format("delete from {0} where 'UserID'=:UserID", m_Realm);
+
+            cmd.Parameters.AddWithValue(":UserID", userID.ToString());
+
+            ExecuteNonQuery(cmd);
+        }
+
         public void LogoutRegionAgents(UUID regionID)
         {
             SqliteCommand cmd = new SqliteCommand();

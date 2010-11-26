@@ -73,7 +73,7 @@ namespace OpenSim.Services.PresenceService
                 UUID secureSessionID)
         {
             if (!m_allowDuplicatePresences)
-                m_Database.Delete("UserID", userID.ToString());
+                m_Database.LogoutAgent(UUID.Parse(userID));
 
             PresenceData data = new PresenceData();
 
