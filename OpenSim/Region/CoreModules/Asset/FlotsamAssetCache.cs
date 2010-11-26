@@ -668,7 +668,7 @@ namespace Flotsam.RegionModules.AssetCache
 
                 s.ForEachSOG(delegate(SceneObjectGroup e)
                 {
-                    gatherer.GatherAssetUuids(e, assets);
+                    gatherer.GatherAssetUuids(e, assets, s);
                 }
                 );
             }

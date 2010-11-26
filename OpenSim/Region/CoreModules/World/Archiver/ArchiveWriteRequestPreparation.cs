@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             foreach (SceneObjectGroup sceneObject in sceneObjects)
             {
-                assetGatherer.GatherAssetUuids(sceneObject, assetUuids);
+                assetGatherer.GatherAssetUuids(sceneObject, assetUuids, m_scene);
             }
 
             m_log.DebugFormat(

@@ -158,7 +158,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             string serialization = UserInventoryItemSerializer.Serialize(saveItem);
             m_archiveWriter.WriteFile(filename, serialization);
 
-            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType)saveItem.AssetType, m_assetUuids);
+            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType)saveItem.AssetType, m_assetUuids, m_scene);
         }
 
         /// <summary>

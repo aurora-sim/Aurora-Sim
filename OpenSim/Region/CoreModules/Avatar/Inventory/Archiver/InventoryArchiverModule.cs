@@ -446,9 +446,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <param name="cmdparams"></param>
         protected void HandleSaveInvConsoleCommand(string module, string[] cmdparams)
         {
-            {
-            }
-			try
+            try
 			{
             m_log.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 

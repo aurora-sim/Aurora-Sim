@@ -83,7 +83,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 sr = new StringReader(parts[0].InnerXml);
                 reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), scene);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), scene, false);
                 reader.Close();
                 sr.Close();
 

@@ -572,6 +572,16 @@ namespace OpenSim.Region.Framework.Scenes
         {
             SetRootPart(part);
         }
+        public SceneObjectGroup(SceneObjectPart part, Scene scene, bool AddToScene)
+            : this(scene)
+        {
+            if (!AddToScene)
+            {
+                m_isLoaded = false;
+                m_isDeleted = true;
+            }
+            SetRootPart(part);
+        }
 
         /// <summary>
         /// Constructor.  This object is added to the scene later via AttachToScene()
