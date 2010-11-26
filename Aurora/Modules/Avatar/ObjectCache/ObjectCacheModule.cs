@@ -91,14 +91,22 @@ namespace Aurora.Modules
 
         public void OnNewClient(IClientAPI client)
         {
+            IScenePresence sp;
+            client.Scene.TryGetScenePresence(client.AgentId, out sp);
             //Create the client's cache
-            LoadFromFileForClient(client.AgentId);
+            //This is shared, so all get saved into one file
+            if (sp != null && !sp.IsChildAgent)
+                LoadFromFileForClient(client.AgentId);
         }
 
         public void OnClosingClient(IClientAPI client)
         {
             //Save the cache to the file for the client
-            SaveToFileForClient(client.AgentId);
+            IScenePresence sp;
+            client.Scene.TryGetScenePresence(client.AgentId, out sp);
+            //This is shared, so all get saved into one file
+            if (sp != null && !sp.IsChildAgent)
+                SaveToFileForClient(client.AgentId);
             //Remove the client's cache
             ObjectCacheAgents.Remove(client.AgentId);
         }

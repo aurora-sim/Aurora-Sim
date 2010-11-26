@@ -117,7 +117,7 @@ namespace OpenSim.Services.GridService
                 if (scope != string.Empty)
                     UUID.TryParse(scope, out m_ScopeID);
 
-                m_Check4096 = gridConfig.GetBoolean("Check4096", true);
+                m_Check4096 = gridConfig.GetBoolean("Check4096", m_Check4096);
 
                 m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
 
