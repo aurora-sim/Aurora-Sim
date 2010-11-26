@@ -194,12 +194,11 @@ namespace OpenSim.Region.Framework.Scenes
         #region admin stuff
 
         /// <summary>
-        /// Region Restart - Seconds till restart.
+        /// Region Restart, fire all the events for it
         /// </summary>
         /// <param name="seconds"></param>
-        public virtual void Restart(int seconds)
+        public virtual void Restart()
         {
-            m_log.Error("[REGION]: passing Restart Message up the namespace");
             restart handlerPhysicsCrash = OnRestart;
             if (handlerPhysicsCrash != null)
                 handlerPhysicsCrash(RegionInfo);

@@ -217,10 +217,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osRegionRestart", m_host, "OSSL");
 
-            
-            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+            IRestartModule restartModule = World.RequestModuleInterface<IRestartModule>();
+            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false) && (restartModule != null))
             {
-                World.Restart((float)seconds);
+                if (seconds < 15)
+                {
+                    restartModule.AbortRestart("Restart aborted");
+                    return 1;
+                }
+
+                List<int> times = new List<int>();
+                while (seconds > 0)
+                {
+                    times.Add((int)seconds);
+                    if (seconds > 300)
+                        seconds -= 120;
+                    else if (seconds > 30)
+                        seconds -= 30;
+                    else
+                        seconds -= 15;
+                }
+
+                restartModule.ScheduleRestart(UUID.Zero, "Region will restart in {0}", times.ToArray(), true);
                 return 1;
             }
             else

@@ -373,7 +373,9 @@ namespace OpenSim
 
             m_console.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
 
-            m_console.Commands.AddCommand("region", false, "save oar", "save oar <oar name>", "Save a region's data to an OAR archive", "More information on forthcoming options here soon", SaveOar);
+            m_console.Commands.AddCommand("region", false, "save oar", "save oar [-v|--version=N] [<OAR path>]", "Save a region's data to an OAR archive", "-v|--version=N generates scene objects as per older versions of the serialization (e.g. -v=0)" + Environment.NewLine
+                                           + "The OAR path must be a filesystem path."
+                                           + "  If this is not given then the oar is saved to region.oar in the current directory.", SaveOar);
 
             m_console.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
 

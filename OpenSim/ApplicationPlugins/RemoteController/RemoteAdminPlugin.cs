@@ -200,31 +200,37 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 m_log.Info("[RADMIN]: Request to restart Region.");
-                CheckStringParameters(request, new string[] {"password", "regionID"});
+                CheckStringParameters(request, new string[] { "password", "regionID" });
 
                 if (m_requiredPassword != String.Empty &&
-                    (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
+                    (!requestData.Contains("password") || (string)requestData["password"] != m_requiredPassword))
                 {
                     throw new Exception("wrong password");
                 }
 
-                UUID regionID = new UUID((string) requestData["regionID"]);
-
-                responseData["accepted"] = true;
-                responseData["success"] = true;
-                response.Value = responseData;
+                UUID regionID = new UUID((string)requestData["regionID"]);
 
                 Scene rebootedScene;
 
+                responseData["success"] = false;
+                responseData["accepted"] = true;
                 if (!manager.TryGetScene(regionID, out rebootedScene))
                     throw new Exception("region not found");
 
                 responseData["rebooting"] = true;
+
+                IRestartModule restartModule = rebootedScene.RequestModuleInterface<IRestartModule>();
+                if (restartModule != null)
+                {
+                    List<int> times = new List<int> { 30, 15 };
+
+                    restartModule.ScheduleRestart(UUID.Zero, "Region will restart in {0}", times.ToArray(), true);
+                    responseData["success"] = true;
+                };
                 response.Value = responseData;
-                rebootedScene.Restart(30);
             }
             catch (Exception e)
             {

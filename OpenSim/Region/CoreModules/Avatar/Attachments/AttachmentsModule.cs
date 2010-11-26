@@ -114,7 +114,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     return;
 
                 if (!m_scene.Permissions.CanTakeObject(part.UUID, remoteClient.AgentId))
-                    return;
+                {
+                     remoteClient.SendAgentAlertMessage(
+                         "You don't have sufficient permissions to attach this object", false);
+                     return;
+                }
 
                 // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
                 // be removed when that functionality is implemented in opensim
@@ -188,12 +192,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 UUID itemID = UUID.Zero;
                 if (sp != null)
                 {
-                    foreach (SceneObjectGroup grp in sp.GetAttachments(AttachmentPt))
+                    foreach (SceneObjectGroup grp in sp.Attachments)
                     {
-                        itemID = grp.GetFromItemID();
-                        if (itemID != UUID.Zero)
-                            DetachSingleAttachmentToInv(itemID, remoteClient);
+                        if (grp.GetAttachmentPoint() == (byte)AttachmentPt)
+                        {
+                            itemID = grp.GetFromItemID();
+                            break;
+                        }
                     }
+                    if (itemID != UUID.Zero)
+                        DetachSingleAttachmentToInv(itemID, remoteClient);
                 }
 
                 if (group.GetFromItemID() == UUID.Zero)

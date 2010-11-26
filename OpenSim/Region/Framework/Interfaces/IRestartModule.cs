@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,48 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.IO;
-using System.Reflection;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
-using OpenSim.Server.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using OpenMetaverse;
 
-namespace OpenSim.Server.Handlers.Freeswitch
+namespace OpenSim.Region.Framework.Interfaces
 {
-    public class FreeswitchServerGetHandler : BaseStreamHandler
+    public interface IRestartModule
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        //private IFreeswitchService m_FreeswitchService;
-
-        public FreeswitchServerGetHandler(IFreeswitchService service) :
-                base("GET", "/api")
-        {
-            //m_FreeswitchService = service;
-        }
-
-        public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            byte[] result = new byte[0];
-
-            string[] p = SplitParams(path);
-
-            if (p.Length == 0)
-                return result;
-
-            // Process web request
-
-            return result;
-        }
+        TimeSpan TimeUntilRestart { get; }
+        void ScheduleRestart(UUID initiator, string message, int[] alerts, bool notice);
+        void AbortRestart(string message);
     }
 }
