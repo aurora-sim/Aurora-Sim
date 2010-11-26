@@ -302,9 +302,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             
                 // Don't put all this profile information into the archive right now.
                 //SaveUsers();
-                            
-                new AssetsRequest(
-                    new AssetsArchiver(m_archiveWriter), m_assetUuids, m_scene.AssetService, ReceivedAllAssets).Execute();
             }
             catch (Exception)
             {
