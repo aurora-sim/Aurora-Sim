@@ -64,12 +64,8 @@ namespace OpenSim.Region.CoreModules.World.Region
             m_Scene = scene;
             scene.RegisterModuleInterface<IRestartModule>(this);
             MainConsole.Instance.Commands.AddCommand("RestartModule",
-                    false, "region restart bluebox",
-                    "region restart bluebox <message> <time> ...",
-                    "Restart the region", HandleRegionRestart);
-            MainConsole.Instance.Commands.AddCommand("RestartModule",
-                    false, "region restart notice",
-                    "region restart notice <message> <time> ...",
+                    false, "region restart",
+                    "region restart <message> <time (in seconds)>",
                     "Restart the region", HandleRegionRestart);
             MainConsole.Instance.Commands.AddCommand("RestartModule",
                     false, "region restart abort",
@@ -107,8 +103,18 @@ namespace OpenSim.Region.CoreModules.World.Region
 
         public void ScheduleRestart(UUID initiator, string message, int[] alerts, bool notice)
         {
-            if (m_CountdownTimer != null)
+            if (alerts.Length == 0)
+            {
+                AbortRestart("Restart aborted");
                 return;
+            }
+
+            if (m_CountdownTimer != null)
+            {
+                m_log.Warn("[Region]: Reseting the restart timer for new settings.");
+                m_CountdownTimer.Stop();
+                m_CountdownTimer = null;
+            }
 
             if (alerts == null)
             {
@@ -186,6 +192,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                     m_DialogModule.SendGeneralAlert(msg);
                 else
                     m_DialogModule.SendNotificationToUsersInRegion(m_Initiator, "System", msg);
+                m_log.Warn("[Region]: Region will restart in " + currentAlertString);
             }
 
             return currentAlert - nextAlert;
@@ -193,6 +200,8 @@ namespace OpenSim.Region.CoreModules.World.Region
 
         public void SetTimer(int intervalSeconds)
         {
+            if (intervalSeconds == 0)
+                return;
             m_CountdownTimer = new Timer();
             m_CountdownTimer.AutoReset = false;
             m_CountdownTimer.Interval = intervalSeconds * 1000;
@@ -215,6 +224,8 @@ namespace OpenSim.Region.CoreModules.World.Region
                 m_CountdownTimer = null;
                 if (m_DialogModule != null && message != String.Empty)
                     m_DialogModule.SendGeneralAlert(message);
+
+                m_log.Warn("[Region]: Region restart aborted");
             }
         }
 
@@ -226,36 +237,47 @@ namespace OpenSim.Region.CoreModules.World.Region
             if (MainConsole.Instance.ConsoleScene != m_Scene)
                 return;
 
-            if (args.Length < 5)
+            if (args.Length < 4)
             {
-                if (args.Length > 2)
+                if (args.Length >= 3)
                 {
                     if (args[2] == "abort")
                     {
-                        string msg = String.Empty;
+                        string msg = "Restart aborted";
                         if (args.Length > 3)
                             msg = args[3];
 
-                        AbortRestart(msg);
+                        if (m_Alerts != null)
+                        {
+                            AbortRestart(msg);
+                        }
+                        return;
+                    }
+                    int seconds = 0;
+                    if (int.TryParse(args[2], out seconds))
+                    {
+                        List<int> times = new List<int>();
+                        while (seconds > 0)
+                        {
+                            times.Add((int)seconds);
+                            if (seconds > 300)
+                                seconds -= 120;
+                            else if (seconds > 30)
+                                seconds -= 30;
+                            else
+                                seconds -= 15;
+                        }
+                        string msg = "Region will restart in {0}";
+                        if (args.Length > 3)
+                            msg = args[3];
 
-                        MainConsole.Instance.Output("Region restart aborted");
+                        ScheduleRestart(UUID.Zero, msg, times.ToArray(), true);
                         return;
                     }
                 }
-
                 MainConsole.Instance.Output("Error: restart region <mode> <name> <time> ...");
                 return;
             }
-
-            bool notice = false;
-            if (args[2] == "notice")
-                notice = true;
-
-            List<int> times = new List<int>();
-            for (int i = 4; i < args.Length; i++)
-                times.Add(Convert.ToInt32(args[i]));
-
-            ScheduleRestart(UUID.Zero, args[3], times.ToArray(), notice);
         }
     }
 }

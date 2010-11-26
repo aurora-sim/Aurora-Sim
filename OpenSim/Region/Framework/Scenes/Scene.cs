@@ -100,7 +100,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected ISimulationDataService m_SimulationDataService;
         protected IEstateDataService m_EstateDataService;
         protected IAssetService m_AssetService;
-        protected IAuthorizationService m_AuthorizationService;
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;
         protected ILibraryService m_LibraryService;
@@ -377,19 +376,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_AvatarService == null)
                     m_AvatarService = RequestModuleInterface<IAvatarService>();
                 return m_AvatarService;
-            }
-        }
-
-        public IAuthorizationService AuthorizationService
-        {
-            get
-            {
-                if (m_AuthorizationService == null)
-                {
-                    m_AuthorizationService = RequestModuleInterface<IAuthorizationService>();
-                }
-
-                return m_AuthorizationService;
             }
         }
 
@@ -4405,15 +4391,16 @@ namespace OpenSim.Region.Framework.Scenes
         {
             reason = String.Empty;
 
-            if (Permissions.IsGod(agent.AgentID)) return true;
-
+            IAuthorizationService AuthorizationService = RequestModuleInterface<IAuthorizationService>();
             if (AuthorizationService != null)
             {
                 if (!AuthorizationService.IsAuthorizedForRegion(agent.AgentID.ToString(), RegionInfo.RegionID.ToString(), out reason))
                 {
+                    if (Permissions.IsGod(agent.AgentID)) return true;
+
                     m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user does not have access to the region",
                                      agent.AgentID, agent.firstname, agent.lastname, RegionInfo.RegionName);
-                    //reason = String.Format("You are not currently on the access list for {0}",RegionInfo.RegionName);
+                    reason = String.Format("You do not have access to the region {0}",RegionInfo.RegionName);
                     return false;
                 }
             }
