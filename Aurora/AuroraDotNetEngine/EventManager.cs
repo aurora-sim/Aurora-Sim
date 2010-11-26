@@ -196,12 +196,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Handles piping the proper stuff to The script engine for touching
         /// Including DetectedParams
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="originalID"></param>
+        /// <param name="part"></param>
+        /// <param name="child"></param>
         /// <param name="offsetPos"></param>
         /// <param name="remoteClient"></param>
         /// <param name="surfaceArgs"></param>
-        public void touch_start(SceneObjectPart part, Vector3 offsetPos,
+        public void touch_start(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             // Add to queue for all scripts in ObjectID object
@@ -213,7 +213,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             detparam.Key = remoteClient.AgentId;
 
             detparam.Populate(part.ParentGroup.Scene);
-            detparam.LinkNum = part.LinkNum;
+            detparam.LinkNum = child.LinkNum;
             
             if (surfaceArgs != null)
             {
@@ -238,7 +238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void touch(SceneObjectPart part, Vector3 offsetPos,
+        public void touch(SceneObjectPart part, SceneObjectPart child, Vector3 offsetPos,
                 IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
@@ -254,7 +254,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                      offsetPos.Z);
 
             detparam.Populate(part.ParentGroup.Scene);
-            detparam.LinkNum = part.LinkNum;
+            detparam.LinkNum = child.LinkNum;
 
             if (surfaceArgs != null)
                 detparam.SurfaceTouchArgs = surfaceArgs;
@@ -277,7 +277,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void touch_end(SceneObjectPart part, IClientAPI remoteClient,
+        public void touch_end(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient,
                               SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
@@ -290,7 +290,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             detparam.Key = remoteClient.AgentId;
 
             detparam.Populate(m_scriptEngine.findPrimsScene(part.LocalId));
-            detparam.LinkNum = part.LinkNum;
+            detparam.LinkNum = child.LinkNum;
 
             if (surfaceArgs != null)
                 detparam.SurfaceTouchArgs = surfaceArgs;
