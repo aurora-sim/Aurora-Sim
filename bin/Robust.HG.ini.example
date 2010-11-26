@@ -122,6 +122,10 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
 [PresenceService]
     ;; for the server connector
     LocalServiceModule = "OpenSim.Services.PresenceService.dll:PresenceService"
+    ;; Should multiple logins of users be enabled?
+    AllowDuplicatePresences = false
+    ;; Should we check the last time that the user was reported when getting presence data and log out non responsive ones?
+    CheckLastSeen = true
 
 [AvatarService]
     ;; for the server connector

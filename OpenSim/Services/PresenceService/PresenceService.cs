@@ -48,6 +48,7 @@ namespace OpenSim.Services.PresenceService
         private IGridService m_GridService;
 
         protected bool m_allowDuplicatePresences = false;
+        protected bool m_checkLastSeen = true;
 
         public PresenceService(IConfigSource config)
             : base(config)
@@ -58,6 +59,9 @@ namespace OpenSim.Services.PresenceService
                 m_allowDuplicatePresences =
                        presenceConfig.GetBoolean("AllowDuplicatePresences",
                                                  m_allowDuplicatePresences);
+                m_checkLastSeen =
+                       presenceConfig.GetBoolean("CheckLastSeen",
+                                                 m_checkLastSeen);
                 string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
                 if (gridServiceDll != string.Empty)
                     m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
@@ -128,8 +132,9 @@ namespace OpenSim.Services.PresenceService
             if (data == null)
                 return null;
 
-            if (int.Parse(data.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
+            if (m_checkLastSeen && int.Parse(data.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
             {
+                m_log.Warn("[PresenceService]: Found a user (" + data.UserID + ") that was not seen within the last hour! Logging them out.");
                 LogoutAgent(sessionID);
                 return null;
             }
@@ -153,8 +158,9 @@ namespace OpenSim.Services.PresenceService
                 {
                     PresenceInfo ret = new PresenceInfo();
 
-                    if (int.Parse(d.Data["LastSeen"]) + (60 * 60) < Util.UnixTimeSinceEpoch())
+                    if (m_checkLastSeen && int.Parse(d.Data["LastSeen"]) + (60 * 60) < Util.UnixTimeSinceEpoch())
                     {
+                        m_log.Warn("[PresenceService]: Found a user (" + d.UserID + ") that was not seen within the last hour! Logging them out.");
                         LogoutAgent(d.SessionID);
                         continue;
                     }
