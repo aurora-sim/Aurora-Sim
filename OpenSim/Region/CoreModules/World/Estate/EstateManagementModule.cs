@@ -1027,6 +1027,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
             args.isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId);
             if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
+            else if (m_scene.RegionInfo.EstateSettings.IsEstateManager(remoteClient.AgentId))
+                args.isEstateManager = true;
 
             args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;
             args.terrainStartHeight0 = (float)m_scene.RegionInfo.RegionSettings.Elevation1SW;
