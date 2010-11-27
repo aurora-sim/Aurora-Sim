@@ -340,7 +340,7 @@ namespace Aurora.Modules
             }
 
             //Check how long its been since the last TP
-            if (m_enabledBlockTeleportSeconds && Sp != null)
+            if (m_enabledBlockTeleportSeconds && Sp != null && !Sp.IsChildAgent)
             {
                 if (TimeSinceLastTeleport.ContainsKey(Sp.Scene.RegionInfo.RegionID))
                 {
