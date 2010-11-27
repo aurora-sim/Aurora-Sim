@@ -626,6 +626,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     if (group == null)
                         return null;
 
+                    group.IsDeleted = false;
                     string reason; 
                     if (!m_Scene.Permissions.CanRezObject(
                             group.ChildrenList.Count, remoteClient.AgentId, pos, out reason)
@@ -799,6 +800,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                        = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, m_Scene);
                 if (group == null)
                     continue;
+                group.IsDeleted = false;
                 NewGroup.Add(group);
 
                 string reason; 

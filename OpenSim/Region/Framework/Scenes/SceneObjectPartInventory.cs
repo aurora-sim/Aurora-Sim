@@ -753,6 +753,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string xmlData = Utils.BytesToString(rezAsset.Data);
             SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, m_part.ParentGroup.Scene);
+            group.IsDeleted = false;
             //Reset IDs, etc
             m_part.ParentGroup.Scene.PrepPrimForAdditionToScene(group);
 

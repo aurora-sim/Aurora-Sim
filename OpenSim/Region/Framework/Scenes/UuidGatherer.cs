@@ -285,7 +285,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 string xml = Utils.BytesToString(objectAsset.Data);
                 SceneObjectGroup sog = SceneObjectSerializer.FromOriginalXmlFormat(xml, scene);
-
+                    
                 if (null != sog)
                     GatherAssetUuids(sog, assetUuids, scene);
             }
