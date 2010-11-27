@@ -300,6 +300,7 @@ namespace OpenSim.Framework
         public float EnergyLevel;
         public Byte GodLevel;
         public float Speed;
+        public float DrawDistance;
         public bool AlwaysRun;
         public UUID PreyAgent;
         public Byte AgentAccess;
@@ -369,6 +370,7 @@ namespace OpenSim.Framework
             args["energy_level"] = OSD.FromReal(EnergyLevel);
             args["speed"] = OSD.FromString(Speed.ToString());
             args["god_level"] = OSD.FromString(GodLevel.ToString());
+            args["draw_distance"] = OSD.FromReal(DrawDistance);
             args["always_run"] = OSD.FromBoolean(AlwaysRun);
             args["sent_initial_wearables"] = OSD.FromBoolean(SentInitialWearables);
             args["prey_agent"] = OSD.FromUUID(PreyAgent);
@@ -530,6 +532,11 @@ namespace OpenSim.Framework
                 float.TryParse(args["speed"].AsString(), out Speed);
             else
                 Speed = 1;
+
+            if (args["draw_distance"] != null)
+                float.TryParse(args["draw_distance"].AsString(), out DrawDistance);
+            else
+                DrawDistance = 0;
 
             //Reset this to fix movement... since regions are being bad about this
             if (Speed == 0)

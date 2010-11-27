@@ -2167,8 +2167,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (sog.GroupID != groupID)
                         continue;
-                    
-                    SceneObjectPart[] partList = sog.Parts;
 
                     foreach (SceneObjectPart child in sog.ChildrenList)
                     {

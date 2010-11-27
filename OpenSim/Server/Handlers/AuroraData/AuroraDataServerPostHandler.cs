@@ -73,8 +73,6 @@ namespace OpenSim.Server.Handlers.AuroraData
                     #region Agents
                     case "getagent":
                         return AgentHandler.GetAgent(request);
-                    case "updateagent":
-                        return AgentHandler.UpdateAgent(request);
                     #endregion
                     #region Estates
                     case "loadestatesettings":
@@ -277,33 +275,6 @@ namespace OpenSim.Server.Handlers.AuroraData
             string xmlString = ServerUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-        }
-
-        public byte[] UpdateAgent(Dictionary<string, object> request)
-        {
-            /*Dictionary<string, object> result = new Dictionary<string, object>();
-
-            UUID principalID = UUID.Zero;
-            if (request.ContainsKey("PRINCIPALID"))
-                UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
-            else
-            {
-                m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to update agent");
-                result["result"] = "null";
-                string FailedxmlString = ServerUtils.BuildXmlResponse(result);
-                m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", FailedxmlString);
-                UTF8Encoding Failedencoding = new UTF8Encoding();
-                return Failedencoding.GetBytes(FailedxmlString);
-            }
-
-            IAgentInfo Agent = new IAgentInfo(request);
-            AgentConnector.UpdateAgent(Agent);
-            result["result"] = "Successful";
-
-            string xmlString = ServerUtils.BuildXmlResponse(result);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);*/
-            return null;
         }
     }
     public class GroupsServiceHandler

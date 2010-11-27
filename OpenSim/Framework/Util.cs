@@ -84,6 +84,7 @@ namespace OpenSim.Framework
 
         public static bool CloseLocalRegions = true;
         public static int RegionViewSize = 1;
+        public static bool VariableRegionSight = false;
         public static List<IScene> Scenes = new List<IScene>();
         public static int NumberofScenes = 0;
 

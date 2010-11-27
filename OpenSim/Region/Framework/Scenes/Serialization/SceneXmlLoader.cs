@@ -272,8 +272,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static void SavePrimListToXml2(EntityBase[] entityList, TextWriter stream, Vector3 min, Vector3 max)
         {
-            XmlTextWriter writer = new XmlTextWriter(stream);
-
             int primCount = 0;
             stream.WriteLine("<scene>\n");
 

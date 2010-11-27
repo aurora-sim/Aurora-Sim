@@ -1122,26 +1122,39 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// This informs all neighboring regions about agent "avatar".
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
         /// </summary>
-        public void EnableChildAgents(ScenePresence sp)
+        public virtual void EnableChildAgents(ScenePresence sp)
         {
             List<GridRegion> neighbours = new List<GridRegion>();
             RegionInfo m_regionInfo = sp.Scene.RegionInfo;
 
             if (m_regionInfo != null)
             {
-                if (Util.RegionViewSize == 1) //Legacy support
-                    neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
+                if (Util.VariableRegionSight && sp.DrawDistance != 0)
+                {
+                    int xMin = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) - (int)sp.DrawDistance;
+                    int xMax = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) + (int)sp.DrawDistance;
+                    int yMin = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) - (int)sp.DrawDistance;
+                    int yMax = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) + (int)sp.DrawDistance;
+                    
+                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
+                        xMin, xMax, yMin, yMax);
+                }
                 else
                 {
-                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * (int)Constants.RegionSize);
-                }
-                if (!Util.CloseLocalRegions)
-                {
-                    foreach (IScene scene in Util.Scenes)
+                    if (Util.RegionViewSize == 1) //Legacy support
+                        neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
+                    else
                     {
-                        GridRegion region = sp.Scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
-                        if (!neighbours.Contains(region))
-                            neighbours.Add(region);
+                        neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * (int)Constants.RegionSize);
+                    }
+                    if (!Util.CloseLocalRegions)
+                    {
+                        foreach (IScene scene in Util.Scenes)
+                        {
+                            GridRegion region = sp.Scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
+                            if (!neighbours.Contains(region))
+                                neighbours.Add(region);
+                        }
                     }
                 }
             }

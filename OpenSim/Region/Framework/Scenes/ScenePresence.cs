@@ -3177,7 +3177,8 @@ namespace OpenSim.Region.Framework.Scenes
             //else 
             //    cAgent.GodLevel = (byte) 0;
 
-            cAgent.Speed = SpeedModifier;
+                cAgent.Speed = SpeedModifier;
+                cAgent.DrawDistance = DrawDistance;
             cAgent.AlwaysRun = m_setAlwaysRun;
             cAgent.SentInitialWearables = m_InitialHasWearablesBeenSent;
             
@@ -3281,6 +3282,7 @@ namespace OpenSim.Region.Framework.Scenes
             //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
             //    m_godLevel = cAgent.GodLevel;
             m_speedModifier = cAgent.Speed;
+            m_DrawDistance = cAgent.DrawDistance;
             m_setAlwaysRun = cAgent.AlwaysRun;
             m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
             m_appearance = new AvatarAppearance(cAgent.Appearance);
