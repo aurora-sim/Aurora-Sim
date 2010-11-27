@@ -62,7 +62,7 @@ namespace Aurora.Modules
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
-        private static readonly UUID STOP_UUID = UUID.Random();
+        //private static readonly UUID STOP_UUID = UUID.Random();
         private static readonly string m_mapLayerPath = "0001/";
 
         //private IConfig m_config;
@@ -71,9 +71,9 @@ namespace Aurora.Modules
         protected bool m_Enabled = false;
         private List<UUID> m_rootAgents = new List<UUID>();
         private IConfigSource m_config;
-        private ExpiringCache<ulong, MapBlockData> m_mapRegionCache = new ExpiringCache<ulong, MapBlockData>();
+        //private ExpiringCache<ulong, MapBlockData> m_mapRegionCache = new ExpiringCache<ulong, MapBlockData>();
         private ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
-        private ExpiringCache<string, List<MapBlockData>> m_terrainCache = new ExpiringCache<string, List<MapBlockData>>();
+        //private ExpiringCache<string, List<MapBlockData>> m_terrainCache = new ExpiringCache<string, List<MapBlockData>>();
 
         private List<MapItemRequester> m_itemsToRequest = new List<MapItemRequester>();
         private bool itemRequesterIsRunning = false;
@@ -296,7 +296,6 @@ namespace Aurora.Modules
 
             m_scene.TryGetScenePresence(agentID, out avatarPresence);
 
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, agentID);
             if (avatarPresence != null)
             {
                 List<MapBlockData> mapBlocks = new List<MapBlockData>();
@@ -695,7 +694,7 @@ namespace Aurora.Modules
                 //Add the found in search region first
                 blocks.Add(SearchMapBlockFromGridRegion(region));
                 //Then send surrounding regions
-                List<GridRegion> regions = regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+                List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
                             (region.RegionLocX - (4 * (int)Constants.RegionSize)),
                             (region.RegionLocX + (4 * (int)Constants.RegionSize)),
                             (region.RegionLocY - (4 * (int)Constants.RegionSize)),
@@ -983,8 +982,6 @@ namespace Aurora.Modules
                 return;
 
             int lastMapRefresh = 0;
-            int twoDays = 172800;
-            int RefreshSeconds = twoDays;
 
             try
             {

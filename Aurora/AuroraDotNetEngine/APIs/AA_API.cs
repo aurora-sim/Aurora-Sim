@@ -548,15 +548,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (invItemID == UUID.Zero)
                 return; // Not in a prim? How??
 
-            TaskInventoryItem item;
-
-            lock (m_host.TaskInventory)
-            {
-                item = m_host.TaskInventory[invItemID];
-            }
-
-            
-
             string ownerName = "";
             ScenePresence ownerPresence = World.GetScenePresence(m_host.ParentGroup.RootPart.OwnerID);
             if (ownerPresence == null)

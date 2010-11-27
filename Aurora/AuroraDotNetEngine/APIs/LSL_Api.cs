@@ -3568,7 +3568,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-
             if (m_host.ParentGroup.RootPart.AttachmentPoint == 0)
                 return;
 
@@ -3587,11 +3586,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
             {
-                SceneObjectGroup grp = m_host.ParentGroup;
-                UUID itemID = grp.GetFromItemID();
-
-                ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
-
                 IAttachmentsModule attachmentsModule = World.AttachmentsModule;
                 if (attachmentsModule != null)
                     Util.FireAndForget(DetachWrapper, m_host);
@@ -3951,7 +3945,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     SceneObjectPart rootPart = null;
                     rootPart = group.GetChildPart(group.UUID);
 
-                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
                     ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
                     if (SP != null)
                         group.SetGroup(m_host.GroupID, SP.ControllingClient);
@@ -9462,12 +9455,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         public LSL_Key llRequestSimulatorData(string simulator, int data)
-            {
-            IOSSL_Api ossl = (IOSSL_Api)m_ScriptEngine.GetApi(m_itemID, "OSSL");
+        {
             UUID tid = UUID.Zero;
 
             try
-                {
+            {
                 ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
                 string reply = String.Empty;
@@ -9480,12 +9472,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
                 switch (data)
-                    {
+                {
                     case 5: // DATA_SIM_POS
                         if (info == null)
-                            {
+                        {
                             break;
-                            }
+                        }
                         reply = new LSL_Vector(
                             info.RegionLocX * Constants.RegionSize,
                             info.RegionLocY * Constants.RegionSize,
@@ -9499,9 +9491,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         break;
                     case 7: // DATA_SIM_RATING
                         if (info == null)
-                            {
+                        {
                             break;
-                            }
+                        }
                         int access = info.Maturity;
                         if (access == 0)
                             reply = "PG";
@@ -9518,7 +9510,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         break;
                     default:
                         break;
-                    }
+                }
                 UUID rq = UUID.Random();
 
                 DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
@@ -9526,15 +9518,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, rq.ToString());
 
                 dataserverPlugin.AddReply(rq.ToString(), reply, 1000);
-                }
+            }
             catch (Exception)
-                {
+            {
                 //m_log.Error("[LSL_API]: llRequestSimulatorData" + e.ToString());
-                }
+            }
 
             ScriptSleep(1000);
             return (LSL_Key)tid.ToString();
-            }
+        }
 
         public LSL_String llRequestURL()
         {

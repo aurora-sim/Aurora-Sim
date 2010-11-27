@@ -342,7 +342,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public LSL_Types.list ParseValueToList(string inval, int start, out int end)
         {
             LSL_Types.list v = new LSL_Types.list();
-            int a = start;
             end = -1;
             char c;
             string tr = ",}";

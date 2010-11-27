@@ -54,8 +54,7 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IConfigSource m_config;
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileFrontend = null;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_SearchEnabled = false;
@@ -68,7 +67,6 @@ namespace Aurora.Modules
 
         public void Initialise(IConfigSource config)
         {
-            m_config = config;
             IConfig searchConfig = config.Configs["Search"];
             if (searchConfig != null) //Check whether we are enabled
                 if (searchConfig.GetString("SearchModule", Name) == Name)
@@ -648,7 +646,6 @@ namespace Aurora.Modules
                     
                     string RegionName = eventdata.simName;
                     Vector3 globalPos = eventdata.globalPos;
-                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByName(UUID.Zero, RegionName);
                     mapitem = new mapItemReply();
                     
                     //Use global position plus half the region so that it doesn't always appear in the bottom corner

@@ -228,7 +228,6 @@ namespace Aurora.Modules
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
 
             m_log.Error("[DisplayNamesModule] : Report this! GetDisplayName : " + rm.ToString());
-            IUserProfileInfo info = m_profileConnector.GetUserProfile(agentID);
                 
             //Send back data
             Hashtable responsedata = new Hashtable();

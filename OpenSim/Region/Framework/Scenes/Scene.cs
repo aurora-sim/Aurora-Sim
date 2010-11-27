@@ -163,7 +163,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         private string m_defaultScriptEngine;
-        private int m_LastLogin;
         private Thread HeartbeatThread;
         private static volatile bool shuttingdown = false;
 
@@ -618,9 +617,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     #endregion
                 }
-                // Region config overrides global config
-                //
-                IConfig startupConfig = m_config.Configs["Startup"];
 
                 //Animation states
                 IConfig animationConfig = m_config.Configs["Animations"];
@@ -1253,6 +1249,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
+                LastUpdate = DateTime.Now;
                 if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
@@ -1419,6 +1416,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
+                LastUpdate = DateTime.Now;
                 if (!ShouldExit && !shuttingdown)
                     return;
                 //Lets kill this thing
@@ -1436,7 +1434,6 @@ namespace OpenSim.Region.Framework.Scenes
                     physicsFPS = 0f;
 
                     maintc = Util.EnvironmentTickCount();
-                    int tmpFrameMS = maintc;
                     m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
 
                     // Increment the frame counter
@@ -1492,7 +1489,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     finally
                     {
-                        LastUpdate = DateTime.UtcNow;
+                        m_scene.m_lastupdate = DateTime.UtcNow;
                         m_scene.m_lastupdate = DateTime.UtcNow;
                     }
 
@@ -1552,6 +1549,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
+                LastUpdate = DateTime.Now;
                 if (!ShouldExit && !shuttingdown)
                     return;
                 throw new Exception("Closing");
@@ -1563,10 +1561,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 while (!ShouldExit)
                 {
-                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-
                     maintc = Util.EnvironmentTickCount();
-                    int tmpFrameMS = maintc;
                     m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
 
                     // Increment the frame counter
@@ -1690,6 +1685,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void CheckExit()
             {
+                LastUpdate = DateTime.Now;
                 if (!ShouldExit && !shuttingdown)
                     return;
                 throw new Exception("Closing");
@@ -1702,7 +1698,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 while (!ShouldExit)
                 {
-                    LastUpdate = DateTime.Now;
+                    m_scene.m_lastupdate = DateTime.Now;
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
                     physicsFPS = 0f;
 
@@ -2634,8 +2630,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>true if the object was in the scene, false if it was not</returns>
         public bool UnlinkSceneObject(SceneObjectGroup so, bool softDelete)
         {
-            DateTime StartTime = DateTime.Now.ToUniversalTime();
-
             if (m_sceneGraph.DeleteEntity(so))
             {
                 if (!softDelete)
@@ -3283,7 +3277,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Debug(" >>> IncomingCreateObject(sog) <<< " + ((SceneObjectGroup)sog).AbsolutePosition + " deleted? " + ((SceneObjectGroup)sog).IsDeleted);
             SceneObjectGroup newObject;
-            SceneObjectGroup oldObject = (SceneObjectGroup)oldsog;
             try
             {
                 newObject = (SceneObjectGroup)sog;
@@ -3489,8 +3482,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (GetScenePresence(client.AgentId) != null)
             {
-                m_LastLogin = Util.EnvironmentTickCount();
-                EventManager.TriggerOnNewClient(client);
                 if (vialogin)
                     EventManager.TriggerOnClientLogin(client);
             }

@@ -1822,16 +1822,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_requestedSitTargetID = part.LocalId;
             m_requestedSitOffset = Vector3.Zero;
             m_requestedSitTargetUUID = targetID;
-            Vector3 cameraEyeOffset = Vector3.Zero;
-            Vector3 cameraAtOffset = Vector3.Zero;
-            bool forceMouselook = false;
-
-            Vector3 avSitOffSet = part.SitTargetPosition;
-            Quaternion avSitOrientation = part.SitTargetOrientation;
-
-            cameraAtOffset = part.CameraAtOffset;
-            cameraEyeOffset = part.CameraEyeOffset;
-            forceMouselook = part.ForceMouselook;
 
             Vector3 sitTargetPos = part.SitTargetPosition;
             Quaternion sitTargetOrient = part.SitTargetOrientation;
@@ -2149,10 +2139,10 @@ namespace OpenSim.Region.Framework.Scenes
                         SitRaycastFindEdge(collisionPoint, normal);
                         m_log.DebugFormat("[SIT]: Raycast Horizontal Position succeeded at point: {0}, normal:{1}", collisionPoint, normal);
                         // Next, try to raycast from the camera position
-                        Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-                        Vector3 StartRayCastPosition = CameraPosition;
-                        Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-                        float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
+                        //Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
+                        //Vector3 StartRayCastPosition = CameraPosition;
+                        //Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
+                        //float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
                         //m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastResponseAvatarPosition);
                     }
                     else
@@ -2553,14 +2543,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (remoteClient.IsActive)
             {
                 m_perfMonMS = Util.EnvironmentTickCount();
-
-                PhysicsActor actor = m_physicsActor;
-                Vector3 velocity = (actor != null) ? actor.Velocity : Vector3.Zero;
-
-                Vector3 pos = m_pos;
-                if(m_appearance != null)
-                    pos.Z += m_appearance.HipOffset;
-
                 //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
 
                 remoteClient.SendPrimUpdate(

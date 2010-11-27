@@ -51,7 +51,7 @@ namespace Aurora.Modules
     /// </summary>
     public class AbuseReportsModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool m_enabled = false;
         private List<Scene> m_SceneList = new List<Scene>();

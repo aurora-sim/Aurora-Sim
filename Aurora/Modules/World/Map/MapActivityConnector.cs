@@ -39,7 +39,7 @@ namespace Aurora.Modules
 {
     public class MapActivityDetector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Scene m_aScene;
         private IGridService m_GridService;

@@ -557,7 +557,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessUpdateFlag(SceneObjectPart obj, XmlTextReader reader)
         {
-            InternalUpdateFlags flags = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
+            reader.Read();
+            //InternalUpdateFlags flags = (InternalUpdateFlags)(byte)reader.ReadElementContentAsInt("UpdateFlag", String.Empty);
         }
 
         private static void ProcessSitTargetOrientation(SceneObjectPart obj, XmlTextReader reader)
@@ -1107,15 +1108,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             WriteVector(writer, "AngularVelocity", sop.AngularVelocity);
             WriteVector(writer, "Acceleration", sop.Acceleration);
             writer.WriteElementString("Description", sop.Description);
-            if (sop.Color != null)
-            {
-                writer.WriteStartElement("Color");
-                writer.WriteElementString("R", sop.Color.R.ToString(Utils.EnUsCulture));
-                writer.WriteElementString("G", sop.Color.G.ToString(Utils.EnUsCulture));
-                writer.WriteElementString("B", sop.Color.B.ToString(Utils.EnUsCulture));
-                writer.WriteElementString("A", sop.Color.G.ToString(Utils.EnUsCulture));
-                writer.WriteEndElement();
-            }
+            writer.WriteStartElement("Color");
+            writer.WriteElementString("R", sop.Color.R.ToString(Utils.EnUsCulture));
+            writer.WriteElementString("G", sop.Color.G.ToString(Utils.EnUsCulture));
+            writer.WriteElementString("B", sop.Color.B.ToString(Utils.EnUsCulture));
+            writer.WriteElementString("A", sop.Color.G.ToString(Utils.EnUsCulture));
+            writer.WriteEndElement();
 
             writer.WriteElementString("Text", sop.Text);
             writer.WriteElementString("SitName", sop.SitName);

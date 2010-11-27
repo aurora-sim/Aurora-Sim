@@ -186,7 +186,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 rootElement.AppendChild(eventDelay);
             }
             Type type = instance.Script.GetType();
-            FieldInfo[] mi = type.GetFields();
             string xml = xmldoc.InnerXml;
 
             XmlDocument sdoc = new XmlDocument();

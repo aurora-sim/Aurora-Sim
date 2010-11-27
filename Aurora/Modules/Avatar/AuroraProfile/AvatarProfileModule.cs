@@ -56,12 +56,8 @@ namespace Aurora.Modules
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IConfigSource m_config;
-        private Dictionary<string, Dictionary<UUID, string>> ClassifiedsCache = new Dictionary<string, Dictionary<UUID, string>>();
-        private Dictionary<string, List<string>> ClassifiedInfoCache = new Dictionary<string, List<string>>();
         private IProfileConnector ProfileFrontend = null;
         private IFriendsModule m_friendsModule;
-        private IConfigSource m_gConfig;
         private List<Scene> m_Scenes = new List<Scene>();
         private bool m_ProfileEnabled = true;
 
@@ -71,8 +67,6 @@ namespace Aurora.Modules
 
         public void Initialise(IConfigSource config)
         {
-            m_config = config;
-            m_gConfig = config;
             IConfig profileConfig = config.Configs["Profile"];
             if (profileConfig == null)
             {
@@ -293,10 +287,6 @@ namespace Aurora.Modules
 
             UUID parceluuid = p.currentParcelUUID;
             string parcelname = "Unknown";
-
-            string pos_global = new Vector3(remoteClient.Scene.RegionInfo.RegionLocX * Constants.RegionSize + p.AbsolutePosition.X,
-                remoteClient.Scene.RegionInfo.RegionLocY * Constants.RegionSize + p.AbsolutePosition.Y,
-                p.AbsolutePosition.Z).ToString();
 
             ILandObject parcel = GetRegionUserIsIn(remoteClient.AgentId).LandChannel.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
             if(parcel != null)

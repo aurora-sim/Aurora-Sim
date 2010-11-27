@@ -20,16 +20,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     public class LSLConverter : IScriptConverter
     {
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
-        private Compiler m_compiler;
         private ICSCodeGenerator LSL_Converter;
 
         public void Initialise(Compiler compiler)
         {
-            m_compiler = compiler;
-            if (m_compiler.m_XEngineLSLCompatabilityModule)
+            if (compiler.m_XEngineLSLCompatabilityModule)
                 LSL_Converter = new LegacyCSCodeGenerator();
             else
-                LSL_Converter = new CSCodeGenerator(m_compiler.m_SLCompatabilityMode, null);
+                LSL_Converter = new CSCodeGenerator(compiler.m_SLCompatabilityMode, null);
         }
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)

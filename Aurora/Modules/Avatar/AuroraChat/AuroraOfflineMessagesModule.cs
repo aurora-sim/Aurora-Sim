@@ -46,7 +46,6 @@ namespace Aurora.Modules
 
         private bool enabled = true;
         private List<Scene> m_SceneList = new List<Scene>();
-        private string m_RestURL = String.Empty;
         IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
         private IOfflineMessagesConnector OfflineMessagesConnector;

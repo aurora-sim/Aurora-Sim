@@ -150,7 +150,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool AllowedDrop;
 
-        private bool m_DIE_AT_EDGE;
         [XmlIgnore]
         public bool DIE_AT_EDGE
         {
@@ -161,11 +160,9 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("DIE_AT_EDGE", value);
-                m_DIE_AT_EDGE = value;
             }
         }
 
-        private bool m_RETURN_AT_EDGE;
         [XmlIgnore]
         public bool RETURN_AT_EDGE
         {
@@ -176,11 +173,9 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("RETURN_AT_EDGE", value);
-                m_RETURN_AT_EDGE = value;
             }
         }
 
-        private bool m_BlockGrab;
         [XmlIgnore]
         public bool BlockGrab
         {
@@ -191,7 +186,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("BlockGrab", value);
-                m_BlockGrab = value;
             }
         }
 
@@ -203,7 +197,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_IsLoading = value; }
         }
 
-        private bool m_StatusSandbox;
         [XmlIgnore]
         public bool StatusSandbox
         {
@@ -214,11 +207,9 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("StatusSandbox", value);
-                m_StatusSandbox = value;
             }
         }
 
-        private Vector3 m_StatusSandboxPos;
         [XmlIgnore]
         public Vector3 StatusSandboxPos
         {
@@ -229,11 +220,9 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("StatusSandboxPos", value);
-                m_StatusSandboxPos = value;
             }
         }
 
-        private int m_UseSoundQueue;
         [XmlIgnore]
         public int UseSoundQueue
         {
@@ -244,7 +233,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("UseSoundQueue", value);
-                m_UseSoundQueue = value;
             }
         }
 
@@ -263,7 +251,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private UUID m_Sound;
         [XmlIgnore]
         public UUID Sound
         {
@@ -274,7 +261,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("Sound", value);
-                m_Sound = value;
             }
         }
         
@@ -499,7 +485,6 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public Vector3 RotationAxis = Vector3.One;
 
-        private bool m_VolumeDetectActive;
         [XmlIgnore]
         public bool VolumeDetectActive
         {
@@ -510,7 +495,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("VolumeDetectActive", value);
-                m_VolumeDetectActive = value;
             }
         }
 
@@ -560,8 +544,6 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         private readonly Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
         private string m_sitName = String.Empty;
-        private Quaternion m_sitTargetOrientation = Quaternion.Identity;
-        private Vector3 m_sitTargetPosition;
         private string m_sitAnimation = "SIT";
         private string m_text = String.Empty;
         private string m_touchName = String.Empty;
@@ -611,8 +593,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected string m_mediaUrl;
 
-        private Vector3 m_cameraEyeOffset;
-
         public Vector3 CameraEyeOffset
         {
             get
@@ -622,11 +602,8 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("CameraEyeOffset", value);
-                m_cameraEyeOffset = value;
             }
         }
-
-        private Vector3 m_cameraAtOffset;
 
         public Vector3 CameraAtOffset
         {
@@ -637,10 +614,8 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("CameraAtOffset", value);
-                m_cameraAtOffset = value;
             }
         }
-        private bool m_forceMouselook;
 
         public bool ForceMouselook
         {
@@ -651,7 +626,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("ForceMouselook", value);
-                m_forceMouselook = value;
             }
         }
         
@@ -832,8 +806,6 @@ namespace OpenSim.Region.Framework.Scenes
         private uint _everyoneMask = (uint)PermissionMask.None;
         private uint _nextOwnerMask = (uint)PermissionMask.All;
         private PrimFlags _flags = PrimFlags.None;
-        private DateTime m_expires;
-        private DateTime m_rezzed;
         private bool m_createSelected = false;
         private string m_currentMediaVersion = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
         [XmlIgnore]
@@ -1151,7 +1123,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("Expires", value);
-                m_expires = value;
             }
         }
 
@@ -1165,7 +1136,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("Rezzed", value);
-                m_rezzed = value;
             }
         }
 
@@ -1179,7 +1149,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("Damage", value);
-                m_damage = value; 
             }
         }
 
@@ -1674,7 +1643,6 @@ namespace OpenSim.Region.Framework.Scenes
             set 
             {
                 SetComponentState("SitTargetOrientation", value);
-                m_sitTargetOrientation = value; 
             }
         }
 
@@ -1688,7 +1656,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("SitTargetPosition", value);
-                m_sitTargetPosition = value;
             }
         }
 
@@ -1703,7 +1670,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("SitTargetPosition", value);
-                m_sitTargetPosition = value; 
             }
         }
 
@@ -1717,7 +1683,6 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("SitTargetOrientationLL", value);
-                m_sitTargetOrientation = new Quaternion(value.X, value.Y, value.Z, value.W); 
             }
         }
 
@@ -2280,7 +2245,7 @@ namespace OpenSim.Region.Framework.Scenes
             dupe._objectSaleType = _objectSaleType;
             dupe._salePrice = _salePrice;
             dupe._category = _category;
-            dupe.Rezzed = m_rezzed;
+            dupe.Rezzed = Rezzed;
 
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
@@ -2365,7 +2330,7 @@ namespace OpenSim.Region.Framework.Scenes
             dupe._objectSaleType = _objectSaleType;
             dupe._salePrice = _salePrice;
             dupe._category = _category;
-            dupe.Rezzed = m_rezzed;
+            dupe.Rezzed = Rezzed;
 
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();

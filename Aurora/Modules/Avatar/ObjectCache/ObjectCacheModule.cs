@@ -17,7 +17,7 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected bool m_Enabled = true;
         private Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
         private string m_filePath = "ObjectCache/";

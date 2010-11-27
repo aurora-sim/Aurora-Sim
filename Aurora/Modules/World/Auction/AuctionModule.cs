@@ -19,8 +19,8 @@ namespace Aurora.Modules
 {
     public class AuctionModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log =
+        //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
 
         public void Initialise(IConfigSource pSource)
@@ -89,7 +89,7 @@ namespace Aurora.Modules
 
         private Hashtable ViewerStartAuction(Hashtable mDhttpMethod, UUID capuuid)
         {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             
             //Send back data
             Hashtable responsedata = new Hashtable();

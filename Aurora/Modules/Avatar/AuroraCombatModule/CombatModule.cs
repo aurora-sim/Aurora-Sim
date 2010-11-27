@@ -208,7 +208,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             private float m_health = 100f; 
             private string m_Team;
             private Dictionary<UUID, float> TeamHits = new Dictionary<UUID, float>();
-            private Dictionary<string, float> GenericStats = new Dictionary<string, float>();
+            //private Dictionary<string, float> GenericStats = new Dictionary<string, float>();
 
             public float Health
             {
@@ -670,7 +670,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
                 Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
-                float starthealth = Health;
                 UUID killerObj = UUID.Zero;
                 foreach (uint localid in coldata.Keys)
                 {

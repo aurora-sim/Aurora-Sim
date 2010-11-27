@@ -1402,7 +1402,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
-            if (ItemID != null && Errors.ContainsKey(ItemID))
+            if (Errors.ContainsKey(ItemID))
             {
                 lock (Errors)
                 {

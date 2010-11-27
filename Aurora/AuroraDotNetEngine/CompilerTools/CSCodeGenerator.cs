@@ -129,7 +129,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private List<string> m_warnings = new List<string>();
         private bool IsParentEnumerable = false;
         private string OriginalScript = "";
-        private bool m_SLCompatabilityMode = false;
         private Parser p = null;
         private Random random = new Random();
         private class GlobalVar
@@ -146,7 +145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// Param 1 - the API function name, Param 2 - the API name
         /// </summary>
         private Dictionary<string, string> m_apiFunctions = new Dictionary<string, string>();
-        private IScriptApi[] m_Apis = new IScriptApi[0];
+        //private IScriptApi[] m_Apis = new IScriptApi[0];
 
         private bool FuncCntr = false;
 
@@ -229,9 +228,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             #endregion
 
-            m_SLCompatabilityMode = compatMode;
+            //m_SLCompatabilityMode = compatMode;
             ResetCounters();
-            m_Apis = Apis;
+            //m_Apis = Apis;
         }
 
         /// <summary>
@@ -311,12 +310,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             try
             {
-                if (m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
-                {
-                    script = CheckForInlineVectors(script);
-
-                    script = CheckFloatExponent(script);
-                }
+                ///if (m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
+                //{
+                //    script = CheckForInlineVectors(script);
+                //
+                //    script = CheckFloatExponent(script);
+                //}
             }
             catch (Exception ex)
             {
@@ -632,11 +631,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
 
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_not_at_target()";
                 if (splitScript != Valid)
                 {
@@ -867,8 +861,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_timer()";
                 if (splitScript != Valid)
@@ -1126,11 +1118,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
 
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_moving_end()";
                 if (splitScript != Valid)
                 {
@@ -1143,11 +1130,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
-
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_moving_start()";
                 if (splitScript != Valid)
@@ -1162,11 +1144,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
 
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_no_sensor()";
                 if (splitScript != Valid)
                 {
@@ -1179,11 +1156,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
-
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_not_at_rot_target()";
                 if (splitScript != Valid)
@@ -1300,11 +1272,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string splitScript = script.Remove(0, charNum);
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
-
-                string arguments = splitScript.Split('(')[1];
-                arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_state_exit()";
                 if (splitScript != Valid)

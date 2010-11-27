@@ -84,19 +84,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private StartPerformanceQueue LUQueue = new StartPerformanceQueue();
 
         /// <summary>
-        /// Queue containing events waiting to be executed.
-        /// </summary>
-        private EventPerformanceQueue EventProcessorQueue = new EventPerformanceQueue();
-
-        /// <summary>
         /// Queue containing scripts that need to have states saved or deleted.
         /// </summary>
         private Queue StateQueue = new Queue();
-
-        /// <summary>
-        /// Removes the script from the event queue so it does not fire anymore events.
-        /// </summary>
-        private Dictionary<UUID, int> NeedsRemoved = new Dictionary<UUID, int>();
 
         private EventManager EventManager = null;
 

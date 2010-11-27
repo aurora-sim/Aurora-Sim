@@ -490,7 +490,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 else
                 {
                     // Jumping
-                    float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
+                    //float jumpChange = (((float)Util.EnvironmentTickCount()) - m_animTickJump) / 1000;
                     if (!jumping)
                     {
                         m_animTickJump = Util.EnvironmentTickCount();

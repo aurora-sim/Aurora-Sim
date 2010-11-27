@@ -253,7 +253,6 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// <param name="newID"></param>
         public void ResetComponentIDsToNewObject(UUID oldID, SceneObjectPart part)
         {
-            OSDMap ComponentsBody = new OSDMap();
             //Run through the list of components and serialize them
             foreach (IComponent component in m_components.Values)
             {

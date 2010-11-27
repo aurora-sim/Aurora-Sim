@@ -47,7 +47,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_sceneList = new List<Scene>();
-        private IWComms m_IWC = null;
+        //private IWComms m_IWC = null;
 
         private IEntityTransferModule m_AgentTransferModule;
         protected IEntityTransferModule AgentTransferModule
@@ -108,7 +108,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
-            m_IWC = scene.RequestModuleInterface<IWComms>();
+            //m_IWC = scene.RequestModuleInterface<IWComms>();
         }
 
         public void Close()

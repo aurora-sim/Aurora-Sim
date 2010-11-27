@@ -22,7 +22,7 @@ namespace Aurora.Modules
     {
         #region Declares 
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_scenes = new List<Scene>();
         private IConfigSource m_config;
         private bool m_Enabled = true;

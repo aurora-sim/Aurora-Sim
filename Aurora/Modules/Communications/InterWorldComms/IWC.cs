@@ -25,7 +25,7 @@ namespace Aurora.Modules
     public class IWComms : ISharedRegionModule
     {
         #region Declares
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public string OurPassword = "";
         private IConfig m_config;
         private List<Scene> m_scenes = new List<Scene>();
@@ -134,7 +134,6 @@ namespace Aurora.Modules
         public void RetriveOtherServersRegions(Dictionary<string, object> replyData)
         {
             //Retrive their sims...
-            List<OpenSim.Services.Interfaces.GridRegion> Sims = new List<OpenSim.Services.Interfaces.GridRegion>();
             foreach (object f in replyData)
             {
                 KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
@@ -219,7 +218,7 @@ namespace Aurora.Modules
 
         public void IncomingIWCBasedAgent(ConnectionIdentifier connection, UUID userID, UUID regionID)
         {
-            bool success = m_scenes[0].PresenceService.LoginAgent(userID.ToString(), UUID.Random(), UUID.Random());
+            /*bool success = */m_scenes[0].PresenceService.LoginAgent(userID.ToString(), UUID.Random(), UUID.Random());
             UserAccount account = OutgoingPrivateComms.GetUserAccount(connection, userID);
             m_scenes[0].UserAccountService.StoreUserAccount(account);
         }

@@ -17,10 +17,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     public class VBConverter : IScriptConverter
     {
         private VBCodeProvider VBcodeProvider = new VBCodeProvider();
-        Compiler m_compiler;
         public void Initialise(Compiler compiler)
         {
-            m_compiler = compiler;
         }
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)

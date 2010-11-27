@@ -540,7 +540,6 @@ namespace Aurora.Modules
 
         public void SendProfileToClient(ScenePresence presence, RegionLightShareData wl)
         {
-            IClientAPI client = presence.ControllingClient;
             if (m_enableWindlight)
             {
                 if (!presence.IsChildAgent)

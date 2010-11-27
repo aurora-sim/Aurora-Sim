@@ -75,7 +75,7 @@ namespace Aurora.Modules
                 int i = 0;
                 foreach (string URL in URLS)
                 {
-                    AskForeignServerForBans(URLS[i], Passwords[i]);
+                    AskForeignServerForBans(URL, Passwords[i]);
                     i++;
                 }
             }

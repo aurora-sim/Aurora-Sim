@@ -44,7 +44,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     /// </summary>
     public class AppDomainManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private int maxScriptsPerAppDomain = 1;
         private bool loadAllScriptsIntoCurrentDomain = false;
@@ -87,7 +87,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private int AppDomainNameCount;
 
         private ScriptEngine m_scriptEngine;
-        private string PathToLoadScriptsFrom = "";
 
         public AppDomainManager(ScriptEngine scriptEngine)
         {
@@ -97,7 +96,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void ReadConfig()
         {
-            PathToLoadScriptsFrom = m_scriptEngine.Config.GetString("PathToLoadScriptsFrom", "");
             maxScriptsPerAppDomain = m_scriptEngine.ScriptConfigSource.GetInt(
                     "ScriptsPerAppDomain", 1);
             m_PermissionLevel = m_scriptEngine.ScriptConfigSource.GetString(

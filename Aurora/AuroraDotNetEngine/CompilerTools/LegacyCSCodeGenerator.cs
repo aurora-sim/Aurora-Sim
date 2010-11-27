@@ -349,8 +349,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
 
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_not_at_target()";
                 if (splitScript != Valid)
                 {
@@ -581,8 +579,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_timer()";
                 if (splitScript != Valid)
@@ -843,8 +839,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
 
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_moving_end()";
                 if (splitScript != Valid)
                 {
@@ -860,8 +854,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_moving_start()";
                 if (splitScript != Valid)
@@ -879,8 +871,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
 
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_no_sensor()";
                 if (splitScript != Valid)
                 {
@@ -896,8 +886,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
-
-                string[] AllArguments = arguments.Split(',');
 
                 string Valid = state + "_event_not_at_rot_target()";
                 if (splitScript != Valid)
@@ -1018,8 +1006,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 string arguments = splitScript.Split('(')[1];
                 arguments = arguments.Split(')')[0];
 
-                string[] AllArguments = arguments.Split(',');
-
                 string Valid = state + "_event_state_exit()";
                 if (splitScript != Valid)
                 {
@@ -1080,7 +1066,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         void FindLineNumbers(string EventName, string Problem)
         {
-            string testScript = OriginalScript.Replace(" ","");
             int lineNumber = 0;
             int charNumber = 0;
             int i = 0;

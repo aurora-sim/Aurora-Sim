@@ -650,7 +650,7 @@ namespace Aurora.Modules
             //Can only enter prelude regions once!
             int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
             //We assume that our own region isn't null....
-            if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude))
+            if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
             {
                 if (((agentInfo.Flags & IAgentFlags.PastPrelude) == IAgentFlags.PastPrelude))
                 {

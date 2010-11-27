@@ -18,10 +18,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     {
         private CSharpCodeProvider YPcodeProvider = new CSharpCodeProvider(); // YP is translated into CSharp
         private YP2CSConverter YP_Converter = new YP2CSConverter();
-        Compiler m_compiler;
         public void Initialise(Compiler compiler)
         {
-            m_compiler = compiler;
         }
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)

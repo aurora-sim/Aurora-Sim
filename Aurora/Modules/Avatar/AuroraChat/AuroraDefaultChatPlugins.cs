@@ -25,10 +25,8 @@ namespace Aurora.Modules.Avatar.AuroraChat
     /// </summary>
     public class CalcChatPlugin : IChatPlugin
     {
-        IChatModule chatModule;
         public void Initialize(IChatModule module)
         {
-            chatModule = module;
             module.RegisterChatPlugin("calc", this);
         }
 
@@ -141,19 +139,16 @@ namespace Aurora.Modules.Avatar.AuroraChat
             public bool ShowNonTranslated = false;
         }
 
-        IChatModule chatModule;
         Dictionary<UUID, TranslatorUserInfo> UserInfos = new Dictionary<UUID, TranslatorUserInfo>();
         
         public void Initialize(IChatModule module)
         {
-            chatModule = module;
             //We register all so that we can hook up to all chat when they enable us
             module.RegisterChatPlugin("all", this);
         }
 
         public bool OnNewChatMessageFromWorld(OSChatMessage c, out OSChatMessage newc)
         {
-            Scene scene = (Scene)c.Scene;
             string[] operators = c.Message.Split(' ');
             TranslatorUserInfo UInfo = null;
 
@@ -450,13 +445,11 @@ namespace Aurora.Modules.Avatar.AuroraChat
             //Announce the closing agent if enabled
             if (m_announceClosedAgents)
             {
-                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID,
-                    clientID);
                 scene.ForEachScenePresence(delegate(ScenePresence SP)
                 {
                     if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
-                        SP.ControllingClient.SendChatMessage(account.Name + " has left the region. Total Agents: " + scene.GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
+                        SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + scene.GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }

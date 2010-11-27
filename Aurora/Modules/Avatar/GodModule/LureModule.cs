@@ -207,9 +207,8 @@ namespace Aurora.Modules
 				scene.RequestTeleportLocation(client, handle, position,
 				                              Vector3.Zero, teleportFlags);
 			}
-			catch(Exception ex)
+			catch
 			{
-				ex = new Exception();
 			}
 
         }

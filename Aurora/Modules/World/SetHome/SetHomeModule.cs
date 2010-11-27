@@ -19,8 +19,8 @@ namespace Aurora.Modules.World.Auction
 {
     public class SetHomeModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log =
+        //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene;
 
         public void Initialise(IConfigSource pSource)
@@ -89,7 +89,7 @@ namespace Aurora.Modules.World.Auction
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
-            UUID NotecardID = rm["notecard-id"].AsUUID();
+            //UUID NotecardID = rm["notecard-id"].AsUUID();
             //There is an object-id as well, but objects arn't handled through this currently as of Sept. 2010
             
             //TODO: Check notecard for this

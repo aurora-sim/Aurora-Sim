@@ -3666,7 +3666,6 @@ namespace OpenSim.Region.Framework.Scenes
         
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
-            Scene s = (Scene)scene;
             SceneObjectGroup sog = (SceneObjectGroup)Copy();
             sog.m_isDeleted = false;
             return sog;

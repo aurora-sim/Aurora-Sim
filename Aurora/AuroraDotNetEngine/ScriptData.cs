@@ -264,11 +264,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     int permsMask = InventoryItem.PermsMask;
                     UUID permsGranter = InventoryItem.PermsGranter;
 
-
+                    ScenePresence sp = World.GetScenePresence(permsGranter);
                     if ((permsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                     {
-                        if (presence != null)
-                            presence.UnRegisterControlEventsToScript(part.LocalId, ItemID);
+                        if (sp != null)
+                            sp.UnRegisterControlEventsToScript(part.LocalId, ItemID);
                     }
                 }
 
