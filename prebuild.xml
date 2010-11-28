@@ -1129,7 +1129,6 @@
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <Reference name="Mono.Addins" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="Mono.Data.Sqlite" path="../../../bin/"/>
 
@@ -1520,7 +1519,6 @@
       </Configuration>
 
       <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="Mono.Addins" path="../../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="System"/>
@@ -1927,7 +1925,6 @@
       <Reference name="Microsoft.VisualBasic"/>
 
       <Reference name="Nini" path="../../bin/"/>
-      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="Aurora.DataManager"/>
@@ -1984,7 +1981,6 @@
       <Reference name="Microsoft.VisualBasic"/>
 
       <Reference name="Nini" path="../../bin/"/>
-      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="Aurora.DataManager"/>
@@ -2138,7 +2134,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
       <Reference name="OpenSim.Services.Interfaces"/>
@@ -2182,7 +2177,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Framework"/>
-      <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
