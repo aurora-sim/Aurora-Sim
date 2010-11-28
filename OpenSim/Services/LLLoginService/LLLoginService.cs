@@ -1034,6 +1034,15 @@ namespace OpenSim.Services.LLLoginService
             aCircuit.ServiceURLs = new Dictionary<string, object>();
             if (account.ServiceURLs == null)
                 return;
+            //Set the defaults if the user doesn't have any
+            if (account.ServiceURLs.Count == 0)
+            {
+                account.ServiceURLs["HomeURI"] = string.Empty;
+                account.ServiceURLs["GatekeeperURI"] = string.Empty;
+                account.ServiceURLs["InventoryServerURI"] = string.Empty;
+                account.ServiceURLs["AssetServerURI"] = string.Empty;
+                m_UserAccountService.StoreUserAccount(account);
+            }
 
             foreach (KeyValuePair<string, object> kvp in account.ServiceURLs)
             {
