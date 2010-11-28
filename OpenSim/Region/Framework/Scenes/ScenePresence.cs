@@ -949,6 +949,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!m_InitialHasWearablesBeenSent)
             {
+                m_InitialHasWearablesBeenSent = true;
                 m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
                 
                 //Force send!
@@ -3626,6 +3627,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AddAttachment(SceneObjectGroup gobj)
         {
+            gobj.IsDeleted = false;
             lock (m_attachments)
             {
                 m_attachments.Add(gobj);

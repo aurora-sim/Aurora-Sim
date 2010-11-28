@@ -160,6 +160,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public Socket Server { get { return null; } }
 
+        public List<UUID> m_handlingCircuitCodes = new List<UUID>();
+
         public LLUDPServer(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
             : base(listenIP, (int)port)
         {
@@ -853,14 +855,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IPEndPoint remoteEndPoint = (IPEndPoint)buffer.RemoteEndPoint;
 
             // Begin the process of adding the client to the simulator
-            AddNewClient((UseCircuitCodePacket)packet, remoteEndPoint);
+            if (AddNewClient((UseCircuitCodePacket)packet, remoteEndPoint))
+            {
+                // Acknowledge the UseCircuitCode packet
+                SendAckImmediate(remoteEndPoint, packet.Header.Sequence);
 
-            // Acknowledge the UseCircuitCode packet
-            SendAckImmediate(remoteEndPoint, packet.Header.Sequence);
-
-            m_log.DebugFormat(
-                "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
-                buffer.RemoteEndPoint, (DateTime.Now - startTime).Milliseconds);
+                m_log.DebugFormat(
+                    "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
+                    buffer.RemoteEndPoint, (DateTime.Now - startTime).Milliseconds);
+            }
         }
 
         private void SendAckImmediate(IPEndPoint remoteEndpoint, uint sequenceNumber)
@@ -892,7 +895,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return sessionInfo.Authorised;
         }
 
-        private void AddNewClient(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint)
+        private bool AddNewClient(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint)
         {
             UUID agentID = useCircuitCode.CircuitCode.ID;
             UUID sessionID = useCircuitCode.CircuitCode.SessionID;
@@ -901,7 +904,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AuthenticateResponse sessionInfo;
             if (IsClientAuthorized(useCircuitCode, remoteEndPoint, out sessionInfo))
             {
-                AddClient(circuitCode, agentID, sessionID, remoteEndPoint, sessionInfo);
+                return AddClient(circuitCode, agentID, sessionID, remoteEndPoint, sessionInfo);
             }
             else
             {
@@ -910,13 +913,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     "[LLUDPSERVER]: Connection request for client {0} connecting with unnotified circuit code {1} from {2}",
                     useCircuitCode.CircuitCode.ID, useCircuitCode.CircuitCode.Code, remoteEndPoint);
             }
+            return false;
         }
 
-        protected virtual void AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AuthenticateResponse sessionInfo)
+        protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AuthenticateResponse sessionInfo)
         {
             // Create the LLUDPClient
             LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
             IClientAPI existingClient;
+            //Check to make sure we arn't handling two or more circuit codes from the client if we are lagging badly.
+            // The block below this (TryGetClient) works as well, but if it gets locked up before the client is added to the scene, it will break
+            //  So we do this check here as well.
+            lock (m_handlingCircuitCodes)
+            {
+                if (m_handlingCircuitCodes.Contains(agentID))
+                    return false;
+                m_handlingCircuitCodes.Add(agentID);
+            }
 
             if (!m_scene.TryGetClient(agentID, out existingClient))
             {
@@ -928,12 +941,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Start the IClientAPI
                 client.Start();
+                //Remove it from the check
+                m_handlingCircuitCodes.Remove(agentID);
+                return true;
             }
             else
             {
                 m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
                     udpClient.AgentID, remoteEndPoint, circuitCode);
             }
+            //Remove it from the check
+            m_handlingCircuitCodes.Remove(agentID);
+            return false;
         }
 
         private void RemoveClient(LLUDPClient udpClient)
