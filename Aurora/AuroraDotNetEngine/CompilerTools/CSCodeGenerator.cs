@@ -1842,6 +1842,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             bool printSemicolon = true;
 
             bool marc = FuncCallsMarc();
+            bool possibleStatement = false;
             retstr += Indent();
 
             if (0 < s.kids.Count)
@@ -1896,9 +1897,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 else
                                 {
                                     retstr += GenerateNode(akid);
+                                    possibleStatement = true;
                                 }
                             }
-
                         }
                         else
                         {
@@ -1907,7 +1908,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 foreach (SYMBOL akid in kid.kids)
                                 {
                                     if (akid is FunctionCall)
-                                        retstr += GenerateFunctionCall(akid as FunctionCall,false);
+                                        retstr += GenerateFunctionCall(akid as FunctionCall, false);
                                     else
                                         retstr += GenerateNode(akid);
                                 }
@@ -1926,7 +1927,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (printSemicolon)
                 retstr += GenerateLine(";");
 
-            return DumpFunc(marc) + retstr.ToString();
+            if (!marc && possibleStatement)
+            {
+                FuncCalls.Add(retstr);
+                return "";
+            }
+            else
+            {
+                return DumpFunc(marc) + retstr.ToString();
+            }
         }
 
         /// <summary>
@@ -2085,7 +2094,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if(DoBrace)
                 tmpstr += GenerateLine("{");
 
-            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+            SYMBOL s = (SYMBOL)ifs.kids.Pop();
+            if (s is CompoundStatement)
+            {
+                CompoundStatement cs = (CompoundStatement)s;
+                string innerTmpStr = "";
+                innerTmpStr += GenerateIndentedLine("{");
+                //            if (IsParentEnumerable)
+                //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+                m_braceCount++;
+
+                foreach (SYMBOL kid in cs.kids)
+                {
+                    if (kid is Statement)
+                    {
+                        Statement stm = kid as Statement;
+                        innerTmpStr += GenerateStatement(stm);
+                    }
+                    else
+                        innerTmpStr += GenerateNode(kid);
+                }
+
+                // closing brace
+                m_braceCount--;
+
+                innerTmpStr += GenerateIndentedLine("}");
+                tmpstr += innerTmpStr;
+            }
+            else
+            {
+                tmpstr += GenerateNode(s);
+            }
 //            if (indentHere) m_braceCount--;
             if (DoBrace)
                 tmpstr += GenerateLine("}");
