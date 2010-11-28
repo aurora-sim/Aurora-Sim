@@ -172,12 +172,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
         {
-            List<GridRegion> n = m_GridCache.GetNeighbors();
-            if (n == null)
-            {
-                n = base.GetNeighbours(scopeID, regionID);
-                m_GridCache.SetNeighbors(n);
-            }
+            //List<GridRegion> n = m_GridCache.GetNeighbors();
+            //if (n == null)
+            //{
+            List<GridRegion> n = base.GetNeighbours(scopeID, regionID);
+            //    m_GridCache.SetNeighbors(n);
+            //}
             return n;
         }
 
@@ -400,7 +400,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                 cache.Add(newcache, ExpireTime);
         }
 
-        public void SetNeighbors(List<GridRegion> neighbors)
+        /*public void SetNeighbors(List<GridRegion> neighbors)
         {
             neighborsCache.Clear();
             for(int i = 0; i < neighbors.Count; i++)
@@ -420,6 +420,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
                 neighbors.Add(neighborsCache[i]);
             }
             return neighbors;
-        }
+        }*/
     }
 }

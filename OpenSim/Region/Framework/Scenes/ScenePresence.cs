@@ -646,7 +646,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void AdjustKnownSeeds()
         {
             Dictionary<ulong, string> seeds;
-            ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
+            ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
             if (module != null)
                 seeds = module.GetChildrenSeeds(UUID);
             else

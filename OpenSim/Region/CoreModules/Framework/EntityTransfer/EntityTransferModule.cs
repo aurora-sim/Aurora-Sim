@@ -1244,6 +1244,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     cagents.Add(agent);
                 }
+                else
+                    cagents.Add(new AgentCircuitData());
             }
 
             /// Update all child agent with everyone's seeds
