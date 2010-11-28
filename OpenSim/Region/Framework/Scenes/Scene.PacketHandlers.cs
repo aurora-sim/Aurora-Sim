@@ -253,11 +253,14 @@ namespace OpenSim.Region.Framework.Scenes
             bool isAttachment = false;
             
             part.ParentGroup.IsSelected = false;
-            
+
             if (part.ParentGroup.IsAttachment)
                 isAttachment = true;
             else //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
-                part.ParentGroup.ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+            {
+                if(part.ParentGroup.RootPart.AngularVelocity != Vector3.Zero && !part.ParentGroup.IsDeleted)
+                    part.ParentGroup.ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+            }
 
             // If it's not an attachment, and we are allowed to move it,
             // then we might have done so. If we moved across a parcel
@@ -651,9 +654,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)
         {
-            if (LibraryService != null && (LibraryService.LibraryRootFolder.Owner == uuid))
+            if (LibraryService != null && (LibraryService.LibraryOwner == uuid))
             {
-                remote_client.SendNameReply(uuid, "Mr", "OpenSim");
+                remote_client.SendNameReply(uuid, LibraryService.LibraryOwnerName[0], LibraryService.LibraryOwnerName[1]);
             }
             else
             {

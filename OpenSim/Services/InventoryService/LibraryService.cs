@@ -51,12 +51,24 @@ namespace OpenSim.Services.InventoryService
 
         private InventoryFolderImpl m_LibraryRootFolder;
 
+        private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
+
+        private string[] libOwnerName = new string[2] { "Library", "Owner"};
+
         public InventoryFolderImpl LibraryRootFolder
         {
             get { return m_LibraryRootFolder; }
         }
 
-        private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
+        public UUID LibraryOwner
+        {
+            get { return libOwner; }
+        }
+
+        public string[] LibraryOwnerName
+        {
+            get { return libOwnerName; }
+        }
 
         /// <summary>
         /// Holds the root library folder and all its descendents.  This is really only used during inventory
@@ -70,12 +82,21 @@ namespace OpenSim.Services.InventoryService
         {
             string pLibrariesLocation = Path.Combine("inventory", "Libraries.xml");
             string pLibName = "OpenSim Library";
+            string pLibOwnerName = "Library Owner";
 
             IConfig libConfig = config.Configs["LibraryService"];
             if (libConfig != null)
             {
                 pLibrariesLocation = libConfig.GetString("DefaultLibrary", pLibrariesLocation);
                 pLibName = libConfig.GetString("LibraryName", pLibName);
+                pLibOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
+            }
+
+            libOwnerName = pLibOwnerName.Split(' ');
+            if (libOwnerName.Length != 2)
+            {
+                //Reset it if it isn't the right length
+                libOwnerName = new string[2] { "Library", "Owner"};
             }
 
             //m_log.Debug("[LIBRARY]: Starting library service...");

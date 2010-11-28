@@ -305,7 +305,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGridService; }
         }
 
-
         public string DefaultObjectName
         {
             get { return m_DefaultObjectName; }
