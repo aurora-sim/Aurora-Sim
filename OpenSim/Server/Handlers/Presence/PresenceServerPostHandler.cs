@@ -267,7 +267,16 @@ namespace OpenSim.Server.Handlers.Presence
             string[] pinfos = m_PresenceService.GetAgentsLocations(userIDs);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
-            if ((pinfos == null) || ((pinfos != null) && (pinfos.Length == 0)))
+            bool nullValues = true;
+            foreach (string i in pinfos)
+            {
+                if(i != "")
+                {
+                    nullValues = false;
+                    break;
+                }
+            }
+            if ((pinfos == null) || ((pinfos != null) && (pinfos.Length == 0)) || nullValues)
                 result["result"] = "noagents";
             else
             {

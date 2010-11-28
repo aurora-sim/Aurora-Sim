@@ -249,7 +249,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private void SendInstantMessages(object message)
         {
             GridInstantMessage msg = message as GridInstantMessage;
-            foreach (GroupMembersData member in m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), UUID.Parse(msg.imSessionID.ToString())))
+            List<GroupMembersData> members = m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), UUID.Parse(msg.imSessionID.ToString()));
+            List<UUID> agentsToSendTo = new List<UUID>();
+            foreach (GroupMembersData member in members)
+            {
+                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString())))
+                {
+                    // Don't deliver messages to people who have dropped this session
+                    if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} has dropped session, not delivering to them", member.AgentID);
+                    continue;
+                }
+                agentsToSendTo.Add(member.AgentID);
+            }
+            m_msgTransferModule.SendInstantMessages(msg, agentsToSendTo);
+            /*foreach (GroupMembersData member in m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), UUID.Parse(msg.imSessionID.ToString())))
             {
                 if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString())))
                 {
@@ -266,7 +279,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     if (!success && m_removeOfflineAgentsFromGroupIMs)
                         m_groupData.AgentDroppedFromGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString()));
                 });
-            }
+            }*/
         }
         
         #region SimGridEventHandlers

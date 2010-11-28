@@ -184,8 +184,9 @@ namespace OpenSim.Services.PresenceService
                 PresenceData[] data = m_Database.Get("UserID",
                         userIDStr);
 
-                foreach (PresenceData d in data)
+                if (data.Length != 0)
                 {
+                    PresenceData d = data[0];
                     PresenceInfo ret = new PresenceInfo();
 
                     if (int.Parse(d.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
@@ -202,9 +203,11 @@ namespace OpenSim.Services.PresenceService
                     }
 
                     Services.Interfaces.GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, d.RegionID);
-                    if(r != null)
+                    if (r != null)
                         info.Add("http://" + r.ExternalHostName + ":" + r.HttpPort);
                 }
+                else//Add a blank one
+                    info.Add("");
             }
 
             // m_log.DebugFormat("[PRESENCE SERVICE]: GetAgents for {0} userIDs found {1} presences", userIDs.Length, info.Count);

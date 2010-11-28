@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -37,6 +39,8 @@ namespace OpenSim.Region.Framework.Interfaces
         event UndeliveredMessage OnUndeliveredMessage;
 
         void SendInstantMessage(GridInstantMessage im, MessageResultNotification result);
+
+        void SendInstantMessages(GridInstantMessage im, List<UUID> AgentsToSendTo);
 
         void SendInstantMessage(GridInstantMessage im);
     }

@@ -48,8 +48,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         private bool m_Enabled = false;
         protected List<Scene> m_Scenes = new List<Scene>();
-        protected Dictionary<UUID, IMPresenceInfo> m_UserRegionMap = new Dictionary<UUID, IMPresenceInfo>();
-
+        
         public event UndeliveredMessage OnUndeliveredMessage;
 
         private IPresenceService m_PresenceService;
@@ -134,6 +133,33 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             SendInstantMessage(im, result);
         }
 
+        public virtual void SendInstantMessages(GridInstantMessage im, List<UUID> AgentsToSendTo)
+        {
+            //Check for local users first
+            List<UUID> RemoveUsers = new List<UUID>();
+            foreach (Scene scene in m_Scenes)
+            {
+                for(int i = 0; i < AgentsToSendTo.Count; i++)
+                {
+                    if (scene.Entities.ContainsKey(AgentsToSendTo[i]) &&
+                        scene.Entities[AgentsToSendTo[i]] is ScenePresence)
+                    {
+                        // Local message
+                        ScenePresence user = (ScenePresence)scene.Entities[AgentsToSendTo[i]];
+                        user.ControllingClient.SendInstantMessage(im);
+                        RemoveUsers.Add(AgentsToSendTo[i]);
+                    }
+                }
+            }
+            //Clear the local users out
+            foreach (UUID agentID in RemoveUsers)
+            {
+                AgentsToSendTo.Remove(agentID);
+            }
+
+            SendMultipleGridInstantMessageViaXMLRPC(im, AgentsToSendTo);
+        }
+
         public virtual void SendInstantMessage(GridInstantMessage im, MessageResultNotification result)
         {
             UUID toAgentID = new UUID(im.toAgentID);
@@ -150,26 +176,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     return;
                 }
             }
-            //Note: Why??? This is completely unnesessary!
-            /*// try child avatar second
-            foreach (Scene scene in m_Scenes)
-            {
-                //                m_log.DebugFormat(
-                //                    "[INSTANT MESSAGE]: Looking for child of {0} in {1}", toAgentID, scene.RegionInfo.RegionName);
-
-                if (scene.Entities.ContainsKey(toAgentID) &&
-                        scene.Entities[toAgentID] is ScenePresence)
-                {
-                    // Local message
-                    ScenePresence user = (ScenePresence)scene.Entities[toAgentID];
-
-                    m_log.DebugFormat("[INSTANT MESSAGE]: Delivering IM to child agent {0} {1}", user.Name, toAgentID);
-                    user.ControllingClient.SendInstantMessage(im);
-
-                    return;
-                }
-            }*/
-
             //m_log.DebugFormat("[INSTANT MESSAGE]: Delivering IM to {0} via XMLRPC", im.toAgentID);
             SendGridInstantMessageViaXMLRPC(im, result);
         }
@@ -439,7 +445,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             icon.EndInvoke(iar);
         }
 
-
         protected virtual void SendGridInstantMessageViaXMLRPC(GridInstantMessage im, MessageResultNotification result)
         {
             GridInstantMessageDelegate d = SendGridInstantMessageViaXMLRPCAsync;
@@ -447,10 +452,128 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             d.BeginInvoke(im, result, null, GridInstantMessageCompleted, d);
         }
 
-        public class IMPresenceInfo
+        protected virtual void SendMultipleGridInstantMessageViaXMLRPC(GridInstantMessage im, List<UUID> users)
         {
-            public string HTTPPath = string.Empty;
-            public GridRegion Region = null;
+            Dictionary<UUID, string> HTTPPaths = new Dictionary<UUID, string>();
+
+            foreach (UUID agentID in users)
+            {
+                lock (IMUsersCache)
+                {
+                    string HTTPPath = "";
+                    if (!IMUsersCache.TryGetValue(agentID, out HTTPPath))
+                        HTTPPath = "";
+                    else
+                        HTTPPaths.Add(agentID, HTTPPath);
+                }
+            }
+            List<UUID> CompletedUsers = new List<UUID>();
+            foreach (KeyValuePair<UUID, string> kvp in HTTPPaths)
+            {
+                //Fix the agentID
+                im.toAgentID = kvp.Key.Guid;
+                Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
+                //We've tried to send an IM to them before, pull out their info
+                //Send the IM to their last location
+                if (!doIMSending(kvp.Value, msgdata))
+                {
+                    //If this fails, the user has either moved from their stored location or logged out
+                    //Since it failed, let it look them up again and rerun
+                    lock (IMUsersCache)
+                    {
+                        IMUsersCache.Remove(kvp.Key);
+                    }
+                }
+                else
+                {
+                    //Send the IM, and it made it to the user, return true
+                    CompletedUsers.Add(kvp.Key);
+                }
+            }
+
+            //Remove the finished users
+            foreach (UUID agentID in CompletedUsers)
+            {
+                users.Remove(agentID);
+            }
+            HTTPPaths.Clear();
+
+            //Now query the grid server for the agents
+            List<string> Queries = new List<string>();
+            foreach (UUID agentID in users)
+            {
+                Queries.Add(agentID.ToString());
+            }
+
+
+            //Ask for the user new style first
+            string[] AgentLocations = PresenceService.GetAgentsLocations(Queries.ToArray());
+            //If this is false, this doesn't exist on the presence server and we use the legacy way
+            if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure"))
+            {
+                //No agents, so this user is offline
+                if (AgentLocations[0] == "NoAgents")
+                {
+                    foreach (UUID agentID in users)
+                    {
+                        lock (IMUsersCache)
+                        {
+                            //Remove them so we keep testing against the db
+                            IMUsersCache.Remove(agentID);
+                        }
+                    }
+                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                    return;
+                }
+                else //Found the agents, use their location
+                {
+                    for (int i = 0; i < users.Count; i++)
+                    {
+                        HTTPPaths.Add(users[i], AgentLocations[i]);
+                    }
+                }
+            }
+            else
+            {
+                //Query the legacy way
+                foreach (UUID agentID in users)
+                {
+                    SendGridInstantMessageViaXMLRPCAsync(im, delegate(bool r) { }, null);
+                }
+                return;
+            }
+
+            //We found the agent's location, now ask them about the user
+            foreach (KeyValuePair<UUID, string> kvp in HTTPPaths)
+            {
+                if (kvp.Value != "")
+                {
+                    im.toAgentID = kvp.Key.Guid;
+                    Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
+                    if (!doIMSending(kvp.Value, msgdata))
+                    {
+                        //It failed
+                        lock (IMUsersCache)
+                        {
+                            //Remove them so we keep testing against the db
+                            IMUsersCache.Remove(kvp.Key);
+                        }
+                    }
+                    else
+                    {
+                        //Send the IM, and it made it to the user, return true
+                        return;
+                    }
+                }
+                else
+                {
+                    lock (IMUsersCache)
+                    {
+                        //Remove them so we keep testing against the db
+                        IMUsersCache.Remove(kvp.Key);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -569,7 +692,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
 
             //We found the agent's location, now ask them about the user
-            if (HTTPPath != null)
+            if (HTTPPath != "")
             {
                 if (!doIMSending(HTTPPath, msgdata))
                 {
