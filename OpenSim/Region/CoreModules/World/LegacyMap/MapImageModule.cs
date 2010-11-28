@@ -565,8 +565,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
                     return new Bitmap(image);
-                else
-                    return null;
             }
             catch (DllNotFoundException)
             {
@@ -584,7 +582,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             }
             return null;
-
         }
 
         // Compute the average color of a texture.

@@ -15,8 +15,9 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="UserInventoryItemID"></param>
+        /// <param name="onlyCached">Only return if it is cached</param>
         /// <returns></returns>
-        StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID);
+        StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID, bool onlyCached);
 
         /// <summary>
         /// Cache all of the state saves that we have in the database

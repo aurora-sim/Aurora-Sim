@@ -183,7 +183,10 @@ namespace OpenSim.Server.Handlers.GridUser
             GridUserInfo guinfo = m_GridUserService.GetGridUserInfo(user);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
-            result["result"] = guinfo.ToKeyValuePairs();
+            if (guinfo == null)
+                result["result"] = "null";
+            else
+                result["result"] = guinfo.ToKeyValuePairs();
 
             string xmlString = ServerUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID USER HANDLER]: resp string: {0}", xmlString);

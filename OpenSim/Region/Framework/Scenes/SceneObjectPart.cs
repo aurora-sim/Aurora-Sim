@@ -558,7 +558,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_acceleration;
         protected Vector3 m_angularVelocity;
 
-        //unkown if this will be kept, added as a way of removing the group position from the group class
+        //unknown if this will be kept, added as a way of removing the group position from the group class
         protected Vector3 m_groupPosition;
         protected uint m_localId;
         protected uint m_crc;
@@ -892,10 +892,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get 
             {
-                return GetComponentState("LocalId").AsUInteger(); 
+                if(m_localId == 0)
+                    m_localId = GetComponentState("LocalId").AsUInteger();
+                return m_localId; 
             }
             set
             {
+                m_localId = value;
                 SetComponentState("LocalId", value, true);
             }
         }
@@ -1791,8 +1794,8 @@ namespace OpenSim.Region.Framework.Scenes
             set 
             { 
 //                m_log.DebugFormat("[SOP]: Setting flags for {0} {1} to {2}", UUID, Name, value);
-                if (ParentGroup != null && _flags != value)
-                    ParentGroup.HasGroupChanged = true;
+                //if (ParentGroup != null && _flags != value)
+                //    ParentGroup.HasGroupChanged = true;
                 _flags = value; 
             }
         }

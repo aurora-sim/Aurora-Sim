@@ -229,6 +229,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             #endregion
 
             //m_SLCompatabilityMode = compatMode;
+            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             //m_Apis = Apis;
         }
@@ -256,7 +257,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private void ResetCounters()
         {
-            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             m_braceCount = 0;
             m_CSharpLine = 0;
             m_CSharpCol = 1;
@@ -327,6 +327,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             LSL2CSCodeTransformer codeTransformer;
             try
             {
+                p.m_lexer.Reset();
                 codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
             }
             catch (CSToolsException e)

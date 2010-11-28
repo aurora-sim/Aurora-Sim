@@ -5342,7 +5342,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.ViewerStats, HandleViewerStats);
             AddLocalPacketHandler(PacketType.MapItemRequest, HandleMapItemRequest, false);
             AddLocalPacketHandler(PacketType.TransferAbort, HandleTransferAbort, false);
-            AddLocalPacketHandler(PacketType.MuteListRequest, HandleMuteListRequest, false);
+            AddLocalPacketHandler(PacketType.MuteListRequest, HandleMuteListRequest, true);
             AddLocalPacketHandler(PacketType.UseCircuitCode, HandleUseCircuitCode);
             AddLocalPacketHandler(PacketType.AgentHeightWidth, HandleAgentHeightWidth, false);
             AddLocalPacketHandler(PacketType.InventoryDescendents, HandleInventoryDescendents);

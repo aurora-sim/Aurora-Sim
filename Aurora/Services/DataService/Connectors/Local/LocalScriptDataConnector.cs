@@ -61,18 +61,22 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name="itemID"></param>
         /// <param name="UserInventoryItemID"></param>
+        /// <param name="onlyCached)"></param>
         /// <returns></returns>
-        public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID)
+        public StateSave GetStateSave(UUID itemID, UUID UserInventoryItemID, bool onlyCached)
         {
             StateSave StateSave = new StateSave();
             //Check the caches
             if (m_cachedStateSaves.TryGetValue(itemID, out StateSave))
                 return StateSave;
-            else if (UserInventoryItemID != UUID.Zero && 
+            else if (UserInventoryItemID != UUID.Zero &&
                 m_cachedStateSaves.TryGetValue(UserInventoryItemID, out StateSave))
                 return StateSave;
+            else if (onlyCached)
+                return null;
             else
                 StateSave = new StateSave();
+
 
             try
             {

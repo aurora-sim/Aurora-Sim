@@ -195,7 +195,7 @@ namespace OpenSim.Services.PresenceService
                         LogoutAgent(d.SessionID);
                         continue;
                     }
-                    if (ret.RegionID == UUID.Zero) //Bad logout
+                    if (d.RegionID == UUID.Zero) //Bad logout
                     {
                         m_log.Warn("[PresenceService]: Found a user (" + d.UserID + ") that does not have a region (UUID.Zero)! Logging them out.");
                         LogoutAgent(d.SessionID);
