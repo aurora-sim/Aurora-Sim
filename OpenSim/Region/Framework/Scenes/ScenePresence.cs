@@ -495,6 +495,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_pos = actor.Position;
                 else
                 {
+                    //return m_pos; 
                     // OpenSim Mantis #4063. Obtain the correct position of a seated avatar. In addition
                     // to providing the correct position while the avatar is seated, this value will also
                     // be used as the location to unsit to.

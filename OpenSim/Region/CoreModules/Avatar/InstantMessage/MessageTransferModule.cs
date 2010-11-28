@@ -480,7 +480,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 {
                     //They have been IMed before, look up in the cache
                     upd = new PresenceInfo();
-                    upd.RegionID = m_UserRegionMap[toAgentID].Region.RegionID;
+                    if(m_UserRegionMap[toAgentID].Region != null)
+                        upd.RegionID = m_UserRegionMap[toAgentID].Region.RegionID;
                     cachedRegion = m_UserRegionMap[toAgentID].Region;
                     // We need to compare the current regionhandle with the previous region handle
                     // or the recursive loop will never end because it will never try to lookup the agent again
@@ -503,31 +504,15 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 //Find the regions http address where the agent is
                 string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { toAgentID.ToString() });
-
-                if (AgentLocations == null || (AgentLocations.Length == 1 && AgentLocations[0] == "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
+                if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
                 {
-                    // Non-cached user agent lookup.
-                    PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
-                    if (presences != null && presences.Length > 0)
-                        upd = presences[0];
+                    //No agents, do nothing
+                    if (AgentLocations[0] == "NoAgents")
+                        return;
 
-                    if (upd != null)
-                    {
-                        // check if we've tried this region before..
-                        // This is one way to end the recursive loop
-                        if ((upd.RegionID == UUID.Zero) || (prevRegion != null && upd.RegionID == prevRegion.RegionID))
-                        {
-                            m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                            HandleUndeliveredMessage(im, result);
-                            return;
-                        }
-                    }
-                }
-                else
-                {
                     Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
 
-                    bool imresult = doIMSending("http://" + cachedRegion.ExternalHostName + ":" + cachedRegion.HttpPort, msgdata);
+                    bool imresult = doIMSending(AgentLocations[0], msgdata);
                     if (imresult)
                     {
                         // IM delivery successful, so store the Agent's location in our local cache.
@@ -535,7 +520,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         {
                             m_UserRegionMap[toAgentID] = new IMPresenceInfo();
                             m_UserRegionMap[toAgentID].Region = cachedRegion;
-                            m_UserRegionMap[toAgentID].HTTPPath = "http://" + cachedRegion.ExternalHostName + ":" + cachedRegion.HttpPort;
+                            m_UserRegionMap[toAgentID].HTTPPath = AgentLocations[0];
                         }
                         result(true);
                         return;
@@ -555,6 +540,25 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                                 cachedRegion);
                     }
                     return; //If this isn't here, infinite loop occurs
+                }
+                else //If this is true, this doesn't exist on the presence server and we use the legacy way
+                {
+                    // Non-cached user agent lookup.
+                    PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
+                    if (presences != null && presences.Length > 0)
+                        upd = presences[0];
+
+                    if (upd != null)
+                    {
+                        // check if we've tried this region before..
+                        // This is one way to end the recursive loop
+                        if ((upd.RegionID == UUID.Zero) || (prevRegion != null && upd.RegionID == prevRegion.RegionID))
+                        {
+                            m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                            HandleUndeliveredMessage(im, result);
+                            return;
+                        }
+                    }
                 }
             }
 
