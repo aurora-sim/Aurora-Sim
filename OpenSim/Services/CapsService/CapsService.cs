@@ -127,6 +127,13 @@ namespace OpenSim.Services.CapsService
             handlers.Add(new RestHTTPHandler("POST", CreateCAPS("WebFetchInventoryDescendents"),
                                                       method));
 
+            method = delegate(Hashtable httpMethod)
+            {
+                return FetchLibraryInventoryDescendentsRequest(httpMethod, m_AgentID);
+            };
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchLibDescendents"),
+                                                      method));
+
             return handlers;
         }
 
@@ -418,7 +425,91 @@ namespace OpenSim.Services.CapsService
             return cancelresponsedata;
         }
 
+        public Hashtable FetchLibraryInventoryDescendentsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        {
+            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS web fetch LIBRARY inventory request for {0}", AgentID);
 
+            // nasty temporary hack here, the linden client falsely
+            // identifies the uuid 00000000-0000-0000-0000-000000000000
+            // as a string which breaks us
+            //
+            // correctly mark it as a uuid
+            //
+            string request = (string)mDhttpMethod["requestbody"];
+            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
+
+            // another hack <integer>1</integer> results in a
+            // System.ArgumentException: Object type System.Int32 cannot
+            // be converted to target type: System.Boolean
+            //
+            request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
+            request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
+
+            Hashtable hash = new Hashtable();
+            try
+            {
+                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
+            }
+            catch (LLSD.LLSDParseException pe)
+            {
+                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
+                m_log.Error("Request: " + request.ToString());
+            }
+
+            ArrayList foldersrequested = (ArrayList)hash["folders"];
+
+            string response = "";
+            lock (m_fetchLock)
+            {
+                for (int i = 0; i < foldersrequested.Count; i++)
+                {
+                    string inventoryitemstr = "";
+                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
+
+                    LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
+
+                    try
+                    {
+                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
+                    }
+                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID);
+
+                    inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
+                    inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
+                    inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
+
+                    response += inventoryitemstr;
+                }
+
+
+                if (response.Length == 0)
+                {
+                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
+                    // Therefore, I'm concluding that the client only has so many threads available to do requests
+                    // and when a thread stalls..   is stays stalled.
+                    // Therefore we need to return something valid
+                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
+                }
+                else
+                {
+                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
+                }
+
+                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
+                //m_log.Debug("[CAPS] "+response);
+
+            }
+            Hashtable cancelresponsedata = new Hashtable();
+            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
+            cancelresponsedata["content_type"] = "text/plain";
+            cancelresponsedata["keepalive"] = false;
+            cancelresponsedata["str_response_string"] = response;
+            return cancelresponsedata;
+        }
 
         /// <summary>
         /// Construct an LLSD reply packet to a CAPS inventory request
