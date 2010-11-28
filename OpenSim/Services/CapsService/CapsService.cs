@@ -134,6 +134,20 @@ namespace OpenSim.Services.CapsService
             handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchLibDescendents"),
                                                       method));
 
+            method = delegate(Hashtable httpMethod)
+            {
+                return FetchInventoryItemsRequest(httpMethod, m_AgentID);
+            };
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchInventory"),
+                                                      method));
+
+            method = delegate(Hashtable httpMethod)
+            {
+                return FetchLibInventoryItemsRequest(httpMethod, m_AgentID);
+            };
+            handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchLib"),
+                                                      method));
+
             return handlers;
         }
 
@@ -179,6 +193,8 @@ namespace OpenSim.Services.CapsService
             registeredCAPSPath[m_HostName + caps] = method;
             return caps;
         }
+
+        #region Other CAPS
 
         private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)
         {
@@ -259,6 +275,8 @@ namespace OpenSim.Services.CapsService
             return cancelresponsedata;
         }
 
+        #endregion
+
         #region Inventory
 
 
@@ -307,7 +325,7 @@ namespace OpenSim.Services.CapsService
 
                 LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
                 LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, agentID);
+                LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, agentID, false);
 
                 inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
                 inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
@@ -390,7 +408,7 @@ namespace OpenSim.Services.CapsService
                     {
                         m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
                     }
-                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID);
+                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID, false);
 
                     inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
                     inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
@@ -476,7 +494,7 @@ namespace OpenSim.Services.CapsService
                     {
                         m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
                     }
-                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID);
+                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID, true);
 
                     inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
                     inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
@@ -511,12 +529,178 @@ namespace OpenSim.Services.CapsService
             return cancelresponsedata;
         }
 
+        public Hashtable FetchInventoryItemsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        {
+            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS inventory items request for {0}", AgentID);
+
+            // nasty temporary hack here, the linden client falsely
+            // identifies the uuid 00000000-0000-0000-0000-000000000000
+            // as a string which breaks us
+            //
+            // correctly mark it as a uuid
+            //
+            string request = (string)mDhttpMethod["requestbody"];
+            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
+
+            Hashtable hash = new Hashtable();
+            try
+            {
+                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
+            }
+            catch (LLSD.LLSDParseException pe)
+            {
+                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
+                m_log.Error("Request: " + request.ToString());
+            }
+
+            ArrayList foldersrequested = (ArrayList)hash["items"];
+
+            string response = "";
+            lock (m_fetchLock)
+            {
+                for (int i = 0; i < foldersrequested.Count; i++)
+                {
+                    string inventoryitemstr = "";
+                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
+
+                    LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
+
+                    try
+                    {
+                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
+                    }
+                    InventoryItemBase item = m_InventoryService.GetItem(new InventoryItemBase(llsdRequest.item_id, llsdRequest.owner_id));
+                    if (item != null)
+                    {
+                        LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
+                        inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
+
+                        response += inventoryitemstr;
+                    }
+                }
+
+
+                if (response.Length == 0)
+                {
+                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
+                    // Therefore, I'm concluding that the client only has so many threads available to do requests
+                    // and when a thread stalls..   is stays stalled.
+                    // Therefore we need to return something valid
+                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
+                }
+                else
+                {
+                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
+                }
+
+                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
+                //m_log.Debug("[CAPS] "+response);
+
+            }
+            Hashtable cancelresponsedata = new Hashtable();
+            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
+            cancelresponsedata["content_type"] = "text/plain";
+            cancelresponsedata["keepalive"] = false;
+            cancelresponsedata["str_response_string"] = response;
+            return cancelresponsedata;
+        }
+
+        public Hashtable FetchLibInventoryItemsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        {
+            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS library inventory items request for {0}", AgentID);
+
+            // nasty temporary hack here, the linden client falsely
+            // identifies the uuid 00000000-0000-0000-0000-000000000000
+            // as a string which breaks us
+            //
+            // correctly mark it as a uuid
+            //
+            string request = (string)mDhttpMethod["requestbody"];
+            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
+
+            Hashtable hash = new Hashtable();
+            try
+            {
+                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
+            }
+            catch (LLSD.LLSDParseException pe)
+            {
+                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
+                m_log.Error("Request: " + request.ToString());
+            }
+
+            ArrayList foldersrequested = (ArrayList)hash["items"];
+
+            string response = "";
+            lock (m_fetchLock)
+            {
+                for (int i = 0; i < foldersrequested.Count; i++)
+                {
+                    string inventoryitemstr = "";
+                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
+
+                    LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
+
+                    try
+                    {
+                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
+                    }
+                    InventoryItemBase item = null;
+                    if (m_LibraryService != null && m_LibraryService.LibraryRootFolder != null)
+                    {
+                        item = m_LibraryService.LibraryRootFolder.FindItem(llsdRequest.item_id);
+                    }
+                    if(item == null) //Try normal inventory them
+                        item = m_InventoryService.GetItem(new InventoryItemBase(llsdRequest.item_id, llsdRequest.owner_id));
+                    if (item != null)
+                    {
+                        LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
+                        inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
+
+                        response += inventoryitemstr;
+                    }
+                }
+
+
+                if (response.Length == 0)
+                {
+                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
+                    // Therefore, I'm concluding that the client only has so many threads available to do requests
+                    // and when a thread stalls..   is stays stalled.
+                    // Therefore we need to return something valid
+                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
+                }
+                else
+                {
+                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
+                }
+
+                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
+                //m_log.Debug("[CAPS] "+response);
+
+            }
+            Hashtable cancelresponsedata = new Hashtable();
+            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
+            cancelresponsedata["content_type"] = "text/plain";
+            cancelresponsedata["keepalive"] = false;
+            cancelresponsedata["str_response_string"] = response;
+            return cancelresponsedata;
+        }
+
         /// <summary>
         /// Construct an LLSD reply packet to a CAPS inventory request
         /// </summary>
         /// <param name="invFetch"></param>
         /// <returns></returns>
-        private LLSDInventoryDescendents FetchInventoryReply(LLSDFetchInventoryDescendents invFetch, UUID AgentID)
+        private LLSDInventoryDescendents FetchInventoryReply(LLSDFetchInventoryDescendents invFetch, UUID AgentID, bool Library)
         {
             LLSDInventoryDescendents reply = new LLSDInventoryDescendents();
             LLSDInventoryFolderContents contents = new LLSDInventoryFolderContents();
@@ -529,7 +713,7 @@ namespace OpenSim.Services.CapsService
             inv.Folders = new List<InventoryFolderBase>();
             inv.Items = new List<InventoryItemBase>();
             int version = 0;
-            inv = HandleFetchInventoryDescendentsCAPS(AgentID, invFetch.folder_id, invFetch.owner_id, invFetch.fetch_folders, invFetch.fetch_items, invFetch.sort_order, out version);
+            inv = HandleFetchInventoryDescendentsCAPS(AgentID, invFetch.folder_id, invFetch.owner_id, invFetch.fetch_folders, invFetch.fetch_items, invFetch.sort_order, Library, out version);
 
             if (inv.Folders != null)
             {
@@ -581,6 +765,7 @@ namespace OpenSim.Services.CapsService
         private LLSDInventoryItem ConvertInventoryItem(InventoryItemBase invItem, UUID AgentID)
         {
             LLSDInventoryItem llsdItem = new LLSDInventoryItem();
+            llsdItem.agent_id = AgentID;
             llsdItem.asset_id = invItem.AssetID;
             llsdItem.created_at = invItem.CreationDate;
             llsdItem.desc = invItem.Description;
@@ -609,8 +794,10 @@ namespace OpenSim.Services.CapsService
             llsdItem.permissions.group_mask = (int)invItem.GroupPermissions;
             llsdItem.permissions.is_owner_group = invItem.GroupOwned;
             llsdItem.permissions.next_owner_mask = (int)invItem.NextPermissions;
+            llsdItem.permissions.last_owner_id = invItem.Owner; //Err... can't set this?
             llsdItem.permissions.owner_id = AgentID;
             llsdItem.permissions.owner_mask = (int)invItem.CurrentPermissions;
+            
             llsdItem.sale_info = new LLSDSaleInfo();
             llsdItem.sale_info.sale_price = invItem.SalePrice;
             switch (invItem.SaleType)
@@ -633,7 +820,7 @@ namespace OpenSim.Services.CapsService
         }
 
         public InventoryCollection HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
-                                                   bool fetchFolders, bool fetchItems, int sortOrder, out int version)
+                                                   bool fetchFolders, bool fetchItems, int sortOrder, bool Library, out int version)
         {
             m_log.DebugFormat(
                 "[INVENTORY CACHE]: Fetching folders ({0}), items ({1}) from {2} for agent {3}",
@@ -642,18 +829,25 @@ namespace OpenSim.Services.CapsService
             // FIXME MAYBE: We're not handling sortOrder!
 
             InventoryFolderImpl fold;
-            if (m_LibraryService != null && m_LibraryService.LibraryRootFolder != null)
-                if ((fold = m_LibraryService.LibraryRootFolder.FindFolder(folderID)) != null)
-                {
-                    version = 0;
-                    InventoryCollection ret = new InventoryCollection();
-                    ret.Folders = new List<InventoryFolderBase>();
-                    ret.Items = fold.RequestListOfItems();
-
-                    return ret;
-                }
 
             InventoryCollection contents = new InventoryCollection();
+            //if (Library)
+           // {
+                //version = 0;
+                if (m_LibraryService != null && m_LibraryService.LibraryRootFolder != null)
+                {
+                    if ((fold = m_LibraryService.LibraryRootFolder.FindFolder(folderID)) != null)
+                    {
+                        version = 0;
+                        InventoryCollection ret = new InventoryCollection();
+                        ret.Folders = new List<InventoryFolderBase>();
+                        ret.Items = fold.RequestListOfItems();
+
+                        return ret;
+                    }
+                }
+                //return contents;
+            //}
 
             //if (folderID != UUID.Zero)
             //{

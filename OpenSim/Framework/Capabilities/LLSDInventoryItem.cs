@@ -35,6 +35,7 @@ namespace OpenSim.Framework.Capabilities
         public UUID parent_id;
 
         public UUID asset_id;
+        public UUID agent_id;
         public UUID item_id;
         public LLSDPermissions permissions;
         public string type;
@@ -53,6 +54,7 @@ namespace OpenSim.Framework.Capabilities
         public UUID creator_id;
         public UUID owner_id;
         public UUID group_id;
+        public UUID last_owner_id;
         public int base_mask;
         public int owner_mask;
         public int group_mask;
@@ -82,6 +84,13 @@ namespace OpenSim.Framework.Capabilities
         public int sort_order;
         public bool fetch_folders;
         public bool fetch_items;
+    }
+
+    [OSDMap]
+    public class LLSDFetchInventory
+    {
+        public UUID item_id;
+        public UUID owner_id;
     }
 
     [OSDMap]
