@@ -3705,14 +3705,21 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_attachments)
             {
-                // Validate
-                foreach (SceneObjectGroup gobj in m_attachments)
+                for (int i = 0; i < m_attachments.Count; i++)
                 {
-                    if (gobj == null)
-                        return false;
-
-                    if (gobj.IsDeleted)
-                        return false;
+                    if (m_attachments[i] == null)
+                    {
+                        ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
+                        m_attachments.RemoveAt(i);
+                        continue;
+                    }
+                    if (m_attachments[i].IsDeleted)
+                    {
+                        ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
+                        IAttachmentsModule module = Scene.RequestModuleInterface<IAttachmentsModule>();
+                        module.DetachObject(m_attachments[i].LocalId, ControllingClient);
+                        continue;
+                    }
                 }
             }
             return true;
