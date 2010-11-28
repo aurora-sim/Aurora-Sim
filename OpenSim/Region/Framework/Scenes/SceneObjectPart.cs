@@ -531,8 +531,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         private PrimFlags LocalFlags;
-        [XmlIgnore]
-        private float m_damage = -1.0f;
         private byte[] m_TextureAnimation = Utils.EmptyBytes;
         private byte m_clickAction;
         private Color m_color = Color.Black;

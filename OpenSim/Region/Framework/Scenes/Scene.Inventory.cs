@@ -1975,8 +1975,15 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     string xmlData = Utils.BytesToString(rezAsset.Data);
                     SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, this);
+                    if (group == null)
+                        return null;
+
                     group.IsDeleted = false;
-                    
+                    group.m_isLoaded = true;
+                    foreach (SceneObjectPart part in group.ChildrenList)
+                    {
+                        part.IsLoading = false;
+                    }
                     string reason;
                     if (!Permissions.CanRezObject(group.ChildrenList.Count, ownerID, pos, out reason))
                     {

@@ -627,6 +627,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         return null;
 
                     group.IsDeleted = false;
+                    group.m_isLoaded = true;
+                    foreach (SceneObjectPart part in group.ChildrenList)
+                    {
+                        part.IsLoading = false;
+                    }
                     string reason; 
                     if (!m_Scene.Permissions.CanRezObject(
                             group.ChildrenList.Count, remoteClient.AgentId, pos, out reason)
@@ -799,8 +804,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 SceneObjectGroup group
                        = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, m_Scene);
                 if (group == null)
-                    continue;
+                    return null;
+
                 group.IsDeleted = false;
+                group.m_isLoaded = true;
+                foreach (SceneObjectPart part in group.ChildrenList)
+                {
+                    part.IsLoading = false;
+                }
                 NewGroup.Add(group);
 
                 string reason; 

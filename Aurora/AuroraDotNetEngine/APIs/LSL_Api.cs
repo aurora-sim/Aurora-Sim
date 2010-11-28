@@ -3928,7 +3928,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     AssetBase asset = World.AssetService.Get(inventory);
                     SceneObjectGroup group
                                         = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
+                    if (group == null)
+                        return;
+
                     group.IsDeleted = false;
+                    group.m_isLoaded = true;
+                    foreach (SceneObjectPart part in group.ChildrenList)
+                    {
+                        part.IsLoading = false;
+                    }
                     group.OwnerID = m_host.OwnerID;
 
                     group.RootPart.AddFlag(PrimFlags.CreateSelected);

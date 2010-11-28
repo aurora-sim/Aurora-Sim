@@ -59,10 +59,17 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 rootNode = doc.FirstChild;
                 foreach (XmlNode aPrimNode in rootNode.ChildNodes)
                 {
-                    SceneObjectGroup obj = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, scene);
-                    obj.IsDeleted = false;
-                    
-                    scene.AddPrimToScene(obj);
+                    SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, scene);
+                    if (group == null)
+                        return;
+
+                    group.IsDeleted = false;
+                    group.m_isLoaded = true;
+                    foreach (SceneObjectPart part in group.ChildrenList)
+                    {
+                        part.IsLoading = false;
+                    }
+                    scene.AddPrimToScene(group);
                 }
             }
             else
