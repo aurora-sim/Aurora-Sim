@@ -269,8 +269,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             ScenePresence SP = ((Scene)client.Scene).GetScenePresence(client.AgentId);
             // Send client thier groups information.
-            if(SP != null && !SP.IsChildAgent)
-                SendAgentGroupDataUpdate(client, client.AgentId);
+            if (SP != null && !SP.IsChildAgent)
+                Util.FireAndForget(SendAgentGroupDataAsync, client);
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -1444,6 +1444,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     scene.ForEachClient(delegate(IClientAPI client) { SendAgentGroupDataUpdate(client, dataForClientID); });
                 }
             }
+        }
+
+        private void SendAgentGroupDataAsync(object o)
+        {
+            IClientAPI client = (IClientAPI)o;
+            SendAgentGroupDataUpdate(client, client.AgentId);
         }
 
         /// <summary>

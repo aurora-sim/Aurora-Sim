@@ -96,7 +96,19 @@ namespace Aurora.Modules
             //Create the client's cache
             //This is shared, so all get saved into one file
             if (sp != null && !sp.IsChildAgent)
-                LoadFromFileForClient(client.AgentId);
+            {
+                Util.FireAndForget(LoadFileOnNewClient, sp.UUID);
+            }
+        }
+
+        /// <summary>
+        /// Load the file for the client async so that we don't lock up the system for too long
+        /// </summary>
+        /// <param name="o"></param>
+        public void LoadFileOnNewClient(object o)
+        {
+            UUID agentID = (UUID)o;
+            LoadFromFileForClient(agentID);
         }
 
         public void OnClosingClient(IClientAPI client)
@@ -108,7 +120,10 @@ namespace Aurora.Modules
             if (sp != null && !sp.IsChildAgent)
                 SaveToFileForClient(client.AgentId);
             //Remove the client's cache
-            ObjectCacheAgents.Remove(client.AgentId);
+            lock (ObjectCacheAgents)
+            {
+                ObjectCacheAgents.Remove(client.AgentId);
+            }
         }
 
         void SceneGraph_OnObjectRemove(EntityBase obj)
@@ -146,11 +161,16 @@ namespace Aurora.Modules
 
         public void SaveToFileForClient(UUID AgentID)
         {
-            if (!ObjectCacheAgents.ContainsKey(AgentID))
-                return;
+            Dictionary<uint, uint> cache;
+            lock (ObjectCacheAgents)
+            {
+                if (!ObjectCacheAgents.ContainsKey(AgentID))
+                    return;
+                cache = ObjectCacheAgents[AgentID];
+            }
             FileStream stream = new FileStream(m_filePath + AgentID + ".oc", FileMode.OpenOrCreate);
             StreamWriter m_streamWriter = new StreamWriter(stream);
-            m_streamWriter.WriteLine(SerializeAgentCache(ObjectCacheAgents[AgentID]));
+            m_streamWriter.WriteLine(SerializeAgentCache(cache));
             m_streamWriter.Close();
         }
 
@@ -161,8 +181,14 @@ namespace Aurora.Modules
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();
             //Read file here
-            if(file != "") //New file
-                ObjectCacheAgents[AgentID] = DeserializeAgentCache(file);
+            if (file != "") //New file
+            {
+                Dictionary<uint, uint> cache = DeserializeAgentCache(file);
+                lock (ObjectCacheAgents)
+                {
+                    ObjectCacheAgents[AgentID] = cache;
+                }
+            }
         }
 
         #endregion

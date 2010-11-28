@@ -508,7 +508,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 // The friend is not here [as root]. Let's forward.
                 string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { friendID.ToString() });
 
-                if (AgentLocations != null && (AgentLocations.Length != 1 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
+                if (AgentLocations != null || (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
                 {
                     try
                     {
