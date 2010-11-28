@@ -123,6 +123,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("LocalId");
             RegisterComponent(com);
+            com = new DefaultComponents("TextureAnimation");
+            RegisterComponent(com);
         }
 
         public void RemoveRegion(Scene scene)

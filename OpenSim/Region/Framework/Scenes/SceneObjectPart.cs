@@ -531,7 +531,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         private PrimFlags LocalFlags;
-        private byte[] m_TextureAnimation = Utils.EmptyBytes;
         private byte m_clickAction;
         private Color m_color = Color.Black;
         private string m_description = String.Empty;
@@ -1091,12 +1090,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Byte[] TextureAnimation
         {
-            get { return m_TextureAnimation; }
+            get { return GetComponentState("TextureAnimation").AsBinary(); }
             set
             {
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
-                m_TextureAnimation = value;
+                SetComponentState("TextureAnimation", value);
             }
         }
 
@@ -2017,7 +2016,7 @@ namespace OpenSim.Region.Framework.Scenes
             Utils.FloatToBytes(pTexAnim.Length).CopyTo(data, pos + 4);
             Utils.FloatToBytes(pTexAnim.Rate).CopyTo(data, pos + 8);
 
-            m_TextureAnimation = data;
+            TextureAnimation = data;
         }
 
         public void AdjustSoundGain(double volume)
