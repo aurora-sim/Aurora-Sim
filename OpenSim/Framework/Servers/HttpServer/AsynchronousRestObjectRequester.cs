@@ -190,5 +190,48 @@ namespace OpenSim.Framework.Servers.HttpServer
                     
             }, null);
         }
+
+        public static void MakeRequest(string verb, string requestUrl, string obj)
+        {
+            WebRequest request = WebRequest.Create(requestUrl);
+            request.Method = verb;
+            string respstring = String.Empty;
+
+            using (MemoryStream buffer = new MemoryStream())
+            {
+                if ((verb == "POST") || (verb == "PUT"))
+                {
+                    request.ContentType = "text/www-form-urlencoded";
+
+                    int length = 0;
+                    using (StreamWriter writer = new StreamWriter(buffer))
+                    {
+                        writer.Write(obj);
+                        writer.Flush();
+                    }
+
+                    length = (int)obj.Length;
+                    request.ContentLength = length;
+
+                    try
+                    {
+                        request.BeginGetRequestStream(delegate(IAsyncResult res)
+                        {
+                            Stream requestStream = request.EndGetRequestStream(res);
+
+                            requestStream.Write(buffer.ToArray(), 0, length);
+                            requestStream.Close();
+                        }, null);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e.ToString(), requestUrl);
+                    }
+                    finally
+                    {
+                    }
+                }
+            }
+        }
     }
 }

@@ -232,9 +232,9 @@ namespace OpenSim.Services.Connectors
             string reqString = ServerUtils.BuildQueryString(sendData);
             try
             {
-                AsynchronousRestObjectRequester.MakeRequest<string, string>("POST",
+                AsynchronousRestObjectRequester.MakeRequest("POST",
                     m_ServerURI + "/presence",
-                    reqString, null);
+                    reqString);
             }
             catch (Exception e)
             {
