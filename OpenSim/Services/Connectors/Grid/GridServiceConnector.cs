@@ -849,12 +849,11 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "addagent";
 
             string reqString = ServerUtils.BuildQueryString(sendData);
-            string reply = "";
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
+                AsynchronousRestObjectRequester.MakeRequest<string, string>("POST",
+                    m_ServerURI + "/grid",
+                    reqString, null);
             }
             catch (Exception e)
             {

@@ -218,7 +218,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool ReportAgent(UUID sessionID, UUID regionID)
+        public void ReportAgent(UUID sessionID, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -230,36 +230,16 @@ namespace OpenSim.Services.Connectors
             sendData["RegionID"] = regionID.ToString();
 
             string reqString = ServerUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/presence",
-                        reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData.ContainsKey("result"))
-                    {
-                        if (replyData["result"].ToString().ToLower() == "success")
-                            return true;
-                        else
-                            return false;
-                    }
-                    else
-                        m_log.DebugFormat("[PRESENCE CONNECTOR]: ReportAgent reply data does not contain result field");
-
-                }
-                else
-                    m_log.DebugFormat("[PRESENCE CONNECTOR]: ReportAgent received empty reply");
+                AsynchronousRestObjectRequester.MakeRequest<string, string>("POST",
+                    m_ServerURI + "/presence",
+                    reqString, null);
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[PRESENCE CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
             }
-
-            return false;
         }
 
         public PresenceInfo GetAgent(UUID sessionID)

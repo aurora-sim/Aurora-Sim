@@ -142,7 +142,7 @@ namespace OpenSim.Services.UserAccountService
             return m_Database.Store(d);
         }
 
-        public bool SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public void SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             //m_log.DebugFormat("[Grid User Service]: SetLastPosition for {0}", userID);
             GridUserData d = m_Database.Get(userID);
@@ -156,7 +156,7 @@ namespace OpenSim.Services.UserAccountService
             d.Data["LastPosition"] = lastPosition.ToString();
             d.Data["LastLookAt"] = lastLookAt.ToString();
 
-            return m_Database.Store(d);
+            m_Database.Store(d);
         }
     }
 }

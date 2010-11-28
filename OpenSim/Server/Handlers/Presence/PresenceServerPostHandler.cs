@@ -176,12 +176,8 @@ namespace OpenSim.Server.Handlers.Presence
             if (!UUID.TryParse(request["RegionID"].ToString(), out region))
                 return FailureResult();
 
-            if (m_PresenceService.ReportAgent(session, region))
-            {
-                return SuccessResult();
-            }
-
-            return FailureResult();
+            m_PresenceService.ReportAgent(session, region);
+            return SuccessResult();
         }
 
         byte[] GetAgent(Dictionary<string, object> request)

@@ -104,23 +104,22 @@ namespace OpenSim.Services.PresenceService
             return true;
         }
 
-        public bool ReportAgent(UUID sessionID, UUID regionID)
+        public void ReportAgent(UUID sessionID, UUID regionID)
         {
             m_log.DebugFormat("[PRESENCE SERVICE]: ReportAgent with session {0} in region {1}", sessionID, regionID);
             try
             {
                 PresenceData pdata = m_Database.Get(sessionID);
                 if (pdata == null)
-                    return false;
+                    return;
                 if (pdata.Data == null)
-                    return false;
+                    return;
 
-                return m_Database.ReportAgent(sessionID, regionID);
+                m_Database.ReportAgent(sessionID, regionID);
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[PRESENCE SERVICE]: ReportAgent threw exception {0}", e.StackTrace);
-                return false;
             }
         }
 

@@ -138,9 +138,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
             return m_RemoteConnector.LogoutRegionAgents(regionID);
         }
 
-        public bool ReportAgent(UUID sessionID, UUID regionID)
+        public void ReportAgent(UUID sessionID, UUID regionID)
         {
-            return m_RemoteConnector.ReportAgent(sessionID, regionID);
+            m_RemoteConnector.ReportAgent(sessionID, regionID);
         }
 
         public PresenceInfo GetAgent(UUID sessionID)

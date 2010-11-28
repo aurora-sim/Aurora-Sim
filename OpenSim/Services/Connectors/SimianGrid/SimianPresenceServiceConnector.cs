@@ -192,10 +192,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return success;
         }
 
-        public bool ReportAgent(UUID sessionID, UUID regionID)
+        public void ReportAgent(UUID sessionID, UUID regionID)
         {
             // Not needed for SimianGrid
-            return true;
         }
 
         public PresenceInfo GetAgent(UUID sessionID)
@@ -308,9 +307,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return success;
         }
 
-        public bool SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public void SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
-            return UpdateSession(sessionID, regionID, lastPosition, lastLookAt);
+            UpdateSession(sessionID, regionID, lastPosition, lastLookAt);
         }
 
         public GridUserInfo GetGridUserInfo(string user)

@@ -172,7 +172,13 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
         public override List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
         {
-            return base.GetNeighbours(scopeID, regionID);
+            List<GridRegion> n = m_GridCache.GetNeighbors();
+            if (n == null)
+            {
+                n = base.GetNeighbours(scopeID, regionID);
+                m_GridCache.SetNeighbors(n);
+            }
+            return n;
         }
 
         public override GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
@@ -254,10 +260,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
     {
         private double ExpireTime = 30 * 1000 * 60; //30 mins
         private ExpiringList<GridRegionCache> cache = new ExpiringList<GridRegionCache>();
+        private ExpiringList<GridRegion> neighborsCache = new ExpiringList<GridRegion>();
         
         public GridCache()
         {
             cache.SetDefaultTime(ExpireTime);
+            neighborsCache.SetDefaultTime(ExpireTime);
         }
 
         private class GridRegionCache
@@ -390,6 +398,28 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
             }
             if (!found)
                 cache.Add(newcache, ExpireTime);
+        }
+
+        public void SetNeighbors(List<GridRegion> neighbors)
+        {
+            neighborsCache.Clear();
+            for(int i = 0; i < neighbors.Count; i++)
+            {
+                neighborsCache[i] = neighbors[i];
+            }
+        }
+
+        public List<GridRegion> GetNeighbors()
+        {
+            if (neighborsCache.Count == 0)
+                return null;
+
+            List<GridRegion> neighbors = new List<GridRegion>();
+            for (int i = 0; i < neighborsCache.Count; i++)
+            {
+                neighbors.Add(neighborsCache[i]);
+            }
+            return neighbors;
         }
     }
 }

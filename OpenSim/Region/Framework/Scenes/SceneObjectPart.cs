@@ -4402,9 +4402,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="text"></param>
         public void SetText(string text)
         {
+            if (Text != text)
+                ParentGroup.HasGroupChanged = true;
             Text = text;
 
-            ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate(PrimUpdateFlags.Text);
         }
         

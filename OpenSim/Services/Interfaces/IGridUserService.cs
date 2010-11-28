@@ -128,7 +128,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="lastPosition">Region-relative position</param>
         /// <param name="lastLookAt">Normalized look direction</param>
         /// <returns>True if the user's last position was successfully updated, otherwise false</returns>
-        bool SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt);
+        void SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt);
         
         GridUserInfo GetGridUserInfo(string userID);
     }

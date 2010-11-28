@@ -327,8 +327,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             LSL2CSCodeTransformer codeTransformer;
             try
             {
-                p.m_lexer.Reset();
-                codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
+                lock (p)
+                {
+                    codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
+                    p.m_lexer.Reset();
+                }
             }
             catch (CSToolsException e)
             {

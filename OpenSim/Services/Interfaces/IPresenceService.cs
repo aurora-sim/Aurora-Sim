@@ -65,7 +65,7 @@ namespace OpenSim.Services.Interfaces
         bool LogoutAgent(UUID sessionID);
         bool LogoutRegionAgents(UUID regionID);
 
-        bool ReportAgent(UUID sessionID, UUID regionID);
+        void ReportAgent(UUID sessionID, UUID regionID);
 
         PresenceInfo GetAgent(UUID sessionID);
         PresenceInfo[] GetAgents(string[] userIDs);

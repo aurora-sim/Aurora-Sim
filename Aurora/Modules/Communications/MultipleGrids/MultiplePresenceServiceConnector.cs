@@ -140,17 +140,12 @@ namespace Aurora.Modules.Communications.MultipleGrids
             return true;
         }
 
-        public bool ReportAgent(UUID sessionID, UUID regionID)
+        public void ReportAgent(UUID sessionID, UUID regionID)
         {
-            bool RetVal = false;
             foreach (IPresenceService service in AllServices)
             {
-                if (!RetVal)
-                    RetVal = service.ReportAgent(sessionID, regionID);
-                else
-                    service.ReportAgent(sessionID, regionID);
+                service.ReportAgent(sessionID, regionID);
             }
-            return true;
         }
 
         public OpenSim.Services.Interfaces.PresenceInfo GetAgent(UUID sessionID)

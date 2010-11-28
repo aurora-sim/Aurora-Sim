@@ -123,7 +123,7 @@ namespace OpenSim.Services.Connectors
             return Set(sendData, userID, regionID, position, lookAt);
         }
 
-        public bool SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 position, Vector3 lookAt)
+        public void SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 position, Vector3 lookAt)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -131,7 +131,7 @@ namespace OpenSim.Services.Connectors
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "setposition";
 
-            return Set(sendData, userID, regionID, position, lookAt);
+            AsyncSet(sendData, userID, regionID, position, lookAt);
         }
 
         public GridUserInfo GetGridUserInfo(string userID)
@@ -187,6 +187,26 @@ namespace OpenSim.Services.Connectors
             }
 
             return false;
+        }
+
+        protected void AsyncSet(Dictionary<string, object> sendData, string userID, UUID regionID, Vector3 position, Vector3 lookAt)
+        {
+            sendData["UserID"] = userID;
+            sendData["RegionID"] = regionID.ToString();
+            sendData["Position"] = position.ToString();
+            sendData["LookAt"] = lookAt.ToString();
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+            try
+            {
+                AsynchronousRestObjectRequester.MakeRequest<string, string>("POST",
+                    m_ServerURI + "/griduser",
+                    reqString, null);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[GRID USER CONNECTOR]: Exception when contacting grid user server: {0}", e.Message);
+            }
         }
 
         protected GridUserInfo Get(Dictionary<string, object> sendData)

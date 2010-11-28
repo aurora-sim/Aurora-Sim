@@ -137,16 +137,12 @@ namespace Aurora.Modules.Communications.MultipleGrids
             return r;
         }
 
-        public bool SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public void SetLastPosition(string userID, UUID sessionID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
-            bool r = false;
             foreach (IGridUserService service in AllServices)
             {
-                r = service.SetLastPosition(userID, sessionID, regionID, lastPosition, lastLookAt);
-                if (r)
-                    return r;
+                service.SetLastPosition(userID, sessionID, regionID, lastPosition, lastLookAt);
             }
-            return r;
         }
 
         public GridUserInfo GetGridUserInfo(string userID)
