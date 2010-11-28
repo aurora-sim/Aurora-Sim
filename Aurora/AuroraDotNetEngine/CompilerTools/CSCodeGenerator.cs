@@ -1842,7 +1842,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             bool printSemicolon = true;
 
             bool marc = FuncCallsMarc();
-            bool possibleStatement = false;
             retstr += Indent();
 
             if (0 < s.kids.Count)
@@ -1897,7 +1896,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 else
                                 {
                                     retstr += GenerateNode(akid);
-                                    possibleStatement = true;
                                 }
                             }
                         }
@@ -1927,15 +1925,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (printSemicolon)
                 retstr += GenerateLine(";");
 
-            if (!marc && possibleStatement)
-            {
-                FuncCalls.Add(retstr);
-                return "";
-            }
-            else
-            {
-                return DumpFunc(marc) + retstr.ToString();
-            }
+            return DumpFunc(marc) + retstr.ToString();
         }
 
         /// <summary>
@@ -2080,9 +2070,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string retstr = "";
             string tmpstr = "";
             bool DoBrace = false;
-            bool marc = FuncCallsMarc();
             tmpstr += GenerateIndented("if (", ifs);
-            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+            bool marc = FuncCallsMarc();
+            SYMBOL s = (SYMBOL)ifs.kids.Pop();
+            if (s is BinaryExpression)
+            {
+                BinaryExpression be = s as BinaryExpression;
+                string innerRetStr = "";
+                if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
+                {
+                    // special case handling for logical and/or, see Mantis 3174
+                    innerRetStr += "((bool)(";
+                    innerRetStr += GenerateNode((SYMBOL)be.kids.Pop());
+                    innerRetStr += "))";
+                    innerRetStr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
+                    innerRetStr += "((bool)(";
+                    foreach (SYMBOL kid in be.kids)
+                        innerRetStr += GenerateNode(kid);
+                    innerRetStr += "))";
+                }
+                else
+                {
+                    SYMBOL c = (SYMBOL)be.kids.Pop();
+                    if (c is FunctionCallExpression)
+                    {
+                        FunctionCallExpression f = c as FunctionCallExpression;
+                        foreach (SYMBOL akid in f.kids)
+                        {
+                            if (akid is FunctionCall)
+                            {
+                                innerRetStr += GenerateFunctionCall(akid as FunctionCall, true);
+                            }
+                            else
+                                innerRetStr += GenerateNode(akid);
+                        }
+                    }
+                    else
+                        innerRetStr += GenerateNode(c);
+                    innerRetStr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
+                    foreach (SYMBOL kid in be.kids)
+                        innerRetStr += GenerateNode(kid);
+                }
+                tmpstr = DumpFunc(true) + tmpstr + innerRetStr;
+            }
+            else
+                tmpstr += GenerateNode(s);
             tmpstr += GenerateLine(")");
 
             // CompoundStatement handles indentation itself but we need to do it
@@ -2094,12 +2126,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if(DoBrace)
                 tmpstr += GenerateLine("{");
 
-            SYMBOL s = (SYMBOL)ifs.kids.Pop();
-            if (s is CompoundStatement)
+            SYMBOL child = (SYMBOL)ifs.kids.Pop();
+            if (child is CompoundStatement)
             {
-                CompoundStatement cs = (CompoundStatement)s;
-                string innerTmpStr = "";
-                innerTmpStr += GenerateIndentedLine("{");
+                CompoundStatement cs = child as CompoundStatement;
+                string innerretstr = "";
+
+                // opening brace
+                innerretstr += GenerateIndentedLine("{");
                 //            if (IsParentEnumerable)
                 //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
                 m_braceCount++;
@@ -2108,23 +2142,62 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     if (kid is Statement)
                     {
-                        Statement stm = kid as Statement;
-                        innerTmpStr += GenerateStatement(stm);
+                        Statement state = kid as Statement;
+                        bool printSemicolon = true;
+
+                        innerretstr += Indent();
+
+                        if (0 < state.kids.Count)
+                        {
+                            // Jump label prints its own colon, we don't need a semicolon.
+                            printSemicolon = !(s.kids.Top is JumpLabel);
+
+                            // If we encounter a lone Ident, we skip it, since that's a C#
+                            // (MONO) error.
+                            if (!(s.kids.Top is IdentExpression && 1 == s.kids.Count))
+                            {
+                                foreach (SYMBOL stateKid in state.kids)
+                                {
+                                    if (stateKid is FunctionCallExpression)
+                                    {
+                                        foreach (SYMBOL akid in stateKid.kids)
+                                        {
+                                            if (akid is FunctionCall)
+                                            {
+                                                string innerinnerretStr = "";
+                                                innerinnerretStr += GenerateFunctionCall(akid as FunctionCall, false);
+                                                innerretstr += DumpFunc(true) + innerinnerretStr;
+                                            }
+                                            else
+                                                innerretstr += GenerateNode(akid);
+                                        }
+                                    }
+                                    else
+                                        innerretstr += GenerateNode(stateKid);
+                                }
+                            }
+                        }
+
+
+                        //Nasty hack to fix if statements with yield return and yield break;
+                        if (innerretstr[innerretstr.Length - 1] == '}')
+                            printSemicolon = false;
+
+                        if (printSemicolon)
+                            innerretstr += GenerateLine(";");
                     }
                     else
-                        innerTmpStr += GenerateNode(kid);
+                        innerretstr += GenerateNode(kid);
                 }
 
                 // closing brace
                 m_braceCount--;
 
-                innerTmpStr += GenerateIndentedLine("}");
-                tmpstr += innerTmpStr;
+                innerretstr += GenerateIndentedLine("}");
+                tmpstr += innerretstr;
             }
             else
-            {
-                tmpstr += GenerateNode(s);
-            }
+                tmpstr += GenerateNode(child);
 //            if (indentHere) m_braceCount--;
             if (DoBrace)
                 tmpstr += GenerateLine("}");

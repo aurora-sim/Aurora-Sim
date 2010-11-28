@@ -373,9 +373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         Path.GetFileNameWithoutExtension(assembly) + ext;
                 try
                 {
-                    File.WriteAllText(Path.Combine(Path.Combine(
-                        m_scriptEngine.ScriptEnginesPath,
-                        "Scripts"),
+                    File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
                         srcFileName), Script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
