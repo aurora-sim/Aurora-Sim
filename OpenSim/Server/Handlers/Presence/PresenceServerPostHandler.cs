@@ -268,7 +268,7 @@ namespace OpenSim.Server.Handlers.Presence
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((pinfos == null) || ((pinfos != null) && (pinfos.Length == 0)))
-                result["result"] = "null";
+                result["result"] = "noagents";
             else
             {
                 int i = 0;

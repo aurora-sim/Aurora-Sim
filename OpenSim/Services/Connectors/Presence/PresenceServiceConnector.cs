@@ -382,9 +382,14 @@ namespace OpenSim.Services.Connectors
             if (replyData != null)
             {
                 if (replyData.ContainsKey("result") &&
-                    (replyData["result"].ToString() == "null" || replyData["result"].ToString() == "Failure"))
+                    (replyData["result"].ToString() == "null"))
                 {
                     return new string[1]{"Failure"};
+                }
+                else if (replyData.ContainsKey("result") &&
+                    (replyData["result"].ToString() == "noagents"))
+                {
+                    return new string[1] { "NoAgents" };
                 }
 
                 Dictionary<string, object>.ValueCollection pinfosList = replyData.Values;
