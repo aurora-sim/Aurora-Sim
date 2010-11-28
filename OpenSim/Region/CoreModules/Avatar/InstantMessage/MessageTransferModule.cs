@@ -454,6 +454,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         }
 
         /// <summary>
+        /// Param UUID - AgentID
+        /// Param string - HTTP path to the region the user is in, blank if not found
+        /// </summary>
+        public Dictionary<UUID, string> IMUsersCache = new Dictionary<UUID, string>();
+
+        /// <summary>
         /// Recursive SendGridInstantMessage over XMLRPC method.
         /// This is called from within a dedicated thread.
         /// The first time this is called, prevRegionHandle will be 0 Subsequent times this is called from 
@@ -468,146 +474,132 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         protected virtual void SendGridInstantMessageViaXMLRPCAsync(GridInstantMessage im, MessageResultNotification result, GridRegion prevRegion)
         {
             UUID toAgentID = new UUID(im.toAgentID);
+            string HTTPPath = "";
 
-            PresenceInfo upd = null;
-            GridRegion cachedRegion = null;
+            Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
 
-            bool lookupAgent = false;
-
-            lock (m_UserRegionMap)
+            lock (IMUsersCache)
             {
-                if (m_UserRegionMap.ContainsKey(toAgentID))
+                if (!IMUsersCache.TryGetValue(toAgentID, out HTTPPath))
+                    HTTPPath = "";
+            }
+
+            if (HTTPPath != "")
+            {
+                //We've tried to send an IM to them before, pull out their info
+                //Send the IM to their last location
+                if (!doIMSending(HTTPPath, msgdata))
                 {
-                    //They have been IMed before, look up in the cache
-                    upd = new PresenceInfo();
-                    if(m_UserRegionMap[toAgentID].Region != null)
-                        upd.RegionID = m_UserRegionMap[toAgentID].Region.RegionID;
-                    cachedRegion = m_UserRegionMap[toAgentID].Region;
-                    // We need to compare the current regionhandle with the previous region handle
-                    // or the recursive loop will never end because it will never try to lookup the agent again
-                    if (prevRegion != null && prevRegion.RegionID == upd.RegionID)
+                    //If this fails, the user has either moved from their stored location or logged out
+                    //Since it failed, let it look them up again and rerun
+                    lock (IMUsersCache)
                     {
-                        //If prevRegion is the same as the cache, look them up, someone moved
-                        lookupAgent = true;
+                        IMUsersCache.Remove(toAgentID);
                     }
+                    //Clear the path and let it continue trying again.
+                    HTTPPath = "";
                 }
                 else
                 {
-                    //Havn't IMed this person before, get their presence info
-                    lookupAgent = true;
-                }
-            }
-            
-
-            // Are we needing to look-up an agent?
-            if (lookupAgent)
-            {
-                //Find the regions http address where the agent is
-                string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { toAgentID.ToString() });
-                if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
-                {
-                    //No agents, do nothing
-                    if (AgentLocations[0] == "NoAgents")
-                        return;
-
-                    Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
-
-                    bool imresult = doIMSending(AgentLocations[0], msgdata);
-                    if (imresult)
-                    {
-                        // IM delivery successful, so store the Agent's location in our local cache.
-                        lock (m_UserRegionMap)
-                        {
-                            m_UserRegionMap[toAgentID] = new IMPresenceInfo();
-                            m_UserRegionMap[toAgentID].Region = cachedRegion;
-                            m_UserRegionMap[toAgentID].HTTPPath = AgentLocations[0];
-                        }
-                        result(true);
-                        return;
-                    }
-                    else
-                    {
-                        // This happens when the agent moves out of the last known region
-
-                        // try again, but lookup user this time.
-                        // Warning, this must call the Async version
-                        // of this method or we'll be making thousands of threads
-                        // The version within the spawned thread is SendGridInstantMessageViaXMLRPCAsync
-                        // The version that spawns the thread is SendGridInstantMessageViaXMLRPC
-
-                        // This is recursive!!!!!
-                        SendGridInstantMessageViaXMLRPCAsync(im, result,
-                                cachedRegion);
-                    }
-                    return; //If this isn't here, infinite loop occurs
-                }
-                else //If this is true, this doesn't exist on the presence server and we use the legacy way
-                {
-                    // Non-cached user agent lookup.
-                    PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
-                    if (presences != null && presences.Length > 0)
-                        upd = presences[0];
-
-                    if (upd != null)
-                    {
-                        // check if we've tried this region before..
-                        // This is one way to end the recursive loop
-                        if ((upd.RegionID == UUID.Zero) || (prevRegion != null && upd.RegionID == prevRegion.RegionID))
-                        {
-                            m_log.Error("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                            HandleUndeliveredMessage(im, result);
-                            return;
-                        }
-                    }
+                    //Send the IM, and it made it to the user, return true
+                    result(true);
+                    return;
                 }
             }
 
-            if (upd != null)
+            //Now query the grid server for the agent
+
+            //Ask for the user new style first
+            string[] AgentLocations = PresenceService.GetAgentsLocations(new string[] { toAgentID.ToString() });
+            //If this is false, this doesn't exist on the presence server and we use the legacy way
+            if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) 
             {
-                if(cachedRegion == null)
-                    cachedRegion = m_Scenes[0].GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID,
-                        upd.RegionID);
-
-                if (cachedRegion != null)
+                //No agents, so this user is offline
+                if (AgentLocations[0] == "NoAgents")
                 {
-                    Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
-
-                    bool imresult = doIMSending("http://" + cachedRegion.ExternalHostName + ":" + cachedRegion.HttpPort, msgdata);
-                    if (imresult)
+                    lock (IMUsersCache)
                     {
-                        // IM delivery successful, so store the Agent's location in our local cache.
-                        lock (m_UserRegionMap)
-                        {
-                            m_UserRegionMap[toAgentID] = new IMPresenceInfo();
-                            m_UserRegionMap[toAgentID].Region = cachedRegion;
-                            m_UserRegionMap[toAgentID].HTTPPath = "http://" + cachedRegion.ExternalHostName + ":" + cachedRegion.HttpPort;
-                        }
-                        result(true);
+                        //Remove them so we keep testing against the db
+                        IMUsersCache.Remove(toAgentID);
                     }
-                    else
-                    {
-                        // This happens when the agent moves out of the last known region
-
-                        // try again, but lookup user this time.
-                        // Warning, this must call the Async version
-                        // of this method or we'll be making thousands of threads
-                        // The version within the spawned thread is SendGridInstantMessageViaXMLRPCAsync
-                        // The version that spawns the thread is SendGridInstantMessageViaXMLRPC
-
-                        // This is recursive!!!!!
-                        SendGridInstantMessageViaXMLRPCAsync(im, result,
-                                cachedRegion);
-                    }
-                }
-                else
-                {
-                    m_log.WarnFormat("[GRID INSTANT MESSAGE]: Unable to find region {0}", upd.RegionID);
+                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                     HandleUndeliveredMessage(im, result);
+                    return;
+                }
+                else //Found the agent, use this location
+                    HTTPPath = AgentLocations[0];
+            }
+            else
+            {
+                //Query the legacy way
+                PresenceInfo[] presences = PresenceService.GetAgents(new string[] { toAgentID.ToString() });
+                if (presences != null && presences.Length > 0)
+                {
+                    Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(m_Scenes[0].RegionInfo.ScopeID,
+                        presences[0].RegionID);
+                    if (r != null)
+                    {
+                        HTTPPath = "http://" + r.ExternalHostName + ":" + r.HttpPort;
+                    }
+                    else
+                    {
+                        //Can't find their region, so stop here
+                        lock (IMUsersCache)
+                        {
+                            //Remove them so we keep testing against the db
+                            IMUsersCache.Remove(toAgentID);
+                        }
+                        m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                        result(false);
+                        return;
+                    }
+                }
+                else
+                {
+                    //The user is offline
+                    lock (IMUsersCache)
+                    {
+                        //Remove them so we keep testing against the db
+                        IMUsersCache.Remove(toAgentID);
+                    }
+                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                    HandleUndeliveredMessage(im, result);
+                    return;
+                }
+            }
+
+            //We found the agent's location, now ask them about the user
+            if (HTTPPath != null)
+            {
+                if (!doIMSending(HTTPPath, msgdata))
+                {
+                    //It failed, stop now
+                    lock (IMUsersCache)
+                    {
+                        //Remove them so we keep testing against the db
+                        IMUsersCache.Remove(toAgentID);
+                    }
+                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
+                    result(false);
+                    return;
+                }
+                else
+                {
+                    //Send the IM, and it made it to the user, return true
+                    result(true);
+                    return;
                 }
             }
             else
             {
-                HandleUndeliveredMessage(im, result);
+                //Couldn't find them, stop for now
+                lock (IMUsersCache)
+                {
+                    //Remove them so we keep testing against the db
+                    IMUsersCache.Remove(toAgentID);
+                }
+                m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
+                result(false);
             }
         }
 
