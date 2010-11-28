@@ -27,7 +27,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, List<UUID> > m_FunctionPerms = new Dictionary<string, List<UUID> >();
         //Keeps track of whether the source has been compiled before
         public Dictionary<string, string> PreviouslyCompiled = new Dictionary<string, string>();
-
+        
+        public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
+        public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
+        
         public bool AllowHTMLLinking
         {
             get
@@ -177,6 +180,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 		#endregion
         
         #region Previously Compiled Scripts
+
+        /// <summary>
+        /// Reset all lists (if hard), if not hard, just reset previously compiled
+        /// </summary>
+        /// <param name="hard"></param>
+        public void Reset(bool hard)
+        {
+            lock (PreviouslyCompiled)
+            {
+                PreviouslyCompiled.Clear();
+            }
+            if (hard)
+            {
+                lock (ScriptsItems)
+                {
+                    ScriptsItems.Clear();
+                }
+                lock (Scripts)
+                {
+                    Scripts.Clear();
+                }
+            }
+        }
         
         public void AddPreviouslyCompiled(string source, ScriptData ID)
         {
@@ -207,8 +233,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return assemblyName;
         }
         
-        public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
-        public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
         public ScriptData GetScript(UUID primID, UUID itemID)
         {
             Dictionary<UUID, ScriptData> Instances;

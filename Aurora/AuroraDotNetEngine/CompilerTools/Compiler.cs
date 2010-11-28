@@ -252,11 +252,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             if (Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {
-                try
+                string[] directories = Directory.GetDirectories(m_scriptEngine.ScriptEnginesPath);
+                foreach (string dir in directories)
                 {
-                    Directory.Delete(m_scriptEngine.ScriptEnginesPath, true);
+                    try
+                    {
+                        Directory.Delete(dir, true);
+                    }
+                    catch (Exception) { }
                 }
-                catch (Exception) { }
             }
             if (!Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {

@@ -951,9 +951,23 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_InitialHasWearablesBeenSent = true;
                 m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
-                
+
                 //Force send!
-                SendInitialData();
+                ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
+                SendAvatarDataToAllAgents();
+                
+                // We have an appearance but we may not have the baked textures. Check the asset cache 
+                // to see if all the baked textures are already here. 
+                IAvatarFactory AvatarFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
+                if (AvatarFactory != null)
+                {
+                    SendAppearanceToAgent(this);
+
+                    // If the avatars baked textures are all in the cache, then we have a 
+                    // complete appearance... send it out, if not, then we'll send it when
+                    // the avatar finishes updating its appearance
+                    SendAppearanceToAllOtherAgents();
+                }
             }
         }
 

@@ -3420,7 +3420,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             uint heightmapWidthSamples = (uint)Constants.RegionSize + 2;
 
             uint heightmapHeightSamples = (uint)Constants.RegionSize + 2;
-
+#pragma warning disable 0162
             if (Constants.RegionSize == 256)
             {
                 // -- creating a buffer zone of one extra sample all around - danzor
@@ -3429,7 +3429,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 heightmapWidth++;
                 heightmapHeight++;
             }
-
+#pragma warning restore 0162
             int regionsize = (int)Constants.RegionSize;
             
             float hfmin = 2000;
