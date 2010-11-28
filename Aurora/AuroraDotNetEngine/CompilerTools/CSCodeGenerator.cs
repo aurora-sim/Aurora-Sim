@@ -257,6 +257,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         private void ResetCounters()
         {
+            //NOTE: This takes a VERY long time to rebuild. Ideally, this should be reset, but interesting errors are happening when it is reset..
+            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             m_braceCount = 0;
             m_CSharpLine = 0;
             m_CSharpCol = 1;
