@@ -3483,6 +3483,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (GetScenePresence(client.AgentId) != null)
             {
+                EventManager.TriggerOnNewClient(client);
                 if (vialogin)
                     EventManager.TriggerOnClientLogin(client);
             }
