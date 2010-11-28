@@ -54,7 +54,10 @@ namespace OpenSim.Services.UserAccountService
             GridUserData d = m_Database.Get(userID);
 
             if (d == null)
+            {
+                m_log.Warn("[GridUserService]: Could not find GridUserInfo for " + userID);
                 return null;
+            }
 
             GridUserInfo info = new GridUserInfo();
             info.UserID = d.UserID;
