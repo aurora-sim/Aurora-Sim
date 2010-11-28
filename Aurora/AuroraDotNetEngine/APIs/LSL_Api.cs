@@ -8699,15 +8699,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         face = (int)rules.GetLSLIntegerItem(idx++);
                         texFace = tex.GetFace((uint)face);
 
-                        if (texFace != null)
+                        if (face == ScriptBaseClass.ALL_SIDES)
                         {
-                            res.Add(new LSL_Integer(((int)texFace.Shiny)));
-                            res.Add(new LSL_Integer(((int)texFace.Bump)));
+                            for (face = 0; face < GetNumberOfSides(part); face++)
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                // Convert Shininess to PRIM_SHINY_*
+                                res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
+                                // PRIM_BUMP_*
+                                res.Add(new LSL_Integer((int)texface.Bump));
+                            }
                         }
                         else
                         {
-                            res.Add(new LSL_Integer(0));
-                            res.Add(new LSL_Integer(0));
+                            if (face >= 0 && face < GetNumberOfSides(part))
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                // Convert Shininess to PRIM_SHINY_*
+                                res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
+                                // PRIM_BUMP_*
+                                res.Add(new LSL_Integer((int)texface.Bump));
+                            }
                         }
                         break;
 
@@ -8716,18 +8728,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             return res;
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
-                        texFace = tex.GetFace((uint)face);
-
-                        if (texFace != null)
+                        tex = part.Shape.Textures;
+                        if (face == ScriptBaseClass.ALL_SIDES)
                         {
-                            res.Add(new LSL_Integer((texFace.Fullbright == true ? 1 : 0)));
+                            for (face = 0; face < GetNumberOfSides(part); face++)
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
+                            }
                         }
                         else
                         {
-                            res.Add(new LSL_Integer(0));
+                            if (face >= 0 && face < GetNumberOfSides(part))
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
+                            }
                         }
-
-                        res.Add(new LSL_Integer(0));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FLEXIBLE:
@@ -8752,18 +8769,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             return res;
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
-                        texFace = tex.GetFace((uint)face);
-                        if (texFace != null)
+                        if (face == ScriptBaseClass.ALL_SIDES)
                         {
-                            //Has to be this way as the LSL numbers are not the same
-                            // as the libomv numbers
-                            if (texFace.TexMapType == MappingType.Default)
-                                res.Add(new LSL_Integer(0));
-                            if (texFace.TexMapType == MappingType.Planar)
-                                res.Add(new LSL_Integer(1));
+                            for (face = 0; face < GetNumberOfSides(part); face++)
+                            {
+                                MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
+                                res.Add(new LSL_Integer((uint)texgen >> 1));
+                            }
                         }
                         else
-                            res.Add(new LSL_Integer(0));
+                        {
+                            if (face >= 0 && face < GetNumberOfSides(part))
+                            {
+                                MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                res.Add(new LSL_Integer((uint)texgen >> 1));
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
@@ -8786,14 +8808,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             return res;
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
-                        texFace = tex.GetFace((uint)face);
-                        if (texFace != null)
+                        if (face == ScriptBaseClass.ALL_SIDES)
                         {
-                            res.Add(new LSL_Integer(texFace.Glow));
+                            for (face = 0; face < GetNumberOfSides(part); face++)
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                res.Add(new LSL_Float(texface.Glow));
+                            }
                         }
                         else
-                            res.Add(new LSL_Integer(0));
+                        {
+                            if (face >= 0 && face < GetNumberOfSides(part))
+                            {
+                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                res.Add(new LSL_Float(texface.Glow));
+                            }
+                        }
                         break;
+
                     case (int)ScriptBaseClass.PRIM_TEXT:
                         Color4 textColor = part.GetTextColor();
                         res.Add(part.Text);
