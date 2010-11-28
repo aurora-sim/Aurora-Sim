@@ -191,9 +191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_warnings.Clear();
             m_errors.Clear();
 
-            assembly = CheckDirectories(Path.Combine(m_scriptEngine.ScriptEnginesPath, Path.Combine(
-                        "Scripts",
-                        FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll")));
+            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
 
             IScriptConverter converter;
             string compileScript;
@@ -272,8 +270,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
         }
         
-        private string CheckDirectories(string assembly)
+        private string CheckDirectories(string assembly, UUID itemID)
         {
+            string dirName = itemID.ToString().Substring(0, 3);
             if (!Directory.Exists(m_scriptEngine.ScriptEnginesPath))
             {
                 try
@@ -284,16 +283,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                 }
             }
-            if (!Directory.Exists(Path.Combine(m_scriptEngine.ScriptEnginesPath,"Scripts")))
+            if (!Directory.Exists(Path.Combine(m_scriptEngine.ScriptEnginesPath, dirName)))
             {
                 try
                 {
-                    Directory.CreateDirectory(Path.Combine(m_scriptEngine.ScriptEnginesPath, "Scripts"));
+                    Directory.CreateDirectory(Path.Combine(m_scriptEngine.ScriptEnginesPath, dirName));
                 }
                 catch (Exception)
                 {
                 }
             }
+            assembly = Path.Combine(Path.Combine(m_scriptEngine.ScriptEnginesPath, dirName), assembly);
             assembly = CheckAssembly(assembly, 0);
             return assembly;
         }
