@@ -524,6 +524,7 @@ namespace OpenSim.Framework
             UUID password = Password; //Save the pass as this TryParse will wipe it out
             if (!UUID.TryParse(config.GetString("NeighborPassword", ""), out Password))
             {
+                Password = password;
                 config.Set("NeighborPassword", password);
                 WriteNiniConfig(source);
             }
