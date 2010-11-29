@@ -43,19 +43,20 @@ namespace OpenSim.Server.Handlers.Neighbour
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private INeighbourService m_NeighbourService;
-        private IAuthenticationService m_AuthenticationService = null;
+        private IAuthenticationService m_AuthenticationService;
 
-        public NeighbourServiceInConnector(IConfigSource source, IHttpServer server, INeighbourService nService, IScene scene) :
+        public NeighbourServiceInConnector(IConfigSource source, IHttpServer server, INeighbourService nService, IAuthenticationService aService, IScene scene) :
                 base(source, server, String.Empty)
         {
 
             m_NeighbourService = nService;
+            m_AuthenticationService = aService;
             if (m_NeighbourService == null)
             {
                 m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
                 return;
             }
-            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, m_AuthenticationService));
+            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, aService));
         }
     }
 }

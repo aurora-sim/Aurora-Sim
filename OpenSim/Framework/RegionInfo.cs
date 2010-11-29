@@ -85,6 +85,7 @@ namespace OpenSim.Framework
         protected uint? m_regionLocY;
         protected uint m_remotingPort;
         public UUID RegionID = UUID.Zero;
+        public UUID Password = UUID.Random();
         public string RemotingAddress;
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
@@ -102,10 +103,11 @@ namespace OpenSim.Framework
                 if (!File.Exists(filename)) // New region config request
                 {
                     IniConfigSource newFile = new IniConfigSource();
-                    ReadNiniConfig(newFile, configName);
-                    newFile.Save(filename);
 
                     RegionFile = filename;
+
+                    ReadNiniConfig(newFile, configName);
+                    newFile.Save(filename);
 
                     return;
                 }
@@ -116,12 +118,12 @@ namespace OpenSim.Framework
                 if (m_source.Configs[configName] == null)
                     saveFile = true;
 
+                RegionFile = filename;
+
                 bool update = ReadNiniConfig(m_source, configName);
 
                 if (configName != String.Empty && (saveFile || update))
                     m_source.Save(filename);
-
-                RegionFile = filename;
 
                 return;
             }
@@ -517,6 +519,15 @@ namespace OpenSim.Framework
             // Multi-tenancy
             //
             ScopeID = new UUID(config.GetString("ScopeID", ScopeID.ToString()));
+
+            //Do this last so that we can save the password immediately if it doesn't exist
+            UUID password = Password; //Save the pass as this TryParse will wipe it out
+            if (!UUID.TryParse(config.GetString("NeighborPassword", ""), out Password))
+            {
+                config.Set("NeighborPassword", password);
+                WriteNiniConfig(source);
+            }
+
             return NeedsUpdate;
         }
 
@@ -563,6 +574,8 @@ namespace OpenSim.Framework
 
             if (GridSecureSessionID != UUID.Zero)
                 config.Set("GridSessionID", GridSecureSessionID);
+
+            config.Set("NeighborPassword", Password.ToString());
 
             source.Save();
         }
@@ -612,6 +625,7 @@ namespace OpenSim.Framework
                 args["proxy_url"] = OSD.FromString(proxyUrl);
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
+            args["password"] = OSD.FromUUID(Password);
 
             return args;
         }
@@ -661,6 +675,8 @@ namespace OpenSim.Framework
                 proxyUrl = args["proxy_url"].AsString();
             if (args["region_type"] != null)
                 m_regionType = args["region_type"].AsString();
+            if (args["password"] != null)
+                Password = args["password"].AsUUID();
         }
 
         public static RegionInfo Create(UUID regionID, string regionName, uint regX, uint regY, string externalHostName, uint httpPort, uint simPort, uint remotingPort, string serverURI)

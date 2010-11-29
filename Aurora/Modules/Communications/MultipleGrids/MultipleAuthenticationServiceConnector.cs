@@ -162,6 +162,11 @@ namespace Aurora.Modules.Communications.MultipleGrids
             return ret;
         }
 
+        public bool CheckExists(UUID principalID)
+        {
+            return false;
+        }
+
         #endregion
     }
 }

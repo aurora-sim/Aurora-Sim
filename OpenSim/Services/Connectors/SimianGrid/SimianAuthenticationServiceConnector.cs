@@ -100,6 +100,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 m_log.Info("[SIMIAN AUTH CONNECTOR]: No AuthenticationServerURI specified, disabling connector");
         }
 
+        public bool CheckExists(UUID principalID)
+        {
+            return false;
+        }
+
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
             NameValueCollection requestArgs = new NameValueCollection

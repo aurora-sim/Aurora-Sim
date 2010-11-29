@@ -109,14 +109,19 @@ namespace OpenSim.Server.Handlers.Neighbour
 
             if (m_AuthenticationService != null)
             {
-                // Rethink this
-                //if (!m_AuthenticationService.VerifyKey(aRegion.RegionID, authToken))
-                //{
-                //    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
-                //    httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                //    return result;
-                //}
-                m_log.DebugFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionID);
+                //Set password on the incoming region
+                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                {
+                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    {
+                        m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
+                        return result;
+                    }
+                    else
+                        m_log.InfoFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionName);
+                }
+                else //Set the password then
+                    m_AuthenticationService.SetPasswordHashed(aRegion.RegionID, aRegion.Password.ToString());
             }
 
             // Finally!
@@ -160,14 +165,22 @@ namespace OpenSim.Server.Handlers.Neighbour
 
             if (m_AuthenticationService != null)
             {
-                // Rethink this
-                //if (!m_AuthenticationService.VerifyKey(aRegion.RegionID, authToken))
-                //{
-                //    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
-                //    httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                //    return result;
-                //}
-                m_log.DebugFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionID);
+                //Set password on the incoming region
+                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                {
+                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    {
+                        m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
+                        return result;
+                    }
+                    else
+                        m_log.InfoFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionName);
+                }
+                else
+                {
+                    m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
+                    return result;
+                }
             }
 
             // Finally!

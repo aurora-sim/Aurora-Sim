@@ -139,8 +139,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authentication
 
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
-            // Not implemented at the regions
-            return string.Empty; 
+            return m_AuthenticationService.Authenticate(principalID, password, lifetime);
+        }
+
+        public bool CheckExists(UUID principalID)
+        {
+            return m_AuthenticationService.CheckExists(principalID);
         }
 
         public bool Verify(UUID principalID, string token, int lifetime)

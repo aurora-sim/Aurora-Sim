@@ -93,6 +93,11 @@ namespace OpenSim.Services.AuthenticationService
                 throw new Exception(string.Format("Could not find a storage interface in module {0}", dllName));
         }
 
+        public bool CheckExists(UUID principalID)
+        {
+            return  m_Database.Get(principalID) != null;
+        }
+
         public bool Verify(UUID principalID, string token, int lifetime)
         {
             return m_Database.CheckToken(principalID, token, lifetime);

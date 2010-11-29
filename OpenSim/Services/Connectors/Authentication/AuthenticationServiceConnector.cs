@@ -82,6 +82,11 @@ namespace OpenSim.Services.Connectors
             m_ServerURI = serviceURI;
         }
 
+        public bool CheckExists(UUID principalID)
+        {
+            return false;
+        }
+
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
