@@ -49,6 +49,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         private List<Scene> m_Scenes = new List<Scene>();
         private IGridService m_gridService = null;
+        private ISimulationService m_simService = null;
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
@@ -104,6 +105,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             scene.RegisterModuleInterface<INeighbourService>(this);
             if (m_gridService == null)
                 m_gridService = scene.GridService;
+            if (m_simService == null)
+                m_simService = scene.SimulationService;
         }
 
         public void RegionLoaded(Scene scene)
@@ -120,10 +123,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         #endregion ISharedRegionModule
 
-        public void SetGridService(IGridService service)
+        public void SetServices(IGridService gridService, ISimulationService simService)
         {
-            if(m_gridService == null)
-                m_gridService = service;
+            if (m_gridService == null)
+                m_gridService = gridService;
+            if (m_simService == null)
+                m_simService = simService;
         }
 
         #region INeighbourService
@@ -166,6 +171,25 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             return m_informedRegions;
         }
 
-        #endregion INeighbourService
+        public void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
+        {
+            //Send the updates to all known neighbors
+            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            {
+                m_simService.UpdateAgent(region, childAgentUpdate);
+            }
+        }
+
+        public void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
+        {
+            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            {
+                //If it is one of the ones that needs closing, close it
+                if(regionsToClose.Contains(region.RegionHandle))
+                    m_simService.CloseAgent(region, agentID);
+            }
+        }
+
+        #endregion
     }
 }

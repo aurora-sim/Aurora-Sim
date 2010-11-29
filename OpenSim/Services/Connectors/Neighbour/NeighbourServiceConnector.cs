@@ -146,5 +146,15 @@ namespace OpenSim.Services.Connectors
 
             return informedRegions;
         }
+
+        public virtual void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
+        {
+            //The remote connector has to deal with it
+        }
+
+        public virtual void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
+        {
+            //The remote connector has to deal with it
+        }
     }
 }

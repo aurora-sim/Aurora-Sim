@@ -47,14 +47,14 @@ using log4net;
 
 namespace OpenSim.Server.Handlers.Neighbour
 {
-    public class NeighbourPostHandler : BaseStreamHandler
+    public class NeighbourHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private INeighbourService m_NeighbourService;
         private IAuthenticationService m_AuthenticationService;
         // unused: private bool m_AllowForeignGuests;
 
-        public NeighbourPostHandler(INeighbourService service, IAuthenticationService authentication) :
+        public NeighbourHandler(INeighbourService service, IAuthenticationService authentication) :
             base("POST", "/region")
         {
             m_NeighbourService = service;

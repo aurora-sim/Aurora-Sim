@@ -1061,8 +1061,7 @@ namespace OpenSim.Region.Framework.Scenes
             
             regionInfo.InternalEndPoint.Port = (int)port;
 
-            SceneCommunicationService sceneGridService = new SceneCommunicationService();
-            Scene scene = new Scene(regionInfo, circuitManager, sceneGridService, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
+            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
             
             FindEstateInfo(scene);
 

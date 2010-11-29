@@ -35,28 +35,6 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
-    // Soon to be dismissed
-    [Serializable]
-    public class ChildAgentDataUpdate
-    {
-        public Guid ActiveGroupID;
-        public Guid AgentID;
-        public bool alwaysrun;
-        public float AVHeight;
-        public Vector3 cameraPosition;
-        public float drawdistance;
-        public float godlevel;
-        public uint GroupAccess;
-        public Vector3 Position;
-        public ulong regionHandle;
-        public byte[] throttles;
-        public Vector3 Velocity;
-
-        public ChildAgentDataUpdate()
-        {
-        }
-    }
-
     public interface IAgentData
     {
         UUID AgentID { get; set; }
@@ -165,26 +143,6 @@ namespace OpenSim.Framework
 
             if (args["throttles"] != null)
                 Throttles = args["throttles"].AsBinary();
-        }
-
-        /// <summary>
-        /// Soon to be decommissioned
-        /// </summary>
-        /// <param name="cAgent"></param>
-        public void CopyFrom(ChildAgentDataUpdate cAgent)
-        {
-            AgentID = new UUID(cAgent.AgentID);
-
-            // next: ???
-            Size = new Vector3();
-            Size.Z = cAgent.AVHeight;
-
-            Center = cAgent.cameraPosition;
-            Far = cAgent.drawdistance;
-            Position = cAgent.Position;
-            RegionHandle = cAgent.regionHandle;
-            Throttles = cAgent.throttles;
-            Velocity = cAgent.Velocity;
         }
     }
 

@@ -2832,34 +2832,21 @@ namespace OpenSim.Region.Framework.Scenes
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
 
-                ChildAgentDataUpdate cadu = new ChildAgentDataUpdate();
-                cadu.ActiveGroupID = UUID.Zero.Guid;
-                cadu.AgentID = UUID.Guid;
-                cadu.alwaysrun = m_setAlwaysRun;
-                cadu.AVHeight = m_avHeight;
-                Vector3 tempCameraCenter = m_CameraCenter;
-                cadu.cameraPosition = tempCameraCenter;
-                cadu.drawdistance = m_DrawDistance;
-                cadu.GroupAccess = 0;
-                cadu.Position = AbsolutePosition;
-                cadu.regionHandle = m_rootRegionHandle;
-                float multiplier = 1;
-                int innacurateNeighbors = m_scene.GetInaccurateNeighborCount();
-                if (innacurateNeighbors != 0)
-                {
-                    multiplier = 1f / (float)innacurateNeighbors;
-                }
-                if (multiplier <= 0f)
-                {
-                    multiplier = 0.25f;
-                }
-
-                //m_log.Info("[NeighborThrottle]: " + m_scene.GetInaccurateNeighborCount().ToString() + " - m: " + multiplier.ToString());
-                cadu.throttles = ControllingClient.GetThrottlesPacked(multiplier);
-                cadu.Velocity = Velocity;
-
                 AgentPosition agentpos = new AgentPosition();
-                agentpos.CopyFrom(cadu);
+                agentpos.AgentID = UUID;
+                agentpos.AtAxis = CameraAtAxis;
+                agentpos.Center = m_lastChildAgentUpdateCamPosition;
+                agentpos.ChangedGrid = false;
+                agentpos.CircuitCode = 0;
+                agentpos.Far = DrawDistance;
+                agentpos.LeftAxis = CameraLeftAxis;
+                agentpos.Position = m_lastChildAgentUpdatePosition;
+                agentpos.RegionHandle = RegionHandle;
+                agentpos.SessionID = UUID.Zero;
+                agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3(0, 0, m_avHeight);
+                agentpos.Throttles = new byte[0];
+                agentpos.UpAxis = CameraUpAxis;
+                agentpos.Velocity = Velocity;
 
                 m_scene.SendOutChildAgentUpdates(agentpos, this);
             }
@@ -3114,7 +3101,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (byebyeRegions.Count > 0)
             {
                 m_log.Debug("[SCENE PRESENCE]: Closing " + byebyeRegions.Count + " child agents");
-                m_scene.SceneGridService.SendCloseChildAgentConnections(m_controllingClient.AgentId, byebyeRegions);
+                INeighbourService service = m_scene.RequestModuleInterface<INeighbourService>();
+                if (service != null)
+                    service.SendCloseChildAgent(UUID, m_scene.RegionInfo.RegionID, byebyeRegions);
             }
             
             foreach (ulong handle in byebyeRegions)

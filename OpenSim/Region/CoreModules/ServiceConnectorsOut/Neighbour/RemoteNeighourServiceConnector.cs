@@ -37,6 +37,8 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 using OpenSim.Server.Handlers.Base;
+using OpenMetaverse;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 {
@@ -109,7 +111,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             //Add the local region for this
             m_LocalService.AddRegion(scene);
             //Set the grid service for the local regions
-            m_LocalService.SetGridService(scene.GridService);
+            m_LocalService.SetServices(scene.GridService, scene.SimulationService);
             scene.RegisterModuleInterface<INeighbourService>(this);
 
             //Add the incoming remote neighbor handlers
@@ -144,6 +146,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         {
             List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionisUp(incomingRegion);
             
+            //Get the known regions from the local connector, as it queried the grid service to find them all
             m_KnownNeighbors = m_LocalService.Neighbors;
 
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
@@ -164,6 +167,16 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             return nowInformedRegions;
         }
 
-        #endregion INeighbourService
+        public override void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
+        {
+            m_LocalService.SendChildAgentUpdate(childAgentUpdate, regionID);
+        }
+
+        public override void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
+        {
+            m_LocalService.SendCloseChildAgent(agentID, regionID, regionsToClose);
+        }
+
+        #endregion
     }
 }

@@ -93,8 +93,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected AgentCircuitManager m_authenticateHandler;
 
-
-        protected SceneCommunicationService m_sceneGridService;
         public bool LoginsDisabled = true;
 
         protected ISimulationDataService m_SimulationDataService;
@@ -300,11 +298,6 @@ namespace OpenSim.Region.Framework.Scenes
             return m_config;
         }
 
-        public SceneCommunicationService SceneGridService
-        {
-            get { return m_sceneGridService; }
-        }
-
         public string DefaultObjectName
         {
             get { return m_DefaultObjectName; }
@@ -484,7 +477,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Constructors
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen,
-                     SceneCommunicationService sceneGridService,
             IConfigSource config, string simulatorVersion, ISimulationDataService simDataService, IStatsCollector stats)
         {
             //THIS NEEDS RESET TO FIX RESTARTS
@@ -498,7 +490,6 @@ namespace OpenSim.Region.Framework.Scenes
             Random random = new Random();
             m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
             m_authenticateHandler = authen;
-            m_sceneGridService = sceneGridService;
             m_regInfo = regInfo;
             m_lastUpdate = Util.EnvironmentTickCount();
 
@@ -2199,8 +2190,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
         public string RegisterRegionWithGrid()
         {
-            m_sceneGridService.SetScene(this);
-
             // These two 'commands' *must be* next to each other or sim rebooting fails.
             //m_sceneGridService.RegisterRegion(m_interregionCommsOut, RegionInfo);
 
@@ -2226,7 +2215,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Save the new SessionID to the database
             g.AddGeneric(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
 
-            m_sceneGridService.SetScene(this);
             INeighbourService service = this.RequestModuleInterface<INeighbourService>();
             if (service != null)
                 service.InformNeighborsThatRegionisUp(RegionInfo);
@@ -4055,8 +4043,9 @@ namespace OpenSim.Region.Framework.Scenes
                         //}
                         List<ulong> regions = new List<ulong>(avatar.KnownChildRegionHandles);
                         regions.Remove(RegionInfo.RegionHandle);
-                        m_sceneGridService.SendCloseChildAgentConnections(agentID, regions);
-
+                        INeighbourService service = RequestModuleInterface<INeighbourService>();
+                        if (service != null)
+                            service.SendCloseChildAgent(agentID, RegionInfo.RegionID, regions);
                     }
                     m_eventManager.TriggerClientClosed(agentID, this);
                     m_eventManager.TriggerOnClosingClient(avatar.ControllingClient);
@@ -4673,7 +4662,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendOutChildAgentUpdates(AgentPosition cadu, ScenePresence presence)
         {
-            m_sceneGridService.SendChildAgentDataUpdate(cadu, presence);
+            INeighbourService service = RequestModuleInterface<INeighbourService>();
+            if (service != null)
+                service.SendChildAgentUpdate(cadu, presence.Scene.RegionInfo.RegionID);
         }
 
         public void RegionHandleRequest(IClientAPI client, UUID regionID)

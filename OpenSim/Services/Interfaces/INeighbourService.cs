@@ -35,7 +35,33 @@ namespace OpenSim.Services.Interfaces
 {
     public interface INeighbourService
     {
+        /// <summary>
+        /// Neighbors of all local regions
+        /// UUID - RegionID
+        /// List<GridRegion> - Neighbors of the given region
+        /// </summary>
         Dictionary<UUID, List<GridRegion>> Neighbors { get; }
+        
+        /// <summary>
+        /// Tell the neighbors that this region is now up and running
+        /// </summary>
+        /// <param name="incomingRegion">The region that is now up</param>
+        /// <returns>Returns the list of neighbors that were informed of this change</returns>
         List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion);
+        
+        /// <summary>
+        /// Send a child agent update to the neighbors
+        /// </summary>
+        /// <param name="childAgentUpdate">The update to send</param>
+        /// <param name="regionID">The region the client is currently in</param>
+        void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID);
+
+        /// <summary>
+        /// Close the given agent in all of it's regions
+        /// </summary>
+        /// <param name="agentID">The client's UUID</param>
+        /// <param name="regionID">The region the client is currently in</param>
+        /// <param name="regionsToClose">Regions in which to close the child agents</param>
+        void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose);
     }
 }
