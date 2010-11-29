@@ -230,9 +230,46 @@ namespace OpenSim.Services.Connectors
             return new List<GridRegion>();
         }
 
-        public virtual bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        public virtual bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
             return false;
+        }
+
+        protected void InformNeighborsOfChatMessage(OSChatMessage message, ChatSourceType type, RegionInfo region, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
+        {
+            foreach (GridRegion neighbor in neighbors)
+            {
+                //If we have already informed the region, don't tell it again
+                if (alreadyInformedRegions.Contains(neighbor))
+                    continue;
+                //Call the region then and add the regions it informed
+                InformNeighborOfChatMessage(message, type, neighbor, region);
+            }
+        }
+
+        protected void InformNeighborOfChatMessage(OSChatMessage message, ChatSourceType type, GridRegion region, RegionInfo thisRegion)
+        {
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
+
+            // Fill it in
+            Dictionary<string, object> args = new Dictionary<string, object>();
+
+            try
+            {
+                args = Util.OSDToDictionary(thisRegion.PackRegionInfoData());
+            }
+            catch (Exception e)
+            {
+                m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
+                return;
+            }
+            args["MESSAGE"] = message.ToKVP();
+            args["TYPE"] = (int)type;
+            args["METHOD"] = "inform_neighbors_of_chat_message";
+
+            string queryString = ServerUtils.BuildQueryString(args);
+            string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
         }
     }
 }

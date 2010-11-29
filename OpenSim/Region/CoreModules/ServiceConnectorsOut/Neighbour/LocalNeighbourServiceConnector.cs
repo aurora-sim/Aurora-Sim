@@ -227,22 +227,45 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
         }
 
-        public bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        public bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
             bool RetVal = false;
-            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            foreach (GridRegion neighbor in m_KnownNeighbors[region.RegionID])
             {
-                if (regionID == region.RegionID)
+                if (neighbor.RegionID == region.RegionID)
                     continue;
                 Scene scene = FindSceneByUUID(region.RegionID);
                 Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
                 if (chatModule != null)
                 {
-                    chatModule.DeliverChatToAvatars(ChatSourceType.Object, message);
+                    chatModule.DeliverChatToAvatars(type, message);
                     RetVal = true;
                 }
             }
             return RetVal;
+        }
+
+        public List<GridRegion> SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region, out bool RetVal)
+        {
+            RetVal = false;
+            List<GridRegion> regionsNotified = new List<GridRegion>();
+            foreach (GridRegion neighbor in m_KnownNeighbors[region.RegionID])
+            {
+                if (neighbor.RegionID == region.RegionID)
+                    continue;
+                Scene scene = FindSceneByUUID(neighbor.RegionID);
+                if (scene != null)
+                {
+                    Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
+                    if (chatModule != null)
+                    {
+                        chatModule.DeliverChatToAvatars(type, message);
+                        RetVal = true;
+                    }
+                    regionsNotified.Add(neighbor);
+                }
+            }
+            return regionsNotified;
         }
 
         protected Scene FindSceneByUUID(UUID regionID)

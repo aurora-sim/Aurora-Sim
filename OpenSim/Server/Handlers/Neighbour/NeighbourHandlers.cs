@@ -85,11 +85,59 @@ namespace OpenSim.Server.Handlers.Neighbour
                     return InformNeighborsRegionIsUp(request);
                 case "inform_neighbors_region_is_down":
                     return InformNeighborsRegionIsDown(request);
+                case "inform_neighbors_of_chat_message":
+                    return InformNeighborsOfChatMessage(request);
                 default :
                     m_log.Warn("[NeighborHandlers]: Unknown method " + method);
                     break;
             }
             return result;
+        }
+
+        private byte[] InformNeighborsOfChatMessage(Dictionary<string, object> request)
+        {
+            byte[] result = new byte[0];
+
+            // retrieve the region
+            RegionInfo aRegion = new RegionInfo();
+            try
+            {
+                aRegion.UnpackRegionInfoData(Util.DictionaryToOSD(request));
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+
+            OSChatMessage message = new OSChatMessage();
+            message.FromKVP((Dictionary<string, object>)request["MESSAGE"]);
+            ChatSourceType type = (ChatSourceType)int.Parse(request["TYPE"].ToString());
+            if (m_AuthenticationService != null)
+            {
+                //Set password on the incoming region
+                if (m_AuthenticationService.CheckExists(aRegion.RegionID))
+                {
+                    if (m_AuthenticationService.Authenticate(aRegion.RegionID, aRegion.Password.ToString(), 100) == "")
+                    {
+                        m_log.Warn("[RegionPostHandler]: Authentication failed for region " + aRegion.RegionName);
+                        return result;
+                    }
+                    else
+                        m_log.InfoFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionName);
+                }
+                else //Set the password then
+                    m_AuthenticationService.SetPasswordHashed(aRegion.RegionID, aRegion.Password.ToString());
+            }
+
+            // Finally!
+            m_NeighbourService.SendChatMessageToNeighbors(message, type, aRegion);
+
+            Dictionary<string, object> resp = new Dictionary<string, object>();
+            resp["success"] = "true";
+
+            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] InformNeighborsRegionIsUp(Dictionary<string, object> request)

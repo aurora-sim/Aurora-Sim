@@ -314,8 +314,20 @@ namespace Aurora.Modules
                     }
                 }
             }
-
-            DeliverChatToAvatars(ChatSourceType.Agent, c);
+            bool Sent = false;
+            OpenSim.Services.Interfaces.INeighbourService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighbourService>();
+            if (neighborService != null)
+            {
+                string Name = "";
+                if(sender is IClientAPI)
+                {
+                    Name = ((IClientAPI)sender).Name;
+                }
+                c.From = Name;
+                Sent = neighborService.SendChatMessageToNeighbors(c, ChatSourceType.Agent, c.Scene.RegionInfo);
+            }
+            if (!Sent)
+                DeliverChatToAvatars(ChatSourceType.Agent, c);
         }
 
         /// <summary>
@@ -334,9 +346,9 @@ namespace Aurora.Modules
                 c.Range = m_maxChatDistance;
 
             OpenSim.Services.Interfaces.INeighbourService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighbourService>();
-            if (neighborService != null)
+            if (neighborService != null && c.Message != "")
             {
-                Sent = neighborService.SendChatMessageToNeighbors(c, c.Scene.RegionInfo.RegionID);
+                Sent = neighborService.SendChatMessageToNeighbors(c, ChatSourceType.Object, c.Scene.RegionInfo);
             }
 
             if (!Sent)
@@ -377,19 +389,28 @@ namespace Aurora.Modules
             switch (sourceType)
             {
                 case ChatSourceType.Agent:
-                    if (!(scene is Scene))
+                    if (scene != null)
                     {
-                        m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                         scene.RegionInfo.RegionName, c.Sender.AgentId);
-                        return;
+                        if (!(scene is Scene))
+                        {
+                            m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
+                                             scene.RegionInfo.RegionName, c.Sender.AgentId);
+                            return;
+                        }
+                        ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
+                        if (avatar != null)
+                        {
+                            fromPos = avatar.AbsolutePosition;
+                            fromName = avatar.Name;
+                            fromID = c.Sender.AgentId;
+                            //Always send this so it fires on typing start and end
+                            avatar.SendScriptEventToAttachments("changed", new object[] { Changed.STATE });
+                        }
+                        else
+                            fromID = c.SenderUUID;
                     }
-                    ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
-                    fromPos = avatar.AbsolutePosition;
-                    fromName = avatar.Name;
-                    fromID = c.Sender.AgentId;
-                    //Always send this so it fires on typing start and end
-                    avatar.SendScriptEventToAttachments("changed", new object[] { Changed.STATE });
-
+                    else
+                        fromID = c.SenderUUID;
                     break;
 
                 case ChatSourceType.Object:

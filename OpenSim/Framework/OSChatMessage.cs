@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -177,6 +178,33 @@ namespace OpenSim.Framework
         public override string ToString()
         {
             return m_message;
+        }
+
+
+        public Dictionary<string, object> ToKVP()
+        {
+            Dictionary<string, object> kvp = new Dictionary<string,object>();
+            kvp["Message"] = Message;
+            kvp["Type"] = (int)Type;
+            kvp["Channel"] = Channel;
+            kvp["Range"] = Range;
+            kvp["Position"] = Position;
+            kvp["From"] = From;
+            kvp["SenderUUID"] = SenderUUID;
+            kvp["ToAgentID"] = ToAgentID;
+            return kvp;
+        }
+
+        public void FromKVP(Dictionary<string, object> kvp)
+        {
+            Message = kvp["Message"].ToString();
+            Type = ((ChatTypeEnum)int.Parse(kvp["Type"].ToString()));
+            Channel = int.Parse(kvp["Channel"].ToString());
+            Range = float.Parse(kvp["Range"].ToString());
+            Position = Vector3.Parse(kvp["Position"].ToString());
+            From = kvp["From"].ToString();
+            SenderUUID = UUID.Parse(kvp["SenderUUID"].ToString());
+            ToAgentID = UUID.Parse(kvp["ToAgentID"].ToString());
         }
 
         #endregion

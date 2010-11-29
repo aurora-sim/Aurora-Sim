@@ -75,8 +75,9 @@ namespace OpenSim.Services.Interfaces
         /// Send a chat message to the surrounding neighbors
         /// </summary>
         /// <param name="message">The message to send</param>
+        /// <param name="message">The type of sender of the message</param>
         /// <param name="regionInfo">The regionInfo of the current region</param>
         /// <returns>Whether to still send the message locally</returns>
-        bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID);
+        bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region);
     }
 }

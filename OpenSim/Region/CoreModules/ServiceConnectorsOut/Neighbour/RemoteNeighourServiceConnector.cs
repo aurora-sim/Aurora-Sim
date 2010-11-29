@@ -212,9 +212,22 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_LocalService.SendCloseChildAgent(agentID, regionID, regionsToClose);
         }
 
-        public override bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        public override bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
-            return m_LocalService.SendChatMessageToNeighbors(message, regionID);
+            bool RetVal = false;
+            List<GridRegion> NotifiedRegions = m_LocalService.SendChatMessageToNeighbors(message, type, region, out RetVal);
+
+            int RegionsNotInformed = m_KnownNeighbors[region.RegionID].Count - NotifiedRegions.Count;
+
+            //We informed all of them locally, so quit early
+            if (RegionsNotInformed == 0)
+                return RetVal;
+
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            base.InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
+
+            //This tells the chat module whether we should send the message in the region it originated from, and if it 
+            return RetVal;
         }
 
         #endregion
