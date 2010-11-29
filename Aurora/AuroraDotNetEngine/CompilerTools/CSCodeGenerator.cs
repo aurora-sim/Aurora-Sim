@@ -2150,11 +2150,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         if (0 < state.kids.Count)
                         {
                             // Jump label prints its own colon, we don't need a semicolon.
-                            printSemicolon = !(s.kids.Top is JumpLabel);
+                            printSemicolon = !(state.kids.Top is JumpLabel);
 
                             // If we encounter a lone Ident, we skip it, since that's a C#
                             // (MONO) error.
-                            if (!(s.kids.Top is IdentExpression && 1 == s.kids.Count))
+                            if (!(state.kids.Top is IdentExpression && 1 == state.kids.Count))
                             {
                                 foreach (SYMBOL stateKid in state.kids)
                                 {
