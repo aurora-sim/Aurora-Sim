@@ -36,19 +36,22 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
+using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 {
-    /*public class RemoteNeighbourServicesConnector :
+    public class RemoteNeighbourServicesConnector :
             NeighbourServicesConnector, ISharedRegionModule, INeighbourService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        private bool m_Registered = false;
         private bool m_Enabled = false;
+        private IConfigSource m_config = null;
         private LocalNeighbourServicesConnector m_LocalService;
-        //private string serviceDll;
+        private string serviceDll = "OpenSim.Server.Handlers.dll:NeighbourServiceInConnector";
         //private List<Scene> m_Scenes = new List<Scene>();
 
         public Type ReplaceableInterface 
@@ -63,28 +66,27 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void Initialise(IConfigSource source)
         {
+            m_config = source;
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
                 string name = moduleConfig.GetString("NeighbourServices");
                 if (name == Name)
                 {
-                    m_LocalService = new LocalNeighbourServicesConnector();
-
-                    //IConfig neighbourConfig = source.Configs["NeighbourService"];
-                    //if (neighbourConfig == null)
-                    //{
-                    //    m_log.Error("[NEIGHBOUR CONNECTOR]: NeighbourService missing from OpenSim.ini");
-                    //    return;
-                    //}
-                    //serviceDll = neighbourConfig.GetString("LocalServiceModule", String.Empty);
-                    //if (serviceDll == String.Empty)
-                    //{
-                    //    m_log.Error("[NEIGHBOUR CONNECTOR]: No LocalServiceModule named in section NeighbourService");
-                    //    return;
-                    //}
-
                     m_Enabled = true;
+                    m_LocalService = new LocalNeighbourServicesConnector();
+                    IConfig neighbourConfig = source.Configs["NeighbourService"];
+                    if (neighbourConfig == null)
+                    {
+                        m_log.Error("[NEIGHBOUR CONNECTOR]: NeighbourService missing from OpenSim.ini");
+                        return;
+                    }
+                    serviceDll = neighbourConfig.GetString("RemoteServiceModule", serviceDll);
+                    if (serviceDll == String.Empty)
+                    {
+                        m_log.Error("[NEIGHBOUR CONNECTOR]: No LocalServiceModule named in section NeighbourService");
+                        return;
+                    }
 
                     //m_log.Info("[NEIGHBOUR CONNECTOR]: Remote Neighbour connector enabled");
                 }
@@ -93,20 +95,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void PostInitialise()
         {
-            //if (m_Enabled)
-            //{
-            //    Object[] args = new Object[] { m_Scenes };
-            //    m_LocalService =
-            //            ServerUtils.LoadPlugin<INeighbourService>(serviceDll,
-            //            args);
-
-            //    if (m_LocalService == null)
-            //    {
-            //        m_log.Error("[NEIGHBOUR CONNECTOR]: Can't load neighbour service");
-            //        Unregister();
-            //        return;
-            //    }
-            //}
         }
 
         public void Close()
@@ -118,8 +106,19 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             if (!m_Enabled)
                 return;
 
+            //Add the local region for this
             m_LocalService.AddRegion(scene);
+            //Set the grid service for the local regions
+            m_LocalService.SetGridService(scene.GridService);
             scene.RegisterModuleInterface<INeighbourService>(this);
+
+            //Add the incoming remote neighbor handlers
+            if (!m_Registered)
+            {
+                m_Registered = true;
+                Object[] args = new Object[] { m_config, MainServer.Instance, m_LocalService, scene };
+                ServerUtils.LoadPlugin<IServiceConnector>(serviceDll, args);
+            }
         }
 
         public void RemoveRegion(Scene scene)
@@ -147,20 +146,24 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
             m_KnownNeighbors = m_LocalService.Neighbors;
 
-            List<GridRegion> ourNeighbors = m_KnownNeighbors[incomingRegion.RegionID];
-            foreach (GridRegion n in nowInformedRegions)
-            {
-                ourNeighbors.Remove(n);
-            }
+            int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+            
             //We informed all of them locally, so quit early
-            if (ourNeighbors.Count == 0)
+            if (RegionsNotInformed == 0)
                 return nowInformedRegions;
 
-            //Now add the remote ones
-            nowInformedRegions.AddRange(base.InformNeighborsThatRegionisUp(incomingRegion));
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            nowInformedRegions.AddRange(base.InformNeighborsRegionIsUp(incomingRegion, nowInformedRegions));
+            
+            //Now check to see if we informed everyone
+            RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+            if (RegionsNotInformed != 0)
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely.");
+            }
             return nowInformedRegions;
         }
 
         #endregion INeighbourService
-    }*/
+    }
 }

@@ -45,7 +45,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors
 {
-    /*public class NeighbourServicesConnector : INeighbourService
+    public class NeighbourServicesConnector : INeighbourService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -75,9 +75,24 @@ namespace OpenSim.Services.Connectors
 
         public virtual List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
         {
-            if (!DoHelloNeighbourCall(regInfo, thisRegion))
-                    return null;
-            return regInfo;
+            return new List<GridRegion>();
+        }
+
+        public List<GridRegion> InformNeighborsRegionIsUp(RegionInfo incomingRegion, List<GridRegion> alreadyInformedRegions)
+        {
+            List<GridRegion> informedRegions = new List<GridRegion>();
+            foreach (GridRegion neighbor in Neighbors[incomingRegion.RegionID])
+            {
+                //If we have already informed the region, don't tell it again
+                if (alreadyInformedRegions.Contains(neighbor))
+                    continue;
+                //Call the region then
+                if (!DoHelloNeighbourCall(neighbor, incomingRegion))
+                    continue;
+                //We informed this region, add it
+                informedRegions.Contains(neighbor);
+            }
+            return informedRegions;
         }
 
         public bool DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
@@ -171,5 +186,5 @@ namespace OpenSim.Services.Connectors
 
         }
 
-    }*/
+    }
 }

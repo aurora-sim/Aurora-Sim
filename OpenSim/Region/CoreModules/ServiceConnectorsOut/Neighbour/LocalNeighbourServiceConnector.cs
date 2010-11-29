@@ -34,7 +34,6 @@ using OpenSim.Framework;
 using OpenSim.Server.Base;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Server.Handlers.Base;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -48,7 +47,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IConfigSource m_config = null;
         private List<Scene> m_Scenes = new List<Scene>();
         private IGridService m_gridService = null;
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
@@ -59,16 +57,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         }
 
         private bool m_Enabled = false;
-        private static bool m_Registered = false;
-
-        public LocalNeighbourServicesConnector()
-        {
-        }
-
-        public LocalNeighbourServicesConnector(List<Scene> scenes)
-        {
-            m_Scenes = scenes;
-        }
 
         #region ISharedRegionModule
 
@@ -84,7 +72,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void Initialise(IConfigSource source)
         {
-            m_config = source;
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
@@ -113,13 +100,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
             m_Scenes.Add(scene);
 
-            if (!m_Registered)
-            {
-                m_Registered = true;
-                Object[] args = new Object[] { m_config, MainServer.Instance, this, scene };
-                ServerUtils.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:NeighbourServiceInConnector", args);
-            }
-
             scene.RegisterModuleInterface<INeighbourService>(this);
             if (m_gridService == null)
                 m_gridService = scene.GridService;
@@ -138,6 +118,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         }
 
         #endregion ISharedRegionModule
+
+        public void SetGridService(IGridService service)
+        {
+            if(m_gridService == null)
+                m_gridService = service;
+        }
 
         #region INeighbourService
 
@@ -171,7 +157,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 }
             }
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
-            if (RegionsNotInformed != 0)
+            if (RegionsNotInformed != 0 && m_Enabled) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally."); 
             }

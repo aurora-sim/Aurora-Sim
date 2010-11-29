@@ -2230,7 +2230,6 @@ namespace OpenSim.Region.Framework.Scenes
             INeighbourService service = this.RequestModuleInterface<INeighbourService>();
             if (service != null)
                 service.InformNeighborsThatRegionisUp(RegionInfo);
-            //m_sceneGridService.InformNeighborsThatRegionisUp(RequestModuleInterface<INeighbourService>(), RegionInfo);
             return "";
         }
 
