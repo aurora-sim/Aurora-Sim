@@ -44,6 +44,16 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        //The object is a GridRegion
+        public delegate void TriggerOnRegionUp(object otherRegion);
+        public event TriggerOnRegionUp OnRegionUp;
+
+        public void TriggerRegionUp(object otherRegion)
+        {
+            if (OnRegionUp != null)
+                OnRegionUp(otherRegion);
+        }
+
         public bool commFailTF = false;
         public string RegionFile = String.Empty;
         public bool isSandbox = false;

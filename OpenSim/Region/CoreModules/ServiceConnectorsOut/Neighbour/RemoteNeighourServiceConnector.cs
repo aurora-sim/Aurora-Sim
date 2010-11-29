@@ -39,7 +39,7 @@ using OpenSim.Server.Base;
 
 namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 {
-    public class RemoteNeighbourServicesConnector :
+    /*public class RemoteNeighbourServicesConnector :
             NeighbourServicesConnector, ISharedRegionModule, INeighbourService
     {
         private static readonly ILog m_log =
@@ -141,15 +141,26 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         #region INeighbourService
 
-        public override GridRegion HelloNeighbour(ulong regionHandle, RegionInfo thisRegion)
+        public override List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
         {
-            GridRegion region = m_LocalService.HelloNeighbour(regionHandle, thisRegion);
-            if (region != null)
-                return region;
+            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionisUp(incomingRegion);
 
-            return base.HelloNeighbour(regionHandle, thisRegion);
+            m_KnownNeighbors = m_LocalService.Neighbors;
+
+            List<GridRegion> ourNeighbors = m_KnownNeighbors[incomingRegion.RegionID];
+            foreach (GridRegion n in nowInformedRegions)
+            {
+                ourNeighbors.Remove(n);
+            }
+            //We informed all of them locally, so quit early
+            if (ourNeighbors.Count == 0)
+                return nowInformedRegions;
+
+            //Now add the remote ones
+            nowInformedRegions.AddRange(base.InformNeighborsThatRegionisUp(incomingRegion));
+            return nowInformedRegions;
         }
 
         #endregion INeighbourService
-    }
+    }*/
 }

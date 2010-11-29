@@ -34,7 +34,10 @@ using OpenSim.Framework;
 using OpenSim.Server.Base;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Server.Handlers.Base;
 using OpenSim.Services.Interfaces;
+using OpenMetaverse;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 {
@@ -45,9 +48,18 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        private IConfigSource m_config = null;
         private List<Scene> m_Scenes = new List<Scene>();
+        private IGridService m_gridService = null;
+        private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
+
+        public Dictionary<UUID, List<GridRegion>> Neighbors
+        {
+            get { return m_KnownNeighbors; }
+        }
 
         private bool m_Enabled = false;
+        private static bool m_Registered = false;
 
         public LocalNeighbourServicesConnector()
         {
@@ -72,6 +84,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void Initialise(IConfigSource source)
         {
+            m_config = source;
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
@@ -85,27 +98,36 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
         }
 
+        public void PostInitialise()
+        {
+        }
+
         public void Close()
         {
         }
 
         public void AddRegion(Scene scene)
         {
-            m_Scenes.Add(scene);
-
             if (!m_Enabled)
                 return;
 
+            m_Scenes.Add(scene);
+
+            if (!m_Registered)
+            {
+                m_Registered = true;
+                Object[] args = new Object[] { m_config, MainServer.Instance, this, scene };
+                ServerUtils.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:NeighbourServiceInConnector", args);
+            }
+
             scene.RegisterModuleInterface<INeighbourService>(this);
+            if (m_gridService == null)
+                m_gridService = scene.GridService;
         }
 
         public void RegionLoaded(Scene scene)
         {
             //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled for region " + scene.RegionInfo.RegionName);
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void RemoveRegion(Scene scene)
@@ -119,20 +141,42 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         #region INeighbourService
 
-        public GridRegion HelloNeighbour(ulong regionHandle, RegionInfo thisRegion)
+        public List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
         {
-            m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: HelloNeighbour from {0}, to {1}.",
-                thisRegion.RegionName, regionHandle);
+            List<GridRegion> m_informedRegions = new List<GridRegion>();
+            m_KnownNeighbors[incomingRegion.RegionID] = m_gridService.GetNeighbours(incomingRegion.ScopeID, incomingRegion.RegionID);
+
+            //We need to inform all the regions around us that our region now exists
+            
             foreach (Scene s in m_Scenes)
             {
-                if (s.RegionInfo.RegionHandle == regionHandle)
+                //Don't tell ourselves about us
+                if (s.RegionInfo.RegionID == incomingRegion.RegionID)
+                    continue;
+
+                foreach (GridRegion n in m_KnownNeighbors[incomingRegion.RegionID])
                 {
-                    //m_log.Debug("[NEIGHBOUR CONNECTOR]: Found region to SendHelloNeighbour");
-                    return s.IncomingHelloNeighbour(thisRegion);
+                    if (n.RegionID == s.RegionInfo.RegionID)
+                    {
+                        m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: HelloNeighbour from {0}, to {1}.",
+                            incomingRegion.RegionName, n.RegionName);
+
+                        //Tell this region about the original region
+                        s.IncomingHelloNeighbour(incomingRegion);
+                        //Tell the original region about this new region
+                        incomingRegion.TriggerRegionUp(n);
+                        //This region knows now, so add it to the list
+                        m_informedRegions.Add(n);
+                    }
                 }
             }
-            //m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: region handle {0} not found", regionHandle);
-            return null;
+            int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
+            if (RegionsNotInformed != 0)
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally."); 
+            }
+
+            return m_informedRegions;
         }
 
         #endregion INeighbourService

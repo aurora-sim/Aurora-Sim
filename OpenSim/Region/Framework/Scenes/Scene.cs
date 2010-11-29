@@ -490,6 +490,9 @@ namespace OpenSim.Region.Framework.Scenes
             //THIS NEEDS RESET TO FIX RESTARTS
             shuttingdown = false;
 
+            //Register to regInfo events
+            regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
+
             m_stats = stats;
             m_config = config;
             Random random = new Random();
@@ -819,6 +822,11 @@ namespace OpenSim.Region.Framework.Scenes
                     m_neighbours.Add(region);
                 }
             }
+        }
+
+        private void regInfo_OnRegionUp(object otherRegion)
+        {
+            EventManager.TriggerOnRegionUp((GridRegion)otherRegion);
         }
 
         public bool CheckNeighborRegion(RegionInfo region)
@@ -2219,7 +2227,10 @@ namespace OpenSim.Region.Framework.Scenes
             g.AddGeneric(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
 
             m_sceneGridService.SetScene(this);
-            m_sceneGridService.InformNeighborsThatRegionisUp(RequestModuleInterface<INeighbourService>(), RegionInfo);
+            INeighbourService service = this.RequestModuleInterface<INeighbourService>();
+            if (service != null)
+                service.InformNeighborsThatRegionisUp(RegionInfo);
+            //m_sceneGridService.InformNeighborsThatRegionisUp(RequestModuleInterface<INeighbourService>(), RegionInfo);
             return "";
         }
 

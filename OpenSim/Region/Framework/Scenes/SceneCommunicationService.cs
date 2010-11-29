@@ -54,63 +54,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = s;
         }
 
-        public delegate void InformNeighbourThatRegionUpDelegate(INeighbourService nService, RegionInfo region, ulong regionhandle);
-
-        private void InformNeighborsThatRegionisUpCompleted(IAsyncResult iar)
-        {
-            InformNeighbourThatRegionUpDelegate icon = (InformNeighbourThatRegionUpDelegate) iar.AsyncState;
-            icon.EndInvoke(iar);
-        }
-
-        /// <summary>
-        /// Asynchronous call to information neighbouring regions that this region is up
-        /// </summary>
-        /// <param name="region"></param>
-        /// <param name="regionhandle"></param>
-        private void InformNeighboursThatRegionIsUpAsync(INeighbourService neighbourService, RegionInfo region, ulong regionhandle)
-        {
-            uint x = 0, y = 0;
-            Utils.LongToUInts(regionhandle, out x, out y);
-
-            GridRegion neighbour = null;
-            if (neighbourService != null)
-                neighbour = neighbourService.HelloNeighbour(regionhandle, region);
-            else
-                m_log.DebugFormat("[SCS]: No neighbour service provided for informing neigbhours of this region");
-
-            if (neighbour != null)
-            {
-                m_log.DebugFormat("[INTERGRID]: Successfully informed neighbour {0}-{1} that I'm here", x / Constants.RegionSize, y / Constants.RegionSize);
-                m_scene.EventManager.TriggerOnRegionUp(neighbour);
-            }
-            else
-            {
-                if (m_scene.GridService != null)
-                {
-                    neighbour = m_scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                    
-                    if (neighbour != null)
-                        m_log.InfoFormat("[INTERGRID]: Failed to inform neighbour {0}-{1} that I'm here.", x / Constants.RegionSize, y / Constants.RegionSize);
-                }
-            }
-        }
-
-
-        public void InformNeighborsThatRegionisUp(INeighbourService neighbourService, RegionInfo region)
-        {
-            //m_log.Info("[INTER]: " + debugRegionName + ": SceneCommunicationService: Sending InterRegion Notification that region is up " + region.RegionName);
-
-            List<GridRegion> neighbours = m_scene.GridService.GetNeighbours(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
-            m_log.DebugFormat("[INTERGRID]: Informing {0} neighbours that this region is up", neighbours.Count);
-            foreach (GridRegion n in neighbours)
-            {
-                InformNeighbourThatRegionUpDelegate d = InformNeighboursThatRegionIsUpAsync;
-                d.BeginInvoke(neighbourService, region, n.RegionHandle,
-                              InformNeighborsThatRegionisUpCompleted,
-                              d);
-            }
-        }
-
         public delegate void SendChildAgentDataUpdateDelegate(AgentPosition cAgentData, ulong regionHandle);
 
         /// <summary>

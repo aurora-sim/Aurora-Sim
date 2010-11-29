@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Net;
@@ -149,7 +150,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            GridRegion thisRegion = m_NeighbourService.HelloNeighbour(regionhandle, aRegion);
+            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionisUp(aRegion);
             
             OSDMap resp = new OSDMap(1);
 

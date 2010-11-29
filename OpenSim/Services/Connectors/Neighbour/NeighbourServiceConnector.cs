@@ -45,13 +45,19 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors
 {
-    public class NeighbourServicesConnector : INeighbourService
+    /*public class NeighbourServicesConnector : INeighbourService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IGridService m_GridService = null;
+        protected Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
+
+        public Dictionary<UUID, List<GridRegion>> Neighbors
+        {
+            get { return m_KnownNeighbors; }
+        }
 
         public NeighbourServicesConnector()
         {
@@ -67,21 +73,10 @@ namespace OpenSim.Services.Connectors
             m_GridService = gridServices;
         }
 
-        public virtual GridRegion HelloNeighbour(ulong regionHandle, RegionInfo thisRegion)
+        public virtual List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
         {
-            uint x = 0, y = 0;
-            Utils.LongToUInts(regionHandle, out x, out y);
-            GridRegion regInfo = m_GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-            if ((regInfo != null) &&
-                // Don't remote-call this instance; that's a startup hickup
-                !((regInfo.ExternalHostName == thisRegion.ExternalHostName) && (regInfo.HttpPort == thisRegion.HttpPort)))
-            {
-                if (!DoHelloNeighbourCall(regInfo, thisRegion))
+            if (!DoHelloNeighbourCall(regInfo, thisRegion))
                     return null;
-            }
-            else
-                return null;
-
             return regInfo;
         }
 
@@ -176,5 +171,5 @@ namespace OpenSim.Services.Connectors
 
         }
 
-    }
+    }*/
 }

@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -34,6 +35,7 @@ namespace OpenSim.Services.Interfaces
 {
     public interface INeighbourService
     {
-        GridRegion HelloNeighbour(ulong regionHandle, RegionInfo otherRegion);
+        Dictionary<UUID, List<GridRegion>> Neighbors { get; }
+        List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion);
     }
 }
