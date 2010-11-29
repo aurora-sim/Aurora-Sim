@@ -47,28 +47,6 @@ using log4net;
 
 namespace OpenSim.Server.Handlers.Neighbour
 {
-    public class NeighbourGetHandler : BaseStreamHandler
-    {
-        // unused: private ISimulationService m_SimulationService;
-        // unused: private IAuthenticationService m_AuthenticationService;
-
-        public NeighbourGetHandler(INeighbourService service, IAuthenticationService authentication) :
-                base("GET", "/region")
-        {
-            // unused: m_SimulationService = service;
-            // unused: m_AuthenticationService = authentication;
-        }
-
-        public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            // Not implemented yet
-            Console.WriteLine("--- Get region --- " + path);
-            httpResponse.StatusCode = (int)HttpStatusCode.NotImplemented;
-            return new byte[] { };
-        }
-    }
-
     public class NeighbourPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -97,33 +75,37 @@ namespace OpenSim.Server.Handlers.Neighbour
             Dictionary<string, object> request =
                         ServerUtils.ParseQueryString(body);
 
-            OSDMap args = Util.DictionaryToOSD(request);
+            if (!request.ContainsKey("METHOD"))
+                return result; //No method, no work
+
+            string method = request["METHOD"].ToString();
+            switch(method)
+            {
+                case "inform_neighbors_region_is_up":
+                    return InformNeighborsRegionIsUp(request);
+                default :
+                    break;
+            }
+            return result;
+        }
+
+        private byte[] InformNeighborsRegionIsUp(Dictionary<string, object> request)
+        {
+            byte[] result = new byte[0];
 
             // retrieve the region
             RegionInfo aRegion = new RegionInfo();
             try
             {
-                aRegion.UnpackRegionInfoData(args);
+                aRegion.UnpackRegionInfoData(Util.DictionaryToOSD(request));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                m_log.InfoFormat("[RegionPostHandler]: exception on unpacking region info {0}", ex.Message);
-                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
-                httpResponse.StatusDescription = "Problems with data deserialization";
                 return result;
             }
 
             if (m_AuthenticationService != null)
             {
-                // Authentication
-                string authority = string.Empty;
-                string authToken = string.Empty;
-                if (!RestHandlerUtils.GetAuthentication(httpRequest, out authority, out authToken))
-                {
-                    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
-                    httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    return result;
-                }
                 // Rethink this
                 //if (!m_AuthenticationService.VerifyKey(aRegion.RegionID, authToken))
                 //{
@@ -137,69 +119,25 @@ namespace OpenSim.Server.Handlers.Neighbour
             // Finally!
             List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionisUp(aRegion);
             
-            OSDMap resp = new OSDMap(1);
+            Dictionary<string, object> resp = new Dictionary<string, object>();
 
             if (thisRegion.Count != 0)
             {
-                resp["success"] = OSD.FromBoolean(true);
+                resp["success"] = "true";
                 int i = 0;
                 foreach (GridRegion r in thisRegion)
                 {
                     Dictionary<string, object> region = r.ToKeyValuePairs();
-                    resp["region" + i] = Util.DictionaryToOSD(region);
+                    resp["region" + i] = region;
                     i++;
                 }
             }
             else
-                resp["success"] = OSD.FromBoolean(false);
+                resp["success"] = "false";
 
-            httpResponse.StatusCode = (int)HttpStatusCode.OK;
-
-            string xmlString = ServerUtils.BuildXmlResponse(Util.OSDToDictionary(resp));
+            string xmlString = ServerUtils.BuildXmlResponse(resp);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-        }
-    }
-
-    public class NeighbourPutHandler : BaseStreamHandler
-    {
-        // unused: private ISimulationService m_SimulationService;
-        // unused: private IAuthenticationService m_AuthenticationService;
-
-        public NeighbourPutHandler(INeighbourService service, IAuthenticationService authentication) :
-            base("PUT", "/region")
-        {
-            // unused: m_SimulationService = service;
-            // unused: m_AuthenticationService = authentication;
-        }
-
-        public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            // Not implemented yet
-            httpResponse.StatusCode = (int)HttpStatusCode.NotImplemented;
-            return new byte[] { };
-        }
-    }
-
-    public class NeighbourDeleteHandler : BaseStreamHandler
-    {
-        // unused: private ISimulationService m_SimulationService;
-        // unused: private IAuthenticationService m_AuthenticationService;
-
-        public NeighbourDeleteHandler(INeighbourService service, IAuthenticationService authentication) :
-            base("DELETE", "/region")
-        {
-            // unused: m_SimulationService = service;
-            // unused: m_AuthenticationService = authentication;
-        }
-
-        public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            // Not implemented yet
-            httpResponse.StatusCode = (int)HttpStatusCode.NotImplemented;
-            return new byte[] { };
         }
     }
 }

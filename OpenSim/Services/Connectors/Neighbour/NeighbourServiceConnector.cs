@@ -100,40 +100,41 @@ namespace OpenSim.Services.Connectors
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
-            OSDMap args = null;
+            Dictionary<string, object> args = new Dictionary<string, object>();
             try
             {
-                args = thisRegion.PackRegionInfoData();
+                args = Util.OSDToDictionary(thisRegion.PackRegionInfoData());
             }
             catch (Exception e)
             {
                 m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
                 return informedRegions;
             }
+            args["METHOD"] = "inform_neighbors_region_is_up";
 
-            string queryString = ServerUtils.BuildQueryString(Util.OSDToDictionary(args));
+            string queryString = ServerUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
 
             if (reply == "")
                 return informedRegions;
 
-            OSDMap replyMap = Util.DictionaryToOSD(ServerUtils.ParseXmlResponse(reply));
+            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
 
             try
             {
-                if (replyMap == null)
-                    return new informedRegions;
-
-                //Didn't inform, return now
-                if (!replyMap.ContainsKey("success") || !replyMap["success"].AsBoolean())
+                if (response == null)
                     return informedRegions;
 
-                foreach (KeyValuePair<string, OSD> kvp in replyMap)
+                //Didn't inform, return now
+                if (!response.ContainsKey("success") || response["success"].ToString() != "true")
+                    return informedRegions;
+
+                foreach (KeyValuePair<string, object> kvp in response)
                 {
-                    if (kvp.Value is OSDMap)
+                    if (kvp.Value is Dictionary<string, object>)
                     {
-                        OSDMap r = kvp.Value as OSDMap;
-                        GridRegion nregion = new GridRegion(Util.OSDToDictionary(r));
+                        Dictionary<string, object> r = kvp.Value as Dictionary<string, object>;
+                        GridRegion nregion = new GridRegion(r);
                         informedRegions.Add(nregion);
                     }
                 }
