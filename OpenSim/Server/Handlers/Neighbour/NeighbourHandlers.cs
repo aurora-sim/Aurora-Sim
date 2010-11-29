@@ -83,7 +83,10 @@ namespace OpenSim.Server.Handlers.Neighbour
             {
                 case "inform_neighbors_region_is_up":
                     return InformNeighborsRegionIsUp(request);
+                case "inform_neighbors_region_is_down":
+                    return InformNeighborsRegionIsDown(request);
                 default :
+                    m_log.Warn("[NeighborHandlers]: Unknown method " + method);
                     break;
             }
             return result;
@@ -117,8 +120,59 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionisUp(aRegion);
+            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionIsUp(aRegion);
             
+            Dictionary<string, object> resp = new Dictionary<string, object>();
+
+            if (thisRegion.Count != 0)
+            {
+                resp["success"] = "true";
+                int i = 0;
+                foreach (GridRegion r in thisRegion)
+                {
+                    Dictionary<string, object> region = r.ToKeyValuePairs();
+                    resp["region" + i] = region;
+                    i++;
+                }
+            }
+            else
+                resp["success"] = "false";
+
+            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] InformNeighborsRegionIsDown(Dictionary<string, object> request)
+        {
+            byte[] result = new byte[0];
+
+            // retrieve the region
+            RegionInfo aRegion = new RegionInfo();
+            try
+            {
+                aRegion.UnpackRegionInfoData(Util.DictionaryToOSD(request));
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+
+            if (m_AuthenticationService != null)
+            {
+                // Rethink this
+                //if (!m_AuthenticationService.VerifyKey(aRegion.RegionID, authToken))
+                //{
+                //    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
+                //    httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                //    return result;
+                //}
+                m_log.DebugFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionID);
+            }
+
+            // Finally!
+            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionIsDown(aRegion);
+
             Dictionary<string, object> resp = new Dictionary<string, object>();
 
             if (thisRegion.Count != 0)

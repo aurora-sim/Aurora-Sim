@@ -766,8 +766,6 @@ namespace OpenSim.Region.Framework.Scenes
                     // Let the grid service module know, so this can be cached
                     m_eventManager.TriggerOnRegionUp(otherRegion);
 
-                    //This updates us about new neighbors in the cache
-                    GridService.GetNeighbours(UUID.Zero, this.RegionInfo.RegionID);
                     try
                     {
                         ForEachScenePresence(delegate(ScenePresence agent)
@@ -838,10 +836,15 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // Alias IncomingHelloNeighbour OtherRegionUp, for now
-        public GridRegion IncomingHelloNeighbour(RegionInfo neighbour)
+        public void IncomingHelloNeighbour(RegionInfo neighbour)
         {
             OtherRegionUp(new GridRegion(neighbour));
-            return new GridRegion(RegionInfo);
+        }
+
+        public void IncomingClosingNeighbour(RegionInfo neighbour)
+        {
+            //OtherRegionUp(new GridRegion(neighbour));
+            //return new GridRegion(RegionInfo);
         }
 
         // This causes the region to restart immediatley.
@@ -961,6 +964,11 @@ namespace OpenSim.Region.Framework.Scenes
                     tracker = null;
                 }
             }
+
+            //Tell the neighbors that this region is now down
+            INeighbourService service = RequestModuleInterface<INeighbourService>();
+            if (service != null)
+                service.InformNeighborsThatRegionIsDown(RegionInfo);
 
             // Stop updating the scene objects and agents.
             //m_heartbeatTimer.Close();
@@ -2217,7 +2225,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             INeighbourService service = this.RequestModuleInterface<INeighbourService>();
             if (service != null)
-                service.InformNeighborsThatRegionisUp(RegionInfo);
+                service.InformNeighborsThatRegionIsUp(RegionInfo);
             return "";
         }
 

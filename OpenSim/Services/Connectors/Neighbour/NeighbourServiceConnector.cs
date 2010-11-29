@@ -74,7 +74,7 @@ namespace OpenSim.Services.Connectors
             m_GridService = gridServices;
         }
 
-        public virtual List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
+        public virtual List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
             return new List<GridRegion>();
         }
@@ -93,7 +93,7 @@ namespace OpenSim.Services.Connectors
             return informedRegions;
         }
 
-        public List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
+        protected List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
             string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
@@ -147,6 +147,74 @@ namespace OpenSim.Services.Connectors
             return informedRegions;
         }
 
+        public List<GridRegion> InformNeighborsRegionIsDown(RegionInfo closingRegion, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
+        {
+            List<GridRegion> informedRegions = new List<GridRegion>();
+            foreach (GridRegion neighbor in neighbors)
+            {
+                //If we have already informed the region, don't tell it again
+                if (alreadyInformedRegions.Contains(neighbor))
+                    continue;
+                //Call the region then and add the regions it informed
+                informedRegions.AddRange(DoGoodbyeNeighbourCall(neighbor, closingRegion));
+            }
+            return informedRegions;
+        }
+
+        protected List<GridRegion> DoGoodbyeNeighbourCall(GridRegion region, RegionInfo thisRegion)
+        {
+            List<GridRegion> informedRegions = new List<GridRegion>();
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
+
+            // Fill it in
+            Dictionary<string, object> args = new Dictionary<string, object>();
+            try
+            {
+                args = Util.OSDToDictionary(thisRegion.PackRegionInfoData());
+            }
+            catch (Exception e)
+            {
+                m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
+                return informedRegions;
+            }
+            args["METHOD"] = "inform_neighbors_region_is_down";
+
+            string queryString = ServerUtils.BuildQueryString(args);
+            string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
+
+            if (reply == "")
+                return informedRegions;
+
+            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
+
+            try
+            {
+                if (response == null)
+                    return informedRegions;
+
+                //Didn't inform, return now
+                if (!response.ContainsKey("success") || response["success"].ToString() != "true")
+                    return informedRegions;
+
+                foreach (KeyValuePair<string, object> kvp in response)
+                {
+                    if (kvp.Value is Dictionary<string, object>)
+                    {
+                        Dictionary<string, object> r = kvp.Value as Dictionary<string, object>;
+                        GridRegion nregion = new GridRegion(r);
+                        informedRegions.Add(nregion);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[NeighborServiceConnector]: Failed to read response from neighbor " + ex.ToString());
+            }
+
+            return informedRegions;
+        }
+
         public virtual void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
         {
             //The remote connector has to deal with it
@@ -155,6 +223,11 @@ namespace OpenSim.Services.Connectors
         public virtual void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
         {
             //The remote connector has to deal with it
+        }
+
+        public virtual List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
+        {
+            return new List<GridRegion>();
         }
     }
 }

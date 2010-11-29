@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         #region INeighbourService
 
-        public List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
+        public List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
             List<GridRegion> m_informedRegions = new List<GridRegion>();
             m_KnownNeighbors[incomingRegion.RegionID] = m_gridService.GetNeighbours(incomingRegion.ScopeID, incomingRegion.RegionID);
@@ -165,7 +165,44 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
             if (RegionsNotInformed != 0 && m_Enabled) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
-                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally."); 
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a new neighbor."); 
+            }
+
+            return m_informedRegions;
+        }
+
+        public List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
+        {
+            List<GridRegion> m_informedRegions = new List<GridRegion>();
+            List<GridRegion> neighbors = m_KnownNeighbors[closingRegion.RegionID];
+            m_KnownNeighbors.Remove(closingRegion.RegionID);
+
+            //We need to inform all the regions around us that our region now exists
+
+            foreach (Scene s in m_Scenes)
+            {
+                //Don't tell ourselves about us
+                if (s.RegionInfo.RegionID == closingRegion.RegionID)
+                    continue;
+
+                foreach (GridRegion n in neighbors)
+                {
+                    if (n.RegionID == s.RegionInfo.RegionID)
+                    {
+                        m_log.DebugFormat("[NeighborConnector]: Neighbor is closing from {0} to {1}.",
+                            closingRegion.RegionName, n.RegionName);
+
+                        //Tell this region about the original region
+                        s.IncomingClosingNeighbour(closingRegion);
+                        //This region knows now, so add it to the list
+                        m_informedRegions.Add(n);
+                    }
+                }
+            }
+            int RegionsNotInformed = neighbors.Count - m_informedRegions.Count;
+            if (RegionsNotInformed != 0 && m_Enabled) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a closing neighbor.");
             }
 
             return m_informedRegions;

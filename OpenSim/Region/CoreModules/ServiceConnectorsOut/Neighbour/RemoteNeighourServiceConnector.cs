@@ -142,9 +142,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         #region INeighbourService
 
-        public override List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
+        public override List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
-            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionisUp(incomingRegion);
+            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsUp(incomingRegion);
             
             //Get the known regions from the local connector, as it queried the grid service to find them all
             m_KnownNeighbors = m_LocalService.Neighbors;
@@ -162,7 +162,30 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
             if (RegionsNotInformed != 0)
             {
-                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely.");
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely about a new neighbor.");
+            }
+            return nowInformedRegions;
+        }
+
+        public override List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
+        {
+            List<GridRegion> neighbors = m_KnownNeighbors[closingRegion.RegionID];
+            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsDown(closingRegion);
+
+            int RegionsNotInformed = neighbors.Count - nowInformedRegions.Count;
+
+            //We informed all of them locally, so quit early
+            if (RegionsNotInformed == 0)
+                return nowInformedRegions;
+
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            nowInformedRegions.AddRange(base.InformNeighborsRegionIsDown(closingRegion, nowInformedRegions, neighbors));
+
+            //Now check to see if we informed everyone
+            RegionsNotInformed = neighbors.Count - nowInformedRegions.Count;
+            if (RegionsNotInformed != 0)
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely about a closing neighbor.");
             }
             return nowInformedRegions;
         }

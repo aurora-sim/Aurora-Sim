@@ -41,13 +41,20 @@ namespace OpenSim.Services.Interfaces
         /// List<GridRegion> - Neighbors of the given region
         /// </summary>
         Dictionary<UUID, List<GridRegion>> Neighbors { get; }
-        
+
         /// <summary>
         /// Tell the neighbors that this region is now up and running
         /// </summary>
         /// <param name="incomingRegion">The region that is now up</param>
         /// <returns>Returns the list of neighbors that were informed of this change</returns>
-        List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion);
+        List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion);
+
+        /// <summary>
+        /// Tell the neighbors that this region is going down
+        /// </summary>
+        /// <param name="incomingRegion">The region that is now down</param>
+        /// <returns>Returns the list of neighbors that were informed of this change</returns>
+        List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion);
         
         /// <summary>
         /// Send a child agent update to the neighbors
