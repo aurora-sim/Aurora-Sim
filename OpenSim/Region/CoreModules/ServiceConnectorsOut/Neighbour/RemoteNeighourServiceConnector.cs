@@ -143,7 +143,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public override List<GridRegion> InformNeighborsThatRegionisUp(RegionInfo incomingRegion)
         {
             List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionisUp(incomingRegion);
-
+            
             m_KnownNeighbors = m_LocalService.Neighbors;
 
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;

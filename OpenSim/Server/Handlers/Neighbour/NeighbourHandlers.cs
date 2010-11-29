@@ -131,11 +131,7 @@ namespace OpenSim.Server.Handlers.Neighbour
                 return result;
             }
 
-            // retrieve the regionhandle
-            ulong regionhandle = 0;
-            if (args["destination_handle"] != null)
-                UInt64.TryParse(args["destination_handle"].AsString(), out regionhandle);
-
+            // retrieve the region
             RegionInfo aRegion = new RegionInfo();
             try
             {
@@ -154,8 +150,17 @@ namespace OpenSim.Server.Handlers.Neighbour
             
             OSDMap resp = new OSDMap(1);
 
-            if (thisRegion != null)
+            if (thisRegion.Count != 0)
+            {
                 resp["success"] = OSD.FromBoolean(true);
+                int i = 0;
+                foreach (GridRegion r in thisRegion)
+                {
+                    Dictionary<string, object> region = r.ToKeyValuePairs();
+                    resp["region" + i] = Util.DictionaryToOSD(region);
+                    i++;
+                }
+            }
             else
                 resp["success"] = OSD.FromBoolean(false);
 

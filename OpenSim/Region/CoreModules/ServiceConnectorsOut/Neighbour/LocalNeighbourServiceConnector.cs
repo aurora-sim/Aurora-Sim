@@ -95,10 +95,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void AddRegion(Scene scene)
         {
+            //Keep this here so that we register the region no matter what as the remote service needs this
+            m_Scenes.Add(scene);
+
             if (!m_Enabled)
                 return;
-
-            m_Scenes.Add(scene);
 
             scene.RegisterModuleInterface<INeighbourService>(this);
             if (m_gridService == null)
@@ -112,7 +113,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void RemoveRegion(Scene scene)
         {
-            // Always remove 
+            // Always remove as the remote service uses this
             if (m_Scenes.Contains(scene))
                 m_Scenes.Remove(scene);
         }
@@ -144,7 +145,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 {
                     if (n.RegionID == s.RegionInfo.RegionID)
                     {
-                        m_log.DebugFormat("[NEIGHBOUR CONNECTOR]: HelloNeighbour from {0}, to {1}.",
+                        m_log.DebugFormat("[NeighborConnector]: HelloNeighbour from {0} to {1}.",
                             incomingRegion.RegionName, n.RegionName);
 
                         //Tell this region about the original region

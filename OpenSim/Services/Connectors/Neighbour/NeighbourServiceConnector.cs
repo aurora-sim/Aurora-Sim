@@ -86,16 +86,13 @@ namespace OpenSim.Services.Connectors
                 //If we have already informed the region, don't tell it again
                 if (alreadyInformedRegions.Contains(neighbor))
                     continue;
-                //Call the region then
-                if (!DoHelloNeighbourCall(neighbor, incomingRegion))
-                    continue;
-                //We informed this region, add it
-                informedRegions.Contains(neighbor);
+                //Call the region then and add the regions it informed
+                informedRegions.AddRange(DoHelloNeighbourCall(neighbor, incomingRegion));
             }
             return informedRegions;
         }
 
-        public bool DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
+        public List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
@@ -114,11 +111,9 @@ namespace OpenSim.Services.Connectors
             catch (Exception e)
             {
                 m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
-                return false;
+                return new List<GridRegion>();
             }
-            // Add the regionhandle of the destination region
-            args["destination_handle"] = OSD.FromString(region.RegionHandle.ToString());
-
+            
             string strBuffer = "";
             byte[] buffer = new byte[1];
             try
@@ -131,7 +126,7 @@ namespace OpenSim.Services.Connectors
             catch (Exception e)
             {
                 m_log.WarnFormat("[REST COMMS]: Exception thrown on serialization of HelloNeighbour: {0}", e.Message);
-                return false;
+                return new List<GridRegion>();
             }
 
             Stream os = null;
@@ -145,7 +140,7 @@ namespace OpenSim.Services.Connectors
             catch (Exception ex)
             {
                 m_log.InfoFormat("[REST COMMS]: Unable to send HelloNeighbour to {0}: {1}", region.RegionName, ex.Message);
-                return false;
+                return new List<GridRegion>();
             }
             finally
             {
@@ -157,6 +152,7 @@ namespace OpenSim.Services.Connectors
             //m_log.Info("[REST COMMS]: Waiting for a reply after DoHelloNeighbourCall");
 
             StreamReader sr = null;
+            string reply = "";
             try
             {
                 WebResponse webResponse = HelloNeighbourRequest.GetResponse();
@@ -166,15 +162,13 @@ namespace OpenSim.Services.Connectors
                 }
 
                 sr = new StreamReader(webResponse.GetResponseStream());
-                //reply = sr.ReadToEnd().Trim();
-                sr.ReadToEnd().Trim();
+                reply = sr.ReadToEnd().Trim();
                 //m_log.InfoFormat("[REST COMMS]: DoHelloNeighbourCall reply was {0} ", reply);
-
             }
             catch (Exception ex)
             {
                 m_log.InfoFormat("[REST COMMS]: exception on reply of DoHelloNeighbourCall {0}", ex.Message);
-                return false;
+                return new List<GridRegion>();
             }
             finally
             {
@@ -182,7 +176,33 @@ namespace OpenSim.Services.Connectors
                     sr.Close();
             }
 
-            return true;
+            List<GridRegion> informedRegions = new List<GridRegion>();
+            try
+            {
+                OSDMap replyMap = (OSDMap)OSDParser.DeserializeJson(reply);
+                if (replyMap == null)
+                    return new List<GridRegion>();
+
+                //Didn't inform, return now
+                if (!replyMap.ContainsKey("success") || !replyMap["success"].AsBoolean())
+                    return informedRegions;
+
+                foreach (KeyValuePair<string, OSD> kvp in replyMap)
+                {
+                    if (kvp.Value is OSDMap)
+                    {
+                        OSDMap r = kvp.Value as OSDMap;
+                        GridRegion nregion = new GridRegion(Util.OSDToDictionary(r));
+                        informedRegions.Add(nregion);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("[NeighborServiceConnector]: Failed to read response from neighbor " + ex.ToString());
+            }
+
+            return informedRegions;
 
         }
 

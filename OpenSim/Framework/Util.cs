@@ -1570,7 +1570,24 @@ namespace OpenSim.Framework
             Dictionary<string, object> retVal = new Dictionary<string, object>();
             foreach (string key in map.Keys)
             {
-                retVal.Add(key, map[key]);
+                if (map[key].Type == OSDType.Binary)
+                    retVal.Add(key, map[key].AsBinary());
+                else if (map[key].Type == OSDType.Boolean)
+                    retVal.Add(key, map[key].AsBoolean());
+                else if (map[key].Type == OSDType.Date)
+                    retVal.Add(key, map[key].AsDate());
+                else if (map[key].Type == OSDType.Integer)
+                    retVal.Add(key, map[key].AsInteger());
+                else if (map[key].Type == OSDType.Real)
+                    retVal.Add(key, map[key].AsReal());
+                else if (map[key].Type == OSDType.String)
+                    retVal.Add(key, map[key].AsString());
+                else if (map[key].Type == OSDType.URI)
+                    retVal.Add(key, map[key].AsUri());
+                else if (map[key].Type == OSDType.UUID)
+                    retVal.Add(key, map[key].AsUUID());
+                else
+                    retVal.Add(key, (object)map[key].AsString());
             }
             return retVal;
         }
