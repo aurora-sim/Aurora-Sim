@@ -227,6 +227,36 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
         }
 
+        public bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        {
+            bool RetVal = false;
+            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            {
+                if (regionID == region.RegionID)
+                    continue;
+                Scene scene = FindSceneByUUID(region.RegionID);
+                Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
+                if (chatModule != null)
+                {
+                    chatModule.DeliverChatToAvatars(ChatSourceType.Object, message);
+                    RetVal = true;
+                }
+            }
+            return RetVal;
+        }
+
+        protected Scene FindSceneByUUID(UUID regionID)
+        {
+            foreach (Scene scene in m_Scenes)
+            {
+                if (scene.RegionInfo.RegionID == regionID)
+                {
+                    return scene;
+                }
+            }
+            return null;
+        }
+
         #endregion
     }
 }

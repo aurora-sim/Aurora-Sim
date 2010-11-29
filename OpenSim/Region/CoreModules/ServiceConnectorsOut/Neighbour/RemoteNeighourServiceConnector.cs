@@ -212,6 +212,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_LocalService.SendCloseChildAgent(agentID, regionID, regionsToClose);
         }
 
+        public override bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        {
+            return m_LocalService.SendChatMessageToNeighbors(message, regionID);
+        }
+
         #endregion
     }
 }

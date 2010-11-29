@@ -70,5 +70,13 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionID">The region the client is currently in</param>
         /// <param name="regionsToClose">Regions in which to close the child agents</param>
         void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose);
+
+        /// <summary>
+        /// Send a chat message to the surrounding neighbors
+        /// </summary>
+        /// <param name="message">The message to send</param>
+        /// <param name="regionInfo">The regionInfo of the current region</param>
+        /// <returns>Whether to still send the message locally</returns>
+        bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID);
     }
 }

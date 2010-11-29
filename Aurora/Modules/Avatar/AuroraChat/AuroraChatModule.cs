@@ -333,148 +333,13 @@ namespace Aurora.Modules
             if(c.Range > m_maxChatDistance) //Check for max distance
                 c.Range = m_maxChatDistance;
 
-            //Send the message into neighboring regions if possible
-
-            if (c.Type == ChatTypeEnum.Say ||
-                c.Type == ChatTypeEnum.Whisper ||
-                c.Type == ChatTypeEnum.Shout ||
-                c.Type == ChatTypeEnum.Custom)
+            OpenSim.Services.Interfaces.INeighbourService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighbourService>();
+            if (neighborService != null)
             {
-                int distance = c.Type == ChatTypeEnum.Say ? m_saydistance :
-                    (c.Type == ChatTypeEnum.Whisper) ? m_whisperdistance :
-                    (c.Type == ChatTypeEnum.Custom) ? (int)c.Range : m_shoutdistance;
-
-                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
-                    c.Position.Y,
-                    c.Position.Z), Cardinals.E))
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X,
-                    c.Position.Y + distance,
-                    c.Position.Z), Cardinals.N))
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
-                    c.Position.Y + distance,
-                    c.Position.Z), Cardinals.E) &&
-                    ((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
-                    c.Position.Y + distance,
-                    c.Position.Z), Cardinals.N))
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X + distance,
-                    c.Position.Y,
-                    c.Position.Z), Cardinals.E) && c.Position.Y - distance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX + 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X -= Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.Y - distance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - distance < 0 && c.Position.Y - distance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY - 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - distance < 0)
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
-                if (c.Position.X - distance < 0 && ((Scene)c.Scene).TestBorderCross(new Vector3(c.Position.X,
-                    c.Position.Y + distance,
-                    c.Position.Z), Cardinals.N))
-                {
-                    Scene scene = FindScene(c.Scene.RegionInfo.RegionLocX - 1, c.Scene.RegionInfo.RegionLocY + 1);
-                    if (scene != null)
-                    {
-                        OSChatMessage newC = c.Copy();
-                        newC.Scene = scene;
-                        Vector3 Position = newC.Position;
-                        Position.X += Constants.RegionSize;
-                        Position.Y -= Constants.RegionSize;
-                        newC.Position = Position;
-                        DeliverChatToAvatars(ChatSourceType.Object, newC);
-                        Sent = true;
-                    }
-                }
+                Sent = neighborService.SendChatMessageToNeighbors(c, c.Scene.RegionInfo.RegionID);
             }
-            if(!Sent)
+
+            if (!Sent)
                 DeliverChatToAvatars(ChatSourceType.Object, c);
         }
 
@@ -497,7 +362,7 @@ namespace Aurora.Modules
             return null;
         }
 
-        protected virtual void DeliverChatToAvatars(ChatSourceType sourceType, OSChatMessage c)
+        public virtual void DeliverChatToAvatars(ChatSourceType sourceType, OSChatMessage c)
         {
             string fromName = c.From;
             UUID fromID = UUID.Zero;

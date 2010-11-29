@@ -33,5 +33,7 @@ namespace Aurora.Framework
                                                   UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                   string message, ChatSourceType src, float Range);
         void OnChatFromWorld(Object sender, OSChatMessage c);
+
+        void DeliverChatToAvatars(ChatSourceType chatSourceType, OSChatMessage message);
     }
 }

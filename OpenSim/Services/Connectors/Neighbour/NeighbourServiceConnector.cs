@@ -229,5 +229,10 @@ namespace OpenSim.Services.Connectors
         {
             return new List<GridRegion>();
         }
+
+        public virtual bool SendChatMessageToNeighbors(OSChatMessage message, UUID regionID)
+        {
+            return false;
+        }
     }
 }
