@@ -38,6 +38,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Communications;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using OpenSim.Server.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -94,13 +95,9 @@ namespace OpenSim.Services.Connectors
 
         public List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
+            List<GridRegion> informedRegions = new List<GridRegion>();
             string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
-
-            WebRequest HelloNeighbourRequest = WebRequest.Create(uri);
-            HelloNeighbourRequest.Method = "POST";
-            HelloNeighbourRequest.ContentType = "application/json";
-            HelloNeighbourRequest.Timeout = 10000;
 
             // Fill it in
             OSDMap args = null;
@@ -111,77 +108,21 @@ namespace OpenSim.Services.Connectors
             catch (Exception e)
             {
                 m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
-                return new List<GridRegion>();
+                return informedRegions;
             }
-            
-            string strBuffer = "";
-            byte[] buffer = new byte[1];
+
+            string queryString = ServerUtils.BuildQueryString(Util.OSDToDictionary(args));
+            string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
+
+            if (reply == "")
+                return informedRegions;
+
+            OSDMap replyMap = Util.DictionaryToOSD(ServerUtils.ParseXmlResponse(reply));
+
             try
             {
-                strBuffer = OSDParser.SerializeJsonString(args);
-                UTF8Encoding str = new UTF8Encoding();
-                buffer = str.GetBytes(strBuffer);
-
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[REST COMMS]: Exception thrown on serialization of HelloNeighbour: {0}", e.Message);
-                return new List<GridRegion>();
-            }
-
-            Stream os = null;
-            try
-            { // send the Post
-                HelloNeighbourRequest.ContentLength = buffer.Length;   //Count bytes to send
-                os = HelloNeighbourRequest.GetRequestStream();
-                os.Write(buffer, 0, strBuffer.Length);         //Send it
-                //m_log.InfoFormat("[REST COMMS]: Posted HelloNeighbour request to remote sim {0}", uri);
-            }
-            catch (Exception ex)
-            {
-                m_log.InfoFormat("[REST COMMS]: Unable to send HelloNeighbour to {0}: {1}", region.RegionName, ex.Message);
-                return new List<GridRegion>();
-            }
-            finally
-            {
-                if (os != null)
-                    os.Close();
-            }
-
-            // Let's wait for the response
-            //m_log.Info("[REST COMMS]: Waiting for a reply after DoHelloNeighbourCall");
-
-            StreamReader sr = null;
-            string reply = "";
-            try
-            {
-                WebResponse webResponse = HelloNeighbourRequest.GetResponse();
-                if (webResponse == null)
-                {
-                    m_log.Info("[REST COMMS]: Null reply on DoHelloNeighbourCall post");
-                }
-
-                sr = new StreamReader(webResponse.GetResponseStream());
-                reply = sr.ReadToEnd().Trim();
-                //m_log.InfoFormat("[REST COMMS]: DoHelloNeighbourCall reply was {0} ", reply);
-            }
-            catch (Exception ex)
-            {
-                m_log.InfoFormat("[REST COMMS]: exception on reply of DoHelloNeighbourCall {0}", ex.Message);
-                return new List<GridRegion>();
-            }
-            finally
-            {
-                if (sr != null)
-                    sr.Close();
-            }
-
-            List<GridRegion> informedRegions = new List<GridRegion>();
-            try
-            {
-                OSDMap replyMap = (OSDMap)OSDParser.DeserializeJson(reply);
                 if (replyMap == null)
-                    return new List<GridRegion>();
+                    return new informedRegions;
 
                 //Didn't inform, return now
                 if (!replyMap.ContainsKey("success") || !replyMap["success"].AsBoolean())
@@ -203,8 +144,6 @@ namespace OpenSim.Services.Connectors
             }
 
             return informedRegions;
-
         }
-
     }
 }

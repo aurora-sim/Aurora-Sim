@@ -34,15 +34,6 @@ using System.Xml.Serialization;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
-    public class SynchronousRestObjectPoster
-    {
-        [Obsolete]
-        public static TResponse BeginPostObject<TRequest, TResponse>(string verb, string requestUrl, TRequest obj)
-        {
-            return SynchronousRestObjectRequester.MakeRequest<TRequest, TResponse>(verb, requestUrl, obj);
-        }
-    }
-
     public class SynchronousRestObjectRequester
     {
         /// <summary>

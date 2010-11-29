@@ -84,20 +84,32 @@ namespace OpenSim.Server.Handlers.Neighbour
             // unused: m_AllowForeignGuests = foreignGuests;
         }
 
-        public override byte[] Handle(string path, Stream request,
+        public override byte[] Handle(string path, Stream requestData,
                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             byte[] result = new byte[0];
 
-            UUID regionID;
-            string action;
-            ulong regionHandle;
-            if (RestHandlerUtils.GetParams(path, out regionID, out regionHandle, out action))
-            {
-                m_log.InfoFormat("[RegionPostHandler]: Invalid parameters for neighbour message {0}", path);
-                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
-                httpResponse.StatusDescription = "Invalid parameters for neighbour message " + path;
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
 
+            Dictionary<string, object> request =
+                        ServerUtils.ParseQueryString(body);
+
+            OSDMap args = Util.DictionaryToOSD(request);
+
+            // retrieve the region
+            RegionInfo aRegion = new RegionInfo();
+            try
+            {
+                aRegion.UnpackRegionInfoData(args);
+            }
+            catch (Exception ex)
+            {
+                m_log.InfoFormat("[RegionPostHandler]: exception on unpacking region info {0}", ex.Message);
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                httpResponse.StatusDescription = "Problems with data deserialization";
                 return result;
             }
 
@@ -113,36 +125,13 @@ namespace OpenSim.Server.Handlers.Neighbour
                     return result;
                 }
                 // Rethink this
-                //if (!m_AuthenticationService.VerifyKey(regionID, authToken))
+                //if (!m_AuthenticationService.VerifyKey(aRegion.RegionID, authToken))
                 //{
                 //    m_log.InfoFormat("[RegionPostHandler]: Authentication failed for neighbour message {0}", path);
                 //    httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 //    return result;
                 //}
-                m_log.DebugFormat("[RegionPostHandler]: Authentication succeeded for {0}", regionID);
-            }
-
-            OSDMap args = Util.GetOSDMap(request, (int)httpRequest.ContentLength);
-            if (args == null)
-            {
-                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
-                httpResponse.StatusDescription = "Unable to retrieve data";
-                m_log.DebugFormat("[RegionPostHandler]: Unable to retrieve data for post {0}", path);
-                return result;
-            }
-
-            // retrieve the region
-            RegionInfo aRegion = new RegionInfo();
-            try
-            {
-                aRegion.UnpackRegionInfoData(args);
-            }
-            catch (Exception ex)
-            {
-                m_log.InfoFormat("[RegionPostHandler]: exception on unpacking region info {0}", ex.Message);
-                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
-                httpResponse.StatusDescription = "Problems with data deserialization";
-                return result;
+                m_log.DebugFormat("[RegionPostHandler]: Authentication succeeded for {0}", aRegion.RegionID);
             }
 
             // Finally!
@@ -166,7 +155,9 @@ namespace OpenSim.Server.Handlers.Neighbour
 
             httpResponse.StatusCode = (int)HttpStatusCode.OK;
 
-            return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(resp));
+            string xmlString = ServerUtils.BuildXmlResponse(Util.OSDToDictionary(resp));
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
     }
 
