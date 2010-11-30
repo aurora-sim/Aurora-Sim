@@ -5576,7 +5576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return String.Empty;
             }
-            return src.Data[index].ToString();
+            return new LSL_String(src.Data[index].ToString());
         }
 
         public LSL_String llList2Key(LSL_List src, int index)
