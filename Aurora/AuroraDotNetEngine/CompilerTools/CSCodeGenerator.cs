@@ -1339,7 +1339,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         void FindLineNumbers(string EventName, string Problem)
         {
-            string testScript = OriginalScript.Replace(" ", "");
+            //string testScript = OriginalScript.Replace(" ", "");
             int lineNumber = 0;
             int charNumber = 0;
             int i = 0;
@@ -2067,6 +2067,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for IfStatement ifs.</returns>
         private string GenerateIfStatement(IfStatement ifs)
         {
+            /*
+             * Test script that was used to make sure that if statements do not fail
+              integer a = 0;
+integer test()
+{
+    a++;
+    return a;
+}
+default
+{
+    state_entry()
+    {
+        if(test() == 0) //1 gets returned here
+        {
+            llSay(0, "Script running. 0");
+        }
+        else if(test() == 1) //2 gets returned here
+        {
+            llSay(0, "Script running. 2");
+        }
+        else
+        {
+            // 3 gets returned here
+            if(test() == 4)
+            {
+                llSay(0, "Script running. 4");
+            }
+            else if(test() == 4)
+            {
+                // It should hit this path
+                llSay(0, "Script running. 2 4");
+            }
+            else
+            {
+              // 5 would be returned here
+                llSay(0, "Script running. else " + test());
+            }
+        }
+    }
+}*/
             string retstr = "";
             string tmpstr = "";
             bool DoBrace = false;
@@ -2111,6 +2151,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     foreach (SYMBOL kid in be.kids)
                         innerRetStr += GenerateNode(kid);
                 }
+                //Force the DumpFunc here so that we put out all of the code before it as it should be
                 tmpstr = DumpFunc(true) + tmpstr + innerRetStr;
             }
             else
@@ -2127,6 +2168,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 tmpstr += GenerateLine("{");
 
             SYMBOL child = (SYMBOL)ifs.kids.Pop();
+            tmpstr += GenerateInnerIfStatement(child);
+//            if (indentHere) m_braceCount--;
+            if (DoBrace)
+                tmpstr += GenerateLine("}");
+
+
+            if (0 < ifs.kids.Count) // do it again for an else
+            {
+                tmpstr += GenerateIndentedLine("else", null);
+                bool DoElseIfBrace = (ifs.kids.Top is IfStatement);
+                if (DoElseIfBrace)
+                    tmpstr += GenerateIndentedLine("{", null);
+                //Because of the enumeration, we HAVE to break else if statements up into something like this...
+                // if .. {}
+                // else { if "the old else if statement" {} else {} }
+                // Messy... but necessary
+
+//                indentHere = ifs.kids.Top is Statement;
+//                if (indentHere) m_braceCount++;
+                DoBrace = !(ifs.kids.Top is CompoundStatement || ifs.kids.Top is IfStatement);
+                if (DoBrace)
+                    tmpstr += GenerateLine("{");
+
+                SYMBOL childChild = (SYMBOL)ifs.kids.Pop();
+                tmpstr += GenerateInnerIfStatement(childChild);
+
+
+                if (DoBrace)
+                    tmpstr += GenerateLine("}");
+                //close the else statement
+                if (DoElseIfBrace)
+                    tmpstr += GenerateLine("}");
+
+
+//                if (indentHere) m_braceCount--;
+            }
+
+            retstr += DumpFunc(marc) + tmpstr.ToString();
+
+            return retstr.ToString();
+        }
+
+        private string GenerateInnerIfStatement(SYMBOL child)
+        {
+            string tmpstr = "";
             if (child is CompoundStatement)
             {
                 CompoundStatement cs = child as CompoundStatement;
@@ -2198,33 +2284,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else
                 tmpstr += GenerateNode(child);
-//            if (indentHere) m_braceCount--;
-            if (DoBrace)
-                tmpstr += GenerateLine("}");
-
-
-            if (0 < ifs.kids.Count) // do it again for an else
-            {
-                tmpstr += GenerateIndentedLine("else", ifs);
-
-//                indentHere = ifs.kids.Top is Statement;
-//                if (indentHere) m_braceCount++;
-                DoBrace = !(ifs.kids.Top is CompoundStatement || ifs.kids.Top is IfStatement);
-                if (DoBrace)
-                    tmpstr += GenerateLine("{");
-
-                tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
-
-                if (DoBrace)
-                    tmpstr += GenerateLine("}");
-
-
-//                if (indentHere) m_braceCount--;
-            }
-
-            retstr += DumpFunc(marc) + tmpstr.ToString();
-
-            return retstr.ToString();
+            return tmpstr;
         }
 
         /// <summary>

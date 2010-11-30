@@ -605,7 +605,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        DisplayUserNotification(ex.ToString(), "compiling", reupload, true);
+                        DisplayUserNotification(ex.Message, "compiling", reupload, true);
                         return;
                     }
                 }
