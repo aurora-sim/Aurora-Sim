@@ -401,9 +401,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Delete all assemblies
                     Compiler.RecreateDirectory();
+                    ScriptData[] scripts = ScriptProtection.GetAllScripts();
                     ScriptProtection.Reset(true);
                     IScriptDataConnector con = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IScriptDataConnector>();
-                    foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+                    foreach (ScriptData ID in scripts)
                     {
                         try
                         {
