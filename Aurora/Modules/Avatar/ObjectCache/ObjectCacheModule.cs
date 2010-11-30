@@ -67,6 +67,7 @@ namespace Aurora.Modules
             scene.UnregisterModuleInterface<IObjectCache>(this);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.SceneGraph.OnObjectRemove -= SceneGraph_OnObjectRemove;
         }
 
         public virtual void RegionLoaded(Scene scene)
@@ -128,6 +129,23 @@ namespace Aurora.Modules
 
         void SceneGraph_OnObjectRemove(EntityBase obj)
         {
+            /*lock(ObjectCacheAgents)
+            {
+                Dictionary<UUID, Dictionary<uint, uint>> NewAgentCaches = new Dictionary<UUID, Dictionary<uint, uint>>();
+                foreach(KeyValuePair<UUID, Dictionary<uint, uint>> kvp in ObjectCacheAgents)
+                {
+                     if(kvp.Value.ContainsKey(obj.LocalId))
+                     {
+                         Dictionary<uint, uint> cache = kvp.Value;
+                         cache.Remove(obj.LocalId);
+                         NewAgentCaches.Add(kvp.Key, cache);
+                     }
+                }
+                foreach(KeyValuePair<UUID, Dictionary<uint, uint>> kvp in NewAgentCaches)
+                {
+                     ObjectCacheAgents[kvp.Key] = kvp.Value;
+                }
+            }*/
         }
 
         #endregion
