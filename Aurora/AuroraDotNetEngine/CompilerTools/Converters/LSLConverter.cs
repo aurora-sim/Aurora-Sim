@@ -24,10 +24,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void Initialise(Compiler compiler)
         {
-            if (compiler.m_XEngineLSLCompatabilityModule)
-                LSL_Converter = new LegacyCSCodeGenerator();
-            else
-                LSL_Converter = new CSCodeGenerator(compiler.m_SLCompatabilityMode, null);
+            LSL_Converter = new CSCodeGenerator(null);
         }
 
         public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)

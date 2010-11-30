@@ -615,7 +615,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
                     {
-                        if (!scenePresence.IsChildAgent)
+                        //if (!scenePresence.IsChildAgent)
                             avatars.Add(scenePresence);
                     });
                 }

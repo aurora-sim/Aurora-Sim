@@ -4606,13 +4606,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (m_teleportModule != null)
                 {
-                    object[] request = new object[5];
+                    /*object[] request = new object[5];
                     request[0] = sp;
                     request[1] = regionHandle;
                     request[2] = position;
                     request[3] = lookAt;
                     request[4] = teleportFlags;
-                    Util.FireAndForget(FireTeleportAsync, request);
+                    Util.FireAndForget(FireTeleportAsync, request);*/
+                    m_teleportModule.Teleport(sp, regionHandle, position, lookAt, teleportFlags);
                 }
                 else
                 {

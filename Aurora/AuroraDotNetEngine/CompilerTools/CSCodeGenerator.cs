@@ -152,7 +152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
-        public CSCodeGenerator(bool compatMode, IScriptApi[] Apis)
+        public CSCodeGenerator(IScriptApi[] Apis)
         {
             #region DTFunctions
 

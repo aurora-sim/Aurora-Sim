@@ -414,15 +414,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                SetInTransit(sp.UUID);
-
                 // Let's send a full update of the agent. This is a synchronous call.
                 AgentData agent = new AgentData();
                 sp.CopyTo(agent);
                 agent.Position = position;
                 SetCallbackURL(agent, sp.Scene.RegionInfo);
-
-                //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Updating agent...");
 
                 if (!UpdateAgent(reg, finalDestination, agent))
                 {
@@ -451,8 +447,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                 // that the client contacted the destination before we send the attachments and close things here.
-                
+
                 //OpenSim sucks at callbacks, disable it for now
+
+                SetInTransit(sp.UUID);
                 
                 if (!WaitForCallback(sp.UUID))
                 {

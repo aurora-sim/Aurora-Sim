@@ -920,7 +920,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             // Create the LLUDPClient
             LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
-            IClientAPI existingClient;
+            //IClientAPI existingClient;
             //Check to make sure we arn't handling two or more circuit codes from the client if we are lagging badly.
             // The block below this (TryGetClient) works as well, but if it gets locked up before the client is added to the scene, it will break
             //  So we do this check here as well.
@@ -930,8 +930,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return false;
                 m_handlingCircuitCodes.Add(agentID);
             }
-
-            if (!m_scene.TryGetClient(agentID, out existingClient))
+            ScenePresence SP;
+            if (!m_scene.TryGetScenePresence(agentID, out SP) && (SP == null || (SP != null && SP.IsChildAgent)))
             {
                 // Create the LLClientView
                 LLClientView client = new LLClientView(remoteEndPoint, m_scene, this, udpClient, sessionInfo, agentID, sessionID, circuitCode);

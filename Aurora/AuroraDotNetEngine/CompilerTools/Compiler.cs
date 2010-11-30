@@ -74,9 +74,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private List<string> m_errors = new List<string>();
 
-        public bool m_XEngineLSLCompatabilityModule = false;
-        public bool m_SLCompatabilityMode = false;
-
         private static UInt64 scriptCompileCounter = 0; // And a counter
 
         public UInt64 ScriptCompileCounter
@@ -101,9 +98,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // Get some config
             WriteScriptSourceToDebugFile = m_scriptEngine.Config.GetBoolean("WriteScriptSourceToDebugFile", false);
             CompileWithDebugInformation = m_scriptEngine.Config.GetBoolean("CompileWithDebugInformation", true);
-
-            m_XEngineLSLCompatabilityModule = m_scriptEngine.Config.GetBoolean("XEngineCompatabilityMode", false);
-            m_SLCompatabilityMode = m_scriptEngine.Config.GetBoolean("SLCompatabilityMode", false);
 
             MakeFilePrefixSafe();
             //Set up the compilers
