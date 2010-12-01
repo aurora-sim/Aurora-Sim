@@ -558,9 +558,11 @@ namespace OpenSim.Services.CapsService
             string response = "";
             lock (m_fetchLock)
             {
+                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                map.Add("agent_id", OSD.FromUUID(AgentID));
+                OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
-                    string inventoryitemstr = "";
                     Hashtable inventoryhash = (Hashtable)foldersrequested[i];
 
                     LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
@@ -577,25 +579,39 @@ namespace OpenSim.Services.CapsService
                     if (item != null)
                     {
                         LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
-                        inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
-
-                        response += inventoryitemstr;
+                        OpenMetaverse.StructuredData.OSDMap itemMap = new OpenMetaverse.StructuredData.OSDMap();
+                        itemMap.Add("agent_id", reply.agent_id);
+                        itemMap.Add("asset_id", reply.asset_id);
+                        itemMap.Add("created_at", reply.created_at);
+                        itemMap.Add("desc", reply.desc);
+                        itemMap.Add("flags", reply.flags);
+                        itemMap.Add("inv_type", reply.inv_type);
+                        itemMap.Add("item_id", reply.item_id);
+                        itemMap.Add("name", reply.name);
+                        itemMap.Add("parent_id", reply.parent_id);
+                        OpenMetaverse.StructuredData.OSDMap permissions = new OpenMetaverse.StructuredData.OSDMap();
+                        permissions.Add("base_mask", reply.permissions.base_mask);
+                        permissions.Add("creator_id", reply.permissions.creator_id);
+                        permissions.Add("everyone_mask", reply.permissions.everyone_mask);
+                        permissions.Add("group_id", reply.permissions.group_id);
+                        permissions.Add("group_mask", reply.permissions.group_mask);
+                        permissions.Add("is_owner_group", reply.permissions.is_owner_group);
+                        permissions.Add("last_owner_id", reply.permissions.last_owner_id);
+                        permissions.Add("next_owner_mask", reply.permissions.next_owner_mask);
+                        permissions.Add("owner_id", reply.permissions.owner_id);
+                        permissions.Add("owner_mask", reply.permissions.owner_mask);
+                        itemMap.Add("permissions", permissions);
+                        OpenMetaverse.StructuredData.OSDMap sales = new OpenMetaverse.StructuredData.OSDMap();
+                        itemMap.Add("sale_price", reply.sale_info.sale_price);
+                        itemMap.Add("sale_type", reply.sale_info.sale_type);
+                        itemMap.Add("sale_info", sales);
+                        itemMap.Add("type", reply.type);
+                        items.Add(itemMap);
                     }
                 }
+                map.Add("items", items);
 
-
-                if (response.Length == 0)
-                {
-                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                    // Therefore, I'm concluding that the client only has so many threads available to do requests
-                    // and when a thread stalls..   is stays stalled.
-                    // Therefore we need to return something valid
-                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
-                }
-                else
-                {
-                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-                }
+                response = OSDParser.SerializeLLSDXmlString(map);
 
                 //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
                 //m_log.Debug("[CAPS] "+response);
@@ -638,9 +654,11 @@ namespace OpenSim.Services.CapsService
             string response = "";
             lock (m_fetchLock)
             {
+                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                map.Add("agent_id", OSD.FromUUID(AgentID));
+                OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
-                    string inventoryitemstr = "";
                     Hashtable inventoryhash = (Hashtable)foldersrequested[i];
 
                     LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
@@ -663,25 +681,39 @@ namespace OpenSim.Services.CapsService
                     if (item != null)
                     {
                         LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
-                        inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
-
-                        response += inventoryitemstr;
+                        OpenMetaverse.StructuredData.OSDMap itemMap = new OpenMetaverse.StructuredData.OSDMap();
+                        itemMap.Add("agent_id", reply.agent_id);
+                        itemMap.Add("asset_id", reply.asset_id);
+                        itemMap.Add("created_at", reply.created_at);
+                        itemMap.Add("desc", reply.desc);
+                        itemMap.Add("flags", reply.flags);
+                        itemMap.Add("inv_type", reply.inv_type);
+                        itemMap.Add("item_id", reply.item_id);
+                        itemMap.Add("name", reply.name);
+                        itemMap.Add("parent_id", reply.parent_id);
+                        OpenMetaverse.StructuredData.OSDMap permissions = new OpenMetaverse.StructuredData.OSDMap();
+                        permissions.Add("base_mask", reply.permissions.base_mask);
+                        permissions.Add("creator_id", reply.permissions.creator_id);
+                        permissions.Add("everyone_mask", reply.permissions.everyone_mask);
+                        permissions.Add("group_id", reply.permissions.group_id);
+                        permissions.Add("group_mask", reply.permissions.group_mask);
+                        permissions.Add("is_owner_group", reply.permissions.is_owner_group);
+                        permissions.Add("last_owner_id", reply.permissions.last_owner_id);
+                        permissions.Add("next_owner_mask", reply.permissions.next_owner_mask);
+                        permissions.Add("owner_id", reply.permissions.owner_id);
+                        permissions.Add("owner_mask", reply.permissions.owner_mask);
+                        itemMap.Add("permissions", permissions);
+                        OpenMetaverse.StructuredData.OSDMap sales = new OpenMetaverse.StructuredData.OSDMap();
+                        itemMap.Add("sale_price", reply.sale_info.sale_price);
+                        itemMap.Add("sale_type", reply.sale_info.sale_type);
+                        itemMap.Add("sale_info", sales);
+                        itemMap.Add("type", reply.type);
+                        items.Add(itemMap);
                     }
                 }
+                map.Add("items", items);
 
-
-                if (response.Length == 0)
-                {
-                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                    // Therefore, I'm concluding that the client only has so many threads available to do requests
-                    // and when a thread stalls..   is stays stalled.
-                    // Therefore we need to return something valid
-                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
-                }
-                else
-                {
-                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-                }
+                response = OSDParser.SerializeLLSDXmlString(map);
 
                 //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
                 //m_log.Debug("[CAPS] "+response);
