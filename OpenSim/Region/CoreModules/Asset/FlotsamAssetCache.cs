@@ -89,6 +89,7 @@ namespace Flotsam.RegionModules.AssetCache
         private TimeSpan m_MemoryExpiration = TimeSpan.Zero;
         private TimeSpan m_FileExpiration = TimeSpan.Zero;
         private TimeSpan m_FileExpirationCleanupTimer = TimeSpan.Zero;
+        private object m_fileCacheLock = new Object();
 
         private static int m_CacheDirectoryTiers = 1;
         private static int m_CacheDirectoryTierLen = 3;
@@ -264,17 +265,21 @@ namespace Flotsam.RegionModules.AssetCache
 
                 try
                 {
-                    // If the file is already cached, don't cache it, just touch it so access time is updated
-                    if (File.Exists(filename))
+                    lock (m_fileCacheLock)
                     {
-                        File.SetLastAccessTime(filename, DateTime.Now);
-                    } else { 
-                        
-                        // Once we start writing, make sure we flag that we're writing
-                        // that object to the cache so that we don't try to write the 
-                        // same file multiple times.
-                        lock (m_CurrentlyWriting)
+                        // If the file is already cached, don't cache it, just touch it so access time is updated
+                        if (File.Exists(filename))
                         {
+                            File.SetLastAccessTime(filename, DateTime.Now);
+                        }
+                        else
+                        {
+
+                            // Once we start writing, make sure we flag that we're writing
+                            // that object to the cache so that we don't try to write the 
+                            // same file multiple times.
+                            lock (m_CurrentlyWriting)
+                            {
 #if WAIT_ON_INPROGRESS_REQUESTS
                             if (m_CurrentlyWriting.ContainsKey(filename))
                             {
@@ -286,20 +291,21 @@ namespace Flotsam.RegionModules.AssetCache
                             }
 
 #else
-                            if (m_CurrentlyWriting.Contains(filename))
-                            {
-                                return;
-                            }
-                            else
-                            {
-                                m_CurrentlyWriting.Add(filename);
-                            }
+                                if (m_CurrentlyWriting.Contains(filename))
+                                {
+                                    return;
+                                }
+                                else
+                                {
+                                    m_CurrentlyWriting.Add(filename);
+                                }
 #endif
 
-                        }
+                            }
 
-                        Util.FireAndForget(
-                            delegate { WriteFileCache(filename, asset); });
+                            Util.FireAndForget(
+                                delegate { WriteFileCache(filename, asset); });
+                        }
                     }
                 }
                 catch (Exception e)
@@ -322,38 +328,41 @@ namespace Flotsam.RegionModules.AssetCache
             else
             {
                 string filename = GetFileName(id);
-                if (File.Exists(filename))
+                lock (m_fileCacheLock)
                 {
-                    FileStream stream = null;
-                    try
+                    if (File.Exists(filename))
                     {
-                        stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        BinaryFormatter bformatter = new BinaryFormatter();
+                        FileStream stream = null;
+                        try
+                        {
+                            stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+                            BinaryFormatter bformatter = new BinaryFormatter();
 
-                        asset = (AssetBase)bformatter.Deserialize(stream);
+                            asset = (AssetBase)bformatter.Deserialize(stream);
 
-                        UpdateMemoryCache(id, asset);
+                            UpdateMemoryCache(id, asset);
 
-                        m_DiskHits++;
-                    }
-                    catch (System.Runtime.Serialization.SerializationException e)
-                    {
-                        LogException(e);
+                            m_DiskHits++;
+                        }
+                        catch (System.Runtime.Serialization.SerializationException e)
+                        {
+                            LogException(e);
 
-                        // If there was a problem deserializing the asset, the asset may 
-                        // either be corrupted OR was serialized under an old format 
-                        // {different version of AssetBase} -- we should attempt to
-                        // delete it and re-cache
-                        File.Delete(filename);
-                    }
-                    catch (Exception e)
-                    {
-                        LogException(e);
-                    }
-                    finally
-                    {
-                        if (stream != null)
-                            stream.Close();
+                            // If there was a problem deserializing the asset, the asset may 
+                            // either be corrupted OR was serialized under an old format 
+                            // {different version of AssetBase} -- we should attempt to
+                            // delete it and re-cache
+                            File.Delete(filename);
+                        }
+                        catch (Exception e)
+                        {
+                            LogException(e);
+                        }
+                        finally
+                        {
+                            if (stream != null)
+                                stream.Close();
+                        }
                     }
                 }
 
@@ -420,9 +429,12 @@ namespace Flotsam.RegionModules.AssetCache
             try
             {
                 string filename = GetFileName(id);
-                if (File.Exists(filename))
+                lock (m_fileCacheLock)
                 {
-                    File.Delete(filename);
+                    if (File.Exists(filename))
+                    {
+                        File.Delete(filename);
+                    }
                 }
 
                 if (m_MemoryCacheEnabled)
@@ -439,9 +451,12 @@ namespace Flotsam.RegionModules.AssetCache
             if (m_LogLevel >= 2)
                 m_log.Debug("[FLOTSAM ASSET CACHE]: Clearing Cache.");
 
-            foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
+            lock (m_fileCacheLock)
             {
-                Directory.Delete(dir);
+                foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
+                {
+                    Directory.Delete(dir, true);
+                }
             }
 
             if (m_MemoryCacheEnabled)
@@ -487,9 +502,12 @@ namespace Flotsam.RegionModules.AssetCache
 
             foreach (string file in Directory.GetFiles(dir))
             {
-                if (File.GetLastAccessTime(file) < purgeLine)
+                lock (m_fileCacheLock)
                 {
-                    File.Delete(file);
+                    if (File.GetLastAccessTime(file) < purgeLine)
+                    {
+                        File.Delete(file);
+                    }
                 }
             }
 
@@ -499,15 +517,18 @@ namespace Flotsam.RegionModules.AssetCache
                 CleanExpiredFiles(subdir, purgeLine);
             }
 
-            // Check if a tier directory is empty, if so, delete it
-            int dirSize = Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Length;
-            if (dirSize == 0)
+            lock (m_fileCacheLock)
             {
-                Directory.Delete(dir);
-            }
-            else if (dirSize >= m_CacheWarnAt)
-            {
-                m_log.WarnFormat("[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration", dir, dirSize);
+                // Check if a tier directory is empty, if so, delete it
+                int dirSize = Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Length;
+                if (dirSize == 0)
+                {
+                    Directory.Delete(dir);
+                }
+                else if (dirSize >= m_CacheWarnAt)
+                {
+                    m_log.WarnFormat("[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration", dir, dirSize);
+                }
             }
         }
 
@@ -553,18 +574,23 @@ namespace Flotsam.RegionModules.AssetCache
 
             try
             {
-                if (!Directory.Exists(directory))
+                lock (m_fileCacheLock)
                 {
-                    Directory.CreateDirectory(directory);
+                    if (!Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    stream = File.Open(tempname, FileMode.Create);
+                    BinaryFormatter bformatter = new BinaryFormatter();
+                    bformatter.Serialize(stream, asset);
+                    stream.Close();
+
+                    // Now that it's written, rename it so that it can be found.
+                    if (File.Exists(filename))
+                        File.Delete(filename);
+                    File.Move(tempname, filename);
                 }
-
-                stream = File.Open(tempname, FileMode.Create);
-                BinaryFormatter bformatter = new BinaryFormatter();
-                bformatter.Serialize(stream, asset);
-                stream.Close();
-
-                // Now that it's written, rename it so that it can be found.
-                File.Move(tempname, filename);
 
                 if (m_LogLevel >= 2)
                     m_log.DebugFormat("[FLOTSAM ASSET CACHE]: Cache Stored :: {0}", asset.ID);
@@ -634,13 +660,18 @@ namespace Flotsam.RegionModules.AssetCache
         private void StampRegionStatusFile(UUID RegionID)
         {
             string RegionCacheStatusFile = Path.Combine(m_CacheDirectory, "RegionStatus_" + RegionID.ToString() + ".fac");
-            if (File.Exists(RegionCacheStatusFile))
+            lock (m_fileCacheLock)
             {
-                File.SetLastWriteTime(RegionCacheStatusFile, DateTime.Now);
-            }
-            else
-            {
-                File.WriteAllText(RegionCacheStatusFile, "Please do not delete this file unless you are manually clearing your Flotsam Asset Cache.");
+                if (!Directory.Exists(m_CacheDirectory))
+                    Directory.CreateDirectory(m_CacheDirectory);
+                if (File.Exists(RegionCacheStatusFile))
+                {
+                    File.SetLastWriteTime(RegionCacheStatusFile, DateTime.Now);
+                }
+                else
+                {
+                    File.WriteAllText(RegionCacheStatusFile, "Please do not delete this file unless you are manually clearing your Flotsam Asset Cache.");
+                }
             }
         }
 
@@ -695,27 +726,30 @@ namespace Flotsam.RegionModules.AssetCache
         /// </summary>
         private void ClearFileCache()
         {
-            foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
+            lock (m_fileCacheLock)
             {
-                try
+                foreach (string dir in Directory.GetDirectories(m_CacheDirectory))
                 {
-                    Directory.Delete(dir, true);
+                    try
+                    {
+                        Directory.Delete(dir, true);
+                    }
+                    catch (Exception e)
+                    {
+                        LogException(e);
+                    }
                 }
-                catch (Exception e)
-                {
-                    LogException(e);
-                }
-            }
 
-            foreach (string file in Directory.GetFiles(m_CacheDirectory))
-            {
-                try
+                foreach (string file in Directory.GetFiles(m_CacheDirectory))
                 {
-                    File.Delete(file);
-                }
-                catch (Exception e)
-                {
-                    LogException(e);
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception e)
+                    {
+                        LogException(e);
+                    }
                 }
             }
         }
