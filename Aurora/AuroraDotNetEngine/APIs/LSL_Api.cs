@@ -261,14 +261,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<SceneObjectPart> ret = new List<SceneObjectPart>();
             ret.Add(m_host);
 
-            switch (linkType)
+            if (linkType == ScriptBaseClass.LINK_SET)
             {
-            case ScriptBaseClass.LINK_SET:
                 if (m_host.ParentGroup != null)
                     return new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 return ret;
+            }
 
-            case ScriptBaseClass.LINK_ROOT:
+            if (linkType == ScriptBaseClass.LINK_ROOT)
+            {
                 if (m_host.ParentGroup != null)
                 {
                     ret = new List<SceneObjectPart>();
@@ -276,28 +277,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return ret;
                 }
                 return ret;
+            }
 
-            case ScriptBaseClass.LINK_ALL_OTHERS:
-                if (m_host.ParentGroup ==  null)
+            if (linkType == ScriptBaseClass.LINK_ALL_OTHERS)
+            {
+                if (m_host.ParentGroup == null)
                     return new List<SceneObjectPart>();
                 ret = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
                 return ret;
+            }
 
-            case ScriptBaseClass.LINK_ALL_CHILDREN:
-                if (m_host.ParentGroup ==  null)
+            if (linkType == ScriptBaseClass.LINK_ALL_CHILDREN)
+            {
+                if (m_host.ParentGroup == null)
                     return new List<SceneObjectPart>();
                 ret = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
                 if (ret.Contains(m_host.ParentGroup.RootPart))
                     ret.Remove(m_host.ParentGroup.RootPart);
                 return ret;
+            }
 
-            case ScriptBaseClass.LINK_THIS:
+            if (linkType == ScriptBaseClass.LINK_THIS)
+            {
                 return ret;
+            }
 
-            default:
-                if (linkType < 0 || m_host.ParentGroup ==  null)
+            else
+            {
+                if (linkType < 0 || m_host.ParentGroup == null)
                     return new List<SceneObjectPart>();
                 ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
                 if (target is SceneObjectPart)
@@ -307,9 +316,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ret = new List<SceneObjectPart>();
                     ret.Add(target as SceneObjectPart);
                 }
-                    //No allowing scene presences to be found here
+                //No allowing scene presences to be found here
                 return ret;
-
             }
         }
 
@@ -318,66 +326,74 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ISceneEntity> ret = new List<ISceneEntity>();
             ret.Add(m_host);
 
-            switch (linkType)
+            if (linkType == ScriptBaseClass.LINK_SET)
             {
-                case ScriptBaseClass.LINK_SET:
-                    if (m_host.ParentGroup != null)
-                    {
-                        List<SceneObjectPart> parts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                        return parts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart,ISceneEntity>(delegate(SceneObjectPart part)
-                            {
-                                return (ISceneEntity)part;
-                            }));
-                    }
-                    return ret;
+                if (m_host.ParentGroup != null)
+                {
+                    List<SceneObjectPart> parts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
+                    return parts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                        {
+                            return (ISceneEntity)part;
+                        }));
+                }
+                return ret;
+            }
 
-                case ScriptBaseClass.LINK_ROOT:
-                    if (m_host.ParentGroup != null)
-                    {
-                        ret = new List<ISceneEntity>();
-                        ret.Add(m_host.ParentGroup.RootPart);
-                        return ret;
-                    }
-                    return ret;
-
-                case ScriptBaseClass.LINK_ALL_OTHERS:
-                    if (m_host.ParentGroup == null)
-                        return new List<ISceneEntity>();
-                    List < SceneObjectPart > sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                    ret = sceneobjectparts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
-                            {
-                                return (ISceneEntity)part;
-                            }));
-                    if (ret.Contains(m_host))
-                        ret.Remove(m_host);
-                    return ret;
-
-                case ScriptBaseClass.LINK_ALL_CHILDREN:
-                    if (m_host.ParentGroup == null)
-                        return new List<ISceneEntity>();
-                    List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
-                    ret = children.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
-                    {
-                        return (ISceneEntity)part;
-                    }));
-                    if (ret.Contains(m_host.ParentGroup.RootPart))
-                        ret.Remove(m_host.ParentGroup.RootPart);
-                    return ret;
-
-                case ScriptBaseClass.LINK_THIS:
-                    return ret;
-
-                default:
-                    if (linkType < 0 || m_host.ParentGroup == null)
-                        return new List<ISceneEntity>();
-                    ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
-                    if (target == null)
-                        return new List<ISceneEntity>();
+            if (linkType == ScriptBaseClass.LINK_ROOT)
+            {
+                if (m_host.ParentGroup != null)
+                {
                     ret = new List<ISceneEntity>();
-                    ret.Add(target);
-                    
+                    ret.Add(m_host.ParentGroup.RootPart);
                     return ret;
+                }
+                return ret;
+            }
 
+            if (linkType == ScriptBaseClass.LINK_ALL_OTHERS)
+            {
+                if (m_host.ParentGroup == null)
+                    return new List<ISceneEntity>();
+                List<SceneObjectPart> sceneobjectparts = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
+                ret = sceneobjectparts.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                        {
+                            return (ISceneEntity)part;
+                        }));
+                if (ret.Contains(m_host))
+                    ret.Remove(m_host);
+                return ret;
+            }
+
+            if (linkType == ScriptBaseClass.LINK_ALL_CHILDREN)
+            {
+                if (m_host.ParentGroup == null)
+                    return new List<ISceneEntity>();
+                List<SceneObjectPart> children = new List<SceneObjectPart>(m_host.ParentGroup.ChildrenList);
+                ret = children.ConvertAll<ISceneEntity>(new Converter<SceneObjectPart, ISceneEntity>(delegate(SceneObjectPart part)
+                {
+                    return (ISceneEntity)part;
+                }));
+                if (ret.Contains(m_host.ParentGroup.RootPart))
+                    ret.Remove(m_host.ParentGroup.RootPart);
+                return ret;
+            }
+
+            if (linkType == ScriptBaseClass.LINK_THIS)
+            {
+                return ret;
+            }
+
+            else
+            {
+                if (linkType < 0 || m_host.ParentGroup == null)
+                    return new List<ISceneEntity>();
+                ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                if (target == null)
+                    return new List<ISceneEntity>();
+                ret = new List<ISceneEntity>();
+                ret.Add(target);
+
+                return ret;
             }
         }
 
@@ -1428,72 +1444,89 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetStatus(int status)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
             // m_log.Debug(m_host.ToString() + " status is " + m_host.GetEffectiveObjectFlags().ToString());
-            switch (status)
+            if (status == ScriptBaseClass.STATUS_PHYSICS)
             {
-                case ScriptBaseClass.STATUS_PHYSICS:
-                    if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics)
-                    {
-                        return 1;
-                    }
+                if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics)
+                {
+                    return 1;
+                }
+                return 0;
+            }
+
+            else if (status == ScriptBaseClass.STATUS_PHANTOM)
+            {
+                if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom)
+                {
+                    return 1;
+                }
+                return 0;
+            }
+
+            else if (status == ScriptBaseClass.STATUS_CAST_SHADOWS)
+            {
+                if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.CastShadows) == (uint)PrimFlags.CastShadows)
+                {
+                    return 1;
+                }
+                return 0;
+            }
+
+            else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB)
+            {
+                if (m_host.GetBlockGrab())
+                    return 1;
+                else
                     return 0;
+            }
 
-                case ScriptBaseClass.STATUS_PHANTOM:
-                    if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom)
-                    {
-                        return 1;
-                    }
+            else if (status == ScriptBaseClass.STATUS_DIE_AT_EDGE)
+            {
+                if (m_host.GetDieAtEdge())
+                    return 1;
+                else
                     return 0;
+            }
 
-                case ScriptBaseClass.STATUS_CAST_SHADOWS:
-                    if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.CastShadows) == (uint)PrimFlags.CastShadows)
-                    {
-                        return 1;
-                    }
+            else if (status == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
+            {
+                if (m_host.GetReturnAtEdge())
+                    return 1;
+                else
                     return 0;
+            }
 
-                case ScriptBaseClass.STATUS_BLOCK_GRAB:
-                    if (m_host.GetBlockGrab())
-                        return 1;
-                    else
-                        return 0;
+            else if (status == ScriptBaseClass.STATUS_ROTATE_X)
+            {
+                if (m_host.GetAxisRotation(2) == 2)
+                    return 1;
+                else
+                    return 0;
+            }
 
-                case ScriptBaseClass.STATUS_DIE_AT_EDGE:
-                    if (m_host.GetDieAtEdge())
-                        return 1;
-                    else
-                        return 0;
+            else if (status == ScriptBaseClass.STATUS_ROTATE_Y)
+            {
+                if (m_host.GetAxisRotation(4) == 4)
+                    return 1;
+                else
+                    return 0;
+            }
 
-                case ScriptBaseClass.STATUS_RETURN_AT_EDGE:
-                    if (m_host.GetReturnAtEdge())
-                        return 1;
-                    else
-                        return 0;
+            else if (status == ScriptBaseClass.STATUS_ROTATE_Z)
+            {
+                if (m_host.GetAxisRotation(8) == 8)
+                    return 1;
+                else
+                    return 0;
+            }
 
-                case ScriptBaseClass.STATUS_ROTATE_X:
-                    if (m_host.GetAxisRotation(2) == 2)
-                        return 1;
-                    else
-                        return 0;
-
-                case ScriptBaseClass.STATUS_ROTATE_Y:
-                    if (m_host.GetAxisRotation(4) == 4)
-                        return 1;
-                    else
-                        return 0;
-
-                case ScriptBaseClass.STATUS_ROTATE_Z:
-                    if (m_host.GetAxisRotation(8) == 8)
-                        return 1;
-                    else
-                        return 0;
-
-                case ScriptBaseClass.STATUS_SANDBOX:
-                    if (m_host.GetStatusSandbox())
-                        return 1;
-                    else
-                        return 0;
+            else if (status == ScriptBaseClass.STATUS_SANDBOX)
+            {
+                if (m_host.GetStatusSandbox())
+                    return 1;
+                else
+                    return 0;
             }
             return 0;
         }
@@ -4278,14 +4311,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return; // Fail silently if attached
             SceneObjectPart childPrim = null;
 
-            switch (linknum)
+            if(linknum == ScriptBaseClass.LINK_ROOT)
             {
-                case ScriptBaseClass.LINK_ROOT:
-                    break;
-                case ScriptBaseClass.LINK_SET:
-                case ScriptBaseClass.LINK_ALL_OTHERS:
-                case ScriptBaseClass.LINK_ALL_CHILDREN:
-                case ScriptBaseClass.LINK_THIS:
+            }
+            else if(linknum == ScriptBaseClass.LINK_SET ||
+                ScriptBaseClass.LINK_ALL_OTHERS ||
+                ScriptBaseClass.LINK_ALL_CHILDREN ||
+                ScriptBaseClass.LINK_THIS)
+            {
                     foreach (SceneObjectPart part in parentPrim.ChildrenList)
                     {
                         if (part.UUID != m_host.UUID)
@@ -4294,18 +4327,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             break;
                         }
                     }
-                    break;
-                default:
+            }
+            else
+            {
                     ISceneEntity target = m_host.ParentGroup.GetLinkNumPart(linknum);
                     if (target is SceneObjectPart)
                     {
                         childPrim = target as SceneObjectPart;
                     }
                     else
-                        break;
+                        return;
                     if (childPrim.UUID == m_host.UUID)
                         childPrim = null;
-                    break;
             }
 
             if (linknum == ScriptBaseClass.LINK_ROOT)
@@ -6712,7 +6745,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             SetParticleSystem(m_host, rules);
         }
 
-        private void SetParticleSystem(SceneObjectPart part, LSL_List rules) 
+        private void SetParticleSystem(SceneObjectPart part, LSL_List rules)
         {
             if (rules.Length == 0)
             {
@@ -6728,147 +6761,167 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 for (int i = 0; i < rules.Length; i += 2)
                 {
-                    switch (rules.GetLSLIntegerItem(i))
+                    LSL_Integer rule = rules.GetLSLIntegerItem(i);
+                    if (rule == (int)ScriptBaseClass.PSYS_PART_FLAGS)
                     {
-                        case (int)ScriptBaseClass.PSYS_PART_FLAGS:
-                            prules.PartDataFlags = (Primitive.ParticleSystem.ParticleDataFlags)(uint)rules.GetLSLIntegerItem(i + 1);
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_START_COLOR:
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.PartStartColor.R = (float)tempv.x;
-                            prules.PartStartColor.G = (float)tempv.y;
-                            prules.PartStartColor.B = (float)tempv.z;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_START_ALPHA:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.PartStartColor.A = tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_END_COLOR:
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.PartEndColor.R = (float)tempv.x;
-                            prules.PartEndColor.G = (float)tempv.y;
-                            prules.PartEndColor.B = (float)tempv.z;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_END_ALPHA:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.PartEndColor.A = tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_START_SCALE:
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.PartStartScaleX = (float)tempv.x;
-                            prules.PartStartScaleY = (float)tempv.y;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_END_SCALE:
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.PartEndScaleX = (float)tempv.x;
-                            prules.PartEndScaleY = (float)tempv.y;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_PART_MAX_AGE:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.PartMaxAge = tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_ACCEL:
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.PartAcceleration.X = (float)tempv.x;
-                            prules.PartAcceleration.Y = (float)tempv.y;
-                            prules.PartAcceleration.Z = (float)tempv.z;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_PATTERN:
-                            int tmpi = (int)rules.GetLSLIntegerItem(i + 1);
-                            prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
-                            break;
-
-                        // PSYS_SRC_INNERANGLE and PSYS_SRC_ANGLE_BEGIN use the same variables. The
-                        // PSYS_SRC_OUTERANGLE and PSYS_SRC_ANGLE_END also use the same variable. The
-                        // client tells the difference between the two by looking at the 0x02 bit in
-                        // the PartFlags variable.
-                        case (int)ScriptBaseClass.PSYS_SRC_INNERANGLE:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.InnerAngle = (float)tempf;
-                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.OuterAngle = (float)tempf;
-                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
-                             break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_TEXTURE:
-                            prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1));
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_BURST_RATE:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstRate = (float)tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT:
-                            prules.BurstPartCount = (byte)(int)rules.GetLSLIntegerItem(i + 1);
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_BURST_RADIUS:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstRadius = (float)tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstSpeedMin = (float)tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstSpeedMax = (float)tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_MAX_AGE:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.MaxAge = (float)tempf;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_TARGET_KEY:
-                            UUID key = UUID.Zero;
-                            if (UUID.TryParse(rules.Data[i + 1].ToString(), out key))
-                            {
-                                prules.Target = key;
-                            }
-                            else
-                            {
-                                prules.Target = part.UUID;
-                            }
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_OMEGA:
-                            // AL: This is an assumption, since it is the only thing that would match.
-                            tempv = rules.GetVector3Item(i + 1);
-                            prules.AngularVelocity.X = (float)tempv.x;
-                            prules.AngularVelocity.Y = (float)tempv.y;
-                            prules.AngularVelocity.Z = (float)tempv.z;
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.InnerAngle = (float)tempf;
-                            prules.PartFlags |= 0x02; // Set new angle format.
-                            break;
-
-                        case (int)ScriptBaseClass.PSYS_SRC_ANGLE_END:
-                            tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.OuterAngle = (float)tempf;
-                            prules.PartFlags |= 0x02; // Set new angle format.
-                            break;
+                        prules.PartDataFlags = (Primitive.ParticleSystem.ParticleDataFlags)(uint)rules.GetLSLIntegerItem(i + 1);
                     }
 
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_START_COLOR)
+                    {
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.PartStartColor.R = (float)tempv.x;
+                        prules.PartStartColor.G = (float)tempv.y;
+                        prules.PartStartColor.B = (float)tempv.z;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_START_ALPHA)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.PartStartColor.A = tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_COLOR)
+                    {
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.PartEndColor.R = (float)tempv.x;
+                        prules.PartEndColor.G = (float)tempv.y;
+                        prules.PartEndColor.B = (float)tempv.z;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_ALPHA)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.PartEndColor.A = tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_START_SCALE)
+                    {
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.PartStartScaleX = (float)tempv.x;
+                        prules.PartStartScaleY = (float)tempv.y;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_SCALE)
+                    {
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.PartEndScaleX = (float)tempv.x;
+                        prules.PartEndScaleY = (float)tempv.y;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_PART_MAX_AGE)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.PartMaxAge = tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ACCEL)
+                    {
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.PartAcceleration.X = (float)tempv.x;
+                        prules.PartAcceleration.Y = (float)tempv.y;
+                        prules.PartAcceleration.Z = (float)tempv.z;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_PATTERN)
+                    {
+                        int tmpi = (int)rules.GetLSLIntegerItem(i + 1);
+                        prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
+                    }
+
+                    // PSYS_SRC_INNERANGLE and PSYS_SRC_ANGLE_BEGIN use the same variables. The
+                    // PSYS_SRC_OUTERANGLE and PSYS_SRC_ANGLE_END also use the same variable. The
+                    // client tells the difference between the two by looking at the 0x02 bit in
+                    // the PartFlags variable.
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_INNERANGLE)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.InnerAngle = (float)tempf;
+                        prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.OuterAngle = (float)tempf;
+                        prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_TEXTURE)
+                    {
+                        prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1));
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RATE)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.BurstRate = (float)tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT)
+                    {
+                        prules.BurstPartCount = (byte)(int)rules.GetLSLIntegerItem(i + 1);
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RADIUS)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.BurstRadius = (float)tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.BurstSpeedMin = (float)tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.BurstSpeedMax = (float)tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_MAX_AGE)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.MaxAge = (float)tempf;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_TARGET_KEY)
+                    {
+                        UUID key = UUID.Zero;
+                        if (UUID.TryParse(rules.Data[i + 1].ToString(), out key))
+                        {
+                            prules.Target = key;
+                        }
+                        else
+                        {
+                            prules.Target = part.UUID;
+                        }
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_OMEGA)
+                    {
+                        // AL: This is an assumption, since it is the only thing that would match.
+                        tempv = rules.GetVector3Item(i + 1);
+                        prules.AngularVelocity.X = (float)tempv.x;
+                        prules.AngularVelocity.Y = (float)tempv.y;
+                        prules.AngularVelocity.Z = (float)tempv.z;
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.InnerAngle = (float)tempf;
+                        prules.PartFlags |= 0x02; // Set new angle format.
+                    }
+
+                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_END)
+                    {
+                        tempf = (float)rules.GetLSLFloatItem(i + 1);
+                        prules.OuterAngle = (float)tempf;
+                        prules.PartFlags |= 0x02; // Set new angle format.
+                    }
                 }
                 prules.CRC = 1;
 
@@ -7742,433 +7795,458 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int face;
                 LSL_Vector v;
 
-                switch (code)
+                if (code == (int)ScriptBaseClass.PRIM_NAME)
                 {
-                    case (int)ScriptBaseClass.PRIM_NAME:
-                        if (remain < 1)
-                            return;
+                    if (remain < 1)
+                        return;
 
-                        string name = rules.Data[idx++].ToString();
-                        if (part is SceneObjectPart)
-                            (part as SceneObjectPart).Name = name;
-                        break;
+                    string name = rules.Data[idx++].ToString();
+                    if (part is SceneObjectPart)
+                        (part as SceneObjectPart).Name = name;
+                }
 
-                    case (int)ScriptBaseClass.PRIM_DESC:
-                        if (remain < 1)
-                            return;
+                else if (code == (int)ScriptBaseClass.PRIM_DESC)
+                {
+                    if (remain < 1)
+                        return;
 
-                        string desc = rules.Data[idx++].ToString();
-                        if (part is SceneObjectPart)
-                            (part as SceneObjectPart).Description = desc;
-                        break;
+                    string desc = rules.Data[idx++].ToString();
+                    if (part is SceneObjectPart)
+                        (part as SceneObjectPart).Description = desc;
+                }
 
-                    case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
-                        if (remain < 1)
-                            return;
-                        LSL_Rotation lr = rules.GetQuaternionItem(idx++);
-                        if (part is SceneObjectPart)
-                            SetRot((part as SceneObjectPart), Rot2Quaternion(lr));
-                        break;
+                else if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
+                {
+                    if (remain < 1)
+                        return;
+                    LSL_Rotation lr = rules.GetQuaternionItem(idx++);
+                    if (part is SceneObjectPart)
+                        SetRot((part as SceneObjectPart), Rot2Quaternion(lr));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_POSITION:
-                        if (remain < 1)
-                            return;
+                else if (code == (int)ScriptBaseClass.PRIM_POSITION)
+                {
+                    if (remain < 1)
+                        return;
 
-                        v=rules.GetVector3Item(idx++);
-                        if (part is SceneObjectPart)
-                            SetPos(part as SceneObjectPart, v);
-                        else if (part is ScenePresence) 
+                    v = rules.GetVector3Item(idx++);
+                    if (part is SceneObjectPart)
+                        SetPos(part as SceneObjectPart, v);
+                    else if (part is ScenePresence)
+                    {
+                        (part as ScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
+                        (part as ScenePresence).SendTerseUpdateToAllClients();
+                    }
+                }
+                else if (code == (int)ScriptBaseClass.PRIM_SIZE)
+                {
+                    if (remain < 1)
+                        return;
+
+
+                    v = rules.GetVector3Item(idx++);
+                    if (part is SceneObjectPart)
+                        SetScale(part as SceneObjectPart, v);
+
+                }
+                else if (code == (int)ScriptBaseClass.PRIM_ROTATION)
+                {
+                    if (remain < 1)
+                        return;
+
+                    if (part is SceneObjectPart) { }
+                    else return;
+
+                    LSL_Rotation q = rules.GetQuaternionItem(idx++);
+                    // try to let this work as in SL...
+                    if ((part as SceneObjectPart).ParentID == 0)
+                    {
+                        // special case: If we are root, rotate complete SOG to new rotation
+                        SetRot(part as SceneObjectPart, Rot2Quaternion(q));
+                    }
+                    else
+                    {
+                        // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
+                        SceneObjectGroup group = (part as SceneObjectPart).ParentGroup;
+                        if (group != null) // a bit paranoid, maybe
                         {
-                            (part as ScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
-                            (part as ScenePresence).SendTerseUpdateToAllClients();
-                        }
-                        break;
-                    case (int)ScriptBaseClass.PRIM_SIZE:
-                        if (remain < 1)
-                            return;
-
-                        
-                        v=rules.GetVector3Item(idx++);
-                        if (part is SceneObjectPart)
-                            SetScale(part as SceneObjectPart, v);
-
-                        break;
-                    case (int)ScriptBaseClass.PRIM_ROTATION:
-                        if (remain < 1)
-                            return;
-
-                        if (part is SceneObjectPart){}
-                        else return;
-
-                        LSL_Rotation q = rules.GetQuaternionItem(idx++);
-                        // try to let this work as in SL...
-                        if ((part as SceneObjectPart).ParentID == 0)
-                        {
-                            // special case: If we are root, rotate complete SOG to new rotation
-                            SetRot(part as SceneObjectPart, Rot2Quaternion(q));
-                        }
-                        else
-                        {
-                            // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                            SceneObjectGroup group = (part as SceneObjectPart).ParentGroup;
-                            if (group != null) // a bit paranoid, maybe
+                            SceneObjectPart rootPart = group.RootPart;
+                            if (rootPart != null) // again, better safe than sorry
                             {
-                                SceneObjectPart rootPart = group.RootPart;
-                                if (rootPart != null) // again, better safe than sorry
-                                {
-                                    SetRot((part as SceneObjectPart), rootPart.RotationOffset * Rot2Quaternion(q));
-                                }
+                                SetRot((part as SceneObjectPart), rootPart.RotationOffset * Rot2Quaternion(q));
                             }
                         }
+                    }
 
-                        break;
+                }
 
-                    case (int)ScriptBaseClass.PRIM_TYPE:
-                        if (remain < 3)
+                else if (code == (int)ScriptBaseClass.PRIM_TYPE)
+                {
+                    if (remain < 3)
+                        return;
+
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+
+                    code = (int)rules.GetLSLIntegerItem(idx++);
+
+                    remain = rules.Length - idx;
+                    float hollow;
+                    LSL_Vector twist;
+                    LSL_Vector taper_b;
+                    LSL_Vector topshear;
+                    float revolutions;
+                    float radiusoffset;
+                    float skew;
+                    LSL_Vector holesize;
+                    LSL_Vector profilecut;
+
+                    if (code == (int)ScriptBaseClass.PRIM_TYPE_BOX)
+                    {
+                        if (remain < 6)
                             return;
 
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-
-                        code = (int)rules.GetLSLIntegerItem(idx++);
-
-                        remain = rules.Length - idx;
-                        float hollow;
-                        LSL_Vector twist;
-                        LSL_Vector taper_b;
-                        LSL_Vector topshear;
-                        float revolutions;
-                        float radiusoffset;
-                        float skew;
-                        LSL_Vector holesize;
-                        LSL_Vector profilecut;
-
-                        switch (code)
-                        {
-                            case (int)ScriptBaseClass.PRIM_TYPE_BOX:
-                                if (remain < 6)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++);
-                                v = rules.GetVector3Item(idx++); // cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 1);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                if (remain < 6)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); // cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-                                (part as SceneObjectPart).Shape.ProfileShape = ProfileShape.Circle;
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 0);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_PRISM:
-                                if (remain < 6)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); //cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 3);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_SPHERE:
-                                if (remain < 5)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); // cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++); // dimple
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, 5);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_TORUS:
-                                if (remain < 11)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); //cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                holesize = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-                                profilecut = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++); // taper_a
-                                revolutions = (float)rules.GetLSLFloatItem(idx++);
-                                radiusoffset = (float)rules.GetLSLFloatItem(idx++);
-                                skew = (float)rules.GetLSLFloatItem(idx++);
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
-                                                        revolutions, radiusoffset, skew, 0);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_TUBE:
-                                if (remain < 11)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); //cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                holesize = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-                                profilecut = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++); // taper_a
-                                revolutions = (float)rules.GetLSLFloatItem(idx++);
-                                radiusoffset = (float)rules.GetLSLFloatItem(idx++);
-                                skew = (float)rules.GetLSLFloatItem(idx++);
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
-                                                        revolutions, radiusoffset, skew, 1);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_RING:
-                                if (remain < 11)
-                                    return;
-
-                                face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
-                                v = rules.GetVector3Item(idx++); //cut
-                                hollow = (float)rules.GetLSLFloatItem(idx++);
-                                twist = rules.GetVector3Item(idx++);
-                                holesize = rules.GetVector3Item(idx++);
-                                topshear = rules.GetVector3Item(idx++);
-                                profilecut = rules.GetVector3Item(idx++);
-                                taper_b = rules.GetVector3Item(idx++); // taper_a
-                                revolutions = (float)rules.GetLSLFloatItem(idx++);
-                                radiusoffset = (float)rules.GetLSLFloatItem(idx++);
-                                skew = (float)rules.GetLSLFloatItem(idx++);
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b, 
-                                                        revolutions, radiusoffset, skew, 3);
-                                break;
-
-                            case (int)ScriptBaseClass.PRIM_TYPE_SCULPT:
-                                if (remain < 2)
-                                    return;
-
-                                string map = rules.Data[idx++].ToString();
-                                face = (int)rules.GetLSLIntegerItem(idx++); // type
-                                (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                                SetPrimitiveShapeParams((part as SceneObjectPart), map, face);
-                                break;
-                        }
-
-                        break;
-
-                    case (int)ScriptBaseClass.PRIM_TEXTURE:
-                        if (remain < 5)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-                        string tex=rules.Data[idx++].ToString();
-                        LSL_Vector repeats=rules.GetVector3Item(idx++);
-                        LSL_Vector offsets=rules.GetVector3Item(idx++);
-                        double rotation=(double)rules.GetLSLFloatItem(idx++);
-
-                        SetTexture((part as SceneObjectPart), tex, face);
-                        ScaleTexture((part as SceneObjectPart), repeats.x, repeats.y, face);
-                        OffsetTexture((part as SceneObjectPart), offsets.x, offsets.y, face);
-                        RotateTexture((part as SceneObjectPart), rotation, face);
-
-                        break;
-
-                    case (int)ScriptBaseClass.PRIM_COLOR:
-                        if (remain < 3)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                        face=(int)rules.GetLSLIntegerItem(idx++);
-                        LSL_Vector color=rules.GetVector3Item(idx++);
-                        double alpha=(double)rules.GetLSLFloatItem(idx++);
-
-                        (part as SceneObjectPart).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
-                        SetAlpha((part as SceneObjectPart), alpha, face);
-
-                        break;
-                    
-                    case (int)ScriptBaseClass.PRIM_FLEXIBLE:
-                        if (remain < 7)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                        bool flexi = rules.GetLSLIntegerItem(idx++);
-                        int softness = rules.GetLSLIntegerItem(idx++);
-                        float gravity = (float)rules.GetLSLFloatItem(idx++);
-                        float friction = (float)rules.GetLSLFloatItem(idx++);
-                        float wind = (float)rules.GetLSLFloatItem(idx++);
-                        float tension = (float)rules.GetLSLFloatItem(idx++);
-                        LSL_Vector force = rules.GetVector3Item(idx++);
-
-                        SetFlexi((part as SceneObjectPart), flexi, softness, gravity, friction, wind, tension, force);
-
-                        break;
-                    
-                    case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
-                        if (remain < 5)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                        bool light = rules.GetLSLIntegerItem(idx++);
-                        LSL_Vector lightcolor = rules.GetVector3Item(idx++);
-                        float intensity = (float)rules.GetLSLFloatItem(idx++);
-                        float radius = (float)rules.GetLSLFloatItem(idx++);
-                        float falloff = (float)rules.GetLSLFloatItem(idx++);
-
-                        SetPointLight((part as SceneObjectPart), light, lightcolor, intensity, radius, falloff);
-
-                        break;
-                    
-                    case (int)ScriptBaseClass.PRIM_GLOW:
-                        if (remain < 2)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                        face = rules.GetLSLIntegerItem(idx++);
-                        float glow = (float)rules.GetLSLFloatItem(idx++);
-
-                        SetGlow((part as SceneObjectPart), face, glow);
-
-                        break;
-                    
-                    case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
-                        if (remain < 3)
-                            return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
                         face = (int)rules.GetLSLIntegerItem(idx++);
-                        int shiny = (int)rules.GetLSLIntegerItem(idx++);
-                        Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
+                        v = rules.GetVector3Item(idx++); // cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
 
-                        SetShiny((part as SceneObjectPart), face, shiny, bump);
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 1);
 
-                        break;
-                    
-                     case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
-                         if (remain < 2)
-                             return;
-                         if (part is SceneObjectPart) { }
-                         else
-                             return;
-                         face = rules.GetLSLIntegerItem(idx++);
-                         bool st = rules.GetLSLIntegerItem(idx++);
-                         SetFullBright((part as SceneObjectPart), face, st);
-                         break;
-                    
-                     case (int)ScriptBaseClass.PRIM_MATERIAL:
-                         if (remain < 1)
-                             return;
-                         if (part is SceneObjectPart) { }
-                         else
-                             return;
-                         int mat = rules.GetLSLIntegerItem(idx++);
-                         if (mat < 0 || mat > 7)
-                             return;
+                    }
 
-                         (part as SceneObjectPart).Material = Convert.ToByte(mat);
-                         break;
-                    
-                     case (int)ScriptBaseClass.PRIM_PHANTOM:
-                        if (remain < 1)
-                             return;
-                        if (part is SceneObjectPart) { }
-                        else
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_CYLINDER)
+                    {
+                        if (remain < 6)
                             return;
-                         string ph = rules.Data[idx++].ToString();
-                         bool phantom;
 
-                         if (ph.Equals("1"))
-                             phantom = true;
-                         else
-                             phantom = false;
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); // cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
+                        (part as SceneObjectPart).Shape.ProfileShape = ProfileShape.Circle;
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 0);
 
-                         (part as SceneObjectPart).ScriptSetPhantomStatus(phantom);
-                         break;
-                    
-                     case (int)ScriptBaseClass.PRIM_PHYSICS:
-                        if (remain < 1)
-                             return;
-                        if (part is SceneObjectPart) { }
-                        else
+                    }
+
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_PRISM)
+                    {
+                        if (remain < 6)
                             return;
-                         string phy = rules.Data[idx++].ToString();
-                         bool physics;
 
-                         if (phy.Equals("1"))
-                             physics = true;
-                         else
-                             physics = false;
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); //cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 3);
 
-                         (part as SceneObjectPart).ScriptSetPhysicsStatus(physics);
-                         break;
-                    
-                    case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
-                        if (remain < 1)
+                    }
+
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_SPHERE)
+                    {
+                        if (remain < 5)
                             return;
-                        if (part is SceneObjectPart) { }
-                        else
+
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); // cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++); // dimple
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, 5);
+
+                    }
+
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_TORUS)
+                    {
+                        if (remain < 11)
                             return;
-                        string temp = rules.Data[idx++].ToString();
-                        bool tempOnRez;
 
-                        if (temp.Equals("1"))
-                            tempOnRez = true;
-                        else
-                            tempOnRez = false;
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); //cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        holesize = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
+                        profilecut = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++); // taper_a
+                        revolutions = (float)rules.GetLSLFloatItem(idx++);
+                        radiusoffset = (float)rules.GetLSLFloatItem(idx++);
+                        skew = (float)rules.GetLSLFloatItem(idx++);
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                                                revolutions, radiusoffset, skew, 0);
+                    }
 
-                        (part as SceneObjectPart).ScriptSetTemporaryStatus(tempOnRez);
-                        break;
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_TUBE)
+                    {
+                        if (remain < 11)
+                            return;
 
-                    case (int)ScriptBaseClass.PRIM_TEXGEN:
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); //cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        holesize = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
+                        profilecut = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++); // taper_a
+                        revolutions = (float)rules.GetLSLFloatItem(idx++);
+                        radiusoffset = (float)rules.GetLSLFloatItem(idx++);
+                        skew = (float)rules.GetLSLFloatItem(idx++);
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                                                revolutions, radiusoffset, skew, 1);
+                    }
+
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_RING)
+                    {
+                        if (remain < 11)
+                            return;
+
+                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        v = rules.GetVector3Item(idx++); //cut
+                        hollow = (float)rules.GetLSLFloatItem(idx++);
+                        twist = rules.GetVector3Item(idx++);
+                        holesize = rules.GetVector3Item(idx++);
+                        topshear = rules.GetVector3Item(idx++);
+                        profilecut = rules.GetVector3Item(idx++);
+                        taper_b = rules.GetVector3Item(idx++); // taper_a
+                        revolutions = (float)rules.GetLSLFloatItem(idx++);
+                        radiusoffset = (float)rules.GetLSLFloatItem(idx++);
+                        skew = (float)rules.GetLSLFloatItem(idx++);
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                                                revolutions, radiusoffset, skew, 3);
+                    }
+
+                    else if (code == (int)ScriptBaseClass.PRIM_TYPE_SCULPT)
+                    {
                         if (remain < 2)
                             return;
-                        if (part is SceneObjectPart) { }
-                        else
-                            return;
-                            //face,type
-                        face = rules.GetLSLIntegerItem(idx++);
-                        int style = rules.GetLSLIntegerItem(idx++);
-                        SetTexGen((part as SceneObjectPart), face, style);
-                        break;
-                    case (int)ScriptBaseClass.PRIM_TEXT:
-                        if (remain < 3)
-                            return;
-                        string primText = rules.GetLSLStringItem(idx++);
-                        LSL_Vector primTextColor = rules.GetVector3Item(idx++);
-                        LSL_Float primTextAlpha = rules.GetLSLFloatItem(idx++);
-                        Vector3 av3 = new Vector3(Util.Clip((float)primTextColor.x, 0.0f, 1.0f),
-                                      Util.Clip((float)primTextColor.y, 0.0f, 1.0f),
-                                      Util.Clip((float)primTextColor.z, 0.0f, 1.0f));
-                        (part as SceneObjectPart).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
 
-                        break;
+                        string map = rules.Data[idx++].ToString();
+                        face = (int)rules.GetLSLIntegerItem(idx++); // type
+                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as SceneObjectPart), map, face);
+                    }
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_TEXTURE)
+                {
+                    if (remain < 5)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    string tex = rules.Data[idx++].ToString();
+                    LSL_Vector repeats = rules.GetVector3Item(idx++);
+                    LSL_Vector offsets = rules.GetVector3Item(idx++);
+                    double rotation = (double)rules.GetLSLFloatItem(idx++);
+
+                    SetTexture((part as SceneObjectPart), tex, face);
+                    ScaleTexture((part as SceneObjectPart), repeats.x, repeats.y, face);
+                    OffsetTexture((part as SceneObjectPart), offsets.x, offsets.y, face);
+                    RotateTexture((part as SceneObjectPart), rotation, face);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_COLOR)
+                {
+                    if (remain < 3)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    LSL_Vector color = rules.GetVector3Item(idx++);
+                    double alpha = (double)rules.GetLSLFloatItem(idx++);
+
+                    (part as SceneObjectPart).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
+                    SetAlpha((part as SceneObjectPart), alpha, face);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_FLEXIBLE)
+                {
+                    if (remain < 7)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    bool flexi = rules.GetLSLIntegerItem(idx++);
+                    int softness = rules.GetLSLIntegerItem(idx++);
+                    float gravity = (float)rules.GetLSLFloatItem(idx++);
+                    float friction = (float)rules.GetLSLFloatItem(idx++);
+                    float wind = (float)rules.GetLSLFloatItem(idx++);
+                    float tension = (float)rules.GetLSLFloatItem(idx++);
+                    LSL_Vector force = rules.GetVector3Item(idx++);
+
+                    SetFlexi((part as SceneObjectPart), flexi, softness, gravity, friction, wind, tension, force);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
+                {
+                    if (remain < 5)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    bool light = rules.GetLSLIntegerItem(idx++);
+                    LSL_Vector lightcolor = rules.GetVector3Item(idx++);
+                    float intensity = (float)rules.GetLSLFloatItem(idx++);
+                    float radius = (float)rules.GetLSLFloatItem(idx++);
+                    float falloff = (float)rules.GetLSLFloatItem(idx++);
+
+                    SetPointLight((part as SceneObjectPart), light, lightcolor, intensity, radius, falloff);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_GLOW)
+                {
+                    if (remain < 2)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    face = rules.GetLSLIntegerItem(idx++);
+                    float glow = (float)rules.GetLSLFloatItem(idx++);
+
+                    SetGlow((part as SceneObjectPart), face, glow);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
+                {
+                    if (remain < 3)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    int shiny = (int)rules.GetLSLIntegerItem(idx++);
+                    Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
+
+                    SetShiny((part as SceneObjectPart), face, shiny, bump);
+
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
+                {
+                    if (remain < 2)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    face = rules.GetLSLIntegerItem(idx++);
+                    bool st = rules.GetLSLIntegerItem(idx++);
+                    SetFullBright((part as SceneObjectPart), face, st);
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_MATERIAL)
+                {
+                    if (remain < 1)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    int mat = rules.GetLSLIntegerItem(idx++);
+                    if (mat < 0 || mat > 7)
+                        return;
+
+                    (part as SceneObjectPart).Material = Convert.ToByte(mat);
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
+                {
+                    if (remain < 1)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    string ph = rules.Data[idx++].ToString();
+                    bool phantom;
+
+                    if (ph.Equals("1"))
+                        phantom = true;
+                    else
+                        phantom = false;
+
+                    (part as SceneObjectPart).ScriptSetPhantomStatus(phantom);
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_PHYSICS)
+                {
+                    if (remain < 1)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    string phy = rules.Data[idx++].ToString();
+                    bool physics;
+
+                    if (phy.Equals("1"))
+                        physics = true;
+                    else
+                        physics = false;
+
+                    (part as SceneObjectPart).ScriptSetPhysicsStatus(physics);
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
+                {
+                    if (remain < 1)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    string temp = rules.Data[idx++].ToString();
+                    bool tempOnRez;
+
+                    if (temp.Equals("1"))
+                        tempOnRez = true;
+                    else
+                        tempOnRez = false;
+
+                    (part as SceneObjectPart).ScriptSetTemporaryStatus(tempOnRez);
+                }
+
+                else if (code == (int)ScriptBaseClass.PRIM_TEXGEN)
+                {
+                    if (remain < 2)
+                        return;
+                    if (part is SceneObjectPart) { }
+                    else
+                        return;
+                    //face,type
+                    face = rules.GetLSLIntegerItem(idx++);
+                    int style = rules.GetLSLIntegerItem(idx++);
+                    SetTexGen((part as SceneObjectPart), face, style);
+                }
+                else if (code == (int)ScriptBaseClass.PRIM_TEXT)
+                {
+                    if (remain < 3)
+                        return;
+                    string primText = rules.GetLSLStringItem(idx++);
+                    LSL_Vector primTextColor = rules.GetVector3Item(idx++);
+                    LSL_Float primTextAlpha = rules.GetLSLFloatItem(idx++);
+                    Vector3 av3 = new Vector3(Util.Clip((float)primTextColor.x, 0.0f, 1.0f),
+                                  Util.Clip((float)primTextColor.y, 0.0f, 1.0f),
+                                  Util.Clip((float)primTextColor.z, 0.0f, 1.0f));
+                    (part as SceneObjectPart).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
+
                 }
             }
         }
@@ -8479,210 +8557,211 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List GetLinkPrimitiveParams(SceneObjectPart part, LSL_List rules)
         {
             LSL_List res = new LSL_List();
-            int idx=0;
+            int idx = 0;
             while (idx < rules.Length)
             {
-                int code=(int)rules.GetLSLIntegerItem(idx++);
+                int code = (int)rules.GetLSLIntegerItem(idx++);
                 int remain = rules.Length - idx;
                 Primitive.TextureEntry tex = part.Shape.Textures;
                 int face = 0;
-                if(idx < rules.Length)
+                if (idx < rules.Length)
                     face = (int)rules.GetLSLIntegerItem(idx++);
 
                 Primitive.TextureEntryFace texFace = tex.GetFace((uint)face);
 
-                switch (code)
+                if (code == (int)ScriptBaseClass.PRIM_NAME)
                 {
-                    case (int)ScriptBaseClass.PRIM_NAME:
-                        res.Add(new LSL_Integer(part.Name));
-                        break;
+                    res.Add(new LSL_Integer(part.Name));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_DESC:
-                        res.Add(new LSL_Integer(part.Description));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_DESC)
+                {
+                    res.Add(new LSL_Integer(part.Description));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_MATERIAL:
-                        res.Add(new LSL_Integer(part.Material));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_MATERIAL)
+                {
+                    res.Add(new LSL_Integer(part.Material));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_PHYSICS:
-                        if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) != 0)
-                            res.Add(new LSL_Integer(1));
-                        else
-                            res.Add(new LSL_Integer(0));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_PHYSICS)
+                {
+                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) != 0)
+                        res.Add(new LSL_Integer(1));
+                    else
+                        res.Add(new LSL_Integer(0));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
-                        if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.TemporaryOnRez) != 0)
-                            res.Add(new LSL_Integer(1));
-                        else
-                            res.Add(new LSL_Integer(0));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
+                {
+                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.TemporaryOnRez) != 0)
+                        res.Add(new LSL_Integer(1));
+                    else
+                        res.Add(new LSL_Integer(0));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_PHANTOM:
-                        if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) != 0)
-                            res.Add(new LSL_Integer(1));
-                        else
-                            res.Add(new LSL_Integer(0));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
+                {
+                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) != 0)
+                        res.Add(new LSL_Integer(1));
+                    else
+                        res.Add(new LSL_Integer(0));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_POSITION:
-                        LSL_Vector v = new LSL_Vector(part.AbsolutePosition.X,
-                                                      part.AbsolutePosition.Y,
-                                                      part.AbsolutePosition.Z);
-                        // For some reason, the part.AbsolutePosition.* values do not change if the
-                        // linkset is rotated; they always reflect the child prim's world position
-                        // as though the linkset is unrotated. This is incompatible behavior with SL's
-                        // implementation, so will break scripts imported from there (not to mention it
-                        // makes it more difficult to determine a child prim's actual inworld position).
-                        if (part.ParentID != 0)
-                            v = ((v - llGetRootPosition()) * llGetRootRotation()) + llGetRootPosition();
-                        res.Add(v);
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_POSITION)
+                {
+                    LSL_Vector v = new LSL_Vector(part.AbsolutePosition.X,
+                                                  part.AbsolutePosition.Y,
+                                                  part.AbsolutePosition.Z);
+                    // For some reason, the part.AbsolutePosition.* values do not change if the
+                    // linkset is rotated; they always reflect the child prim's world position
+                    // as though the linkset is unrotated. This is incompatible behavior with SL's
+                    // implementation, so will break scripts imported from there (not to mention it
+                    // makes it more difficult to determine a child prim's actual inworld position).
+                    if (part.ParentID != 0)
+                        v = ((v - llGetRootPosition()) * llGetRootRotation()) + llGetRootPosition();
+                    res.Add(v);
+                }
 
-                    case (int)ScriptBaseClass.PRIM_SIZE:
-                        res.Add(new LSL_Vector(part.Scale.X,
-                                                      part.Scale.Y,
-                                                      part.Scale.Z));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_SIZE)
+                {
+                    res.Add(new LSL_Vector(part.Scale.X,
+                                                  part.Scale.Y,
+                                                  part.Scale.Z));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_ROTATION:
-                        res.Add(GetPartRot(part));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_ROTATION)
+                {
+                    res.Add(GetPartRot(part));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_TYPE:
-                        // implementing box
-                        PrimitiveBaseShape Shape = part.Shape;
-                        int primType = (int)part.GetPrimType();
-                        res.Add(new LSL_Integer(primType));
-                        double topshearx = (double)(sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
-                        double topsheary = (double)(sbyte)Shape.PathShearY / 100.0; // and PathShearY.
-                        switch (primType)
+                if (code == (int)ScriptBaseClass.PRIM_TYPE)
+                {
+                    // implementing box
+                    PrimitiveBaseShape Shape = part.Shape;
+                    int primType = (int)part.GetPrimType();
+                    res.Add(new LSL_Integer(primType));
+                    double topshearx = (double)(sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
+                    double topsheary = (double)(sbyte)Shape.PathShearY / 100.0; // and PathShearY.
+                    if (primType == ScriptBaseClass.PRIM_TYPE_BOX ||
+                         ScriptBaseClass.PRIM_TYPE_CYLINDER ||
+                         ScriptBaseClass.PRIM_TYPE_PRISM)
+                    {
+                        res.Add(new LSL_Integer(Shape.ProfileCurve));
+                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
+                        res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
+                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
+                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0 - 1), 1 - (Shape.PathScaleY / 100.0 - 1), 0));
+                        res.Add(new LSL_Vector(topshearx, topsheary, 0));
+                    }
+
+                    if (primType == ScriptBaseClass.PRIM_TYPE_SPHERE)
+                    {
+                        res.Add(new LSL_Integer(Shape.ProfileCurve));
+                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0, 1 - Shape.PathEnd / 50000.0, 0));
+                        res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
+                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
+                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
+                    }
+
+                    if (primType == ScriptBaseClass.PRIM_TYPE_SCULPT)
+                    {
+                        res.Add(Shape.SculptTexture.ToString());
+                        res.Add(new LSL_Integer(Shape.SculptType));
+                    }
+                    if (primType == ScriptBaseClass.PRIM_TYPE_RING ||
+                     ScriptBaseClass.PRIM_TYPE_TUBE ||
+                     ScriptBaseClass.PRIM_TYPE_TORUS)
+                    {
+                        // holeshape
+                        res.Add(new LSL_Integer(Shape.ProfileCurve));
+
+                        // cut
+                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0, 1 - Shape.PathEnd / 50000.0, 0));
+
+                        // hollow
+                        res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
+
+                        // twist
+                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
+
+                        // vector holesize
+                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0 - 1), 1 - (Shape.PathScaleY / 100.0 - 1), 0));
+
+                        // vector topshear
+                        res.Add(new LSL_Vector(topshearx, topsheary, 0));
+
+                        // vector profilecut
+                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
+
+                        // vector tapera
+                        res.Add(new LSL_Vector(Shape.PathTaperX / 100.0, Shape.PathTaperY / 100.0, 0));
+
+                        // float revolutions
+                        res.Add(new LSL_Float((Shape.PathRevolutions * 0.015) + 1.0)); // Slightly inaccurate, because an unsigned
+                        // byte is being used to represent the entire
+                        // range of floating-point values from 1.0
+                        // through 4.0 (which is how SL does it). 
+
+                        // float radiusoffset
+                        res.Add(new LSL_Float(Shape.PathRadiusOffset / 100.0));
+
+                        // float skew
+                        res.Add(new LSL_Float(Shape.PathSkew / 100.0));
+                    }
+                }
+
+                if (code == (int)ScriptBaseClass.PRIM_TEXTURE)
+                {
+                    if (remain < 1)
+                        return res;
+
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
-                            case ScriptBaseClass.PRIM_TYPE_BOX:
-                            case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                            case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                res.Add(new LSL_Integer(Shape.ProfileCurve));
-                                res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
-                                res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
-                                res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
-                                res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0 - 1), 1 - (Shape.PathScaleY / 100.0 - 1), 0));
-                                res.Add(new LSL_Vector(topshearx, topsheary, 0));
-                                break;
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
 
-                            case ScriptBaseClass.PRIM_TYPE_SPHERE:
-                                res.Add(new LSL_Integer(Shape.ProfileCurve));
-                                res.Add(new LSL_Vector(Shape.PathBegin / 50000.0, 1 - Shape.PathEnd / 50000.0, 0));
-                                res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
-                                res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
-                                res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
-                                break;
-
-                            case ScriptBaseClass.PRIM_TYPE_SCULPT:
-                                res.Add(Shape.SculptTexture.ToString());
-                                res.Add(new LSL_Integer(Shape.SculptType));
-                                break;
-
-                            case ScriptBaseClass.PRIM_TYPE_RING:
-                            case ScriptBaseClass.PRIM_TYPE_TUBE:
-                            case ScriptBaseClass.PRIM_TYPE_TORUS:
-                                // holeshape
-                                res.Add(new LSL_Integer(Shape.ProfileCurve));
-
-                                // cut
-                                res.Add(new LSL_Vector(Shape.PathBegin / 50000.0, 1 - Shape.PathEnd / 50000.0, 0));
-
-                                // hollow
-                                res.Add(new LSL_Float(Shape.ProfileHollow / 50000.0));
-
-                                // twist
-                                res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0, Shape.PathTwist / 100.0, 0));
-
-                                // vector holesize
-                                res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0 - 1), 1 - (Shape.PathScaleY / 100.0 - 1), 0));
-
-                                // vector topshear
-                                res.Add(new LSL_Vector(topshearx, topsheary, 0));
-
-                                // vector profilecut
-                                res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
-
-                                // vector tapera
-                                res.Add(new LSL_Vector(Shape.PathTaperX / 100.0, Shape.PathTaperY / 100.0, 0));
-
-                                // float revolutions
-                                res.Add(new LSL_Float((Shape.PathRevolutions * 0.015) + 1.0)); // Slightly inaccurate, because an unsigned
-                                                                                               // byte is being used to represent the entire
-                                                                                               // range of floating-point values from 1.0
-                                                                                               // through 4.0 (which is how SL does it). 
-                        
-                                // float radiusoffset
-                                res.Add(new LSL_Float(Shape.PathRadiusOffset / 100.0));
-
-                                // float skew
-                                res.Add(new LSL_Float(Shape.PathSkew / 100.0));
-                                break;
+                            res.Add(new LSL_String(texface.TextureID.ToString()));
+                            res.Add(new LSL_Vector(texface.RepeatU,
+                                                   texface.RepeatV,
+                                                   0));
+                            res.Add(new LSL_Vector(texface.OffsetU,
+                                                   texface.OffsetV,
+                                                   0));
+                            res.Add(new LSL_Float(texface.Rotation));
                         }
-                        break;
-
-                    case (int)ScriptBaseClass.PRIM_TEXTURE:
-                        if (remain < 1)
-                            return res;
-
-                        if (face == ScriptBaseClass.ALL_SIDES)
+                    }
+                    else
+                    {
+                        if (face >= 0 && face < GetNumberOfSides(part))
                         {
-                            for (face = 0 ; face < GetNumberOfSides(part); face++)
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
 
-                                res.Add(new LSL_String(texface.TextureID.ToString()));
-                                res.Add(new LSL_Vector(texface.RepeatU,
-                                                       texface.RepeatV,
-                                                       0));
-                                res.Add(new LSL_Vector(texface.OffsetU,
-                                                       texface.OffsetV,
-                                                       0));
-                                res.Add(new LSL_Float(texface.Rotation));
-                            }
+                            res.Add(new LSL_String(texface.TextureID.ToString()));
+                            res.Add(new LSL_Vector(texface.RepeatU,
+                                                   texface.RepeatV,
+                                                   0));
+                            res.Add(new LSL_Vector(texface.OffsetU,
+                                                   texface.OffsetV,
+                                                   0));
+                            res.Add(new LSL_Float(texface.Rotation));
                         }
-                        else
-                        {
-                            if (face >= 0 && face < GetNumberOfSides(part))
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                    }
+                }
 
-                                res.Add(new LSL_String(texface.TextureID.ToString()));
-                                res.Add(new LSL_Vector(texface.RepeatU,
-                                                       texface.RepeatV,
-                                                       0));
-                                res.Add(new LSL_Vector(texface.OffsetU,
-                                                       texface.OffsetV,
-                                                       0));
-                                res.Add(new LSL_Float(texface.Rotation));
-                            }
-                        }
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_COLOR)
+                {
+                    if (remain < 1)
+                        return res;
 
-                    case (int)ScriptBaseClass.PRIM_COLOR:
-                        if (remain < 1)
-                            return res;
+                    face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
-
-                        tex = part.Shape.Textures;
-                        Color4 texcolor;
-                        if (face == ScriptBaseClass.ALL_SIDES)
-                        {
-                            for (face = 0 ; face < GetNumberOfSides(part); face++)
-                            {
-                                texcolor = tex.GetFace((uint)face).RGBA;
-                                res.Add(new LSL_Vector(texcolor.R,
-                                                       texcolor.G,
-                                                       texcolor.B));
-                                res.Add(new LSL_Float(texcolor.A));
-                            }
-                        }
-                        else
+                    tex = part.Shape.Textures;
+                    Color4 texcolor;
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
                             texcolor = tex.GetFace((uint)face).RGBA;
                             res.Add(new LSL_Vector(texcolor.R,
@@ -8690,153 +8769,169 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                    texcolor.B));
                             res.Add(new LSL_Float(texcolor.A));
                         }
-                        break;
+                    }
+                    else
+                    {
+                        texcolor = tex.GetFace((uint)face).RGBA;
+                        res.Add(new LSL_Vector(texcolor.R,
+                                               texcolor.G,
+                                               texcolor.B));
+                        res.Add(new LSL_Float(texcolor.A));
+                    }
+                }
 
-                    case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
-                        if (remain < 1)
-                            return res;
+                if (code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
+                {
+                    if (remain < 1)
+                        return res;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
-                        texFace = tex.GetFace((uint)face);
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    texFace = tex.GetFace((uint)face);
 
-                        if (face == ScriptBaseClass.ALL_SIDES)
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
-                            for (face = 0; face < GetNumberOfSides(part); face++)
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                // Convert Shininess to PRIM_SHINY_*
-                                res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
-                                // PRIM_BUMP_*
-                                res.Add(new LSL_Integer((int)texface.Bump));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            // Convert Shininess to PRIM_SHINY_*
+                            res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
+                            // PRIM_BUMP_*
+                            res.Add(new LSL_Integer((int)texface.Bump));
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (face >= 0 && face < GetNumberOfSides(part))
                         {
-                            if (face >= 0 && face < GetNumberOfSides(part))
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                // Convert Shininess to PRIM_SHINY_*
-                                res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
-                                // PRIM_BUMP_*
-                                res.Add(new LSL_Integer((int)texface.Bump));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            // Convert Shininess to PRIM_SHINY_*
+                            res.Add(new LSL_Integer((uint)texface.Shiny >> 6));
+                            // PRIM_BUMP_*
+                            res.Add(new LSL_Integer((int)texface.Bump));
                         }
-                        break;
+                    }
+                }
 
-                    case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
-                        if (remain < 1)
-                            return res;
+                if (code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
+                {
+                    if (remain < 1)
+                        return res;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
-                        tex = part.Shape.Textures;
-                        if (face == ScriptBaseClass.ALL_SIDES)
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    tex = part.Shape.Textures;
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
-                            for (face = 0; face < GetNumberOfSides(part); face++)
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (face >= 0 && face < GetNumberOfSides(part))
                         {
-                            if (face >= 0 && face < GetNumberOfSides(part))
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
                         }
-                        break;
+                    }
+                }
 
-                    case (int)ScriptBaseClass.PRIM_FLEXIBLE:
-                        PrimitiveBaseShape shape = part.Shape;
+                if (code == (int)ScriptBaseClass.PRIM_FLEXIBLE)
+                {
+                    PrimitiveBaseShape shape = part.Shape;
 
-                        if (shape.FlexiEntry)
-                            res.Add(new LSL_Integer(1));              // active
-                        else
-                            res.Add(new LSL_Integer(0));
-                        res.Add(new LSL_Integer(shape.FlexiSoftness));// softness
-                        res.Add(new LSL_Float(shape.FlexiGravity));   // gravity
-                        res.Add(new LSL_Float(shape.FlexiDrag));      // friction
-                        res.Add(new LSL_Float(shape.FlexiWind));      // wind
-                        res.Add(new LSL_Float(shape.FlexiTension));   // tension
-                        res.Add(new LSL_Vector(shape.FlexiForceX,       // force
-                                               shape.FlexiForceY,
-                                               shape.FlexiForceZ));
-                        break;
+                    if (shape.FlexiEntry)
+                        res.Add(new LSL_Integer(1));              // active
+                    else
+                        res.Add(new LSL_Integer(0));
+                    res.Add(new LSL_Integer(shape.FlexiSoftness));// softness
+                    res.Add(new LSL_Float(shape.FlexiGravity));   // gravity
+                    res.Add(new LSL_Float(shape.FlexiDrag));      // friction
+                    res.Add(new LSL_Float(shape.FlexiWind));      // wind
+                    res.Add(new LSL_Float(shape.FlexiTension));   // tension
+                    res.Add(new LSL_Vector(shape.FlexiForceX,       // force
+                                           shape.FlexiForceY,
+                                           shape.FlexiForceZ));
+                }
 
-                    case (int)ScriptBaseClass.PRIM_TEXGEN:
-                        if (remain < 1)
-                            return res;
+                if (code == (int)ScriptBaseClass.PRIM_TEXGEN)
+                {
+                    if (remain < 1)
+                        return res;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
-                        if (face == ScriptBaseClass.ALL_SIDES)
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
-                            for (face = 0; face < GetNumberOfSides(part); face++)
-                            {
-                                MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
-                                res.Add(new LSL_Integer((uint)texgen >> 1));
-                            }
+                            MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                            // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
+                            res.Add(new LSL_Integer((uint)texgen >> 1));
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (face >= 0 && face < GetNumberOfSides(part))
                         {
-                            if (face >= 0 && face < GetNumberOfSides(part))
-                            {
-                                MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                res.Add(new LSL_Integer((uint)texgen >> 1));
-                            }
+                            MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                            res.Add(new LSL_Integer((uint)texgen >> 1));
                         }
-                        break;
+                    }
+                }
 
-                    case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
-                        shape = part.Shape;
+                if (code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
+                {
+                    PrimitiveBaseShape shape = part.Shape;
 
-                        if (shape.LightEntry)
-                            res.Add(new LSL_Integer(1));              // active
-                        else
-                            res.Add(new LSL_Integer(0));
-                        res.Add(new LSL_Vector(shape.LightColorR,       // color
-                                               shape.LightColorG,
-                                               shape.LightColorB));
-                        res.Add(new LSL_Float(shape.LightIntensity)); // intensity
-                        res.Add(new LSL_Float(shape.LightRadius));    // radius
-                        res.Add(new LSL_Float(shape.LightFalloff));   // falloff
-                        break;
+                    if (shape.LightEntry)
+                        res.Add(new LSL_Integer(1));              // active
+                    else
+                        res.Add(new LSL_Integer(0));
+                    res.Add(new LSL_Vector(shape.LightColorR,       // color
+                                           shape.LightColorG,
+                                           shape.LightColorB));
+                    res.Add(new LSL_Float(shape.LightIntensity)); // intensity
+                    res.Add(new LSL_Float(shape.LightRadius));    // radius
+                    res.Add(new LSL_Float(shape.LightFalloff));   // falloff
+                }
 
-                    case (int)ScriptBaseClass.PRIM_GLOW:
-                        if (remain < 1)
-                            return res;
+                if (code == (int)ScriptBaseClass.PRIM_GLOW)
+                {
+                    if (remain < 1)
+                        return res;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
-                        if (face == ScriptBaseClass.ALL_SIDES)
+                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    if (face == ScriptBaseClass.ALL_SIDES)
+                    {
+                        for (face = 0; face < GetNumberOfSides(part); face++)
                         {
-                            for (face = 0; face < GetNumberOfSides(part); face++)
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                res.Add(new LSL_Float(texface.Glow));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            res.Add(new LSL_Float(texface.Glow));
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (face >= 0 && face < GetNumberOfSides(part))
                         {
-                            if (face >= 0 && face < GetNumberOfSides(part))
-                            {
-                                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                res.Add(new LSL_Float(texface.Glow));
-                            }
+                            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                            res.Add(new LSL_Float(texface.Glow));
                         }
-                        break;
+                    }
+                }
 
-                    case (int)ScriptBaseClass.PRIM_TEXT:
-                        Color4 textColor = part.GetTextColor();
-                        res.Add(part.Text);
-                        res.Add(new LSL_Vector(textColor.R,
-                                               textColor.G,
-                                               textColor.B));
-                        res.Add(new LSL_Float(textColor.A));
-                        break;
-                    case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
-                        res.Add(new LSL_Rotation(part.RotationOffset.X, part.RotationOffset.Y, part.RotationOffset.Z, part.RotationOffset.W));
-                        break;
+                if (code == (int)ScriptBaseClass.PRIM_TEXT)
+                {
+                    Color4 textColor = part.GetTextColor();
+                    res.Add(part.Text);
+                    res.Add(new LSL_Vector(textColor.R,
+                                           textColor.G,
+                                           textColor.B));
+                    res.Add(new LSL_Float(textColor.A));
+                }
+                if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
+                {
+                    res.Add(new LSL_Rotation(part.RotationOffset.X, part.RotationOffset.Y, part.RotationOffset.Z, part.RotationOffset.W));
                 }
             }
             return res;
@@ -10022,76 +10117,75 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 int code = (int)rules.GetLSLIntegerItem(i);
 
-                switch (code)
+                if (code == ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE)
                 {
-                    case ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE:
-                        // Not implemented
-                        res.Add(new LSL_Integer(0));
-                        break;
+                    // Not implemented
+                    res.Add(new LSL_Integer(0));
+                }
 
-                    case ScriptBaseClass.PRIM_MEDIA_CONTROLS:
-                        if (me.Controls == MediaControls.Standard)
-                            res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD));
-                        else
-                            res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_MINI));
-                        break;
+                else if (code == ScriptBaseClass.PRIM_MEDIA_CONTROLS)
+                {
+                    if (me.Controls == MediaControls.Standard)
+                        res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD));
+                    else
+                        res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_MINI));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_CURRENT_URL)
+                {
+                    res.Add(new LSL_String(me.CurrentURL));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_HOME_URL)
+                {
+                    res.Add(new LSL_String(me.HomeURL));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP)
+                {
+                    res.Add(me.AutoLoop ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY)
+                {
+                    res.Add(me.AutoPlay ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE)
+                {
+                    res.Add(me.AutoScale ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM)
+                {
+                    res.Add(me.AutoZoom ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT)
+                {
+                    res.Add(me.InteractOnFirstClick ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS)
+                {
+                    res.Add(new LSL_Integer(me.Width));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS)
+                {
+                    res.Add(new LSL_Integer(me.Height));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE)
+                {
+                    res.Add(me.EnableWhiteList ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST)
+                {
+                    string[] urls = (string[])me.WhiteList.Clone();
 
-                    case ScriptBaseClass.PRIM_MEDIA_CURRENT_URL:
-                        res.Add(new LSL_String(me.CurrentURL));
-                        break;
+                    for (int j = 0; j < urls.Length; j++)
+                        urls[j] = Uri.EscapeDataString(urls[j]);
 
-                    case ScriptBaseClass.PRIM_MEDIA_HOME_URL:
-                        res.Add(new LSL_String(me.HomeURL));
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP:
-                        res.Add(me.AutoLoop ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY:
-                        res.Add(me.AutoPlay ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE:
-                        res.Add(me.AutoScale ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM:
-                        res.Add(me.AutoZoom ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT:
-                        res.Add(me.InteractOnFirstClick ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS:
-                        res.Add(new LSL_Integer(me.Width));
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS:
-                        res.Add(new LSL_Integer(me.Height));
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE:
-                        res.Add(me.EnableWhiteList ? ScriptBaseClass.TRUE : ScriptBaseClass.FALSE);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
-                        string[] urls = (string[])me.WhiteList.Clone();
-
-                        for (int j = 0; j < urls.Length; j++)
-                            urls[j] = Uri.EscapeDataString(urls[j]);
-
-                        res.Add(new LSL_String(string.Join(", ", urls)));
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT:
-                        res.Add(new LSL_Integer((int)me.InteractPermissions));
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL:
-                        res.Add(new LSL_Integer((int)me.ControlPermissions));
-                        break;
+                    res.Add(new LSL_String(string.Join(", ", urls)));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT)
+                {
+                    res.Add(new LSL_Integer((int)me.InteractPermissions));
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL)
+                {
+                    res.Add(new LSL_Integer((int)me.ControlPermissions));
                 }
             }
 
@@ -10148,75 +10242,73 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 int code = rules.GetLSLIntegerItem(i++);
 
-                switch (code)
+                if (code == ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE)
                 {
-                    case ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE:
-                        me.EnableAlterntiveImage = (rules.GetLSLIntegerItem(i++) != 0 ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_CONTROLS:
-                        int v = rules.GetLSLIntegerItem(i++);
-                        if (ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD == v)
-                            me.Controls = MediaControls.Standard;
-                        else
-                            me.Controls = MediaControls.Mini;
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_CURRENT_URL:
-                        me.CurrentURL = rules.GetLSLStringItem(i++);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_HOME_URL:
-                        me.HomeURL = rules.GetLSLStringItem(i++);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP:
-                        me.AutoLoop = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY:
-                        me.AutoPlay = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE:
-                        me.AutoScale = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM:
-                        me.AutoZoom = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT:
-                        me.InteractOnFirstClick = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS:
-                        me.Width = (int)rules.GetLSLIntegerItem(i++);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS:
-                        me.Height = (int)rules.GetLSLIntegerItem(i++);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE:
-                        me.EnableWhiteList = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
-                        string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new char[] { ',' });
-                        List<string> whiteListUrls = new List<string>();
-                        Array.ForEach(
-                            rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
-                        me.WhiteList = whiteListUrls.ToArray();
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT:
-                        me.InteractPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
-                        break;
-
-                    case ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL:
-                        me.ControlPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
-                        break;
+                    me.EnableAlterntiveImage = (rules.GetLSLIntegerItem(i++) != 0 ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_CONTROLS)
+                {
+                    int v = rules.GetLSLIntegerItem(i++);
+                    if (ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD == v)
+                        me.Controls = MediaControls.Standard;
+                    else
+                        me.Controls = MediaControls.Mini;
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_CURRENT_URL)
+                {
+                    me.CurrentURL = rules.GetLSLStringItem(i++);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_HOME_URL)
+                {
+                    me.HomeURL = rules.GetLSLStringItem(i++);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP)
+                {
+                    me.AutoLoop = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY)
+                {
+                    me.AutoPlay = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE)
+                {
+                    me.AutoScale = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM)
+                {
+                    me.AutoZoom = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT)
+                {
+                    me.InteractOnFirstClick = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS)
+                {
+                    me.Width = (int)rules.GetLSLIntegerItem(i++);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS)
+                {
+                    me.Height = (int)rules.GetLSLIntegerItem(i++);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE)
+                {
+                    me.EnableWhiteList = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST)
+                {
+                    string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new char[] { ',' });
+                    List<string> whiteListUrls = new List<string>();
+                    Array.ForEach(
+                        rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
+                    me.WhiteList = whiteListUrls.ToArray();
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT)
+                {
+                    me.InteractPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
+                }
+                else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL)
+                {
+                    me.ControlPermissions = (MediaPermission)(byte)(int)rules.GetLSLIntegerItem(i++);
                 }
             }
 
@@ -10506,27 +10598,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             SortedDictionary<int, float> parameters = new SortedDictionary<int, float>();
             object[] data = rules.Data;
-            for (int i = 0; i < data.Length; ++i) {
+            for (int i = 0; i < data.Length; ++i)
+            {
                 int type = Convert.ToInt32(data[i++].ToString());
                 if (i >= data.Length) break; // odd number of entries => ignore the last
 
                 // some special cases: Vector parameters are split into 3 float parameters (with type+1, type+2, type+3)
-                switch (type) {
-                case ScriptBaseClass.CAMERA_FOCUS:
-                case ScriptBaseClass.CAMERA_FOCUS_OFFSET:
-                case ScriptBaseClass.CAMERA_POSITION:
+                if (type == ScriptBaseClass.CAMERA_FOCUS ||
+                    type == ScriptBaseClass.CAMERA_FOCUS_OFFSET ||
+                    type == ScriptBaseClass.CAMERA_POSITION)
+                {
                     LSL_Vector v = (LSL_Vector)data[i];
                     parameters.Add(type + 1, (float)v.x);
                     parameters.Add(type + 2, (float)v.y);
                     parameters.Add(type + 3, (float)v.z);
-                    break;
-                default:
+                }
+                else
+                {
                     if (data[i] is LSL_Float)
                         parameters.Add(type, (float)((LSL_Float)data[i]).value);
                     else if (data[i] is LSL_Integer)
                         parameters.Add(type, (float)((LSL_Integer)data[i]).value);
                     else parameters.Add(type, Convert.ToSingle(data[i]));
-                    break;
                 }
             }
             if (parameters.Count > 0) presence.ControllingClient.SendSetFollowCamProperties(objectID, parameters);
@@ -10565,35 +10658,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Float llListStatistics(int operation, LSL_List src)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
             LSL_List nums = LSL_List.ToDoubleList(src);
-            switch (operation)
-            {
-                case ScriptBaseClass.LIST_STAT_RANGE:
-                    return nums.Range();
-                case ScriptBaseClass.LIST_STAT_MIN:
-                    return nums.Min();
-                case ScriptBaseClass.LIST_STAT_MAX:
-                    return nums.Max();
-                case ScriptBaseClass.LIST_STAT_MEAN:
-                    return nums.Mean();
-                case ScriptBaseClass.LIST_STAT_MEDIAN:
-                    return nums.Median();
-                case ScriptBaseClass.LIST_STAT_NUM_COUNT:
-                    return nums.NumericLength();
-                case ScriptBaseClass.LIST_STAT_STD_DEV:
-                    return nums.StdDev();
-                case ScriptBaseClass.LIST_STAT_SUM:
-                    return nums.Sum();
-                case ScriptBaseClass.LIST_STAT_SUM_SQUARES:
-                    return nums.SumSqrs();
-                case ScriptBaseClass.LIST_STAT_GEOMETRIC_MEAN:
-                    return nums.GeometricMean();
-                case ScriptBaseClass.LIST_STAT_HARMONIC_MEAN:
-                    return nums.HarmonicMean();
-                default:
-                    return 0.0;
-            }
+            if (operation == ScriptBaseClass.LIST_STAT_RANGE)
+                return nums.Range();
+            else if (operation == ScriptBaseClass.LIST_STAT_MIN)
+                return nums.Min();
+            else if (operation == ScriptBaseClass.LIST_STAT_MAX)
+                return nums.Max();
+            else if (operation == ScriptBaseClass.LIST_STAT_MEAN)
+                return nums.Mean();
+            else if (operation == ScriptBaseClass.LIST_STAT_MEDIAN)
+                return nums.Median();
+            else if (operation == ScriptBaseClass.LIST_STAT_NUM_COUNT)
+                return nums.NumericLength();
+            else if (operation == ScriptBaseClass.LIST_STAT_STD_DEV)
+                return nums.StdDev();
+            else if (operation == ScriptBaseClass.LIST_STAT_SUM)
+                return nums.Sum();
+            else if (operation == ScriptBaseClass.LIST_STAT_SUM_SQUARES)
+                return nums.SumSqrs();
+            else if (operation == ScriptBaseClass.LIST_STAT_GEOMETRIC_MEAN)
+                return nums.GeometricMean();
+            else if (operation == ScriptBaseClass.LIST_STAT_HARMONIC_MEAN)
+                return nums.HarmonicMean();
+            else
+                return 0.0;
         }
 
         public LSL_Integer llGetUnixTime()
@@ -10712,7 +10802,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (reqID != UUID.Zero)
                 return reqID.ToString();
             else
-                return new LSL_String();
+                return new LSL_String("");
         }
 
 

@@ -229,7 +229,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         // Avatar info functions
-        public string osGetAgentIP(string agent)
+        public LSL_String osGetAgentIP(string agent)
         {
             return m_OSSL_Functions.osGetAgentIP(agent);
         }

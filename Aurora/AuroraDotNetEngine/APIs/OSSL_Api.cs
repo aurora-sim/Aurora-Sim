@@ -703,7 +703,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //resources based on the IP address of the clients connected.
         //I think High is a good risk level for this, as it is an
         //information leak.
-        public string osGetAgentIP(string agent)
+        public LSL_String osGetAgentIP(string agent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetAgentIP", m_host, "OSSL");
 
@@ -717,11 +717,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (ep is IPEndPoint)
                 {
                     IPEndPoint ip = (IPEndPoint)ep;
-                    return ip.Address.ToString();
+                    return new LSL_String(ip.Address.ToString());
                 }
             }
             // fall through case, just return nothing
-            return "";
+            return new LSL_String("");
         }
 
         // Get a list of all the avatars/agents in the region
@@ -815,7 +815,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "MoveTo " + x + "," + y + ";";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawLine(string drawList, int startX, int startY, int endX, int endY)
@@ -824,7 +824,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "MoveTo "+ startX+","+ startY +"; LineTo "+endX +","+endY +"; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawLine(string drawList, int endX, int endY)
@@ -833,7 +833,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "LineTo " + endX + "," + endY + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawText(string drawList, string text)
@@ -842,7 +842,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "Text " + text + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawEllipse(string drawList, int width, int height)
@@ -851,7 +851,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "Ellipse " + width + "," + height + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawRectangle(string drawList, int width, int height)
@@ -860,7 +860,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "Rectangle " + width + "," + height + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawFilledRectangle(string drawList, int width, int height)
@@ -869,7 +869,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "FillRectangle " + width + "," + height + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawFilledPolygon(string drawList, LSL_List x, LSL_List y)
@@ -880,7 +880,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (x.Length != y.Length || x.Length < 3)
             {
-                return "";
+                return new LSL_String("");
             }
             drawList += "FillPolygon " + x.GetLSLStringItem(0) + "," + y.GetLSLStringItem(0);
             for (int i = 1; i < x.Length; i++)
@@ -888,7 +888,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 drawList += "," + x.GetLSLStringItem(i) + "," + y.GetLSLStringItem(i);
             }
             drawList += "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawPolygon(string drawList, LSL_List x, LSL_List y)
@@ -899,7 +899,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (x.Length != y.Length || x.Length < 3)
             {
-                return "";
+                return new LSL_String("");
             }
             drawList += "Polygon " + x.GetLSLStringItem(0) + "," + y.GetLSLStringItem(0);
             for (int i = 1; i < x.Length; i++)
@@ -907,7 +907,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 drawList += "," + x.GetLSLStringItem(i) + "," + y.GetLSLStringItem(i);
             }
             drawList += "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osSetFontSize(string drawList, int fontSize)
@@ -925,7 +925,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "FontName "+ fontName +"; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osSetPenSize(string drawList, int penSize)
@@ -934,7 +934,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "PenSize " + penSize + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osSetPenColour(string drawList, string colour)
@@ -943,7 +943,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "PenColour " + colour + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osSetPenCap(string drawList, string direction, string type)
@@ -952,7 +952,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList += "PenCap " + direction + "," + type + "; ";
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public string osDrawImage(string drawList, int width, int height, string imageUrl)
@@ -961,7 +961,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
             drawList +="Image " +width + "," + height+ ","+ imageUrl +"; " ;
-            return drawList;
+            return new LSL_String(drawList);
         }
 
         public LSL_Vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize)
@@ -1116,10 +1116,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IWindModule module = World.RequestModuleInterface<IWindModule>();
             if (module != null)
             {
-                return module.WindActiveModelPluginName;
+                return new LSL_String(module.WindActiveModelPluginName);
             }
 
-            return String.Empty;
+            return new LSL_String("");
         }
 
         public void osWindParamSet(string plugin, string param, float value)

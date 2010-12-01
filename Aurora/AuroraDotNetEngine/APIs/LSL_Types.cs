@@ -1378,7 +1378,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         [Serializable]
-        public struct LSLString
+        public class LSLString
         {
             public string m_string;
             #region Constructors
@@ -1571,7 +1571,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         [Serializable]
-        public struct LSLInteger
+        public class LSLInteger
         {
             public int value;
 
@@ -1870,7 +1870,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         [Serializable]
-        public struct LSLFloat
+        public class LSLFloat
         {
             public double value;
 

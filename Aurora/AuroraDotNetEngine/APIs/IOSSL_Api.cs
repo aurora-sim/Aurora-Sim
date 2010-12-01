@@ -65,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetParcelSIPAddress(string SIPAddress);
 
         // Avatar Info Commands
-        string osGetAgentIP(string agent);
+        LSL_String osGetAgentIP(string agent);
         LSL_List osGetAgents();
 
         // Teleport commands
