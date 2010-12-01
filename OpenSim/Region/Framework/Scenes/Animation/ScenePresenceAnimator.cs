@@ -169,8 +169,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
 
-            const float SOFTLAND_FORCE = 5;
-            const float LAND_FORCE = 8;
+            const float SOFTLAND_FORCE = 80;
+            const float LAND_FORCE = 130;
 
 
             const float PREJUMP_DELAY = 0.35f;
@@ -348,6 +348,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     // Just started falling
                     m_animTickFall = Util.EnvironmentTickCount();*/
+                if(m_animTickFall == 0)
+                    m_animTickFall = Util.EnvironmentTickCount();
                 return "FALLDOWN";
                 /*}
                 else if (!jumping && fallElapsed > FALL_DELAY)
@@ -518,10 +520,36 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             if (m_movementAnimation == "FALLDOWN")
             {
-                //Experimentally found variables, but it makes soft landings look good.
+                float fallElapsed = (float)(Util.EnvironmentTickCount() - m_animTickFall) / 1000f;
+                if (fallElapsed < 0.75)
+                {
+                    m_animTickFall = Util.EnvironmentTickCount();
+
+                    return "SOFT_LAND";
+                }
+                else if (fallElapsed < 1.1)
+                {
+                    m_animTickFall = Util.EnvironmentTickCount();
+
+                    return "LAND";
+                }
+                else
+                {
+                    if (m_scenePresence.Scene.m_useSplatAnimation)
+                    {
+                        m_animTickStandup = Util.EnvironmentTickCount();
+                        return "STANDUP";
+                    }
+                    else
+                        return "LAND";
+                }
+                /*//Experimentally found variables, but it makes soft landings look good.
                 // -- Revolution
                 //Note: we use m_scenePresence.LastVelocity for a reason! The PhysActor and SP Velocity are both cleared before this is called.
-                float Z = Math.Abs(m_scenePresence.LastVelocity.LengthSquared());
+                
+                float Z = m_scenePresence.LastVelocity.Z * m_scenePresence.LastVelocity.Z;
+                if (Math.Abs(m_scenePresence.LastVelocity.X) < 0.1 && Math.Abs(m_scenePresence.LastVelocity.Y) < 0.1)
+                    Z *= Z; //If you are falling down, the calculation is different..
                 if (Z < SOFTLAND_FORCE)
                 {
                     m_animTickFall = Util.EnvironmentTickCount();
@@ -543,7 +571,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     }
                     else
                         return "LAND";
-                }
+                }*/
             }
             else if (m_movementAnimation == "LAND")
             {

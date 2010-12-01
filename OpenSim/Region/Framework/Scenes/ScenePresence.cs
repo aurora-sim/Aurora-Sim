@@ -3584,7 +3584,7 @@ namespace OpenSim.Region.Framework.Scenes
                     case "CROUCH":
                     case "CROUCHWALK":
                         {
-                            ContactPoint lowest;
+                            /*ContactPoint lowest;
                             lowest.SurfaceNormal = Vector3.Zero;
                             lowest.Position = Vector3.Zero;
                             lowest.Position.Z = Single.NaN;
@@ -3605,7 +3605,27 @@ namespace OpenSim.Region.Framework.Scenes
                                 else
                                     lowest.SurfaceNormal.Z = ((int)AbsolutePosition.Z) - (PhysicsActor.Size.Z * 1.75f) - (int)Scene.GetGroundHeight(AbsolutePosition.X, AbsolutePosition.Y);
                             }
-                            CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
+                            CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));*/
+                            ContactPoint lowest;
+                            lowest.SurfaceNormal = Vector3.Zero;
+                            lowest.Position = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                            lowest.Position.Z = Single.NaN;
+
+                            foreach (ContactPoint contact in coldata.Values)
+                            {
+                                if (Single.IsNaN(lowest.Position.Z) || contact.Position.Z != 0 && contact.Position.Z < lowest.Position.Z)
+                                {
+                                    lowest = contact;
+                                }
+                            }
+
+                            if (lowest.Position != new Vector3(float.MaxValue, float.MaxValue, float.MaxValue))
+                            {
+                                CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
+                            }
+                            //No Zero vectors, as it causes bent knee in the client!
+                            if (CollisionPlane == Vector4.UnitW)
+                                CollisionPlane = new Vector4(0, 0, 0, 1);
                         }
                         break;
                 }
