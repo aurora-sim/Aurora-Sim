@@ -874,7 +874,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public void doForce(Vector3 force)
         {
-            if (!collidelock)
+            if (!collidelock && force != Vector3.Zero)
             {
                 //force /= m_mass;
                 d.BodyAddForce(Body, force.X, force.Y, force.Z);
@@ -1229,17 +1229,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (vec.X < 100000 && vec.Y < 100000 && vec.Z < 100000) //Checks for crazy, going to NaN us values
                 {
+                    d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (Math.Abs(vec.X) < 0.05 && Math.Abs(vec.Y) < 0.05 && Math.Abs(vec.Z) < 0.05)
+                    if (Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.09)
                     {
                         vec = new Vector3(0, 0, 0);
                         d.BodySetLinearVel(Body, 0, 0, 0);
                     }
 
-                    //Reduce insanely small values to 0
-                    if (Math.Abs(vec.Z) < 0.01)
-                        vec.Z = 0;
+                    //Reduce insanely small values to 0 if the velocity isn't going up
+                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.5)
+                    {
+                        if (-veloc.Z > 0)
+                            vec.Z = 0;
+                        else
+                            vec.Z = -veloc.Z * 5;
+                        d.BodySetLinearVel(Body, veloc.X, veloc.Y, vec.Z);
+                    }
 
+                    d.Vector3 posi = d.BodyGetPosition(Body);
+                    if (vec != Vector3.Zero)
+                        m_log.Warn("[Physics]: Vec:" + vec + ",Vel:" + veloc.Z + ",zero_flag:" + _zeroFlag);
                     doForce(vec);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
