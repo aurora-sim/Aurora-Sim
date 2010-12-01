@@ -185,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // not sure it's need
             if (InTimeSlice)
             {
-                OpenSim.Framework.Console.MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap" + FunctionName);
+                //OpenSim.Framework.Console.MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap" + FunctionName);
                 return Start;
             }
 
