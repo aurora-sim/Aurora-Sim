@@ -195,7 +195,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (converter == null)
                 return "No Compiler found for this type of script.";
 
-            retval = CompileFromDotNetText(compileScript, converter, assembly);
+            retval = CompileFromDotNetText(compileScript, converter, assembly, Script);
             return retval;
         }
 
@@ -343,7 +343,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly)
+        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly, string originalScript)
         {
             string ext = "." + converter.Name;
 
@@ -433,8 +433,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
                             lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            LineN = lslPos.Key - 1 - LinesToRemoveOnError;
+                            //LineN = lslPos.Key - 1 - LinesToRemoveOnError;
+                            LineN = lslPos.Key - 1;
                             CharN = lslPos.Value - 1;
+                            if (LineN <= 0 && CharN != 0)
+                            {
+                                string[] lines = originalScript.Split('\n');
+                                int charCntr = 0;
+                                int lineCntr = 0;
+                                foreach(string line in lines)
+                                {
+                                    if (charCntr + line.Length > CharN)
+                                    {
+                                        //Its in this line
+                                        CharN -= charCntr;
+                                        LineN = lineCntr;
+                                        break;
+                                    }
+                                    charCntr += line.Length - 1;
+                                    lineCntr++;
+                                }
+                            }
                         }
                         else
                         {
@@ -527,9 +546,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return new KeyValuePair<int, int>(line, col);
 
             KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
-            line -= LinesToRemoveOnError;
+            //line -= LinesToRemoveOnError;
 
-            if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
+             if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
                     out ret))
                 return ret;
 

@@ -118,7 +118,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
     }
 
-    public class CSCodeGenerator : ICSCodeGenerator
+    public class CSCodeGenerator : IDisposable
     {
         private SYMBOL m_astRoot = null;
         private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> m_positionMap;
@@ -278,7 +278,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             MethodVariables.Clear();
             VariablesToRename.Clear();
             m_braceCount = 0;
-            m_CSharpLine = 0;
+            m_CSharpLine = 15;
             m_CSharpCol = 1;
             m_positionMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
             LocalMethods.Clear();
@@ -294,7 +294,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string CreateCompilerScript(string ScriptClass)
         {
             string compiledScript = "";
-            compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n\n";
+            compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine;\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n";
             compiledScript += "using System;\n";
@@ -369,7 +369,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             string returnstring = "";
 
             // line number
-            m_CSharpLine += 3;
+            //m_CSharpLine += 3;
 
             // here's the payload
             returnstring += GenerateLine();
@@ -1572,7 +1572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     if (retstr[retstr.Length - i] == '}')
                     {
-                        retstr.Insert(retstr.Length - i, GenerateLine("\n    yield break;\n"));
+                        retstr.Insert(retstr.Length - i, GenerateLine(" yield break;"));
                         break;
                     }
                 }
@@ -2048,15 +2048,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 retstr += Generate("{ ");
                 if (rs.kids.Count == 0)
-                    retstr += Generate("yield break;", rs);
+                    retstr += GenerateLine("yield break;", rs);
                 else
                 {
                     retstr += Generate("yield return ", rs);
                     foreach (SYMBOL kid in rs.kids)
                         retstr += GenerateNode(kid);
-                    retstr += Generate("; yield break;", rs);
+                    retstr += GenerateLine("; yield break;", rs);
                 }
-                retstr += Generate(" }");
+                retstr += GenerateLine(" }");
             }
             else
             {
@@ -2076,7 +2076,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for JumpLabel jl.</returns>
         private string GenerateJumpLabel(JumpLabel jl)
         {
-            return Generate(String.Format("{0}:", CheckName(jl.LabelName)), jl) + " NoOp();\n";
+            return GenerateLine(Generate(String.Format("{0}:", CheckName(jl.LabelName)), jl) + " NoOp();");
         }
 
         /// <summary>
@@ -2619,7 +2619,6 @@ default
             string Mname = "";
             bool isEnumerable = false;
             string tempString = "";
-            string FunctionCalls = "";
 
             //int NeedCloseParent = 0;
 
@@ -2796,32 +2795,33 @@ default
 
                 Mname = RandomString(10, true);
                 string Exname = RandomString(10, true);
-                FunctionCalls += Generate("string " + Exname + " =  \"\";");
-                FunctionCalls += Generate("IEnumerator " + Mname + " = ");
-                FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
-                FunctionCalls += tempString;
-                FunctionCalls += Generate(");\n");
+                List<string> fCalls = new List<string>();
+                fCalls.Add(Generate("string " + Exname + " =  \"\";"));
+                fCalls.Add(Generate("IEnumerator " + Mname + " = "));
+                fCalls.Add(Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
+                fCalls.Add(tempString);
+                fCalls.Add(Generate(");"));
 
-                FunctionCalls += GenerateLine("while (true) {");
-                FunctionCalls += GenerateLine(" try {");
-                FunctionCalls += GenerateLine("  if(!" + Mname + ".MoveNext())");
-                FunctionCalls += GenerateLine("   break;");
-                FunctionCalls += GenerateLine("  }"); //End of try
-                FunctionCalls += GenerateLine(" catch(Exception ex) ");
-                FunctionCalls += GenerateLine("  {");
-                FunctionCalls += GenerateLine("  " + Exname + " = ex.Message;");
-                FunctionCalls += GenerateLine("  }"); //End of catch
-                FunctionCalls += GenerateLine(" if(" + Exname + " != \"\")");
-                FunctionCalls += GenerateLine("   yield return " + Exname + ";"); //Exceptions go first
-                FunctionCalls += GenerateLine(" else if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)");
-                FunctionCalls += GenerateLine("   yield return " + Mname + ".Current;"); //Let the other things process for a bit here at the end of each enumeration
-                FunctionCalls += GenerateLine(" else break;"); //Let the other things process for a bit here at the end of each enumeration
-                FunctionCalls += GenerateLine(" }"); //End while
+                fCalls.Add(Generate("while (true) {"));
+                fCalls.Add(Generate(" try {"));
+                fCalls.Add(Generate("  if(!" + Mname + ".MoveNext())"));
+                fCalls.Add(Generate("   break;"));
+                fCalls.Add(Generate("  }")); //End of try
+                fCalls.Add(Generate(" catch(Exception ex) "));
+                fCalls.Add(Generate("  {"));
+                fCalls.Add(Generate("  " + Exname + " = ex.Message;"));
+                fCalls.Add(Generate("  }")); //End of catch
+                fCalls.Add(Generate(" if(" + Exname + " != \"\")"));
+                fCalls.Add(Generate("   yield return " + Exname + ";")); //Exceptions go first
+                fCalls.Add(Generate(" else if(" + Mname + ".Current == null || " + Mname + ".Current is DateTime)"));
+                fCalls.Add(Generate("   yield return " + Mname + ".Current;")); //Let the other things process for a bit here at the end of each enumeration
+                fCalls.Add(Generate(" else break;")); //Let the other things process for a bit here at the end of each enumeration
+                fCalls.Add(Generate(" }")); //End while
                 if (NeedRetVal && rettype != "void")
                 {
                     retstr += " (" + rettype + ") " + Mname + ".Current";
                 }
-                FuncCalls.Add(FunctionCalls);
+                FuncCalls.AddRange(fCalls);
             }
             else
             {
@@ -3126,7 +3126,7 @@ default
                 return ret;
             }
             foreach (string s in FuncCalls)
-                ret += s;
+                ret += GenerateIndentedLine(s);
             FuncCalls.Clear();
             return ret;
         }

@@ -20,7 +20,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     public class LSLConverter : IScriptConverter
     {
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
-        private ICSCodeGenerator LSL_Converter;
+        private CSCodeGenerator LSL_Converter;
 
         public void Initialise(Compiler compiler)
         {
