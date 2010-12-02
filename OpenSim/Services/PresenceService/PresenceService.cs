@@ -65,6 +65,8 @@ namespace OpenSim.Services.PresenceService
                 string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
                 if (gridServiceDll != string.Empty)
                     m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
+                if (m_GridService == null)
+                    throw new Exception("[PresenceService]: 'GridService' was not defined in the [PresenceService] config files!");
             }
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
         }

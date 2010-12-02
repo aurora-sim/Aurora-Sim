@@ -133,7 +133,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 foreach (TaskInventoryItem item in items)
                 {
-                    //UUID oldItemID = item.ItemID;
+                    UUID oldItemID = item.ItemID;
                     item.ResetIDs(m_part.UUID);
                     m_items.Add(item.ItemID, item);
                     //LEAVE THIS COMMENTED!!!
