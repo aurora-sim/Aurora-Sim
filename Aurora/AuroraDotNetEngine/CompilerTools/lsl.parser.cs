@@ -161,6 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 		}
 		public  string  Id { get { return  m_id ;
 			}
+            set { m_id = value; }
 		}
 
 		public override string yyname { get { return "Declaration"; }}

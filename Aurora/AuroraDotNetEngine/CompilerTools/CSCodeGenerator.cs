@@ -141,7 +141,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
 
+        /// <summary>
+        /// This saves the variables in methods so that we can make sure multiple variables do not have the same name, and if they do, rename/assign them to the correct variable name
+        /// </summary>
         private Dictionary<string, GlobalVar> MethodVariables = new Dictionary<string, GlobalVar>();
+
+        private class VarRename
+        {
+            public string NewVarName;
+            public bool HasBeenAssigned;
+            public string OldVarName;
+        }
+        /// <summary>
+        /// This contains a list of variables that we need to rename because of some constraint
+        /// </summary>
+        private Dictionary<string, VarRename> VariablesToRename = new Dictionary<string, VarRename>();
         private List<string> FuncCalls = new List<string>();
         /// <summary>
         /// Param 1 - the API function name, Param 2 - the API name
@@ -262,6 +276,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //NOTE: This takes a VERY long time to rebuild. Ideally, this should be reset, but interesting errors are happening when it is reset..
             p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             MethodVariables.Clear();
+            VariablesToRename.Clear();
             m_braceCount = 0;
             m_CSharpLine = 0;
             m_CSharpCol = 1;
@@ -312,22 +327,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public string Convert(string script)
         {
             ResetCounters();
-
-            try
-            {
-                ///if (m_SLCompatabilityMode && false) // :/ its terribly slow! plus it really should be a job for the parser too...
-                //{
-                //    script = CheckForInlineVectors(script);
-                //
-                //    script = CheckFloatExponent(script);
-                //}
-            }
-            catch (Exception ex)
-            {
-                string message = "Syntax error before conversion - " + ex.Message;
-
-                throw new Exception(message);
-            }
 
             LSL2CSCodeTransformer codeTransformer;
             try
@@ -1837,7 +1836,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             GlobalVar var = null;
             if(MethodVariables.TryGetValue(d.Id, out var))
             {
-                return Generate(String.Format("{0}", CheckName(d.Id)), d);
+                if (var.Type != d.Datatype)
+                {
+                    Console.WriteLine("[CSCodeGenerator]: found var needing renamed!");
+                    string NewVariableName = RandomString(10, true);
+                    VarRename r = new VarRename();
+                    r.OldVarName = d.Id;
+                    r.HasBeenAssigned = false;
+                    r.NewVarName = NewVariableName;
+                    VariablesToRename.Add(d.Id, r);
+                    d.Id = NewVariableName;
+                    MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
+                    return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+                }
+                else
+                    return Generate(String.Format("{0}", CheckName(d.Id)), d);
             }
             else
             {
@@ -3060,7 +3073,22 @@ default
             if (CSReservedWords.IsReservedWord(s))
                 return "@" + s;
             else
+            {
+                VarRename var;
+                if(VariablesToRename.TryGetValue(s, out var))
+                {
+                    Console.WriteLine("[CSCodeGenerator]: found var needing renamed!");
+                    if (var.HasBeenAssigned)
+                        s = var.NewVarName;
+                    else
+                    {
+                        s = var.OldVarName;
+                        var.HasBeenAssigned = true;
+                        VariablesToRename[s] = var;
+                    }
+                }
                 return s;
+            }
         }
 
         /// From http://www.c-sharpcorner.com/UploadFile/mahesh/RandomNumber11232005010428AM/RandomNumber.aspx
