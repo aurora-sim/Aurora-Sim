@@ -51,8 +51,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private IMessageTransferModule m_msgTransferModule = null;
 
         private IGroupsServicesConnector m_groupData = null;
-
-        private bool m_removeOfflineAgentsFromGroupIMs = true;
         
         // Config Options
         private bool m_groupMessagingEnabled = false;
@@ -82,8 +80,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 if (!m_groupMessagingEnabled)
                     return;
 
-                m_removeOfflineAgentsFromGroupIMs = groupsConfig.GetBoolean("RemoveOfflineUsersFromGroupIMs", m_removeOfflineAgentsFromGroupIMs);
-                
                 //m_log.Info("[GROUPS-MESSAGING]: Initializing GroupsMessagingModule");
 
                 m_debugEnabled = groupsConfig.GetBoolean("DebugEnabled", true);

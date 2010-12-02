@@ -1248,8 +1248,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     d.Vector3 posi = d.BodyGetPosition(Body);
-                    if (vec != Vector3.Zero)
-                        m_log.Warn("[Physics]: Vec:" + vec + ",Vel:" + veloc.Z + ",zero_flag:" + _zeroFlag);
+                    //if (vec != Vector3.Zero)
+                    //    m_log.Warn("[Physics]: Vec:" + vec + ",Vel:" + veloc.Z + ",zero_flag:" + _zeroFlag);
                     doForce(vec);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).

@@ -140,6 +140,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 //        public Dictionary<string, string> IenFunctions = new Dictionary<string, string>();
         public Dictionary<string, string> LocalMethods = new Dictionary<string, string>();
         private Dictionary<string, GlobalVar> GlobalVariables = new Dictionary<string, GlobalVar>();
+
+        private Dictionary<string, GlobalVar> MethodVariables = new Dictionary<string, GlobalVar>();
         private List<string> FuncCalls = new List<string>();
         /// <summary>
         /// Param 1 - the API function name, Param 2 - the API name
@@ -259,6 +261,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             //NOTE: This takes a VERY long time to rebuild. Ideally, this should be reset, but interesting errors are happening when it is reset..
             p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
+            MethodVariables.Clear();
             m_braceCount = 0;
             m_CSharpLine = 0;
             m_CSharpCol = 1;
@@ -1521,6 +1524,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for GlobalFunctionDefinition gf.</returns>
         private string GenerateGlobalFunctionDefinition(GlobalFunctionDefinition gf)
         {
+            MethodVariables.Clear();
             StringBuilder retstr = new StringBuilder();
 
             // we need to separate the argument declaration list from other kids
@@ -1548,29 +1552,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
 
-//            LocalMethods.Add(CheckName(gf.Name), gf.ReturnType);
+            //            LocalMethods.Add(CheckName(gf.Name), gf.ReturnType);
             IsParentEnumerable = true;
 
             // print the state arguments, if any
             foreach (SYMBOL kid in argumentDeclarationListKids)
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
+            {
+                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
+                retstr.Append(GenerateArgumentDeclarationList(ADL));
+            }
 
             retstr.Append(GenerateLine(")"));
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
 
             if (gf.ReturnType == "void")
-                {
+            {
                 int i;
                 for (i = 1; i < 5; i++)
-                    {
+                {
                     if (retstr[retstr.Length - i] == '}')
-                        {
+                    {
                         retstr.Insert(retstr.Length - i, GenerateLine("\n    yield break;\n"));
                         break;
-                        }
                     }
                 }
+            }
 
             IsParentEnumerable = false;
             return retstr.ToString();
@@ -1765,7 +1772,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             foreach (Declaration d in adl.kids)
             {
-                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+                retstr += GenerateDeclaration(d);
                 if (0 < comma--)
                     retstr += Generate(", ");
             }
@@ -1827,7 +1834,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for Declaration d.</returns>
         private string GenerateDeclaration(Declaration d)
         {
-            return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+            GlobalVar var = null;
+            if(MethodVariables.TryGetValue(d.Id, out var))
+            {
+                return Generate(String.Format("{0}", CheckName(d.Id)), d);
+            }
+            else
+            {
+                MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
+                return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+            }
         }
 
         /// <summary>
