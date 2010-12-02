@@ -235,6 +235,60 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
+        public virtual List<GridRegion> GetNeighbors(RegionInfo region)
+        {
+            List<GridRegion> neighbors = new List<GridRegion>();
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + region.RegionID + "/";
+            //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
+
+            // Fill it in
+            Dictionary<string, object> args = new Dictionary<string, object>();
+            try
+            {
+                args = Util.OSDToDictionary(region.PackRegionInfoData());
+            }
+            catch (Exception e)
+            {
+                m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
+                return neighbors;
+            }
+            args["METHOD"] = "get_neighbors";
+
+            string queryString = ServerUtils.BuildQueryString(args);
+            string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
+
+            if (reply == "")
+                return neighbors;
+
+            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
+
+            try
+            {
+                if (response == null)
+                    return neighbors;
+
+                //Didn't inform, return now
+                if (!response.ContainsKey("success") || response["success"].ToString() != "true")
+                    return neighbors;
+
+                foreach (KeyValuePair<string, object> kvp in response)
+                {
+                    if (kvp.Value is Dictionary<string, object>)
+                    {
+                        Dictionary<string, object> r = kvp.Value as Dictionary<string, object>;
+                        GridRegion nregion = new GridRegion(r);
+                        neighbors.Add(nregion);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[NeighborServiceConnector]: Failed to read response from neighbor " + ex.ToString());
+            }
+
+            return neighbors;
+        }
+
         protected void InformNeighborsOfChatMessage(OSChatMessage message, ChatSourceType type, RegionInfo region, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
         {
             foreach (GridRegion neighbor in neighbors)
@@ -270,6 +324,19 @@ namespace OpenSim.Services.Connectors
 
             string queryString = ServerUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
+        }
+
+        public virtual void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
+        {
+        }
+
+        public virtual void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
+        {
+        }
+
+        public virtual bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
+        {
+            return false;
         }
     }
 }

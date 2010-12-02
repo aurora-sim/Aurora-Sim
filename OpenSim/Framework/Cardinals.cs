@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Framework
 {
     public enum Cardinals
     {

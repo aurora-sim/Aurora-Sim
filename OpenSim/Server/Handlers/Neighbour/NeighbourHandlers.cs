@@ -87,11 +87,52 @@ namespace OpenSim.Server.Handlers.Neighbour
                     return InformNeighborsRegionIsDown(request);
                 case "inform_neighbors_of_chat_message":
                     return InformNeighborsOfChatMessage(request);
+                case "get_neighbors":
+                    return GetNeighbors(request);
                 default :
                     m_log.Warn("[NeighborHandlers]: Unknown method " + method);
                     break;
             }
             return result;
+        }
+
+        private byte[] GetNeighbors(Dictionary<string, object> request)
+        {
+            byte[] result = new byte[0];
+
+            // retrieve the region
+            RegionInfo aRegion = new RegionInfo();
+            try
+            {
+                aRegion.UnpackRegionInfoData(Util.DictionaryToOSD(request));
+            }
+            catch (Exception)
+            {
+                return result;
+            }
+
+            // Finally!
+            List<GridRegion> thisRegion = m_NeighbourService.GetNeighbors(aRegion);
+
+            Dictionary<string, object> resp = new Dictionary<string, object>();
+
+            if (thisRegion.Count != 0)
+            {
+                resp["success"] = "true";
+                int i = 0;
+                foreach (GridRegion r in thisRegion)
+                {
+                    Dictionary<string, object> region = r.ToKeyValuePairs();
+                    resp["region" + i] = region;
+                    i++;
+                }
+            }
+            else
+                resp["success"] = "false";
+
+            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] InformNeighborsOfChatMessage(Dictionary<string, object> request)

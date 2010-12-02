@@ -346,7 +346,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // OK, it got this agent. Let's close some child agents
-                sp.CloseChildAgents(newRegionX, newRegionY);
+                INeighbourService neighborService = sp.Scene.RequestModuleInterface<INeighbourService>();
+                if (neighborService != null)
+                    neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
                 if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
                 {
@@ -585,17 +587,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected virtual bool NeedsNewAgent(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY)
         {
-            return Util.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY, false);
+            INeighbourService neighborService = m_aScene.RequestModuleInterface<INeighbourService>();
+            if (neighborService != null)
+                return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
+            return false;
         }
 
         protected virtual bool NeedsClosing(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY, GridRegion reg)
         {
-            return Util.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY, Util.GetIsLocalRegion(reg.RegionHandle));
+            INeighbourService neighborService = m_aScene.RequestModuleInterface<INeighbourService>();
+            if (neighborService != null)
+                return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
+            return false;
         }
 
         protected virtual bool IsOutsideRegion(Scene s, Vector3 pos)
         {
-
             if (s.TestBorderCross(pos, Cardinals.N))
                 return true;
             if (s.TestBorderCross(pos, Cardinals.S))
@@ -919,7 +926,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 				agent.ControllingClient.RequestClientInfo();
 
                 string agentcaps;
-                if (!agent.KnownRegions.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
+                ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+                Dictionary<ulong, string> seeds = new Dictionary<ulong, string>();
+                //Get children seeds from the CAPS module
+                if (module != null)
+                {
+                    seeds = module.GetChildrenSeeds(agent.UUID);
+                }
+                if (!seeds.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
                 {
                     m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: No ENTITY TRANSFER MODULE information for region handle {0}, exiting CrossToNewRegion.",
                                      neighbourRegion.RegionHandle);
@@ -957,7 +971,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // Next, let's close the child agent connections that are too far away.
-                agent.CloseChildAgents(neighbourx, neighboury);
+                INeighbourService neighborService = agent.Scene.RequestModuleInterface<INeighbourService>();
+                if (neighborService != null)
+                    neighborService.CloseNeighborAgents(neighbourx, neighboury, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 agent.MakeChildAgent();
                 // now we have a child agent in this region. Request all interesting data about other (root) agents
@@ -999,10 +1015,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // Next, let's close the child agent connections that are too far away.
-                agent.CloseChildAgents((uint)neighbourRegion.RegionLocX / 256, (uint)neighbourRegion.RegionLocY / 256);
+                INeighbourService neighborService = agent.Scene.RequestModuleInterface<INeighbourService>();
+                if (neighborService != null)
+                    neighborService.CloseNeighborAgents((uint)neighbourRegion.RegionLocX / 256, (uint)neighbourRegion.RegionLocY / 256, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 string agentcaps;
-                if (!agent.KnownRegions.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
+                ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+                Dictionary<ulong, string> seeds = new Dictionary<ulong, string>();
+                //Get children seeds from the CAPS module
+                if (module != null)
+                {
+                    seeds = module.GetChildrenSeeds(agent.UUID);
+                }
+                if (!seeds.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
                 {
                     m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: No ENTITY TRANSFER MODULE information for region handle {0}, exiting CrossToNewRegion.",
                                      neighbourRegion.RegionHandle);
@@ -1083,7 +1108,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agent.ChildrenCapSeeds.Add(sp.Scene.RegionInfo.RegionHandle, sp.ControllingClient.RequestClientInfo().CapsPath);
             //m_log.DebugFormat("[XXX] Seeds 2 {0}", agent.ChildrenCapSeeds.Count);
 
-            sp.AddNeighbourRegion(region.RegionHandle, agent.CapsPath);
             //foreach (ulong h in agent.ChildrenCapSeeds.Keys)
             //    m_log.DebugFormat("[XXX] --> {0}", h);
             //m_log.DebugFormat("[XXX] Adding {0}", region.RegionHandle);
@@ -1139,20 +1163,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else
                 {
-                    if (Util.RegionViewSize == 1) //Legacy support
-                        neighbours = RequestNeighbours(sp.Scene, m_regionInfo.RegionLocX, m_regionInfo.RegionLocY);
-                    else
+                    INeighbourService service = sp.Scene.RequestModuleInterface<INeighbourService>();
+                    if (service != null)
                     {
-                        neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID, (int)(m_regionInfo.RegionLocX - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocX + Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY - Util.RegionViewSize) * (int)Constants.RegionSize, (int)(m_regionInfo.RegionLocY + Util.RegionViewSize) * (int)Constants.RegionSize);
-                    }
-                    if (!Util.CloseLocalRegions)
-                    {
-                        foreach (IScene scene in Util.Scenes)
-                        {
-                            GridRegion region = sp.Scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
-                            if (!neighbours.Contains(region))
-                                neighbours.Add(region);
-                        }
+                        neighbours = service.GetNeighbors(sp.Scene.RegionInfo);
                     }
                 }
             }
@@ -1160,17 +1174,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 m_log.Debug("[ENTITY TRANSFER MODULE]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
             }
-            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
-                m_log.Info("[EntityTransferModule]: Neighbor GridRegion count : " + neighbours.Count);
-
+            
             /// We need to find the difference between the new regions where there are no child agents
             /// and the regions where there are already child agents. We only send notification to the former.
             List<ulong> neighbourHandles = NeighbourHandles(sp.Scene, neighbours); // on this region
             neighbourHandles.Add(sp.Scene.RegionInfo.RegionHandle);  // add this region too
             List<ulong> previousRegionNeighbourHandles;
-
-            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
-                m_log.Info("[EntityTransferModule]: Neighbor region handles count : " + neighbourHandles.Count);
 
             ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
             if (module != null)
@@ -1233,7 +1242,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (newRegions.Contains(neighbour.RegionHandle))
                     {
                         agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-                        sp.AddNeighbourRegion(neighbour.RegionHandle, agent.CapsPath);
                         if(!seeds.ContainsKey(neighbour.RegionHandle))
                             seeds.Add(neighbour.RegionHandle, agent.CapsPath);
                     }
@@ -1252,14 +1260,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 a.ChildrenCapSeeds = new Dictionary<ulong, string>(seeds);
             }
 
-            if (Util.RegionViewSize != 1 || !Util.CloseLocalRegions)
-                m_log.Info("[EntityTransferModule]: Agents count : " + cagents.Count);
-
             if (module != null)
             {
                 module.SetChildrenSeed(sp.UUID, seeds);
             }
-            sp.KnownRegions = seeds;
             //avatar.Scene.DumpChildrenSeeds(avatar.UUID);
             //avatar.DumpKnownRegions();
 
@@ -1384,49 +1388,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             }
 
-        }
-
-        protected List<GridRegion> RequestNeighbours(Scene pScene, uint pRegionLocX, uint pRegionLocY)
-        {
-            RegionInfo m_regionInfo = pScene.RegionInfo;
-
-            Border[] northBorders = pScene.NorthBorders.ToArray();
-            Border[] southBorders = pScene.SouthBorders.ToArray();
-            Border[] eastBorders = pScene.EastBorders.ToArray();
-            Border[] westBorders = pScene.WestBorders.ToArray();
-
-            // Legacy one region.  Provided for simplicity while testing the all inclusive method in the else statement.
-            if (northBorders.Length <= 1 && southBorders.Length <= 1 && eastBorders.Length <= 1 && westBorders.Length <= 1)
-            {
-                return pScene.GridService.GetNeighbours(m_regionInfo.ScopeID, m_regionInfo.RegionID);
-            }
-            else
-            {
-                Vector2 extent = Vector2.Zero;
-                for (int i = 0; i < eastBorders.Length; i++)
-                {
-                    extent.X = (eastBorders[i].BorderLine.Z > extent.X) ? eastBorders[i].BorderLine.Z : extent.X;
-                }
-                for (int i = 0; i < northBorders.Length; i++)
-                {
-                    extent.Y = (northBorders[i].BorderLine.Z > extent.Y) ? northBorders[i].BorderLine.Z : extent.Y;
-                }
-
-                // Loss of fraction on purpose
-                extent.X = ((int)extent.X / (int)Constants.RegionSize) + 1;
-                extent.Y = ((int)extent.Y / (int)Constants.RegionSize) + 1;
-
-                int startX = (int)(pRegionLocX - 1) * (int)Constants.RegionSize;
-                int startY = (int)(pRegionLocY - 1) * (int)Constants.RegionSize;
-
-                int endX = ((int)pRegionLocX + (int)extent.X) * (int)Constants.RegionSize;
-                int endY = ((int)pRegionLocY + (int)extent.Y) * (int)Constants.RegionSize;
-
-                List<GridRegion> neighbours = pScene.GridService.GetRegionRange(m_regionInfo.ScopeID, startX, endX, startY, endY);
-                neighbours.RemoveAll(delegate(GridRegion r) { return r.RegionID == m_regionInfo.RegionID; });
-
-                return neighbours;
-            }
         }
 
         private List<ulong> NewNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)

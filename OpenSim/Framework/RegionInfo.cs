@@ -60,6 +60,11 @@ namespace OpenSim.Framework
         public bool Persistent = true;
         public bool Disabled = false;
 
+        public List<Border> NorthBorders = new List<Border>();
+        public List<Border> EastBorders = new List<Border>();
+        public List<Border> SouthBorders = new List<Border>();
+        public List<Border> WestBorders = new List<Border>();
+
         private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
         // private IConfigSource m_configSource = null;

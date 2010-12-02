@@ -72,11 +72,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile int m_bordersLocked = 0;
 
-        public List<Border> NorthBorders = new List<Border>();
-        public List<Border> EastBorders = new List<Border>();
-        public List<Border> SouthBorders = new List<Border>();
-        public List<Border> WestBorders = new List<Border>();
-
         /// <value>
         /// The scene graph for this scene
         /// </value>
@@ -499,22 +494,22 @@ namespace OpenSim.Region.Framework.Scenes
             Border northBorder = new Border();
             northBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize);  //<---
             northBorder.CrossDirection = Cardinals.N;
-            NorthBorders.Add(northBorder);
+            RegionInfo.NorthBorders.Add(northBorder);
 
             Border southBorder = new Border();
             southBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0);    //--->
             southBorder.CrossDirection = Cardinals.S;
-            SouthBorders.Add(southBorder);
+            RegionInfo.SouthBorders.Add(southBorder);
 
             Border eastBorder = new Border();
             eastBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize);   //<---
             eastBorder.CrossDirection = Cardinals.E;
-            EastBorders.Add(eastBorder);
+            RegionInfo.EastBorders.Add(eastBorder);
 
             Border westBorder = new Border();
             westBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0);     //--->
             westBorder.CrossDirection = Cardinals.W;
-            WestBorders.Add(westBorder);
+            RegionInfo.WestBorders.Add(westBorder);
 
             BordersLocked = false;
 
@@ -571,9 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
                     MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
-                    Util.RegionViewSize = aurorastartupConfig.GetInt("RegionSightSize", Util.RegionViewSize);
                     Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
-                    Util.CloseLocalRegions = !aurorastartupConfig.GetBoolean("SeeIntoAllLocalRegions", Util.CloseLocalRegions); //This option is the opposite of the config to make it easier on the user
                     m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                     CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
                     SetObjectCapacity(aurorastartupConfig.GetInt("ObjectCapacity", 80000));
@@ -708,22 +701,22 @@ namespace OpenSim.Region.Framework.Scenes
             Border northBorder = new Border();
             northBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize - 1);  //<---
             northBorder.CrossDirection = Cardinals.N;
-            NorthBorders.Add(northBorder);
+            RegionInfo.NorthBorders.Add(northBorder);
 
             Border southBorder = new Border();
             southBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 1);    //--->
             southBorder.CrossDirection = Cardinals.S;
-            SouthBorders.Add(southBorder);
+            RegionInfo.SouthBorders.Add(southBorder);
 
             Border eastBorder = new Border();
             eastBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize - 1);   //<---
             eastBorder.CrossDirection = Cardinals.E;
-            EastBorders.Add(eastBorder);
+            RegionInfo.EastBorders.Add(eastBorder);
 
             Border westBorder = new Border();
             westBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 1);     //--->
             westBorder.CrossDirection = Cardinals.W;
-            WestBorders.Add(westBorder);
+            RegionInfo.WestBorders.Add(westBorder);
             BordersLocked = false;
 
             m_regInfo = regInfo;
@@ -940,9 +933,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Kick all ROOT agents with the message, 'The simulator is going down'
             ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                if (avatar.KnownChildRegionHandles.Contains(RegionInfo.RegionHandle))
-                    avatar.KnownChildRegionHandles.Remove(RegionInfo.RegionHandle);
-
                 if (!avatar.IsChildAgent)
                     avatar.ControllingClient.Kick("The simulator is going down.");
 
@@ -3049,9 +3039,9 @@ namespace OpenSim.Region.Framework.Scenes
                 switch (gridline)
                 {
                     case Cardinals.N:
-                        lock (NorthBorders)
+                        lock (RegionInfo.NorthBorders)
                         {
-                            foreach (Border b in NorthBorders)
+                            foreach (Border b in RegionInfo.NorthBorders)
                             {
                                 if (b.TestCross(position))
                                     return b;
@@ -3059,9 +3049,9 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         break;
                     case Cardinals.S:
-                        lock (SouthBorders)
+                        lock (RegionInfo.SouthBorders)
                         {
-                            foreach (Border b in SouthBorders)
+                            foreach (Border b in RegionInfo.SouthBorders)
                             {
                                 if (b.TestCross(position))
                                     return b;
@@ -3070,9 +3060,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                     case Cardinals.E:
-                        lock (EastBorders)
+                        lock (RegionInfo.EastBorders)
                         {
-                            foreach (Border b in EastBorders)
+                            foreach (Border b in RegionInfo.EastBorders)
                             {
                                 if (b.TestCross(position))
                                     return b;
@@ -3082,9 +3072,9 @@ namespace OpenSim.Region.Framework.Scenes
                         break;
                     case Cardinals.W:
 
-                        lock (WestBorders)
+                        lock (RegionInfo.WestBorders)
                         {
-                            foreach (Border b in WestBorders)
+                            foreach (Border b in RegionInfo.WestBorders)
                             {
                                 if (b.TestCross(position))
                                     return b;
@@ -3099,7 +3089,7 @@ namespace OpenSim.Region.Framework.Scenes
                 switch (gridline)
                 {
                     case Cardinals.N:
-                        foreach (Border b in NorthBorders)
+                        foreach (Border b in RegionInfo.NorthBorders)
                         {
                             if (b.TestCross(position))
                                 return b;
@@ -3107,14 +3097,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                     case Cardinals.S:
-                        foreach (Border b in SouthBorders)
+                        foreach (Border b in RegionInfo.SouthBorders)
                         {
                             if (b.TestCross(position))
                                 return b;
                         }
                         break;
                     case Cardinals.E:
-                        foreach (Border b in EastBorders)
+                        foreach (Border b in RegionInfo.EastBorders)
                         {
                             if (b.TestCross(position))
                                 return b;
@@ -3122,7 +3112,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                     case Cardinals.W:
-                        foreach (Border b in WestBorders)
+                        foreach (Border b in RegionInfo.WestBorders)
                         {
                             if (b.TestCross(position))
                                 return b;
@@ -3143,9 +3133,9 @@ namespace OpenSim.Region.Framework.Scenes
                 switch (border)
                 {
                     case Cardinals.N:
-                        lock (NorthBorders)
+                        lock (RegionInfo.NorthBorders)
                         {
-                            foreach (Border b in NorthBorders)
+                            foreach (Border b in RegionInfo.NorthBorders)
                             {
                                 if (b.TestCross(position))
                                     return true;
@@ -3153,9 +3143,9 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         break;
                     case Cardinals.E:
-                        lock (EastBorders)
+                        lock (RegionInfo.EastBorders)
                         {
-                            foreach (Border b in EastBorders)
+                            foreach (Border b in RegionInfo.EastBorders)
                             {
                                 if (b.TestCross(position))
                                     return true;
@@ -3163,9 +3153,9 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         break;
                     case Cardinals.S:
-                        lock (SouthBorders)
+                        lock (RegionInfo.SouthBorders)
                         {
-                            foreach (Border b in SouthBorders)
+                            foreach (Border b in RegionInfo.SouthBorders)
                             {
                                 if (b.TestCross(position))
                                     return true;
@@ -3173,9 +3163,9 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         break;
                     case Cardinals.W:
-                        lock (WestBorders)
+                        lock (RegionInfo.WestBorders)
                         {
-                            foreach (Border b in WestBorders)
+                            foreach (Border b in RegionInfo.WestBorders)
                             {
                                 if (b.TestCross(position))
                                     return true;
@@ -3189,28 +3179,28 @@ namespace OpenSim.Region.Framework.Scenes
                 switch (border)
                 {
                     case Cardinals.N:
-                        foreach (Border b in NorthBorders)
+                        foreach (Border b in RegionInfo.NorthBorders)
                         {
                             if (b.TestCross(position))
                                 return true;
                         }
                         break;
                     case Cardinals.E:
-                        foreach (Border b in EastBorders)
+                        foreach (Border b in RegionInfo.EastBorders)
                         {
                             if (b.TestCross(position))
                                 return true;
                         }
                         break;
                     case Cardinals.S:
-                        foreach (Border b in SouthBorders)
+                        foreach (Border b in RegionInfo.SouthBorders)
                         {
                             if (b.TestCross(position))
                                 return true;
                         }
                         break;
                     case Cardinals.W:
-                        foreach (Border b in WestBorders)
+                        foreach (Border b in RegionInfo.WestBorders)
                         {
                             if (b.TestCross(position))
                                 return true;
@@ -4043,17 +4033,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!avatar.IsChildAgent)
                     {
-                        //List<ulong> childknownRegions = new List<ulong>();
-                        //List<ulong> ckn = avatar.KnownChildRegionHandles;
-                        //for (int i = 0; i < ckn.Count; i++)
-                        //{
-                        //    childknownRegions.Add(ckn[i]);
-                        //}
-                        List<ulong> regions = new List<ulong>(avatar.KnownChildRegionHandles);
-                        regions.Remove(RegionInfo.RegionHandle);
                         INeighbourService service = RequestModuleInterface<INeighbourService>();
                         if (service != null)
-                            service.SendCloseChildAgent(agentID, RegionInfo.RegionID, regions);
+                            service.CloseAllNeighborAgents(agentID, RegionInfo.RegionID);
                     }
                     m_eventManager.TriggerClientClosed(agentID, this);
                     m_eventManager.TriggerOnClosingClient(avatar.ControllingClient);
@@ -4101,27 +4083,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_authenticateHandler.RemoveCircuit(avatar.ControllingClient.CircuitCode);
                 //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
                 //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
-            }
-        }
-
-        /// <summary>
-        /// Removes region from an avatar's known region list.  This coincides with child agents.  For each child agent, there will be a known region entry.
-        /// 
-        /// </summary>
-        /// <param name="avatarID"></param>
-        /// <param name="regionslst"></param>
-        public void HandleRemoveKnownRegionsFromAvatar(UUID avatarID, List<ulong> regionslst)
-        {
-            ScenePresence av = GetScenePresence(avatarID);
-            if (av != null)
-            {
-                lock (av)
-                {
-                    for (int i = 0; i < regionslst.Count; i++)
-                    {
-                        av.KnownChildRegionHandles.Remove(regionslst[i]);
-                    }
-                }
             }
         }
 
@@ -4303,22 +4264,22 @@ namespace OpenSim.Region.Framework.Scenes
                 // If it is, check the Z start position also..   if not, leave it alone.
                 if (BordersLocked)
                 {
-                    lock (EastBorders)
+                    lock (RegionInfo.EastBorders)
                     {
-                        if (agent.startpos.X > EastBorders[0].BorderLine.Z)
+                        if (agent.startpos.X > RegionInfo.EastBorders[0].BorderLine.Z)
                         {
                             m_log.Warn("FIX AGENT POSITION");
-                            agent.startpos.X = EastBorders[0].BorderLine.Z * 0.5f;
+                            agent.startpos.X = RegionInfo.EastBorders[0].BorderLine.Z * 0.5f;
                             if (agent.startpos.Z > 720)
                                 agent.startpos.Z = 720;
                         }
                     }
-                    lock (NorthBorders)
+                    lock (RegionInfo.NorthBorders)
                     {
-                        if (agent.startpos.Y > NorthBorders[0].BorderLine.Z)
+                        if (agent.startpos.Y > RegionInfo.NorthBorders[0].BorderLine.Z)
                         {
                             m_log.Warn("FIX Agent POSITION");
-                            agent.startpos.Y = NorthBorders[0].BorderLine.Z * 0.5f;
+                            agent.startpos.Y = RegionInfo.NorthBorders[0].BorderLine.Z * 0.5f;
                             if (agent.startpos.Z > 720)
                                 agent.startpos.Z = 720;
                         }
@@ -4326,17 +4287,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    if (agent.startpos.X > EastBorders[0].BorderLine.Z)
+                    if (agent.startpos.X > RegionInfo.EastBorders[0].BorderLine.Z)
                     {
                         m_log.Warn("FIX AGENT POSITION");
-                        agent.startpos.X = EastBorders[0].BorderLine.Z * 0.5f;
+                        agent.startpos.X = RegionInfo.EastBorders[0].BorderLine.Z * 0.5f;
                         if (agent.startpos.Z > 720)
                             agent.startpos.Z = 720;
                     }
-                    if (agent.startpos.Y > NorthBorders[0].BorderLine.Z)
+                    if (agent.startpos.Y > RegionInfo.NorthBorders[0].BorderLine.Z)
                     {
                         m_log.Warn("FIX Agent POSITION");
-                        agent.startpos.Y = NorthBorders[0].BorderLine.Z * 0.5f;
+                        agent.startpos.Y = RegionInfo.NorthBorders[0].BorderLine.Z * 0.5f;
                         if (agent.startpos.Z > 720)
                             agent.startpos.Z = 720;
                     }
@@ -4344,7 +4305,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //Keep users from being underground
                 if (agent.startpos.Z < GetGroundHeight(agent.startpos.X, agent.startpos.Y))
                 {
-                    m_log.Warn("FIX Agent Z POSITION");
                     agent.startpos.Z = GetGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
                 }
             }

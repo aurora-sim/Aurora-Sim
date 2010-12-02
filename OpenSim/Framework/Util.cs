@@ -82,10 +82,7 @@ namespace OpenSim.Framework
         /// FireAndForgetMethod.SmartThreadPool is used</summary>
         private static SmartThreadPool m_ThreadPool;
 
-        public static bool CloseLocalRegions = true;
-        public static int RegionViewSize = 1;
         public static bool VariableRegionSight = false;
-        public static List<IScene> Scenes = new List<IScene>();
         public static int NumberofScenes = 0;
 
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.
@@ -430,29 +427,6 @@ namespace OpenSim.Framework
             int min = Math.Min(x, y);
 
             return (x + y - (min >> 1) - (min >> 2) + (min >> 4));
-        }
-
-        public static void AddScene(IScene scene)
-        {
-            Scenes.Add(scene);
-        }
-
-        public static bool GetIsLocalRegion(ulong handle)
-        {
-            foreach (IScene scene in Scenes)
-            {
-                if (handle == scene.RegionInfo.RegionHandle)
-                    return true;
-            }
-            return false;
-        }
-
-        public static bool IsOutsideView(double oldx, double newx, double oldy, double newy, bool IsLocalRegion)
-        {
-            if (IsLocalRegion && !CloseLocalRegions)
-                return false;
-            // Eventually this will be a function of the draw distance / camera position too.
-            return ((Math.Abs(oldx - newx) > RegionViewSize) || (Math.Abs(oldy - newy) > RegionViewSize));
         }
 
         public static string FieldToString(byte[] bytes)

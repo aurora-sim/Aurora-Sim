@@ -6154,8 +6154,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     edge.x = dir.x / Math.Abs(dir.x);
                 }
             }
-
-            List<GridRegion> neighbors = World.GridService.GetNeighbours(World.RegionInfo.ScopeID, World.RegionInfo.RegionID);
+            INeighbourService service = World.RequestModuleInterface<INeighbourService>();
+            List<GridRegion> neighbors = new List<GridRegion>();
+            if (service != null)
+            {
+                neighbors = service.GetNeighbors(World.RegionInfo);
+            }
 
             uint neighborX = World.RegionInfo.RegionLocX + (uint)dir.x;
             uint neighborY = World.RegionInfo.RegionLocY + (uint)dir.y;

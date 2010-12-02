@@ -207,11 +207,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_LocalService.SendChildAgentUpdate(childAgentUpdate, regionID);
         }
 
-        public override void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
-        {
-            m_LocalService.SendCloseChildAgent(agentID, regionID, regionsToClose);
-        }
-
         public override bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
             bool RetVal = false;
@@ -228,6 +223,31 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
             //This tells the chat module whether we should send the message in the region it originated from, and if it 
             return RetVal;
+        }
+
+        public override List<GridRegion> GetNeighbors(RegionInfo region)
+        {
+            //Try to find the neighbors if it is local first, then query the remote server
+            List<GridRegion> neighbors = m_LocalService.GetNeighbors(region);
+            if (neighbors.Count != 0)
+                return neighbors;
+            //Couldn't find it, ask the other region about it
+            return base.GetNeighbors(region);
+        }
+
+        public override void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
+        {
+            m_LocalService.CloseAllNeighborAgents(AgentID, currentRegionID);
+        }
+
+        public override void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
+        {
+            m_LocalService.CloseNeighborAgents(newRegionX, newRegionY, AgentID, currentRegionID);
+        }
+
+        public override bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
+        {
+            return m_LocalService.IsOutsideView(x, newRegionX, y, newRegionY);
         }
 
         #endregion

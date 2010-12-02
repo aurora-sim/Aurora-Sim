@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Framework
 {
     public class Border
     {

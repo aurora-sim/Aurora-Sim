@@ -51,6 +51,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         private IGridService m_gridService = null;
         private ISimulationService m_simService = null;
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
+        private bool CloseLocalRegions = true;
+        private int RegionViewSize = 1;
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
         {
@@ -73,6 +75,13 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void Initialise(IConfigSource source)
         {
+            IConfig neighborService = source.Configs["NeighborService"];
+            if (neighborService != null)
+            {
+                RegionViewSize = neighborService.GetInt("RegionSightSize", RegionViewSize);
+                //This option is the opposite of the config to make it easier on the user
+                CloseLocalRegions = !neighborService.GetBoolean("SeeIntoAllLocalRegions", CloseLocalRegions);
+            }
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
@@ -103,14 +112,14 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 return;
 
             scene.RegisterModuleInterface<INeighbourService>(this);
-            if (m_gridService == null)
-                m_gridService = scene.GridService;
-            if (m_simService == null)
-                m_simService = scene.SimulationService;
         }
 
         public void RegionLoaded(Scene scene)
         {
+            if (m_gridService == null)
+                m_gridService = scene.GridService;
+            if (m_simService == null)
+                m_simService = scene.SimulationService;
             //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled for region " + scene.RegionInfo.RegionName);
         }
 
@@ -136,7 +145,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
             List<GridRegion> m_informedRegions = new List<GridRegion>();
-            m_KnownNeighbors[incomingRegion.RegionID] = m_gridService.GetNeighbours(incomingRegion.ScopeID, incomingRegion.RegionID);
+            m_KnownNeighbors[incomingRegion.RegionID] = FindNewNeighbors(incomingRegion);
 
             //We need to inform all the regions around us that our region now exists
             
@@ -169,6 +178,75 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
 
             return m_informedRegions;
+        }
+
+        private List<GridRegion> FindNewNeighbors(RegionInfo region)
+        {
+            List<GridRegion> neighbors = new List<GridRegion>();
+            if (RegionViewSize == 1) //Legacy support
+            {
+                Border[] northBorders = region.NorthBorders.ToArray();
+                Border[] southBorders = region.SouthBorders.ToArray();
+                Border[] eastBorders = region.EastBorders.ToArray();
+                Border[] westBorders = region.WestBorders.ToArray();
+
+                // Legacy one region.  Provided for simplicity while testing the all inclusive method in the else statement.
+                if (northBorders.Length <= 1 && southBorders.Length <= 1 && eastBorders.Length <= 1 && westBorders.Length <= 1)
+                {
+                    neighbors = m_gridService.GetNeighbours(region.ScopeID, region.RegionID);
+                }
+                else
+                {
+                    //Check for larger mega-regions
+                    Vector2 extent = Vector2.Zero;
+                    for (int i = 0; i < eastBorders.Length; i++)
+                    {
+                        extent.X = (eastBorders[i].BorderLine.Z > extent.X) ? eastBorders[i].BorderLine.Z : extent.X;
+                    }
+                    for (int i = 0; i < northBorders.Length; i++)
+                    {
+                        extent.Y = (northBorders[i].BorderLine.Z > extent.Y) ? northBorders[i].BorderLine.Z : extent.Y;
+                    }
+
+                    // Loss of fraction on purpose
+                    extent.X = ((int)extent.X / (int)Constants.RegionSize) + 1;
+                    extent.Y = ((int)extent.Y / (int)Constants.RegionSize) + 1;
+
+                    int startX = (int)(region.RegionLocX - 1) * (int)Constants.RegionSize;
+                    int startY = (int)(region.RegionLocY - 1) * (int)Constants.RegionSize;
+
+                    int endX = ((int)region.RegionLocX + (int)extent.X) * (int)Constants.RegionSize;
+                    int endY = ((int)region.RegionLocY + (int)extent.Y) * (int)Constants.RegionSize;
+
+                    neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
+                }
+            }
+            else
+            {
+                //Get the range of regions defined by RegionViewSize
+                neighbors = m_gridService.GetRegionRange(region.ScopeID, (int)(region.RegionLocX - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocX + RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY + RegionViewSize) * (int)Constants.RegionSize);
+            }
+            if (!CloseLocalRegions)
+            {
+                foreach (Scene scene in m_Scenes)
+                {
+                    GridRegion gregion = m_gridService.GetRegionByUUID(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
+                    if (!neighbors.Contains(gregion))
+                        neighbors.Add(gregion);
+                }
+            }
+            neighbors.RemoveAll(delegate(GridRegion r) { return r.RegionID == region.RegionID; });
+            return neighbors;
+        }
+
+        public List<GridRegion> GetNeighbors(RegionInfo region)
+        {
+            List<GridRegion> neighbors = new List<GridRegion>();
+            if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
+            {
+                neighbors = new List<GridRegion>();
+            }
+            return neighbors;
         }
 
         public List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
@@ -217,13 +295,58 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
         }
 
-        public void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
+        public void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
         {
-            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
+            m_log.DebugFormat(
+                "[NeighborService]: Closing all child agents for " + AgentID + ". Checking {0} regions.",
+                NeighborsOfCurrentRegion.Count);
+            SendCloseChildAgent(AgentID, currentRegionID, NeighborsOfCurrentRegion);
+        }
+
+        public bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
+        {
+            Scene scene = FindSceneByPosition(x, y);
+            //Check whether it is a local region
+            if (!CloseLocalRegions && scene != null)
+                return false;
+
+            return ((Math.Abs(x - newRegionX) > RegionViewSize) || (Math.Abs(y - newRegionY) > RegionViewSize));
+        }
+
+        public void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
+        {
+            List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
+            List<GridRegion> byebyeRegions = new List<GridRegion>();
+            m_log.DebugFormat(
+                "[NeighborService]: Closing child agents. Checking {0} regions in {1}",
+                NeighborsOfCurrentRegion.Count, FindSceneByUUID(currentRegionID).RegionInfo.RegionName);
+            
+            foreach (GridRegion region in NeighborsOfCurrentRegion)
             {
-                //If it is one of the ones that needs closing, close it
-                if(regionsToClose.Contains(region.RegionHandle))
-                    m_simService.CloseAgent(region, agentID);
+                uint x, y;
+                x = (uint)region.RegionLocX / (uint)Constants.RegionSize;
+                y = (uint)region.RegionLocY / (uint)Constants.RegionSize;
+
+                if (IsOutsideView(x, newRegionX, y, newRegionY))
+                {
+                    byebyeRegions.Add(region);
+                }
+            }
+
+            if (byebyeRegions.Count > 0)
+            {
+                m_log.Debug("[NeighborService]: Closing " + byebyeRegions.Count + " child agents");
+                SendCloseChildAgent(AgentID, currentRegionID, byebyeRegions);
+            }
+        }
+
+        protected void SendCloseChildAgent(UUID agentID, UUID regionID, List<GridRegion> regionsToClose)
+        {
+            //Close all agents that we've been given regions for
+            foreach (GridRegion region in regionsToClose)
+            {
+                m_simService.CloseAgent(region, agentID);
             }
         }
 
@@ -273,6 +396,19 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             foreach (Scene scene in m_Scenes)
             {
                 if (scene.RegionInfo.RegionID == regionID)
+                {
+                    return scene;
+                }
+            }
+            return null;
+        }
+
+        private Scene FindSceneByPosition(uint x, uint y)
+        {
+            foreach (Scene scene in m_Scenes)
+            {
+                if (scene.RegionInfo.RegionLocX == x &&
+                    scene.RegionInfo.RegionLocY == y)
                 {
                     return scene;
                 }
