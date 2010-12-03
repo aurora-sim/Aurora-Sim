@@ -13,6 +13,9 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
 using OpenSim.Framework.Capabilities;
+using OSD = OpenMetaverse.StructuredData.OSD;
+using OSDArray = OpenMetaverse.StructuredData.OSDArray;
+using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OpenSim.Services.Base;
 
 using OpenMetaverse;
@@ -27,6 +30,7 @@ namespace OpenSim.Services.CapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public IHttpServer m_server = null;
+        public static List<ICapsServiceConnector> CapsModules = new List<ICapsServiceConnector>();
 
         public AuroraCAPSHandler(IConfigSource config, IHttpServer server, string configName) :
             base(config, server, configName)
@@ -48,6 +52,7 @@ namespace OpenSim.Services.CapsService
             ILibraryService m_LibraryService = ServerUtils.LoadPlugin<ILibraryService>(libService, args);
             IGridUserService m_GridUserService = ServerUtils.LoadPlugin<IGridUserService>(guService, args);
             IPresenceService m_PresenceService = ServerUtils.LoadPlugin<IPresenceService>(presenceService, args);
+            CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             //This handler allows sims to post CAPS for their sims on the CAPS server.
             server.AddStreamHandler(new CAPSPublicHandler(server, Password, m_InventoryService, m_LibraryService, m_GridUserService, m_PresenceService, HostName));
         }
@@ -72,7 +77,9 @@ namespace OpenSim.Services.CapsService
         public Hashtable registeredCAPS = new Hashtable();
         //Paths to X cap
         public Hashtable registeredCAPSPath = new Hashtable();
+        private CAPSEQMHandler EQMHandler = new CAPSEQMHandler();
         private string m_HostName;
+        public OSDMap postToSendToSim = new OSDMap();
 
         public CAPSPrivateSeedHandler(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IPresenceService presenceService, string URL, UUID agentID, string HostName)
         {
@@ -92,6 +99,8 @@ namespace OpenSim.Services.CapsService
         public List<IRequestHandler> GetServerCAPS()
         {
             List<IRequestHandler> handlers = new List<IRequestHandler>();
+
+            handlers.Add(EQMHandler.RegisterCap(m_AgentID, this));
 
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
@@ -148,6 +157,11 @@ namespace OpenSim.Services.CapsService
             handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchLib"),
                                                       method));
 
+            foreach (ICapsServiceConnector conn in AuroraCAPSHandler.CapsModules)
+            {
+                handlers.AddRange(conn.RegisterCaps(m_AgentID));
+            }
+
             return handlers;
         }
 
@@ -167,7 +181,7 @@ namespace OpenSim.Services.CapsService
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         SimToInform,
-                        "");
+                        OSDParser.SerializeLLSDXmlString(postToSendToSim));
                 if (reply != "")
                 {
                     Hashtable hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(reply));
@@ -912,6 +926,8 @@ namespace OpenSim.Services.CapsService
 #endregion
     }
 
+    #region Public handler
+
     /// <summary>
     /// This handles requests from the user server about clients that need a CAPS seed URL.
     /// </summary>
@@ -1005,4 +1021,452 @@ namespace OpenSim.Services.CapsService
             m_server.AddStreamHandler(new RestStreamHandler("POST", CAPS, new CAPSPrivateSeedHandler(m_server, m_inventory, m_library, m_GridUserService, m_PresenceService, SimCAPS, AgentID, m_hostName).CapsRequest));
         }
     }
+
+    #endregion
+
+    #region EQM
+
+    public class CAPSEQMHandler
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private Dictionary<UUID, int> m_ids = new Dictionary<UUID, int>();
+
+        private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
+        private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
+        private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
+        private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
+
+        /// <summary>
+        ///  Always returns a valid queue
+        /// </summary>
+        /// <param name="agentId"></param>
+        /// <returns></returns>
+        private Queue<OSD> TryGetQueue(UUID agentId)
+        {
+            lock (queues)
+            {
+                if (!queues.ContainsKey(agentId))
+                {
+                    queues[agentId] = new Queue<OSD>();
+                }
+
+                return queues[agentId];
+            }
+        }
+
+        /// <summary>
+        /// May return a null queue
+        /// </summary>
+        /// <param name="agentId"></param>
+        /// <returns></returns>
+        private Queue<OSD> GetQueue(UUID agentId)
+        {
+            lock (queues)
+            {
+                if (queues.ContainsKey(agentId))
+                {
+                    return queues[agentId];
+                }
+                else
+                    return null;
+            }
+        }
+
+        public bool Enqueue(OSD ev, UUID avatarID)
+        {
+            try
+            {
+                Queue<OSD> queue = GetQueue(avatarID);
+                if (queue != null)
+                    queue.Enqueue(ev);
+            }
+            catch (NullReferenceException e)
+            {
+                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
+                return false;
+            }
+
+            return true;
+        }
+
+        /*private void ClientClosed(UUID AgentID, Scene scene)
+        {
+            //m_log.DebugFormat("[EVENTQUEUE]: Closed client {0} in region {1}", AgentID, m_scene.RegionInfo.RegionName);
+
+            //Errr... shouldn't we just close the client?
+            int count = 0;
+            while (queues.ContainsKey(AgentID) && queues[AgentID].Count > 0 && count++ < 2)
+            {
+                Thread.Sleep(100);
+            }
+
+            lock (queues)
+            {
+                queues.Remove(AgentID);
+            }
+            List<UUID> removeitems = new List<UUID>();
+            lock (m_AvatarQueueUUIDMapping)
+            {
+                foreach (UUID ky in m_AvatarQueueUUIDMapping.Keys)
+                {
+                    if (ky == AgentID)
+                    {
+                        removeitems.Add(ky);
+                    }
+                }
+
+                foreach (UUID ky in removeitems)
+                {
+                    m_AvatarQueueUUIDMapping.Remove(ky);
+                    MainServer.Instance.RemovePollServiceHTTPHandler("", "/CAPS/EQG/" + ky.ToString() + "/");
+                }
+
+            }
+            UUID searchval = UUID.Zero;
+
+            removeitems.Clear();
+
+            lock (m_QueueUUIDAvatarMapping)
+            {
+                foreach (UUID ky in m_QueueUUIDAvatarMapping.Keys)
+                {
+                    searchval = m_QueueUUIDAvatarMapping[ky];
+
+                    if (searchval == AgentID)
+                    {
+                        removeitems.Add(ky);
+                    }
+                }
+
+                foreach (UUID ky in removeitems)
+                    m_QueueUUIDAvatarMapping.Remove(ky);
+            }
+        }*/
+
+        public IRequestHandler RegisterCap(UUID agentID, CAPSPrivateSeedHandler handler)
+        {
+            // Register an event queue for the client
+
+            // Let's instantiate a Queue for this agent right now
+            TryGetQueue(agentID);
+
+            string capsBase = "/CAPS/EQG/";
+            UUID EventQueueGetUUID = UUID.Zero;
+
+            lock (m_AvatarQueueUUIDMapping)
+            {
+                // Reuse open queues.  The client does!
+                if (m_AvatarQueueUUIDMapping.ContainsKey(agentID))
+                {
+                    //m_log.DebugFormat("[EVENTQUEUE]: Found Existing UUID!");
+                    EventQueueGetUUID = m_AvatarQueueUUIDMapping[agentID];
+                }
+                else
+                {
+                    EventQueueGetUUID = UUID.Random();
+                    //m_log.DebugFormat("[EVENTQUEUE]: Using random UUID!");
+                }
+            }
+
+            lock (m_QueueUUIDAvatarMapping)
+            {
+                if (!m_QueueUUIDAvatarMapping.ContainsKey(EventQueueGetUUID))
+                    m_QueueUUIDAvatarMapping.Add(EventQueueGetUUID, agentID);
+            }
+
+            lock (m_AvatarQueueUUIDMapping)
+            {
+                if (!m_AvatarQueueUUIDMapping.ContainsKey(agentID))
+                    m_AvatarQueueUUIDMapping.Add(agentID, EventQueueGetUUID);
+            }
+
+            // Register this as a caps handler
+            IRequestHandler rhandler =
+                                 new RestHTTPHandler("POST", capsBase + EventQueueGetUUID.ToString() + "/",
+                                                       delegate(Hashtable m_dhttpMethod)
+                                                       {
+                                                           return ProcessQueue(m_dhttpMethod, agentID);
+                                                       });
+
+            // This will persist this beyond the expiry of the caps handlers
+            MainServer.Instance.AddPollServiceHTTPHandler(
+                capsBase + EventQueueGetUUID.ToString() + "/", EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, agentID));
+
+            Random rnd = new Random(Environment.TickCount);
+            lock (m_ids)
+            {
+                if (!m_ids.ContainsKey(agentID))
+                    m_ids.Add(agentID, rnd.Next(30000000));
+            }
+
+            UUID Password = UUID.Random();
+
+            m_AvatarPasswordMap.Add(agentID, Password);
+            handler.postToSendToSim.Add("EventQueuePass", OSD.FromUUID(Password));
+            return rhandler;
+        }
+
+        public bool AuthenticateRequest(UUID agentID, UUID Password)
+        {
+            if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID] == Password)
+                return true;
+            return false;
+        }
+
+        public bool HasEvents(UUID requestID, UUID agentID)
+        {
+            // Don't use this, because of race conditions at agent closing time
+            //Queue<OSD> queue = TryGetQueue(agentID);
+
+            Queue<OSD> queue = GetQueue(agentID);
+            if (queue != null)
+                lock (queue)
+                {
+                    if (queue.Count > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            return false;
+        }
+
+        public Hashtable GetEvents(UUID requestID, UUID pAgentId, string request)
+        {
+            Queue<OSD> queue = TryGetQueue(pAgentId);
+            OSD element;
+            lock (queue)
+            {
+                if (queue.Count == 0)
+                    return NoEvents(requestID, pAgentId);
+                element = queue.Dequeue(); // 15s timeout
+            }
+
+
+
+            int thisID = 0;
+            lock (m_ids)
+                thisID = m_ids[pAgentId];
+
+            OSDArray array = new OSDArray();
+            if (element == null) // didn't have an event in 15s
+            {
+                OSDMap keepAliveEvent = new OSDMap(2);
+                keepAliveEvent.Add("body", new OSDMap());
+                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+
+                // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
+                array.Add(keepAliveEvent);
+                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
+            }
+            else
+            {
+                array.Add(element);
+                lock (queue)
+                {
+                    while (queue.Count > 0)
+                    {
+                        array.Add(queue.Dequeue());
+                        thisID++;
+                    }
+                }
+            }
+
+            OSDMap events = new OSDMap();
+            events.Add("events", array);
+
+            events.Add("id", new OSDInteger(thisID));
+            lock (m_ids)
+            {
+                m_ids[pAgentId] = thisID + 1;
+            }
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200;
+            responsedata["content_type"] = "application/xml";
+            responsedata["keepalive"] = false;
+            responsedata["reusecontext"] = false;
+            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
+            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", pAgentId, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
+            return responsedata;
+        }
+
+        public Hashtable NoEvents(UUID requestID, UUID agentID)
+        {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 502;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["reusecontext"] = false;
+            responsedata["str_response_string"] = "Upstream error: ";
+            responsedata["error_status_text"] = "Upstream error:";
+            responsedata["http_protocol_version"] = "HTTP/1.0";
+            return responsedata;
+        }
+
+        public Hashtable ProcessQueue(Hashtable request, UUID agentID)
+        {
+            // TODO: this has to be redone to not busy-wait (and block the thread),
+            // TODO: as soon as we have a non-blocking way to handle HTTP-requests.
+
+            //            if (m_log.IsDebugEnabled)
+            //            { 
+            //                String debug = "[EVENTQUEUE]: Got request for agent {0} in region {1} from thread {2}: [  ";
+            //                foreach (object key in request.Keys)
+            //                {
+            //                    debug += key.ToString() + "=" + request[key].ToString() + "  ";
+            //                }
+            //                m_log.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
+            //            }
+
+            Queue<OSD> queue = TryGetQueue(agentID);
+            OSD element = queue.Dequeue(); // 15s timeout
+
+            Hashtable responsedata = new Hashtable();
+
+            int thisID = 0;
+            lock (m_ids)
+                thisID = m_ids[agentID];
+
+            if (element == null)
+            {
+                //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
+                if (thisID == -1) // close-request
+                {
+                    m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
+                    responsedata["int_response_code"] = 404; //501; //410; //404;
+                    responsedata["content_type"] = "text/plain";
+                    responsedata["keepalive"] = false;
+                    responsedata["str_response_string"] = "Closed EQG";
+                    return responsedata;
+                }
+                responsedata["int_response_code"] = 502;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                responsedata["str_response_string"] = "Upstream error: ";
+                responsedata["error_status_text"] = "Upstream error:";
+                responsedata["http_protocol_version"] = "HTTP/1.0";
+                return responsedata;
+            }
+
+            OSDArray array = new OSDArray();
+            if (element == null) // didn't have an event in 15s
+            {
+                OSDMap keepAliveEvent = new OSDMap(2);
+                keepAliveEvent.Add("body", new OSDMap());
+                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+
+                // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
+                array.Add(keepAliveEvent);
+                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", agentID, m_scene.RegionInfo.RegionName);
+            }
+            else
+            {
+                array.Add(element);
+                while (queue.Count > 0)
+                {
+                    array.Add(queue.Dequeue());
+                    thisID++;
+                }
+            }
+
+            OSDMap events = new OSDMap();
+            events.Add("events", array);
+
+            events.Add("id", new OSDInteger(thisID));
+            lock (m_ids)
+            {
+                m_ids[agentID] = thisID + 1;
+            }
+
+            responsedata["int_response_code"] = 200;
+            responsedata["content_type"] = "application/xml";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
+            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", agentID, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
+
+            return responsedata;
+        }
+
+        public Hashtable EventQueuePoll(Hashtable request)
+        {
+            return new Hashtable();
+        }
+
+        #region EQM event poster
+
+        public class EQMEventPoster : BaseStreamHandler
+        {
+            private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+            private IHttpServer m_server;
+            private CAPSEQMHandler m_handler;
+
+            public EQMEventPoster(IHttpServer server, CAPSEQMHandler handler) :
+                base("POST", "/CAPS/EQMPOSTER")
+            {
+                m_server = server;
+                m_handler = handler;
+            }
+
+            public override byte[] Handle(string path, Stream requestData,
+                    OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                StreamReader sr = new StreamReader(requestData);
+                string body = sr.ReadToEnd();
+                sr.Close();
+                body = body.Trim();
+
+                //m_log.DebugFormat("[XXX]: query String: {0}", body);
+                string method = string.Empty;
+                try
+                {
+                    Dictionary<string, object> request = new Dictionary<string, object>();
+                    request = ServerUtils.ParseQueryString(body);
+                    if (request.Count == 1)
+                        request = ServerUtils.ParseXmlResponse(body);
+                    object value = null;
+                    request.TryGetValue("<?xml version", out value);
+                    if (value != null)
+                        request = ServerUtils.ParseXmlResponse(body);
+
+                    return ProcessAddCAP(request);
+                }
+                catch (Exception)
+                {
+                }
+
+                return null;
+
+            }
+
+            private byte[] ProcessAddCAP(Dictionary<string, object> m_dhttpMethod)
+            {
+                UUID agentID = UUID.Parse((string)m_dhttpMethod["AGENTID"]);
+                UUID password = UUID.Parse((string)m_dhttpMethod["PASS"]);
+                string llsd = (string)m_dhttpMethod["LLSD"];
+                //This is called by the user server
+                if (!m_handler.AuthenticateRequest(agentID,password))
+                {
+                    Dictionary<string, object> result = new Dictionary<string, object>();
+                    result.Add("result", "false");
+                    string xmlString = ServerUtils.BuildXmlResponse(result);
+                    UTF8Encoding encoding = new UTF8Encoding();
+                    return encoding.GetBytes(xmlString);
+                }
+                else
+                {
+                    m_handler.Enqueue(OSDParser.DeserializeJson(llsd), agentID);
+                    Dictionary<string, object> result = new Dictionary<string, object>();
+                    result.Add("result", "true");
+                    string xmlString = ServerUtils.BuildXmlResponse(result);
+                    UTF8Encoding encoding = new UTF8Encoding();
+                    return encoding.GetBytes(xmlString);
+                }
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
 }

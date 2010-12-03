@@ -92,6 +92,8 @@ namespace Aurora.Modules
             {
                 if (handler.registeredCAPSPath.ContainsKey(handle.Path))
                 {
+                    if (handle.HttpMethod == "EQM")
+                        continue;
                     caps.RegisterHandler(handler.registeredCAPSPath[handle.Path].ToString(), handle);
                 }
             }
