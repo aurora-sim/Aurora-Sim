@@ -55,11 +55,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         // Assembly is compiled using LSL_BaseClass as base. Look at debug C# code file created when LSL script is compiled for full details.
         //
 
-        /// <summary>
-        /// This contains number of lines WE use for header when compiling script. User will get error in line x-LinesToRemoveOnError when error occurs.
-        /// </summary>
-        public static int LinesToRemoveOnError = 9;
-
         private string DefaultCompileLanguage;
         private bool WriteScriptSourceToDebugFile;
         private bool CompileWithDebugInformation;
@@ -433,7 +428,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
                             lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            //LineN = lslPos.Key - 1 - LinesToRemoveOnError;
                             LineN = lslPos.Key - 1;
                             CharN = lslPos.Value - 1;
                             if (LineN <= 0 && CharN != 0)
@@ -486,8 +480,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             text = ReplaceTypes(CompErr.ErrorText);
                             text = CleanError(text);
                             lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            LineN = lslPos.Key - 1 - LinesToRemoveOnError;
+                            LineN = lslPos.Key - 1;
                             CharN = lslPos.Value - 1;
+                            if (LineN <= 0 && CharN != 0)
+                            {
+                                string[] lines = originalScript.Split('\n');
+                                int charCntr = 0;
+                                int lineCntr = 0;
+                                foreach(string line in lines)
+                                {
+                                    if (charCntr + line.Length > CharN)
+                                    {
+                                        //Its in this line
+                                        CharN -= charCntr;
+                                        LineN = lineCntr;
+                                        break;
+                                    }
+                                    charCntr += line.Length - 1;
+                                    lineCntr++;
+                                }
+                            }
                         }
                         else
                         {
@@ -546,7 +558,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return new KeyValuePair<int, int>(line, col);
 
             KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
-            //line -= LinesToRemoveOnError;
 
              if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
                     out ret))

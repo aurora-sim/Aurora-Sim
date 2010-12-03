@@ -1535,23 +1535,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     argumentDeclarationListKids.Add(kid);
                 else
                     remainingKids.Add(kid);
-            /*
-                        if (gf.ReturnType != "void")
-                        {
-                            retstr.Append(GenerateIndented(String.Format("{0} {1}(", gf.ReturnType, CheckName(gf.Name)), gf));
-                            IsParentEnumerable = false;
-                        }
-                        else
-                        {
-                            retstr.Append(GenerateIndented(String.Format("{0} {1}(", "IEnumerator", CheckName(gf.Name)), gf));
-                            IsParentEnumerable = true;
-                        }
-             */
-
 
             retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
 
-            //            LocalMethods.Add(CheckName(gf.Name), gf.ReturnType);
             IsParentEnumerable = true;
 
             // print the state arguments, if any
@@ -2046,7 +2032,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (IsParentEnumerable)
             {
-                retstr += Generate("{ ");
+                retstr += GenerateLine("{ ");
                 if (rs.kids.Count == 0)
                     retstr += GenerateLine("yield break;", rs);
                 else
@@ -2054,9 +2040,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     retstr += Generate("yield return ", rs);
                     foreach (SYMBOL kid in rs.kids)
                         retstr += GenerateNode(kid);
-                    retstr += GenerateLine("; yield break;", rs);
+                    retstr += GenerateLine(";", null);
+                    retstr += GenerateLine("yield break;", null);
                 }
-                retstr += GenerateLine(" }");
+                retstr += GenerateLine("}");
             }
             else
             {
@@ -2690,33 +2677,7 @@ default
                     tempString += GenerateNode(kid);
                 }
             }
-            /*
-                        string TempStringForEnum = "";
-                        TempStringForEnum = OriginalScript.Remove(0, fc.pos);
-                        TempStringForEnum = TempStringForEnum.Remove(0, fc.Id.Length);
-                        TempStringForEnum = TempStringForEnum.Split(')')[0];
-                        string TestOriginal = OriginalScript.Replace(" ", "");
-                        TestOriginal = TestOriginal.Replace("\n", "");
-                        string TestScript = fc.Id + TempStringForEnum + ")" + "{";
-                        string TestTestScript = fc.Id + "(*){";
-
-                        foreach (string testOriginal in TestOriginal.Split(';'))
-                        {
-                            if (testOriginal.CompareWildcard(TestTestScript, true))
-                            {
-                                isEnumerable = true;
-                            }
-                        }
-                        if (TestOriginal.Contains(TestScript))
-                        {
-                            //This DOES need to exist, this is for nested function calls to user-generated methods!
-                            isEnumerable = true;
-                        }
-                        else if (retstr.ToString().Contains("IEnumerator " + fc.Id))
-                        {
-                            isEnumerable = true;
-                        }
-            */
+            
             isEnumerable = false;
             bool DTFunction = false;
 
@@ -2742,57 +2703,13 @@ default
 
             if (DTFunction)
             {
-                //                retstr.Append(GenerateLine("{"));
                 retstr += Generate("yield return ");
                 retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 retstr += tempString;
-
-                retstr += GenerateLine(")");
-                //                retstr.Append(Generate("yield return null;"));
-                //                retstr.Append(GenerateLine("}"));
             }
             else if (isEnumerable)
             {
-                /*
-                                if (rettype != "void")
-                                    {
-                                    Mname = RandomString(10, true);
-                                    FunctionCalls += GenerateLine(rettype + " " + Mname + ";");
-                                    }
-
-                                FunctionCalls += GenerateLine("{");
-
-                                //We can use enumerator here as the { in the above line breaks off possible issues upward in the method (or should anyway)
-                                FunctionCalls += Generate("IEnumerator enumerator = ");
-                                FunctionCalls += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
-                                FunctionCalls += tempString;
-                                FunctionCalls += Generate(");");
-
-                                FunctionCalls += GenerateLine("while (true) {");
-                                string FunctionName = RandomString(10, true);
-                                FunctionCalls += GenerateLine(" bool " + FunctionName + " = false;");
-
-                                FunctionCalls += GenerateLine(" try");
-                                FunctionCalls += GenerateLine("  {");
-                                FunctionCalls += GenerateLine("  " + FunctionName + " = enumerator.MoveNext();");
-                                FunctionCalls += GenerateLine("  if(!" + FunctionName + ")");
-                                FunctionCalls += GenerateLine("    break;"); //All done, break out of the loop
-                                FunctionCalls += GenerateLine("  }");
-                                FunctionCalls += GenerateLine(" catch");
-                                FunctionCalls += GenerateLine("  {");
-                                FunctionCalls += GenerateLine("  yield break;");//End it since we are erroring out -> now abort 
-                                FunctionCalls += GenerateLine("  }"); //End of catch
-                                FunctionCalls += GenerateLine(" if( enumerator.Current == null || enumerator.Current is DateTime) yield return enumerator.Current;"); //Let the other things process for a bit here at the end of each enumeration
-                                FunctionCalls += GenerateLine(" else break;"); //Let the other things process for a bit here at the end of each enumeration
-                                FunctionCalls += GenerateLine("}"); //End of while
-                                if (rettype != "void")
-                                    {
-                                    FunctionCalls += GenerateLine(Mname + " = (" + rettype + ") enumerator.Current;");
-                                    retstr += Mname;
-                                    }
-                                FunctionCalls += GenerateLine("}");
-                 */
-
+                //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
                 Mname = RandomString(10, true);
                 string Exname = RandomString(10, true);
                 List<string> fCalls = new List<string>();
@@ -2831,7 +2748,7 @@ default
                 retstr += Generate(")");
             }
 
-            //Function calls are first
+            //Function calls are first if needed
             return DumpFunc(marc) + retstr.ToString();
         }
 
