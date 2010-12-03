@@ -64,6 +64,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
         
         #region IRegionModule methods
+
         public virtual void Initialise(IConfigSource config)
         {
         }

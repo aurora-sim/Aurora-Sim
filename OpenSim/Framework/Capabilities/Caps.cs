@@ -126,6 +126,7 @@ namespace OpenSim.Framework.Capabilities
         public ItemUpdatedCallback ItemUpdatedCall = null;
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
         public FetchInventoryDescendentsCAPS CAPSFetchInventoryDescendents = null;
+        public OpenMetaverse.StructuredData.OSDMap RequestMap = new OpenMetaverse.StructuredData.OSDMap();
         
         public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,
                     UUID agent, string regionName)
@@ -297,7 +298,13 @@ namespace OpenSim.Framework.Capabilities
                 m_log.DebugFormat("[CAPS]: Unauthorized CAPS client");
                 return string.Empty;
             }
-
+            try
+            {
+                RequestMap = request != "" ? ((OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeJson(request)) : new OpenMetaverse.StructuredData.OSDMap();
+            }
+            catch
+            {
+            }
             string result = LLSDHelpers.SerialiseLLSDReply(m_capsHandlers.CapsDetails);
 
             //m_log.DebugFormat("[CAPS] CapsRequest {0}", result);

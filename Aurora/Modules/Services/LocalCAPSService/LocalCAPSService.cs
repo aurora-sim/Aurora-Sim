@@ -84,7 +84,7 @@ namespace Aurora.Modules
             CAPSPrivateSeedHandler handler = new CAPSPrivateSeedHandler(null,//the server IS null for a reason, so that we don't add the handlers at the wrong time
                 m_scene.InventoryService, 
                 m_scene.LibraryService, m_scene.GridUserService,
-                m_scene.PresenceService, "", agentID, ""); //URL and Hostname are all "" as well so that we don't add the hostname by accident
+                m_scene.PresenceService, "", agentID, "", false); //URL and Hostname are all "" as well so that we don't add the hostname by accident
 
             List<IRequestHandler> handlers = handler.GetServerCAPS();
 
@@ -92,8 +92,6 @@ namespace Aurora.Modules
             {
                 if (handler.registeredCAPSPath.ContainsKey(handle.Path))
                 {
-                    if (handle.HttpMethod == "EQM")
-                        continue;
                     caps.RegisterHandler(handler.registeredCAPSPath[handle.Path].ToString(), handle);
                 }
             }

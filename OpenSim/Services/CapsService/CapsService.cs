@@ -61,7 +61,7 @@ namespace OpenSim.Services.CapsService
     /// <summary>
     /// This handles the seed requests from the client and forwards the request onto the the simulator
     /// </summary>
-    public class CAPSPrivateSeedHandler
+    public class CAPSPrivateSeedHandler : IPrivateCapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -79,9 +79,22 @@ namespace OpenSim.Services.CapsService
         public Hashtable registeredCAPSPath = new Hashtable();
         private CAPSEQMHandler EQMHandler = new CAPSEQMHandler();
         private string m_HostName;
-        public OSDMap postToSendToSim = new OSDMap();
+        public string HostName
+        {
+            get { return m_HostName; }
+            set { m_HostName = value; }
+        }
+        private OSDMap postToSendToSim = new OSDMap();
 
-        public CAPSPrivateSeedHandler(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IPresenceService presenceService, string URL, UUID agentID, string HostName)
+        public OSDMap PostToSendToSim
+        {
+            get { return postToSendToSim; }
+            set { postToSendToSim = value; }
+        }
+
+        private bool m_runTheEQM;
+
+        public CAPSPrivateSeedHandler(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IPresenceService presenceService, string URL, UUID agentID, string HostName, bool runTheEQM)
         {
             m_server = server;
             m_InventoryService = inventoryService;
@@ -91,6 +104,7 @@ namespace OpenSim.Services.CapsService
             SimToInform = URL;
             m_AgentID = agentID;
             m_HostName = HostName;
+            m_runTheEQM = runTheEQM;
 
             if(m_server != null)
                 AddServerCAPS();
@@ -100,7 +114,17 @@ namespace OpenSim.Services.CapsService
         {
             List<IRequestHandler> handlers = new List<IRequestHandler>();
 
-            handlers.Add(EQMHandler.RegisterCap(m_AgentID, this));
+            if (m_runTheEQM)
+            {
+                // The EventQueue module is now handled by the CapsService (if we arn't disabling it) as it needs to be completely protected
+                //  This means we deal with all teleports and keeping track of the passwords for the agents
+                handlers.Add(EQMHandler.RegisterCap(m_AgentID, m_server, this));
+            }
+
+            foreach (ICapsServiceConnector conn in AuroraCAPSHandler.CapsModules)
+            {
+                handlers.AddRange(conn.RegisterCaps(m_AgentID, m_server, this));
+            }
 
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
@@ -156,11 +180,6 @@ namespace OpenSim.Services.CapsService
             };
             handlers.Add(new RestHTTPHandler("POST", CreateCAPS("FetchLib"),
                                                       method));
-
-            foreach (ICapsServiceConnector conn in AuroraCAPSHandler.CapsModules)
-            {
-                handlers.AddRange(conn.RegisterCaps(m_AgentID));
-            }
 
             return handlers;
         }
@@ -1018,7 +1037,7 @@ namespace OpenSim.Services.CapsService
         private void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS)
         {
             //This makes the new SEED url on the CAPS server
-            m_server.AddStreamHandler(new RestStreamHandler("POST", CAPS, new CAPSPrivateSeedHandler(m_server, m_inventory, m_library, m_GridUserService, m_PresenceService, SimCAPS, AgentID, m_hostName).CapsRequest));
+            m_server.AddStreamHandler(new RestStreamHandler("POST", CAPS, new CAPSPrivateSeedHandler(m_server, m_inventory, m_library, m_GridUserService, m_PresenceService, SimCAPS, AgentID, m_hostName, true).CapsRequest));
         }
     }
 
@@ -1026,7 +1045,7 @@ namespace OpenSim.Services.CapsService
 
     #region EQM
 
-    public class CAPSEQMHandler
+    public class CAPSEQMHandler// : ICapsServiceModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -1144,14 +1163,14 @@ namespace OpenSim.Services.CapsService
             }
         }*/
 
-        public IRequestHandler RegisterCap(UUID agentID, CAPSPrivateSeedHandler handler)
+        public IRequestHandler RegisterCap(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
             // Register an event queue for the client
 
             // Let's instantiate a Queue for this agent right now
             TryGetQueue(agentID);
 
-            string capsBase = "/CAPS/EQG/";
+            string capsBase = handler.HostName + "/CAPS/EQG/";
             UUID EventQueueGetUUID = UUID.Zero;
 
             lock (m_AvatarQueueUUIDMapping)
@@ -1189,6 +1208,9 @@ namespace OpenSim.Services.CapsService
                                                            return ProcessQueue(m_dhttpMethod, agentID);
                                                        });
 
+            //This handler allows sims to post EQM messages for their sims on the CAPS server.
+            server.AddStreamHandler(new EQMEventPoster(this));
+
             // This will persist this beyond the expiry of the caps handlers
             MainServer.Instance.AddPollServiceHTTPHandler(
                 capsBase + EventQueueGetUUID.ToString() + "/", EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, agentID));
@@ -1203,7 +1225,7 @@ namespace OpenSim.Services.CapsService
             UUID Password = UUID.Random();
 
             m_AvatarPasswordMap.Add(agentID, Password);
-            handler.postToSendToSim.Add("EventQueuePass", OSD.FromUUID(Password));
+            handler.PostToSendToSim.Add("EventQueuePass", OSD.FromUUID(Password));
             return rhandler;
         }
 
@@ -1398,13 +1420,11 @@ namespace OpenSim.Services.CapsService
         {
             private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-            private IHttpServer m_server;
             private CAPSEQMHandler m_handler;
 
-            public EQMEventPoster(IHttpServer server, CAPSEQMHandler handler) :
+            public EQMEventPoster(CAPSEQMHandler handler) :
                 base("POST", "/CAPS/EQMPOSTER")
             {
-                m_server = server;
                 m_handler = handler;
             }
 
