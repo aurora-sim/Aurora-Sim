@@ -98,7 +98,7 @@ namespace OpenSim.Services.GridService
 
         public HypergridLinker(IConfigSource config, GridService gridService, IRegionData db)
         {
-            m_log.DebugFormat("[HYPERGRID LINKER]: Starting with db {0}", db.GetType());
+            //m_log.DebugFormat("[HYPERGRID LINKER]: Starting with db {0}", db.GetType());
 
             m_Database = db;
             m_GridService = gridService;
@@ -121,7 +121,7 @@ namespace OpenSim.Services.GridService
 
                 m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
 
-                m_log.DebugFormat("[HYPERGRID LINKER]: Loaded all services...");
+                //m_log.DebugFormat("[HYPERGRID LINKER]: Loaded all services...");
             }
 
             if (MainConsole.Instance != null)

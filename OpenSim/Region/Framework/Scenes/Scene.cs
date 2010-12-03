@@ -697,6 +697,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="regInfo"></param>
         public Scene(RegionInfo regInfo)
         {
+            m_regInfo = regInfo;
             BordersLocked = true;
             Border northBorder = new Border();
             northBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize - 1);  //<---
@@ -719,7 +720,6 @@ namespace OpenSim.Region.Framework.Scenes
             RegionInfo.WestBorders.Add(westBorder);
             BordersLocked = false;
 
-            m_regInfo = regInfo;
             m_eventManager = new EventManager();
             AuroraEventManager = new AuroraEventManager();
 

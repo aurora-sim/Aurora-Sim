@@ -311,7 +311,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             if (!CloseLocalRegions && scene != null)
                 return false;
 
-            return ((Math.Abs(x - newRegionX) > RegionViewSize) || (Math.Abs(y - newRegionY) > RegionViewSize));
+            return ((Math.Abs((int)x - (int)newRegionX) > RegionViewSize) || (Math.Abs((int)y - (int)newRegionY) > RegionViewSize));
         }
 
         public void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)

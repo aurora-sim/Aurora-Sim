@@ -435,7 +435,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (eq != null)
                 {
                     eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
-                                           0, teleportFlags, capsPath, sp.UUID, teleportFlags);
+                                           4, teleportFlags, capsPath, sp.UUID, teleportFlags);
                 }
                 else
                 {
@@ -456,33 +456,33 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 
                 if (!WaitForCallback(sp.UUID))
                 {
-                    /*//Make sure the client hasn't TPed back in this time.
+                    //Make sure the client hasn't TPed back in this time.
                     ScenePresence SP = m_aScene.GetScenePresence(sp.UUID);
                     if (SP != null && SP.IsChildAgent)
                     {
                         //Disabling until this actually helps and doesn't kill clients
-                        //Fail(sp, finalDestination);
+                        Fail(sp, finalDestination);
                         return;
                     }
                     else if (SP == null)
                     {
                         //Err.. this happens somehow.
                         return;
-                    }*/
+                    }
                 }
 
-                /*//Make sure the client hasn't TPed back in this time.
+                //Make sure the client hasn't TPed back in this time.
                 ScenePresence newSP = m_aScene.GetScenePresence(sp.UUID);
-                if (newSP != null && !newSP.IsChildAgent)
+                /*if (newSP != null && !newSP.IsChildAgent)
                 {
                     //They are root again, don't cross them!
                     return;
                 }
-                else if (newSP == null)
+                else */if (newSP == null)
                 {
                     //Err.. this happens somehow.
                     return;
-                }*/
+                }
 
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
@@ -525,6 +525,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         private void Cancel(ScenePresence sp)
         {
             m_cancelingAgents.Remove(sp.UUID);
+
+            // Client never contacted destination. Let's restore everything back
+            sp.ControllingClient.SendTeleportFailed("You canceled the tp.");
 
             // Fail. Reset it back
             sp.IsChildAgent = false;

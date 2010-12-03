@@ -3435,7 +3435,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_lastColliders.Add(localID);
                 //Play collision sounds
-                if(CollisionSoundID == UUID.Zero)
+                if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent)
                 {
                     if (collissionswith[localID].PenetrationDepth < 0.17)
                         CollisionSoundID = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");

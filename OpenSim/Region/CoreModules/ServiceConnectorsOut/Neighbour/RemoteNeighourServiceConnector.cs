@@ -79,9 +79,10 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 {
                     m_Enabled = true;
                     m_LocalService = new LocalNeighbourServicesConnector();
+                    m_LocalService.Initialise(source);
                     //Set up the local auth
 
-                    IConfig neighbourConfig = source.Configs["NeighbourService"];
+                    IConfig neighbourConfig = source.Configs["NeighborService"];
                     if (neighbourConfig == null)
                     {
                         m_log.Error("[NEIGHBOUR CONNECTOR]: NeighbourService missing from OpenSim.ini");

@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         {
             OSDMap info = new OSDMap();
             info.Add("AgentID", OSD.FromUUID(agentID));
-            info.Add("LocationID", OSD.FromBinary(uintToByteArray(0))); // TODO what is this?
+            info.Add("LocationID", OSD.FromBinary(uintToByteArray(locationID))); // TODO what is this?
             info.Add("RegionHandle", OSD.FromBinary(ulongToByteArray(regionHandle)));
             info.Add("SeedCapability", OSD.FromString(capsURL));
             info.Add("SimAccess", OSD.FromInteger(simAccess));

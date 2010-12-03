@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenMetaverse;
 
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Console;
 using OpenSim.Server.Base;
@@ -609,9 +610,10 @@ namespace OpenSim.Services.LLLoginService
                         MaxMaturity = "A";
                 }
 
+
                 LLLoginResponse response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
-                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, CAPSServerURL, CAPSServicePassword, allowExportPermission, m_config);
+                    m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), allowExportPermission, m_config);
 
                 m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
@@ -623,6 +625,98 @@ namespace OpenSim.Services.LLLoginService
                     m_PresenceService.LogoutAgent(session);
                 return LLFailedLoginResponse.InternalError;
             }
+        }
+
+        private string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
+        {
+            string capsSeedPath = String.Empty;
+            string SimcapsSeedPath = String.Empty;
+
+            #region IP Translation for NAT
+            if (ipepClient != null)
+            {
+                SimcapsSeedPath
+                    = "http://"
+                      + NetworkUtil.GetHostFor(ipepClient.Address, destination.ExternalHostName)
+                      + ":"
+                      + destination.HttpPort
+                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+            }
+            else
+            {
+                SimcapsSeedPath
+                    = "http://"
+                      + destination.ExternalHostName
+                      + ":"
+                      + destination.HttpPort
+                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+            }
+            #endregion
+
+            // Don't use the following!  It Fails for logging into any region not on the same port as the http server!
+            // Kept here so it doesn't happen again!
+            // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
+
+            if (CAPSServerURL != "")
+            {
+                if (CAPSServerURL.StartsWith("http")) //Note: Don't do any more than http, we allow for https
+                {
+                    capsSeedPath = CAPSServerURL + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+                }
+                else
+                {
+                    capsSeedPath
+                        = "http://"
+                          + CAPSServerURL
+                          + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
+                }
+
+                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), SimcapsSeedPath, AgentID))
+                {
+                    capsSeedPath = SimcapsSeedPath;
+                }
+            }
+            else
+            {
+                capsSeedPath = SimcapsSeedPath;
+            }
+
+            return capsSeedPath;
+        }
+
+        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, string SimCAPS, UUID AgentID)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["CAPSSEEDPATH"] = CAPSSeed;
+            sendData["SIMCAPS"] = SimCAPS;
+            sendData["PASS"] = CAPSServicePassword;
+            sendData["AGENTID"] = AgentID.ToString();
+
+            string reqString = ServerUtils.BuildQueryString(sendData);
+
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        CAPSServerURL + "/CAPS/REGISTER",
+                        reqString);
+                if (reply != "")
+                {
+                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        if (replyData.ContainsKey("result") && (string)replyData["result"] == "true")
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return false;
         }
 
         protected GridRegion FindDestination(UserAccount account, UUID scopeID, GridUserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out GridRegion gatekeeper, out string where, out Vector3 position, out Vector3 lookAt)

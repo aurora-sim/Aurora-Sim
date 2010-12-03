@@ -247,12 +247,11 @@ namespace OpenSim.Services.LLLoginService
             GridRegion destination, List<InventoryFolderBase> invSkel, FriendInfo[] friendsList, ILibraryService libService,
             string where, string startlocation, Vector3 position, Vector3 lookAt, List<InventoryItemBase> gestures, string message,
             GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating, string mapTileURL, string searchURL, string AllowFL, string TutorialURL,
-            ArrayList eventValues, ArrayList classifiedValues, string CAPSURL, string CAPSPass, bool allowExportPermission, IConfigSource source)
+            ArrayList eventValues, ArrayList classifiedValues, string seedCap, bool allowExportPermission, IConfigSource source)
             : this()
         {
             m_source = source;
-            CAPSServiceURL = CAPSURL;
-            CAPSServicePassword = CAPSPass;
+            SeedCapability = seedCap;
 
             FillOutInventoryData(invSkel, libService);
 
@@ -281,8 +280,6 @@ namespace OpenSim.Services.LLLoginService
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
 
             FillOutRegionData(destination);
-
-            FillOutSeedCap(aCircuit, destination, clientIP);
             
         }
 
@@ -368,98 +365,6 @@ namespace OpenSim.Services.LLLoginService
             SimPort = (uint)endPoint.Port;
             RegionX = (uint)destination.RegionLocX;
             RegionY = (uint)destination.RegionLocY;
-        }
-
-        private void FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient)
-        {
-            string capsSeedPath = String.Empty;
-            string SimcapsSeedPath = String.Empty;
-
-            #region IP Translation for NAT
-            if (ipepClient != null)
-            {
-                SimcapsSeedPath
-                    = "http://"
-                      + NetworkUtil.GetHostFor(ipepClient.Address, destination.ExternalHostName)
-                      + ":"
-                      + destination.HttpPort
-                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-            }
-            else
-            {
-                SimcapsSeedPath
-                    = "http://"
-                      + destination.ExternalHostName
-                      + ":"
-                      + destination.HttpPort
-                      + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-            }
-            #endregion
-
-            // Don't use the following!  It Fails for logging into any region not on the same port as the http server!
-            // Kept here so it doesn't happen again!
-            // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
-
-            if (CAPSServiceURL != "")
-            {
-                if(CAPSServiceURL.StartsWith("http")) //Note: Don't do any more than http, we allow for https
-                {
-                    capsSeedPath = CAPSServiceURL + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-                }
-                else
-                {
-                    capsSeedPath
-                        = "http://"
-                          + CAPSServiceURL
-                          + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-                }
-
-                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), SimcapsSeedPath))
-                {
-                    capsSeedPath = SimcapsSeedPath;
-                }
-            }
-            else
-            {
-                capsSeedPath = SimcapsSeedPath;
-            }
-
-            SeedCapability = capsSeedPath;
-        }
-
-        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, string SimCAPS)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["CAPSSEEDPATH"] = CAPSSeed;
-            sendData["SIMCAPS"] = SimCAPS;
-            sendData["PASS"] = CAPSServicePassword;
-            sendData["AGENTID"] = AgentID.ToString();
-
-            string reqString = ServerUtils.BuildQueryString(sendData);
-
-            try
-            {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        CAPSServiceURL + "/CAPS/REGISTER",
-                        reqString);
-                if (reply != "")
-                {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (string)replyData["result"] == "true")
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
-            return false;
         }
 
         private void SetDefaultValues()
