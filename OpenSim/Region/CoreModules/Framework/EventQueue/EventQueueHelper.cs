@@ -34,6 +34,12 @@ using OpenMetaverse.Messages.Linden;
 
 namespace OpenSim.Region.CoreModules.Framework.EventQueue
 {
+    public struct QueueItem
+    {
+        public int id;
+        public OSDMap body;
+    }
+
     public class EventQueueHelper
     {
         private EventQueueHelper() {} // no construction possible, it's an utility class

@@ -47,13 +47,7 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.CoreModules.Framework.EventQueue
 {
-    public struct QueueItem
-    {
-        public int id;
-        public OSDMap body;
-    }
-
-    public class EventQueueGetModule : IEventQueue, INonSharedRegionModule
+    public class LocalEventQueueServiceConnector : IEventQueue, INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -62,15 +56,24 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
         private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
-        
+        private bool m_enabled = false;
+
         #region IRegionModule methods
 
         public virtual void Initialise(IConfigSource config)
         {
+            IConfig modulesConfig = config.Configs["Modules"];
+            if (modulesConfig != null)
+            {
+                if (modulesConfig.GetString("EventQueueService", Name) == Name)
+                    m_enabled = true;
+            }
         }
 
         public void AddRegion(Scene scene)
         {
+            if (!m_enabled)
+                return;
             scene.RegisterModuleInterface<IEventQueue>(this);
 
             // Register fallback handler
@@ -106,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
 
         public virtual string Name
         {
-            get { return "EventQueueGetModule"; }
+            get { return "LocalEventQueueServiceConnector"; }
         }
 
         #endregion
