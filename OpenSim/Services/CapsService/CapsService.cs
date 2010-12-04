@@ -227,6 +227,13 @@ namespace OpenSim.Services.CapsService
             registeredCAPSPath[m_HostName + caps] = method;
         }
 
+        public string GetCAPS(string method)
+        {
+            if (registeredCAPS.ContainsKey(method))
+                return registeredCAPS[method].ToString();
+            return "";
+        }
+
         #region Other CAPS
 
         private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)
@@ -1052,9 +1059,9 @@ namespace OpenSim.Services.CapsService
         private Dictionary<UUID, int> m_ids = new Dictionary<UUID, int>();
 
         private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
-        private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
-        private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
+        private Dictionary<UUID, List<UUID>> m_AvatarPasswordMap = new Dictionary<UUID, List<UUID>>();
+        private Dictionary<UUID, UUID> m_rootAvatarPasswordMap = new Dictionary<UUID, UUID>();
         private IHttpServer m_server;
         private IPrivateCapsService m_handler;
 
@@ -1104,10 +1111,14 @@ namespace OpenSim.Services.CapsService
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "CrossedRegion")
                     {
-                        string SeedCap = ((OSDMap)map["info"])["SeedCapability"];
+                        OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0]);
+                        string SeedCap = infoMap["SeedCapability"].AsString();
                         m_AvatarQueueUUIDMapping.Remove(avatarID);
-                        m_AvatarPasswordMap.Remove(avatarID);
+                        m_rootAvatarPasswordMap.Remove(avatarID);
+                        m_ids.Remove(avatarID);
                         m_server.AddStreamHandler(RegisterCap(avatarID, m_server, m_handler));
+                        SeedCap = m_handler.GetCAPS("EventQueueGet");
+                        ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = SeedCap;
                     }
                 }
                 if (queue != null)
@@ -1203,12 +1214,6 @@ namespace OpenSim.Services.CapsService
                 }
             }
 
-            lock (m_QueueUUIDAvatarMapping)
-            {
-                if (!m_QueueUUIDAvatarMapping.ContainsKey(EventQueueGetUUID))
-                    m_QueueUUIDAvatarMapping.Add(EventQueueGetUUID, agentID);
-            }
-
             lock (m_AvatarQueueUUIDMapping)
             {
                 if (!m_AvatarQueueUUIDMapping.ContainsKey(agentID))
@@ -1242,14 +1247,17 @@ namespace OpenSim.Services.CapsService
 
             UUID Password = UUID.Random();
 
-            m_AvatarPasswordMap.Add(agentID, Password);
-            handler.PostToSendToSim.Add("EventQueuePass", OSD.FromUUID(Password));
+            m_rootAvatarPasswordMap.Add(agentID, Password);
+            if (!m_AvatarPasswordMap.ContainsKey(agentID))
+                m_AvatarPasswordMap.Add(agentID, new List<UUID>());
+            m_AvatarPasswordMap[agentID].Add(Password);
+            handler.PostToSendToSim["EventQueuePass"] = OSD.FromUUID(Password);
             return rhandler;
         }
 
         public bool AuthenticateRequest(UUID agentID, UUID Password)
         {
-            if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID] == Password)
+            if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID].Contains(Password))
                 return true;
             return false;
         }
@@ -1394,8 +1402,12 @@ namespace OpenSim.Services.CapsService
             array.Add(element);
             while (queue.Count > 0)
             {
-                array.Add(queue.Dequeue());
-                thisID++;
+                OSD item = queue.Dequeue();
+                if (item != null)
+                {
+                    array.Add(item);
+                    thisID++;
+                }
             }
 
             OSDMap events = new OSDMap();

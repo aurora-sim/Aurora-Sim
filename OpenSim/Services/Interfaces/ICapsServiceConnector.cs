@@ -11,6 +11,7 @@ namespace OpenSim.Services.Interfaces
     {
         void AddCAPS(string method, string caps);
         OSDMap PostToSendToSim { get; set; }
+        string GetCAPS(string method);
     }
 
     public interface ICapsServiceConnector

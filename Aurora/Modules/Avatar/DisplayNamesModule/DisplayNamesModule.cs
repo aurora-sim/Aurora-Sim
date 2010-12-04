@@ -51,7 +51,7 @@ namespace Aurora.Modules
             m_scene = scene;
             m_scenes.Add(scene);
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
-            m_scene.EventManager.OnNewClient += OnNewClient;
+            m_scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
         }
 
         public void RemoveRegion(Scene scene)
@@ -102,25 +102,24 @@ namespace Aurora.Modules
         /// <summary>
         /// Tell the client about all other display names in the region as well as send ours to all others
         /// </summary>
-        /// <param name="client"></param>
-        public void OnNewClient(IClientAPI client)
+        /// <param name="us"></param>
+        void OnMakeRootAgent(ScenePresence us)
         {
-            ScenePresence us = ((Scene)client.Scene).GetScenePresence(client.AgentId);
             if (us.IsChildAgent)
                 return;
-            IUserProfileInfo usProfile = m_profileConnector.GetUserProfile(client.AgentId);
+            IUserProfileInfo usProfile = m_profileConnector.GetUserProfile(us.UUID);
             //Send our name to us
             if (usProfile != null)
-                DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, client.AgentId);
+                DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, us.UUID);
 
-            foreach (ScenePresence SP in ((Scene)client.Scene).ScenePresences)
+            foreach (ScenePresence SP in us.Scene.ScenePresences)
             {
-                if (SP.UUID != client.AgentId)
+                if (SP.UUID != us.UUID)
                 {
                     IUserProfileInfo info = m_profileConnector.GetUserProfile(SP.UUID);
                     //Send to the incoming user all known display names of avatar's around the client
                     if (info != null)
-                        DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, client.AgentId);
+                        DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, us.UUID);
                     DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, SP.UUID);
                 }
             }

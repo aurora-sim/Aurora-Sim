@@ -81,12 +81,6 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 return;
             m_scene = scene;
             scene.RegisterModuleInterface<IEventQueue>(this);
-            scene.EventManager.OnClosingClient += new EventManager.OnNewClientDelegate(EventManager_OnClosingClient);
-        }
-
-        void EventManager_OnClosingClient(IClientAPI client)
-        {
-            m_AvatarPasswordMap.Remove(client.AgentId);
         }
 
         void FindAndPopulateEQMPassword(UUID agentID)
@@ -100,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                     if (caps.RequestMap.ContainsKey("EventQueuePass"))
                     {
                         UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
-                        m_AvatarPasswordMap.Add(agentID, Password);
+                        m_AvatarPasswordMap[agentID] = Password;
                     }
                 }
             }
@@ -141,10 +135,8 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
-                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
-                {
-                    FindAndPopulateEQMPassword(avatarID);
-                }
+                FindAndPopulateEQMPassword(avatarID);
+
                 if (!m_AvatarPasswordMap.ContainsKey(avatarID))
                     return false;
 
