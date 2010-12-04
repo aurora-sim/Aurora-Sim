@@ -22,7 +22,7 @@ namespace OpenSim.Services.Interfaces
         ILibraryService LibraryService { get; }
         IGridUserService GridUserService { get; }
         IGridService GridService { get; }
-        string SimToInform { get; }
+        string SimToInform { get; set; }
         string HostName { get; }
         ICAPSPublicHandler PublicHandler { get; }
         ulong RegionHandle { get; }

@@ -324,8 +324,7 @@ namespace OpenSim.Services.CapsService
                 UUID AgentID = UUID.Parse((string)m_dhttpMethod["AGENTID"]);
                 ulong regionHandle = ulong.Parse((string)m_dhttpMethod["REGIONHANDLE"]);
 
-                //The client calls this to find out all the CAPS
-                m_CapsServices.Remove(regionHandle);
+                m_CapsServices.Remove(AgentID);
                 CreateCAPS(AgentID, simCAPS, CAPS, regionHandle);
 
                 Dictionary<string, object> result = new Dictionary<string, object>();
@@ -339,23 +338,25 @@ namespace OpenSim.Services.CapsService
         private void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle)
         {
             //This makes the new SEED url on the CAPS server
-            AddCapsService(new CAPSPrivateSeedHandler(m_server, m_inventory, m_library, m_GridUserService, m_GridService, m_PresenceService, SimCAPS, AgentID, m_hostName, true, regionHandle, this, CAPS), CAPS);
+            AddCapsService(new CAPSPrivateSeedHandler(m_server, m_inventory, m_library, m_GridUserService, m_GridService, m_PresenceService, SimCAPS, AgentID, m_hostName, true, regionHandle, this, CAPS), CAPS, AgentID);
         }
 
-        Dictionary<ulong, IPrivateCapsService> m_CapsServices = new Dictionary<ulong, IPrivateCapsService>();
+        Dictionary<UUID, Dictionary<ulong, IPrivateCapsService>> m_CapsServices = new Dictionary<UUID, Dictionary<ulong, IPrivateCapsService>>();
 
-        public IPrivateCapsService GetCapsService(ulong regionID)
+        public IPrivateCapsService GetCapsService(ulong regionID, UUID agentID)
         {
-            if (m_CapsServices.ContainsKey(regionID))
-                return m_CapsServices[regionID];
+            if (m_CapsServices.ContainsKey(agentID) && m_CapsServices[agentID].ContainsKey(regionID))
+                return m_CapsServices[agentID][regionID];
             return null;
         }
 
-        public void AddCapsService(IPrivateCapsService handler, string CAPS)
+        public void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID)
         {
-            if (!m_CapsServices.ContainsKey(handler.RegionHandle))
+            if (!m_CapsServices.ContainsKey(agentID))
+                m_CapsServices.Add(agentID, new Dictionary<ulong,IPrivateCapsService>());
+            if (!m_CapsServices[agentID].ContainsKey(handler.RegionHandle))
             {
-                m_CapsServices[handler.RegionHandle] = handler;
+                m_CapsServices[agentID][handler.RegionHandle] = handler;
                 handler.Initialise();
                 m_server.AddStreamHandler(new RestStreamHandler("POST", CAPS, handler.CapsRequest));
             }
@@ -443,6 +444,7 @@ namespace OpenSim.Services.CapsService
 
                         handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
                         handler = m_handler.PublicHandler.GetCapsService(regionHandle);
+                        handler.SimToInform = SeedCap;
                         
                         //Get the seed cap from the CapsService for that region
                         SeedCap = handler.HostName + handler.CapsURL;
@@ -464,6 +466,7 @@ namespace OpenSim.Services.CapsService
 
                         handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
                         handler = m_handler.PublicHandler.GetCapsService(regionHandle);
+                        handler.SimToInform = SeedCap;
                         //Get the seed cap from the CapsService for that region
                         SeedCap = handler.HostName + handler.CapsURL;
 
@@ -487,7 +490,8 @@ namespace OpenSim.Services.CapsService
 
                         handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
                         handler = m_handler.PublicHandler.GetCapsService(regionHandle);
-
+                        handler.SimToInform = SeedCap;
+                        
                         //Get the seed cap from the CapsService for that region
                         SeedCap = handler.HostName + handler.CapsURL;
                         
