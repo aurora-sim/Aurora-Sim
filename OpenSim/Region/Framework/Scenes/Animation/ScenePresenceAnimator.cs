@@ -170,9 +170,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             const float BRUSH_TIME = 3.5f;
 
             const float SOFTLAND_FORCE = 80;
-            const float LAND_FORCE = 130;
-
-
+            
             const float PREJUMP_DELAY = 0.35f;
 
             #region Inputs

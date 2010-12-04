@@ -201,8 +201,6 @@ namespace OpenSim.Services.LLLoginService
         private string lookAt;
         private string tutorialURL;
         private string udpBlackList;
-        private string CAPSServiceURL;
-        private string CAPSServicePassword;
         private bool m_allowExportPermission;
         private IConfigSource m_source;
 

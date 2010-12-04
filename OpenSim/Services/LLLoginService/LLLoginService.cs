@@ -671,7 +671,7 @@ namespace OpenSim.Services.LLLoginService
                           + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
                 }
 
-                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), SimcapsSeedPath, AgentID))
+                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle, SimcapsSeedPath, AgentID))
                 {
                     capsSeedPath = SimcapsSeedPath;
                 }
@@ -684,13 +684,14 @@ namespace OpenSim.Services.LLLoginService
             return capsSeedPath;
         }
 
-        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, string SimCAPS, UUID AgentID)
+        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, ulong regionHandle, string SimCAPS, UUID AgentID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["CAPSSEEDPATH"] = CAPSSeed;
             sendData["SIMCAPS"] = SimCAPS;
             sendData["PASS"] = CAPSServicePassword;
+            sendData["REGIONHANDLE"] = regionHandle;
             sendData["AGENTID"] = AgentID.ToString();
 
             string reqString = ServerUtils.BuildQueryString(sendData);
