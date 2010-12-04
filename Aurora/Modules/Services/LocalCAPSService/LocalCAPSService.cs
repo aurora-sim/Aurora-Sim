@@ -84,7 +84,7 @@ namespace Aurora.Modules
             CAPSPrivateSeedHandler handler = new CAPSPrivateSeedHandler(null,//the server IS null for a reason, so that we don't add the handlers at the wrong time
                 m_scene.InventoryService, 
                 m_scene.LibraryService, m_scene.GridUserService, m_scene.GridService,
-                m_scene.PresenceService, "", agentID, "", false, 0, null); //URL and Hostname are all "" as well so that we don't add the hostname by accident
+                m_scene.PresenceService, "", agentID, "", false, 0, null, ""); //URL and Hostname are all "" as well so that we don't add the hostname by accident
 
             List<IRequestHandler> handlers = handler.GetServerCAPS();
 

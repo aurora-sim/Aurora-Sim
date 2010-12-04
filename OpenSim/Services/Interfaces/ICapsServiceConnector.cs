@@ -11,6 +11,7 @@ namespace OpenSim.Services.Interfaces
     {
         void AddCAPS(string method, string caps);
         void Initialise();
+        string CapsURL { get; }
         string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse);
         OSDMap PostToSendToSim { get; set; }

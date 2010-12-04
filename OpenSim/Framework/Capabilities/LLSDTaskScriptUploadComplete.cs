@@ -45,10 +45,13 @@ namespace OpenSim.Framework.Capabilities
         public bool compiled;
 
         /// <summary>
-        /// State of the upload.  So far have only even seen this set to "complete"
+        /// State of the upload.
         /// </summary>
         public string state;
 
+        /// <summary>
+        /// Errors to send to the client
+        /// </summary>
         public OSDArray errors;
     }
 }
