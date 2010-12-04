@@ -105,6 +105,10 @@ namespace OpenSim.Services.CapsService
             set { m_SimToInform = value; }
         }
         private UUID m_AgentID;
+        public UUID AgentID
+        {
+            get { return m_AgentID; }
+        }
         //X cap name to path
         public Hashtable registeredCAPS = new Hashtable();
         //Paths to X cap
@@ -442,8 +446,8 @@ namespace OpenSim.Services.CapsService
                         IPrivateCapsService handler = new CAPSPrivateSeedHandler(m_server, m_handler.InventoryService, m_handler.LibraryService, m_handler.GridUserService, m_handler.GridService, m_handler.PresenceService,
                             SeedCap, avatarID, m_handler.HostName, true, regionHandle, m_handler.PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
 
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
-                        handler = m_handler.PublicHandler.GetCapsService(regionHandle);
+                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
+                        handler = m_handler.PublicHandler.GetCapsService(regionHandle, handler.AgentID);
                         handler.SimToInform = SeedCap;
                         
                         //Get the seed cap from the CapsService for that region
@@ -464,8 +468,8 @@ namespace OpenSim.Services.CapsService
                         IPrivateCapsService handler = new CAPSPrivateSeedHandler(m_server, m_handler.InventoryService, m_handler.LibraryService, m_handler.GridUserService, m_handler.GridService, m_handler.PresenceService,
                             SeedCap, avatarID, m_handler.HostName, true, regionHandle, m_handler.PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
 
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
-                        handler = m_handler.PublicHandler.GetCapsService(regionHandle);
+                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
+                        handler = m_handler.PublicHandler.GetCapsService(regionHandle, handler.AgentID);
                         handler.SimToInform = SeedCap;
                         //Get the seed cap from the CapsService for that region
                         SeedCap = handler.HostName + handler.CapsURL;
@@ -488,8 +492,8 @@ namespace OpenSim.Services.CapsService
                         IPrivateCapsService handler = new CAPSPrivateSeedHandler(m_server, m_handler.InventoryService, m_handler.LibraryService, m_handler.GridUserService, m_handler.GridService, m_handler.PresenceService,
                             SeedCap, avatarID, m_handler.HostName, true, regionHandle, m_handler.PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
 
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL);
-                        handler = m_handler.PublicHandler.GetCapsService(regionHandle);
+                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
+                        handler = m_handler.PublicHandler.GetCapsService(regionHandle, handler.AgentID);
                         handler.SimToInform = SeedCap;
                         
                         //Get the seed cap from the CapsService for that region

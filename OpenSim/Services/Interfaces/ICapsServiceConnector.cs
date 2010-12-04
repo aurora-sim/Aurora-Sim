@@ -12,6 +12,7 @@ namespace OpenSim.Services.Interfaces
         void AddCAPS(string method, string caps);
         void Initialise();
         string CapsURL { get; }
+        UUID AgentID { get; }
         string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse);
         OSDMap PostToSendToSim { get; set; }
@@ -30,8 +31,8 @@ namespace OpenSim.Services.Interfaces
 
     public interface ICAPSPublicHandler
     {
-        void AddCapsService(IPrivateCapsService handler, string CAPS);
-        IPrivateCapsService GetCapsService(ulong regionID);
+        void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID);
+        IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);
     }
 
     public interface ICapsServiceConnector
