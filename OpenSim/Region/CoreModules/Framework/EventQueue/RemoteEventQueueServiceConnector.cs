@@ -151,7 +151,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 Dictionary<string, object> request = new Dictionary<string,object>();
                 request.Add("AGENTID", avatarID.ToString());
                 request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
-                request.Add("LLSD", OSDParser.SerializeJsonString(ev));
+                request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
                 AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL, OpenSim.Server.Base.ServerUtils.BuildQueryString(request));
             } 
             catch(Exception e)

@@ -1055,6 +1055,8 @@ namespace OpenSim.Services.CapsService
         private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
+        private IHttpServer m_server;
+        private IPrivateCapsService m_handler;
 
         /// <summary>
         ///  Always returns a valid queue
@@ -1097,6 +1099,17 @@ namespace OpenSim.Services.CapsService
             try
             {
                 Queue<OSD> queue = GetQueue(avatarID);
+                if (ev.Type == OSDType.Map)
+                {
+                    OSDMap map = (OSDMap)ev;
+                    if (map.ContainsKey("message") && map["message"] == "CrossedRegion")
+                    {
+                        string SeedCap = ((OSDMap)map["info"])["SeedCapability"];
+                        m_AvatarQueueUUIDMapping.Remove(avatarID);
+                        m_AvatarPasswordMap.Remove(avatarID);
+                        m_server.AddStreamHandler(RegisterCap(avatarID, m_server, m_handler));
+                    }
+                }
                 if (queue != null)
                     queue.Enqueue(ev);
             }
@@ -1165,6 +1178,8 @@ namespace OpenSim.Services.CapsService
 
         public IRequestHandler RegisterCap(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
+            m_server = server;
+            m_handler = handler;
             // Register an event queue for the client
 
             // Let's instantiate a Queue for this agent right now
@@ -1467,7 +1482,7 @@ namespace OpenSim.Services.CapsService
                 }
                 else
                 {
-                    m_handler.Enqueue(OSDParser.DeserializeJson(llsd), agentID);
+                    m_handler.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID);
                     Dictionary<string, object> result = new Dictionary<string, object>();
                     result.Add("result", "true");
                     string xmlString = ServerUtils.BuildXmlResponse(result);
