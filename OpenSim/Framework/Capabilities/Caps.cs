@@ -315,33 +315,6 @@ namespace OpenSim.Framework.Capabilities
         /// <summary>
         ///
         /// </summary>
-        /// <param name="mapReq"></param>
-        /// <returns></returns>
-        public LLSDMapLayerResponse GetMapLayer(LLSDMapRequest mapReq)
-        {
-            m_log.Debug("[CAPS]: MapLayer Request in region: " + m_regionName);
-            LLSDMapLayerResponse mapResponse = new LLSDMapLayerResponse();
-            mapResponse.LayerData.Array.Add(GetOSDMapLayerResponse());
-            return mapResponse;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        protected static OSDMapLayer GetOSDMapLayerResponse()
-        {
-            OSDMapLayer mapLayer = new OSDMapLayer();
-            mapLayer.Right = 5000;
-            mapLayer.Top = 5000;
-            mapLayer.ImageID = new UUID("00000000-0000-1111-9999-000000000006");
-
-            return mapLayer;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
         /// <param name="request"></param>
         /// <param name="path"></param>
         /// <param name="param"></param>

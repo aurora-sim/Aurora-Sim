@@ -144,7 +144,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 request.Add("AGENTID", avatarID.ToString());
                 request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
                 request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
-                AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL, OpenSim.Server.Base.ServerUtils.BuildQueryString(request));
+                AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL + m_scene.RegionInfo.RegionHandle, OpenSim.Server.Base.ServerUtils.BuildQueryString(request));
             } 
             catch(Exception e)
             {
@@ -169,9 +169,9 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             Enqueue(item, avatarID);
         }
 
-        public virtual void EstablishAgentCommunication(UUID avatarID, IPEndPoint endPoint, string capsPath) 
+        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string capsPath) 
         {
-            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, endPoint.ToString(), capsPath);
+            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), capsPath);
             Enqueue(item, avatarID);
         }
 

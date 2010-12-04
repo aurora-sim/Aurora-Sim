@@ -798,15 +798,6 @@ namespace Aurora.BotManager
         {
         }
 
-        public ClientInfo GetClientInfo()
-        {
-            return null;
-        }
-
-        public void SetClientInfo(ClientInfo info)
-        {
-        }
-
         public void SendScriptQuestion(UUID objectID, string taskName, string ownerName, UUID itemID, int question)
         {
         }

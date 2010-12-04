@@ -393,7 +393,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         // So let's wait
                         Thread.Sleep(200);
 
-                        eq.EstablishAgentCommunication(sp.UUID, endPoint, capsPath);
+                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, capsPath);
 
                     }
                     else
@@ -1379,7 +1379,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
 
                     eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID);
-                    eq.EstablishAgentCommunication(sp.UUID, endPoint, capsPath);
+                    eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, capsPath);
                 }
                 else
                 {

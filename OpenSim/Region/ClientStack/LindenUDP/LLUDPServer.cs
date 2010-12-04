@@ -70,9 +70,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_udpServer.AddScene(scene);
         }
 
-        public bool HandlesRegion(Location x)
+        public bool HandlesRegion(uint x, uint y)
         {
-            return m_udpServer.HandlesRegion(x);
+            return m_udpServer.HandlesRegion(x, y);
         }
 
         public void Start()
@@ -124,7 +124,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Reference to the scene this UDP server is attached to</summary>
         protected Scene m_scene;
         /// <summary>The X/Y coordinates of the scene this UDP server is attached to</summary>
-        private Location m_location;
+        private uint m_x;
+        private uint m_y;
         /// <summary>The size of the receive buffer for the UDP socket. This value
         /// is passed up to the operating system and used in the system networking
         /// stack. Use zero to leave this value as the default</summary>
@@ -285,12 +286,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             m_scene = (Scene)scene;
-            m_location = new Location(m_scene.RegionInfo.RegionHandle);
+            Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out m_x, out m_y);
         }
 
-        public bool HandlesRegion(Location x)
+        public bool HandlesRegion(uint x, uint y)
         {
-            return x == m_location;
+            return x == m_x && y == m_y;
         }
 
         public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents, bool allowSplitting)
@@ -889,14 +890,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AsyncBeginSend(buffer);
         }
 
-        private bool IsClientAuthorized(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint, out AuthenticateResponse sessionInfo)
+        private bool IsClientAuthorized(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint, out AgentCircuitData sessionInfo)
         {
             UUID agentID = useCircuitCode.CircuitCode.ID;
             UUID sessionID = useCircuitCode.CircuitCode.SessionID;
             uint circuitCode = useCircuitCode.CircuitCode.Code;
 
             sessionInfo = m_circuitManager.AuthenticateSession(sessionID, agentID, circuitCode, remoteEndPoint);
-            return sessionInfo.Authorised;
+            return sessionInfo != null;
         }
 
         private bool AddNewClient(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint)
@@ -905,7 +906,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             UUID sessionID = useCircuitCode.CircuitCode.SessionID;
             uint circuitCode = useCircuitCode.CircuitCode.Code;
 
-            AuthenticateResponse sessionInfo;
+            AgentCircuitData sessionInfo;
             if (IsClientAuthorized(useCircuitCode, remoteEndPoint, out sessionInfo))
             {
                 return AddClient(circuitCode, agentID, sessionID, remoteEndPoint, sessionInfo);
@@ -920,7 +921,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return false;
         }
 
-        protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AuthenticateResponse sessionInfo)
+        protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AgentCircuitData sessionInfo)
         {
             // Create the LLUDPClient
             LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);

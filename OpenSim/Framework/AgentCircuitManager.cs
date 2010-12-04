@@ -39,42 +39,27 @@ namespace OpenSim.Framework
         public Dictionary<uint, AgentCircuitData> AgentCircuits = new Dictionary<uint, AgentCircuitData>();
         public Dictionary<UUID, AgentCircuitData> AgentCircuitsByUUID = new Dictionary<UUID, AgentCircuitData>();
 
-        public virtual AuthenticateResponse AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode, IPEndPoint IP)
+        public virtual AgentCircuitData AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode, IPEndPoint IP)
         {
             AgentCircuitData validcircuit = null;
             if (AgentCircuits.ContainsKey(circuitcode))
             {
                 validcircuit = AgentCircuits[circuitcode];
             }
-            AuthenticateResponse user = new AuthenticateResponse();
             //User never logged in... they shouldn't be attempting to connect
             if (validcircuit == null)
             {
                 //don't have this circuit code in our list
-                user.Authorised = false;
-                return (user);
+                return null;
             }
 
             //There is a session found... just is the sessionID right
             if ((sessionID == validcircuit.SessionID) && (agentID == validcircuit.AgentID))
             {
-                user.Authorised = true;
-                user.LoginInfo = new Login();
-                user.LoginInfo.Agent = agentID;
-                user.LoginInfo.Session = sessionID;
-                user.LoginInfo.SecureSession = validcircuit.SecureSessionID;
-                user.LoginInfo.First = validcircuit.firstname;
-                user.LoginInfo.Last = validcircuit.lastname;
-                user.LoginInfo.InventoryFolder = validcircuit.InventoryFolder;
-                user.LoginInfo.BaseFolder = validcircuit.BaseFolder;
-                user.LoginInfo.StartPos = validcircuit.startpos;
-            }
-            else
-            {
-                    user.Authorised = false;
+                return validcircuit;
             }
 
-            return (user);
+            return null;
         }
 
         /// <summary>

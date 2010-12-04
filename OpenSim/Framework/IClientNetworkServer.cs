@@ -39,7 +39,7 @@ namespace OpenSim.Framework
             AgentCircuitManager authenticateClass);
 
         void NetworkStop();
-        bool HandlesRegion(Location x);
+        bool HandlesRegion(uint x, uint y);
         void AddScene(IScene x);
 
         void Start();

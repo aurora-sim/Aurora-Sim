@@ -28,7 +28,7 @@
 using System;
 using System.Threading;
 
-namespace OpenSim.Framework.Communications
+namespace OpenSim.Framework
 {
     internal class SimpleAsyncResult : IAsyncResult
     {

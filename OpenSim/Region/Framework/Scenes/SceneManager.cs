@@ -942,11 +942,12 @@ namespace OpenSim.Region.Framework.Scenes
             // Close and remove the clientserver for a region
             bool foundClientServer = false;
             int clientServerElement = 0;
-            Location location = new Location(whichRegion.RegionHandle);
+            uint x, y;
+            Utils.LongToUInts(whichRegion.RegionHandle, out x, out y);
 
             for (int i = 0; i < m_clientServers.Count; i++)
             {
-                if (m_clientServers[i].HandlesRegion(location))
+                if (m_clientServers[i].HandlesRegion(x, y))
                 {
                     clientServerElement = i;
                     foundClientServer = true;

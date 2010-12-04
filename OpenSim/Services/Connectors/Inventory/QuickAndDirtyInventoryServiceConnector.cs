@@ -61,7 +61,7 @@ namespace OpenSim.Services.Connectors
         }
 
         /// <summary>
-        /// <see cref="OpenSim.Framework.Communications.IInterServiceInventoryServices"/>
+        /// <see cref="IInterServiceInventoryServices"/>
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
@@ -72,7 +72,7 @@ namespace OpenSim.Services.Connectors
         }
 
         /// <summary>
-        /// <see cref="OpenSim.Framework.Communications.IInterServiceInventoryServices"/>
+        /// <see cref="IInterServiceInventoryServices"/>
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>

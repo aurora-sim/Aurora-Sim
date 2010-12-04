@@ -40,7 +40,6 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenSim;
 using OpenSim.Framework;
-using OpenSim.Framework.Communications;
 
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;

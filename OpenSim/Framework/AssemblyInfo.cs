@@ -37,7 +37,7 @@ using System.Runtime.InteropServices;
 [assembly : AssemblyConfiguration("")]
 [assembly : AssemblyCompany("http://opensimulator.org")]
 [assembly : AssemblyProduct("OpenSim.Framework")]
-[assembly : AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2009")]
+[assembly : AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2010")]
 [assembly : AssemblyTrademark("")]
 [assembly : AssemblyCulture("")]
 
@@ -59,5 +59,5 @@ using System.Runtime.InteropServices;
 //      Revision
 //
 
-[assembly : AssemblyVersion("0.6.5.*")]
-[assembly : AssemblyFileVersion("0.6.5.0")]
+[assembly : AssemblyVersion("0.1.*")]
+[assembly: AssemblyFileVersion("0.1")]

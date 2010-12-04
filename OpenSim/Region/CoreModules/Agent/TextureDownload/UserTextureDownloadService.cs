@@ -31,7 +31,6 @@ using System.Reflection;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Communications.Limit;
 using OpenSim.Framework.Statistics;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;

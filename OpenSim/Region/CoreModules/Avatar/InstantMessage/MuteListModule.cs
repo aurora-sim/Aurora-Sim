@@ -31,7 +31,6 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Communications;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;

@@ -42,7 +42,6 @@ using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Communications;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;

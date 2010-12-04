@@ -199,12 +199,13 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             return buildEvent("ScriptRunningReply", body);
         }
 
-        public static OSD EstablishAgentCommunication(UUID agentID, string simIpAndPort, string seedcap)
+        public static OSD EstablishAgentCommunication(UUID agentID, ulong regionhandle, string simIpAndPort, string seedcap)
         {
             OSDMap body = new OSDMap(3);
             body.Add("agent-id", new OSDUUID(agentID));
             body.Add("sim-ip-and-port", new OSDString(simIpAndPort));
             body.Add("seed-capability", new OSDString(seedcap));
+            body.Add("region-handle", OSD.FromULong(regionhandle));
 
             return buildEvent("EstablishAgentCommunication", body);
         }

@@ -35,7 +35,7 @@ using System.Threading;
 using System.Web;
 using log4net;
 
-namespace OpenSim.Framework.Communications
+namespace OpenSim.Framework
 {
     /// <summary>
     /// Implementation of a generic REST client

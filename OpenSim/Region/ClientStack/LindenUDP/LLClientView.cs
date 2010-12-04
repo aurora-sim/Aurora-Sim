@@ -422,7 +422,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Constructor
         /// </summary>
-        public LLClientView(EndPoint remoteEP, Scene scene, LLUDPServer udpServer, LLUDPClient udpClient, AuthenticateResponse sessionInfo,
+        public LLClientView(EndPoint remoteEP, Scene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
             UUID agentId, UUID sessionId, uint circuitCode)
         {
             RegisterInterface<IClientIM>(this);
@@ -443,12 +443,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_channelVersion = Util.StringToBytes256(scene.GetSimulatorVersion());
             m_agentId = agentId;
             m_sessionId = sessionId;
-            m_secureSessionId = sessionInfo.LoginInfo.SecureSession;
+            m_secureSessionId = sessionInfo.SecureSessionID;
             m_circuitCode = circuitCode;
             m_userEndPoint = remoteEP;
-            m_firstName = sessionInfo.LoginInfo.First;
-            m_lastName = sessionInfo.LoginInfo.Last;
-            m_startpos = sessionInfo.LoginInfo.StartPos;
+            m_firstName = sessionInfo.firstname;
+            m_lastName = sessionInfo.lastname;
+            m_startpos = sessionInfo.startpos;
 
             m_udpServer = udpServer;
             m_udpClient = udpClient;
