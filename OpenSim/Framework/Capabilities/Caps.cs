@@ -300,7 +300,7 @@ namespace OpenSim.Framework.Capabilities
             }
             try
             {
-                RequestMap = request != "" ? ((OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeJson(request)) : new OpenMetaverse.StructuredData.OSDMap();
+                RequestMap = request != "" ? ((OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(request)) : new OpenMetaverse.StructuredData.OSDMap();
             }
             catch
             {

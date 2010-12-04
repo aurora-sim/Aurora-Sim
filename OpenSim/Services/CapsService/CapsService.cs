@@ -79,11 +79,6 @@ namespace OpenSim.Services.CapsService
         public Hashtable registeredCAPSPath = new Hashtable();
         private CAPSEQMHandler EQMHandler = new CAPSEQMHandler();
         private string m_HostName;
-        public string HostName
-        {
-            get { return m_HostName; }
-            set { m_HostName = value; }
-        }
         private OSDMap postToSendToSim = new OSDMap();
 
         public OSDMap PostToSendToSim
@@ -222,9 +217,14 @@ namespace OpenSim.Services.CapsService
         private string CreateCAPS(string method)
         {
             string caps = "/CAPS/" + method + "/" + UUID.Random() + "/";
+            AddCAPS(method, caps);
+            return caps;
+        }
+
+        public void AddCAPS(string method, string caps)
+        {
             registeredCAPS[method] = m_HostName + caps;
             registeredCAPSPath[m_HostName + caps] = method;
-            return caps;
         }
 
         #region Other CAPS
@@ -1170,7 +1170,7 @@ namespace OpenSim.Services.CapsService
             // Let's instantiate a Queue for this agent right now
             TryGetQueue(agentID);
 
-            string capsBase = handler.HostName + "/CAPS/EQG/";
+            string capsBase = "/CAPS/EQG/";
             UUID EventQueueGetUUID = UUID.Zero;
 
             lock (m_AvatarQueueUUIDMapping)
@@ -1200,20 +1200,23 @@ namespace OpenSim.Services.CapsService
                     m_AvatarQueueUUIDMapping.Add(agentID, EventQueueGetUUID);
             }
 
+            string caps = capsBase + EventQueueGetUUID.ToString() + "/";
+
             // Register this as a caps handler
             IRequestHandler rhandler =
-                                 new RestHTTPHandler("POST", capsBase + EventQueueGetUUID.ToString() + "/",
+                                 new RestHTTPHandler("POST", caps,
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
                                                            return ProcessQueue(m_dhttpMethod, agentID);
                                                        });
+            handler.AddCAPS("EventQueueGet", caps);
 
             //This handler allows sims to post EQM messages for their sims on the CAPS server.
             server.AddStreamHandler(new EQMEventPoster(this));
 
             // This will persist this beyond the expiry of the caps handlers
             MainServer.Instance.AddPollServiceHTTPHandler(
-                capsBase + EventQueueGetUUID.ToString() + "/", EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, agentID));
+                caps, EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, agentID));
 
             Random rnd = new Random(Environment.TickCount);
             lock (m_ids)
@@ -1341,7 +1344,9 @@ namespace OpenSim.Services.CapsService
             //            }
 
             Queue<OSD> queue = TryGetQueue(agentID);
-            OSD element = queue.Dequeue(); // 15s timeout
+            OSD element = null;
+            if (queue.Count != 0)
+                element = queue.Dequeue(); // 15s timeout
 
             Hashtable responsedata = new Hashtable();
 
@@ -1371,24 +1376,11 @@ namespace OpenSim.Services.CapsService
             }
 
             OSDArray array = new OSDArray();
-            if (element == null) // didn't have an event in 15s
+            array.Add(element);
+            while (queue.Count > 0)
             {
-                OSDMap keepAliveEvent = new OSDMap(2);
-                keepAliveEvent.Add("body", new OSDMap());
-                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
-
-                // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                array.Add(keepAliveEvent);
-                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", agentID, m_scene.RegionInfo.RegionName);
-            }
-            else
-            {
-                array.Add(element);
-                while (queue.Count > 0)
-                {
-                    array.Add(queue.Dequeue());
-                    thisID++;
-                }
+                array.Add(queue.Dequeue());
+                thisID++;
             }
 
             OSDMap events = new OSDMap();

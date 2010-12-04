@@ -54,6 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private bool m_enabled = false;
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private string m_serverURL = "";
+        private Scene m_scene;
 
         #region IRegionModule methods
 
@@ -78,16 +79,30 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         {
             if (!m_enabled)
                 return;
+            m_scene = scene;
             scene.RegisterModuleInterface<IEventQueue>(this);
-            scene.EventManager.OnRegisterCaps += new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
+            scene.EventManager.OnClosingClient += new EventManager.OnNewClientDelegate(EventManager_OnClosingClient);
         }
 
-        void EventManager_OnRegisterCaps(UUID agentID, Caps caps)
+        void EventManager_OnClosingClient(IClientAPI client)
         {
-            if (caps.RequestMap.ContainsKey("EventQueuePass"))
+            m_AvatarPasswordMap.Remove(client.AgentId);
+        }
+
+        void FindAndPopulateEQMPassword(UUID agentID)
+        {
+            ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
+            if (module != null)
             {
-                UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
-                m_AvatarPasswordMap.Add(agentID, Password);
+                Caps caps = module.GetCapsHandlerForUser(agentID);
+                if (caps != null)
+                {
+                    if (caps.RequestMap.ContainsKey("EventQueuePass"))
+                    {
+                        UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
+                        m_AvatarPasswordMap.Add(agentID, Password);
+                    }
+                }
             }
         }
 
@@ -126,6 +141,13 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
+                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
+                {
+                    FindAndPopulateEQMPassword(avatarID);
+                }
+                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
+                    return false;
+
                 Dictionary<string, object> request = new Dictionary<string,object>();
                 request.Add("AGENTID", avatarID.ToString());
                 request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());

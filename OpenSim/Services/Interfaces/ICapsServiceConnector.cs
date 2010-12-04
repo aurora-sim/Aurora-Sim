@@ -9,7 +9,7 @@ namespace OpenSim.Services.Interfaces
 {
     public interface IPrivateCapsService
     {
-        string HostName { get; set; }
+        void AddCAPS(string method, string caps);
         OSDMap PostToSendToSim { get; set; }
     }
 
