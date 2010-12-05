@@ -863,7 +863,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     m_log.ErrorFormat(
                         "[PRIM INVENTORY]: " +
-                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
+                        "Couldn't start script {0}, {1} since asset ID {2} could not be found",
                         item.Name, item.ItemID, item.AssetID);
                     continue;
                 }

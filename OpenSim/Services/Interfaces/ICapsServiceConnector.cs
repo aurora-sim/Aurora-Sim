@@ -18,6 +18,7 @@ namespace OpenSim.Services.Interfaces
         OSDMap PostToSendToSim { get; set; }
         string GetCAPS(string method);
         string CreateCAPS(string method);
+        string CreateCAPS(string method, string appendedPath);
         IPresenceService PresenceService { get; }
         IInventoryService InventoryService { get; }
         ILibraryService LibraryService { get; }

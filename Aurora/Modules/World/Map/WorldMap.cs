@@ -63,7 +63,6 @@ namespace Aurora.Modules
 
         private static readonly string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
         //private static readonly UUID STOP_UUID = UUID.Random();
-        private static readonly string m_mapLayerPath = "0001/";
 
         //private IConfig m_config;
         protected Scene m_scene;
@@ -233,7 +232,6 @@ namespace Aurora.Modules
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
 
-            m_scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             m_scene.EventManager.OnNewClient += OnNewClient;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnClientClosed += ClientLoggedOut;
@@ -249,109 +247,10 @@ namespace Aurora.Modules
             m_scene.EventManager.OnClientClosed -= ClientLoggedOut;
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
-            m_scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
             MainServer.Instance.RemoveHTTPHandler("", regionimage);
-		}
-
-		public void OnRegisterCaps(UUID agentID, Caps caps)
-		{
-			//m_log.DebugFormat("[WORLD MAP]: OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
-			string capsBase = "/CAPS/" + caps.CapsObjectPath;
-			caps.RegisterHandler("MapLayer",
-			                     new RestStreamHandler("POST", capsBase + m_mapLayerPath,
-			                                           delegate(string request, string path, string param,
-			                                                    OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-			                                           {
-			                                           	return MapLayerRequest(request, path, param,
-			                                           	                       agentID, caps);
-			                                           }));
-		}
-
-		/// <summary>
-		/// Callback for a map layer request
-		/// </summary>
-		/// <param name="request"></param>
-		/// <param name="path"></param>
-		/// <param name="param"></param>
-		/// <param name="agentID"></param>
-		/// <param name="caps"></param>
-		/// <returns></returns>
-		public string MapLayerRequest(string request, string path, string param,
-		                              UUID agentID, Caps caps)
-        {
-            int bottom = (int)m_scene.RegionInfo.RegionLocY - MapViewLength;
-            int top = (int)m_scene.RegionInfo.RegionLocY + MapViewLength;
-            int left = (int)m_scene.RegionInfo.RegionLocX - MapViewLength;
-            int right = (int)m_scene.RegionInfo.RegionLocX + MapViewLength;
-
-
-            OSDArray layerData = new OSDArray();
-            layerData.Add(GetOSDMapLayerResponse(bottom, left, right, top, new UUID("00000000-0000-1111-9999-000000000006")));
-            OSDArray mapBlocksData = new OSDArray();
-            
-            ScenePresence avatarPresence = null;
-
-            m_scene.TryGetScenePresence(agentID, out avatarPresence);
-
-            if (avatarPresence != null)
-            {
-                List<MapBlockData> mapBlocks = new List<MapBlockData>();
-                if (m_mapLayer != null)
-                {
-                    mapBlocks = m_mapLayer;
-                }
-                else
-                {
-                    List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                            left * (int)Constants.RegionSize,
-                            right * (int)Constants.RegionSize,
-                            bottom * (int)Constants.RegionSize,
-                            top * (int)Constants.RegionSize);
-                    foreach (GridRegion r in regions)
-                    {
-                        mapBlocks.Add(MapBlockFromGridRegion(r));
-                    }
-                    m_mapLayer = mapBlocks;
-                }
-                foreach (MapBlockData block in m_mapLayer)
-                {
-                    //Add to the array
-                    mapBlocksData.Add(block.ToOSD());
-                }
-            }
-            OSDMap response = MapLayerResponce(layerData, mapBlocksData);
-            string resp = OSDParser.SerializeLLSDXmlString(response);
-            return resp;
-		}
-
-        protected static OSDMap MapLayerResponce(OSDArray layerData, OSDArray mapBlocksData)
-        {
-            OSDMap map = new OSDMap();
-            OSDMap agentMap = new OSDMap();
-            agentMap["Flags"] = 0;
-            map["AgentData"] = agentMap;
-            map["LayerData"] = layerData;
-            map["MapBlocks"] = mapBlocksData;
-            return map;
-        }
-
-		/// <summary>
-		///
-		/// </summary>
-		/// <returns></returns>
-		protected static OSDMap GetOSDMapLayerResponse(int bottom, int left, int right, int top, UUID imageID)
-		{
-            OSDMap mapLayer = new OSDMap();
-            mapLayer["Bottom"] = bottom;
-            mapLayer["Left"] = left;
-            mapLayer["Right"] = right;
-            mapLayer["Top"] = top;
-            mapLayer["ImageID"] = imageID;
-
-            return mapLayer;
 		}
 
 		#region EventHandlers
