@@ -1249,5 +1249,7 @@ namespace Aurora.BotManager
         }
 
         #endregion
+
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
     }
 }

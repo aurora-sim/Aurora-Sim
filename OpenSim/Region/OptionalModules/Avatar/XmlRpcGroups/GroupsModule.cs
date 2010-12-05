@@ -197,13 +197,22 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         void EventManager_OnRegisterCaps(UUID agentID, Caps caps)
         {
-            /*string capsBase = "/CAPS/" + UUID.Random();
+            string capsBase = "/CAPS/" + UUID.Random();
             caps.RegisterHandler("GroupProposalBallot",
-                                new RestHTTPHandler("POST", capsBase + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
+                                new RestStreamHandler("POST", capsBase + "/",
+                                                      delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return GroupProposalBallot(m_dhttpMethod, agentID);
-                                                      }));*/
+                                                          return GroupProposalBallot(request, agentID);
+                                                      }));
+            capsBase = "/CAPS/" + UUID.Random();
+            caps.RegisterHandler("StartGroupProposal",
+                                new RestStreamHandler("POST", capsBase + "/",
+                                                      delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                      {
+                                                          return StartGroupProposal(request, agentID);
+                                                      }));
         }
 
         public void RemoveRegion(Scene scene)
@@ -262,6 +271,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             client.OnAgentDataUpdateRequest += OnAgentDataUpdateRequest;
             client.OnDirFindQuery += OnDirFindQuery;
             client.OnRequestAvatarProperties += OnRequestAvatarProperties;
+            client.OnGroupActiveProposalsRequest += GroupActiveProposalsRequest;
+            client.OnGroupVoteHistoryRequest += GroupVoteHistoryRequest;
+            client.OnGroupProposalBallotRequest += GroupProposalBallotRequest;
 
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage += OnInstantMessage;
@@ -286,6 +298,72 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             //Remove them from the cache
             m_cachedGroupTitles.Remove(client.AgentId);
+        }
+
+        void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID, UUID ProposalID, string vote)
+        {
+        }
+
+        void GroupVoteHistoryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID)
+        {
+            GroupVoteHistoryItem[] votes = new GroupVoteHistoryItem[0];
+            GroupVoteHistory history = new GroupVoteHistory();
+            client.SendGroupVoteHistory(groupID, transactionID, history, votes);
+        }
+
+        void GroupActiveProposalsRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID)
+        {
+            GroupActiveProposals[] proposals = new GroupActiveProposals[0];
+            /*proposals[0] = new GroupActiveProposals();
+            proposals[0].ProposalText = "TEST PROPOSAL";
+            proposals[0].Majority = "1";
+            proposals[0].Quorum = "0";
+            proposals[0].StartDateTime = "";
+            proposals[0].TerseDateID = "";
+            proposals[0].VoteID = UUID.Random().ToString();
+            proposals[0].VoteInitiator = agentID.ToString();
+            proposals[0].EndDateTime = "";*/
+            client.SendGroupActiveProposals(groupID, transactionID, proposals);
+        }
+
+        private string GroupProposalBallot(string request, UUID agentID)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+
+            UUID groupid = map["group-id"].AsUUID();
+            UUID proposalid = map["proposal-id"].AsUUID();
+            UUID sessionid = map["session-id"].AsUUID();
+            string vote = map["vote"].AsString();
+
+            OSDMap resp = new OSDMap();
+            resp["voted"] = OSD.FromBoolean(true);
+            return OSDParser.SerializeLLSDXmlString(resp);
+        }
+
+        private string StartGroupProposal(string request, UUID agentID)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+
+            int duration = map["duration"].AsInteger();
+            UUID group = map["group-id"].AsUUID();
+            double majority = map["majority"].AsReal();
+            string text = map["proposal-text"].AsString();
+            int quorum = map["quorum"].AsInteger();
+            UUID session = map["session-id"].AsUUID();
+
+            GroupProposalInfo info = new GroupProposalInfo();
+            info.GroupID = group;
+            info.Majority = (float)majority;
+            info.Quorum = quorum;
+            info.Session = session;
+            info.Text = text;
+            info.Duration = duration;
+
+            m_groupData.AddGroupProposal(agentID, info);
+
+            OSDMap resp = new OSDMap();
+            resp["voted"] = OSD.FromBoolean(true);
+            return OSDParser.SerializeLLSDXmlString(resp);
         }
 
         private void OnRequestAvatarProperties(IClientAPI remoteClient, UUID avatarID)

@@ -76,6 +76,7 @@ namespace OpenSim.Framework
         void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID);
         void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
+        void AddGroupProposal(UUID agentID, GroupProposalInfo info);
     }
 
     public class GroupInviteInfo
@@ -129,7 +130,7 @@ namespace OpenSim.Framework
             Message = values["Message"].ToString();
             BinaryBucket = Utils.HexStringToBytes(values["BinaryBucket"].ToString(), true);
         }
-        
+
         public Dictionary<string, object> ToKeyValuePairs()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
@@ -138,6 +139,55 @@ namespace OpenSim.Framework
             values["Message"] = Message;
             values["BinaryBucket"] = Utils.BytesToHexString(BinaryBucket, "BinaryBucket");
             return values;
+        }
+    }
+
+    public class GroupProposalInfo : Aurora.Framework.IDataTransferable
+    {
+        public UUID GroupID = UUID.Zero;
+        public int Duration = 0;
+        public float Majority = 0;
+        public string Text = string.Empty;
+        public int Quorum = 0;
+        public UUID Session = UUID.Zero;
+
+        public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
+        {
+            GroupID = map["GroupID"].AsUUID();
+            Duration = map["Duration"].AsInteger();
+            Majority = (float)map["Majority"].AsReal();
+            Text = map["Text"].AsString();
+            Quorum = map["Quorum"].AsInteger();
+            Session = map["Session"].AsUUID();
+        }
+
+        public override OpenMetaverse.StructuredData.OSDMap ToOSD()
+        {
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map["GroupID"] = GroupID;
+            map["Duration"] = Duration;
+            map["Majority"] = Majority;
+            map["Text"] = Text;
+            map["Quorum"] = Quorum;
+            map["Session"] = Session;
+            return map;
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override Aurora.Framework.IDataTransferable Duplicate()
+        {
+            GroupProposalInfo p = new GroupProposalInfo();
+            p.FromOSD(ToOSD());
+            return p;
         }
     }
 }

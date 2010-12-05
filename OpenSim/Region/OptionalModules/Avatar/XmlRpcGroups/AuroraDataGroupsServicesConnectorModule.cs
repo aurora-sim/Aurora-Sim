@@ -385,6 +385,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupsConnector.AddGroupNotice(requestingAgentID, groupID, noticeID, fromName, subject, message, ItemID, AssetType, ItemName);
         }
 
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+            GroupsConnector.AddGroupProposal(agentID, info);
+        }
+
         public void ResetAgentGroupChatSessions(UUID agentID)
         {
             foreach (List<UUID> agentList in m_groupsAgentsDroppedFromChatSession.Values)

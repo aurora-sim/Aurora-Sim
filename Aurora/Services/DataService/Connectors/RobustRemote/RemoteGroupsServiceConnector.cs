@@ -1102,5 +1102,9 @@ namespace Aurora.Services.DataService
 
             return new List<GroupInviteInfo>();
         }
+
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+        }
     }
 }

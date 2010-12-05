@@ -52,11 +52,13 @@ namespace OpenSim.Server.Handlers.Neighbour
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private INeighbourService m_NeighbourService;
         private IAuthenticationService m_AuthenticationService;
-        // unused: private bool m_AllowForeignGuests;
+        private IConfigSource m_source;
+        //private bool m_AllowForeignGuests;
 
-        public NeighbourHandler(INeighbourService service, IAuthenticationService authentication) :
+        public NeighbourHandler(INeighbourService service, IAuthenticationService authentication, IConfigSource config) :
             base("POST", "/region")
         {
+            m_source = config;
             m_NeighbourService = service;
             m_AuthenticationService = authentication;
             // unused: m_AllowForeignGuests = foreignGuests;

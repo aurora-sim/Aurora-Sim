@@ -293,6 +293,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event GodUpdateRegionInfoUpdate OnGodUpdateRegionInfoUpdate;
         public event GodlikeMessage OnEstateTelehubRequest;
         public event ViewerStartAuction OnViewerStartAuction;
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
         
 
         #endregion Events
@@ -5414,6 +5415,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.ParcelGodMarkAsContent, HandleParcelGodMarkAsContent);
             AddLocalPacketHandler(PacketType.GroupActiveProposalsRequest, HandleGroupActiveProposalsRequest);
             AddLocalPacketHandler(PacketType.GroupVoteHistoryRequest, HandleGroupVoteHistoryRequest);
+            AddLocalPacketHandler(PacketType.GroupProposalBallot, HandleGroupProposalBallot);
             AddLocalPacketHandler(PacketType.SimWideDeletes, HandleSimWideDeletes);
             AddLocalPacketHandler(PacketType.SendPostcard, HandleSendPostcard);
             AddLocalPacketHandler(PacketType.TeleportCancel, HandleTeleportCancel);
@@ -10648,6 +10650,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (handlerGroupVoteHistoryRequest != null)
             {
                 handlerGroupVoteHistoryRequest(this, GroupVoteHistoryRequest.AgentData.AgentID,GroupVoteHistoryRequest.AgentData.SessionID,GroupVoteHistoryRequest.GroupData.GroupID,GroupVoteHistoryRequest.TransactionData.TransactionID);
+                return true;
+            }
+            return false;
+        }
+
+        private bool HandleGroupProposalBallot(IClientAPI client, Packet Packet)
+        {
+            GroupProposalBallotPacket GroupProposalBallotRequest =
+                (GroupProposalBallotPacket)Packet;
+            GroupProposalBallotRequest handlerGroupActiveProposalsRequest = OnGroupProposalBallotRequest;
+            if (handlerGroupActiveProposalsRequest != null)
+            {
+                handlerGroupActiveProposalsRequest(this, GroupProposalBallotRequest.AgentData.AgentID, GroupProposalBallotRequest.AgentData.SessionID, GroupProposalBallotRequest.ProposalData.GroupID, GroupProposalBallotRequest.ProposalData.ProposalID, Utils.BytesToString(GroupProposalBallotRequest.ProposalData.VoteCast));
                 return true;
             }
             return false;

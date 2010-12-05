@@ -1161,5 +1161,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
             return true;
         }
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
     }
 }

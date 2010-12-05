@@ -495,10 +495,12 @@ namespace OpenSim.Framework
     public delegate void ParcelBuyPass(IClientAPI client, UUID agentID, int ParcelLocalID);
     
     public delegate void ParcelGodMark(IClientAPI client, UUID agentID, int ParcelLocalID);
-    
-    public delegate void GroupActiveProposalsRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
-    
-    public delegate void GroupVoteHistoryRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+
+    public delegate void GroupActiveProposalsRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+
+    public delegate void GroupVoteHistoryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+
+    public delegate void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID, UUID ProposalID, string vote);
 
     public delegate void SimWideDeletesDelegate(IClientAPI client, int flags, UUID targetID);
     
@@ -1052,6 +1054,7 @@ namespace OpenSim.Framework
         event GroupActiveProposalsRequest OnGroupActiveProposalsRequest;
         event GroupVoteHistoryRequest OnGroupVoteHistoryRequest;
         event SimWideDeletesDelegate OnSimWideDeletes;
+        event GroupProposalBallotRequest OnGroupProposalBallotRequest;
         event SendPostcard OnSendPostcard;
         event MuteListEntryUpdate OnUpdateMuteListEntry;
         event MuteListEntryRemove OnRemoveMuteListEntry;

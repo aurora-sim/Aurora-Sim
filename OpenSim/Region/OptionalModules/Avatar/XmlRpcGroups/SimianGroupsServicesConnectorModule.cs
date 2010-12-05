@@ -1404,6 +1404,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             return new List<GroupInviteInfo>();
         }
+
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+        }
     }
 
 }

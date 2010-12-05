@@ -56,7 +56,7 @@ namespace OpenSim.Server.Handlers.Neighbour
                 m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
                 return;
             }
-            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, aService));
+            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, aService, source));
         }
     }
 }

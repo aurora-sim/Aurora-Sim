@@ -851,7 +851,12 @@ namespace Aurora.Services.DataService
             Values.Add(ItemName);
 
 			data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
-		}
+        }
+
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+            GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
+        }
 
         public bool CheckGroupPermissions(UUID AgentID, UUID GroupID, ulong Permissions)
         {
@@ -881,5 +886,5 @@ namespace Aurora.Services.DataService
 
             return true;
         }
-	}
+    }
 }
