@@ -180,7 +180,7 @@ namespace OpenSim.Services.CapsService
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            OSDArray foldersrequested = (OSDArray)requestmap["folders"];
+            OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
             string response = "";
             lock (m_fetchLock)
@@ -230,7 +230,7 @@ namespace OpenSim.Services.CapsService
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            OSDArray foldersrequested = (OSDArray)requestmap["folders"];
+            OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
             string response = "";
             lock (m_fetchLock)

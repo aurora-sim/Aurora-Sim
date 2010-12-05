@@ -206,10 +206,10 @@ namespace OpenSim.Services.CapsService
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         SimToInform,
                         OSDParser.SerializeLLSDXmlString(postToSendToSim));
-                m_log.Warn("[CAPS]: SEED Request for " + SimToInform + " at " + CapsURL);
+                m_log.Debug("[CAPSService]: Seed request was added for region " + SimToInform + " at " + CapsURL);
                 if (reply != "")
                 {
-                    OSDMap hash = (OSDMap)OSDParser.SerializeLLSDXmlString(OpenMetaverse.Utils.StringToBytes(reply));
+                    OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(reply));
                     foreach (string key in hash.Keys)
                     {
                         if (!registeredCAPS.ContainsKey(key))
@@ -218,7 +218,7 @@ namespace OpenSim.Services.CapsService
                         //    m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
                     }
                 }
-                m_log.Warn("[CAPS]: EQM Request for " + registeredCAPS["EventQueueGet"].AsString());
+                //m_log.Warn("[CAPS]: EQM Request for " + registeredCAPS["EventQueueGet"].AsString());
             }
             catch
             {
@@ -753,7 +753,7 @@ namespace OpenSim.Services.CapsService
             //                }
             //                m_log.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
             //            }
-            m_log.Warn("Got EQM get at " + m_handler.CapsURL);
+            //m_log.Warn("Got EQM get at " + m_handler.CapsURL);
             Queue<OSD> queue = TryGetQueue(agentID);
             OSD element = null;
             if (queue.Count != 0)
