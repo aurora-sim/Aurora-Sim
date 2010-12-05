@@ -331,7 +331,7 @@ namespace OpenSim.Server.Handlers.Neighbour
 
         #region Helpers
 
-        public bool CheckThreatLevel(NeighborThreatLevel thisThreat)
+        private bool CheckThreatLevel(NeighborThreatLevel thisThreat)
         {
             if (m_threatLevel > thisThreat)
                 return false;

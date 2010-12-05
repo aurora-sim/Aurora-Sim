@@ -45,6 +45,11 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors
 {
+    public class NeighborPassword 
+    {
+        public UUID RegionID;
+        public UUID Password;
+    }
     public class NeighbourServicesConnector : INeighbourService
     {
         private static readonly ILog m_log =
@@ -53,6 +58,7 @@ namespace OpenSim.Services.Connectors
 
         protected IGridService m_GridService = null;
         protected Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
+        protected Dictionary<UUID, List<NeighborPassword>> m_KnownNeighborsPass = new Dictionary<UUID, List<NeighborPassword>>();
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
         {
@@ -102,7 +108,7 @@ namespace OpenSim.Services.Connectors
             Dictionary<string, object> args = new Dictionary<string, object>();
             try
             {
-                args = Util.OSDToDictionary(thisRegion.PackRegionInfoData());
+                args = PackRegionInfo(thisRegion, region.RegionID);
             }
             catch (Exception e)
             {
@@ -170,7 +176,7 @@ namespace OpenSim.Services.Connectors
             Dictionary<string, object> args = new Dictionary<string, object>();
             try
             {
-                args = Util.OSDToDictionary(thisRegion.PackRegionInfoData());
+                args = PackRegionInfo(thisRegion, region.RegionID);
             }
             catch (Exception e)
             {
@@ -219,11 +225,6 @@ namespace OpenSim.Services.Connectors
             //The remote connector has to deal with it
         }
 
-        public virtual void SendCloseChildAgent(UUID agentID, UUID regionID, List<ulong> regionsToClose)
-        {
-            //The remote connector has to deal with it
-        }
-
         public virtual List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
         {
             return new List<GridRegion>();
@@ -244,7 +245,7 @@ namespace OpenSim.Services.Connectors
             Dictionary<string, object> args = new Dictionary<string, object>();
             try
             {
-                args = Util.OSDToDictionary(region.PackRegionInfoData());
+                args = PackRegionInfo(region, UUID.Zero);
             }
             catch (Exception e)
             {
@@ -336,6 +337,20 @@ namespace OpenSim.Services.Connectors
         public virtual bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
         {
             return false;
+        }
+
+        private Dictionary<string, object> PackRegionInfo(RegionInfo thisRegion, UUID uUID)
+        {
+            List<NeighborPassword> passes = m_KnownNeighborsPass[uUID];
+            foreach (NeighborPassword p in passes)
+            {
+                if (thisRegion.RegionID == p.RegionID)
+                {
+                    thisRegion.Password = p.Password;
+                    break;
+                }
+            }
+            return Util.OSDToDictionary(thisRegion.PackRegionInfoData());
         }
     }
 }
