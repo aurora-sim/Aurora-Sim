@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
             sendData["REGIONID"] = regionID.ToString();
             sendData["METHOD"] = "loadestatesettings";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -68,7 +68,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
             sendData["ESTATEID"] = estateID;
             sendData["METHOD"] = "loadestatesettings";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -110,7 +110,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -139,7 +139,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "saveestatesettings";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -160,7 +160,7 @@ namespace Aurora.Services.DataService
             sendData["REGIONID"] = RegionID.ToString();
             sendData["METHOD"] = "createestate";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -169,7 +169,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -198,7 +198,7 @@ namespace Aurora.Services.DataService
             sendData["SEARCH"] = search;
             sendData["METHOD"] = "getestates";
             List<int> Estates = new List<int>();
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -207,7 +207,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -249,7 +249,7 @@ namespace Aurora.Services.DataService
             sendData["PASSWORD"] = password;
             sendData["METHOD"] = "linkregionestate";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -258,7 +258,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -289,7 +289,7 @@ namespace Aurora.Services.DataService
             sendData["ESTATEID"] = estateID;
             sendData["METHOD"] = "getregioninestate";
             List<UUID> Regions = new List<UUID>();
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -298,7 +298,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -338,7 +338,7 @@ namespace Aurora.Services.DataService
             sendData["PASSWORD"] = password;
             sendData["METHOD"] = "deleteestate";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -347,7 +347,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {

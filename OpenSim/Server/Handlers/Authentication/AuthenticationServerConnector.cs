@@ -56,7 +56,7 @@ namespace OpenSim.Server.Handlers.Authentication
                 throw new Exception("No AuthenticationService in config file");
 
             Object[] args = new Object[] { config };
-            m_AuthenticationService = ServerUtils.LoadPlugin<IAuthenticationService>(authenticationService, args);
+            m_AuthenticationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authenticationService, args);
 
             server.AddStreamHandler(new AuthenticationServerPostHandler(m_AuthenticationService));
         }

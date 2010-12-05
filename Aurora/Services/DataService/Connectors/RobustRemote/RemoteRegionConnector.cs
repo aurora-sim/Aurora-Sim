@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
             sendData["SESSIONID"] = SessionID.ToString();
             sendData["METHOD"] = "addtelehub";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
             sendData["SESSIONID"] = SessionID.ToString();
             sendData["METHOD"] = "removetelehub";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -104,7 +104,7 @@ namespace Aurora.Services.DataService
             sendData["METHOD"] = "findtelehub";
             sendData["REGIONID"] = regionID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {

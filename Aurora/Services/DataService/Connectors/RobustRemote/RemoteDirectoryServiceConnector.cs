@@ -58,7 +58,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addlandobject";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -79,7 +79,7 @@ namespace Aurora.Services.DataService
             sendData["INFOUUID"] = InfoUUID.ToString();
             sendData["METHOD"] = "getparcelinfo";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -88,7 +88,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -131,7 +131,7 @@ namespace Aurora.Services.DataService
             sendData["OWNERID"] = OwnerID;
             sendData["METHOD"] = "getparcelbyowner";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<LandData> Land = new List<LandData>();
             try
             {
@@ -140,7 +140,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -173,7 +173,7 @@ namespace Aurora.Services.DataService
             sendData["FLAGS"] = Flags;
             sendData["METHOD"] = "findland";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<DirPlacesReplyData> Land = new List<DirPlacesReplyData>();
             try
             {
@@ -182,7 +182,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -215,7 +215,7 @@ namespace Aurora.Services.DataService
             sendData["FLAGS"] = Flags;
             sendData["METHOD"] = "findlandforsale";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<DirLandReplyData> Land = new List<DirLandReplyData>();
             try
             {
@@ -224,7 +224,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
             sendData["STARTQUERY"] = StartQuery;
             sendData["METHOD"] = "findevents";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
@@ -264,7 +264,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -294,7 +294,7 @@ namespace Aurora.Services.DataService
             sendData["MATURITY"] = maturity;
             sendData["METHOD"] = "findeventsinregion";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
@@ -303,7 +303,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -335,7 +335,7 @@ namespace Aurora.Services.DataService
             sendData["STARTQUERY"] = StartQuery;
             sendData["METHOD"] = "findclassifieds";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
             try
             {
@@ -344,7 +344,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -373,7 +373,7 @@ namespace Aurora.Services.DataService
             sendData["EVENTID"] = EventID;
             sendData["METHOD"] = "geteventinfo";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -381,7 +381,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -409,7 +409,7 @@ namespace Aurora.Services.DataService
             sendData["REGIONNAME"] = regionName;
             sendData["METHOD"] = "findclassifiedsinregion";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<Classified> Classifieds = new List<Classified>();
             try
             {
@@ -418,7 +418,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {

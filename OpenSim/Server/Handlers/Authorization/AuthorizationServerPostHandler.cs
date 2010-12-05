@@ -66,7 +66,7 @@ namespace OpenSim.Server.Handlers.Authorization
             AuthorizationResponse result = new AuthorizationResponse(authorized, Authorization.ID + " has been authorized");
 
             xs = new XmlSerializer(typeof(AuthorizationResponse));
-            return ServerUtils.SerializeResult(xs, result);
+            return WebUtils.SerializeResult(xs, result);
             
         }
     }

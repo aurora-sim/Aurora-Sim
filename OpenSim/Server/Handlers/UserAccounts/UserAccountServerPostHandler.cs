@@ -72,7 +72,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -168,7 +168,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
                 }
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -237,7 +237,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
 
         private byte[] ResultToBytes(Dictionary<string, object> result)
         {
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

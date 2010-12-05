@@ -128,11 +128,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 m_Registered = true;
                 Object[] args = new Object[] { m_config };
                 m_LocalAuth =
-                        ServerUtils.LoadPlugin<IAuthenticationService>(authServiceDll,
+                        Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authServiceDll,
                         args);
 
                 args = new Object[] { m_config, MainServer.Instance, m_LocalService, m_LocalAuth, scene };
-                ServerUtils.LoadPlugin<IServiceConnector>(neighborServiceDll, args);
+                Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>(neighborServiceDll, args);
             }
         }
 

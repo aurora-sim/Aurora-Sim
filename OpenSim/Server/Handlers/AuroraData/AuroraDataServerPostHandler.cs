@@ -49,13 +49,13 @@ namespace OpenSim.Server.Handlers.AuroraData
             Dictionary<string, object> request = new Dictionary<string, object>();
             try
             {
-                request = ServerUtils.ParseQueryString(body);
+                request = WebUtils.ParseQueryString(body);
                 //if (request.Count == 1)
                 //    request = ServerUtils.ParseXmlResponse(body);
                 object value = null;
                 request.TryGetValue("<?xml version", out value);
                 if (value != null)
-                    request = ServerUtils.ParseXmlResponse(body);
+                    request = WebUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -272,7 +272,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             else
                 result["result"] = Agent.ToKeyValuePairs();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -519,7 +519,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             if(r != null)
                 result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -537,7 +537,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             if(r != null)
                 result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -554,7 +554,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             GroupProfileData r = GroupsServiceConnector.GetMemberGroupProfile(requestingAgentID, GroupID, AgentID);
             result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -571,7 +571,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             bool r = GroupsServiceConnector.RemoveAgentFromGroup(requestingAgentID, AgentID, GroupID);
             result.Add("A", r);
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -587,7 +587,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             UUID r = GroupsServiceConnector.GetAgentActiveGroup(requestingAgentID, AgentID);
             result.Add("A", r);
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -603,7 +603,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             GroupInviteInfo r = GroupsServiceConnector.GetAgentToGroupInvite(requestingAgentID, inviteID);
             result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -620,7 +620,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             GroupMembersData r = GroupsServiceConnector.GetAgentGroupMemberData(requestingAgentID, GroupID, AgentID);
             result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -636,7 +636,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             GroupNoticeInfo r = GroupsServiceConnector.GetGroupNotice(requestingAgentID, noticeID);
             result.Add("A", r.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -658,7 +658,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -682,7 +682,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -705,7 +705,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -727,7 +727,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -749,7 +749,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -771,7 +771,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -793,7 +793,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -814,7 +814,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -903,7 +903,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             if(land != null)
                 result.Add("Land", land.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -923,7 +923,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -946,7 +946,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -970,7 +970,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -992,7 +992,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1013,7 +1013,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1036,7 +1036,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1051,7 +1051,7 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             result.Add("event", eventdata.ToKeyValuePairs());
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1071,7 +1071,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1175,7 +1175,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             }
             result["result"] = estateresult;
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1209,7 +1209,7 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             //This is not a local transfer, MUST be false!
             Dictionary<string, object> result = ES.ToKeyValuePairs(false);
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1244,7 +1244,7 @@ namespace OpenSim.Server.Handlers.AuroraData
 
             //This NEEDS to be false here, otherwise passwords will be sent unsecurely!
             Dictionary<string, object> result = ES.ToKeyValuePairs(false);
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1367,7 +1367,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1405,7 +1405,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             bool IsMuted = MuteListConnector.IsMuted(PRINCIPALID, MUTEID);
             result["Muted"] = IsMuted;
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1496,7 +1496,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 i++;
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1602,7 +1602,7 @@ namespace OpenSim.Server.Handlers.AuroraData
                 result["result"] = UserProfile.ToKeyValuePairs();
             }
              
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1619,7 +1619,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             {
                 m_log.WarnFormat("[AuroraDataServerPostHandler]: no principalID in request to get profile");
                 result["result"] = "null";
-                string FailedxmlString = ServerUtils.BuildXmlResponse(result);
+                string FailedxmlString = WebUtils.BuildXmlResponse(result);
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", FailedxmlString);
                 UTF8Encoding Failedencoding = new UTF8Encoding();
                 return Failedencoding.GetBytes(FailedxmlString);
@@ -1630,7 +1630,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             ProfileConnector.UpdateUserProfile(UserProfile);
             result["result"] = "Successful";
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);

@@ -110,7 +110,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Simulation
 
                 Object[] args = new Object[] { m_Config, MainServer.Instance, scene };
 
-                ServerUtils.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:SimulationServiceInConnector", args);
+                Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:SimulationServiceInConnector", args);
             }
         }
 

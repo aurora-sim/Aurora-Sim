@@ -95,7 +95,7 @@ namespace OpenSim.Services.InventoryService
                 throw new Exception(String.Format("No section LoginService in config file"));
             Object[] args = new Object[] { config };
             string accountService = m_LoginServerConfig.GetString("UserAccountService", String.Empty);
-            m_UserAccountService = ServerUtils.LoadPlugin<IUserAccountService>(accountService, args);
+            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(accountService, args);
         }
 
         public virtual bool CreateUserInventory(UUID principalID)

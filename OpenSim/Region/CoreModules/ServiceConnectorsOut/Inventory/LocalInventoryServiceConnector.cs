@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
                     Object[] args = new Object[] { source };
                     m_log.DebugFormat("[LOCAL INVENTORY SERVICES CONNECTOR]: Service dll = {0}", serviceDll);
 
-                    m_InventoryService = ServerUtils.LoadPlugin<IInventoryService>(serviceDll, args);
+                    m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(serviceDll, args);
 
                     if (m_InventoryService == null)
                     {

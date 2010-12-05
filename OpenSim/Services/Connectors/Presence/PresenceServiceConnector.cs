@@ -97,7 +97,7 @@ namespace OpenSim.Services.Connectors
             sendData["SessionID"] = sessionID.ToString();
             sendData["SecureSessionID"] = secureSessionID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -106,7 +106,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -141,7 +141,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["SessionID"] = sessionID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -150,7 +150,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -184,7 +184,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["RegionID"] = regionID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -193,7 +193,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -228,7 +228,7 @@ namespace OpenSim.Services.Connectors
             sendData["SessionID"] = sessionID.ToString();
             sendData["RegionID"] = regionID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
                 AsynchronousRestObjectRequester.MakeRequest("POST",
@@ -252,7 +252,7 @@ namespace OpenSim.Services.Connectors
             sendData["SessionID"] = sessionID.ToString();
 
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -270,7 +270,7 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[PRESENCE CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
             }
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
             PresenceInfo pinfo = null;
 
             if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
@@ -295,7 +295,7 @@ namespace OpenSim.Services.Connectors
             sendData["uuids"] = new List<string>(userIDs);
 
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -315,7 +315,7 @@ namespace OpenSim.Services.Connectors
 
             List<PresenceInfo> rinfos = new List<PresenceInfo>();
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
             if (replyData != null)
             {
@@ -356,7 +356,7 @@ namespace OpenSim.Services.Connectors
             sendData["uuids"] = new List<string>(userIDs);
 
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -376,7 +376,7 @@ namespace OpenSim.Services.Connectors
 
             List<string> locations = new List<string>();
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
             if (replyData != null)
             {

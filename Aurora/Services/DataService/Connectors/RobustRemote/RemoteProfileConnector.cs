@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getprofile";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -106,7 +106,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = Profile.PrincipalID.ToString();
             sendData["METHOD"] = "updateprofile";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -115,7 +115,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {

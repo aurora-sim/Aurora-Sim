@@ -133,7 +133,7 @@ namespace OpenSim.Services.Connectors.Friends
 
         private bool Call(GridRegion region, Dictionary<string, object> sendData)
         {
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             //m_log.DebugFormat("[FRIENDS CONNECTOR]: queryString = {0}", reqString);
             if (region == null)
                 return false;
@@ -149,7 +149,7 @@ namespace OpenSim.Services.Connectors.Friends
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("RESULT"))
                     {

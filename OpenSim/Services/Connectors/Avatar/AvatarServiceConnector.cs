@@ -111,7 +111,7 @@ namespace OpenSim.Services.Connectors
             sendData["UserID"] = userID;
 
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -129,7 +129,7 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
             }
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
             AvatarData avatar = null;
 
             if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
@@ -160,7 +160,7 @@ namespace OpenSim.Services.Connectors
                 sendData[kvp.Key] = kvp.Value.ToString();
 
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             //m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -169,7 +169,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -203,7 +203,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["UserID"] = userID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -212,7 +212,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -247,7 +247,7 @@ namespace OpenSim.Services.Connectors
             sendData["Names"] = new List<string>(names);
             sendData["Values"] = new List<string>(values);
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -256,7 +256,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -291,7 +291,7 @@ namespace OpenSim.Services.Connectors
             sendData["UserID"] = userID.ToString();
             sendData["Names"] = new List<string>(names);
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -300,7 +300,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {

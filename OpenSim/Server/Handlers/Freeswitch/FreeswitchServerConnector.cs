@@ -66,7 +66,7 @@ namespace OpenSim.Server.Handlers.Freeswitch
 
             Object[] args = new Object[] { config };
             m_FreeswitchService =
-                    ServerUtils.LoadPlugin<IFreeswitchService>(freeswitchService, args);
+                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(freeswitchService, args);
 
             server.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
             server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);

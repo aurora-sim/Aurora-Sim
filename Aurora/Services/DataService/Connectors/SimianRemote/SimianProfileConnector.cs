@@ -95,7 +95,7 @@ namespace Aurora.Services.DataService
 
         private bool PostData(UUID userID, NameValueCollection nvc)
         {
-            OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
+            OSDMap response = WebUtils.PostToService(m_ServerURI, nvc);
             
             if(response.ContainsKey("Success"))
                 return response["Success"].AsBoolean();
@@ -104,7 +104,7 @@ namespace Aurora.Services.DataService
 
         private OSDMap PostUserData(UUID userID, NameValueCollection nvc)
         {
-            OSDMap response = WebUtil.PostToService(m_ServerURI, nvc);
+            OSDMap response = WebUtils.PostToService(m_ServerURI, nvc);
             if (response["Success"].AsBoolean() && response["User"] is OSDMap)
             {
                 return (OSDMap)response["User"];

@@ -92,7 +92,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             body = body.Trim();
 
             Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
             if (!request.ContainsKey("METHOD"))
                 return result; //No method, no work
@@ -156,7 +156,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             else
                 resp["success"] = "false";
 
-            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            string xmlString = WebUtils.BuildXmlResponse(resp);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -207,7 +207,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             Dictionary<string, object> resp = new Dictionary<string, object>();
             resp["success"] = "true";
 
-            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            string xmlString = WebUtils.BuildXmlResponse(resp);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -263,7 +263,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             else
                 resp["success"] = "false";
 
-            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            string xmlString = WebUtils.BuildXmlResponse(resp);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -322,7 +322,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             else
                 resp["success"] = "false";
 
-            string xmlString = ServerUtils.BuildXmlResponse(resp);
+            string xmlString = WebUtils.BuildXmlResponse(resp);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

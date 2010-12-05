@@ -100,11 +100,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Asset
 
                     Object[] args = new Object[] { source };
                     m_GridService =
-                            ServerUtils.LoadPlugin<IAssetService>(localDll,
+                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(localDll,
                             args);
 
                     m_HGService =
-                            ServerUtils.LoadPlugin<IAssetService>(HGDll,
+                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(HGDll,
                             args);
 
                     if (m_GridService == null)

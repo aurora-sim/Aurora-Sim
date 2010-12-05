@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authentication
 
                     Object[] args = new Object[] { source };
                     m_AuthenticationService =
-                            ServerUtils.LoadPlugin<IAuthenticationService>(serviceDll,
+                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(serviceDll,
                             args);
 
                     if (m_AuthenticationService == null)

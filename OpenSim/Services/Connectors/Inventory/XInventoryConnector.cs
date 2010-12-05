@@ -501,9 +501,9 @@ namespace OpenSim.Services.Connectors
 
             string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/xinventory",
-                    ServerUtils.BuildQueryString(sendData));
+                    WebUtils.BuildQueryString(sendData));
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
                     reply);
 
             return replyData;

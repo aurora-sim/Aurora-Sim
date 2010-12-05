@@ -99,7 +99,7 @@ namespace OpenSim.Services.Connectors
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "register";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -108,7 +108,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("Result")&& (replyData["Result"].ToString().ToLower() == "success"))
                     {
@@ -158,11 +158,11 @@ namespace OpenSim.Services.Connectors
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if ((replyData["Result"] != null) && (replyData["Result"].ToString().ToLower() == "success"))
                         return true;
@@ -189,7 +189,7 @@ namespace OpenSim.Services.Connectors
 
             List<GridRegion> rinfos = new List<GridRegion>();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             string reply = string.Empty;
             try
             {
@@ -203,7 +203,7 @@ namespace OpenSim.Services.Connectors
                 return rinfos;
             }
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
             if (replyData != null)
             {
@@ -239,7 +239,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -251,7 +251,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && (replyData["result"] != null))
                 {
@@ -285,7 +285,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -296,7 +296,7 @@ namespace OpenSim.Services.Connectors
             GridRegion rinfo = null;
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && (replyData["result"] != null))
                 {
@@ -329,7 +329,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -340,7 +340,7 @@ namespace OpenSim.Services.Connectors
             GridRegion rinfo = null;
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && (replyData["result"] != null))
                 {
@@ -372,7 +372,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -382,7 +382,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -424,7 +424,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
             }
@@ -436,7 +436,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -474,7 +474,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
             }
@@ -486,7 +486,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -526,7 +526,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
             }
@@ -538,7 +538,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -578,7 +578,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
             }
@@ -590,7 +590,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -628,7 +628,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
 
                 //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
             }
@@ -640,7 +640,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if (replyData != null)
                 {
@@ -677,7 +677,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/grid",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -689,7 +689,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
                 {
@@ -718,7 +718,7 @@ namespace OpenSim.Services.Connectors
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "update_map";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -727,7 +727,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "success"))
                         return String.Empty;
@@ -777,7 +777,7 @@ namespace OpenSim.Services.Connectors
             sendData["GRIDITEMTYPE"] = (int)gridItemType;
             sendData["METHOD"] = "getmapitems";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -786,7 +786,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -822,7 +822,7 @@ namespace OpenSim.Services.Connectors
             sendData["AGENTID"] = agentID;
             sendData["METHOD"] = "removeagent";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             string reply = "";
             try
             {
@@ -847,7 +847,7 @@ namespace OpenSim.Services.Connectors
             sendData["Z"] = Position.Z;
             sendData["METHOD"] = "addagent";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
                 AsynchronousRestObjectRequester.MakeRequest("POST",

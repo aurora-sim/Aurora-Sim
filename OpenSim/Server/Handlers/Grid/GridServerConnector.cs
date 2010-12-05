@@ -56,7 +56,7 @@ namespace OpenSim.Server.Handlers.Grid
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_GridService = ServerUtils.LoadPlugin<IGridService>(gridService, args);
+            m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
 
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
             LDS.Initialise(config);

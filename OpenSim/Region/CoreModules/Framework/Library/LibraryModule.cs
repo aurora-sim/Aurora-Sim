@@ -70,7 +70,7 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                     if (dllName != string.Empty)
                     {
                         Object[] args = new Object[] { config };
-                        m_Library = ServerUtils.LoadPlugin<ILibraryService>(dllName, args);
+                        m_Library = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(dllName, args);
                     }
                 }
             }

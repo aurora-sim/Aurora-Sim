@@ -61,7 +61,7 @@ namespace OpenSim.Server.Handlers.Hypergrid
             {
                 string serviceDll = gridConfig.GetString("LocalServiceModule", string.Empty);
                 Object[] args = new Object[] { config, simService };
-                m_GatekeeperService = ServerUtils.LoadPlugin<IGatekeeperService>(serviceDll, args);
+                m_GatekeeperService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGatekeeperService>(serviceDll, args);
 
             }
             if (m_GatekeeperService == null)

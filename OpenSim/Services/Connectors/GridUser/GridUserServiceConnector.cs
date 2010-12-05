@@ -155,7 +155,7 @@ namespace OpenSim.Services.Connectors
             sendData["Position"] = position.ToString();
             sendData["LookAt"] = lookAt.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -164,7 +164,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {
@@ -195,7 +195,7 @@ namespace OpenSim.Services.Connectors
             sendData["Position"] = position.ToString();
             sendData["LookAt"] = lookAt.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
                 AsynchronousRestObjectRequester.MakeRequest("POST",
@@ -210,7 +210,7 @@ namespace OpenSim.Services.Connectors
 
         protected GridUserInfo Get(Dictionary<string, object> sendData)
         {
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -219,7 +219,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
                     GridUserInfo guinfo = null;
 
                     if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))

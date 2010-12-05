@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.UserAccounts
                     }
 
                     Object[] args = new Object[] { source };
-                    m_UserService = ServerUtils.LoadPlugin<IUserAccountService>(serviceDll, args);
+                    m_UserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(serviceDll, args);
 
                     if (m_UserService == null)
                     {

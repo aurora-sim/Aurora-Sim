@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Asset
                     }
 
                     Object[] args = new Object[] { source };
-                    m_AssetService = ServerUtils.LoadPlugin<IAssetService>(serviceDll, args);
+                    m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(serviceDll, args);
 
                     if (m_AssetService == null)
                     {

@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.GridUser
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_GridUserService = ServerUtils.LoadPlugin<IGridUserService>(service, args);
+            m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(service, args);
 
             server.AddStreamHandler(new GridUserServerPostHandler(m_GridUserService));
         }

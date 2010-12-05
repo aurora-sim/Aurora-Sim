@@ -236,8 +236,9 @@ namespace Aurora.Framework
         /// <param name="dllName"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static T LoadPlugin<T>(string dllName, string type) 
+        public static T LoadPlugin<T>(string dllName) 
         {
+            string type = typeof(T).ToString();
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -270,6 +271,80 @@ namespace Aurora.Framework
                 throw e;
             }
             return default(T);
+        }
+
+        /// <summary>
+        /// Load a plugin from a dll with the given class or interface
+        /// </summary>
+        /// <param name="dllName"></param>
+        /// <param name="args">The arguments which control which constructor is invoked on the plugin</param>
+        /// <returns></returns>
+        public static T LoadPlugin<T>(string dllName, Object[] args) where T : class
+        {
+            string[] parts = dllName.Split(new char[] { ':' });
+
+            dllName = parts[0];
+
+            string className = String.Empty;
+
+            if (parts.Length > 1)
+                className = parts[1];
+
+            return LoadPlugin<T>(dllName, className, args);
+        }
+
+        /// <summary>
+        /// Load a plugin from a dll with the given class or interface
+        /// </summary>
+        /// <param name="dllName"></param>
+        /// <param name="className"></param>
+        /// <param name="args">The arguments which control which constructor is invoked on the plugin</param>
+        /// <returns></returns>
+        public static T LoadPlugin<T>(string dllName, string className, Object[] args) where T : class
+        {
+            string interfaceName = typeof(T).ToString();
+
+            try
+            {
+                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+
+                foreach (Type pluginType in pluginAssembly.GetTypes())
+                {
+                    if (pluginType.IsPublic)
+                    {
+                        if (className != String.Empty
+                            && pluginType.ToString() != pluginType.Namespace + "." + className)
+                            continue;
+
+                        Type typeInterface = pluginType.GetInterface(interfaceName, true);
+
+                        if (typeInterface != null)
+                        {
+                            T plug = null;
+                            try
+                            {
+                                plug = (T)Activator.CreateInstance(pluginType,
+                                        args);
+                            }
+                            catch (Exception e)
+                            {
+                                if (!(e is System.MissingMethodException))
+                                    m_log.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName, e.InnerException);
+                                return null;
+                            }
+
+                            return plug;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                m_log.Error(string.Format("Error loading plugin from {0}", dllName), e);
+                return null;
+            }
         }
     }
 }

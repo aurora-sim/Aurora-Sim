@@ -35,6 +35,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
 
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
@@ -141,7 +142,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Value", flags.ToString() }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
 
             if (!success)
@@ -163,7 +164,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Key", friend }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
 
             if (!success)
@@ -183,7 +184,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Type", "Friend" }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 return (OSDArray)response["Entries"];
@@ -204,7 +205,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Type", "Friend" }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 return (OSDArray)response["Entries"];

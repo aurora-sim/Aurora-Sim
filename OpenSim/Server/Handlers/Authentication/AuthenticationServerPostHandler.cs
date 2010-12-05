@@ -87,7 +87,7 @@ namespace OpenSim.Server.Handlers.Authentication
         private byte[] DoPlainMethods(string body)
         {
             Dictionary<string, object> request =
-                    ServerUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
             int lifetime = 30;
 

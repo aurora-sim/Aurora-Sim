@@ -137,7 +137,7 @@ namespace OpenSim.Services.Connectors
             sendData["query"] = query;
 
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -157,7 +157,7 @@ namespace OpenSim.Services.Connectors
 
             List<UserAccount> accounts = new List<UserAccount>();
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
             if (replyData != null)
             {
@@ -205,7 +205,7 @@ namespace OpenSim.Services.Connectors
         private UserAccount SendAndGetReply(Dictionary<string, object> sendData)
         {
             string reply = string.Empty;
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -223,7 +223,7 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
             }
 
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
             UserAccount account = null;
 
             if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
@@ -240,7 +240,7 @@ namespace OpenSim.Services.Connectors
 
         private bool SendAndGetBoolReply(Dictionary<string, object> sendData)
         {
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
@@ -249,7 +249,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData.ContainsKey("result"))
                     {

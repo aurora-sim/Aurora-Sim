@@ -65,7 +65,7 @@ namespace Aurora.Services.DataService
             sendData["OwnerRoleID"] = OwnerRoleID;
             sendData["OwnerPowers"] = OwnerPowers;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -94,7 +94,7 @@ namespace Aurora.Services.DataService
             sendData["AssetType"] = AssetType;
             sendData["ItemName"] = ItemName;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -115,7 +115,7 @@ namespace Aurora.Services.DataService
             sendData["METHOD"] = "SetAgentActiveGroup";
             sendData["AgentID"] = AgentID;
             sendData["GroupID"] = GroupID;
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -138,7 +138,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["RoleID"] = RoleID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -161,7 +161,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["RoleID"] = RoleID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -188,7 +188,7 @@ namespace Aurora.Services.DataService
             sendData["Title"] = Title;
             sendData["Powers"] = Powers;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -217,7 +217,7 @@ namespace Aurora.Services.DataService
             sendData["allowPublish"] = allowPublish;
             sendData["maturePublish"] = maturePublish;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -240,7 +240,7 @@ namespace Aurora.Services.DataService
             sendData["RoleID"] = RoleID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -267,7 +267,7 @@ namespace Aurora.Services.DataService
             sendData["Title"] = Title;
             sendData["Powers"] = Powers;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -292,7 +292,7 @@ namespace Aurora.Services.DataService
             sendData["AcceptNotices"] = AcceptNotices;
             sendData["ListInProfile"] = ListInProfile;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -318,7 +318,7 @@ namespace Aurora.Services.DataService
             sendData["AgentID"] = AgentID;
             sendData["FromAgentName"] = FromAgentName;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -340,7 +340,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["inviteID"] = inviteID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -364,7 +364,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["RoleID"] = RoleID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -388,7 +388,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["RoleID"] = RoleID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -411,7 +411,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["GroupName"] = GroupName;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -420,7 +420,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -456,7 +456,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -465,7 +465,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -501,7 +501,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -510,7 +510,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -546,7 +546,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -555,7 +555,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -590,7 +590,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = RequestingAgentID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -599,7 +599,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -624,7 +624,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["inviteID"] = inviteID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -633,7 +633,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -669,7 +669,7 @@ namespace Aurora.Services.DataService
             sendData["GroupID"] = GroupID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -678,7 +678,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -713,7 +713,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["noticeID"] = noticeID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -722,7 +722,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -757,7 +757,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["AgentID"] = AgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -766,7 +766,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -803,7 +803,7 @@ namespace Aurora.Services.DataService
             sendData["StartQuery"] = StartQuery;
             sendData["queryflags"] = queryflags;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -812,7 +812,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -848,7 +848,7 @@ namespace Aurora.Services.DataService
             sendData["AgentID"] = AgentID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -857,7 +857,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -892,7 +892,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -901,7 +901,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -936,7 +936,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -945,7 +945,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -980,7 +980,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -989,7 +989,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -1024,7 +1024,7 @@ namespace Aurora.Services.DataService
             sendData["requestingAgentID"] = requestingAgentID;
             sendData["GroupID"] = GroupID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -1033,7 +1033,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -1067,7 +1067,7 @@ namespace Aurora.Services.DataService
             sendData["METHOD"] = "GetGroupInvites";
             sendData["requestingAgentID"] = requestingAgentID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -1076,7 +1076,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {

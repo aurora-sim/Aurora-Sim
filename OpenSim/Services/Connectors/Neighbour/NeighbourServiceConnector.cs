@@ -117,13 +117,13 @@ namespace OpenSim.Services.Connectors
             }
             args["METHOD"] = "inform_neighbors_region_is_up";
 
-            string queryString = ServerUtils.BuildQueryString(args);
+            string queryString = WebUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
 
             if (reply == "")
                 return informedRegions;
 
-            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> response = WebUtils.ParseXmlResponse(reply);
 
             try
             {
@@ -185,13 +185,13 @@ namespace OpenSim.Services.Connectors
             }
             args["METHOD"] = "inform_neighbors_region_is_down";
 
-            string queryString = ServerUtils.BuildQueryString(args);
+            string queryString = WebUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
 
             if (reply == "")
                 return informedRegions;
 
-            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> response = WebUtils.ParseXmlResponse(reply);
 
             try
             {
@@ -254,13 +254,13 @@ namespace OpenSim.Services.Connectors
             }
             args["METHOD"] = "get_neighbors";
 
-            string queryString = ServerUtils.BuildQueryString(args);
+            string queryString = WebUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
 
             if (reply == "")
                 return neighbors;
 
-            Dictionary<string, object> response = ServerUtils.ParseXmlResponse(reply);
+            Dictionary<string, object> response = WebUtils.ParseXmlResponse(reply);
 
             try
             {
@@ -322,7 +322,7 @@ namespace OpenSim.Services.Connectors
             args["TYPE"] = (int)type;
             args["METHOD"] = "inform_neighbors_of_chat_message";
 
-            string queryString = ServerUtils.BuildQueryString(args);
+            string queryString = WebUtils.BuildQueryString(args);
             string reply = SynchronousRestFormsRequester.MakeRequest("POST", uri, queryString);
         }
 

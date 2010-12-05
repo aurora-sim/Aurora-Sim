@@ -57,7 +57,7 @@ namespace OpenSim.Server.Handlers.Login
             ILibraryService libService = scene.RequestModuleInterface<ILibraryService>();
 
             Object[] args = new Object[] { config, simService, libService };
-            m_LoginService = ServerUtils.LoadPlugin<ILoginService>(loginService, args);
+            m_LoginService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILoginService>(loginService, args);
 
             InitializeHandlers(server);
         }
@@ -69,7 +69,7 @@ namespace OpenSim.Server.Handlers.Login
 
             Object[] args = new Object[] { config };
 
-            m_LoginService = ServerUtils.LoadPlugin<ILoginService>(loginService, args);
+            m_LoginService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILoginService>(loginService, args);
 
             InitializeHandlers(server);
         }

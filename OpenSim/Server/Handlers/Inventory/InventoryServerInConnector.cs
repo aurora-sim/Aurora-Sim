@@ -74,7 +74,7 @@ namespace OpenSim.Server.Handlers.Inventory
 
             Object[] args = new Object[] { config };
             m_InventoryService =
-                    ServerUtils.LoadPlugin<IInventoryService>(inventoryService, args);
+                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(inventoryService, args);
 
             m_userserver_url = serverConfig.GetString("UserServerURI", String.Empty);
             m_doLookup = serverConfig.GetBoolean("SessionAuthentication", false);

@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Avatar
 
                     Object[] args = new Object[] { source };
                     m_AvatarService =
-                            ServerUtils.LoadPlugin<IAvatarService>(serviceDll,
+                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAvatarService>(serviceDll,
                             args);
 
                     if (m_AvatarService == null)

@@ -95,7 +95,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Asset
 
                 Object[] args = new Object[] { m_Config, MainServer.Instance, string.Empty };
 
-                ServerUtils.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:AssetServiceConnector", args);
+                Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:AssetServiceConnector", args);
             }
         }
 

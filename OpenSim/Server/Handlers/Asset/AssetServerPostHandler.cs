@@ -67,13 +67,13 @@ namespace OpenSim.Server.Handlers.Asset
                         m_AssetService.UpdateContent(p[1], asset.Data);
 
                 xs = new XmlSerializer(typeof(bool));
-                return ServerUtils.SerializeResult(xs, result);
+                return WebUtils.SerializeResult(xs, result);
             }
 
             string id = m_AssetService.Store(asset);
 
             xs = new XmlSerializer(typeof(string));
-            return ServerUtils.SerializeResult(xs, id);
+            return WebUtils.SerializeResult(xs, id);
         }
     }
 }

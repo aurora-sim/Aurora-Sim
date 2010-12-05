@@ -161,13 +161,13 @@ namespace Aurora.Server
 
                 Object[] modargs = new Object[] { m_config, server,
                     configName };
-                connector = ServerUtils.LoadPlugin<IServiceConnector>(conn,
+                connector = AuroraModuleLoader.LoadPlugin<IServiceConnector>(conn,
                         modargs);
                 if (connector == null)
                 {
                     modargs = new Object[] { m_config, server };
                     connector =
-                            ServerUtils.LoadPlugin<IServiceConnector>(conn,
+                            AuroraModuleLoader.LoadPlugin<IServiceConnector>(conn,
                             modargs);
                 }
 

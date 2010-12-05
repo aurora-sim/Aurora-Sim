@@ -115,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (StorageDLL == String.Empty)
                 StorageDLL = "OpenSim.Data.Null.dll";
 
-            m_simulationDataService = ServerUtils.LoadPlugin<ISimulationDataService>(StorageDLL, new object[] { m_config });
+            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[] { m_config });
 
             //Register us!
             m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
@@ -419,7 +419,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (StorageDLL != "")
                     {
-                        IEstateDataStore EDS = AuroraModuleLoader.LoadPlugin<IEstateDataStore>(StorageDLL, "IEstateDataStore");
+                        IEstateDataStore EDS = AuroraModuleLoader.LoadPlugin<IEstateDataStore>(StorageDLL);
                         EDS.Initialise(StorageConnectionString);
                         if (EDS != null)
                         {
@@ -1077,7 +1077,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
 
-            clientServer = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll, "IClientNetworkServer");
+            clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll);
             clientServer.Initialise(
                     listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
                     m_config, circuitManager);

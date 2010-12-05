@@ -87,7 +87,7 @@ namespace OpenSim.Server.Handlers.Asset
                 {
                     XmlSerializer xs =
                             new XmlSerializer(typeof(AssetMetadata));
-                    result = ServerUtils.SerializeResult(xs, metadata);
+                    result = WebUtils.SerializeResult(xs, metadata);
 
                     httpResponse.StatusCode = (int)HttpStatusCode.OK;
                     httpResponse.ContentType =
@@ -107,7 +107,7 @@ namespace OpenSim.Server.Handlers.Asset
                 if (asset != null)
                 {
                     XmlSerializer xs = new XmlSerializer(typeof(AssetBase));
-                    result = ServerUtils.SerializeResult(xs, asset);
+                    result = WebUtils.SerializeResult(xs, asset);
 
                     httpResponse.StatusCode = (int)HttpStatusCode.OK;
                     httpResponse.ContentType =

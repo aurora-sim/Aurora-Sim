@@ -69,7 +69,7 @@ namespace OpenSim.Server.Handlers.Avatar
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -119,7 +119,7 @@ namespace OpenSim.Server.Handlers.Avatar
                 else
                     result["result"] = avatar.ToKeyValuePairs();
 
-                string xmlString = ServerUtils.BuildXmlResponse(result);
+                string xmlString = WebUtils.BuildXmlResponse(result);
 
                 UTF8Encoding encoding = new UTF8Encoding();
                 return encoding.GetBytes(xmlString);

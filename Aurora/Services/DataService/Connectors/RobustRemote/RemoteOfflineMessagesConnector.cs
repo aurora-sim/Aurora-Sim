@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID;
             sendData["METHOD"] = "getofflinemessages";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<GridInstantMessage> Messages = new List<GridInstantMessage>();
             try
             {
@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -91,7 +91,7 @@ namespace Aurora.Services.DataService
 
             sendData["METHOD"] = "addofflinemessage";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {

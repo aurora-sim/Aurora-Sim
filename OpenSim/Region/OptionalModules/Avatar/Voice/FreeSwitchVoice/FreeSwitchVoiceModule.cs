@@ -126,7 +126,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 }
 
                 Object[] args = new Object[] { config };
-                m_FreeswitchService = ServerUtils.LoadPlugin<IFreeswitchService>(serviceDll, args);
+                m_FreeswitchService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(serviceDll, args);
 
                 string jsonConfig = m_FreeswitchService.GetJsonConfig();
                 m_log.Debug("[FreeSwitchVoice]: Configuration string: " + jsonConfig);

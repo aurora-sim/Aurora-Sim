@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();

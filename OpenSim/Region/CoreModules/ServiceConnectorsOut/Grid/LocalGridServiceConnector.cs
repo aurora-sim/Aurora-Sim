@@ -114,7 +114,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
             Object[] args = new Object[] { source };
             m_GridService =
-                    ServerUtils.LoadPlugin<IGridService>(serviceDll,
+                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(serviceDll,
                     args);
 
             if (m_GridService == null)

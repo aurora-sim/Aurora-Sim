@@ -43,6 +43,8 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 
+using Aurora.Simulation.Base;
+
 /***************************************************************************
  * Simian Data Map
  * ===============
@@ -1367,7 +1369,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Immediately forward the request if the cache is disabled.
             if (m_cacheTimeout == 0)
             {
-                return WebUtil.PostToService(m_groupsServerURI, requestArgs);
+                return WebUtils.PostToService(m_groupsServerURI, requestArgs);
             }
 
             // Check if this is an update or a request
@@ -1378,18 +1380,18 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 m_memoryCache.Clear();
 
                 // Send update to server, return the response without caching it
-                return WebUtil.PostToService(m_groupsServerURI, requestArgs);
+                return WebUtils.PostToService(m_groupsServerURI, requestArgs);
             }
 
             // If we're not doing an update, we must be requesting data
 
             // Create the cache key for the request and see if we have it cached
-            string CacheKey = WebUtil.BuildQueryString(requestArgs);
+            string CacheKey = WebUtils.BuildQueryString(requestArgs);
             OSDMap response = null;
             if (!m_memoryCache.TryGetValue(CacheKey, out response))
             {
                 // if it wasn't in the cache, pass the request to the Simian Grid Services
-                response = WebUtil.PostToService(m_groupsServerURI, requestArgs);
+                response = WebUtils.PostToService(m_groupsServerURI, requestArgs);
 
                 // and cache the response
                 m_memoryCache.AddOrUpdate(CacheKey, response, TimeSpan.FromSeconds(m_cacheTimeout));

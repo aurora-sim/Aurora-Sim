@@ -157,25 +157,25 @@ namespace OpenSim.Services.LLLoginService
                 throw new Exception("LoginService is missing service specifications");
 
             Object[] args = new Object[] { config };
-            m_UserAccountService = ServerUtils.LoadPlugin<IUserAccountService>(accountService, args);
-            m_GridUserService = ServerUtils.LoadPlugin<IGridUserService>(gridUserService, args);
-            m_AuthenticationService = ServerUtils.LoadPlugin<IAuthenticationService>(authService, args);
-            m_InventoryService = ServerUtils.LoadPlugin<IInventoryService>(invService, args);
+            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(accountService, args);
+            m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(gridUserService, args);
+            m_AuthenticationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authService, args);
+            m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(invService, args);
 
             if (gridService != string.Empty)
-                m_GridService = ServerUtils.LoadPlugin<IGridService>(gridService, args);
+                m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
             if (presenceService != string.Empty)
-                m_PresenceService = ServerUtils.LoadPlugin<IPresenceService>(presenceService, args);
+                m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(presenceService, args);
             if (avatarService != string.Empty)
-                m_AvatarService = ServerUtils.LoadPlugin<IAvatarService>(avatarService, args);
+                m_AvatarService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAvatarService>(avatarService, args);
             if (friendsService != string.Empty)
-                m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(friendsService, args);
+                m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(friendsService, args);
             if (simulationService != string.Empty)
-                m_RemoteSimulationService = ServerUtils.LoadPlugin<ISimulationService>(simulationService, args);
+                m_RemoteSimulationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ISimulationService>(simulationService, args);
             if (agentService != string.Empty)
-                m_UserAgentService = ServerUtils.LoadPlugin<IUserAgentService>(agentService, args);
+                m_UserAgentService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAgentService>(agentService, args);
             if (assetService != string.Empty)
-                m_AssetService = ServerUtils.LoadPlugin<IAssetService>(assetService, args);
+                m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
 
             //
             // deal with the services given as argument
@@ -189,7 +189,7 @@ namespace OpenSim.Services.LLLoginService
             else if (libService != string.Empty)
             {
                 m_log.DebugFormat("[LLOGIN SERVICE]: Using instantiated LibraryService");
-                m_LibraryService = ServerUtils.LoadPlugin<ILibraryService>(libService, args);
+                m_LibraryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(libService, args);
             }
 
             m_GatekeeperConnector = new GatekeeperServiceConnector();
@@ -694,7 +694,7 @@ namespace OpenSim.Services.LLLoginService
             sendData["REGIONHANDLE"] = regionHandle;
             sendData["AGENTID"] = AgentID.ToString();
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -703,7 +703,7 @@ namespace OpenSim.Services.LLLoginService
                         reqString);
                 if (reply != "")
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -1559,7 +1559,7 @@ namespace AvatarArchives
             string document = reader.ReadToEnd();
             string[] lines = document.Split('\n');
             List<string> file = new List<string>(lines);
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(file[1]);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
             UserAccount UDA = new UserAccount();
@@ -1591,7 +1591,7 @@ namespace AvatarArchives
             UserAccountService.StoreUserAccount(UDA);
 
 
-            replyData = ServerUtils.ParseXmlResponse(file[2]);
+            replyData = WebUtils.ParseXmlResponse(file[2]);
             IUserProfileInfo UPI = new IUserProfileInfo();
             UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
             //Update the principle ID to the new user.
@@ -1622,10 +1622,10 @@ namespace AvatarArchives
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["result"] = profile.ToKeyValuePairs();
-            string UPIxmlString = ServerUtils.BuildXmlResponse(result);
+            string UPIxmlString = WebUtils.BuildXmlResponse(result);
 
             result["result"] = account.ToKeyValuePairs();
-            string UDAxmlString = ServerUtils.BuildXmlResponse(result);
+            string UDAxmlString = WebUtils.BuildXmlResponse(result);
 
             StreamWriter writer = new StreamWriter(cmdparams[5]);
             writer.Write("<profile>\n");

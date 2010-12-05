@@ -26,19 +26,26 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Security;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Text;
-using System.Collections.Generic;
+using System.Web;
 using log4net;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace Aurora.Simulation.Base
 {
-    public static class ServerUtils
+    public static class WebUtils
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -55,80 +62,6 @@ namespace Aurora.Simulation.Base
             Array.Resize(ref ret, (int)ms.Length);
 
             return ret;
-        }
-
-        /// <summary>
-        /// Load a plugin from a dll with the given class or interface
-        /// </summary>
-        /// <param name="dllName"></param>
-        /// <param name="args">The arguments which control which constructor is invoked on the plugin</param>
-        /// <returns></returns>
-        public static T LoadPlugin<T>(string dllName, Object[] args) where T:class
-        {
-            string[] parts = dllName.Split(new char[] {':'});
-
-            dllName = parts[0];
-
-            string className = String.Empty;
-
-            if (parts.Length > 1)
-                className = parts[1];
-
-            return LoadPlugin<T>(dllName, className, args);
-        }
-
-        /// <summary>
-        /// Load a plugin from a dll with the given class or interface
-        /// </summary>
-        /// <param name="dllName"></param>
-        /// <param name="className"></param>
-        /// <param name="args">The arguments which control which constructor is invoked on the plugin</param>
-        /// <returns></returns>
-        public static T LoadPlugin<T>(string dllName, string className, Object[] args) where T:class
-        {
-            string interfaceName = typeof(T).ToString();
-
-            try
-            {
-                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
-
-                foreach (Type pluginType in pluginAssembly.GetTypes())
-                {
-                    if (pluginType.IsPublic)
-                    {
-                        if (className != String.Empty 
-                            && pluginType.ToString() != pluginType.Namespace + "." + className)
-                            continue;
-                        
-                        Type typeInterface = pluginType.GetInterface(interfaceName, true);
-
-                        if (typeInterface != null)
-                        {
-                            T plug = null;
-                            try
-                            {
-                                plug = (T)Activator.CreateInstance(pluginType,
-                                        args);
-                            }
-                            catch (Exception e)
-                            {
-                                if (!(e is System.MissingMethodException))
-                                    m_log.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName, e.InnerException);
-                                return null;
-                            }
-
-                            return plug;
-                        }
-                    }
-                }
-
-                return null;
-            }
-            catch (Exception e)
-            {
-                m_log.Error(string.Format("Error loading plugin from {0}", dllName), e);
-                return null;
-            }
         }
 
         public static Dictionary<string, object> ParseQueryString(string query)
@@ -332,6 +265,144 @@ namespace Aurora.Simulation.Base
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Send LLSD to an HTTP client in application/llsd+json form
+        /// </summary>
+        /// <param name="response">HTTP response to send the data in</param>
+        /// <param name="body">LLSD to send to the client</param>
+        public static void SendJSONResponse(OSHttpResponse response, OSDMap body)
+        {
+            byte[] responseData = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(body));
+
+            response.ContentEncoding = Encoding.UTF8;
+            response.ContentLength = responseData.Length;
+            response.ContentType = "application/llsd+json";
+            response.Body.Write(responseData, 0, responseData.Length);
+        }
+
+        /// <summary>
+        /// Send LLSD to an HTTP client in application/llsd+xml form
+        /// </summary>
+        /// <param name="response">HTTP response to send the data in</param>
+        /// <param name="body">LLSD to send to the client</param>
+        public static void SendXMLResponse(OSHttpResponse response, OSDMap body)
+        {
+            byte[] responseData = OSDParser.SerializeLLSDXmlBytes(body);
+
+            response.ContentEncoding = Encoding.UTF8;
+            response.ContentLength = responseData.Length;
+            response.ContentType = "application/llsd+xml";
+            response.Body.Write(responseData, 0, responseData.Length);
+        }
+
+        /// <summary>
+        /// Make a GET or GET-like request to a web service that returns LLSD
+        /// or JSON data
+        /// </summary>
+        public static OSDMap ServiceRequest(string url, string httpVerb)
+        {
+            string errorMessage;
+
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+                request.Method = httpVerb;
+
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        try
+                        {
+                            string responseStr = responseStream.GetStreamString();
+                            OSD responseOSD = OSDParser.Deserialize(responseStr);
+                            if (responseOSD.Type == OSDType.Map)
+                                return (OSDMap)responseOSD;
+                            else
+                                errorMessage = "Response format was invalid.";
+                        }
+                        catch
+                        {
+                            errorMessage = "Failed to parse the response.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn(httpVerb + " on URL " + url + " failed: " + ex.Message);
+                errorMessage = ex.Message;
+            }
+
+            return new OSDMap { { "Message", OSD.FromString("Service request failed. " + errorMessage) } };
+        }
+
+        /// <summary>
+        /// POST URL-encoded form data to a web service that returns LLSD or
+        /// JSON data
+        /// </summary>
+        public static OSDMap PostToService(string url, NameValueCollection data)
+        {
+            string errorMessage;
+
+            try
+            {
+                string queryString = BuildQueryString(data);
+                byte[] requestData = System.Text.Encoding.UTF8.GetBytes(queryString);
+
+                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+                request.Method = "POST";
+                request.ContentLength = requestData.Length;
+                request.ContentType = "application/x-www-form-urlencoded";
+
+                Stream requestStream = request.GetRequestStream();
+                requestStream.Write(requestData, 0, requestData.Length);
+                requestStream.Close();
+
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        string responseStr = null;
+
+                        try
+                        {
+                            responseStr = responseStream.GetStreamString();
+                            OSD responseOSD = OSDParser.Deserialize(responseStr);
+                            if (responseOSD.Type == OSDType.Map)
+                                return (OSDMap)responseOSD;
+                            else
+                                errorMessage = "Response format was invalid.";
+                        }
+                        catch (Exception ex)
+                        {
+                            if (!String.IsNullOrEmpty(responseStr))
+                                errorMessage = "Failed to parse the response:\n" + responseStr;
+                            else
+                                errorMessage = "Failed to retrieve the response: " + ex.Message;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("POST to URL " + url + " failed: " + ex);
+                errorMessage = ex.Message;
+            }
+
+            return new OSDMap { { "Message", OSD.FromString("Service request failed. " + errorMessage) } };
+        }
+
+        public static string BuildQueryString(NameValueCollection requestArgs)
+        {
+            Dictionary<string, object> d = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, object> kvp in requestArgs)
+            {
+                d[kvp.Key] = kvp.Value;
+            }
+            return BuildQueryString(d);
         }
     }
 }

@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
 
                     Object[] args = new Object[] { source };
                     m_LocalGridInventoryService =
-                            ServerUtils.LoadPlugin<IInventoryService>(localDll,
+                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(localDll,
                             args);
 
                     if (m_LocalGridInventoryService == null)

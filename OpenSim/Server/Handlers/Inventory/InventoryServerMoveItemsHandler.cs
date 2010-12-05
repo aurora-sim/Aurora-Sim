@@ -75,7 +75,7 @@ namespace OpenSim.Server.Handlers.Inventory
                 m_log.WarnFormat("[MOVEITEMS HANDLER]: ownerID not provided in request. Unable to serve.");
 
             xs = new XmlSerializer(typeof(bool));
-            return ServerUtils.SerializeResult(xs, result);
+            return WebUtils.SerializeResult(xs, result);
         }
     }
 }

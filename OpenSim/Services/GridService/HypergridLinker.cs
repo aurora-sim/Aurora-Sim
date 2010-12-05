@@ -111,7 +111,7 @@ namespace OpenSim.Services.GridService
                 Object[] args = new Object[] { config };
 
                 if (assetService != string.Empty)
-                    m_AssetService = ServerUtils.LoadPlugin<IAssetService>(assetService, args);
+                    m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
 
                 string scope = gridConfig.GetString("ScopeID", string.Empty);
                 if (scope != string.Empty)

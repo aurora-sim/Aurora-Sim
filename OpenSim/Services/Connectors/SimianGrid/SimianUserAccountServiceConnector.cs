@@ -37,6 +37,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
@@ -163,7 +164,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "NameQuery", query }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDArray array = response["Users"] as OSDArray;
@@ -202,7 +203,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "AccessLevel", data.UserLevel.ToString() }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             
             if (response["Success"].AsBoolean())
             {
@@ -217,7 +218,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     { "UserTitle", data.UserTitle }
                 };
 
-                response = WebUtil.PostToService(m_serverUrl, requestArgs);
+                response = WebUtils.PostToService(m_serverUrl, requestArgs);
                 bool success = response["Success"].AsBoolean();
 
                 if (success)
@@ -250,7 +251,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             string lookupValue = (requestArgs.Count > 1) ? requestArgs[1] : "(Unknown)";
             m_log.DebugFormat("[SIMIAN ACCOUNT CONNECTOR]: Looking up user account with query: " + lookupValue);
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDMap user = response["User"] as OSDMap;

@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_UserAccountService = ServerUtils.LoadPlugin<IUserAccountService>(service, args);
+            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(service, args);
 
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }

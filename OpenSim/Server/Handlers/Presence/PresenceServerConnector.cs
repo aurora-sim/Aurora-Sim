@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.Presence
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_PresenceService = ServerUtils.LoadPlugin<IPresenceService>(gridService, args);
+            m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(gridService, args);
 
             server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
         }

@@ -41,6 +41,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Aurora.Simulation.Base;
 
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
@@ -172,7 +173,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "ExtraData", OSDParser.SerializeJsonString(extraData) }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
                 return String.Empty;
             else
@@ -188,7 +189,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Enabled", "0" }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
 
             if (!success)
@@ -233,7 +234,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "SceneID", regionID.ToString() }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 return ResponseToGridRegion(response);
@@ -258,7 +259,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Enabled", "1" }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 return ResponseToGridRegion(response);
@@ -296,7 +297,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (maxNumber > 0)
                 requestArgs["MaxNumber"] = maxNumber.ToString();
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDArray array = response["Scenes"] as OSDArray;
@@ -329,7 +330,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "Enabled", "1" }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDArray array = response["Scenes"] as OSDArray;
@@ -390,7 +391,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "SceneID", regionID.ToString() }
             };
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 return response["Enabled"].AsBoolean() ? REGION_ONLINE : 0;
@@ -493,7 +494,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (onlyEnabled)
                 requestArgs["Enabled"] = "1";
 
-            OSDMap response = WebUtil.PostToService(m_serverUrl, requestArgs);
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 return ResponseToGridRegion(response);

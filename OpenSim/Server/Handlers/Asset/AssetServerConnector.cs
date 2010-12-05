@@ -57,7 +57,7 @@ namespace OpenSim.Server.Handlers.Asset
 
             Object[] args = new Object[] { config };
             m_AssetService =
-                    ServerUtils.LoadPlugin<IAssetService>(assetService, args);
+                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
 
             bool allowDelete = serverConfig.GetBoolean("AllowRemoteDelete", false);
 

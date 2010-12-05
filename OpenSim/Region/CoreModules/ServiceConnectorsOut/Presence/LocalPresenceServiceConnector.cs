@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Presence
                     Object[] args = new Object[] { source };
                     m_log.DebugFormat("[LOCAL PRESENCE CONNECTOR]: Service dll = {0}", serviceDll);
 
-                    m_PresenceService = ServerUtils.LoadPlugin<IPresenceService>(serviceDll, args);
+                    m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(serviceDll, args);
 
                     if (m_PresenceService == null)
                     {

@@ -46,11 +46,11 @@ namespace OpenSim.Services.CapsService
             string presenceService = m_CAPSServerConfig.GetString("PresenceService", String.Empty);
             string Password = m_CAPSServerConfig.GetString("Password", String.Empty);
             string HostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
-            IInventoryService m_InventoryService = ServerUtils.LoadPlugin<IInventoryService>(invService, args);
-            ILibraryService m_LibraryService = ServerUtils.LoadPlugin<ILibraryService>(libService, args);
-            IGridUserService m_GridUserService = ServerUtils.LoadPlugin<IGridUserService>(guService, args);
-            IPresenceService m_PresenceService = ServerUtils.LoadPlugin<IPresenceService>(presenceService, args);
-            IGridService m_GridService = ServerUtils.LoadPlugin<IGridService>(gService, args);
+            IInventoryService m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(invService, args);
+            ILibraryService m_LibraryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(libService, args);
+            IGridUserService m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(guService, args);
+            IPresenceService m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(presenceService, args);
+            IGridService m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gService, args);
             CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             //This handler allows sims to post CAPS for their sims on the CAPS server.
             server.AddStreamHandler(new CAPSPublicHandler(server, Password, m_InventoryService, m_LibraryService, m_GridUserService, m_PresenceService, m_GridService, HostName));
@@ -295,13 +295,13 @@ namespace OpenSim.Services.CapsService
             try
             {
                 Dictionary<string, object> request = new Dictionary<string, object>();
-                request = ServerUtils.ParseQueryString(body);
+                request = WebUtils.ParseQueryString(body);
                 if (request.Count == 1)
-                    request = ServerUtils.ParseXmlResponse(body);
+                    request = WebUtils.ParseXmlResponse(body);
                 object value = null;
                 request.TryGetValue("<?xml version", out value);
                 if (value != null)
-                    request = ServerUtils.ParseXmlResponse(body);
+                    request = WebUtils.ParseXmlResponse(body);
 
                 return ProcessAddCAP(request);
             }
@@ -320,7 +320,7 @@ namespace OpenSim.Services.CapsService
             {
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "false");
-                string xmlString = ServerUtils.BuildXmlResponse(result);
+                string xmlString = WebUtils.BuildXmlResponse(result);
                 UTF8Encoding encoding = new UTF8Encoding();
                 return encoding.GetBytes(xmlString);
             }
@@ -337,7 +337,7 @@ namespace OpenSim.Services.CapsService
 
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "true");
-                string xmlString = ServerUtils.BuildXmlResponse(result);
+                string xmlString = WebUtils.BuildXmlResponse(result);
                 UTF8Encoding encoding = new UTF8Encoding();
                 return encoding.GetBytes(xmlString);
             }
@@ -845,13 +845,13 @@ namespace OpenSim.Services.CapsService
                 try
                 {
                     Dictionary<string, object> request = new Dictionary<string, object>();
-                    request = ServerUtils.ParseQueryString(body);
+                    request = WebUtils.ParseQueryString(body);
                     if (request.Count == 1)
-                        request = ServerUtils.ParseXmlResponse(body);
+                        request = WebUtils.ParseXmlResponse(body);
                     object value = null;
                     request.TryGetValue("<?xml version", out value);
                     if (value != null)
-                        request = ServerUtils.ParseXmlResponse(body);
+                        request = WebUtils.ParseXmlResponse(body);
 
                     return ProcessAddCAP(request);
                 }
@@ -873,7 +873,7 @@ namespace OpenSim.Services.CapsService
                 {
                     Dictionary<string, object> result = new Dictionary<string, object>();
                     result.Add("result", "false");
-                    string xmlString = ServerUtils.BuildXmlResponse(result);
+                    string xmlString = WebUtils.BuildXmlResponse(result);
                     UTF8Encoding encoding = new UTF8Encoding();
                     return encoding.GetBytes(xmlString);
                 }
@@ -882,7 +882,7 @@ namespace OpenSim.Services.CapsService
                     m_handler.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID);
                     Dictionary<string, object> result = new Dictionary<string, object>();
                     result.Add("result", "true");
-                    string xmlString = ServerUtils.BuildXmlResponse(result);
+                    string xmlString = WebUtils.BuildXmlResponse(result);
                     UTF8Encoding encoding = new UTF8Encoding();
                     return encoding.GetBytes(xmlString);
                 }

@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.Friends
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_FriendsService = ServerUtils.LoadPlugin<IFriendsService>(gridService, args);
+            m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(gridService, args);
 
             server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
         }

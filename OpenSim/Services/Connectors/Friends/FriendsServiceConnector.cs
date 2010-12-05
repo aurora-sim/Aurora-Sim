@@ -92,7 +92,7 @@ namespace OpenSim.Services.Connectors
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getfriends";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -101,7 +101,7 @@ namespace OpenSim.Services.Connectors
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -160,7 +160,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/friends",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -170,7 +170,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
                 {
@@ -201,7 +201,7 @@ namespace OpenSim.Services.Connectors
             {
                 reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/friends",
-                        ServerUtils.BuildQueryString(sendData));
+                        WebUtils.BuildQueryString(sendData));
             }
             catch (Exception e)
             {
@@ -211,7 +211,7 @@ namespace OpenSim.Services.Connectors
 
             if (reply != string.Empty)
             {
-                Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                 if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
                 {

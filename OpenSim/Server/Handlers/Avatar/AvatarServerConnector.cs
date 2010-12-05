@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.Avatar
                 throw new Exception("No LocalServiceModule in config file");
 
             Object[] args = new Object[] { config };
-            m_AvatarService = ServerUtils.LoadPlugin<IAvatarService>(avatarService, args);
+            m_AvatarService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAvatarService>(avatarService, args);
 
             server.AddStreamHandler(new AvatarServerPostHandler(m_AvatarService));
         }

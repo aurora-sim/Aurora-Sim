@@ -79,7 +79,7 @@ namespace Aurora.Modules
             string document = reader.ReadToEnd();
             string[] lines = document.Split('\n');
             List<string> file = new List<string>(lines);
-            Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(file[1]);
+            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
             UserAccount UDA = new UserAccount();
@@ -110,7 +110,7 @@ namespace Aurora.Modules
             m_scene.UserAccountService.StoreUserAccount(UDA);
 
 
-            replyData = ServerUtils.ParseXmlResponse(file[2]);
+            replyData = WebUtils.ParseXmlResponse(file[2]);
             IUserProfileInfo UPI = new IUserProfileInfo();
             UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
             //Update the principle ID to the new user.
@@ -142,11 +142,11 @@ namespace Aurora.Modules
             Dictionary<string, object> result = new Dictionary<string, object>();
             if(profile != null)
                 result["result"] = profile.ToKeyValuePairs();
-            string UPIxmlString = ServerUtils.BuildXmlResponse(result);
+            string UPIxmlString = WebUtils.BuildXmlResponse(result);
 
             if(account != null)
                 result["result"] = account.ToKeyValuePairs();
-            string UDAxmlString = ServerUtils.BuildXmlResponse(result);
+            string UDAxmlString = WebUtils.BuildXmlResponse(result);
 
             StreamWriter writer = new StreamWriter(cmdparams[5]);
             writer.Write("<profile>\n");

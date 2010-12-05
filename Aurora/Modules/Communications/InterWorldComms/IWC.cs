@@ -263,7 +263,7 @@ namespace Aurora.Modules
 
             sendData["METHOD"] = "newconnection";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -273,7 +273,7 @@ namespace Aurora.Modules
 
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -352,7 +352,7 @@ namespace Aurora.Modules
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseXmlResponse(body);
+                        WebUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -411,7 +411,7 @@ namespace Aurora.Modules
 
         private byte[] Return(Dictionary<string, object> result)
         {
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -517,7 +517,7 @@ namespace Aurora.Modules
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseXmlResponse(body);
+                        WebUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -589,7 +589,7 @@ namespace Aurora.Modules
 
         private byte[] Return(Dictionary<string, object> result)
         {
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -687,7 +687,7 @@ namespace Aurora.Modules
 
             sendData["METHOD"] = "getregions";
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -697,7 +697,7 @@ namespace Aurora.Modules
 
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {
@@ -731,7 +731,7 @@ namespace Aurora.Modules
             sendData["USERID"] = userID;
             sendData["REGIONID"] = regionID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -752,7 +752,7 @@ namespace Aurora.Modules
             sendData["METHOD"] = "getuseraccount";
             sendData["USERID"] = userID;
 
-            string reqString = ServerUtils.BuildXmlResponse(sendData);
+            string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
@@ -762,7 +762,7 @@ namespace Aurora.Modules
 
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     if (replyData != null)
                     {

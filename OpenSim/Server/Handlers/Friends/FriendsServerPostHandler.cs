@@ -70,7 +70,7 @@ namespace OpenSim.Server.Handlers.Friends
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -127,7 +127,7 @@ namespace OpenSim.Server.Handlers.Friends
                 }
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);

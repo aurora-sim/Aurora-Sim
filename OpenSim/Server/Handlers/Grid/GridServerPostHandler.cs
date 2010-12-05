@@ -75,7 +75,7 @@ namespace OpenSim.Server.Handlers.Grid
             try
             {
                 Dictionary<string, object> request =
-                        ServerUtils.ParseQueryString(body);
+                        WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -317,7 +317,7 @@ namespace OpenSim.Server.Handlers.Grid
                 }
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -347,7 +347,7 @@ namespace OpenSim.Server.Handlers.Grid
             else
                 result["result"] = rinfo.ToKeyValuePairs();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -380,7 +380,7 @@ namespace OpenSim.Server.Handlers.Grid
             else
                 result["result"] = rinfo.ToKeyValuePairs();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -409,7 +409,7 @@ namespace OpenSim.Server.Handlers.Grid
             else
                 result["result"] = rinfo.ToKeyValuePairs();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -452,7 +452,7 @@ namespace OpenSim.Server.Handlers.Grid
                 }
             }
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -501,7 +501,7 @@ namespace OpenSim.Server.Handlers.Grid
                     i++;
                 }
             }
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -531,7 +531,7 @@ namespace OpenSim.Server.Handlers.Grid
                     i++;
                 }
             }
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -572,7 +572,7 @@ namespace OpenSim.Server.Handlers.Grid
                     i++;
                 }
             }
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -613,7 +613,7 @@ namespace OpenSim.Server.Handlers.Grid
                     i++;
                 }
             }
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -643,7 +643,7 @@ namespace OpenSim.Server.Handlers.Grid
                     i++;
                 }
             }
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -669,7 +669,7 @@ namespace OpenSim.Server.Handlers.Grid
             Dictionary<string, object> result = new Dictionary<string, object>(); 
             result["result"] = flags.ToString();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -714,7 +714,7 @@ namespace OpenSim.Server.Handlers.Grid
 
             result["MapItems"] = items.ToKeyValuePairs();
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -733,7 +733,7 @@ namespace OpenSim.Server.Handlers.Grid
                 TelehubConnector.RemoveTelehub(regionID, SessionID);
             result["result"] = "Successful";
 
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -759,7 +759,7 @@ namespace OpenSim.Server.Handlers.Grid
             Telehub telehub = TelehubConnector.FindTelehub(regionID);
             if (telehub != null)
                 result = telehub.ToKeyValuePairs();
-            string xmlString = ServerUtils.BuildXmlResponse(result);
+            string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -798,7 +798,7 @@ namespace OpenSim.Server.Handlers.Grid
             sendData["Result"] = "Success";
             sendData["Message"] = result;
 
-            string xmlString = ServerUtils.BuildXmlResponse(sendData);
+            string xmlString = WebUtils.BuildXmlResponse(sendData);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

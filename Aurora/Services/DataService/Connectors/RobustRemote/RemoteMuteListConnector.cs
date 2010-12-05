@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getmutelist";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
             List<MuteList> Mutes = new List<MuteList>();
             try
             {
@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                     foreach (object f in replyData)
                     {
@@ -92,7 +92,7 @@ namespace Aurora.Services.DataService
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "updatemute";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -114,7 +114,7 @@ namespace Aurora.Services.DataService
             sendData["MUTEID"] = muteID.ToString();
             sendData["METHOD"] = "deletemute";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -136,7 +136,7 @@ namespace Aurora.Services.DataService
             sendData["MUTEID"] = PossibleMuteID.ToString();
             sendData["METHOD"] = "ismuted";
 
-            string reqString = ServerUtils.BuildQueryString(sendData);
+            string reqString = WebUtils.BuildQueryString(sendData);
 
             try
             {
@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService
                         reqString);
                 if (reply != string.Empty)
                 {
-                    Dictionary<string, object> replyData = ServerUtils.ParseXmlResponse(reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
                     return bool.Parse(replyData["Muted"].ToString());
                 }
             }
