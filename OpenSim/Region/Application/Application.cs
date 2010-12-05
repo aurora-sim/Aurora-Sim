@@ -114,15 +114,15 @@ namespace OpenSim
 
             // Check if the system is compatible with OpenSimulator.
             // Ensures that the minimum system requirements are met
-            m_log.Info("Performing compatibility checks... \n");
+            m_log.Info("[Setup]: Performing compatibility checks... \n");
             string supported = String.Empty;
             if (Util.IsEnvironmentSupported(ref supported))
             {
-                m_log.Info("Environment is compatible.\n");
+                m_log.Info("[Setup]: Environment is compatible.\n");
             }
             else
             {
-                m_log.Warn("Environment is unsupported (" + supported + ")\n");
+                m_log.Warn("[Setup]: Environment is unsupported (" + supported + ")\n");
             }
 
             // Configure nIni aliases and localles

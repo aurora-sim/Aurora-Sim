@@ -43,8 +43,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using Caps = OpenSim.Framework.Capabilities.Caps;
-using OSD = OpenMetaverse.StructuredData.OSD;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OpenSim.Framework.Capabilities;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
 

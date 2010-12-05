@@ -1459,7 +1459,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
-            OpenMetaverse.StructuredData.OSDMap args = (OpenMetaverse.StructuredData.OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap args = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             properties.Deserialize(args);
 

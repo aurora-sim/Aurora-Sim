@@ -123,7 +123,7 @@ namespace OpenSim.Framework.Capabilities
         public ItemUpdatedCallback ItemUpdatedCall = null;
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
         public FetchInventoryDescendentsCAPS CAPSFetchInventoryDescendents = null;
-        public OpenMetaverse.StructuredData.OSDMap RequestMap = new OpenMetaverse.StructuredData.OSDMap();
+        public OSDMap RequestMap = new OSDMap();
         
         public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,
                     UUID agent, string regionName)
@@ -295,7 +295,7 @@ namespace OpenSim.Framework.Capabilities
             }
             try
             {
-                RequestMap = request != "" ? ((OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(request)) : new OpenMetaverse.StructuredData.OSDMap();
+                RequestMap = request != "" ? ((OSDMap)OSDParser.DeserializeLLSDXml(request)) : new OSDMap();
             }
             catch
             {
@@ -337,7 +337,7 @@ namespace OpenSim.Framework.Capabilities
             {
                 m_log.Debug("[CAPS]: ScriptTaskInventory Request in region: " + m_regionName);
                 //m_log.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
-                OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 int is_script_running = map["is_script_running"].AsInteger();
@@ -364,10 +364,10 @@ namespace OpenSim.Framework.Capabilities
                 string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
                                      uploaderPath;
 
-                map = new OpenMetaverse.StructuredData.OSDMap();
+                map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
-                return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlString(map);
             }
             catch (Exception e)
             {
@@ -405,10 +405,10 @@ namespace OpenSim.Framework.Capabilities
 
                 string uploaderURL = protocol + m_httpListenerHostName + ":" +
                         m_httpListenPort.ToString() + capsBase + uploaderPath;
-                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
-                return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlString(map);
             }
             catch (Exception e)
             {
@@ -431,7 +431,7 @@ namespace OpenSim.Framework.Capabilities
             //m_log.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
             //m_log.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
             
-            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
             
             string capsBase = "/CAPS/" + m_capsObjectPath;
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
@@ -451,10 +451,10 @@ namespace OpenSim.Framework.Capabilities
             string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
                                  uploaderPath;
 
-            map = new OpenMetaverse.StructuredData.OSDMap();
+            map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
-            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         /// <summary>
@@ -465,7 +465,7 @@ namespace OpenSim.Framework.Capabilities
         public string NewAgentInventoryRequest(string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             //m_log.Debug("[CAPS]: NewAgentInventoryRequest Request is: " + llsdRequest.ToString());
             //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
@@ -490,10 +490,10 @@ namespace OpenSim.Framework.Capabilities
                             if (client != null)
                                 client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
                             
-                            map = new OpenMetaverse.StructuredData.OSDMap();
+                            map = new OSDMap();
                             map["uploader"] = "";
                             map["state"] = "error";
-                            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                            return OSDParser.SerializeLLSDXmlString(map);
                         }
                         else
                             mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
@@ -526,10 +526,10 @@ namespace OpenSim.Framework.Capabilities
             string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
                                  uploaderPath;
             uploader.OnUpLoad += UploadCompleteHandler;
-            map = new OpenMetaverse.StructuredData.OSDMap();
+            map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
-            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         /// <summary>
@@ -701,11 +701,11 @@ namespace OpenSim.Framework.Capabilities
             {
                 UUID inv = inventoryItemID;
                 string res = String.Empty;
-                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["new_inventory_item"] = inv;
                 map["state"] = "complete";
-                res = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                res = OSDParser.SerializeLLSDXmlString(map);
                 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
@@ -861,17 +861,17 @@ namespace OpenSim.Framework.Capabilities
                         handlerUpdateTaskScript(inventoryItemID, primID, isScriptRunning, data, ref errors);
                     }
 
-                    OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                    OSDMap map = new OSDMap();
                     map["new_asset"] = inventoryItemID;
                     map["compiled"] = errors.Count > 0 ? false : true;
                     map["state"] = "complete";
-                    OpenMetaverse.StructuredData.OSDArray array = new OpenMetaverse.StructuredData.OSDArray();
+                    OSDArray array = new OSDArray();
                     foreach (object o in errors)
                     {
-                        array.Add(OpenMetaverse.StructuredData.OSD.FromObject(o));
+                        array.Add(OSD.FromObject(o));
                     }
                     map["errors"] = array;
-                    res = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                    res = OSDParser.SerializeLLSDXmlString(map);
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
 
@@ -937,11 +937,11 @@ namespace OpenSim.Framework.Capabilities
             public string uploaderCaps(byte[] data, string path, string param)
             {
                 string res = String.Empty;
-                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["new_inventory_item"] = UUID.Zero;
                 map["state"] = "complete";
-                res = OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                res = OSDParser.SerializeLLSDXmlString(map);
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
                 handlerUpLoad = OnUpLoad;

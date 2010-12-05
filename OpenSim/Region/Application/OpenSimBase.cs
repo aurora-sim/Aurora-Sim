@@ -216,7 +216,7 @@ namespace OpenSim
                 // If there is no threshold set then the threshold is effectively everything.
                 if (null == m_consoleAppender.Threshold)
                     m_consoleAppender.Threshold = Level.All;
-                m_console.Output(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+                m_console.Output(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
             }
 
             IConfig startupConfig = m_config.Configs["Startup"];

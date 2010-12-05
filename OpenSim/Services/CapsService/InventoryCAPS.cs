@@ -13,9 +13,6 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
 using OpenSim.Framework.Capabilities;
-using OSD = OpenMetaverse.StructuredData.OSD;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OpenSim.Services.Base;
 
 using OpenMetaverse;
@@ -34,90 +31,9 @@ namespace OpenSim.Services.CapsService
         
         #region Inventory
 
-        public Hashtable FetchInventoryDescendentsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        public string HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS web fetch inventory request for {0}", AgentID);
-
-            // nasty temporary hack here, the linden client falsely
-            // identifies the uuid 00000000-0000-0000-0000-000000000000
-            // as a string which breaks us
-            //
-            // correctly mark it as a uuid
-            //
-            string request = (string)mDhttpMethod["requestbody"];
-            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
-
-            // another hack <integer>1</integer> results in a
-            // System.ArgumentException: Object type System.Int32 cannot
-            // be converted to target type: System.Boolean
-            //
-            request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
-            request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
-
-            OSDArray foldersrequested = (OSDArray)map["folders"];
-
-            string response = "";
-            lock (m_fetchLock)
-            {
-                for (int i = 0; i < foldersrequested.Count; i++)
-                {
-                    string inventoryitemstr = "";
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-
-                    inventoryitemstr = FetchInventoryReply(requestedFolders, AgentID, false);
-
-                    inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
-                    inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
-
-                    response += inventoryitemstr;
-                }
-
-
-                if (response.Length == 0)
-                {
-                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                    // Therefore, I'm concluding that the client only has so many threads available to do requests
-                    // and when a thread stalls..   is stays stalled.
-                    // Therefore we need to return something valid
-                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
-                }
-                else
-                {
-                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-                }
-
-                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
-                //m_log.Debug("[CAPS] "+response);
-
-            }
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = response;
-            return cancelresponsedata;
-        }
-
-        public Hashtable FetchLibraryInventoryDescendentsRequest(Hashtable mDhttpMethod, UUID AgentID)
-        {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS web fetch LIBRARY inventory request for {0}", AgentID);
-
-            // nasty temporary hack here, the linden client falsely
-            // identifies the uuid 00000000-0000-0000-0000-000000000000
-            // as a string which breaks us
-            //
-            // correctly mark it as a uuid
-            //
-            string request = (string)mDhttpMethod["requestbody"];
-            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
-
-            // another hack <integer>1</integer> results in a
-            // System.ArgumentException: Object type System.Int32 cannot
-            // be converted to target type: System.Boolean
-            //
-            request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
-            request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
+            m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -126,57 +42,30 @@ namespace OpenSim.Services.CapsService
             string response = "";
             lock (m_fetchLock)
             {
-                for (int i = 0; i < foldersrequested.Count; i++)
-                {
-                    string inventoryitemstr = "";
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-
-                    inventoryitemstr = FetchInventoryReply(requestedFolders, AgentID, true);
-
-                    inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
-                    inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
-
-                    response += inventoryitemstr;
-                }
-
-
-                if (response.Length == 0)
-                {
-                    // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                    // Therefore, I'm concluding that the client only has so many threads available to do requests
-                    // and when a thread stalls..   is stays stalled.
-                    // Therefore we need to return something valid
-                    response = "<llsd><map><key>folders</key><array /></map></llsd>";
-                }
-                else
-                {
-                    response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-                }
-
-                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
-                //m_log.Debug("[CAPS] "+response);
-
+                response = FetchInventoryReply(foldersrequested, AgentID, false);
             }
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = response;
-            return cancelresponsedata;
+            return response;
         }
 
-        public Hashtable FetchInventoryItemsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        public string HandleFetchLibDescendents(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS inventory items request for {0}", AgentID);
+            m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-            // nasty temporary hack here, the linden client falsely
-            // identifies the uuid 00000000-0000-0000-0000-000000000000
-            // as a string which breaks us
-            //
-            // correctly mark it as a uuid
-            //
-            string request = (string)mDhttpMethod["requestbody"];
-            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+
+            OSDArray foldersrequested = (OSDArray)map["folders"];
+
+            string response = "";
+            lock (m_fetchLock)
+            {
+                response = FetchInventoryReply(foldersrequested, AgentID, true);
+            }
+            return response;
+        }
+
+        public string HandleFetchInventory(string request, UUID AgentID)
+        {
+            m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -185,9 +74,11 @@ namespace OpenSim.Services.CapsService
             string response = "";
             lock (m_fetchLock)
             {
-                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                OSDMap map = new OSDMap();
+                //We have to send the agent_id in the main map as well as all the items
                 map.Add("agent_id", OSD.FromUUID(AgentID));
-                OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
+
+                OSDArray items = new OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     OSDMap requestedFolders = (OSDMap)foldersrequested[i];
@@ -202,31 +93,13 @@ namespace OpenSim.Services.CapsService
                 map.Add("items", items);
 
                 response = OSDParser.SerializeLLSDXmlString(map);
-
-                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
-                //m_log.Debug("[CAPS] "+response);
-
             }
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = response;
-            return cancelresponsedata;
+            return response;
         }
 
-        public Hashtable FetchLibInventoryItemsRequest(Hashtable mDhttpMethod, UUID AgentID)
+        public string HandleFetchLib(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS library inventory items request for {0}", AgentID);
-
-            // nasty temporary hack here, the linden client falsely
-            // identifies the uuid 00000000-0000-0000-0000-000000000000
-            // as a string which breaks us
-            //
-            // correctly mark it as a uuid
-            //
-            string request = (string)mDhttpMethod["requestbody"];
-            request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
+            m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -235,9 +108,9 @@ namespace OpenSim.Services.CapsService
             string response = "";
             lock (m_fetchLock)
             {
-                OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                OSDMap map = new OSDMap();
                 map.Add("agent_id", OSD.FromUUID(AgentID));
-                OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
+                OSDArray items = new OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     OSDMap requestedFolders = (OSDMap)foldersrequested[i];
@@ -258,17 +131,8 @@ namespace OpenSim.Services.CapsService
                 map.Add("items", items);
 
                 response = OSDParser.SerializeLLSDXmlString(map);
-
-                //m_log.DebugFormat("[CAPS]: Replying to CAPS fetch inventory request with following xml");
-                //m_log.Debug("[CAPS] "+response);
-
             }
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = response;
-            return cancelresponsedata;
+            return response;
         }
 
         /// <summary>
@@ -276,51 +140,63 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="invFetch"></param>
         /// <returns></returns>
-        private string FetchInventoryReply(OSDMap invFetch, UUID AgentID, bool Library)
+        private string FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, bool Library)
         {
             OSDMap contents = new OSDMap();
+            OSDArray folders = new OSDArray();
 
-            UUID agent_id = invFetch["agent_id"].AsUUID();
-            UUID owner_id = invFetch["owner_id"].AsUUID();
-            UUID folder_id = invFetch["folder_id"].AsUUID();
-            bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
-            bool fetch_items = invFetch["fetch_items"].AsBoolean();
-            int sort_order = invFetch["sort_order"].AsInteger();
-            OSDMap array = new OSDMap();
-            array["agent_id"] = AgentID;
-            array["owner_id"] = owner_id;
-            array["folder_id"] = folder_id;
-            contents["folders"] = new OSDArray();
-            ((OSDArray)contents["folders"]).Add(array);
-            InventoryCollection inv = new InventoryCollection();
-            inv.Folders = new List<InventoryFolderBase>();
-            inv.Items = new List<InventoryItemBase>();
-            int version = 0;
-            inv = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
-
-            OSDArray categories = new OSDArray();
-            if (inv.Folders != null)
+            foreach (OSD m in fetchRequest)
             {
-                foreach (InventoryFolderBase invFolder in inv.Folders)
+                OSDMap invFetch = (OSDMap)m;
+                OSDMap internalContents = new OSDMap();
+
+                UUID agent_id = invFetch["agent_id"].AsUUID();
+                UUID owner_id = invFetch["owner_id"].AsUUID();
+                UUID folder_id = invFetch["folder_id"].AsUUID();
+                bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
+                bool fetch_items = invFetch["fetch_items"].AsBoolean();
+                int sort_order = invFetch["sort_order"].AsInteger();
+
+                //Set the normal stuff
+                internalContents["agent_id"] = AgentID;
+                internalContents["owner_id"] = owner_id;
+                internalContents["folder_id"] = folder_id;
+
+
+                InventoryCollection inv = new InventoryCollection();
+                inv.Folders = new List<InventoryFolderBase>();
+                inv.Items = new List<InventoryItemBase>();
+                int version = 0;
+                inv = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
+
+                OSDArray categories = new OSDArray();
+                if (inv.Folders != null)
                 {
-                    categories.Add(ConvertInventoryFolder(invFolder));
+                    foreach (InventoryFolderBase invFolder in inv.Folders)
+                    {
+                        categories.Add(ConvertInventoryFolder(invFolder));
+                    }
                 }
-            }
-            contents["categories"] = categories;
+                internalContents["categories"] = categories;
 
-            OSDArray items = new OSDArray();
-            if (inv.Items != null)
-            {
-                foreach (InventoryItemBase invItem in inv.Items)
+                OSDArray items = new OSDArray();
+                if (inv.Items != null)
                 {
-                    items.Add(ConvertInventoryItem(invItem, AgentID));
+                    foreach (InventoryItemBase invItem in inv.Items)
+                    {
+                        items.Add(ConvertInventoryItem(invItem, AgentID));
+                    }
                 }
+                internalContents["items"] = items;
+
+                internalContents["descendents"] = items.Count + categories.Count;
+                internalContents["version"] = version;
+
+                //Now add it to the folder array
+                folders.Add(internalContents);
             }
-            contents["items"] = items;
 
-            contents["descendents"] = items.Count + categories.Count;
-            contents["version"] = version;
-
+            contents["folders"] = folders;
             return OSDParser.SerializeLLSDXmlString(contents);
         }
 
@@ -411,10 +287,6 @@ namespace OpenSim.Services.CapsService
         public InventoryCollection HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
                                                    bool fetchFolders, bool fetchItems, int sortOrder, bool Library, out int version)
         {
-            m_log.DebugFormat(
-                "[INVENTORY CACHE]: Fetching folders ({0}), items ({1}) from {2} for agent {3}",
-                fetchFolders, fetchItems, folderID, agentID);
-
             // FIXME MAYBE: We're not handling sortOrder!
 
             InventoryFolderImpl fold;
@@ -475,32 +347,36 @@ namespace OpenSim.Services.CapsService
             m_handler = handler;
             List<IRequestHandler> handlers = new List<IRequestHandler>();
 
-            GenericHTTPMethod method = delegate(Hashtable httpMethod)
+            RestMethod method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return FetchInventoryDescendentsRequest(httpMethod, agentID);
+                return HandleWebFetchInventoryDescendents(request, agentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", m_handler.CreateCAPS("WebFetchInventoryDescendents"),
+            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("WebFetchInventoryDescendents"),
                                                       method));
 
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return FetchLibraryInventoryDescendentsRequest(httpMethod, agentID);
+                return HandleFetchLibDescendents(request, agentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", m_handler.CreateCAPS("FetchLibDescendents"),
+            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchLibDescendents"),
                                                       method));
 
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return FetchInventoryItemsRequest(httpMethod, agentID);
+                return HandleFetchInventory(request, agentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", m_handler.CreateCAPS("FetchInventory"),
+            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchInventory"),
                                                       method));
 
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return FetchLibInventoryItemsRequest(httpMethod, agentID);
+                return HandleFetchLib(request, agentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", m_handler.CreateCAPS("FetchLib"),
+            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchLib"),
                                                       method));
 
             return handlers;

@@ -40,6 +40,7 @@ using OpenSim.Server.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
 
@@ -112,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
             string response = base.CapsUpdateInventoryItemAsset(remoteClient, itemID, data);
 
-            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(response);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(response);
             UploadInventoryItem(remoteClient.AgentId, map["new_asset"].AsUUID(), "", 0);
 
             return response;

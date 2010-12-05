@@ -55,6 +55,11 @@ namespace OpenSim
         protected bool inidbg;
 
         /// <summary>
+        /// Should we show all the loading of the config files?
+        /// </summary>
+        protected bool showIniLoading;
+
+        /// <summary>
         /// Loads the region configuration
         /// </summary>
         /// <param name="argvSource">Parameters passed into the process when started</param>
@@ -69,6 +74,9 @@ namespace OpenSim
 
             inidbg =
                 startupConfig.GetBoolean("inidbg", false);
+
+            showIniLoading =
+                startupConfig.GetBoolean("inishowfileloading", false);
 
             string masterFileName =
                 startupConfig.GetString("inimaster", String.Empty);
@@ -144,7 +152,7 @@ namespace OpenSim
 
             m_config = new IniConfigSource();
             
-            m_log.Info("[CONFIG]: Reading configuration settings");
+            m_log.Info("[Config]: Reading configuration settings");
 
             if (sources.Count == 0)
             {
@@ -253,7 +261,8 @@ namespace OpenSim
 
             if (!IsUri(iniPath))
             {
-                m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
+                if(showIniLoading)
+                    m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Path.GetFullPath(iniPath));
 
                 m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
                 if (inidbg)

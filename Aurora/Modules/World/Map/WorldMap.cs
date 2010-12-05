@@ -46,8 +46,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps=OpenSim.Framework.Capabilities.Caps;
-using OSDArray=OpenMetaverse.StructuredData.OSDArray;
-using OSDMap=OpenMetaverse.StructuredData.OSDMap;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
 using Aurora.Framework;
@@ -85,7 +83,6 @@ namespace Aurora.Modules
         private bool m_generateMapTiles = true;
         private UUID staticMapTileUUID = UUID.Zero;
         private bool m_asyncMapTileCreation = false;
-        private List<MapBlockData> m_mapLayer = null;
         private int MapViewLength = 8;
         
 		#region INonSharedRegionModule Members

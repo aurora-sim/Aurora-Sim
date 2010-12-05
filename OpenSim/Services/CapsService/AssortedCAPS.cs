@@ -13,9 +13,6 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
 using OpenSim.Framework.Capabilities;
-using OSD = OpenMetaverse.StructuredData.OSD;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OpenSim.Services.Base;
 
 using OpenMetaverse;
@@ -63,13 +60,13 @@ namespace OpenSim.Services.CapsService
 
         private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)
         {
-            OpenMetaverse.StructuredData.OSDMap rm = (OpenMetaverse.StructuredData.OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            OpenMetaverse.StructuredData.OSDMap HomeLocation = rm["HomeLocation"] as OpenMetaverse.StructuredData.OSDMap;
-            OpenMetaverse.StructuredData.OSDMap pos = HomeLocation["LocationPos"] as OpenMetaverse.StructuredData.OSDMap;
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap HomeLocation = rm["HomeLocation"] as OSDMap;
+            OSDMap pos = HomeLocation["LocationPos"] as OSDMap;
             Vector3 position = new Vector3((float)pos["X"].AsReal(),
                 (float)pos["Y"].AsReal(),
                 (float)pos["Z"].AsReal());
-            OpenMetaverse.StructuredData.OSDMap lookat = HomeLocation["LocationLookAt"] as OpenMetaverse.StructuredData.OSDMap;
+            OSDMap lookat = HomeLocation["LocationLookAt"] as OSDMap;
             Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
                 (float)lookat["Y"].AsReal(),
                 (float)lookat["Z"].AsReal());
@@ -97,8 +94,8 @@ namespace OpenSim.Services.CapsService
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            OpenMetaverse.StructuredData.OSD r = OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
-            OpenMetaverse.StructuredData.OSDMap rm = (OpenMetaverse.StructuredData.OSDMap)r;
+            OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)r;
             IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)
             {
@@ -114,9 +111,9 @@ namespace OpenSim.Services.CapsService
 
         private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID)
         {
-            OpenMetaverse.StructuredData.OSD r = OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
-            OpenMetaverse.StructuredData.OSDMap rm = (OpenMetaverse.StructuredData.OSDMap)r;
-            OpenMetaverse.StructuredData.OSDMap access = (OpenMetaverse.StructuredData.OSDMap)rm["access_prefs"];
+            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)r;
+            OSDMap access = (OSDMap)rm["access_prefs"];
             string Level = access["max"].AsString();
             int maxLevel = 0;
             if (Level == "PG")

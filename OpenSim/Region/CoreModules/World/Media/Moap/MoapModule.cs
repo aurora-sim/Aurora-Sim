@@ -46,8 +46,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using Caps = OpenSim.Framework.Capabilities.Caps;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Region.CoreModules.Media.Moap
 {

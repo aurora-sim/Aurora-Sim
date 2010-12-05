@@ -116,7 +116,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         public string NewAgentInventoryRequest(string request, UUID agentID)
         {
-            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             //TODO:  The Mesh uploader uploads many types of content. If you're going to implement a Money based limit
             // You need to be aware of this and 
@@ -139,10 +139,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
                     {
                         if (client != null)
                             client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
-                        map = new OpenMetaverse.StructuredData.OSDMap();
+                        map = new OSDMap();
                         map["rsvp"] = "";
                         map["state"] = "error";
-                        return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+                        return OSDParser.SerializeLLSDXmlString(map);
                     }
                     else
                         mm.ApplyUploadCharge(agentID, mm.UploadCharge, "Asset upload.");
@@ -176,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             string uploaderURL = protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port.ToString() + capsBase +
                                  uploaderPath;
 
-            map = new OpenMetaverse.StructuredData.OSDMap();
+            map = new OSDMap();
             map["rsvp"] = uploaderURL;
             map["state"] = "upload";
             map["resource_cost"] = 0;
@@ -193,7 +193,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
                                            pinventoryItem, pparentFolder, pdata, pinventoryType,
                                            passetType, agentID);
                 };
-            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
        

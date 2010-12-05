@@ -45,11 +45,7 @@ using OpenSim.Region.Framework.Scenes;
 using Mono.Data.SqliteClient;
 using Aurora.Framework;
 
-
 using Caps = OpenSim.Framework.Capabilities.Caps;
-
-using OSD = OpenMetaverse.StructuredData.OSD;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Region.UserStatistics
 {

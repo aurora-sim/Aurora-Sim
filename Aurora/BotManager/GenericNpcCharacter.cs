@@ -1153,6 +1153,8 @@ namespace Aurora.BotManager
 
         public event ViewerStartAuction OnViewerStartAuction;
 
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
+
         #pragma warning restore 67
 
         public void SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
@@ -1249,7 +1251,5 @@ namespace Aurora.BotManager
         }
 
         #endregion
-
-        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
     }
 }

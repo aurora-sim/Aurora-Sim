@@ -155,6 +155,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 // disable warning: public events constituting public API
 #pragma warning disable 67
         public event Action<IClientAPI> OnLogout;
+        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
         public event ObjectPermissions OnObjectPermissions;
 
         public event MoneyTransferRequest OnMoneyTransferRequest;
@@ -1161,6 +1162,5 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
             return true;
         }
-        public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
     }
 }

@@ -13,9 +13,6 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
 using OpenSim.Framework.Capabilities;
-using OSD = OpenMetaverse.StructuredData.OSD;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OpenSim.Services.Base;
 
 using OpenMetaverse;

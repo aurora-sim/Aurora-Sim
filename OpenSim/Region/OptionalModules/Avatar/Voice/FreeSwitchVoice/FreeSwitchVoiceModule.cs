@@ -52,7 +52,6 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 using System.Text.RegularExpressions;
 using OpenSim.Server.Base;
 using OpenSim.Services.Interfaces;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 {

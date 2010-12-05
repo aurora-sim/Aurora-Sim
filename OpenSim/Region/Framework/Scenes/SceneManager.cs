@@ -873,7 +873,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (error == "Region locked out")
                 {
                     m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-                    throw new Exception(error);
+                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
+                    Environment.Exit(0);
                 }
                 if (error == "Error communicating with grid service")
                 {
@@ -883,7 +884,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         Environment.Exit(0);
                     }
-                    RegisterRegionWithGrid(scene);
                 }
                 if (error == "Wrong Session ID")
                 {

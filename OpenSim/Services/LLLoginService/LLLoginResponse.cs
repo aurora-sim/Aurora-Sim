@@ -43,8 +43,6 @@ using Nini.Config;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Services.LLLoginService
 {

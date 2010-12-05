@@ -231,20 +231,20 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         private string FailedPermissionsNotecardCAPSUpdate(UUID assetID, UUID inv)
         {
-            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            OSDMap map = new OSDMap();
             map["new_asset"] = assetID.ToString();
             map["new_inventory_item"] = inv;
             map["state"] = "complete";
-            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         private string SuccessNotecardCAPSUpdate(UUID assetID, UUID inv)
         {
-            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            OSDMap map = new OSDMap();
             map["new_asset"] = assetID.ToString();
             map["new_inventory_item"] = inv;
             map["state"] = "complete";
-            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         #endregion
