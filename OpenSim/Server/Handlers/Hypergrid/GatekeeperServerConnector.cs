@@ -39,7 +39,7 @@ using log4net;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class GatekeeperServiceInConnector : ServiceConnector
+    public class GatekeeperServiceInConnector : IServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -52,15 +52,22 @@ namespace OpenSim.Server.Handlers.Hypergrid
         }
 
         bool m_Proxy = false;
-
-        public GatekeeperServiceInConnector(IConfigSource config, IHttpServer server, ISimulationService simService) :
-                base(config, server, String.Empty)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GatekeeperHandler", Name) != Name)
+                return;
+
             IConfig gridConfig = config.Configs["GatekeeperService"];
             if (gridConfig != null)
             {
                 string serviceDll = gridConfig.GetString("LocalServiceModule", string.Empty);
-                Object[] args = new Object[] { config, simService };
+                Object[] args = new Object[] { config, sim };
                 m_GatekeeperService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGatekeeperService>(serviceDll, args);
 
             }
@@ -75,11 +82,5 @@ namespace OpenSim.Server.Handlers.Hypergrid
 
             server.AddHTTPHandler("/foreignagent/", new GatekeeperAgentHandler(m_GatekeeperService, m_Proxy).Handler);
         }
-
-        public GatekeeperServiceInConnector(IConfigSource config, IHttpServer server)
-            : this(config, server, null)
-        {
-        }
-
     }
 }

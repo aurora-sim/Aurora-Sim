@@ -40,7 +40,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public abstract class SceneBase : IScene
+    public abstract class SceneBase : IScene, IRegistryCore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -381,6 +381,30 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void RegisterInterface<M>(M mod)
+        {
+            List<Object> l = null;
+            if (!ModuleInterfaces.TryGetValue(typeof(M), out l))
+            {
+                l = new List<Object>();
+                ModuleInterfaces.Add(typeof(M), l);
+            }
+
+            if (l.Count > 0)
+                return;
+
+            l.Add(mod);
+
+            if (mod is IEntityCreator)
+            {
+                IEntityCreator entityCreator = (IEntityCreator)mod;
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = entityCreator;
+                }
+            }
+        }
+
         public void StackModuleInterface<M>(M mod)
         {
             List<Object> l;
@@ -417,6 +441,28 @@ namespace OpenSim.Region.Framework.Scenes
                 return (T)ModuleInterfaces[typeof(T)][0];
             else
                 return default(T);
+        }
+
+        public T Get<T>()
+        {
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+                return (T)ModuleInterfaces[typeof(T)][0];
+            else
+                return default(T);
+        }
+
+        public bool TryGet<T>(out T iface)
+        {
+            iface = default(T);
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+            {
+                iface = (T)ModuleInterfaces[typeof(T)][0];
+                return true;
+            }
+            else
+                return false;
         }
 
         /// <summary>

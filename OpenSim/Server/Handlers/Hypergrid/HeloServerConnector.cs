@@ -36,14 +36,23 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class HeloServiceInConnector : ServiceConnector
+    public class HeloServiceInConnector : IServiceConnector
     {
-        public HeloServiceInConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("HeloHandler", Name) != Name)
+                return;
+
             server.AddStreamHandler(new HeloServerGetHandler("opensim-robust"));
         }
     }

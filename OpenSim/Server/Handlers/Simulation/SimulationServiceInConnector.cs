@@ -35,14 +35,21 @@ using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Server.Handlers.Simulation
 {
-    public class SimulationServiceInConnector : ServiceConnector
+    public class SimulationServiceInConnector : IServiceConnector
     {
         private ISimulationService m_LocalSimulationService;
         //private IAuthenticationService m_AuthenticationService;
-
-        public SimulationServiceInConnector(IConfigSource config, IHttpServer server, IScene scene) :
-                base(config, server, String.Empty)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("SimulationHandler", Name) != Name)
+                return;
+
             //IConfig serverConfig = config.Configs["SimulationService"];
             //if (serverConfig == null)
             //    throw new Exception("No section 'SimulationService' in config file");
@@ -54,7 +61,7 @@ namespace OpenSim.Server.Handlers.Simulation
             //    throw new Exception("No SimulationService in config file");
 
             //Object[] args = new Object[] { config };
-            m_LocalSimulationService = scene.RequestModuleInterface<ISimulationService>();
+            m_LocalSimulationService = sim.Get<ISimulationService>();
             m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
                     //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
 

@@ -33,10 +33,11 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Authentication
 {
-    public class OpenIdServerConnector : ServiceConnector
+    public class OpenIdServerConnector : IServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -45,10 +46,17 @@ namespace OpenSim.Server.Handlers.Authentication
         private IAuthenticationService m_AuthenticationService;
         private IUserAccountService m_UserAccountService;
         private string m_ConfigName = "OpenIdService";
-
-        public OpenIdServerConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("OpenIdHandler", Name) != Name)
+                return;
+
             IConfig serverConfig = config.Configs[m_ConfigName];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section {0} in config file", m_ConfigName));

@@ -20,13 +20,20 @@ using Aurora.Services.DataService;
  
 namespace OpenSim.Server.Handlers.AuroraData
 {
-    public class AuroraDataServiceConnector : ServiceConnector
+    public class AuroraDataServiceConnector : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public AuroraDataServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuroraDataHandler", Name) != Name)
+                return;
+
             m_log.Debug("[AuroraDataConnectors]: Starting...");
 
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();

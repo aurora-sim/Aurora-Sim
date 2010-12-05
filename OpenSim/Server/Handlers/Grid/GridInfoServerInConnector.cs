@@ -34,16 +34,24 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Server.Handlers.Grid
 {
-    public class GridInfoServerInConnector : ServiceConnector
+    public class GridInfoServerInConnector : IServiceConnector
     {
         //private string m_ConfigName = "GridInfoService";
-
-        public GridInfoServerInConnector(IConfigSource config, IHttpServer server, string configName) :
-            base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridInfoHandler", Name) != Name)
+                return;
+
             GridInfoHandlers handlers = new GridInfoHandlers(config);
 
             server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",

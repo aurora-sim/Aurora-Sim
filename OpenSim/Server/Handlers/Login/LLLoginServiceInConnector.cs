@@ -38,7 +38,7 @@ using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Server.Handlers.Login
 {
-    public class LLLoginServiceInConnector : ServiceConnector
+    public class LLLoginServiceInConnector : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -46,29 +46,24 @@ namespace OpenSim.Server.Handlers.Login
         private bool m_Proxy;
 
         private IConfigSource m_Config;
-
-        public LLLoginServiceInConnector(IConfigSource config, IHttpServer server, IScene scene) :
-                base(config, server, String.Empty)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("LLLoginHandler", Name) != Name)
+                return;
+
             m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             string loginService = ReadLocalServiceFromConfig(config);
 
-            ISimulationService simService = scene.RequestModuleInterface<ISimulationService>();
-            ILibraryService libService = scene.RequestModuleInterface<ILibraryService>();
+            ISimulationService simService = sim.Get<ISimulationService>();
+            ILibraryService libService = sim.Get<ILibraryService>();
 
             Object[] args = new Object[] { config, simService, libService };
-            m_LoginService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILoginService>(loginService, args);
-
-            InitializeHandlers(server);
-        }
-
-        public LLLoginServiceInConnector(IConfigSource config, IHttpServer server) :
-            base(config, server, String.Empty)
-        {
-            string loginService = ReadLocalServiceFromConfig(config);
-
-            Object[] args = new Object[] { config };
-
             m_LoginService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILoginService>(loginService, args);
 
             InitializeHandlers(server);

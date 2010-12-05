@@ -31,17 +31,25 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Avatar
 {
-    public class AvatarServiceConnector : ServiceConnector
+    public class AvatarServiceConnector : IServiceConnector
     {
         private IAvatarService m_AvatarService;
         private string m_ConfigName = "AvatarService";
-
-        public AvatarServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", Name) != Name)
+                return;
+
             IConfig serverConfig = config.Configs[m_ConfigName];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section {0} in config file", m_ConfigName));

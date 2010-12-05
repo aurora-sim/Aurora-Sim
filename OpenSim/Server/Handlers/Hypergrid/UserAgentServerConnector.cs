@@ -45,17 +45,24 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class UserAgentServerConnector : ServiceConnector
+    public class UserAgentServerConnector : IServiceConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IUserAgentService m_HomeUsersService;
-
-        public UserAgentServerConnector(IConfigSource config, IHttpServer server) :
-                base(config, server, String.Empty)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("UserAgentHandler", Name) != Name)
+                return;
+
             IConfig gridConfig = config.Configs["UserAgentService"];
             if (gridConfig != null)
             {

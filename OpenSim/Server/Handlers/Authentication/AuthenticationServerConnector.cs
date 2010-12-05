@@ -31,17 +31,25 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Authentication
 {
-    public class AuthenticationServiceConnector : ServiceConnector
+    public class AuthenticationServiceConnector : IServiceConnector
     {
         private IAuthenticationService m_AuthenticationService;
         private string m_ConfigName = "AuthenticationService";
-
-        public AuthenticationServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthenticationHandler", Name) != Name)
+                return;
+
             if (configName != String.Empty)
                 m_ConfigName = configName;
 

@@ -106,7 +106,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Grid
 
                 m_log.Info("[GridInfo]: Starting...");
 
-                new GridInfoServerInConnector(m_Config, MainServer.Instance, "GridInfoService");
+                GridInfoServerInConnector g = new GridInfoServerInConnector();
+                g.Initialize(m_Config, MainServer.Instance, "GridInfoService", scene);
             }
         }
 

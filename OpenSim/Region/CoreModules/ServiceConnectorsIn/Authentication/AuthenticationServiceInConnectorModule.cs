@@ -108,12 +108,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Authentication
 
                 m_log.Info("[AUTHENTICATION IN CONNECTOR]: Starting...");
 
-                new AuthenticationServiceConnector(m_Config, MainServer.Instance, "AuthenticationService");
+                AuthenticationServiceConnector a= new AuthenticationServiceConnector();
+                a.Initialize(m_Config, MainServer.Instance, "AuthenticationService", scene);
             }
-
         }
 
         #endregion
-
     }
 }

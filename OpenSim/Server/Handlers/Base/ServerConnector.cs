@@ -30,17 +30,16 @@ using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Base
 {
     public interface IServiceConnector
     {
+        void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim);
     }
-
-    public class ServiceConnector : IServiceConnector
+    public interface IService
     {
-        public ServiceConnector(IConfigSource config, IHttpServer server, string configName)
-        {
-        }
+        void Initialize(IConfigSource config);
     }
 }

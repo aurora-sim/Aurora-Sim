@@ -115,7 +115,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Login
             if (!m_Registered)
             {
                 m_Registered = true;
-                new LLLoginServiceInConnector(m_Config, MainServer.Instance, scene);
+                LLLoginServiceInConnector l = new LLLoginServiceInConnector();
+                l.Initialize(m_Config, MainServer.Instance, "", scene);
                 //Object[] args = new Object[] { m_Config, MainServer.Instance, this, scene };
                 //ServerUtils.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:LLLoginServiceInConnector", args);
             }

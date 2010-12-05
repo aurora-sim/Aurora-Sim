@@ -112,10 +112,13 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Hypergrid
                 m_log.Info("[HypergridService]: Starting...");
 
                 ISimulationService simService = scene.RequestModuleInterface<ISimulationService>();
-                m_HypergridHandler = new GatekeeperServiceInConnector(m_Config, MainServer.Instance, simService);
+                m_HypergridHandler = new GatekeeperServiceInConnector();
+                m_HypergridHandler.Initialize(m_Config, MainServer.Instance, "", null);
 
-                new UserAgentServerConnector(m_Config, MainServer.Instance);
-                new HeloServiceInConnector(m_Config, MainServer.Instance, "HeloService");
+                UserAgentServerConnector u = new UserAgentServerConnector();
+                u.Initialize(m_Config, MainServer.Instance, "", scene);
+                HeloServiceInConnector h = new HeloServiceInConnector();
+                h.Initialize(m_Config, MainServer.Instance, "HeloService", scene);
             }
             scene.RegisterModuleInterface<IGatekeeperService>(m_HypergridHandler.GateKeeper);
         }

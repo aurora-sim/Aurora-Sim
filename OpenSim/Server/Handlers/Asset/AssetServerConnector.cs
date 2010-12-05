@@ -31,35 +31,32 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Asset
 {
-    public class AssetServiceConnector : ServiceConnector
+    public class AssetServiceConnector : IServiceConnector
     {
         private IAssetService m_AssetService;
         private string m_ConfigName = "AssetService";
-
-        public AssetServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", Name) != Name)
+                return;
+
+            m_AssetService = sim.Get<IAssetService>();
+
             if (configName != String.Empty)
                 m_ConfigName = configName;
 
             IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section '{0}' in config file", m_ConfigName));
-
-            string assetService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (assetService == String.Empty)
-                throw new Exception("No AssetService in config file");
-
-            Object[] args = new Object[] { config };
-            m_AssetService =
-                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
-
-            bool allowDelete = serverConfig.GetBoolean("AllowRemoteDelete", false);
+            bool allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
 
             server.AddStreamHandler(new AssetServerGetHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerPostHandler(m_AssetService));

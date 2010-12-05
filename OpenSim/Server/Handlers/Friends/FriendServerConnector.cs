@@ -31,17 +31,25 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Friends
 {
-    public class FriendsServiceConnector : ServiceConnector
+    public class FriendsServiceConnector : IServiceConnector
     {
         private IFriendsService m_FriendsService;
         private string m_ConfigName = "FriendsService";
-
-        public FriendsServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FriendsHandler", Name) != Name)
+                return;
+
             IConfig serverConfig = config.Configs[m_ConfigName];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section {0} in config file", m_ConfigName));

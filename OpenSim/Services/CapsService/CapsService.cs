@@ -23,15 +23,22 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
 {
-    public class AuroraCAPSHandler : ServiceConnector
+    public class AuroraCAPSHandler : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public IHttpServer m_server = null;
         public static List<ICapsServiceConnector> CapsModules = new List<ICapsServiceConnector>();
-
-        public AuroraCAPSHandler(IConfigSource config, IHttpServer server, string configName) :
-            base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("CAPSHandler", Name) != Name)
+                return;
+
             m_log.Debug("[AuroraCAPSService]: Starting...");
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
             if (m_CAPSServerConfig == null)

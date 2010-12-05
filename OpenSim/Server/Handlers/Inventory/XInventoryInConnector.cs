@@ -42,16 +42,23 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Asset
 {
-    public class XInventoryInConnector : ServiceConnector
+    public class XInventoryInConnector : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IInventoryService m_InventoryService;
         private string m_ConfigName = "InventoryService";
-
-        public XInventoryInConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", Name) != Name)
+                return;
+
             if (configName != String.Empty)
                 m_ConfigName = configName;
 

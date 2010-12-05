@@ -38,25 +38,31 @@ using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Server.Handlers.Neighbour
 {
-    public class NeighbourServiceInConnector : ServiceConnector
+    public class NeighbourServiceInConnector : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private INeighbourService m_NeighbourService;
         private IAuthenticationService m_AuthenticationService;
-
-        public NeighbourServiceInConnector(IConfigSource source, IHttpServer server, INeighbourService nService, IAuthenticationService aService, IScene scene) :
-                base(source, server, String.Empty)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
 
-            m_NeighbourService = nService;
-            m_AuthenticationService = aService;
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("NeighbourHandler", Name) != Name)
+                return;
+
+            m_NeighbourService = sim.Get<INeighbourService>();
+            m_AuthenticationService = sim.Get<IAuthenticationService>();
             if (m_NeighbourService == null)
             {
                 m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
                 return;
             }
-            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, aService, source));
+            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, m_AuthenticationService, config));
         }
     }
 }

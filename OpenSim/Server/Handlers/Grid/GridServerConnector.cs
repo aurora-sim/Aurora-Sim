@@ -34,17 +34,25 @@ using OpenSim.Server.Handlers.Base;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Grid
 {
-    public class GridServiceConnector : ServiceConnector
+    public class GridServiceConnector : IServiceConnector
     {
         private IGridService m_GridService;
         private string m_ConfigName = "GridService";
-
-        public GridServiceConnector(IConfigSource config, IHttpServer server, string configName) :
-                base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", Name) != Name)
+                return;
+
             IConfig serverConfig = config.Configs[m_ConfigName];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section {0} in config file", m_ConfigName));

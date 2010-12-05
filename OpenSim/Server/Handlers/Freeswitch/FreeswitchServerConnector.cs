@@ -37,20 +37,28 @@ using OpenSim.Server.Handlers.Base;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Freeswitch
 {
-    public class FreeswitchServerConnector : ServiceConnector
+    public class FreeswitchServerConnector : IServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IFreeswitchService m_FreeswitchService;
         private string m_ConfigName = "FreeswitchService";
         protected readonly string m_freeSwitchAPIPrefix = "/fsapi";
-
-        public FreeswitchServerConnector(IConfigSource config, IHttpServer server, string configName) :
-            base(config, server, configName)
+        public string Name
         {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FreeswitchHandler", Name) != Name)
+                return;
+
             if (configName != String.Empty)
                 m_ConfigName = configName;
 
@@ -123,6 +131,5 @@ namespace OpenSim.Server.Handlers.Freeswitch
 
             return response;
         }
-
     }
 }
