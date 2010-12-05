@@ -27,7 +27,7 @@
 
 using System;
 using Nini.Config;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 

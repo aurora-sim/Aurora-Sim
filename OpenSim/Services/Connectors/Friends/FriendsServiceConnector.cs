@@ -35,7 +35,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors

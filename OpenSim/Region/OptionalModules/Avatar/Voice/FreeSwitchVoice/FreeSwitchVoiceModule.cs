@@ -50,7 +50,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using System.Text.RegularExpressions;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice

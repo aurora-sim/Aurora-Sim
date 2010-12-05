@@ -144,7 +144,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
                 request.Add("AGENTID", avatarID.ToString());
                 request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
                 request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
-                AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL + m_scene.RegionInfo.RegionHandle, OpenSim.Server.Base.ServerUtils.BuildQueryString(request));
+                AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL + m_scene.RegionInfo.RegionHandle, Aurora.Simulation.Base.ServerUtils.BuildQueryString(request));
             } 
             catch(Exception e)
             {

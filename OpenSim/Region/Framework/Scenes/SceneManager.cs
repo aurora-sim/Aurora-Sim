@@ -38,7 +38,7 @@ using OpenSim.Region.Physics.Manager;
 using Nini.Config;
 using OpenSim.Framework.Console;
 using OpenSim;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes

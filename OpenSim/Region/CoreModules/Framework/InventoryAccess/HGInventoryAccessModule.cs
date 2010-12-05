@@ -35,7 +35,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Connectors.Hypergrid;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 

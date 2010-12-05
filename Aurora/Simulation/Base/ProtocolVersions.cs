@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim.Server.Base
+namespace Aurora.Simulation.Base
 {
     public class ProtocolVersions
     {

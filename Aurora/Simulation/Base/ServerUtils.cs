@@ -36,7 +36,7 @@ using log4net;
 using OpenSim.Framework;
 using OpenMetaverse;
 
-namespace OpenSim.Server.Base
+namespace Aurora.Simulation.Base
 {
     public static class ServerUtils
     {

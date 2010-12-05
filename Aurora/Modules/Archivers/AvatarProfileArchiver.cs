@@ -13,7 +13,7 @@ using OpenMetaverse;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 namespace Aurora.Modules
 {

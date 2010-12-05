@@ -31,7 +31,7 @@ using System.Reflection;
 
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Framework.Servers.HttpServer;
 
 using OpenMetaverse;

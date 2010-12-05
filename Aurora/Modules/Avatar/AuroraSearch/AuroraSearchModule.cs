@@ -44,7 +44,7 @@ using System.Xml;
 using Aurora.Framework;
 using Aurora.DataManager;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace Aurora.Modules

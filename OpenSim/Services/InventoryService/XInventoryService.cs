@@ -35,7 +35,7 @@ using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.InventoryService
 {

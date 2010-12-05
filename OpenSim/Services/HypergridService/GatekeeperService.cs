@@ -33,7 +33,7 @@ using System.Reflection;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Services.Connectors.Hypergrid;
 
 using OpenMetaverse;

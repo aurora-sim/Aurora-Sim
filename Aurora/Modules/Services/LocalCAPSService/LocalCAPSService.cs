@@ -15,7 +15,7 @@ using Caps = OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Services.CapsService;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 namespace Aurora.Modules
 {

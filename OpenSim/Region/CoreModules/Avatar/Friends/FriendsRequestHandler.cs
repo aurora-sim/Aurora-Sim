@@ -32,7 +32,7 @@ using System.Reflection;
 using System.Xml;
 
 using OpenSim.Framework;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Framework.Servers.HttpServer;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Services.Interfaces;

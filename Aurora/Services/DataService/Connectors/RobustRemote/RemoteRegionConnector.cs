@@ -13,7 +13,7 @@ using System.Reflection;
 using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {

@@ -32,7 +32,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using OpenSim.Framework;
 
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;

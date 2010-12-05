@@ -281,7 +281,8 @@ namespace Aurora.Server
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource)
         {
-            AuroraBase m_base = new AuroraBase(originalConfigSource, configSource);
+            AuroraBase m_base = new AuroraBase();
+            m_base.Initialize(originalConfigSource, configSource);
             try
             {
                 m_base.Startup();

@@ -29,7 +29,7 @@ using System;
 using System.Reflection;
 using Nini.Config;
 using log4net;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Server.Handlers.Base;

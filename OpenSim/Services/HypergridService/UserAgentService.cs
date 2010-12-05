@@ -34,7 +34,7 @@ using OpenSim.Framework;
 using OpenSim.Services.Connectors.Hypergrid;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 
 using OpenMetaverse;
 using log4net;

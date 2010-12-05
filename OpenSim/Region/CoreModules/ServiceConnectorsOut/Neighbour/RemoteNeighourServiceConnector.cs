@@ -35,7 +35,7 @@ using OpenSim.Services.Connectors;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Server.Handlers.Base;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;

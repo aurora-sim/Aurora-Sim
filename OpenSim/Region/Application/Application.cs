@@ -281,7 +281,8 @@ namespace OpenSim
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource)
         {
-            OpenSimBase m_sim = new OpenSimBase(originalConfigSource, configSource);
+            OpenSimBase m_sim = new OpenSimBase();
+            m_sim.Initialize(originalConfigSource, configSource);
             try
             {
                 m_sim.Startup();

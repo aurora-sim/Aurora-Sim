@@ -38,7 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using OpenSim.Services.Connectors.Friends;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;

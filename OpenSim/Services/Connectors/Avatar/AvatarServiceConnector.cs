@@ -36,7 +36,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using IAvatarService = OpenSim.Services.Interfaces.IAvatarService;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors

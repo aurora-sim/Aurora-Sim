@@ -33,7 +33,7 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;

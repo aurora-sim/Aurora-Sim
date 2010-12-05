@@ -14,7 +14,7 @@ using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Server.Base;
+using Aurora.Simulation.Base;
 using log4net;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
