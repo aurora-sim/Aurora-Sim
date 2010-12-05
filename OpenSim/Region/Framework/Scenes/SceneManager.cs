@@ -738,7 +738,7 @@ namespace OpenSim.Region.Framework.Scenes
             IClientNetworkServer clientServer = null;
             Scene scene = SetupScene(regionInfo, proxyOffset, m_config, out clientServer);
 
-            m_log.Info("[MODULES]: Loading New Style Region's modules");
+            m_log.Info("[MODULES]: Loading region modules");
             IRegionModulesController controller;
             if (m_OpenSimBase.ApplicationRegistry.TryGet(out controller))
             {
@@ -788,11 +788,22 @@ namespace OpenSim.Region.Framework.Scenes
 
                     scene.RegionInfo.RegionLocX = X;
                     scene.RegionInfo.RegionLocY = Y;
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+
+                    IConfig config = m_config.Configs["RegionStartup"];
+                    if (config != null)
+                    {
+                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
+                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
+                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+                        else
+                            SaveChangesFile("", scene.RegionInfo);
+                    }
+                    else
+                        SaveChangesFile("", scene.RegionInfo);
                 }
                 if (error == "Region overlaps another region")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is already in use. You must move your region.");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
                     uint X = 0, Y = 0;
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
@@ -807,14 +818,14 @@ namespace OpenSim.Region.Framework.Scenes
                         if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
                             Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
                         else
-                            SaveChangesFile(scene.RegionInfo);
+                            SaveChangesFile("", scene.RegionInfo);
                     }
                     else
-                        SaveChangesFile(scene.RegionInfo);
+                        SaveChangesFile("", scene.RegionInfo);
                 }
                 if (error.Contains("Can't move this region"))
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - You can not move this region. Moving it back to its original position.");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - You can not move this region. Moving it back to its original position.");
                     //Opensim Grid Servers don't have this functionality.
                     try
                     {
@@ -830,10 +841,10 @@ namespace OpenSim.Region.Framework.Scenes
                             if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
                                 Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
                             else
-                                SaveChangesFile(scene.RegionInfo);
+                                SaveChangesFile("", scene.RegionInfo);
                         }
                         else
-                            SaveChangesFile(scene.RegionInfo);
+                            SaveChangesFile("", scene.RegionInfo);
                     }
                     catch (Exception e)
                     {
@@ -843,7 +854,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (error == "Duplicate region name")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region name you specified is already in use. Please change the name.");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region name you specified is already in use. Please change the name.");
+                    string oldRegionName = scene.RegionInfo.RegionName;
                     scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
 
                     IConfig config = m_config.Configs["RegionStartup"];
@@ -853,19 +865,19 @@ namespace OpenSim.Region.Framework.Scenes
                         if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
                             Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
                         else
-                            SaveChangesFile(scene.RegionInfo);
+                            SaveChangesFile(oldRegionName, scene.RegionInfo);
                     }
                     else
-                        SaveChangesFile(scene.RegionInfo);
+                        SaveChangesFile(oldRegionName, scene.RegionInfo);
                 }
                 if (error == "Region locked out")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
                     throw new Exception(error);
                 }
                 if (error == "Error communicating with grid service")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
                     {
@@ -875,7 +887,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (error == "Wrong Session ID")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - Wrong Session ID for this region!");
+                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
                     {
@@ -886,10 +898,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private void SaveChangesFile(RegionInfo regionInfo)
+        private void SaveChangesFile(string oldName, RegionInfo regionInfo)
         {
             string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
+            if (oldName == "")
+                oldName = regionInfo.RegionName;
             try
             {
                 IConfig config = m_config.Configs["RegionStartup"];
@@ -909,12 +923,20 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (string file in iniFiles)
             {
                 IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[regionInfo.RegionName];
+                IConfig cnf = source.Configs[oldName];
                 if (cnf != null)
                 {
-                    cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
-                    cnf.Set("RegionType", regionInfo.RegionType);
-                    cnf.Name = regionInfo.RegionName;
+                    try
+                    {
+                        source.Configs.Remove(cnf);
+                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
+                        cnf.Set("RegionType", regionInfo.RegionType);
+                        cnf.Name = regionInfo.RegionName;
+                        source.Configs.Add(cnf);
+                    }
+                    catch
+                    {
+                    }
                     source.Save();
                     break;
                 }
