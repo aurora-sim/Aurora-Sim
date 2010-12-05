@@ -1534,7 +1534,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// </summary>
         private void SendAgentGroupDataUpdate(IClientAPI remoteClient, UUID dataForAgentID)
         {
-            m_log.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", remoteClient.Name);
+            if (m_debugEnabled) m_log.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", remoteClient.Name);
 
             // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
             OnAgentDataUpdateRequest(remoteClient, dataForAgentID, UUID.Zero);

@@ -56,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void CreateScriptInstances()
         {
-            m_log.Info("[PRIM INVENTORY]: Starting scripts in scene");
+            m_log.Info("[PRIM INVENTORY]: Starting scripts in " + RegionInfo.RegionName);
             //Set loading prims here to block backup
             LoadingPrims = true;
             EntityBase[] entities = Entities.GetEntities();

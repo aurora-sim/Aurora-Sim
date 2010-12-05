@@ -126,11 +126,12 @@ namespace OpenSim
 		/// Constructor.
 		/// </summary>
 		/// <param name="configSource"></param>
-		public OpenSimBase(IConfigSource configSource)
+		public OpenSimBase(IConfigSource originalConfig, IConfigSource configSource)
 		{
             m_StartupTime = DateTime.Now;
             m_version = VersionInfo.Version;
             m_original_config = configSource;
+            m_config = configSource;
 
             // This thread will go on to become the console listening thread
             if (System.Threading.Thread.CurrentThread.Name != "ConsoleThread")
@@ -143,15 +144,8 @@ namespace OpenSim
             RegisterConsoleCommands();
         }
 
-        private void CreateConfig(IConfigSource baseConfig)
-        {
-            ConfigurationLoader m_configLoader = new ConfigurationLoader();
-            m_config = m_configLoader.LoadConfigSettings(baseConfig);
-        }
-
         private void Configuration(IConfigSource configSource)
         {
-            CreateConfig(configSource);
             IConfig startupConfig = m_config.Configs["Startup"];
 
             int stpMaxThreads = 15;

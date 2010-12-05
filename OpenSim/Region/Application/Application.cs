@@ -275,13 +275,13 @@ namespace OpenSim
                 //Always run once, then disable this
                 Running = false;
                 //! because if it crashes, it needs restarted, if it didn't crash, don't restart it
-                Startup(configSource);
+                Startup(configSource, m_configSource);
             }
         }
 
-        public static void Startup(ArgvConfigSource configSource)
+        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource)
         {
-            OpenSimBase m_sim = new OpenSimBase(configSource);
+            OpenSimBase m_sim = new OpenSimBase(originalConfigSource, configSource);
             try
             {
                 m_sim.Startup();

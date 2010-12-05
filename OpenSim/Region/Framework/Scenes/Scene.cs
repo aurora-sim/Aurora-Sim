@@ -2261,7 +2261,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="regionID">Unique Identifier of the Region to load parcel data for</param>
         public void loadAllLandObjectsFromStorage(UUID regionID)
         {
-            m_log.Debug("[SCENE]: Loading Land Objects from database... ");
+            m_log.Info("[SCENE]: Loading Land Objects from database... ");
             IParcelServiceConnector conn = DataManager.RequestPlugin<IParcelServiceConnector>();
             List<LandData> LandObjects = SimulationDataService.LoadLandObjects(regionID);
             if (conn != null)
@@ -4161,7 +4161,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Don't disable this log message - it's too helpful
             if (!agent.child)
-                m_log.InfoFormat(
+                m_log.DebugFormat(
                     "[CONNECTION BEGIN]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
                     agent.AgentID, agent.circuitcode, teleportFlags);

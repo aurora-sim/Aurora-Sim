@@ -81,26 +81,26 @@ namespace OpenSim.Region.Physics.Manager
             IMesher meshEngine = null;
             if (_MeshPlugins.ContainsKey(meshEngineName))
             {
-                m_log.Info("[PHYSICS]: creating meshing engine " + meshEngineName);
+                m_log.Info("[PHYSICS]: Creating meshing engine " + meshEngineName);
                 meshEngine = _MeshPlugins[meshEngineName].GetMesher(config);
             }
             else
             {
-                m_log.WarnFormat("[PHYSICS]: couldn't find meshingEngine: {0}", meshEngineName);
-                throw new ArgumentException(String.Format("couldn't find meshingEngine: {0}", meshEngineName));
+                m_log.WarnFormat("[PHYSICS]: Couldn't find meshing engine: {0}", meshEngineName);
+                throw new ArgumentException(String.Format("couldn't find meshing engine: {0}", meshEngineName));
             }
 
             if (_PhysPlugins.ContainsKey(physEngineName))
             {
-                m_log.Info("[PHYSICS]: creating " + physEngineName);
+                m_log.Info("[PHYSICS]: Creating physics engine " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene(regionName);
                 result.Initialise(meshEngine, config);
                 return result;
             }
             else
             {
-                m_log.WarnFormat("[PHYSICS]: couldn't find physicsEngine: {0}", physEngineName);
-                throw new ArgumentException(String.Format("couldn't find physicsEngine: {0}", physEngineName));
+                m_log.WarnFormat("[PHYSICS]: couldn't find physics engine: {0}", physEngineName);
+                throw new ArgumentException(String.Format("couldn't find physics engine: {0}", physEngineName));
             }
         }
 
