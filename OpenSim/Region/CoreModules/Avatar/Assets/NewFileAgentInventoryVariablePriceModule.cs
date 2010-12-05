@@ -104,66 +104,67 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             //m_log.Info("[GETMESH]: /CAPS/" + capID);
             caps.RegisterHandler("NewFileAgentInventoryVariablePrice",
 
-                    new LLSDStreamhandler<LLSDAssetUploadRequest, LLSDNewFileAngentInventoryVariablePriceReplyResponse>("POST",
-                                                                                           "/CAPS/" + capID.ToString(),
-                                                                                           delegate(LLSDAssetUploadRequest req)
+                    new RestStreamHandler("POST", "/CAPS/" + capID.ToString(), delegate(string request, string path, string param,
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return NewAgentInventoryRequest(req,agentID);
+                                                           return NewAgentInventoryRequest(request, agentID);
                                                        }));
          
         }
 
         #endregion
 
-        public LLSDNewFileAngentInventoryVariablePriceReplyResponse NewAgentInventoryRequest(LLSDAssetUploadRequest llsdRequest, UUID agentID)
+        public string NewAgentInventoryRequest(string request, UUID agentID)
         {
+            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(request);
 
             //TODO:  The Mesh uploader uploads many types of content. If you're going to implement a Money based limit
             // You need to be aware of this and 
 
 
             //if (llsdRequest.asset_type == "texture" ||
-           //     llsdRequest.asset_type == "animation" ||
-           //     llsdRequest.asset_type == "sound")
-           // {
-                IClientAPI client = null;
+            //     llsdRequest.asset_type == "animation" ||
+            //     llsdRequest.asset_type == "sound")
+            // {
+            IClientAPI client = null;
 
-                
-                IMoneyModule mm = m_scene.RequestModuleInterface<IMoneyModule>();
-                
-                if (mm != null)
+
+            IMoneyModule mm = m_scene.RequestModuleInterface<IMoneyModule>();
+
+            if (mm != null)
+            {
+                if (m_scene.TryGetClient(agentID, out client))
                 {
-                    if (m_scene.TryGetClient(agentID, out client))
+                    if (!mm.UploadCovered(client, mm.UploadCharge))
                     {
-                        if (!mm.UploadCovered(client, mm.UploadCharge))
-                        {
-                            if (client != null)
-                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
-
-                            LLSDNewFileAngentInventoryVariablePriceReplyResponse errorResponse = new LLSDNewFileAngentInventoryVariablePriceReplyResponse();
-                            errorResponse.rsvp = "";
-                            errorResponse.state = "error";
-                            return errorResponse;
-                        }
-                        else
-                            mm.ApplyUploadCharge(agentID, mm.UploadCharge, "Asset upload.");
+                        if (client != null)
+                            client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
+                        map = new OpenMetaverse.StructuredData.OSDMap();
+                        map["rsvp"] = "";
+                        map["state"] = "error";
+                        return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
                     }
+                    else
+                        mm.ApplyUploadCharge(agentID, mm.UploadCharge, "Asset upload.");
                 }
-           // }
-            
+            }
+            // }
 
 
-            string assetName = llsdRequest.name;
-            string assetDes = llsdRequest.description;
+
+            string asset_type = map["asset_type"].AsString();
+            string assetName = map["name"].AsString();
+            string assetDes = map["description"].AsString();
             string capsBase = "/CAPS/NewFileAgentInventoryVariablePrice/";
+            string inventory_type = map["inventory_type"].AsString();
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
-            UUID parentFolder = llsdRequest.folder_id;
+            UUID parentFolder = map["folder_id"].AsUUID();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000") + "/";
 
             Caps.AssetUploader uploader =
-                new Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, llsdRequest.inventory_type,
-                                  llsdRequest.asset_type, capsBase + uploaderPath, MainServer.Instance);
+                new Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
+                                  asset_type, capsBase + uploaderPath, MainServer.Instance);
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
@@ -174,28 +175,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
             string uploaderURL = protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port.ToString() + capsBase +
                                  uploaderPath;
-         
 
-            LLSDNewFileAngentInventoryVariablePriceReplyResponse uploadResponse = new LLSDNewFileAngentInventoryVariablePriceReplyResponse();
-           
-            
-            uploadResponse.rsvp = uploaderURL;
-            uploadResponse.state = "upload";
-            uploadResponse.resource_cost = 0;
-            uploadResponse.upload_price = 0;
+            map = new OpenMetaverse.StructuredData.OSDMap();
+            map["rsvp"] = uploaderURL;
+            map["state"] = "upload";
+            map["resource_cost"] = 0;
+            map["upload_price"] = 0;
 
             uploader.OnUpLoad += //UploadCompleteHandler;
-                
+
                 delegate(
                 string passetName, string passetDescription, UUID passetID,
                 UUID pinventoryItem, UUID pparentFolder, byte[] pdata, string pinventoryType,
                 string passetType)
-               {
-                   UploadCompleteHandler(passetName, passetDescription,  passetID,
-                                          pinventoryItem, pparentFolder, pdata,  pinventoryType,
-                                          passetType,agentID);
-               };
-            return uploadResponse;
+                {
+                    UploadCompleteHandler(passetName, passetDescription, passetID,
+                                           pinventoryItem, pparentFolder, pdata, pinventoryType,
+                                           passetType, agentID);
+                };
+            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
         }
 
        

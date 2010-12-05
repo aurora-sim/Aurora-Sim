@@ -33,12 +33,12 @@ using System.Threading;
 using System.Xml;
 
 using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Services.Interfaces;
+using OpenMetaverse.StructuredData;
 
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
@@ -196,55 +196,55 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         private string FailedCompileScriptCAPSUpdate(UUID assetID, UUID inv, string error)
         {
-            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
-            uploadComplete.new_asset = assetID.ToString();
-            uploadComplete.new_inventory_item = inv;
-            uploadComplete.state = "complete";
-            uploadComplete.compiled = false;
-            uploadComplete.errors.Add(error);
-            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+            OSDMap map = new OSDMap();
+            map["new_asset"] = assetID.ToString();
+            map["new_inventory_item"] = inv;
+            map["state"] = "complete";
+            map["compiled"] = false;
+            map["errors"] = new OSDArray();
+            ((OSDArray)map["errors"]).Add(error);
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         private string FailedPermissionsScriptCAPSUpdate(UUID assetID, UUID inv)
         {
-            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
-            uploadComplete.new_asset = assetID.ToString();
-            uploadComplete.new_inventory_item = inv;
-            uploadComplete.state = "complete";
-            uploadComplete.compiled = false;
-            uploadComplete.errors.Add("Insufficient permissions to edit script");
-            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+            OSDMap map = new OSDMap();
+            map["new_asset"] = assetID.ToString();
+            map["new_inventory_item"] = inv;
+            map["state"] = "complete";
+            map["compiled"] = false;
+            map["errors"] = new OSDArray();
+            ((OSDArray)map["errors"]).Add("Insufficient permissions to edit script");
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         private string SuccessScriptCAPSUpdate(UUID assetID, UUID inv)
         {
-            LLSDScriptAssetUploadComplete uploadComplete = new LLSDScriptAssetUploadComplete();
-            uploadComplete.new_asset = assetID.ToString();
-            uploadComplete.new_inventory_item = inv;
-            uploadComplete.state = "complete";
-            uploadComplete.compiled = true;
-
-            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+            OSDMap map = new OSDMap();
+            map["new_asset"] = assetID.ToString();
+            map["new_inventory_item"] = inv;
+            map["state"] = "complete";
+            map["compiled"] = true;
+            map["errors"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlString(map);
         }
 
         private string FailedPermissionsNotecardCAPSUpdate(UUID assetID, UUID inv)
         {
-            LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
-            uploadComplete.new_asset = assetID.ToString();
-            uploadComplete.new_inventory_item = inv;
-            uploadComplete.state = "complete";
-
-            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map["new_asset"] = assetID.ToString();
+            map["new_inventory_item"] = inv;
+            map["state"] = "complete";
+            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
         }
 
         private string SuccessNotecardCAPSUpdate(UUID assetID, UUID inv)
         {
-            LLSDAssetUploadComplete uploadComplete = new LLSDAssetUploadComplete();
-            uploadComplete.new_asset = assetID.ToString();
-            uploadComplete.new_inventory_item = inv;
-            uploadComplete.state = "complete";
-
-            return LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map["new_asset"] = assetID.ToString();
+            map["new_inventory_item"] = inv;
+            map["state"] = "complete";
+            return OpenMetaverse.StructuredData.OSDParser.SerializeLLSDXmlString(map);
         }
 
         #endregion

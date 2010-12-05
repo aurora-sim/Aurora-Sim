@@ -316,6 +316,7 @@ ServiceConnectors = "8003/OpenSim.Server.Handlers.dll:AssetServiceConnector,8003
     InventoryService = OpenSim.Services.InventoryService.dll:XInventoryService
     LibraryService = OpenSim.Services.InventoryService.dll:LibraryService
     GridUserService = "OpenSim.Services.UserAccountService.dll:GridUserService"
+    GridService = "OpenSim.Services.GridService.dll:GridService"
     PresenceService = "OpenSim.Services.PresenceService.dll:PresenceService"   
     ;; Subsection Security
     ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access

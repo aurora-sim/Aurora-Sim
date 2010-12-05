@@ -112,11 +112,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
             string response = base.CapsUpdateInventoryItemAsset(remoteClient, itemID, data);
 
-            System.Collections.Hashtable hash = (System.Collections.Hashtable) LLSD.LLSDDeserialize(Utils.StringToBytes(response));
-            LLSDAssetUploadComplete llsdRequest = new LLSDAssetUploadComplete();
-            LLSDHelpers.DeserialiseOSDMap(hash, llsdRequest);
-
-            UploadInventoryItem(remoteClient.AgentId, UUID.Parse(llsdRequest.new_asset), "", 0);
+            OpenMetaverse.StructuredData.OSDMap map = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.OSDParser.DeserializeLLSDXml(response);
+            UploadInventoryItem(remoteClient.AgentId, map["new_asset"].AsUUID(), "", 0);
 
             return response;
         }

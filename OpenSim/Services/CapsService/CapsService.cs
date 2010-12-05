@@ -110,9 +110,9 @@ namespace OpenSim.Services.CapsService
             get { return m_AgentID; }
         }
         //X cap name to path
-        public Hashtable registeredCAPS = new Hashtable();
+        public OSDMap registeredCAPS = new OSDMap();
         //Paths to X cap
-        public Hashtable registeredCAPSPath = new Hashtable();
+        public OSDMap registeredCAPSPath = new OSDMap();
         private CAPSEQMHandler EQMHandler = new CAPSEQMHandler();
         private string m_HostName;
         public string HostName
@@ -209,21 +209,21 @@ namespace OpenSim.Services.CapsService
                 m_log.Warn("[CAPS]: SEED Request for " + SimToInform + " at " + CapsURL);
                 if (reply != "")
                 {
-                    Hashtable hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(reply));
+                    OSDMap hash = (OSDMap)OSDParser.SerializeLLSDXmlString(OpenMetaverse.Utils.StringToBytes(reply));
                     foreach (string key in hash.Keys)
                     {
                         if (!registeredCAPS.ContainsKey(key))
-                            registeredCAPS[key] = hash[key];
+                            registeredCAPS[key] = hash[key].AsString();
                         //else
                         //    m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
                     }
                 }
-                m_log.Warn("[CAPS]: EQM Request for " + registeredCAPS["EventQueueGet"].ToString());
+                m_log.Warn("[CAPS]: EQM Request for " + registeredCAPS["EventQueueGet"].AsString());
             }
             catch
             {
             }
-            return LLSDHelpers.SerialiseLLSDReply(registeredCAPS);
+            return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
 
         public string CreateCAPS(string method)

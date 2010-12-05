@@ -1455,7 +1455,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IClientAPI client;
             if (! m_scene.TryGetClient(agentID, out client)) {
                 m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
-                return OpenSim.Framework.Capabilities.LLSDHelpers.SerialiseLLSDReply(new OpenSim.Framework.Capabilities.LLSDEmpty());
+                return OSDParser.SerializeLLSDXmlString(new OSDMap());
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
@@ -1501,7 +1501,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.WarnFormat("[LAND] unable to find parcelID {0}", parcelID);
             }
-            return OpenSim.Framework.Capabilities.LLSDHelpers.SerialiseLLSDReply(new OpenSim.Framework.Capabilities.LLSDEmpty());
+            return OSDParser.SerializeLLSDXmlString(new OSDMap());
         }
         // we cheat here: As we don't have (and want) a grid-global parcel-store, we can't return the
         // "real" parcelID, because we wouldn't be able to map that to the region the parcel belongs to.
@@ -1526,19 +1526,18 @@ namespace OpenSim.Region.CoreModules.World.Land
             UUID parcelID = UUID.Zero;
             try
             {
-                Hashtable hash = new Hashtable();
-                hash = (Hashtable)OpenSim.Framework.Capabilities.LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
-                if (hash.ContainsKey("region_id") && hash.ContainsKey("location"))
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                if (map.ContainsKey("region_id") && map.ContainsKey("location"))
                 {
-                    UUID regionID = (UUID)hash["region_id"];
-                    ArrayList list = (ArrayList)hash["location"];
-                    uint x = (uint)(double)list[0];
-                    uint y = (uint)(double)list[1];
-                    if (hash.ContainsKey("region_handle"))
+                    UUID regionID = map["region_id"].AsUUID();
+                    OSDArray list = (OSDArray)map["location"];
+                    uint x = list[0].AsUInteger();
+                    uint y = list[1].AsUInteger();
+                    if (map.ContainsKey("region_handle"))
                     {
                         // if you do a "About Landmark" on a landmark a second time, the viewer sends the
                         // region_handle it got earlier via RegionHandleRequest
-                        ulong regionHandle = Util.BytesToUInt64Big((byte[])hash["region_handle"]);
+                        ulong regionHandle = map["region_handle"].AsULong();
                         parcelID = Util.BuildFakeParcelID(regionHandle, x, y);
                     }
                     else if (regionID == m_scene.RegionInfo.RegionID)
@@ -1555,21 +1554,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                 }
             }
-            catch (OpenSim.Framework.Capabilities.LLSD.LLSDParseException e)
+            catch (Exception e)
             {
                 m_log.ErrorFormat("[LAND] Fetch error: {0}", e.Message);
                 m_log.ErrorFormat("[LAND] ... in request {0}", request);
             }
-            catch(InvalidCastException)
-            {
-                m_log.ErrorFormat("[LAND] Wrong type in request {0}", request);
-            }
 
-            OpenSim.Framework.Capabilities.LLSDRemoteParcelResponse response = new OpenSim.Framework.Capabilities.LLSDRemoteParcelResponse();
-            response.parcel_id = parcelID;
+            OSDMap res = new OSDMap();
+            res["parcel_id"] = parcelID;
             m_log.DebugFormat("[LAND] got parcelID {0}", parcelID);
 
-            return OpenSim.Framework.Capabilities.LLSDHelpers.SerialiseLLSDReply(response);
+            return OSDParser.SerializeLLSDXmlString(res);
         }
 
         #endregion

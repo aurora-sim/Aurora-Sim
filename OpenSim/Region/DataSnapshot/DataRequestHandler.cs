@@ -31,8 +31,8 @@ using System.Reflection;
 using System.Xml;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Scenes;
@@ -77,16 +77,16 @@ namespace OpenSim.Region.DataSnapshot
                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             //Very static for now, flexible enough to add new formats
-            LLSDDiscoveryResponse llsd_response = new LLSDDiscoveryResponse();
-            llsd_response.snapshot_resources = new OSDArray();
+            OSDMap resp = new OSDMap();
+            resp["snapshot_resources"] = new OSDArray();
 
-            LLSDDiscoveryDataURL llsd_dataurl = new LLSDDiscoveryDataURL();
-            llsd_dataurl.snapshot_format = "os-datasnapshot-v1";
-            llsd_dataurl.snapshot_url = "http://" + m_externalData.m_hostname + ":" + m_externalData.m_listener_port + "/?method=collector";
+            OSDMap dataurl = new OSDMap();
+            dataurl["snapshot_format"] = "os-datasnapshot-v1";
+            dataurl["snapshot_url"] = "http://" + m_externalData.m_hostname + ":" + m_externalData.m_listener_port + "/?method=collector";
 
-            llsd_response.snapshot_resources.Array.Add(llsd_dataurl);
+            ((OSDArray)resp["snapshot_resources"]).Add(dataurl);
 
-            string response = LLSDHelpers.SerialiseLLSDReply(llsd_response);
+            string response = OSDParser.SerializeLLSDXmlString(resp);
 
             return response;
         }

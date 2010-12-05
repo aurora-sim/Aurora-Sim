@@ -34,83 +34,6 @@ namespace OpenSim.Services.CapsService
         
         #region Inventory
 
-        /// <summary>
-        /// Processes a fetch inventory request and sends the reply
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        // Request is like:
-        //<llsd>
-        //   <map><key>folders</key>
-        //       <array>
-        //            <map>
-        //                <key>fetch-folders</key><boolean>1</boolean><key>fetch-items</key><boolean>1</boolean><key>folder-id</key><uuid>8e1e3a30-b9bf-11dc-95ff-0800200c9a66</uuid><key>owner-id</key><uuid>11111111-1111-0000-0000-000100bba000</uuid><key>sort-order</key><integer>1</integer>
-        //            </map>
-        //       </array>
-        //   </map>
-        //</llsd>
-        //
-        // multiple fetch-folder maps are allowed within the larger folders map.
-        public Hashtable FetchInventoryRequest(Hashtable mDhttpMethod, UUID agentID)
-        {
-            m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS fetch inventory request for {0}", agentID);
-
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes((string)mDhttpMethod["requestbody"]));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                //m_log.Error("Request: " + request.ToString());
-            }
-
-            ArrayList foldersrequested = (ArrayList)hash["folders"];
-
-            string response = "";
-
-            for (int i = 0; i < foldersrequested.Count; i++)
-            {
-                string inventoryitemstr = "";
-                Hashtable inventoryhash = (Hashtable)foldersrequested[i];
-
-                LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
-                LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, agentID, false);
-
-                inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
-                inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
-                inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
-
-                response += inventoryitemstr;
-            }
-
-            if (response.Length == 0)
-            {
-                // Ter-guess: If requests fail a lot, the client seems to stop requesting descendants.
-                // Therefore, I'm concluding that the client only has so many threads available to do requests
-                // and when a thread stalls..   is stays stalled.
-                // Therefore we need to return something valid
-                response = "<llsd><map><key>folders</key><array /></map></llsd>";
-            }
-            else
-            {
-                response = "<llsd><map><key>folders</key><array>" + response + "</array></map></llsd>";
-            }
-
-            //m_log.DebugFormat("[AGENT INVENTORY]: Replying to CAPS fetch inventory request with following xml");
-            //m_log.Debug(Util.GetFormattedXml(response));
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = response;
-            return cancelresponsedata;
-        }
-
         public Hashtable FetchInventoryDescendentsRequest(Hashtable mDhttpMethod, UUID AgentID)
         {
             m_log.DebugFormat("[AGENT INVENTORY]: Received CAPS web fetch inventory request for {0}", AgentID);
@@ -130,19 +53,9 @@ namespace OpenSim.Services.CapsService
             //
             request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
             request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
-
-            ArrayList foldersrequested = (ArrayList)hash["folders"];
+            OSDArray foldersrequested = (OSDArray)map["folders"];
 
             string response = "";
             lock (m_fetchLock)
@@ -150,21 +63,10 @@ namespace OpenSim.Services.CapsService
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     string inventoryitemstr = "";
-                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
 
-                    LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
+                    inventoryitemstr = FetchInventoryReply(requestedFolders, AgentID, false);
 
-                    try
-                    {
-                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
-                    }
-                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID, false);
-
-                    inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
                     inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
                     inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
 
@@ -217,18 +119,9 @@ namespace OpenSim.Services.CapsService
             request = request.Replace("<key>fetch_folders</key><integer>0</integer>", "<key>fetch_folders</key><boolean>0</boolean>");
             request = request.Replace("<key>fetch_folders</key><integer>1</integer>", "<key>fetch_folders</key><boolean>1</boolean>");
 
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            ArrayList foldersrequested = (ArrayList)hash["folders"];
+            OSDArray foldersrequested = (OSDArray)map["folders"];
 
             string response = "";
             lock (m_fetchLock)
@@ -236,21 +129,10 @@ namespace OpenSim.Services.CapsService
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
                     string inventoryitemstr = "";
-                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
 
-                    LLSDFetchInventoryDescendents llsdRequest = new LLSDFetchInventoryDescendents();
+                    inventoryitemstr = FetchInventoryReply(requestedFolders, AgentID, true);
 
-                    try
-                    {
-                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
-                    }
-                    LLSDInventoryDescendents reply = FetchInventoryReply(llsdRequest, AgentID, true);
-
-                    inventoryitemstr = LLSDHelpers.SerialiseLLSDReply(reply);
                     inventoryitemstr = inventoryitemstr.Replace("<llsd><map><key>folders</key><array>", "");
                     inventoryitemstr = inventoryitemstr.Replace("</array></map></llsd>", "");
 
@@ -296,18 +178,9 @@ namespace OpenSim.Services.CapsService
             string request = (string)mDhttpMethod["requestbody"];
             request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
 
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
+            OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            ArrayList foldersrequested = (ArrayList)hash["items"];
+            OSDArray foldersrequested = (OSDArray)requestmap["folders"];
 
             string response = "";
             lock (m_fetchLock)
@@ -317,50 +190,13 @@ namespace OpenSim.Services.CapsService
                 OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
-                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
-
-                    LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
-
-                    try
-                    {
-                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
-                    }
-                    InventoryItemBase item = m_handler.InventoryService.GetItem(new InventoryItemBase(llsdRequest.item_id, llsdRequest.owner_id));
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    UUID item_id = requestedFolders["item_id"].AsUUID();
+                    InventoryItemBase item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
                     if (item != null)
                     {
-                        LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
-                        OpenMetaverse.StructuredData.OSDMap itemMap = new OpenMetaverse.StructuredData.OSDMap();
-                        itemMap.Add("agent_id", reply.agent_id);
-                        itemMap.Add("asset_id", reply.asset_id);
-                        itemMap.Add("created_at", reply.created_at);
-                        itemMap.Add("desc", reply.desc);
-                        itemMap.Add("flags", reply.flags);
-                        itemMap.Add("inv_type", reply.inv_type);
-                        itemMap.Add("item_id", reply.item_id);
-                        itemMap.Add("name", reply.name);
-                        itemMap.Add("parent_id", reply.parent_id);
-                        OpenMetaverse.StructuredData.OSDMap permissions = new OpenMetaverse.StructuredData.OSDMap();
-                        permissions.Add("base_mask", reply.permissions.base_mask);
-                        permissions.Add("creator_id", reply.permissions.creator_id);
-                        permissions.Add("everyone_mask", reply.permissions.everyone_mask);
-                        permissions.Add("group_id", reply.permissions.group_id);
-                        permissions.Add("group_mask", reply.permissions.group_mask);
-                        permissions.Add("is_owner_group", reply.permissions.is_owner_group);
-                        permissions.Add("last_owner_id", reply.permissions.last_owner_id);
-                        permissions.Add("next_owner_mask", reply.permissions.next_owner_mask);
-                        permissions.Add("owner_id", reply.permissions.owner_id);
-                        permissions.Add("owner_mask", reply.permissions.owner_mask);
-                        itemMap.Add("permissions", permissions);
-                        OpenMetaverse.StructuredData.OSDMap sales = new OpenMetaverse.StructuredData.OSDMap();
-                        itemMap.Add("sale_price", reply.sale_info.sale_price);
-                        itemMap.Add("sale_type", reply.sale_info.sale_type);
-                        itemMap.Add("sale_info", sales);
-                        itemMap.Add("type", reply.type);
-                        items.Add(itemMap);
+                        items.Add(ConvertInventoryItem(item, owner_id));
                     }
                 }
                 map.Add("items", items);
@@ -392,18 +228,9 @@ namespace OpenSim.Services.CapsService
             string request = (string)mDhttpMethod["requestbody"];
             request = request.Replace("<string>00000000-0000-0000-0000-000000000000</string>", "<uuid>00000000-0000-0000-0000-000000000000</uuid>");
 
-            Hashtable hash = new Hashtable();
-            try
-            {
-                hash = (Hashtable)LLSD.LLSDDeserialize(OpenMetaverse.Utils.StringToBytes(request));
-            }
-            catch (LLSD.LLSDParseException pe)
-            {
-                m_log.Error("[AGENT INVENTORY]: Fetch error: " + pe.Message);
-                m_log.Error("Request: " + request.ToString());
-            }
+            OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            ArrayList foldersrequested = (ArrayList)hash["items"];
+            OSDArray foldersrequested = (OSDArray)requestmap["folders"];
 
             string response = "";
             lock (m_fetchLock)
@@ -413,56 +240,19 @@ namespace OpenSim.Services.CapsService
                 OpenMetaverse.StructuredData.OSDArray items = new OpenMetaverse.StructuredData.OSDArray();
                 for (int i = 0; i < foldersrequested.Count; i++)
                 {
-                    Hashtable inventoryhash = (Hashtable)foldersrequested[i];
-
-                    LLSDFetchInventory llsdRequest = new LLSDFetchInventory();
-
-                    try
-                    {
-                        LLSDHelpers.DeserialiseOSDMap(inventoryhash, llsdRequest);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Debug("[CAPS]: caught exception doing OSD deserialize" + e);
-                    }
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    UUID item_id = requestedFolders["item_id"].AsUUID();
                     InventoryItemBase item = null;
                     if (m_handler.LibraryService != null && m_handler.LibraryService.LibraryRootFolder != null)
                     {
-                        item = m_handler.LibraryService.LibraryRootFolder.FindItem(llsdRequest.item_id);
+                        item = m_handler.LibraryService.LibraryRootFolder.FindItem(item_id);
                     }
                     if (item == null) //Try normal inventory them
-                        item = m_handler.InventoryService.GetItem(new InventoryItemBase(llsdRequest.item_id, llsdRequest.owner_id));
+                        item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
                     if (item != null)
                     {
-                        LLSDInventoryItem reply = ConvertInventoryItem(item, llsdRequest.owner_id);
-                        OpenMetaverse.StructuredData.OSDMap itemMap = new OpenMetaverse.StructuredData.OSDMap();
-                        itemMap.Add("agent_id", reply.agent_id);
-                        itemMap.Add("asset_id", reply.asset_id);
-                        itemMap.Add("created_at", reply.created_at);
-                        itemMap.Add("desc", reply.desc);
-                        itemMap.Add("flags", reply.flags);
-                        itemMap.Add("inv_type", reply.inv_type);
-                        itemMap.Add("item_id", reply.item_id);
-                        itemMap.Add("name", reply.name);
-                        itemMap.Add("parent_id", reply.parent_id);
-                        OpenMetaverse.StructuredData.OSDMap permissions = new OpenMetaverse.StructuredData.OSDMap();
-                        permissions.Add("base_mask", reply.permissions.base_mask);
-                        permissions.Add("creator_id", reply.permissions.creator_id);
-                        permissions.Add("everyone_mask", reply.permissions.everyone_mask);
-                        permissions.Add("group_id", reply.permissions.group_id);
-                        permissions.Add("group_mask", reply.permissions.group_mask);
-                        permissions.Add("is_owner_group", reply.permissions.is_owner_group);
-                        permissions.Add("last_owner_id", reply.permissions.last_owner_id);
-                        permissions.Add("next_owner_mask", reply.permissions.next_owner_mask);
-                        permissions.Add("owner_id", reply.permissions.owner_id);
-                        permissions.Add("owner_mask", reply.permissions.owner_mask);
-                        itemMap.Add("permissions", permissions);
-                        OpenMetaverse.StructuredData.OSDMap sales = new OpenMetaverse.StructuredData.OSDMap();
-                        itemMap.Add("sale_price", reply.sale_info.sale_price);
-                        itemMap.Add("sale_type", reply.sale_info.sale_type);
-                        itemMap.Add("sale_info", sales);
-                        itemMap.Add("type", reply.type);
-                        items.Add(itemMap);
+                        items.Add(ConvertInventoryItem(item, owner_id));
                     }
                 }
                 map.Add("items", items);
@@ -486,41 +276,52 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="invFetch"></param>
         /// <returns></returns>
-        private LLSDInventoryDescendents FetchInventoryReply(LLSDFetchInventoryDescendents invFetch, UUID AgentID, bool Library)
+        private string FetchInventoryReply(OSDMap invFetch, UUID AgentID, bool Library)
         {
-            LLSDInventoryDescendents reply = new LLSDInventoryDescendents();
-            LLSDInventoryFolderContents contents = new LLSDInventoryFolderContents();
-            contents.agent_id = AgentID;
-            contents.owner_id = invFetch.owner_id;
-            contents.folder_id = invFetch.folder_id;
+            OSDMap contents = new OSDMap();
 
-            reply.folders.Array.Add(contents);
+            UUID agent_id = invFetch["agent_id"].AsUUID();
+            UUID owner_id = invFetch["owner_id"].AsUUID();
+            UUID folder_id = invFetch["folder_id"].AsUUID();
+            bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
+            bool fetch_items = invFetch["fetch_items"].AsBoolean();
+            int sort_order = invFetch["sort_order"].AsInteger();
+            OSDMap array = new OSDMap();
+            array["agent_id"] = AgentID;
+            array["owner_id"] = owner_id;
+            array["folder_id"] = folder_id;
+            contents["folders"] = new OSDArray();
+            ((OSDArray)contents["folders"]).Add(array);
             InventoryCollection inv = new InventoryCollection();
             inv.Folders = new List<InventoryFolderBase>();
             inv.Items = new List<InventoryItemBase>();
             int version = 0;
-            inv = HandleFetchInventoryDescendentsCAPS(AgentID, invFetch.folder_id, invFetch.owner_id, invFetch.fetch_folders, invFetch.fetch_items, invFetch.sort_order, Library, out version);
+            inv = HandleFetchInventoryDescendentsCAPS(AgentID, folder_id, owner_id, fetch_folders, fetch_items, sort_order, Library, out version);
 
+            OSDArray categories = new OSDArray();
             if (inv.Folders != null)
             {
                 foreach (InventoryFolderBase invFolder in inv.Folders)
                 {
-                    contents.categories.Array.Add(ConvertInventoryFolder(invFolder));
+                    categories.Add(ConvertInventoryFolder(invFolder));
                 }
             }
+            contents["categories"] = categories;
 
+            OSDArray items = new OSDArray();
             if (inv.Items != null)
             {
                 foreach (InventoryItemBase invItem in inv.Items)
                 {
-                    contents.items.Array.Add(ConvertInventoryItem(invItem, AgentID));
+                    items.Add(ConvertInventoryItem(invItem, AgentID));
                 }
             }
+            contents["items"] = items;
 
-            contents.descendents = contents.items.Array.Count + contents.categories.Array.Count;
-            contents.version = version;
+            contents["descendents"] = items.Count + categories.Count;
+            contents["version"] = version;
 
-            return reply;
+            return OSDParser.SerializeLLSDXmlString(contents);
         }
 
         /// <summary>
@@ -528,19 +329,19 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="invFolder"></param>
         /// <returns></returns>
-        private LLSDInventoryFolder ConvertInventoryFolder(InventoryFolderBase invFolder)
+        private OSDMap ConvertInventoryFolder(InventoryFolderBase invFolder)
         {
-            LLSDInventoryFolder llsdFolder = new LLSDInventoryFolder();
-            llsdFolder.folder_id = invFolder.ID;
-            llsdFolder.parent_id = invFolder.ParentID;
-            llsdFolder.name = invFolder.Name;
+            OSDMap folder = new OSDMap();
+            folder["folder_id"] = invFolder.ID;
+            folder["parent_id"] = invFolder.ParentID;
+            folder["name"] = invFolder.Name;
             if (invFolder.Type < 0 || invFolder.Type >= TaskInventoryItem.Types.Length)
-                llsdFolder.type = "0";
+                folder["type"] = "0";
             else
-                llsdFolder.type = TaskInventoryItem.Types[invFolder.Type];
-            llsdFolder.preferred_type = "0";
+                folder["type"] = TaskInventoryItem.Types[invFolder.Type];
+            folder["preferred_type"] = "0";
 
-            return llsdFolder;
+            return folder;
         }
 
         /// <summary>
@@ -548,23 +349,23 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="invItem"></param>
         /// <returns></returns>
-        private LLSDInventoryItem ConvertInventoryItem(InventoryItemBase invItem, UUID AgentID)
+        private OSDMap ConvertInventoryItem(InventoryItemBase invItem, UUID AgentID)
         {
-            LLSDInventoryItem llsdItem = new LLSDInventoryItem();
-            llsdItem.agent_id = AgentID;
-            llsdItem.asset_id = invItem.AssetID;
-            llsdItem.created_at = invItem.CreationDate;
-            llsdItem.desc = invItem.Description;
-            llsdItem.flags = (int)invItem.Flags;
-            llsdItem.item_id = invItem.ID;
-            llsdItem.name = invItem.Name;
-            llsdItem.parent_id = invItem.Folder;
+            OSDMap item = new OSDMap();
+            item["agent_id"] = AgentID;
+            item["asset_id"] = invItem.AssetID;
+            item["created_at"] = invItem.CreationDate;
+            item["desc"] = invItem.Description;
+            item["flags"] = (int)invItem.Flags;
+            item["item_id"] = invItem.ID;
+            item["name"] = invItem.Name;
+            item["parent_id"] = invItem.Folder;
             try
             {
 
                 // TODO reevaluate after upgrade to libomv >= r2566. Probably should use UtilsConversions.
-                llsdItem.type = TaskInventoryItem.Types[invItem.AssetType];
-                llsdItem.inv_type = TaskInventoryItem.InvTypes[invItem.InvType];
+                item["type"] = TaskInventoryItem.Types[invItem.AssetType];
+                item["inv_type"] = TaskInventoryItem.InvTypes[invItem.InvType];
                 //llsdItem.type = Utils.InventoryTypeToString((InventoryType)invItem.AssetType);
                 //llsdItem.inv_type = Utils.InventoryTypeToString((InventoryType)invItem.InvType);
             }
@@ -572,37 +373,39 @@ namespace OpenSim.Services.CapsService
             {
                 m_log.Error("[CAPS]: Problem setting asset/inventory type while converting inventory item " + invItem.Name + " to LLSD:", e);
             }
-            llsdItem.permissions = new LLSDPermissions();
-            llsdItem.permissions.creator_id = invItem.CreatorIdAsUuid;
-            llsdItem.permissions.base_mask = (int)invItem.CurrentPermissions;
-            llsdItem.permissions.everyone_mask = (int)invItem.EveryOnePermissions;
-            llsdItem.permissions.group_id = invItem.GroupID;
-            llsdItem.permissions.group_mask = (int)invItem.GroupPermissions;
-            llsdItem.permissions.is_owner_group = invItem.GroupOwned;
-            llsdItem.permissions.next_owner_mask = (int)invItem.NextPermissions;
-            llsdItem.permissions.last_owner_id = invItem.Owner; //Err... can't set this?
-            llsdItem.permissions.owner_id = AgentID;
-            llsdItem.permissions.owner_mask = (int)invItem.CurrentPermissions;
+            OSDMap permissions = new OSDMap();
+            permissions["creator_id"] = invItem.CreatorIdAsUuid;
+            permissions["base_mask"] = (int)invItem.CurrentPermissions;
+            permissions["everyone_mask"] = (int)invItem.EveryOnePermissions;
+            permissions["group_id"] = invItem.GroupID;
+            permissions["group_mask"] = (int)invItem.GroupPermissions;
+            permissions["is_owner_group"] = invItem.GroupOwned;
+            permissions["next_owner_mask"] = (int)invItem.NextPermissions;
+            permissions["last_owner_id"] = invItem.Owner; //Err... can't set this?
+            permissions["owner_id"] = AgentID;
+            permissions["owner_mask"] = (int)invItem.CurrentPermissions;
+            item["permissions"] = permissions;
 
-            llsdItem.sale_info = new LLSDSaleInfo();
-            llsdItem.sale_info.sale_price = invItem.SalePrice;
+            OSDMap sale_info = new OSDMap();
+            sale_info["sale_price"] = invItem.SalePrice;
             switch (invItem.SaleType)
             {
                 default:
-                    llsdItem.sale_info.sale_type = "not";
+                    sale_info["sale_type"] = "not";
                     break;
                 case 1:
-                    llsdItem.sale_info.sale_type = "original";
+                    sale_info["sale_type"] = "original";
                     break;
                 case 2:
-                    llsdItem.sale_info.sale_type = "copy";
+                    sale_info["sale_type"] = "copy";
                     break;
                 case 3:
-                    llsdItem.sale_info.sale_type = "contents";
+                    sale_info["sale_type"] = "contents";
                     break;
             }
+            item["sale_info"] = sale_info;
 
-            return llsdItem;
+            return item;
         }
 
         public InventoryCollection HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
@@ -673,13 +476,6 @@ namespace OpenSim.Services.CapsService
             List<IRequestHandler> handlers = new List<IRequestHandler>();
 
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
-            {
-                return FetchInventoryRequest(httpMethod, agentID);
-            };
-            handlers.Add(new RestHTTPHandler("POST", m_handler.CreateCAPS("FetchInventoryDescendents"),
-                                                      method));
-
-            method = delegate(Hashtable httpMethod)
             {
                 return FetchInventoryDescendentsRequest(httpMethod, agentID);
             };

@@ -28,6 +28,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using OpenSim.Framework.Servers;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Framework.Capabilities
@@ -147,11 +148,11 @@ namespace OpenSim.Framework.Capabilities
         /// Return an LLSD-serializable Hashtable describing the
         /// capabilities and their handler details.
         /// </summary>
-        public Hashtable CapsDetails
+        public OSDMap CapsDetails
         {
             get
             {
-                Hashtable caps = new Hashtable();
+                OSDMap caps = new OSDMap();
                 string protocol = "http://";
                 
                 if (m_useSSL)
