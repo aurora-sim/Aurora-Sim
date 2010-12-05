@@ -286,6 +286,7 @@ namespace Aurora.Server
             try
             {
                 m_base.Startup();
+                m_base.Run();
             }
             catch (Exception ex)
             {

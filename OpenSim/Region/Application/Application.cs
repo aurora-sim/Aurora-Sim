@@ -286,6 +286,7 @@ namespace OpenSim
             try
             {
                 m_sim.Startup();
+                m_sim.Run();
             }
             catch (Exception ex)
             {

@@ -138,7 +138,10 @@ namespace Aurora.Simulation.Base
 
             //Has to be after Scene Manager startup
             AddPluginCommands();
+        }
 
+        public virtual void Run()
+        {
             try
             {
                 //Start the prompt
