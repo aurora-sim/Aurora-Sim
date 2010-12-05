@@ -46,7 +46,6 @@ using Aurora.DataManager;
 using OpenSim.Services.Interfaces;
 using OpenSim.Server.Base;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using OpenSim.Region.DataSnapshot.Interfaces;
 using OpenMetaverse.StructuredData;
 
 namespace Aurora.Modules

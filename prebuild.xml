@@ -267,30 +267,6 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.Framework.AssetLoader.Filesystem" path="OpenSim/Framework/AssetLoader/Filesystem" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
-      <Reference name="Nini" path="../../../../bin/"/>
-      <Reference name="log4net" path="../../../../bin/"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.Manager" path="OpenSim/Region/Physics/Manager" type="Library">
       <Configuration name="Debug">
         <Options>
@@ -426,6 +402,7 @@
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Services.Interfaces"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <!-- FIXME: The OpenMetaverse reference can be dropped when the TransferRequestPacket reference is removed from the code -->
@@ -653,6 +630,7 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
@@ -1449,96 +1427,38 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v3_5" name="OpenSim.ApplicationPlugins.RegionLoaderPlugins" path="OpenSim/ApplicationPlugins/RegionLoaderPlugins" type="Library">
+    <Project frameworkVersion="v3_5" name="OpenSim.CoreApplicationPlugins" path="OpenSim/CoreApplicationPlugins" type="Library">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="Aurora.Framework"/>
-      <Reference name="Aurora.Services.DataService"/>
+      <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
+      <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Windows.Forms"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <Reference name="Nini" path="../../../bin/"/>
-      <Reference name="OpenSim.Region.CoreModules"/>
-      <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="OpenSim"/>
-      <Reference name="System.Drawing"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-       <!-- <Match pattern="*.resx" recurse="true"/>-->
-      </Files>
-    </Project>
-
-    <Project frameworkVersion="v3_5" name="OpenSim.ApplicationPlugins.RegionModulesController" path="OpenSim/ApplicationPlugins/RegionModulesController" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="Nini" path="../../../bin/"/>
-      <Reference name="OpenSim"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="Aurora.Framework"/>
-<!--      <Reference name="OpenSim.Framework.Servers"/> -->
-      <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="log4net" path="../../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
-    <Project frameworkVersion="v3_5" name="OpenSim.ApplicationPlugins.RemoteController" path="OpenSim/ApplicationPlugins/RemoteController" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="OpenMetaverse" path="../../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
-      <Reference name="Nini" path="../../../bin/"/>
-      <Reference name="XMLRPC" path="../../../bin/"/>
       <Reference name="OpenSim"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Framework"/>
-<!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
-      <Reference name="log4net" path="../../../bin/"/>
+      <Reference name="Aurora.Services.DataService"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="XMLRPC" path="../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>

@@ -33,11 +33,14 @@ using System.Xml;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Services.Interfaces;
+using OpenSim.Services.AssetService;
+using OpenSim.Framework;
 
 /// <summary>
 /// Loads assets from the filesystem location.  Not yet a plugin, though it should be.
 /// </summary>
-namespace OpenSim.Framework.AssetLoader.Filesystem
+namespace OpenSim.Services.AssetService
 {
     public class AssetLoaderFileSystem : IAssetLoader
     {
