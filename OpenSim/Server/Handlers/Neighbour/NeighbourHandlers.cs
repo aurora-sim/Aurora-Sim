@@ -49,11 +49,24 @@ namespace OpenSim.Server.Handlers.Neighbour
 {
     public class NeighbourHandler : BaseStreamHandler
     {
+        #region Enums
+
+        private enum NeighborThreatLevel
+        {
+            None = 0,
+            Low = 1,
+            Medium = 2,
+            High = 3,
+            Full = 4
+        }
+
+        #endregion
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private INeighbourService m_NeighbourService;
         private IAuthenticationService m_AuthenticationService;
         private IConfigSource m_source;
-        //private bool m_AllowForeignGuests;
+        private NeighborThreatLevel m_threatLevel = NeighborThreatLevel.Low;
 
         public NeighbourHandler(INeighbourService service, IAuthenticationService authentication, IConfigSource config) :
             base("POST", "/region")
@@ -61,7 +74,11 @@ namespace OpenSim.Server.Handlers.Neighbour
             m_source = config;
             m_NeighbourService = service;
             m_AuthenticationService = authentication;
-            // unused: m_AllowForeignGuests = foreignGuests;
+            IConfig neighborsConfig = config.Configs["NeighborService"];
+            if (neighborsConfig != null)
+            {
+                m_threatLevel = (NeighborThreatLevel)Enum.Parse(typeof(NeighborThreatLevel), neighborsConfig.GetString("ThreatLevel", "Low"));
+            }
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -98,9 +115,16 @@ namespace OpenSim.Server.Handlers.Neighbour
             return result;
         }
 
+        #region Handlers
+
         private byte[] GetNeighbors(Dictionary<string, object> request)
         {
             byte[] result = new byte[0];
+
+            if (!CheckThreatLevel(NeighborThreatLevel.None))
+            {
+                return result;
+            }
 
             // retrieve the region
             RegionInfo aRegion = new RegionInfo();
@@ -140,6 +164,11 @@ namespace OpenSim.Server.Handlers.Neighbour
         private byte[] InformNeighborsOfChatMessage(Dictionary<string, object> request)
         {
             byte[] result = new byte[0];
+
+            if (!CheckThreatLevel(NeighborThreatLevel.Low))
+            {
+                return result;
+            }
 
             // retrieve the region
             RegionInfo aRegion = new RegionInfo();
@@ -297,5 +326,18 @@ namespace OpenSim.Server.Handlers.Neighbour
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
+
+        #endregion
+
+        #region Helpers
+
+        public bool CheckThreatLevel(NeighborThreatLevel thisThreat)
+        {
+            if (m_threatLevel > thisThreat)
+                return false;
+            return true;
+        }
+
+        #endregion
     }
 }
