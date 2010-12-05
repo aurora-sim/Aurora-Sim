@@ -38,10 +38,10 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 
-namespace OpenSim
+namespace Aurora.Server
 {
     /// <summary>
-    /// Starting class for the OpenSimulator Region
+    /// Starting class for the Aurora Server
     /// </summary>
     public class Application
     {
@@ -281,10 +281,10 @@ namespace OpenSim
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource)
         {
-            OpenSimBase m_sim = new OpenSimBase(originalConfigSource, configSource);
+            AuroraBase m_base = new AuroraBase(originalConfigSource, configSource);
             try
             {
-                m_sim.Startup();
+                m_base.Startup();
             }
             catch (Exception ex)
             {
@@ -296,7 +296,7 @@ namespace OpenSim
                     handleException(mes, ex);
                 }
                 //Just clean it out as good as we can
-                m_sim.Shutdown(false);
+                m_base.Shutdown(false);
                 //Then let it restart if it needs
                 return;
             }
@@ -306,6 +306,7 @@ namespace OpenSim
         private static IConfigSource Configuration(IConfigSource configSource)
         {
             ConfigurationLoader m_configLoader = new ConfigurationLoader();
+            m_configLoader.defaultIniFile = "robust.ini";
             return m_configLoader.LoadConfigSettings(configSource, out iniFilePath);
         }
 

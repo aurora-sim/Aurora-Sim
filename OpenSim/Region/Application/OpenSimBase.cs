@@ -120,6 +120,17 @@ namespace OpenSim
             get { return m_stats; }
         }
 
+        public IHttpServer HttpServer
+        {
+            get { return m_BaseHTTPServer; }
+        }
+
+        private uint m_Port;
+        public uint DefaultPort
+        {
+            get { return m_Port; }
+        }
+
         protected string m_pidFile = String.Empty;
 
 		/// <summary>
@@ -251,7 +262,7 @@ namespace OpenSim
 
             //Move out!
             m_stats = StatsManager.StartCollectingSimExtraStats();
-            m_DiagnosticsManager = new DiagnosticsManager(m_stats, this);
+            m_DiagnosticsManager = new DiagnosticsManager(null, this);
 
             List<IApplicationPlugin> plugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
             foreach (IApplicationPlugin plugin in plugins)
@@ -297,9 +308,9 @@ namespace OpenSim
             }
         }
 
-        private void SetUpHTTPServer()
+        public virtual void SetUpHTTPServer()
         {
-            uint HttpListenerPort =
+            m_Port =
                 (uint)m_config.Configs["Network"].GetInt("http_listener_port", (int)9000);
             uint httpSSLPort = 9001;
             bool HttpUsesSSL = false;
@@ -318,15 +329,15 @@ namespace OpenSim
             {
             }
             m_BaseHTTPServer = new BaseHttpServer(
-                    HttpListenerPort, HttpUsesSSL, httpSSLPort,
+                    m_Port, HttpUsesSSL, httpSSLPort,
                     HttpSSLCN);
 
-            if (HttpUsesSSL && (HttpListenerPort == httpSSLPort))
+            if (HttpUsesSSL && (m_Port == httpSSLPort))
             {
                 m_log.Error("[HTTPSERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
             }
 
-            m_log.InfoFormat("[HTTPSERVER]: Starting HTTP server on port {0}", HttpListenerPort);
+            m_log.InfoFormat("[HTTPSERVER]: Starting HTTP server on port {0}", m_Port);
             m_BaseHTTPServer.Start();
 
             MainServer.Instance = m_BaseHTTPServer;
@@ -767,7 +778,7 @@ namespace OpenSim
         {
             //Rebuild the configs
             ConfigurationLoader loader = new ConfigurationLoader();
-            m_config = loader.LoadConfigSettings(m_original_config);
+            m_config = loader.LoadConfigSettings(m_original_config, out Application.iniFilePath);
             //Update all modules
             IRegionModulesController controller = m_applicationRegistry.Get<IRegionModulesController>();
             foreach (IRegionModuleBase module in controller.AllModules)

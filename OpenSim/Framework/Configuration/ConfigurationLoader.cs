@@ -33,9 +33,8 @@ using System.Threading;
 using System.Xml;
 using log4net;
 using Nini.Config;
-using OpenSim.Framework;
 
-namespace OpenSim
+namespace OpenSim.Framework
 {
     /// <summary>
     /// Loads the Configuration files into nIni
@@ -59,13 +58,16 @@ namespace OpenSim
         /// </summary>
         protected bool showIniLoading;
 
+        public string defaultIniFile = "OpenSim.ini";
+
         /// <summary>
         /// Loads the region configuration
         /// </summary>
         /// <param name="argvSource">Parameters passed into the process when started</param>
         /// <returns>A configuration that gets passed to modules</returns>
-        public IConfigSource LoadConfigSettings(IConfigSource argvSource)
+        public IConfigSource LoadConfigSettings(IConfigSource argvSource, out string iniFilePath)
         {
+            iniFilePath = "";
             bool iniFileExists = false;
 
             IConfig startupConfig = argvSource.Configs["Startup"];
@@ -82,7 +84,7 @@ namespace OpenSim
                 startupConfig.GetString("inimaster", String.Empty);
 
             string iniFileName =
-                startupConfig.GetString("inifile", "OpenSim.ini");
+                startupConfig.GetString("inifile", defaultIniFile);
 
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
@@ -104,7 +106,7 @@ namespace OpenSim
                         (!sources.Contains(masterFilePath)))
                     sources.Add(masterFilePath);
                 if (iniFileName == "") //Then it doesn't exist and we need to set this
-                    Application.iniFilePath = masterFilePath;
+                    iniFilePath = masterFilePath;
             }
 
             if (iniFileName != "")
@@ -113,17 +115,17 @@ namespace OpenSim
                 {
                     if (!sources.Contains(iniFileName))
                         sources.Add(iniFileName);
-                    Application.iniFilePath = iniFileName;
+                    iniFilePath = iniFileName;
                 }
                 else
                 {
-                    Application.iniFilePath = Path.GetFullPath(
+                    iniFilePath = Path.GetFullPath(
                             Path.Combine(Util.configDir(), iniFileName));
 
-                    if (File.Exists(Application.iniFilePath))
+                    if (File.Exists(iniFilePath))
                     {
-                        if (!sources.Contains(Application.iniFilePath))
-                            sources.Add(Application.iniFilePath);
+                        if (!sources.Contains(iniFilePath))
+                            sources.Add(iniFilePath);
                     }
                 }
             }
