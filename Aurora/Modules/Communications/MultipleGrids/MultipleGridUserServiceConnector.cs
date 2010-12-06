@@ -53,7 +53,7 @@ namespace Aurora.Modules.Communications.MultipleGrids
                                 //Set their gridURL
                                 UAS.Set("GridUserServerURI", gridURL);
                                 //Start it up
-                                RemoteGridUserServicesConnector connector = new RemoteGridUserServicesConnector();
+                                GridUserServicesConnector connector = new RemoteGridUserServicesConnector();
                                 connector.Initialise(source);
                                 AllServices.Add(connector);
                                 m_log.Info("[GRID USER CONNECTOR]: Multiple grid user services enabled for " + gridURL);

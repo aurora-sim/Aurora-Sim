@@ -59,7 +59,7 @@ namespace OpenSim.Server.Handlers.Login
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));
             m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
-            string loginService = ReadLocalServiceFromConfig(config);
+            ReadLocalServiceFromConfig(config);
 
             ISimulationService simService = sim.Get<ISimulationService>();
             ILibraryService libService = sim.Get<ILibraryService>();
@@ -68,20 +68,14 @@ namespace OpenSim.Server.Handlers.Login
             InitializeHandlers(server);
         }
 
-        private string ReadLocalServiceFromConfig(IConfigSource config)
+        private void ReadLocalServiceFromConfig(IConfigSource config)
         {
             m_Config = config;
             IConfig serverConfig = config.Configs["LoginService"];
             if (serverConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
 
-            string loginService = serverConfig.GetString("LocalServiceModule", String.Empty);
-            if (loginService == string.Empty)
-                throw new Exception(String.Format("No LocalServiceModule for LoginService in config file"));
-
             m_Proxy = serverConfig.GetBoolean("HasProxy", false);
-
-            return loginService;
         }
 
         private void InitializeHandlers(IHttpServer server)
