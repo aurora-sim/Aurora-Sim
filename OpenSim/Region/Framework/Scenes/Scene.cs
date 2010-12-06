@@ -1187,7 +1187,10 @@ namespace OpenSim.Region.Framework.Scenes
                             m_regInfo.EstateSettings.Save();
                         }
                         else
+                        {
+                            account = null;
                             m_log.ErrorFormat("[SCENE]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
+                        }
                     }
                 }
                 else

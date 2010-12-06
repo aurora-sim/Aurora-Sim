@@ -67,17 +67,15 @@ namespace OpenSim.Services.UserAccountService
             }
 
             IConfig userConfig = config.Configs["UserAccountService"];
-            if (userConfig == null)
-                throw new Exception("No UserAccountService configuration");
-
-            dllName = userConfig.GetString("StorageProvider", dllName);
+            if (userConfig != null)
+            {
+                dllName = userConfig.GetString("StorageProvider", dllName);
+                connString = userConfig.GetString("ConnectionString", connString);
+                realm = userConfig.GetString("Realm", realm);
+            }
 
             if (dllName == String.Empty)
                 throw new Exception("No StorageProvider configured");
-
-            connString = userConfig.GetString("ConnectionString", connString);
-
-            realm = userConfig.GetString("Realm", realm);
 
             m_Database = LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
 

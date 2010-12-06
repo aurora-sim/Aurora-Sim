@@ -121,7 +121,6 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IRegistryCore registry)
         {
-            throw new NotImplementedException();
         }
 
         #endregion
