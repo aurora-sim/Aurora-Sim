@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AuthorizationServicesConnector : IService
+    public class AuthorizationServicesConnector : IService//, IAuthorizationService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -106,6 +106,7 @@ namespace OpenSim.Services.Connectors
             bool responseOnFailure = authorizationConfig.GetBoolean("ResponseOnFailure", true);
 
             m_ResponseOnFailure = responseOnFailure;
+            //registry.RegisterInterface<IAuthorizationService>(this);
             m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
         }
 

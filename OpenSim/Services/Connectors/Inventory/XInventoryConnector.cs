@@ -557,6 +557,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Inventory connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IInventoryService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

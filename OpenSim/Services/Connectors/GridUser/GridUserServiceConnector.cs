@@ -50,7 +50,6 @@ namespace OpenSim.Services.Connectors
 
         #region IGridUserService
 
-
         public GridUserInfo LoggedIn(string userID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -208,7 +207,6 @@ namespace OpenSim.Services.Connectors
 
         }
 
-
         #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -229,6 +227,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("GridUser connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IGridUserService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

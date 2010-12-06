@@ -320,11 +320,10 @@ namespace OpenSim.Services.Connectors.Inventory
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
+            IConfig moduleConfig = config.Configs["Modules"];
             if (moduleConfig != null)
             {
-
-                IConfig inventoryConfig = source.Configs["InventoryService"];
+                IConfig inventoryConfig = config.Configs["InventoryService"];
                 if (inventoryConfig == null)
                 {
                     m_log.Error("[HG INVENTORY SERVICE]: InventoryService missing from OpenSim.ini");

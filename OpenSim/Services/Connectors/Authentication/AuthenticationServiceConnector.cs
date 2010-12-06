@@ -148,6 +148,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Authentication connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IAuthenticationService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

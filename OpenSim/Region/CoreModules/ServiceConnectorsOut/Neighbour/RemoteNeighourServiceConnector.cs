@@ -39,7 +39,6 @@ using Aurora.Simulation.Base;
 using OpenSim.Server.Handlers.Base;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Region.CoreModules.ServiceConnectorsOut.Authentication;
 
 namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 {

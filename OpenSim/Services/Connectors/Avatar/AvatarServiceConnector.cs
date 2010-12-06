@@ -291,7 +291,6 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-
         #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -312,6 +311,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Avatar connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IAvatarService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

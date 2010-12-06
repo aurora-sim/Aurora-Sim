@@ -185,6 +185,7 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterInterface<IInventoryService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

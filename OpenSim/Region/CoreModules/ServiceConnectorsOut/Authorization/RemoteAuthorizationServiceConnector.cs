@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authorization
             get { return "RemoteAuthorizationServicesConnector"; }
         }
 
-        public override void Initialise(IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Authorization
 
                     m_Enabled = true;
 
-                    base.Initialise(source);
+                    base.Initialize(source, new OpenSim.Framework.RegistryCore());
 
                     m_log.Info("[REMOTE AUTHORIZATION CONNECTOR]: Remote authorization enabled");
                 }

@@ -86,6 +86,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Freeswitch connector init error");
             }
             m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
+            registry.RegisterInterface<IFreeswitchService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

@@ -259,6 +259,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("User account connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IUserAccountService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

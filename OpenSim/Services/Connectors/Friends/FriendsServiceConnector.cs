@@ -217,6 +217,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Friends connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IFriendsService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)

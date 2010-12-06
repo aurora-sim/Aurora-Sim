@@ -49,6 +49,15 @@ namespace OpenSim.Services.Connectors
         private string m_ServerURI = String.Empty;
         private IImprovedAssetCache m_Cache = null;
 
+        public AssetServicesConnector()
+        {
+        }
+
+        public AssetServicesConnector(string URL)
+        {
+            m_ServerURI = URL;
+        }
+
         protected void SetCache(IImprovedAssetCache cache)
         {
             m_Cache = cache;
@@ -288,7 +297,7 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig assetConfig = source.Configs["AssetService"];
+            IConfig assetConfig = config.Configs["AssetService"];
             if (assetConfig == null)
             {
                 m_log.Error("[ASSET CONNECTOR]: AssetService missing from OpenSim.ini");
@@ -308,10 +317,13 @@ namespace OpenSim.Services.Connectors
             MainConsole.Instance.Commands.AddCommand("asset", false, "dump asset",
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
+
+            registry.RegisterInterface<IAssetService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)
         {
+            SetCache(registry.Get<IImprovedAssetCache>());
         }
 
         #endregion

@@ -856,6 +856,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Grid connector init error");
             }
             m_ServerURI = serviceURI;
+            registry.RegisterInterface<IGridService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)
