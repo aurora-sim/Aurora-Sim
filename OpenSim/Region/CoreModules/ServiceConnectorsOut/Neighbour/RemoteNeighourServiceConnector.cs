@@ -134,7 +134,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_GridService = scene.GridService;
             //Set the grid service for the local regions
             m_LocalService.SetServices(scene.GridService, scene.SimulationService);
-            scene.RegisterModuleInterface<INeighbourService>(this);
 
             //Add the incoming remote neighbor handlers
             if (!m_Registered)
@@ -157,7 +156,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             }
 
             //m_log.InfoFormat("[NEIGHBOUR CONNECTOR]: Enabled remote neighbours for region {0}", scene.RegionInfo.RegionName);
-
+            scene.RegisterModuleInterface<INeighbourService>(this);
         }
 
         #region INeighbourService

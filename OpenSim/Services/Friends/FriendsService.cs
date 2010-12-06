@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Friends
 {
-    public class FriendsService : ServiceBase, IFriendsService
+    public class FriendsService : ServiceBase, IFriendsService, IService
     {
         protected IFriendsData m_Database = null;
 

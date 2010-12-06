@@ -146,7 +146,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 Object[] args = new Object[0];
 
                 m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(connector, args);
-                //m_FriendsService.Initialize(config, new RegistryCore());
+                ((IService)m_FriendsService).Initialize(config, new RegistryCore());
                 m_FriendsSimConnector = new FriendsSimConnector();
 
                 // Instantiate the request handler
