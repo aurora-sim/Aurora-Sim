@@ -47,7 +47,7 @@ namespace OpenSim.Server.Handlers.Simulation
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("SimulationHandler", Name) != Name)
+            if (handlerConfig.GetString("SimulationHandler", "") != Name)
                 return;
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("SimulationHandlerPort"));
 

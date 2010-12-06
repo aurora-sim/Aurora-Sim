@@ -49,13 +49,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_Registered = false;
         private bool m_Enabled = false;
         private IConfigSource m_config = null;
         private LocalNeighbourServicesConnector m_LocalService;
-        private IAuthenticationService m_LocalAuth;
-        private string neighborServiceDll = "OpenSim.Server.Handlers.dll:NeighbourServiceInConnector";
-        private string authServiceDll = "OpenSim.Services.AuthenticationService.dll:PasswordAuthenticationService";
         
         public Type ReplaceableInterface 
         {
@@ -79,24 +75,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                     m_Enabled = true;
                     m_LocalService = new LocalNeighbourServicesConnector();
                     m_LocalService.Initialise(source);
-                    //Set up the local auth
 
-                    IConfig neighbourConfig = source.Configs["NeighborService"];
-                    if (neighbourConfig == null)
-                    {
-                        m_log.Error("[NEIGHBOUR CONNECTOR]: NeighbourService missing from OpenSim.ini");
-                        return;
-                    }
-                    neighborServiceDll = neighbourConfig.GetString("RemoteNeighborServiceModule", neighborServiceDll);
-                    if (neighborServiceDll == String.Empty)
-                    {
-                        m_log.Error("[NEIGHBOUR CONNECTOR]: No LocalServiceModule named in section NeighbourService");
-                        return;
-                    }
-                    authServiceDll = neighbourConfig.GetString("AuthenticationServiceModule",
-                                                authServiceDll);
-
-                
                     //m_log.Info("[NEIGHBOUR CONNECTOR]: Remote Neighbour connector enabled");
                 }
             }
@@ -133,26 +112,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_GridService = scene.GridService;
             //Set the grid service for the local regions
             m_LocalService.SetServices(scene.GridService, scene.SimulationService);
-
-            //Add the incoming remote neighbor handlers
-            if (!m_Registered)
-            {
-                m_Registered = true;
-                Object[] args = new Object[0];
-                //m_LocalAuth =
-                //        Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authServiceDll,
-                //        args);
-                //m_LocalAuth.Initialize(m_config, new OpenSim.Framework.RegistryCore());
-
-                OpenSim.Framework.RegistryCore r = new RegistryCore();
-                r.RegisterInterface<INeighbourService>(m_LocalService);
-                r.RegisterInterface<IAuthenticationService>(m_LocalAuth);
-                ISimulationBase b = scene.RequestModuleInterface<ISimulationBase>();
-
-                args = new Object[0];
-                IServiceConnector c = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>(neighborServiceDll, args);
-                c.Initialize(m_config, b, "", r);
-            }
 
             //m_log.InfoFormat("[NEIGHBOUR CONNECTOR]: Enabled remote neighbours for region {0}", scene.RegionInfo.RegionName);
             scene.RegisterModuleInterface<INeighbourService>(this);

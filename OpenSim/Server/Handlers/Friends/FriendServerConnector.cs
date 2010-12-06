@@ -46,7 +46,7 @@ namespace OpenSim.Server.Handlers.Friends
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("FriendsInHandler", Name) != Name)
+            if (handlerConfig.GetString("FriendsInHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));

@@ -54,7 +54,7 @@ namespace OpenSim.Server.Handlers.Login
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("LLLoginHandler", Name) != Name)
+            if (handlerConfig.GetString("LLLoginHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));

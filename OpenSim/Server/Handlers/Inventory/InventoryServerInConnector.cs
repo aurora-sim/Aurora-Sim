@@ -63,7 +63,7 @@ namespace OpenSim.Server.Handlers.Inventory
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", Name) != Name)
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("InventoryHandlerPort"));

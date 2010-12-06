@@ -34,7 +34,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuroraDataHandler", Name) != Name)
+            if (handlerConfig.GetString("AuroraDataHandler", "") != Name)
                 return;
 
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();

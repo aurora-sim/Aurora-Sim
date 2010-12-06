@@ -50,7 +50,7 @@ namespace OpenSim.Server.Handlers.Hypergrid
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("HeloInHandler", Name) != Name)
+            if (handlerConfig.GetString("HeloInHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("HeloInHandlerPort"));

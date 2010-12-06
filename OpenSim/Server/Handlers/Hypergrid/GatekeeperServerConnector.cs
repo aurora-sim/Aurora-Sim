@@ -60,7 +60,7 @@ namespace OpenSim.Server.Handlers.Hypergrid
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GatekeeperInHandler", Name) != Name)
+            if (handlerConfig.GetString("GatekeeperInHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GatekeeperInHandlerPort"));

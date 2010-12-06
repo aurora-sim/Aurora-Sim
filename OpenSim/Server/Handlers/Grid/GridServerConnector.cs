@@ -49,7 +49,7 @@ namespace OpenSim.Server.Handlers.Grid
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridInHandler", Name) != Name)
+            if (handlerConfig.GetString("GridInHandler", "") != Name)
                 return;
 
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));

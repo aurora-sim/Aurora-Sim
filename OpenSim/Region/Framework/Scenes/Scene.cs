@@ -1138,6 +1138,7 @@ namespace OpenSim.Region.Framework.Scenes
                             account.ServiceURLs["InventoryServerURI"] = string.Empty;
                             account.ServiceURLs["AssetServerURI"] = string.Empty;
                         }
+                        account.UserTitle = "";
 
                         if (UserAccountService.StoreUserAccount(account))
                         {

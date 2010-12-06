@@ -55,7 +55,7 @@ namespace OpenSim.Server.Handlers.Freeswitch
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("FreeswitchInHandler", Name) != Name)
+            if (handlerConfig.GetString("FreeswitchInHandler", "") != Name)
                 return;
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
             m_FreeswitchService = sim.Get<IFreeswitchService>();

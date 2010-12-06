@@ -36,7 +36,7 @@ namespace OpenSim.Services.CapsService
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("CAPSHandler", Name) != Name)
+            if (handlerConfig.GetString("CAPSHandler", "") != Name)
                 return;
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("CAPSHandlerPort"));
 

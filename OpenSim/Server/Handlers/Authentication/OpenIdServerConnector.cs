@@ -53,7 +53,7 @@ namespace OpenSim.Server.Handlers.Authentication
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("OpenIdHandler", Name) != Name)
+            if (handlerConfig.GetString("OpenIdHandler", "") != Name)
                 return;
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
 
