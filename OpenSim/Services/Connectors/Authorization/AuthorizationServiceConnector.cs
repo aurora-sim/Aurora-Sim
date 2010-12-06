@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AuthorizationServicesConnector : IService//, IAuthorizationService
+    public class AuthorizationServicesConnector : IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -121,6 +121,7 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IRegistryCore registry)
         {
+            throw new NotImplementedException();
         }
 
         #endregion

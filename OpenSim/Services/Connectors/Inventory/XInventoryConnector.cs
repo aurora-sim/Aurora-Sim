@@ -184,7 +184,10 @@ namespace OpenSim.Services.Connectors
 
         public bool AddFolder(InventoryFolderBase folder)
         {
-            Dictionary<string,object> ret = MakeRequest("ADDFOLDER",
+            if (folder == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("ADDFOLDER",
                     new Dictionary<string,object> {
                         { "ParentID", folder.ParentID.ToString() },
                         { "Type", folder.Type.ToString() },
@@ -202,7 +205,10 @@ namespace OpenSim.Services.Connectors
 
         public bool UpdateFolder(InventoryFolderBase folder)
         {
-            Dictionary<string,object> ret = MakeRequest("UPDATEFOLDER",
+            if (folder == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("UPDATEFOLDER",
                     new Dictionary<string,object> {
                         { "ParentID", folder.ParentID.ToString() },
                         { "Type", folder.Type.ToString() },
@@ -220,7 +226,10 @@ namespace OpenSim.Services.Connectors
 
         public bool MoveFolder(InventoryFolderBase folder)
         {
-            Dictionary<string,object> ret = MakeRequest("MOVEFOLDER",
+            if (folder == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("MOVEFOLDER",
                     new Dictionary<string,object> {
                         { "ParentID", folder.ParentID.ToString() },
                         { "ID", folder.ID.ToString() },
@@ -235,6 +244,11 @@ namespace OpenSim.Services.Connectors
 
         public bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
+            if (folderIDs == null)
+                return false;
+            if (folderIDs.Count == 0)
+                return false;
+
             List<string> slist = new List<string>();
 
             foreach (UUID f in folderIDs)
@@ -254,7 +268,10 @@ namespace OpenSim.Services.Connectors
 
         public bool PurgeFolder(InventoryFolderBase folder)
         {
-            Dictionary<string,object> ret = MakeRequest("PURGEFOLDER",
+            if (folder == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("PURGEFOLDER",
                     new Dictionary<string,object> {
                         { "ID", folder.ID.ToString() }
                     });
@@ -267,7 +284,10 @@ namespace OpenSim.Services.Connectors
 
         public bool AddItem(InventoryItemBase item)
         {
-            Dictionary<string,object> ret = MakeRequest("ADDITEM",
+            if (item == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("ADDITEM",
                     new Dictionary<string,object> {
                         { "AssetID", item.AssetID.ToString() },
                         { "AssetType", item.AssetType.ToString() },
@@ -299,7 +319,10 @@ namespace OpenSim.Services.Connectors
 
         public bool UpdateItem(InventoryItemBase item)
         {
-            Dictionary<string,object> ret = MakeRequest("UPDATEITEM",
+            if (item == null)
+                return false;
+
+            Dictionary<string, object> ret = MakeRequest("UPDATEITEM",
                     new Dictionary<string,object> {
                         { "AssetID", item.AssetID.ToString() },
                         { "AssetType", item.AssetType.ToString() },
@@ -331,6 +354,9 @@ namespace OpenSim.Services.Connectors
 
         public bool MoveItems(UUID principalID, List<InventoryItemBase> items)
         {
+            if (items == null)
+                return false;
+
             List<string> idlist = new List<string>();
             List<string> destlist = new List<string>();
 
@@ -355,6 +381,11 @@ namespace OpenSim.Services.Connectors
 
         public bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
+            if (itemIDs == null)
+                return false;
+            if (itemIDs.Count == 0)
+                return true;
+
             List<string> slist = new List<string>();
 
             foreach (UUID f in itemIDs)
@@ -374,6 +405,9 @@ namespace OpenSim.Services.Connectors
 
         public InventoryItemBase GetItem(InventoryItemBase item)
         {
+            if (item == null)
+                return null;
+
             try
             {
                 Dictionary<string, object> ret = MakeRequest("GETITEM",
@@ -398,6 +432,9 @@ namespace OpenSim.Services.Connectors
 
         public InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
+            if (folder == null)
+                return null;
+
             try
             {
                 Dictionary<string, object> ret = MakeRequest("GETFOLDER",
