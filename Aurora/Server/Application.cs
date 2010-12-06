@@ -308,7 +308,7 @@ namespace Aurora.Server
         private static IConfigSource Configuration(IConfigSource configSource)
         {
             ConfigurationLoader m_configLoader = new ConfigurationLoader();
-            m_configLoader.defaultIniFile = "robust.ini";
+            m_configLoader.defaultIniFile = "AuroraServer.ini";
             return m_configLoader.LoadConfigSettings(configSource, out iniFilePath);
         }
 
