@@ -405,30 +405,6 @@ namespace OpenSim.Region.Framework.Scenes
                 scene.RegionInfo.EstateSettings = ES;
                 scene.RegionInfo.WriteNiniConfig();
             }
-            else
-            {
-                IConfig dbConfig = scene.Config.Configs["DatabaseService"];
-                IConfig esConfig = scene.Config.Configs["EstateService"];
-                if (dbConfig != null)
-                {
-                    string StorageDLL = dbConfig.GetString("StorageProvider", String.Empty);
-                    string StorageConnectionString = dbConfig.GetString("ConnectionString", String.Empty);
-                    if (esConfig != null)
-                    {
-                        StorageDLL = esConfig.GetString("StorageProvider", StorageDLL);
-                        StorageConnectionString = esConfig.GetString("ConnectionString", StorageConnectionString);
-                    }
-                    if (StorageDLL != "")
-                    {
-                        IEstateDataStore EDS = AuroraModuleLoader.LoadPlugin<IEstateDataStore>(StorageDLL);
-                        EDS.Initialise(StorageConnectionString);
-                        if (EDS != null)
-                        {
-                            scene.RegionInfo.EstateSettings = EDS.LoadEstateSettings(scene.RegionInfo.RegionID, true);
-                        }
-                    }
-                }
-            }
         }
 
         private EstateSettings CreateEstateInfo(Scene scene)

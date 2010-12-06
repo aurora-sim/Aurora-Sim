@@ -90,7 +90,6 @@ namespace OpenSim.Region.Framework.Scenes
         public bool LoginsDisabled = true;
 
         protected ISimulationDataService m_SimulationDataService;
-        protected IEstateDataService m_EstateDataService;
         protected IAssetService m_AssetService;
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;

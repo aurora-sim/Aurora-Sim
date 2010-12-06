@@ -60,9 +60,6 @@ namespace OpenSim.Region.CoreModules.Framework.Library
         public void Initialise(IConfigSource config)
         {
             m_Enabled = config.Configs["Modules"].GetBoolean("LibraryModule", m_Enabled);
-            if (m_Enabled)
-            {
-            }
         }
 
         public bool IsSharedModule

@@ -137,31 +137,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
         public void Initialise(IConfigSource config)
         {
-            IConfig friendsConfig = config.Configs["Friends"];
-            if (friendsConfig != null)
-            {
-                int mPort = friendsConfig.GetInt("Port", 0);
-
-                string connector = friendsConfig.GetString("Connector", String.Empty);
-                Object[] args = new Object[0];
-
-                m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(connector, args);
-
-                ((IService)m_FriendsService).Initialize(config, new RegistryCore());
-                m_FriendsSimConnector = new FriendsSimConnector();
-
-                // Instantiate the request handler
-                IHttpServer server = MainServer.GetHttpServer((uint)mPort);
-                server.AddStreamHandler(new FriendsRequestHandler(this));
-            }
-
-            if (m_FriendsService == null)
-            {
-                m_log.Error("[FRIENDS]: No Connector defined in section Friends, or failed to load, cannot continue");
-                m_enabled = false;
-                //throw new Exception("Connector load error");
-            }
-
         }
 
         public void PostInitialise()
@@ -176,6 +151,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
             if (!m_enabled)
                 return;
+            if(m_FriendsService == null)
+                m_FriendsService = scene.RequestModuleInterface<IFriendsService>();
 
             m_Scenes.Add(scene);
             scene.RegisterModuleInterface<IFriendsModule>(this);
