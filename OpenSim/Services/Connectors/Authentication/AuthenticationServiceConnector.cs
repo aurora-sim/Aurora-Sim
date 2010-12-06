@@ -39,47 +39,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AuthenticationServicesConnector : IAuthenticationService
+    public class AuthenticationServicesConnector : IAuthenticationService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public AuthenticationServicesConnector()
-        {
-        }
-
-        public AuthenticationServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public AuthenticationServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig assetConfig = source.Configs["AuthenticationService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[AUTH CONNECTOR]: AuthenticationService missing from OpenSim.ini");
-                throw new Exception("Authentication connector init error");
-            }
-
-            string serviceURI = assetConfig.GetString("AuthenticationServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[AUTH CONNECTOR]: No Server URI named in section AuthenticationService");
-                throw new Exception("Authentication connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
 
         public bool CheckExists(UUID principalID)
         {
@@ -161,5 +127,33 @@ namespace OpenSim.Services.Connectors
             // nope, we don't do this
             return false;
         }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig assetConfig = config.Configs["AuthenticationService"];
+            if (assetConfig == null)
+            {
+                m_log.Error("[AUTH CONNECTOR]: AuthenticationService missing from OpenSim.ini");
+                throw new Exception("Authentication connector init error");
+            }
+
+            string serviceURI = assetConfig.GetString("AuthenticationServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[AUTH CONNECTOR]: No Server URI named in section AuthenticationService");
+                throw new Exception("Authentication connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

@@ -113,7 +113,7 @@ namespace OpenSim.Region.Framework.Scenes
                 StorageDLL = simDataConfig.GetString("LocalServiceModule", String.Empty);
             }
             if (StorageDLL == String.Empty)
-                StorageDLL = "OpenSim.Data.Null.dll";
+                StorageDLL = "OpenSim.Services.Connectors.dll:SimulationDataService";
 
             m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[0]);
             m_simulationDataService.Initialize(m_config, null);

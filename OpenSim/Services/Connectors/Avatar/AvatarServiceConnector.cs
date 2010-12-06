@@ -41,48 +41,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AvatarServicesConnector : IAvatarService
+    public class AvatarServicesConnector : IAvatarService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public AvatarServicesConnector()
-        {
-        }
-
-        public AvatarServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public AvatarServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["AvatarService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[AVATAR CONNECTOR]: AvatarService missing from OpenSim.ini");
-                throw new Exception("Avatar connector init error");
-            }
-
-            string serviceURI = gridConfig.GetString("AvatarServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[AVATAR CONNECTOR]: No Server URI named in section AvatarService");
-                throw new Exception("Avatar connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
-
 
         #region IAvatarService
 
@@ -326,5 +291,33 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig gridConfig = config.Configs["AvatarService"];
+            if (gridConfig == null)
+            {
+                m_log.Error("[AVATAR CONNECTOR]: AvatarService missing from OpenSim.ini");
+                throw new Exception("Avatar connector init error");
+            }
+
+            string serviceURI = gridConfig.GetString("AvatarServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[AVATAR CONNECTOR]: No Server URI named in section AvatarService");
+                throw new Exception("Avatar connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

@@ -40,48 +40,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class GridUserServicesConnector : IGridUserService
+    public class GridUserServicesConnector : IGridUserService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public GridUserServicesConnector()
-        {
-        }
-
-        public GridUserServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public GridUserServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["GridUserService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[GRID USER CONNECTOR]: GridUserService missing from OpenSim.ini");
-                throw new Exception("GridUser connector init error");
-            }
-
-            string serviceURI = gridConfig.GetString("GridUserServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[GRID USER CONNECTOR]: No Server URI named in section GridUserService");
-                throw new Exception("GridUser connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
-
 
         #region IGridUserService
 
@@ -243,5 +208,33 @@ namespace OpenSim.Services.Connectors
 
         }
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig gridConfig = config.Configs["GridUserService"];
+            if (gridConfig == null)
+            {
+                m_log.Error("[GRID USER CONNECTOR]: GridUserService missing from OpenSim.ini");
+                throw new Exception("GridUser connector init error");
+            }
+
+            string serviceURI = gridConfig.GetString("GridUserServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[GRID USER CONNECTOR]: No Server URI named in section GridUserService");
+                throw new Exception("GridUser connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

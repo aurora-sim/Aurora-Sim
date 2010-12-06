@@ -35,13 +35,14 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
     /// <summary>
     /// This connector is temporary. It's used by the user server, before that server is refactored.
     /// </summary>
-    public class QuickAndDirtyInventoryServiceConnector : IInventoryService
+    public class QuickAndDirtyInventoryServiceConnector : IInventoryService, IService
     {
 //        private static readonly ILog m_log =
 //                LogManager.GetLogger(
@@ -50,15 +51,6 @@ namespace OpenSim.Services.Connectors
         private string m_ServerURI = String.Empty;
 
         //private Dictionary<UUID, InventoryReceiptCallback> m_RequestingInventory = new Dictionary<UUID, InventoryReceiptCallback>();
-
-        public QuickAndDirtyInventoryServiceConnector()
-        {
-        }
-
-        public QuickAndDirtyInventoryServiceConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
 
         /// <summary>
         /// <see cref="IInterServiceInventoryServices"/>
@@ -188,5 +180,17 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

@@ -40,47 +40,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class FriendsServicesConnector : IFriendsService
+    public class FriendsServicesConnector : IFriendsService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public FriendsServicesConnector()
-        {
-        }
-
-        public FriendsServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public FriendsServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["FriendsService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[FRIENDS CONNECTOR]: FriendsService missing from OpenSim.ini");
-                throw new Exception("Friends connector init error");
-            }
-
-            string serviceURI = gridConfig.GetString("FriendsServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[FRIENDS CONNECTOR]: No Server URI named in section FriendsService");
-                throw new Exception("Friends connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
 
 
         #region IFriendsService
@@ -227,6 +193,34 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend received null reply");
 
             return false;
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig gridConfig = config.Configs["FriendsService"];
+            if (gridConfig == null)
+            {
+                m_log.Error("[FRIENDS CONNECTOR]: FriendsService missing from OpenSim.ini");
+                throw new Exception("Friends connector init error");
+            }
+
+            string serviceURI = gridConfig.GetString("FriendsServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[FRIENDS CONNECTOR]: No Server URI named in section FriendsService");
+                throw new Exception("Friends connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         #endregion

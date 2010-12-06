@@ -35,10 +35,11 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AuthorizationServicesConnector 
+    public class AuthorizationServicesConnector : IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -46,47 +47,6 @@ namespace OpenSim.Services.Connectors
 
         private string m_ServerURI = String.Empty;
         private bool m_ResponseOnFailure = true;
-       
-        public AuthorizationServicesConnector()
-        {
-        }
-
-        public AuthorizationServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public AuthorizationServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig authorizationConfig = source.Configs["AuthorizationService"];
-            if (authorizationConfig == null)
-            {
-                //m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService missing from OpenSim.ini");
-                throw new Exception("Authorization connector init error");
-            }
-
-            string serviceURI = authorizationConfig.GetString("AuthorizationServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[AUTHORIZATION CONNECTOR]: No Server URI named in section AuthorizationService");
-                throw new Exception("Authorization connector init error");
-            }
-            m_ServerURI = serviceURI;
-            
-            // this dictates what happens if the remote service fails, if the service fails and the value is true
-            // the user is authorized for the region.
-            bool responseOnFailure = authorizationConfig.GetBoolean("ResponseOnFailure",true);
-                    
-            m_ResponseOnFailure = responseOnFailure;
-            m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
-        }
 
         public bool IsAuthorizedForRegion(string userID, string firstname, string surname, string email, string regionName, string regionID, out string message)
         {
@@ -119,5 +79,40 @@ namespace OpenSim.Services.Connectors
             return response.IsAuthorized;
         }
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig authorizationConfig = config.Configs["AuthorizationService"];
+            if (authorizationConfig == null)
+            {
+                //m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService missing from OpenSim.ini");
+                throw new Exception("Authorization connector init error");
+            }
+
+            string serviceURI = authorizationConfig.GetString("AuthorizationServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[AUTHORIZATION CONNECTOR]: No Server URI named in section AuthorizationService");
+                throw new Exception("Authorization connector init error");
+            }
+            m_ServerURI = serviceURI;
+
+            // this dictates what happens if the remote service fails, if the service fails and the value is true
+            // the user is authorized for the region.
+            bool responseOnFailure = authorizationConfig.GetBoolean("ResponseOnFailure", true);
+
+            m_ResponseOnFailure = responseOnFailure;
+            m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

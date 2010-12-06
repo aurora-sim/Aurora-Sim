@@ -33,33 +33,17 @@ using System.Reflection;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors.Inventory
 {
-    public class HGInventoryServiceConnector : ISessionAuthInventoryService
+    public class HGInventoryServiceConnector : ISessionAuthInventoryService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private Dictionary<string, InventoryServicesConnector> m_connectors = new Dictionary<string, InventoryServicesConnector>();
-
-        public HGInventoryServiceConnector(IConfigSource source)
-        {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-
-                IConfig inventoryConfig = source.Configs["InventoryService"];
-                if (inventoryConfig == null)
-                {
-                    m_log.Error("[HG INVENTORY SERVICE]: InventoryService missing from OpenSim.ini");
-                    return;
-                }
-
-                m_log.Info("[HG INVENTORY SERVICE]: HG inventory service enabled");
-            }
-        }
 
         private bool StringToUrlAndUserID(string id, out string url, out string userID)
         {
@@ -331,5 +315,30 @@ namespace OpenSim.Services.Connectors.Inventory
             }
             return 0;
         }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig moduleConfig = source.Configs["Modules"];
+            if (moduleConfig != null)
+            {
+
+                IConfig inventoryConfig = source.Configs["InventoryService"];
+                if (inventoryConfig == null)
+                {
+                    m_log.Error("[HG INVENTORY SERVICE]: InventoryService missing from OpenSim.ini");
+                    return;
+                }
+
+                m_log.Info("[HG INVENTORY SERVICE]: HG inventory service enabled");
+            }
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

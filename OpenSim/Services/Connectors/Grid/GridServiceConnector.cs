@@ -40,48 +40,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class GridServicesConnector : IGridService
+    public class GridServicesConnector : IGridService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public GridServicesConnector()
-        {
-        }
-
-        public GridServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public GridServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["GridService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[GRID CONNECTOR]: GridService missing from OpenSim.ini");
-                throw new Exception("Grid connector init error");
-            }
-
-            string serviceURI = gridConfig.GetString("GridServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[GRID CONNECTOR]: No Server URI named in section GridService");
-                throw new Exception("Grid connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
-
 
         #region IGridService
 
@@ -867,6 +832,34 @@ namespace OpenSim.Services.Connectors
         public string GridServiceURL
         {
             get { return m_ServerURI; }
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig gridConfig = config.Configs["GridService"];
+            if (gridConfig == null)
+            {
+                m_log.Error("[GRID CONNECTOR]: GridService missing from OpenSim.ini");
+                throw new Exception("Grid connector init error");
+            }
+
+            string serviceURI = gridConfig.GetString("GridServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[GRID CONNECTOR]: No Server URI named in section GridService");
+                throw new Exception("Grid connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         #endregion

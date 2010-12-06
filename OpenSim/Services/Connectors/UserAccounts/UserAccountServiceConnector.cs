@@ -39,47 +39,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class UserAccountServicesConnector : IUserAccountService
+    public class UserAccountServicesConnector : IUserAccountService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public UserAccountServicesConnector()
-        {
-        }
-
-        public UserAccountServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public UserAccountServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig assetConfig = source.Configs["UserAccountService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[ACCOUNT CONNECTOR]: UserAccountService missing from OpenSim.ini");
-                throw new Exception("User account connector init error");
-            }
-
-            string serviceURI = assetConfig.GetString("UserAccountServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[ACCOUNT CONNECTOR]: No Server URI named in section UserAccountService");
-                throw new Exception("User account connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
 
         public virtual UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
@@ -273,5 +239,32 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig assetConfig = config.Configs["UserAccountService"];
+            if (assetConfig == null)
+            {
+                m_log.Error("[ACCOUNT CONNECTOR]: UserAccountService missing from OpenSim.ini");
+                throw new Exception("User account connector init error");
+            }
+
+            string serviceURI = assetConfig.GetString("UserAccountServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[ACCOUNT CONNECTOR]: No Server URI named in section UserAccountService");
+                throw new Exception("User account connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

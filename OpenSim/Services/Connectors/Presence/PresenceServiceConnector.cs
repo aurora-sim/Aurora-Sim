@@ -40,48 +40,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class PresenceServicesConnector : IPresenceService
+    public class PresenceServicesConnector : IPresenceService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public PresenceServicesConnector()
-        {
-        }
-
-        public PresenceServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public PresenceServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig gridConfig = source.Configs["PresenceService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[PRESENCE CONNECTOR]: PresenceService missing from OpenSim.ini");
-                throw new Exception("Presence connector init error");
-            }
-
-            string serviceURI = gridConfig.GetString("PresenceServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[PRESENCE CONNECTOR]: No Server URI named in section PresenceService");
-                throw new Exception("Presence connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
-
 
         #region IPresenceService
 
@@ -407,5 +372,33 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig gridConfig = config.Configs["PresenceService"];
+            if (gridConfig == null)
+            {
+                m_log.Error("[PRESENCE CONNECTOR]: PresenceService missing from OpenSim.ini");
+                throw new Exception("Presence connector init error");
+            }
+
+            string serviceURI = gridConfig.GetString("PresenceServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[PRESENCE CONNECTOR]: No Server URI named in section PresenceService");
+                throw new Exception("Presence connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

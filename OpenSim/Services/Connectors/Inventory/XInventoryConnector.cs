@@ -40,47 +40,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class XInventoryServicesConnector : IInventoryService
+    public class XInventoryServicesConnector : IInventoryService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public XInventoryServicesConnector()
-        {
-        }
-
-        public XInventoryServicesConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/');
-        }
-
-        public XInventoryServicesConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig assetConfig = source.Configs["InventoryService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[INVENTORY CONNECTOR]: InventoryService missing from OpenSim.ini");
-                throw new Exception("Inventory connector init error");
-            }
-
-            string serviceURI = assetConfig.GetString("InventoryServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[INVENTORY CONNECTOR]: No Server URI named in section InventoryService");
-                throw new Exception("Inventory connector init error");
-            }
-            m_ServerURI = serviceURI;
-        }
 
         public bool CreateUserInventory(UUID principalID)
         {
@@ -570,5 +536,33 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig assetConfig = config.Configs["InventoryService"];
+            if (assetConfig == null)
+            {
+                m_log.Error("[INVENTORY CONNECTOR]: InventoryService missing from OpenSim.ini");
+                throw new Exception("Inventory connector init error");
+            }
+
+            string serviceURI = assetConfig.GetString("InventoryServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[INVENTORY CONNECTOR]: No Server URI named in section InventoryService");
+                throw new Exception("Inventory connector init error");
+            }
+            m_ServerURI = serviceURI;
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }

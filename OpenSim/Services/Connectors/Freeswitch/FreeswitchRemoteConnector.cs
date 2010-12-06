@@ -39,47 +39,13 @@ using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
-    public class RemoteFreeswitchConnector : IFreeswitchService
+    public class RemoteFreeswitchConnector : IFreeswitchService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
-
-        public RemoteFreeswitchConnector()
-        {
-        }
-
-        public RemoteFreeswitchConnector(string serverURI)
-        {
-            m_ServerURI = serverURI.TrimEnd('/') + "/region-config";
-        }
-
-        public RemoteFreeswitchConnector(IConfigSource source)
-        {
-            Initialise(source);
-        }
-
-        public virtual void Initialise(IConfigSource source)
-        {
-            IConfig freeswitchConfig = source.Configs["FreeSwitchVoice"];
-            if (freeswitchConfig == null)
-            {
-                m_log.Error("[FREESWITCH CONNECTOR]: FreeSwitchVoice missing from OpenSim.ini");
-                throw new Exception("Freeswitch connector init error");
-            }
-
-            string serviceURI = freeswitchConfig.GetString("FreeswitchServiceURL",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[FREESWITCH CONNECTOR]: No FreeswitchServiceURL named in section FreeSwitchVoice");
-                throw new Exception("Freeswitch connector init error");
-            }
-            m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
-        }
 
         public Hashtable HandleDirectoryRequest(Hashtable requestBody)
         {
@@ -99,5 +65,33 @@ namespace OpenSim.Services.Connectors
             return SynchronousRestFormsRequester.MakeRequest("GET",
                     m_ServerURI, String.Empty);
         }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource source, IRegistryCore registry)
+        {
+            IConfig freeswitchConfig = source.Configs["FreeSwitchVoice"];
+            if (freeswitchConfig == null)
+            {
+                m_log.Error("[FREESWITCH CONNECTOR]: FreeSwitchVoice missing from OpenSim.ini");
+                throw new Exception("Freeswitch connector init error");
+            }
+
+            string serviceURI = freeswitchConfig.GetString("FreeswitchServiceURL",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[FREESWITCH CONNECTOR]: No FreeswitchServiceURL named in section FreeSwitchVoice");
+                throw new Exception("Freeswitch connector init error");
+            }
+            m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
     }
 }
