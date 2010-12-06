@@ -44,11 +44,16 @@ namespace OpenSim.Services.Connectors
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+        private UserAccountCache m_cache = new UserAccountCache();
 
         private string m_ServerURI = String.Empty;
 
         public virtual UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
+            UserAccount account;
+            if (m_cache.Get(firstName + " " + lastName, out account))
+                return account;
+
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
             sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
@@ -59,7 +64,9 @@ namespace OpenSim.Services.Connectors
             sendData["FirstName"] = firstName.ToString();
             sendData["LastName"] = lastName.ToString();
 
-            return SendAndGetReply(sendData);
+            account = SendAndGetReply(sendData);
+            m_cache.Cache(account.PrincipalID, account);
+            return account;
         }
 
         public virtual UserAccount GetUserAccount(UUID scopeID, string email)
@@ -78,6 +85,10 @@ namespace OpenSim.Services.Connectors
 
         public virtual UserAccount GetUserAccount(UUID scopeID, UUID userID)
         {
+            UserAccount account;
+            if (m_cache.Get(userID, out account))
+                return account;
+
             //m_log.DebugFormat("[ACCOUNTS CONNECTOR]: GetUserAccount {0}", userID);
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -88,7 +99,9 @@ namespace OpenSim.Services.Connectors
             sendData["ScopeID"] = scopeID;
             sendData["UserID"] = userID.ToString();
 
-            return SendAndGetReply(sendData);
+            account = SendAndGetReply(sendData);
+            m_cache.Cache(userID, account);
+            return account;
         }
 
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
@@ -139,6 +152,7 @@ namespace OpenSim.Services.Connectors
                     if (acc is Dictionary<string, object>)
                     {
                         UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
+                        m_cache.Cache(pinfo.PrincipalID, pinfo);
                         accounts.Add(pinfo);
                     }
                     else

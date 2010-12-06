@@ -51,7 +51,6 @@ namespace OpenSim.Services.Interfaces
         private string m_firstname;
         private string m_surname;
         private string m_email;
-        private string m_regionName;
         private string m_regionID;
 
         public AuthorizationRequest()
@@ -64,13 +63,12 @@ namespace OpenSim.Services.Interfaces
             m_regionID = RegionID;
         }
         
-        public AuthorizationRequest(string ID,string FirstName, string SurName, string Email, string RegionName, string RegionID)
+        public AuthorizationRequest(string ID,string FirstName, string SurName, string Email, string RegionID)
         {
             m_userID = ID;
             m_firstname = FirstName;
             m_surname = SurName;
             m_email = Email;
-            m_regionName = RegionName;
             m_regionID = RegionID;
         }
         
@@ -97,21 +95,12 @@ namespace OpenSim.Services.Interfaces
             get { return m_email; }
             set { m_email = value; }
         }
-        
-        public string RegionName
-        {
-            get { return m_regionName; }
-            set { m_regionName = value; }
-        }
                         
         public string RegionID
         {
             get { return m_regionID; }
             set { m_regionID = value; }
         }
-        
-        
-        
     }
     
     public class AuthorizationResponse

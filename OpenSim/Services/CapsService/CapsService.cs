@@ -38,14 +38,13 @@ namespace OpenSim.Services.CapsService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CAPSHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("CAPSHandlerPort"));
+            m_server = simBase.GetHttpServer((uint)handlerConfig.GetInt("CAPSHandlerPort"));
 
             m_log.Debug("[AuroraCAPSService]: Starting...");
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
             if (m_CAPSServerConfig == null)
                 throw new Exception(String.Format("No section CAPSService in config file"));
 
-            m_server = server;
             IInventoryService m_InventoryService = sim.Get<IInventoryService>();
             ILibraryService m_LibraryService = sim.Get<ILibraryService>();
             IGridUserService m_GridUserService = sim.Get<IGridUserService>();
@@ -56,7 +55,8 @@ namespace OpenSim.Services.CapsService
             string HostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
             CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             //This handler allows sims to post CAPS for their sims on the CAPS server.
-            server.AddStreamHandler(new CAPSPublicHandler(server, Password, m_InventoryService, m_LibraryService, m_GridUserService, m_PresenceService, m_GridService, HostName));
+            m_server.AddStreamHandler(new CAPSPublicHandler(m_server, Password, m_InventoryService, m_LibraryService, m_GridUserService, m_PresenceService, m_GridService, HostName));
+
         }
     }
 

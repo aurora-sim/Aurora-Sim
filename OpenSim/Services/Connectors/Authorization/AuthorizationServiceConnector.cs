@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class AuthorizationServicesConnector : IService
+    public class AuthorizationServicesConnector : IService, IAuthorizationService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -47,15 +47,16 @@ namespace OpenSim.Services.Connectors
 
         private string m_ServerURI = String.Empty;
         private bool m_ResponseOnFailure = true;
+        private IUserAccountService m_userAccountService;
 
-        public bool IsAuthorizedForRegion(string userID, string firstname, string surname, string email, string regionName, string regionID, out string message)
+        public bool IsAuthorizedForRegion(string userID, string firstname, string surname, string email, string regionID, out string message)
         {
             // do a remote call to the authorization server specified in the AuthorizationServerURI
             m_log.InfoFormat("[AUTHORIZATION CONNECTOR]: IsAuthorizedForRegion checking {0} at remote server {1}", userID, m_ServerURI);
             
             string uri = m_ServerURI;
             
-            AuthorizationRequest req = new AuthorizationRequest(userID, firstname, surname, email, regionName, regionID);
+            AuthorizationRequest req = new AuthorizationRequest(userID, firstname, surname, email, regionID);
             
             AuthorizationResponse response;
             try
@@ -115,12 +116,24 @@ namespace OpenSim.Services.Connectors
             bool responseOnFailure = authorizationConfig.GetBoolean("ResponseOnFailure", true);
 
             m_ResponseOnFailure = responseOnFailure;
-            //registry.RegisterInterface<IAuthorizationService>(this);
+            registry.RegisterInterface<IAuthorizationService>(this);
             m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
         }
 
         public void PostInitialize(IRegistryCore registry)
         {
+            m_userAccountService = registry.Get<IUserAccountService>();
+        }
+
+        #endregion
+
+        #region IAuthorizationService Members
+
+        public bool IsAuthorizedForRegion(string userID, string regionID, out string message)
+        {
+            UserAccount account = m_userAccountService.GetUserAccount(UUID.Zero, userID);
+            return IsAuthorizedForRegion(userID, account.FirstName, account.LastName,
+                account.Email, regionID, out message);
         }
 
         #endregion

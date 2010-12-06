@@ -29,30 +29,36 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 
 using OpenMetaverse;
 using log4net;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
+namespace OpenSim.Region.CoreModules
 {
-    public class ActivityDetector 
+    public class ActivityDetector : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGridUserService m_GridUserService;
+        private IPresenceService m_PresenceService;
 
-        public ActivityDetector(IGridUserService guservice)
+        public void Initialise(Nini.Config.IConfigSource source)
         {
-            m_GridUserService = guservice;
-            //m_log.DebugFormat("[ACTIVITY DETECTOR]: starting ");
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Close()
+        {
         }
 
         public void AddRegion(Scene scene)
         {
-            // For now the only events we listen to are these
-            // But we could trigger the position update more often
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -60,14 +66,30 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
 
         public void RemoveRegion(Scene scene)
         {
-            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
-            scene.EventManager.OnNewClient -= OnNewClient;
-            scene.EventManager.OnClosingClient -= OnClosingClient;
+            m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            m_GridUserService = scene.GridUserService;
+            m_PresenceService = scene.PresenceService;
+            m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
+        }
+
+        public string Name
+        {
+            get { return "ActivityDetector"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
         }
 
         public void OnMakeRootAgent(ScenePresence sp)
         {
             //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected root presence {0} in {1}", sp.UUID, sp.Scene.RegionInfo.RegionName);
+            m_PresenceService.ReportAgent(sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID);
             m_GridUserService.SetLastPosition(sp.UUID.ToString(), UUID.Zero, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
         }
 
@@ -97,11 +119,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
                     position = ((ScenePresence)sp).AbsolutePosition;
                     lookat = ((ScenePresence)sp).Lookat;
                 }
-                //m_log.DebugFormat("[ACTIVITY DETECTOR]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+                m_log.DebugFormat("[ActivityDetector]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+                m_PresenceService.LogoutAgent(client.SessionId);
                 m_GridUserService.LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
             }
 
         }
-
     }
 }

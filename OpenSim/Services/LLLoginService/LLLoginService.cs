@@ -90,7 +90,6 @@ namespace OpenSim.Services.LLLoginService
 
         protected IConfig m_LoginServerConfig;
         protected IConfigSource m_config;
-        protected IConfig m_AuroraLoginConfig;
         protected bool m_AllowAnonymousLogin = false;
         protected bool m_UseTOS = false;
         protected string m_TOSLocation = "";
@@ -108,26 +107,22 @@ namespace OpenSim.Services.LLLoginService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_config = config;
-            m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
-            if (m_AuroraLoginConfig != null)
-            {
-                m_UseTOS = m_AuroraLoginConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
-                m_DefaultHomeRegion = m_AuroraLoginConfig.GetString("DefaultHomeRegion", "");
-                m_DefaultUserAvatarArchive = m_AuroraLoginConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
-                m_AllowAnonymousLogin = m_AuroraLoginConfig.GetBoolean("AllowAnonymousLogin", false);
-                m_TOSLocation = m_AuroraLoginConfig.GetString("FileNameOfTOS", "");
-                m_AllowFirstLife = m_AuroraLoginConfig.GetBoolean("AllowFirstLifeInProfile", true);
-                m_TutorialURL = m_AuroraLoginConfig.GetString("TutorialURL", m_TutorialURL);
-                ReadEventValues(m_AuroraLoginConfig);
-                ReadClassifiedValues(m_AuroraLoginConfig);
-                CAPSServerURL = m_AuroraLoginConfig.GetString("CAPSServiceURL", "");
-                CAPSServicePassword = m_AuroraLoginConfig.GetString("CAPSServicePassword", "");
-                allowExportPermission = m_AuroraLoginConfig.GetBoolean("AllowUseageOfExportPermissions", true);
-            }
-
             m_LoginServerConfig = config.Configs["LoginService"];
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
+
+            m_UseTOS = m_LoginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
+            m_DefaultHomeRegion = m_LoginServerConfig.GetString("DefaultHomeRegion", "");
+            m_DefaultUserAvatarArchive = m_LoginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
+            m_AllowAnonymousLogin = m_LoginServerConfig.GetBoolean("AllowAnonymousLogin", false);
+            m_TOSLocation = m_LoginServerConfig.GetString("FileNameOfTOS", "");
+            m_AllowFirstLife = m_LoginServerConfig.GetBoolean("AllowFirstLifeInProfile", true);
+            m_TutorialURL = m_LoginServerConfig.GetString("TutorialURL", m_TutorialURL);
+            ReadEventValues(m_LoginServerConfig);
+            ReadClassifiedValues(m_LoginServerConfig);
+            CAPSServerURL = m_LoginServerConfig.GetString("CAPSServiceURL", "");
+            CAPSServicePassword = m_LoginServerConfig.GetString("CAPSServicePassword", "");
+            allowExportPermission = m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true);
 
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -24,74 +24,70 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-
+using System.Collections.Generic;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-
 using OpenMetaverse;
 using log4net;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
+namespace OpenSim.Services.Connectors
 {
-    public class RegionCache
+    public class UserAccountCache
     {
+        private const double CACHE_EXPIRATION_SECONDS = 120.0;
+
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+        private ExpiringCache<UUID, UserAccount> m_UUIDCache;
+        private ExpiringCache<string, UUID> m_NameCache;
 
-        private Scene m_scene;
-        private Dictionary<ulong, GridRegion> m_neighbours = new Dictionary<ulong, GridRegion>();
-
-        public string RegionName
+        public UserAccountCache()
         {
-            get { return m_scene.RegionInfo.RegionName; }
+            m_UUIDCache = new ExpiringCache<UUID, UserAccount>();
+            m_NameCache = new ExpiringCache<string, UUID>(); 
         }
 
-        public RegionCache(Scene s)
+        public void Cache(UUID userID, UserAccount account)
         {
-            m_scene = s;
-            m_scene.EventManager.OnRegionUp += OnRegionUp;
+            // Cache even null accounts
+            m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
+            if (account != null)
+                m_NameCache.AddOrUpdate(account.Name, account.PrincipalID, CACHE_EXPIRATION_SECONDS);
+
+            //m_log.DebugFormat("[USER CACHE]: cached user {0}", userID);
         }
 
-        private void OnRegionUp(GridRegion otherRegion)
+        public bool Get(UUID userID, out UserAccount account)
         {
-            // This shouldn't happen
-            if (otherRegion == null)
-                return;
+            bool inCache = false;
+            if (m_UUIDCache.TryGetValue(userID, out account))
+            {
+                //m_log.DebugFormat("[USER CACHE]: Account {0} {1} found in cache", account.FirstName, account.LastName);
+                return inCache;
+            }
 
-            //m_log.DebugFormat("[REGION CACHE]: (on region {0}) Region {1} is up @ {2}-{3}",
-            //    m_scene.RegionInfo.RegionName, otherRegion.RegionName, otherRegion.RegionLocX, otherRegion.RegionLocY);
-
-            m_neighbours[otherRegion.RegionHandle] = otherRegion;
+            return inCache;
         }
 
-        public void Clear()
+        public bool Get(string name, out UserAccount account)
         {
-            m_scene.EventManager.OnRegionUp -= OnRegionUp;
-            m_neighbours.Clear();
-        }
+            bool inCache = false;
+            account = null;
+            if (!m_NameCache.Contains(name))
+                return inCache;
 
-        public List<GridRegion> GetNeighbours()
-        {
-            return new List<GridRegion>(m_neighbours.Values);
-        }
+            UUID uuid = UUID.Zero;
+            if (m_NameCache.TryGetValue(name, out uuid))
+                if (m_UUIDCache.TryGetValue(uuid, out account))
+                {
+                    inCache = true;
+                    return inCache;
+                }
 
-        public GridRegion GetRegionByPosition(int x, int y)
-        {
-            uint xsnap = (uint)(x / Constants.RegionSize) * Constants.RegionSize;
-            uint ysnap = (uint)(y / Constants.RegionSize) * Constants.RegionSize;
-            ulong handle = Utils.UIntsToLong(xsnap, ysnap);
-            
-            if (m_neighbours.ContainsKey(handle))
-                return m_neighbours[handle];
-            
-            return null;
+            return inCache;
         }
     }
 }
