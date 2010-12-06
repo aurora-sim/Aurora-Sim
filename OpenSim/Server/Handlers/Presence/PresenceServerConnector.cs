@@ -38,30 +38,18 @@ namespace OpenSim.Server.Handlers.Presence
     public class PresenceServiceConnector : IServiceConnector
     {
         private IPresenceService m_PresenceService;
-        private string m_ConfigName = "PresenceService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceHandler", Name) != Name)
                 return;
-
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string gridService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (gridService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(gridService, args);
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("PresenceHandlerPort"));
+            m_PresenceService = sim.Get<IPresenceService>();
 
             server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
         }

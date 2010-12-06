@@ -86,8 +86,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.GridUser
                         return;
                     }
 
-                    Object[] args = new Object[] { source };
+                    Object[] args = new Object[0];
                     m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(serviceDll, args);
+                    m_GridUserService.Initialize(source, new OpenSim.Framework.RegistryCore());
 
                     if (m_GridUserService == null)
                     {

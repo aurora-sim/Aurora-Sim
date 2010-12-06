@@ -125,8 +125,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                     return;
                 }
 
-                Object[] args = new Object[] { config };
-                m_FreeswitchService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(serviceDll, args);
+                //Object[] args = new Object[0];
+                //m_FreeswitchService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(serviceDll, args);
+                //m_FreeswitchService.Initialize(config, new RegistryCore());
 
                 string jsonConfig = m_FreeswitchService.GetJsonConfig();
                 m_log.Debug("[FreeSwitchVoice]: Configuration string: " + jsonConfig);
@@ -226,6 +227,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
             if (m_Enabled)
             {
+                m_FreeswitchService = scene.RequestModuleInterface<IFreeswitchService>();
                 // we need to capture scene in an anonymous method
                 // here as we need it later in the callbacks
                 scene.EventManager.OnRegisterCaps += delegate(UUID agentID, Caps caps)

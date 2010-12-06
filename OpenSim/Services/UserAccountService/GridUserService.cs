@@ -31,22 +31,67 @@ using System.Reflection;
 using Nini.Config;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using log4net;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.UserAccountService
 {
-    public class GridUserService : GridUserServiceBase, IGridUserService
+    public class GridUserService : ServiceBase, IGridUserService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public GridUserService(IConfigSource config) : base(config) 
+        protected IGridUserData m_Database = null;
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "GridUser";
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // [GridUsetService] section overrides [DatabaseService], if it exists
+            //
+            IConfig presenceConfig = config.Configs["GridUserService"];
+            if (presenceConfig != null)
+            {
+                dllName = presenceConfig.GetString("StorageProvider", dllName);
+                connString = presenceConfig.GetString("ConnectionString", connString);
+                realm = presenceConfig.GetString("Realm", realm);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IGridUserData>(dllName, new Object[] { connString, realm });
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module " + dllName);
+            registry.RegisterInterface<IGridUserService>(this);
+
             m_log.Debug("[USER GRID SERVICE]: Starting user grid service");
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public GridUserInfo GetGridUserInfo(string userID)

@@ -85,8 +85,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.UserAccounts
                         return;
                     }
 
-                    Object[] args = new Object[] { source };
+                    Object[] args = new Object[0];
                     m_UserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(serviceDll, args);
+                    m_UserService.Initialize(source, new OpenSim.Framework.RegistryCore());
 
                     if (m_UserService == null)
                     {

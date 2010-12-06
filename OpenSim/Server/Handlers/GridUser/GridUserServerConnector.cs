@@ -38,30 +38,19 @@ namespace OpenSim.Server.Handlers.GridUser
     public class GridUserServiceConnector : IServiceConnector
     {
         private IGridUserService m_GridUserService;
-        private string m_ConfigName = "GridUserService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridUserHandler", Name) != Name)
                 return;
 
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string service = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (service == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(service, args);
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GridUserHandlerPort"));
+            m_GridUserService = sim.Get<IGridUserService>(); 
 
             server.AddStreamHandler(new GridUserServerPostHandler(m_GridUserService));
         }

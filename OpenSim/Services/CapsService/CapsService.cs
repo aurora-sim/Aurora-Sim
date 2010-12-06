@@ -33,11 +33,12 @@ namespace OpenSim.Services.CapsService
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CAPSHandler", Name) != Name)
                 return;
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("CAPSHandlerPort"));
 
             m_log.Debug("[AuroraCAPSService]: Starting...");
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
@@ -45,19 +46,14 @@ namespace OpenSim.Services.CapsService
                 throw new Exception(String.Format("No section CAPSService in config file"));
 
             m_server = server;
-            Object[] args = new Object[] { config };
-            string invService = m_CAPSServerConfig.GetString("InventoryService", String.Empty);
-            string libService = m_CAPSServerConfig.GetString("LibraryService", String.Empty);
-            string guService = m_CAPSServerConfig.GetString("GridUserService", String.Empty);
-            string gService = m_CAPSServerConfig.GetString("GridService", String.Empty);
-            string presenceService = m_CAPSServerConfig.GetString("PresenceService", String.Empty);
+            IInventoryService m_InventoryService = sim.Get<IInventoryService>();
+            ILibraryService m_LibraryService = sim.Get<ILibraryService>();
+            IGridUserService m_GridUserService = sim.Get<IGridUserService>();
+            IPresenceService m_PresenceService = sim.Get<IPresenceService>();
+            IGridService m_GridService = sim.Get<IGridService>();
+
             string Password = m_CAPSServerConfig.GetString("Password", String.Empty);
             string HostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
-            IInventoryService m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(invService, args);
-            ILibraryService m_LibraryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(libService, args);
-            IGridUserService m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(guService, args);
-            IPresenceService m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(presenceService, args);
-            IGridService m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gService, args);
             CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             //This handler allows sims to post CAPS for their sims on the CAPS server.
             server.AddStreamHandler(new CAPSPublicHandler(server, Password, m_InventoryService, m_LibraryService, m_GridUserService, m_PresenceService, m_GridService, HostName));

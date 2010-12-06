@@ -29,11 +29,13 @@ using System;
 using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenMetaverse;
+using Nini.Config;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IEstateDataService
     {
+        void Initialize(IConfigSource config, IRegistryCore registry);
         EstateSettings LoadEstateSettings(UUID regionID, bool create);
         EstateSettings LoadEstateSettings(int estateID);
         void StoreEstateSettings(EstateSettings es);

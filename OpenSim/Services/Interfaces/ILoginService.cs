@@ -32,6 +32,7 @@ using System.Net;
 
 using OpenMetaverse.StructuredData;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {

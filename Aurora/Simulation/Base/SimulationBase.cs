@@ -24,7 +24,7 @@ using Aurora.Framework;
 
 namespace Aurora.Simulation.Base
 {
-    public class SimulationBase : IOpenSimBase
+    public class SimulationBase : IOpenSimBase, ISimulationBase
     {
         protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -87,6 +87,9 @@ namespace Aurora.Simulation.Base
         {
             get { return m_BaseHTTPServer; }
         }
+
+        protected Dictionary<uint, BaseHttpServer> m_Servers =
+            new Dictionary<uint, BaseHttpServer>();
 
         protected uint m_Port;
         public uint DefaultPort
@@ -216,6 +219,25 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance = m_console;
         }
 
+        public IHttpServer GetHttpServer(uint port)
+        {
+            m_log.InfoFormat("[SERVER]: Requested port {0}", port);
+            if (port == m_Port)
+                return HttpServer;
+            if (port == 0)
+                return HttpServer;
+
+            if (m_Servers.ContainsKey(port))
+                return m_Servers[port];
+
+            m_Servers[port] = new BaseHttpServer(port);
+
+            m_log.InfoFormat("[SERVER]: Starting new HTTP server on port {0}", port);
+            m_Servers[port].Start();
+
+            return m_Servers[port];
+        }
+
         public virtual void SetUpHTTPServer()
         {
             m_Port =
@@ -249,6 +271,7 @@ namespace Aurora.Simulation.Base
             m_BaseHTTPServer.Start();
 
             MainServer.Instance = m_BaseHTTPServer;
+            m_Servers.Add(m_Port, m_BaseHTTPServer);
         }
 
         public virtual void StartModules()

@@ -27,19 +27,18 @@
 
 using System;
 using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework;
 
-namespace OpenSim.Server.Handlers.Base
+namespace Aurora.Simulation.Base
 {
     public interface IServiceConnector
     {
-        void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim);
+        void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim);
     }
     public interface IService
     {
-        void Initialize(IConfigSource config);
+        void Initialize(IConfigSource config, IRegistryCore registry);
+        void PostInitialize(IRegistryCore registry);
     }
 }

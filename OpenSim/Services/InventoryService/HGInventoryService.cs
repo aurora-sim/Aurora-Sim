@@ -35,10 +35,11 @@ using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.InventoryService
 {
-    public class HGInventoryService : XInventoryService, IInventoryService
+    public class HGInventoryService : XInventoryService, IInventoryService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -46,8 +47,7 @@ namespace OpenSim.Services.InventoryService
 
         protected new IXInventoryData m_Database;
 
-        public HGInventoryService(IConfigSource config)
-            : base(config)
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             string dllName = String.Empty;
             string connString = String.Empty;
@@ -88,6 +88,12 @@ namespace OpenSim.Services.InventoryService
                 throw new Exception("Could not find a storage interface in the given module");
 
             m_log.Debug("[HG INVENTORY SERVICE]: Starting...");
+            registry.RegisterInterface<IInventoryService>(this);
+        }
+
+        public override void PostInitialize(IRegistryCore registry)
+        {
+            m_UserAccountService = registry.Get<IUserAccountService>();
         }
 
         public override bool CreateUserInventory(UUID principalID)

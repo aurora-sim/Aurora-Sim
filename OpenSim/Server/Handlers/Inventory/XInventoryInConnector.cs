@@ -47,36 +47,20 @@ namespace OpenSim.Server.Handlers.Asset
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IInventoryService m_InventoryService;
-        private string m_ConfigName = "InventoryService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", Name) != Name)
                 return;
 
-            if (configName != String.Empty)
-                m_ConfigName = configName;
-
-            m_log.DebugFormat("[XInventoryInConnector]: Starting with config name {0}", m_ConfigName);
-
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section '{0}' in config file", m_ConfigName));
-
-            string inventoryService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (inventoryService == String.Empty)
-                throw new Exception("No InventoryService in config file");
-
-            Object[] args = new Object[] { config };
-            m_InventoryService =
-                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(inventoryService, args);
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("InventoryHandlerPort"));
+            
+            m_InventoryService = sim.Get<IInventoryService>();
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(m_InventoryService));
         }

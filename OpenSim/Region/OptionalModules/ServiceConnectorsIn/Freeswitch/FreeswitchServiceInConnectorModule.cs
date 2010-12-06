@@ -95,7 +95,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsIn.Freeswitch
 
                 Object[] args = new Object[] { m_Config, MainServer.Instance };
 
-                Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:FreeswitchServerConnector", args);
+                OpenSim.Framework.RegistryCore r = new RegistryCore();
+                ISimulationBase b = scene.RequestModuleInterface<ISimulationBase>();
+
+                args = new Object[0];
+                IServiceConnector c = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>("OpenSim.Server.Handlers.dll:FreeswitchServerConnector", args);
+                c.Initialize(m_Config, b, "", r);
             }
         }
 

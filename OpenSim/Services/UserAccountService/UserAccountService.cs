@@ -30,16 +30,19 @@ using System.Collections.Generic;
 using System.Reflection;
 using Nini.Config;
 using OpenSim.Data;
+using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using OpenSim.Framework.Console;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using log4net;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.UserAccountService
 {
-    public class UserAccountService : UserAccountServiceBase, IUserAccountService
+    public class UserAccountService : ServiceBase, IUserAccountService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static UserAccountService m_RootInstance;
@@ -48,35 +51,44 @@ namespace OpenSim.Services.UserAccountService
         protected IAuthenticationService m_AuthenticationService;
         protected IGridUserService m_GridUserService;
         protected IInventoryService m_InventoryService;
+        protected IUserAccountData m_Database = null;
 
-        public UserAccountService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "UserAccounts";
+
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
             IConfig userConfig = config.Configs["UserAccountService"];
             if (userConfig == null)
                 throw new Exception("No UserAccountService configuration");
+
+            dllName = userConfig.GetString("StorageProvider", dllName);
+
+            if (dllName == String.Empty)
+                throw new Exception("No StorageProvider configured");
+
+            connString = userConfig.GetString("ConnectionString", connString);
+
+            realm = userConfig.GetString("Realm", realm);
+
+            m_Database = LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
+
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
 
             // In case there are several instances of this class in the same process,
             // the console commands are only registered for the root instance
             if (m_RootInstance == null)
             {
                 m_RootInstance = this;
-                string gridServiceDll = userConfig.GetString("GridService", string.Empty);
-                if (gridServiceDll != string.Empty)
-                    m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
-
-                string authServiceDll = userConfig.GetString("AuthenticationService", string.Empty);
-                if (authServiceDll != string.Empty)
-                    m_AuthenticationService = LoadPlugin<IAuthenticationService>(authServiceDll, new Object[] { config });
-
-                string presenceServiceDll = userConfig.GetString("GridUserService", string.Empty);
-                if (presenceServiceDll != string.Empty)
-                    m_GridUserService = LoadPlugin<IGridUserService>(presenceServiceDll, new Object[] { config });
-
-                string invServiceDll = userConfig.GetString("InventoryService", string.Empty);
-                if (invServiceDll != string.Empty)
-                    m_InventoryService = LoadPlugin<IInventoryService>(invServiceDll, new Object[] { config });
-
                 if (MainConsole.Instance != null)
                 {
                     MainConsole.Instance.Commands.AddCommand("UserService", false,
@@ -89,7 +101,22 @@ namespace OpenSim.Services.UserAccountService
                 }
 
             }
+            registry.RegisterInterface<IUserAccountService>(this);
+        }
 
+        public void PostInitialize(IRegistryCore registry)
+        {
+            if (m_GridService == null)
+                m_GridService = registry.Get<IGridService>();
+
+            if (m_AuthenticationService == null)
+                m_AuthenticationService = registry.Get<IAuthenticationService>();
+
+            if (m_InventoryService == null)
+                m_InventoryService = registry.Get<IInventoryService>();
+
+            if (m_GridUserService == null)
+                m_GridUserService = registry.Get<IGridUserService>();
         }
 
         #region IUserAccountService

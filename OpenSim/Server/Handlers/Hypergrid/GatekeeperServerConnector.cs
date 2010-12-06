@@ -57,23 +57,16 @@ namespace OpenSim.Server.Handlers.Hypergrid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GatekeeperHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GatekeeperHandlerPort"));
+            m_GatekeeperService = sim.Get<IGatekeeperService>();
             IConfig gridConfig = config.Configs["GatekeeperService"];
-            if (gridConfig != null)
-            {
-                string serviceDll = gridConfig.GetString("LocalServiceModule", string.Empty);
-                Object[] args = new Object[] { config, sim };
-                m_GatekeeperService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGatekeeperService>(serviceDll, args);
-
-            }
-            if (m_GatekeeperService == null)
-                throw new Exception("Gatekeeper server connector cannot proceed because of missing service");
-
+            
             m_Proxy = gridConfig.GetBoolean("HasProxy", false);
 
             HypergridHandlers hghandlers = new HypergridHandlers(m_GatekeeperService);

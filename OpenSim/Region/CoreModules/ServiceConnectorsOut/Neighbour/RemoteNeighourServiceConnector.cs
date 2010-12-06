@@ -118,22 +118,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
             //Add the local region for this
             m_LocalService.AddRegion(scene);
-            //Set the grid service for the local regions
-            m_LocalService.SetServices(scene.GridService, scene.SimulationService);
-            scene.RegisterModuleInterface<INeighbourService>(this);
-
-            //Add the incoming remote neighbor handlers
-            if (!m_Registered)
-            {
-                m_Registered = true;
-                Object[] args = new Object[] { m_config };
-                m_LocalAuth =
-                        Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authServiceDll,
-                        args);
-
-                args = new Object[] { m_config, MainServer.Instance, m_LocalService, m_LocalAuth, scene };
-                Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>(neighborServiceDll, args);
-            }
         }
 
         public void RemoveRegion(Scene scene)
@@ -148,6 +132,29 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 return;
 
             m_GridService = scene.GridService;
+            //Set the grid service for the local regions
+            m_LocalService.SetServices(scene.GridService, scene.SimulationService);
+            scene.RegisterModuleInterface<INeighbourService>(this);
+
+            //Add the incoming remote neighbor handlers
+            if (!m_Registered)
+            {
+                m_Registered = true;
+                Object[] args = new Object[0];
+                //m_LocalAuth =
+                //        Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authServiceDll,
+                //        args);
+                //m_LocalAuth.Initialize(m_config, new OpenSim.Framework.RegistryCore());
+
+                OpenSim.Framework.RegistryCore r = new RegistryCore();
+                r.RegisterInterface<INeighbourService>(m_LocalService);
+                r.RegisterInterface<IAuthenticationService>(m_LocalAuth);
+                ISimulationBase b = scene.RequestModuleInterface<ISimulationBase>();
+
+                args = new Object[0];
+                IServiceConnector c = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IServiceConnector>(neighborServiceDll, args);
+                c.Initialize(m_config, b, "", r);
+            }
 
             //m_log.InfoFormat("[NEIGHBOUR CONNECTOR]: Enabled remote neighbours for region {0}", scene.RegionInfo.RegionName);
 

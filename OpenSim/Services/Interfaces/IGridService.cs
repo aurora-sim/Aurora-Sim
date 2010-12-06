@@ -31,6 +31,7 @@ using System.Net;
 using System.Net.Sockets;
 using OpenSim.Framework;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {

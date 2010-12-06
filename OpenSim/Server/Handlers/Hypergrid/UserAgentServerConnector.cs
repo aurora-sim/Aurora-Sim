@@ -57,22 +57,16 @@ namespace OpenSim.Server.Handlers.Hypergrid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAgentHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAgentHandlerPort"));
             IConfig gridConfig = config.Configs["UserAgentService"];
-            if (gridConfig != null)
-            {
-                string serviceDll = gridConfig.GetString("LocalServiceModule", string.Empty);
-                Object[] args = new Object[] { config };
-                m_HomeUsersService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAgentService>(serviceDll, args);
-            }
-            if (m_HomeUsersService == null)
-                throw new Exception("UserAgent server connector cannot proceed because of missing service");
 
+            m_HomeUsersService = sim.Get<IUserAgentService>(); 
             string loginServerIP = gridConfig.GetString("LoginServerIP", "127.0.0.1");
             bool proxy = gridConfig.GetBoolean("HasProxy", false);
 

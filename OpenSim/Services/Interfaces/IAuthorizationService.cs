@@ -27,11 +27,12 @@
 
 using System;
 using OpenSim.Framework;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {
     // Generic Authorization service used for authorizing principals in a particular region
-    
+
     public interface IAuthorizationService
     {
         //////////////////////////////////////////////////////

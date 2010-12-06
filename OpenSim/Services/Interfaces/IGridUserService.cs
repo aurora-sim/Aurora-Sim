@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -101,7 +102,7 @@ namespace OpenSim.Services.Interfaces
             return result;
         }
     }
-    
+
     public interface IGridUserService
     {
         GridUserInfo LoggedIn(string userID);

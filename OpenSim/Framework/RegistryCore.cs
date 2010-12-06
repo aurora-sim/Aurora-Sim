@@ -35,6 +35,12 @@ namespace OpenSim.Framework
     {
         protected Dictionary<Type, object> m_moduleInterfaces = new Dictionary<Type, object>();
 
+        public Dictionary<Type, object> GetInterfaces()
+        {
+            return m_moduleInterfaces;
+        }
+
+
         /// <summary>
         /// Register an Module interface.
         /// </summary>
@@ -64,7 +70,9 @@ namespace OpenSim.Framework
 
         public T Get<T>()
         {
-            return (T)m_moduleInterfaces[typeof(T)];
+            if(m_moduleInterfaces.ContainsKey(typeof(T)))
+                return (T)m_moduleInterfaces[typeof(T)];
+            return default(T);
         }
 
         public void StackModuleInterface<M>(M mod)

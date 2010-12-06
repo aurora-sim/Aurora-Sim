@@ -106,9 +106,5 @@ namespace OpenSim.Services.Base
                 return null;
             }
         }
-
-        public ServiceBase(IConfigSource config)
-        {
-        }
     }
 }

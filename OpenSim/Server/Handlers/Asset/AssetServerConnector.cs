@@ -44,11 +44,13 @@ namespace OpenSim.Server.Handlers.Asset
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", Name) != Name)
                 return;
+
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AssetHandlerPort"));
 
             m_AssetService = sim.Get<IAssetService>();
 
@@ -57,7 +59,7 @@ namespace OpenSim.Server.Handlers.Asset
 
             IConfig serverConfig = config.Configs[m_ConfigName];
             bool allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
-
+            
             server.AddStreamHandler(new AssetServerGetHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerPostHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, allowDelete));

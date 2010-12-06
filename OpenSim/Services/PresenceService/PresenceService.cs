@@ -35,25 +35,63 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.PresenceService
 {
-    public class PresenceService : PresenceServiceBase, IPresenceService
+    public class PresenceService : ServiceBase, IPresenceService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGridService m_GridService;
+        protected IPresenceData m_Database = null;
 
         protected bool m_allowDuplicatePresences = true;
         protected bool m_checkLastSeen = true;
 
-        public PresenceService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "Presence";
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // [PresenceService] section overrides [DatabaseService], if it exists
+            //
             IConfig presenceConfig = config.Configs["PresenceService"];
+            if (presenceConfig != null)
+            {
+                dllName = presenceConfig.GetString("StorageProvider", dllName);
+                connString = presenceConfig.GetString("ConnectionString", connString);
+                realm = presenceConfig.GetString("Realm", realm);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IPresenceData>(dllName, new Object[] { connString, realm });
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module " + dllName);
+
             if (presenceConfig != null)
             {
                 m_allowDuplicatePresences =
@@ -62,13 +100,14 @@ namespace OpenSim.Services.PresenceService
                 m_checkLastSeen =
                        presenceConfig.GetBoolean("CheckLastSeen",
                                                  m_checkLastSeen);
-                string gridServiceDll = presenceConfig.GetString("GridService", string.Empty);
-                if (gridServiceDll != string.Empty)
-                    m_GridService = LoadPlugin<IGridService>(gridServiceDll, new Object[] { config });
-                if (m_GridService == null)
-                    throw new Exception("[PresenceService]: 'GridService' was not defined in the [PresenceService] config files!");
             }
+            registry.RegisterInterface<IPresenceService>(this);
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+            m_GridService = registry.Get<IGridService>();
         }
 
         public bool LoginAgent(string userID, UUID sessionID,

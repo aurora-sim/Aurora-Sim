@@ -38,31 +38,18 @@ namespace OpenSim.Server.Handlers.UserAccounts
     public class UserAccountServiceConnector : IServiceConnector
     {
         private IUserAccountService m_UserAccountService;
-        private string m_ConfigName = "UserAccountService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountHandler", Name) != Name)
                 return;
-
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string service = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (service == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(service, args);
-
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAccountHandlerPort"));
+            m_UserAccountService = sim.Get<IUserAccountService>();
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }
     }

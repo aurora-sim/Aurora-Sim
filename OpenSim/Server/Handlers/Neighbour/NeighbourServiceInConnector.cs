@@ -49,12 +49,13 @@ namespace OpenSim.Server.Handlers.Neighbour
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("NeighbourHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("NeighbourHandlerPort"));
             m_NeighbourService = sim.Get<INeighbourService>();
             m_AuthenticationService = sim.Get<IAuthenticationService>();
             if (m_NeighbourService == null)

@@ -41,33 +41,19 @@ namespace OpenSim.Server.Handlers.Grid
     public class GridServiceConnector : IServiceConnector
     {
         private IGridService m_GridService;
-        private string m_ConfigName = "GridService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridHandler", Name) != Name)
                 return;
 
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string gridService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (gridService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
-
-            LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
-            LDS.Initialise(config);
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GridHandlerPort"));
+            m_GridService = sim.Get<IGridService>();
             
             GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
             server.AddStreamHandler(handler);

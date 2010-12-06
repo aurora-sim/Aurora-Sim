@@ -34,12 +34,63 @@ using OpenSim.Data;
 using Nini.Config;
 using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using OpenSim.Services.Base;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Friends
 {
-    public class FriendsService : FriendsServiceBase, IFriendsService
+    public class FriendsService : ServiceBase, IFriendsService
     {
-        public FriendsService(IConfigSource config) : base(config)
+        protected IFriendsData m_Database = null;
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+
+            //
+            // Try reading the [FriendsService] section first, if it exists
+            //
+            IConfig friendsConfig = config.Configs["FriendsService"];
+            if (friendsConfig != null)
+            {
+                dllName = friendsConfig.GetString("StorageProvider", dllName);
+                connString = friendsConfig.GetString("ConnectionString", connString);
+            }
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (String.Empty.Equals(dllName))
+                throw new Exception("No StorageProvider configured");
+
+            string realm = "Friends";
+            if (friendsConfig != null)
+                realm = friendsConfig.GetString("Realm", realm);
+
+            m_Database = LoadPlugin<IFriendsData>(dllName, new Object[] { connString, realm });
+            if (m_Database == null)
+            {
+                throw new Exception(
+                    string.Format(
+                        "Could not find a storage interface {0} in the given StorageProvider {1}", "IFriendsData", dllName));
+            }
+            registry.RegisterInterface<IFriendsService>(this);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
         {
         }
 

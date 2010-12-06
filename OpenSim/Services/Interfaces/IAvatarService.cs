@@ -33,6 +33,7 @@ using OpenSim.Framework;
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {

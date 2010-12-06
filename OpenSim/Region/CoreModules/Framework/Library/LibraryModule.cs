@@ -62,22 +62,6 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             m_Enabled = config.Configs["Modules"].GetBoolean("LibraryModule", m_Enabled);
             if (m_Enabled)
             {
-                IConfig libConfig = config.Configs["LibraryService"];
-                if (libConfig != null)
-                {
-                    string dllName = libConfig.GetString("LocalServiceModule", string.Empty);
-                    //m_log.Debug("[LIBRARY MODULE]: Library service dll is " + dllName);
-                    if (dllName != string.Empty)
-                    {
-                        Object[] args = new Object[] { config };
-                        m_Library = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(dllName, args);
-                    }
-                }
-            }
-            if (m_Library == null)
-            {
-                //m_log.Warn("[LIBRARY MODULE]: No local library service. Module will be disabled.");
-                m_Enabled = false;
             }
         }
 
@@ -106,15 +90,12 @@ namespace OpenSim.Region.CoreModules.Framework.Library
             {
                 m_Scene = scene;
             }
-            scene.RegisterModuleInterface<ILibraryService>(m_Library);
         }
 
         public void RemoveRegion(Scene scene)
         {
             if (!m_Enabled)
                 return;
-
-            scene.UnregisterModuleInterface<ILibraryService>(m_Library);
         }
 
         public void RegionLoaded(Scene scene)
@@ -123,8 +104,9 @@ namespace OpenSim.Region.CoreModules.Framework.Library
                 return;
 
             // This will never run more than once, even if the region is restarted
-            if (!m_HasRunOnce) 
+            if (!m_HasRunOnce)
             {
+                m_Library = scene.RequestModuleInterface<ILibraryService>();
                 LoadLibrariesFromArchives();
                 //DumpLibrary();
                 m_HasRunOnce = true;

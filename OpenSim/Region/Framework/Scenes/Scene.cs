@@ -4129,7 +4129,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
         {
             bool retVal = NewUserConnection(agent, teleportFlags, out reason, true);
-            if (reason != string.Empty)
+            if (!retVal && reason != string.Empty)
                 m_log.Warn("[Scene]: NewUserConnection failed with reason " + reason);
             return retVal;
         }

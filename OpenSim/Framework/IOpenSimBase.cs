@@ -36,10 +36,15 @@ using System.Timers;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Framework
 {
-	public interface IOpenSimBase
+    public interface ISimulationBase
+    {
+        IHttpServer GetHttpServer(uint port);
+    }
+    public interface IOpenSimBase : ISimulationBase
 	{
         IConfigSource ConfigSource { get; set; }
 		IRegistryCore ApplicationRegistry { get; }

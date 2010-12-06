@@ -30,6 +30,7 @@ using OpenSim.Framework;
 using OpenMetaverse;
 
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {

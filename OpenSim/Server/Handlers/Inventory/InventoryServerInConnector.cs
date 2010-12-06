@@ -60,29 +60,20 @@ namespace OpenSim.Server.Handlers.Inventory
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("InventoryHandlerPort"));
+
             if (configName != string.Empty)
                 m_ConfigName = configName;
     
             IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section '{0}' in config file", m_ConfigName));
 
-            string inventoryService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (inventoryService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_InventoryService =
-                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(inventoryService, args);
-
+            m_InventoryService = sim.Get<IInventoryService>(); 
             m_userserver_url = serverConfig.GetString("UserServerURI", String.Empty);
             m_doLookup = serverConfig.GetBoolean("SessionAuthentication", false);
 

@@ -40,10 +40,11 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors.Simulation
 {
-    public class SimulationServiceConnector : ISimulationService
+    public class SimulationServiceConnector : ISimulationService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         //Keeps track of bad sends and will refuse to send child agent updates to them until the DateTime is later than the time accessed
@@ -646,5 +647,14 @@ namespace OpenSim.Services.Connectors.Simulation
         }
 
         #endregion Objects
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<ISimulationService>(this);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
     }
 }

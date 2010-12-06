@@ -38,34 +38,19 @@ namespace OpenSim.Server.Handlers.Authorization
     public class AuthorizationServerConnector : IServiceConnector
     {
         private IAuthorizationService m_AuthorizationService;
-        private string m_ConfigName = "AuthorizationService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthorizationHandler", Name) != Name)
                 return;
-
-            if (configName != String.Empty)
-                m_ConfigName = configName;
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section '{0}' in config file", m_ConfigName));
-
-            string authorizationService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (authorizationService == String.Empty)
-                throw new Exception("No AuthorizationService in config file");
-
-            Object[] args = new Object[] { config };
-            m_AuthorizationService =
-                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthorizationService>(authorizationService, args);
-
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuthorizationHandlerPort"));
+            m_AuthorizationService = sim.Get<IAuthorizationService>(); 
+            
             server.AddStreamHandler(new AuthorizationServerPostHandler(m_AuthorizationService));
         }
     }

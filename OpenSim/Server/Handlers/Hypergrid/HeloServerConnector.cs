@@ -47,12 +47,13 @@ namespace OpenSim.Server.Handlers.Hypergrid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("HeloHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("HeloHandlerPort"));
             server.AddStreamHandler(new HeloServerGetHandler("opensim-robust"));
         }
     }

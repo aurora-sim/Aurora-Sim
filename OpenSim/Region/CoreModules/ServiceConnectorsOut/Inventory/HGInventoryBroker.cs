@@ -95,10 +95,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
                         throw new Exception("Unable to proceed. Please make sure your ini files in config-include are updated according to .example's");
                     }
 
-                    Object[] args = new Object[] { source };
+                    Object[] args = new Object[0];
                     m_LocalGridInventoryService =
                             Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(localDll,
                             args);
+                    m_LocalGridInventoryService.Initialize(source, new OpenSim.Framework.RegistryCore());
 
                     if (m_LocalGridInventoryService == null)
                     {

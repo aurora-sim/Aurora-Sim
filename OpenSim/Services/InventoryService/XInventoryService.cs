@@ -39,7 +39,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.InventoryService
 {
-    public class XInventoryService : ServiceBase, IInventoryService
+    public class XInventoryService : ServiceBase, IInventoryService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -49,7 +49,7 @@ namespace OpenSim.Services.InventoryService
         protected IUserAccountService m_UserAccountService;
 		protected bool m_AllowDelete = true;
 
-        public XInventoryService(IConfigSource config) : base(config)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             string dllName = String.Empty;
             string connString = String.Empty;
@@ -89,13 +89,12 @@ namespace OpenSim.Services.InventoryService
                     new Object[] {connString, String.Empty});
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
+            registry.RegisterInterface<IInventoryService>(this);
+        }
 
-            IConfig m_LoginServerConfig = config.Configs["LoginService"];
-            if (m_LoginServerConfig == null)
-                throw new Exception(String.Format("No section LoginService in config file"));
-            Object[] args = new Object[] { config };
-            string accountService = m_LoginServerConfig.GetString("UserAccountService", String.Empty);
-            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(accountService, args);
+        public virtual void PostInitialize(IRegistryCore registry)
+        {
+            m_UserAccountService = registry.Get<IUserAccountService>();
         }
 
         public virtual bool CreateUserInventory(UUID principalID)

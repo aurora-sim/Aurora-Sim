@@ -30,11 +30,14 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
+using Nini.Config;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ISimulationDataService
     {
+        void Initialize(IConfigSource config, IRegistryCore registry);
+
         /// <summary>
         /// Stores all object's details apart from inventory
         /// </summary>

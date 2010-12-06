@@ -348,7 +348,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             if (l.Count > 0)
-                return;
+                l.Clear();
 
             l.Add(mod);
 
@@ -359,6 +359,24 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_entityCreators[pcode] = entityCreator;
                 }
+            }
+        }
+
+        public void AddModuleInterfaces(Dictionary<Type, object> dictionary)
+        {
+            foreach (KeyValuePair<Type, object> kvp in dictionary)
+            {
+                List<Object> l = null;
+                if (!ModuleInterfaces.TryGetValue(kvp.Key, out l))
+                {
+                    l = new List<Object>();
+                    ModuleInterfaces.Add(kvp.Key, l);
+                }
+
+                if (l.Count > 0)
+                    l.Clear();
+
+                l.Add(kvp.Value);
             }
         }
 
@@ -383,26 +401,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RegisterInterface<M>(M mod)
         {
-            List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof(M), out l))
-            {
-                l = new List<Object>();
-                ModuleInterfaces.Add(typeof(M), l);
-            }
-
-            if (l.Count > 0)
-                return;
-
-            l.Add(mod);
-
-            if (mod is IEntityCreator)
-            {
-                IEntityCreator entityCreator = (IEntityCreator)mod;
-                foreach (PCode pcode in entityCreator.CreationCapabilities)
-                {
-                    m_entityCreators[pcode] = entityCreator;
-                }
-            }
+            RegisterModuleInterface<M>(mod);
         }
 
         public void StackModuleInterface<M>(M mod)

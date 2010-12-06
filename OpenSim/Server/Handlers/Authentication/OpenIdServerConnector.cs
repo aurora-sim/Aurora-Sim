@@ -45,34 +45,21 @@ namespace OpenSim.Server.Handlers.Authentication
  
         private IAuthenticationService m_AuthenticationService;
         private IUserAccountService m_UserAccountService;
-        private string m_ConfigName = "OpenIdService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("OpenIdHandler", Name) != Name)
                 return;
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
 
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string authService = serverConfig.GetString("AuthenticationServiceModule",
-                    String.Empty);
-            string userService = serverConfig.GetString("UserAccountServiceModule",
-                    String.Empty);
-
-            if (authService == String.Empty || userService == String.Empty)
-                throw new Exception("No AuthenticationServiceModule or no UserAccountServiceModule in config file for OpenId authentication");
-
-            Object[] args = new Object[] { config };
-            m_AuthenticationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authService, args);
-            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(authService, args);
-
+            m_AuthenticationService = sim.Get<IAuthenticationService>();
+            m_UserAccountService = sim.Get<IUserAccountService>(); 
+            
             // Handler for OpenID user identity pages
             server.AddStreamHandler(new OpenIdStreamHandler("GET", "/users/", m_UserAccountService, m_AuthenticationService));
             // Handlers for the OpenID endpoint server

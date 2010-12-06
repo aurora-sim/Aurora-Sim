@@ -35,20 +35,63 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AvatarService
 {
-    public class AvatarService : AvatarServiceBase, IAvatarService
+    public class AvatarService : ServiceBase, IAvatarService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+        protected IAvatarData m_Database = null;
 
-        public AvatarService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "Avatars";
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // [AvatarService] section overrides [DatabaseService], if it exists
+            //
+            IConfig presenceConfig = config.Configs["AvatarService"];
+            if (presenceConfig != null)
+            {
+                dllName = presenceConfig.GetString("StorageProvider", dllName);
+                connString = presenceConfig.GetString("ConnectionString", connString);
+                realm = presenceConfig.GetString("Realm", realm);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IAvatarData>(dllName, new Object[] { connString, realm });
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module " + dllName);
+            registry.RegisterInterface<IAvatarService>(this);
             m_log.Debug("[AVATAR SERVICE]: Starting avatar service");
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public AvatarAppearance GetAppearance(UUID principalID)

@@ -36,12 +36,13 @@ using OpenSim.Framework.Console;
 using OpenSim.Data;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse;
 
 namespace OpenSim.Services.GridService
 {
-    public class GridService : GridServiceBase, IGridService
+    public class GridService : ServiceBase, IGridService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -52,6 +53,7 @@ namespace OpenSim.Services.GridService
         protected IConfigSource m_config;
         protected static HypergridLinker m_HypergridLinker;
         protected Aurora.Framework.IEstateConnector m_EstateConnector;
+        protected IRegionData m_Database = null;
 
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
@@ -59,25 +61,52 @@ namespace OpenSim.Services.GridService
         protected bool m_UseSessionID = true;
         protected Dictionary<UUID, UUID> GridSessionIDs = new Dictionary<UUID, UUID>();
 
-        public GridService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "regions";
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // [GridService] section overrides [DatabaseService], if it exists
+            //
+            IConfig gridConfig = config.Configs["GridService"];
+            if (gridConfig != null)
+            {
+                dllName = gridConfig.GetString("StorageProvider", dllName);
+                connString = gridConfig.GetString("ConnectionString", connString);
+                realm = gridConfig.GetString("Realm", realm);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IRegionData>(dllName, new Object[] { connString, realm });
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
+
             //m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;
-            IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", false);
-
-                string authService = gridConfig.GetString("AuthenticationService", String.Empty);
-
-                if (authService != String.Empty)
-                {
-                    Object[] args = new Object[] { config };
-                    m_AuthenticationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authService, args);
-                }
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
                 m_AllowHypergridMapSearch = gridConfig.GetBoolean("AllowHypergridMapSearch", m_AllowHypergridMapSearch);
             }
@@ -102,9 +131,15 @@ namespace OpenSim.Services.GridService
                             String.Empty,
                             HandleSetFlags);
                 }
-                m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
                 m_HypergridLinker = new HypergridLinker(m_config, this, m_Database);
             }
+            registry.RegisterInterface<IGridService>(this);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+            m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
+            m_AuthenticationService = registry.Get<IAuthenticationService>();
         }
 
         #region IGridService

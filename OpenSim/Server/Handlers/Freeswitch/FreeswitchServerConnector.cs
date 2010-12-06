@@ -46,36 +46,20 @@ namespace OpenSim.Server.Handlers.Freeswitch
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IFreeswitchService m_FreeswitchService;
-        private string m_ConfigName = "FreeswitchService";
         protected readonly string m_freeSwitchAPIPrefix = "/fsapi";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeswitchHandler", Name) != Name)
                 return;
-
-            if (configName != String.Empty)
-                m_ConfigName = configName;
-
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section '{0}' in config file", m_ConfigName));
-
-            string freeswitchService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (freeswitchService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_FreeswitchService =
-                    Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFreeswitchService>(freeswitchService, args);
-
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FreeswitchHandlerPort"));
+            m_FreeswitchService = sim.Get<IFreeswitchService>();
+            
             server.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
             server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);
         }

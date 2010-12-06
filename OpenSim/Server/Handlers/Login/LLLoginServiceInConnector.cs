@@ -51,20 +51,19 @@ namespace OpenSim.Server.Handlers.Login
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("LLLoginHandler", Name) != Name)
                 return;
 
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));
             m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             string loginService = ReadLocalServiceFromConfig(config);
 
             ISimulationService simService = sim.Get<ISimulationService>();
             ILibraryService libService = sim.Get<ILibraryService>();
-
-            Object[] args = new Object[] { config, simService, libService };
-            m_LoginService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILoginService>(loginService, args);
+            m_LoginService = sim.Get<ILoginService>();
 
             InitializeHandlers(server);
         }

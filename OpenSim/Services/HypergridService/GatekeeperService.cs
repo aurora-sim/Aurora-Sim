@@ -105,6 +105,11 @@ namespace OpenSim.Services.HypergridService
                 if (m_GridService == null || m_PresenceService == null || m_SimulationService == null)
                     throw new Exception("Unable to load a required plugin, Gatekeeper Service cannot function.");
 
+                /*m_GridService.Initialize(config, new RegistryCore());
+                m_PresenceService.Initialize(config, new RegistryCore());
+                if(m_UserAgentService != null)
+                    m_UserAgentService.Initialize(config, new RegistryCore());
+                m_SimulationService.Initialize(config, new RegistryCore());*/
                 m_log.Debug("[GATEKEEPER SERVICE]: Starting...");
             }
         }

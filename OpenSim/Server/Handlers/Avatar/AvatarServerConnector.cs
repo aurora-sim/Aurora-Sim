@@ -38,31 +38,20 @@ namespace OpenSim.Server.Handlers.Avatar
     public class AvatarServiceConnector : IServiceConnector
     {
         private IAvatarService m_AvatarService;
-        private string m_ConfigName = "AvatarService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", Name) != Name)
                 return;
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AvatarHandlerPort"));
 
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string avatarService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (avatarService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_AvatarService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAvatarService>(avatarService, args);
-
+            m_AvatarService = sim.Get<IAvatarService>();
+            
             server.AddStreamHandler(new AvatarServerPostHandler(m_AvatarService));
         }
     }

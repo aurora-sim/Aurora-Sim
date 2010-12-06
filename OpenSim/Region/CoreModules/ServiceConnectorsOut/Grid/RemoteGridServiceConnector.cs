@@ -104,7 +104,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Grid
 
             base.Initialise(source);
 
-            m_LocalGridService = new LocalGridServicesConnector(source);
+            //m_LocalGridService = new LocalGridServicesConnector(source);
         }
 
         public void PostInitialise()

@@ -89,13 +89,16 @@ namespace OpenSim.Services.HypergridService
                 if (gridService == string.Empty || gridUserService == string.Empty || gatekeeperService == string.Empty)
                     throw new Exception(String.Format("Incomplete specifications, UserAgent Service cannot function."));
 
-                Object[] args = new Object[] { config };
+                /*Object[] args = new Object[] { config };
                 m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
                 m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(gridUserService, args);
                 m_GatekeeperConnector = new GatekeeperServiceConnector();
                 m_GatekeeperService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGatekeeperService>(gatekeeperService, args);
-
-                m_GridName = serverConfig.GetString("ExternalName", string.Empty);
+                */
+                //m_GridService.Initialize(config, new RegistryCore());
+                //m_GridUserService.Initialize(config, new RegistryCore());
+                //m_GatekeeperService.Initialize(config, new RegistryCore());
+                //m_GridName = serverConfig.GetString("ExternalName", string.Empty);
                 if (m_GridName == string.Empty)
                 {
                     serverConfig = config.Configs["GatekeeperService"];

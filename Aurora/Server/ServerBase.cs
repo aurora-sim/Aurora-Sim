@@ -59,32 +59,6 @@ namespace Aurora.Server
 {
     public class AuroraBase : SimulationBase
     {
-        protected Dictionary<uint, BaseHttpServer> m_Servers =
-            new Dictionary<uint, BaseHttpServer>();
-
-        public IHttpServer GetHttpServer(uint port)
-        {
-            m_log.InfoFormat("[SERVER]: Requested port {0}", port);
-            if (port == m_Port)
-                return HttpServer;
-
-            if (m_Servers.ContainsKey(port))
-                return m_Servers[port];
-
-            m_Servers[port] = new BaseHttpServer(port);
-
-            m_log.InfoFormat("[SERVER]: Starting new HTTP server on port {0}", port);
-            m_Servers[port].Start();
-
-            return m_Servers[port];
-        }
-
-        public override void SetUpHTTPServer()
-        {
-            base.SetUpHTTPServer();
-            m_Servers.Add(m_Port, m_BaseHTTPServer);
-        }
-
         public override void Configuration(IConfigSource configSource)
         {
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -113,72 +87,37 @@ namespace Aurora.Server
 
         public override void StartModules()
         {
-            IConfig startupConfig = m_config.Configs["Startup"];
-
-            string connList = startupConfig.GetString("ServiceConnectors", String.Empty);
-            string[] conns = connList.Split(new char[] { ',', ' ' });
-
-            foreach (string c in conns)
+            List<IService> serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
+            foreach (IService connector in serviceConnectors)
             {
-                if (c == String.Empty)
-                    continue;
-
-                string configName = String.Empty;
-                string conn = c;
-                uint port = 0;
-
-                string[] split1 = conn.Split(new char[] { '/' });
-                if (split1.Length > 1)
+                try
                 {
-                    conn = split1[1];
-
-                    string[] split2 = split1[0].Split(new char[] { '@' });
-                    if (split2.Length > 1)
-                    {
-                        configName = split2[0];
-                        port = Convert.ToUInt32(split2[1]);
-                    }
-                    else
-                    {
-                        port = Convert.ToUInt32(split1[0]);
-                    }
+                    connector.Initialize(m_config, ApplicationRegistry);
                 }
-                string[] parts = conn.Split(new char[] { ':' });
-                string friendlyName = parts[0];
-                if (parts.Length > 1)
-                    friendlyName = parts[1];
-
-                IHttpServer server = HttpServer;
-                if (port != 0)
-                    server = GetHttpServer(port);
-
-                if (port != DefaultPort && port != 0)
-                    m_log.InfoFormat("[SERVER]: Loading {0} on port {1}", friendlyName, port);
-                else
-                    m_log.InfoFormat("[SERVER]: Loading {0}", friendlyName);
-
-                IServiceConnector connector = null;
-
-                Object[] modargs = new Object[] { m_config, server,
-                    configName };
-                connector = AuroraModuleLoader.LoadPlugin<IServiceConnector>(conn,
-                        modargs);
-                if (connector == null)
+                catch
                 {
-                    modargs = new Object[] { m_config, server };
-                    connector =
-                            AuroraModuleLoader.LoadPlugin<IServiceConnector>(conn,
-                            modargs);
                 }
-
-                if (connector != null)
+            }
+            foreach (IService connector in serviceConnectors)
+            {
+                try
                 {
-                    //m_ServiceConnectors.Add(connector);
-                    m_log.InfoFormat("[SERVER]: {0} loaded successfully", friendlyName);
+                    connector.PostInitialize(ApplicationRegistry);
                 }
-                else
+                catch
                 {
-                    m_log.InfoFormat("[SERVER]: Failed to load {0}", conn);
+                }
+            }
+
+            List<IServiceConnector> connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
+            foreach (IServiceConnector connector in connectors)
+            {
+                try
+                {
+                    connector.Initialize(m_config, this, "", ApplicationRegistry);
+                }
+                catch
+                {
                 }
             }
         }

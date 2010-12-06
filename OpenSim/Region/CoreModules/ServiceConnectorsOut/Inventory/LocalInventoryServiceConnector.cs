@@ -84,10 +84,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
                         return;
                     }
 
-                    Object[] args = new Object[] { source };
+                    Object[] args = new Object[0];
                     m_log.DebugFormat("[LOCAL INVENTORY SERVICES CONNECTOR]: Service dll = {0}", serviceDll);
 
                     m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(serviceDll, args);
+                    m_InventoryService.Initialize(source, new OpenSim.Framework.RegistryCore());
 
                     if (m_InventoryService == null)
                     {

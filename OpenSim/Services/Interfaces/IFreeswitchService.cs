@@ -28,6 +28,7 @@
 using System;
 using OpenSim.Framework;
 using System.Collections;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {

@@ -58,7 +58,7 @@ namespace OpenSim.Services.LLLoginService
         bool Login(Hashtable request, UUID User, out string message);
     }
 
-    public class LLLoginService : ILoginService
+    public class LLLoginService : ILoginService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool Initialized = false;
@@ -105,8 +105,7 @@ namespace OpenSim.Services.LLLoginService
         protected GridAvatarArchiver archiver;
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
         protected bool allowExportPermission = true;
-
-        public LLLoginService(IConfigSource config, ISimulationService simService, ILibraryService libraryService)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_config = config;
             m_AuroraLoginConfig = config.Configs["AuroraLoginService"];
@@ -130,19 +129,6 @@ namespace OpenSim.Services.LLLoginService
             if (m_LoginServerConfig == null)
                 throw new Exception(String.Format("No section LoginService in config file"));
 
-            string accountService = m_LoginServerConfig.GetString("UserAccountService", String.Empty);
-            string gridUserService = m_LoginServerConfig.GetString("GridUserService", String.Empty);
-            string agentService = m_LoginServerConfig.GetString("UserAgentService", String.Empty);
-            string authService = m_LoginServerConfig.GetString("AuthenticationService", String.Empty);
-            string invService = m_LoginServerConfig.GetString("InventoryService", String.Empty);
-            string gridService = m_LoginServerConfig.GetString("GridService", String.Empty);
-            string presenceService = m_LoginServerConfig.GetString("PresenceService", String.Empty);
-            string libService = m_LoginServerConfig.GetString("LibraryService", String.Empty);
-            string friendsService = m_LoginServerConfig.GetString("FriendsService", String.Empty);
-            string avatarService = m_LoginServerConfig.GetString("AvatarService", String.Empty);
-            string simulationService = m_LoginServerConfig.GetString("SimulationService", String.Empty);
-            string assetService = m_LoginServerConfig.GetString("AssetService", String.Empty);
-
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
             m_RequireInventory = m_LoginServerConfig.GetBoolean("RequireInventory", true);
@@ -151,47 +137,24 @@ namespace OpenSim.Services.LLLoginService
             m_GatekeeperURL = m_LoginServerConfig.GetString("GatekeeperURI", string.Empty);
             m_MapTileURL = m_LoginServerConfig.GetString("MapTileURL", string.Empty);
             m_SearchURL = m_LoginServerConfig.GetString("SearchURL", string.Empty);
+            registry.RegisterInterface<ILoginService>(this);
+        }
 
-            // These are required; the others aren't
-            if (accountService == string.Empty || authService == string.Empty)
-                throw new Exception("LoginService is missing service specifications");
-
-            Object[] args = new Object[] { config };
-            m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(accountService, args);
-            m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(gridUserService, args);
-            m_AuthenticationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAuthenticationService>(authService, args);
-            m_InventoryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(invService, args);
-
-            if (gridService != string.Empty)
-                m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
-            if (presenceService != string.Empty)
-                m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(presenceService, args);
-            if (avatarService != string.Empty)
-                m_AvatarService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAvatarService>(avatarService, args);
-            if (friendsService != string.Empty)
-                m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(friendsService, args);
-            if (simulationService != string.Empty)
-                m_RemoteSimulationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ISimulationService>(simulationService, args);
-            if (agentService != string.Empty)
-                m_UserAgentService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAgentService>(agentService, args);
-            if (assetService != string.Empty)
-                m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
-
-            //
-            // deal with the services given as argument
-            //
-            m_LocalSimulationService = simService;
-            if (libraryService != null)
-            {
-                m_log.DebugFormat("[LLOGIN SERVICE]: Using LibraryService given as argument");
-                m_LibraryService = libraryService;
-            }
-            else if (libService != string.Empty)
-            {
-                m_log.DebugFormat("[LLOGIN SERVICE]: Using instantiated LibraryService");
-                m_LibraryService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ILibraryService>(libService, args);
-            }
-
+        public void PostInitialize(IRegistryCore registry)
+        {
+            m_UserAccountService = registry.Get<IUserAccountService>();
+            m_GridUserService = registry.Get<IGridUserService>();
+            m_AuthenticationService = registry.Get<IAuthenticationService>();
+            m_InventoryService = registry.Get<IInventoryService>();
+            m_GridService = registry.Get<IGridService>();
+            m_PresenceService = registry.Get<IPresenceService>();
+            m_AvatarService = registry.Get<IAvatarService>();
+            m_FriendsService = registry.Get<IFriendsService>();
+            m_RemoteSimulationService = registry.Get<ISimulationService>();
+            m_UserAgentService = registry.Get<IUserAgentService>();
+            m_AssetService = registry.Get<IAssetService>();
+            m_LibraryService = registry.Get<ILibraryService>();
+            
             m_GatekeeperConnector = new GatekeeperServiceConnector();
 
             if (!Initialized)
@@ -206,16 +169,10 @@ namespace OpenSim.Services.LLLoginService
             LoginModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ILoginModule>();
             foreach (ILoginModule module in LoginModules)
             {
-                module.Initialize(this, config, m_UserAccountService);
+                module.Initialize(this, m_config, m_UserAccountService);
             }
 
             m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
-
-        }
-
-        public LLLoginService(IConfigSource config)
-            : this(config, null, null)
-        {
         }
 
         public void ReadEventValues(IConfig config)

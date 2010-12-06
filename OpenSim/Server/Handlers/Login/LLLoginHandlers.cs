@@ -98,12 +98,6 @@ namespace OpenSim.Server.Handlers.Login
                     //MAC BANNING START
                     string mac = (string)requestData["mac"];
                     Aurora.Framework.IAgentConnector AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
-                    if (AgentConnector == null)
-                    {
-                        Aurora.Services.DataService.LocalDataService IDS = new Aurora.Services.DataService.LocalDataService();
-                        IDS.Initialise(m_Config);
-                        AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
-                    }
                     if (AgentConnector != null)
                     {
                         if (!AgentConnector.CheckMacAndViewer(mac, clientVersion))

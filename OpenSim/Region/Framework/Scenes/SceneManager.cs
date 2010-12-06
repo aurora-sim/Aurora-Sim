@@ -115,7 +115,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (StorageDLL == String.Empty)
                 StorageDLL = "OpenSim.Data.Null.dll";
 
-            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[] { m_config });
+            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[0]);
+            m_simulationDataService.Initialize(m_config, null);
 
             //Register us!
             m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
@@ -1085,7 +1086,9 @@ namespace OpenSim.Region.Framework.Scenes
             regionInfo.InternalEndPoint.Port = (int)port;
 
             Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
-            
+
+            StartModules(scene);
+
             FindEstateInfo(scene);
 
             clientServer.AddScene(scene);
@@ -1097,6 +1100,50 @@ namespace OpenSim.Region.Framework.Scenes
             scene.PhysicsScene = GetPhysicsScene(m_config, scene.RegionInfo.RegionName);
             
             return scene;
+        }
+        List<IService> serviceConnectors;
+        List<IServiceConnector> connectors;
+        RegistryCore m_serviceRegistry = null;
+        public void StartModules(Scene scene)
+        {
+            if (m_serviceRegistry == null)
+            {
+                m_serviceRegistry = new RegistryCore();
+                serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
+                connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
+                foreach (IService connector in serviceConnectors)
+                {
+                    try
+                    {
+                        connector.Initialize(m_config, m_serviceRegistry);
+                    }
+                    catch
+                    {
+                    }
+                }
+                foreach (IService connector in serviceConnectors)
+                {
+                    try
+                    {
+                        connector.PostInitialize(m_serviceRegistry);
+                    }
+                    catch
+                    {
+                    }
+                }
+                foreach (IServiceConnector connector in connectors)
+                {
+                    try
+                    {
+                        connector.Initialize(m_config, m_OpenSimBase, "", m_serviceRegistry);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+
+            scene.AddModuleInterfaces(m_serviceRegistry.GetInterfaces());
         }
 
         /// <summary>

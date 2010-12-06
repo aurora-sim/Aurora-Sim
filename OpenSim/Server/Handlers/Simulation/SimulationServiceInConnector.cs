@@ -44,11 +44,12 @@ namespace OpenSim.Server.Handlers.Simulation
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationHandler", Name) != Name)
                 return;
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("SimulationHandlerPort"));
 
             //IConfig serverConfig = config.Configs["SimulationService"];
             //if (serverConfig == null)
@@ -63,6 +64,8 @@ namespace OpenSim.Server.Handlers.Simulation
             //Object[] args = new Object[] { config };
             m_LocalSimulationService = sim.Get<ISimulationService>();
             m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
+            if (m_LocalSimulationService == null)
+                m_LocalSimulationService = sim.Get<ISimulationService>();
                     //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
 
             //System.Console.WriteLine("XXXXXXXXXXXXXXXXXXX m_AssetSetvice == null? " + ((m_AssetService == null) ? "yes" : "no"));

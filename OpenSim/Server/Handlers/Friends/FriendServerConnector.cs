@@ -38,31 +38,20 @@ namespace OpenSim.Server.Handlers.Friends
     public class FriendsServiceConnector : IServiceConnector
     {
         private IFriendsService m_FriendsService;
-        private string m_ConfigName = "FriendsService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsHandler", Name) != Name)
                 return;
 
-            IConfig serverConfig = config.Configs[m_ConfigName];
-            if (serverConfig == null)
-                throw new Exception(String.Format("No section {0} in config file", m_ConfigName));
-
-            string gridService = serverConfig.GetString("LocalServiceModule",
-                    String.Empty);
-
-            if (gridService == String.Empty)
-                throw new Exception("No LocalServiceModule in config file");
-
-            Object[] args = new Object[] { config };
-            m_FriendsService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IFriendsService>(gridService, args);
-
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FriendsHandlerPort"));
+            m_FriendsService = sim.Get<IFriendsService>();
+            
             server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
         }
     }

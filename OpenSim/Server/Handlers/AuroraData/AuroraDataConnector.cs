@@ -20,7 +20,7 @@ using Aurora.Services.DataService;
  
 namespace OpenSim.Server.Handlers.AuroraData
 {
-    public class AuroraDataServiceConnector : IServiceConnector
+    public class AuroraDataServiceConnector : IServiceConnector, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public string Name
@@ -28,16 +28,36 @@ namespace OpenSim.Server.Handlers.AuroraData
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IHttpServer server, string configName, IRegistryCore sim)
+        //IService below, this gets loaded first and sets up AuroraData for the whole instance
+        #region IService
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuroraDataHandler", Name) != Name)
                 return;
 
-            m_log.Debug("[AuroraDataConnectors]: Starting...");
-
             LocalDataService LDS = new Aurora.Services.DataService.LocalDataService();
             LDS.Initialise(config);
+            registry.RegisterInterface<LocalDataService>(LDS);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+        }
+
+        #endregion
+
+        //This is IServiceConnector and it is loaded second and sets up the remote connections
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuroraDataHandler", Name) != Name)
+                return;
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuroraDataHandlerPort"));
+
+            m_log.Debug("[AuroraDataConnectors]: Starting...");
+
             server.AddStreamHandler(new AuroraDataServerPostHandler());
         }
     }

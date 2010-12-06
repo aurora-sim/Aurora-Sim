@@ -37,6 +37,7 @@ using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
@@ -48,8 +49,7 @@ namespace OpenSim.Services.Connectors
 
         protected IEstateDataStore m_database;
 
-        public EstateDataService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             string dllName = String.Empty;
             string connString = String.Empty;
@@ -78,6 +78,10 @@ namespace OpenSim.Services.Connectors
             m_database = LoadPlugin<IEstateDataStore>(dllName, new Object[] { connString });
             if (m_database == null)
                 throw new Exception("Could not find a storage interface in the given module");
+        }
+
+        public virtual void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public EstateSettings LoadEstateSettings(UUID regionID, bool create)

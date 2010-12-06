@@ -63,7 +63,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 
         public virtual void Initialise(IConfigSource config)
         {
-
             IConfig moduleConfig = config.Configs["Modules"];
             if (moduleConfig != null)
             {
@@ -166,6 +165,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 
         public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out string reason)
         {
+            reason = "";
             if (destination == null)
             {
                 reason = "Given destination was null";

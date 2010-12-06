@@ -82,9 +82,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Asset
                         return;
                     }
 
-                    Object[] args = new Object[] { source };
+                    Object[] args = new Object[0];
                     m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(serviceDll, args);
-
+                    m_AssetService.Initialize(source, new RegistryCore());
                     if (m_AssetService == null)
                     {
                         m_log.Error("[LOCAL ASSET SERVICES CONNECTOR]: Can't load asset service");

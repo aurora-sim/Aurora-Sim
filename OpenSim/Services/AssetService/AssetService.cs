@@ -33,33 +33,72 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.Base;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AssetService
 {
-    public class AssetService : AssetServiceBase, IAssetService
+    public class AssetService : ServiceBase, IAssetService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+        protected IAssetDataPlugin m_Database = null;
+        protected IAssetLoader m_AssetLoader = null;
 
-        public AssetService(IConfigSource config) : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            MainConsole.Instance.Commands.AddCommand("kfs", false,
-                    "show digest",
-                    "show digest <ID>",
-                    "Show asset digest", HandleShowDigest);
+            string dllName = String.Empty;
+            string connString = String.Empty;
 
-            MainConsole.Instance.Commands.AddCommand("kfs", false,
-                    "delete asset",
-                    "delete asset <ID>",
-                    "Delete asset from database", HandleDeleteAsset);
+            //
+            // Try reading the [AssetService] section first, if it exists
+            //
+            IConfig assetConfig = config.Configs["AssetService"];
+            if (assetConfig != null)
+            {
+                dllName = assetConfig.GetString("StorageProvider", dllName);
+                connString = assetConfig.GetString("ConnectionString", connString);
+            }
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IAssetDataPlugin>(dllName);
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
+
+            m_Database.Initialise(connString);
+
+            string loaderName = assetConfig.GetString("DefaultAssetLoader",
+                    String.Empty);
+
+            if (loaderName != String.Empty)
+            {
+                m_AssetLoader = LoadPlugin<IAssetLoader>(loaderName);
+
+                if (m_AssetLoader == null)
+                    throw new Exception("Asset loader could not be loaded");
+            }
 
             if (m_AssetLoader != null)
             {
-                IConfig assetConfig = config.Configs["AssetService"];
-                if (assetConfig == null)
-                    throw new Exception("No AssetService configuration");
 
                 string loaderArgs = assetConfig.GetString("AssetLoaderArgs",
                         String.Empty);
@@ -84,9 +123,24 @@ namespace OpenSim.Services.AssetService
                         auroraConfig.ConfigSource.Save();
                     }
                 }
-                
+                registry.RegisterInterface<IAssetService>(this);
+
+                MainConsole.Instance.Commands.AddCommand("kfs", false,
+                    "show digest",
+                    "show digest <ID>",
+                    "Show asset digest", HandleShowDigest);
+
+                MainConsole.Instance.Commands.AddCommand("kfs", false,
+                        "delete asset",
+                        "delete asset <ID>",
+                        "Delete asset from database", HandleDeleteAsset);
+
                 m_log.Info("[ASSET SERVICE]: Local asset service enabled");
             }
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public AssetBase Get(string id)

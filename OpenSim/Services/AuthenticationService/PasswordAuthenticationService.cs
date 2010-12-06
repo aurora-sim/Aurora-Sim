@@ -35,6 +35,7 @@ using System.Reflection;
 using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AuthenticationService
 {
@@ -45,14 +46,56 @@ namespace OpenSim.Services.AuthenticationService
     // verifiable identification.
     //
     public class PasswordAuthenticationService :
-            AuthenticationServiceBase, IAuthenticationService
+            AuthenticationServiceBase, IAuthenticationService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
- 
-        public PasswordAuthenticationService(IConfigSource config) :
-                base(config)
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            string dllName = String.Empty;
+            string connString = String.Empty;
+            string realm = "auth";
+
+            //
+            // Try reading the [AuthenticationService] section first, if it exists
+            //
+            IConfig authConfig = config.Configs["AuthenticationService"];
+            if (authConfig != null)
+            {
+                dllName = authConfig.GetString("StorageProvider", dllName);
+                connString = authConfig.GetString("ConnectionString", connString);
+                m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
+                realm = authConfig.GetString("Realm", realm);
+            }
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName == String.Empty || realm == String.Empty)
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IAuthenticationData>(dllName,
+                    new Object[] { connString, realm });
+            if (m_Database == null)
+                throw new Exception(string.Format("Could not find a storage interface in module {0}", dllName));
+            registry.RegisterInterface<IAuthenticationService>(this);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
         {
         }
 

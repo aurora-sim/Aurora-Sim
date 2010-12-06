@@ -38,6 +38,7 @@ using OpenSim.Services.Interfaces;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.InventoryService
 {
@@ -45,7 +46,7 @@ namespace OpenSim.Services.InventoryService
     /// Basically a hack to give us a Inventory library while we don't have a inventory server
     /// once the server is fully implemented then should read the data from that
     /// </summary>
-    public class LibraryService : ServiceBase, ILibraryService
+    public class LibraryService : ServiceBase, ILibraryService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -77,8 +78,7 @@ namespace OpenSim.Services.InventoryService
         protected Dictionary<UUID, InventoryFolderImpl> libraryFolders
             = new Dictionary<UUID, InventoryFolderImpl>();
 
-        public LibraryService(IConfigSource config)
-            : base(config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             string pLibrariesLocation = Path.Combine("inventory", "Libraries.xml");
             string pLibName = "OpenSim Library";
@@ -112,6 +112,11 @@ namespace OpenSim.Services.InventoryService
             libraryFolders.Add(m_LibraryRootFolder.ID, m_LibraryRootFolder);
 
             LoadLibraries(pLibrariesLocation);
+            registry.RegisterInterface<ILibraryService>(this);
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public InventoryItemBase CreateItem(UUID inventoryID, UUID assetID, string name, string description,

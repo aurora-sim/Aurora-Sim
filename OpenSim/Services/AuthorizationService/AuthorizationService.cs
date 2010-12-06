@@ -34,18 +34,64 @@ using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using OpenSim.Services.Base;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AuthorizationService
 {
-    public class AuthorizationService : AuthorizationServiceBase, IAuthorizationService
+    public class AuthorizationService : ServiceBase, IAuthorizationService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        public AuthorizationService(IConfigSource config) : base(config)
+        private IAssetDataPlugin m_Database;
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-                m_log.Info("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
+            string dllName = String.Empty;
+            string connString = String.Empty;
+
+            //
+            // Try reading the [AuthorizationService] section first, if it exists
+            //
+            IConfig assetConfig = config.Configs["AuthorizationService"];
+            if (assetConfig != null)
+            {
+                dllName = assetConfig.GetString("StorageProvider", dllName);
+                connString = assetConfig.GetString("ConnectionString", connString);
+            }
+
+            //
+            // Try reading the [DatabaseService] section, if it exists
+            //
+            IConfig dbConfig = config.Configs["DatabaseService"];
+            if (dbConfig != null)
+            {
+                if (dllName == String.Empty)
+                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                if (connString == String.Empty)
+                    connString = dbConfig.GetString("ConnectionString", String.Empty);
+            }
+
+            //
+            // We tried, but this doesn't exist. We can't proceed.
+            //
+            if (dllName.Equals(String.Empty))
+                throw new Exception("No StorageProvider configured");
+
+            m_Database = LoadPlugin<IAssetDataPlugin>(dllName);
+            if (m_Database == null)
+                throw new Exception("Could not find a storage interface in the given module");
+
+            m_Database.Initialise(connString);
+            registry.RegisterInterface<IAuthorizationService>(this);
+
+            m_log.Info("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         public bool IsAuthorizedForRegion(string userID, string regionID, out string message)
