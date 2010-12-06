@@ -748,6 +748,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 m_log.Error("[MODULES]: The new RegionModulesController is missing...");
 
+            StartServiceConnectors(scene);
             scene.SetModuleInterfaces();
 
             // Prims have to be loaded after module configuration since some modules may be invoked during the load
@@ -1121,29 +1122,33 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                     }
                 }
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.PostInitialize(m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
-                foreach (IServiceConnector connector in connectors)
-                {
-                    try
-                    {
-                        connector.Initialize(m_config, m_OpenSimBase, "", m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
             }
 
             scene.AddModuleInterfaces(m_serviceRegistry.GetInterfaces());
+        }
+
+        public void StartServiceConnectors(Scene scene)
+        {
+            foreach (IService connector in serviceConnectors)
+            {
+                try
+                {
+                    connector.PostInitialize(scene);
+                }
+                catch
+                {
+                }
+            }
+            foreach (IServiceConnector connector in connectors)
+            {
+                try
+                {
+                    connector.Initialize(m_config, m_OpenSimBase, "", scene);
+                }
+                catch
+                {
+                }
+            }
         }
 
         /// <summary>

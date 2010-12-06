@@ -64,8 +64,6 @@ namespace OpenSim.Server.Handlers.Simulation
             //Object[] args = new Object[] { config };
             m_LocalSimulationService = sim.Get<ISimulationService>();
             m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
-            if (m_LocalSimulationService == null)
-                m_LocalSimulationService = sim.Get<ISimulationService>();
                     //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
 
             //System.Console.WriteLine("XXXXXXXXXXXXXXXXXXX m_AssetSetvice == null? " + ((m_AssetService == null) ? "yes" : "no"));
