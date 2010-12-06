@@ -82,8 +82,17 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthorizationHandler", Name) != Name)
+                return;
+
             IConfig authorizationConfig = config.Configs["AuthorizationService"];
             if (authorizationConfig == null)
             {

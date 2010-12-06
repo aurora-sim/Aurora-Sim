@@ -46,9 +46,9 @@ namespace OpenSim.Server.Handlers.Avatar
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", Name) != Name)
+            if (handlerConfig.GetString("AvatarInHandler", Name) != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AvatarHandlerPort"));
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
 
             m_AvatarService = sim.Get<IAvatarService>();
             

@@ -46,9 +46,9 @@ namespace OpenSim.Server.Handlers.Authorization
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuthorizationHandler", Name) != Name)
+            if (handlerConfig.GetString("AuthorizationInHandler", Name) != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuthorizationHandlerPort"));
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuthorizationInHandlerPort"));
             m_AuthorizationService = sim.Get<IAuthorizationService>(); 
             
             server.AddStreamHandler(new AuthorizationServerPostHandler(m_AuthorizationService));

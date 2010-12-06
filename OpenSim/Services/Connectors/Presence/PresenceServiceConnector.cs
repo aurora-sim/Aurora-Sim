@@ -375,8 +375,17 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("PresenceHandler", Name) != Name)
+                return;
+
             IConfig gridConfig = config.Configs["PresenceService"];
             if (gridConfig == null)
             {

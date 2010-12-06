@@ -293,8 +293,17 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", Name) != Name)
+                return;
+
             IConfig gridConfig = config.Configs["AvatarService"];
             if (gridConfig == null)
             {

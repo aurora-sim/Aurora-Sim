@@ -47,10 +47,10 @@ namespace OpenSim.Server.Handlers.Asset
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", Name) != Name)
+            if (handlerConfig.GetString("AssetInHandler", Name) != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AssetHandlerPort"));
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AssetInHandlerPort"));
 
             m_AssetService = sim.Get<IAssetService>();
 

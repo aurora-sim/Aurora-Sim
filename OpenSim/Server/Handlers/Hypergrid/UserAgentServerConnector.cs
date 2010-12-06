@@ -60,10 +60,10 @@ namespace OpenSim.Server.Handlers.Hypergrid
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAgentHandler", Name) != Name)
+            if (handlerConfig.GetString("UserAgentInHandler", Name) != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAgentHandlerPort"));
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAgentInHandlerPort"));
             IConfig gridConfig = config.Configs["UserAgentService"];
 
             m_HomeUsersService = sim.Get<IUserAgentService>(); 

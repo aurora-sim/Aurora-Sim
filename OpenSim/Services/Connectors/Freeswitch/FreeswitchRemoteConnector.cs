@@ -68,8 +68,17 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource source, IRegistryCore registry)
         {
+            IConfig handlerConfig = source.Configs["Handlers"];
+            if (handlerConfig.GetString("FreeSwitchHandler", Name) != Name)
+                return;
+
             IConfig freeswitchConfig = source.Configs["FreeSwitchVoice"];
             if (freeswitchConfig == null)
             {
