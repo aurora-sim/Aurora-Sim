@@ -46,9 +46,9 @@ namespace OpenSim.Server.Handlers.UserAccounts
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
+            if (handlerConfig.GetString("UserAccountInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAccountHandlerPort"));
+            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
             m_UserAccountService = sim.Get<IUserAccountService>();
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }
