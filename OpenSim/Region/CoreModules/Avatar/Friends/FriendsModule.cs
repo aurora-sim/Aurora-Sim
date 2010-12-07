@@ -151,8 +151,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
             if (!m_enabled)
                 return;
-            if(m_FriendsService == null)
+            if (m_FriendsService == null)
+            {
                 m_FriendsService = scene.RequestModuleInterface<IFriendsService>();
+                m_FriendsSimConnector = new FriendsSimConnector();
+            }
 
             m_Scenes.Add(scene);
             scene.RegisterModuleInterface<IFriendsModule>(this);
