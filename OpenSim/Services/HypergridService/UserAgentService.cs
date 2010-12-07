@@ -48,7 +48,7 @@ namespace OpenSim.Services.HypergridService
     /// needs to do it for them.
     /// Once we have better clients, this shouldn't be needed.
     /// </summary>
-    public class UserAgentService : IUserAgentService
+    public class UserAgentService : IUserAgentService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -68,37 +68,22 @@ namespace OpenSim.Services.HypergridService
 
         protected static bool m_BypassClientVerification;
 
-        public UserAgentService(IConfigSource config)
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             if (!m_Initialized)
             {
                 m_Initialized = true;
 
                 m_log.DebugFormat("[HOME USERS SECURITY]: Starting...");
-                
+
                 IConfig serverConfig = config.Configs["UserAgentService"];
                 if (serverConfig == null)
                     throw new Exception(String.Format("No section UserAgentService in config file"));
 
-                string gridService = serverConfig.GetString("GridService", String.Empty);
-                string gridUserService = serverConfig.GetString("GridUserService", String.Empty);
-                string gatekeeperService = serverConfig.GetString("GatekeeperService", String.Empty);
-
                 m_BypassClientVerification = serverConfig.GetBoolean("BypassClientVerification", false);
 
-                if (gridService == string.Empty || gridUserService == string.Empty || gatekeeperService == string.Empty)
-                    throw new Exception(String.Format("Incomplete specifications, UserAgent Service cannot function."));
-
-                /*Object[] args = new Object[] { config };
-                m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
-                m_GridUserService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridUserService>(gridUserService, args);
-                m_GatekeeperConnector = new GatekeeperServiceConnector();
-                m_GatekeeperService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGatekeeperService>(gatekeeperService, args);
-                */
-                //m_GridService.Initialize(config, new RegistryCore());
-                //m_GridUserService.Initialize(config, new RegistryCore());
-                //m_GatekeeperService.Initialize(config, new RegistryCore());
-                //m_GridName = serverConfig.GetString("ExternalName", string.Empty);
                 if (m_GridName == string.Empty)
                 {
                     serverConfig = config.Configs["GatekeeperService"];
@@ -106,6 +91,16 @@ namespace OpenSim.Services.HypergridService
                 }
             }
         }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+            m_GridService = registry.Get<IGridService>();
+            m_GridUserService = registry.Get<IGridUserService>();
+            m_GatekeeperConnector = new GatekeeperServiceConnector();
+            m_GatekeeperService = registry.Get<IGatekeeperService>();     
+        }
+
+        #endregion
 
         public GridRegion GetHomeRegion(UUID userID, out Vector3 position, out Vector3 lookAt)
         {
@@ -285,7 +280,6 @@ namespace OpenSim.Services.HypergridService
 
             return false;
         }
-
     }
 
     class TravelingAgentInfo

@@ -43,7 +43,7 @@ using log4net;
 
 namespace OpenSim.Services.HypergridService
 {
-    public class GatekeeperService : IGatekeeperService
+    public class GatekeeperService : IGatekeeperService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -61,8 +61,9 @@ namespace OpenSim.Services.HypergridService
         private static bool m_AllowTeleportsToAnyRegion;
         private static string m_ExternalName;
         private static GridRegion m_DefaultGatewayRegion;
+        #region IService Members
 
-        public GatekeeperService(IConfigSource config, ISimulationService simService)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             if (!m_Initialized)
             {
@@ -72,52 +73,30 @@ namespace OpenSim.Services.HypergridService
                 if (serverConfig == null)
                     throw new Exception(String.Format("No section GatekeeperService in config file"));
 
-                string accountService = serverConfig.GetString("UserAccountService", String.Empty);
-                string homeUsersService = serverConfig.GetString("UserAgentService", string.Empty);
-                string gridService = serverConfig.GetString("GridService", String.Empty);
-                string presenceService = serverConfig.GetString("PresenceService", String.Empty);
-                string simulationService = serverConfig.GetString("SimulationService", String.Empty);
-
-                // These 3 are mandatory, the others aren't
-                if (gridService == string.Empty || presenceService == string.Empty)
-                    throw new Exception("Incomplete specifications, Gatekeeper Service cannot function.");
-                
                 string scope = serverConfig.GetString("ScopeID", UUID.Zero.ToString());
                 UUID.TryParse(scope, out m_ScopeID);
                 //m_WelcomeMessage = serverConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
                 m_AllowTeleportsToAnyRegion = serverConfig.GetBoolean("AllowTeleportsToAnyRegion", true);
                 m_ExternalName = serverConfig.GetString("ExternalName", string.Empty);
-
-                Object[] args = new Object[] { config };
-                m_GridService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IGridService>(gridService, args);
-                m_PresenceService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IPresenceService>(presenceService, args);
-
-                if (accountService != string.Empty)
-                    m_UserAccountService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAccountService>(accountService, args);
-                if (homeUsersService != string.Empty)
-                    m_UserAgentService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IUserAgentService>(homeUsersService, args);
-
-                if (simService != null)
-                    m_SimulationService = simService;
-                else if (simulationService != string.Empty)
-                    m_SimulationService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<ISimulationService>(simulationService, args);
-
-                if (m_GridService == null || m_PresenceService == null || m_SimulationService == null)
-                    throw new Exception("Unable to load a required plugin, Gatekeeper Service cannot function.");
-
-                /*m_GridService.Initialize(config, new RegistryCore());
-                m_PresenceService.Initialize(config, new RegistryCore());
-                if(m_UserAgentService != null)
-                    m_UserAgentService.Initialize(config, new RegistryCore());
-                m_SimulationService.Initialize(config, new RegistryCore());*/
-                m_log.Debug("[GATEKEEPER SERVICE]: Starting...");
             }
         }
 
-        public GatekeeperService(IConfigSource config)
-            : this(config, null)
+        public void PostInitialize(IRegistryCore registry)
         {
+            m_GridService = registry.Get<IGridService>();
+            m_PresenceService = registry.Get<IPresenceService>();
+
+            m_UserAccountService = registry.Get<IUserAccountService>();
+            m_UserAgentService = registry.Get<IUserAgentService>();
+
+            m_SimulationService = registry.Get<ISimulationService>();
+
+            if (m_GridService == null || m_PresenceService == null || m_SimulationService == null)
+                throw new Exception("Unable to load a required plugin, Gatekeeper Service cannot function.");
+            m_log.Debug("[GATEKEEPER SERVICE]: Starting...");
         }
+
+        #endregion
 
         public bool LinkRegion(string regionName, out UUID regionID, out ulong regionHandle, out string externalName, out string imageURL, out string reason)
         {

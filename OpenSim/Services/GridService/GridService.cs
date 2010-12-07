@@ -140,6 +140,7 @@ namespace OpenSim.Services.GridService
         {
             m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
             m_AuthenticationService = registry.Get<IAuthenticationService>();
+            m_HypergridLinker.PostInitialize(registry);
         }
 
         #region IGridService

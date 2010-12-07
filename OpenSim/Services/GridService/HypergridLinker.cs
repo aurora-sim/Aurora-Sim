@@ -106,22 +106,11 @@ namespace OpenSim.Services.GridService
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
-                string assetService = gridConfig.GetString("AssetService", string.Empty);
-
-                Object[] args = new Object[0];
-
-                if (assetService != string.Empty)
-                    m_AssetService = Aurora.Framework.AuroraModuleLoader.LoadPlugin<IAssetService>(assetService, args);
-                //if (m_AssetService != null)
-                //    m_AssetService.Initialize(config, new RegistryCore());
-
                 string scope = gridConfig.GetString("ScopeID", string.Empty);
                 if (scope != string.Empty)
                     UUID.TryParse(scope, out m_ScopeID);
 
                 m_Check4096 = gridConfig.GetBoolean("Check4096", m_Check4096);
-
-                m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
 
                 //m_log.DebugFormat("[HYPERGRID LINKER]: Loaded all services...");
             }
@@ -141,6 +130,11 @@ namespace OpenSim.Services.GridService
             }
         }
 
+        internal void PostInitialize(IRegistryCore registry)
+        {
+            m_AssetService = registry.Get<IAssetService>();
+            m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
+        }
 
         #region Link Region
 
@@ -671,6 +665,5 @@ namespace OpenSim.Services.GridService
         }
 
         #endregion
-
     }
 }

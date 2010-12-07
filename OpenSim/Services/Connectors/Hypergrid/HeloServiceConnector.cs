@@ -30,6 +30,7 @@ using System;
 using System.Net;
 using System.Reflection;
 using Nini.Config;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
@@ -48,6 +49,11 @@ namespace OpenSim.Services.Connectors
         public HeloServicesConnector(string serverURI)
         {
             m_ServerURI = serverURI.TrimEnd('/');
+        }
+
+        public void Initialize(IConfigSource config, OpenSim.Framework.ISimulationBase simBase, string configName, OpenSim.Framework.IRegistryCore sim)
+        {
+            throw new NotImplementedException();
         }
 
 
@@ -70,6 +76,5 @@ namespace OpenSim.Services.Connectors
             // fail
             return string.Empty;
         }
-
     }
 }
