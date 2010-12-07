@@ -42,6 +42,7 @@ using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
+using Nwc.XmlRpc;
 
 namespace Aurora.Simulation.Base
 {
@@ -403,6 +404,67 @@ namespace Aurora.Simulation.Base
                 d[kvp.Key] = kvp.Value;
             }
             return BuildQueryString(d);
+        }
+    }
+
+    /// <summary>Class supporting the request side of an XML-RPC transaction.</summary>
+    public class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
+    {
+        private Encoding _encoding = new ASCIIEncoding();
+        private XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
+        private XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
+        private bool _disableKeepAlive = true;
+
+        public string RequestResponse = String.Empty;
+
+        /// <summary>Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.</summary>
+        /// <param name="methodName"><c>String</c> designating the <i>object.method</i> on the server the request
+        /// should be directed to.</param>
+        /// <param name="parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
+        {
+            MethodName = methodName;
+            _params = parameters;
+            _disableKeepAlive = disableKeepAlive;
+        }
+
+        /// <summary>Send the request to the server.</summary>
+        /// <param name="url"><c>String</c> The url of the XML-RPC server.</param>
+        /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
+        public XmlRpcResponse Send(String url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            if (request == null)
+                throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
+                              XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " + url);
+            request.Method = "POST";
+            request.ContentType = "text/xml";
+            request.AllowWriteStreamBuffering = true;
+            request.KeepAlive = !_disableKeepAlive;
+
+            Stream stream = request.GetRequestStream();
+            XmlTextWriter xml = new XmlTextWriter(stream, _encoding);
+            _serializer.Serialize(xml, this);
+            xml.Flush();
+            xml.Close();
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            StreamReader input = new StreamReader(response.GetResponseStream());
+
+            string inputXml = input.ReadToEnd();
+            XmlRpcResponse resp;
+            try
+            {
+                resp = (XmlRpcResponse)_deserializer.Deserialize(inputXml);
+            }
+            catch (Exception e)
+            {
+                RequestResponse = inputXml;
+                throw e;
+            }
+            input.Close();
+            response.Close();
+            return resp;
         }
     }
 }

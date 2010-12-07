@@ -379,8 +379,8 @@ namespace Aurora.Simulation.Base
                 parameters.Add(VersionInfo.Version); //Aurora version
                 parameters.Add(msg); //The error
                 parameters.Add(Environment.OSVersion.Platform.ToString()); //The operating system
-                Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest req;
-                req = new Nwc.XmlRpc.ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
+                ConfigurableKeepAliveXmlRpcRequest req;
+                req = new ConfigurableKeepAliveXmlRpcRequest("SendErrorReport", parameters, true);
                 try
                 {
                     req.Send(m_urlToPostErrors, 10000);
@@ -389,77 +389,6 @@ namespace Aurora.Simulation.Base
                 {
                 }
             }
-        }
-    }
-}
-namespace Nwc.XmlRpc
-{
-    using System;
-    using System.Collections;
-    using System.IO;
-    using System.Xml;
-    using System.Net;
-    using System.Text;
-    using System.Reflection;
-
-    /// <summary>Class supporting the request side of an XML-RPC transaction.</summary>
-    public class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
-    {
-        private Encoding _encoding = new ASCIIEncoding();
-        private XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
-        private XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
-        private bool _disableKeepAlive = true;
-
-        public string RequestResponse = String.Empty;
-
-        /// <summary>Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.</summary>
-        /// <param name="methodName"><c>String</c> designating the <i>object.method</i> on the server the request
-        /// should be directed to.</param>
-        /// <param name="parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
-        public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
-        {
-            MethodName = methodName;
-            _params = parameters;
-            _disableKeepAlive = disableKeepAlive;
-        }
-
-        /// <summary>Send the request to the server.</summary>
-        /// <param name="url"><c>String</c> The url of the XML-RPC server.</param>
-        /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
-        public XmlRpcResponse Send(String url)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            if (request == null)
-                throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
-                              XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " + url);
-            request.Method = "POST";
-            request.ContentType = "text/xml";
-            request.AllowWriteStreamBuffering = true;
-            request.KeepAlive = !_disableKeepAlive;
-
-            Stream stream = request.GetRequestStream();
-            XmlTextWriter xml = new XmlTextWriter(stream, _encoding);
-            _serializer.Serialize(xml, this);
-            xml.Flush();
-            xml.Close();
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            StreamReader input = new StreamReader(response.GetResponseStream());
-
-            string inputXml = input.ReadToEnd();
-            XmlRpcResponse resp;
-            try
-            {
-                resp = (XmlRpcResponse)_deserializer.Deserialize(inputXml);
-            }
-            catch (Exception e)
-            {
-                RequestResponse = inputXml;
-                throw e;
-            }
-            input.Close();
-            response.Close();
-            return resp;
         }
     }
 }
