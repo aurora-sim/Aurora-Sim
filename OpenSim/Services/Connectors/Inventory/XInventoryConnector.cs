@@ -53,6 +53,10 @@ namespace OpenSim.Services.Connectors
             m_ServerURI = Url;
         }
 
+        public XInventoryServicesConnector()
+        {
+        }
+
         public bool CreateUserInventory(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("CREATEUSERINVENTORY",

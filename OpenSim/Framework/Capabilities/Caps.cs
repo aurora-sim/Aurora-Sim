@@ -295,7 +295,12 @@ namespace OpenSim.Framework.Capabilities
             }
             try
             {
-                RequestMap = request != "" ? ((OSDMap)OSDParser.DeserializeLLSDXml(request)) : new OSDMap();
+                if (request != "")
+                {
+                    OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
+                    if (osdRequest is OSDMap)
+                        RequestMap = (OSDMap)osdRequest;
+                }
             }
             catch
             {

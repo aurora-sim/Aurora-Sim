@@ -76,8 +76,6 @@ namespace OpenSim.Services.HypergridService
             {
                 m_Initialized = true;
 
-                m_log.DebugFormat("[HOME USERS SECURITY]: Starting...");
-
                 IConfig serverConfig = config.Configs["UserAgentService"];
                 if (serverConfig == null)
                     throw new Exception(String.Format("No section UserAgentService in config file"));
@@ -89,6 +87,8 @@ namespace OpenSim.Services.HypergridService
                     serverConfig = config.Configs["GatekeeperService"];
                     m_GridName = serverConfig.GetString("ExternalName", string.Empty);
                 }
+                m_log.DebugFormat("[HOME USERS SECURITY]: Starting...");
+
                 registry.RegisterInterface<IUserAgentService>(this);
             }
         }
