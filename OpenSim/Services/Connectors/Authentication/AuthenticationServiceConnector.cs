@@ -138,7 +138,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuthenticationHandler", Name) != Name)
+            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
             IConfig assetConfig = config.Configs["AuthenticationService"];

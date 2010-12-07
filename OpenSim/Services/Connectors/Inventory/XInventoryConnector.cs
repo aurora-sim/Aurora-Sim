@@ -583,7 +583,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", Name) != Name)
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
             IConfig assetConfig = config.Configs["InventoryService"];

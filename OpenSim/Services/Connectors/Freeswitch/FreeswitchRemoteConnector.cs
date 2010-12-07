@@ -76,7 +76,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource source, IRegistryCore registry)
         {
             IConfig handlerConfig = source.Configs["Handlers"];
-            if (handlerConfig.GetString("FreeSwitchHandler", Name) != Name)
+            if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
 
             IConfig freeswitchConfig = source.Configs["FreeSwitchVoice"];

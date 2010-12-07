@@ -217,7 +217,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridUserHandler", Name) != Name)
+            if (handlerConfig.GetString("GridUserHandler", "") != Name)
                 return;
 
             IConfig gridConfig = config.Configs["GridUserService"];

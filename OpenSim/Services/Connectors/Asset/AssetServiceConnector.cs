@@ -303,7 +303,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", Name) != Name)
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
             IConfig assetConfig = config.Configs["AssetService"];

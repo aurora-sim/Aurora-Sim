@@ -301,7 +301,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", Name) != Name)
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
             IConfig gridConfig = config.Configs["AvatarService"];

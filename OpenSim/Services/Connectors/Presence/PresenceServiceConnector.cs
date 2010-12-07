@@ -383,7 +383,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("PresenceHandler", Name) != Name)
+            if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
             IConfig gridConfig = config.Configs["PresenceService"];

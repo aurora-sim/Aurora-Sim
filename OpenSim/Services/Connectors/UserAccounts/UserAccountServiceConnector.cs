@@ -263,7 +263,7 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAccountHandler", Name) != Name)
+            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
             IConfig assetConfig = config.Configs["UserAccountService"];
