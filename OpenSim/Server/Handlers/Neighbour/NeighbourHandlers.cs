@@ -182,7 +182,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             OSChatMessage message = new OSChatMessage();
-            message.FromKVP((Dictionary<string, object>)request["MESSAGE"]);
+            message.FromKVP(WebUtils.ParseQueryString(request["MESSAGE"].ToString()));
             ChatSourceType type = (ChatSourceType)int.Parse(request["TYPE"].ToString());
             if (m_AuthenticationService != null)
             {

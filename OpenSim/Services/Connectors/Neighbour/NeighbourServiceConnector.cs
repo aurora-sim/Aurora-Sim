@@ -318,7 +318,7 @@ namespace OpenSim.Services.Connectors
                 m_log.Debug("[REST COMMS]: PackRegionInfoData failed with exception: " + e.Message);
                 return;
             }
-            args["MESSAGE"] = message.ToKVP();
+            args["MESSAGE"] = WebUtils.BuildQueryString(message.ToKVP());
             args["TYPE"] = (int)type;
             args["METHOD"] = "inform_neighbors_of_chat_message";
 
