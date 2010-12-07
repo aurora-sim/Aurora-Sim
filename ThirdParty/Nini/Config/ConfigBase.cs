@@ -276,6 +276,60 @@ namespace Nini.Config
 					: Convert.ToDouble (result, format);
 		}
 
+        /// <include file='IConfig.xml' path='//Method[@name="GetInt"]/docs/*' />
+        public uint GetUInt(string key)
+        {
+            string text = Get(key);
+
+            if (text == null)
+            {
+                throw new ArgumentException("Value not found: " + key);
+            }
+
+            return Convert.ToUInt32(text, format);
+        }
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntAlias"]/docs/*' />
+        public uint GetUInt(string key, bool fromAlias)
+        {
+            if (!fromAlias)
+            {
+                return GetUInt(key);
+            }
+
+            string result = Get(key);
+
+            if (result == null)
+            {
+                throw new ArgumentException("Value not found: " + key);
+            }
+
+            return GetUIntAlias(key, result);
+        }
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntDefault"]/docs/*' />
+        public uint GetUInt(string key, uint defaultValue)
+        {
+            string result = Get(key);
+
+            return (result == null)
+                    ? defaultValue
+                    : Convert.ToUInt32(result, format);
+        }
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntDefaultAlias"]/docs/*' />
+        public uint GetUInt(string key, uint defaultValue, bool fromAlias)
+        {
+            if (!fromAlias)
+            {
+                return GetUInt(key, defaultValue);
+            }
+
+            string result = Get(key);
+
+            return (result == null) ? defaultValue : GetUIntAlias(key, result);
+        }
+
 		/// <include file='IConfig.xml' path='//Method[@name="GetKeys"]/docs/*' />
 		public string[] GetKeys ()
 		{
@@ -394,6 +448,26 @@ namespace Nini.Config
 			
 			return result;
 		}
+
+        /// <summary>
+        /// Returns the integer alias first from this IConfig then 
+        /// the parent if there is none.
+        /// </summary>
+        private uint GetUIntAlias(string key, string alias)
+        {
+            uint result = 0;
+
+            if (aliasText.ContainsInt(key, alias))
+            {
+                result = aliasText.GetUInt(key, alias);
+            }
+            else
+            {
+                result = ConfigSource.Alias.GetUInt(key, alias);
+            }
+
+            return result;
+        }
 		
 		/// <summary>
 		/// Returns the boolean alias first from this IConfig then 

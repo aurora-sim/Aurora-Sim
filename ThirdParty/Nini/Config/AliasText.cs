@@ -106,6 +106,25 @@ namespace Nini.Config
 			
 			return (int)keys[alias];
 		}
+
+        /// <include file='AliasText.xml' path='//Method[@name="GetInt"]/docs/*' />
+        public uint GetUInt(string key, string alias)
+        {
+            if (!intAlias.Contains(key))
+            {
+                throw new ArgumentException("Alias does not exist for key");
+            }
+
+            Hashtable keys = (Hashtable)intAlias[key];
+
+            if (!keys.Contains(alias))
+            {
+                throw new ArgumentException("Config value does not match a " +
+                                             "supplied alias");
+            }
+
+            return (uint)keys[alias];
+        }
 		#endregion
 		
 		#region Private methods

@@ -77,8 +77,20 @@ namespace Nini.Config
 
 		/// <include file='IConfig.xml' path='//Method[@name="GetDoubleDefault"]/docs/*' />
 		double GetDouble (string key, double defaultValue);
-		
-		/// <include file='IConfig.xml' path='//Method[@name="GetKeys"]/docs/*' />
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetInt"]/docs/*' />
+        uint GetUInt(string key);
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntAlias"]/docs/*' />
+        uint GetUInt(string key, bool fromAlias);
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntDefault"]/docs/*' />
+        uint GetUInt(string key, uint defaultValue);
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetIntDefaultAlias"]/docs/*' />
+        uint GetUInt(string key, uint defaultValue, bool fromAlias);
+
+        /// <include file='IConfig.xml' path='//Method[@name="GetKeys"]/docs/*' />
 		string[] GetKeys ();
 
 		/// <include file='IConfig.xml' path='//Method[@name="GetValues"]/docs/*' />
