@@ -48,6 +48,11 @@ namespace OpenSim.Services.Connectors
 
         private string m_ServerURI = String.Empty;
 
+        public XInventoryServicesConnector(string Url)
+        {
+            m_ServerURI = Url;
+        }
+
         public bool CreateUserInventory(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("CREATEUSERINVENTORY",
@@ -567,12 +572,6 @@ namespace OpenSim.Services.Connectors
 
             return item;
         }
-
-        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
-        {
-            return false;
-        }
-
 
         #region IService Members
 

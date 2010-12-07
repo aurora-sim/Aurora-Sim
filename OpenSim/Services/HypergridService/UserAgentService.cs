@@ -89,6 +89,7 @@ namespace OpenSim.Services.HypergridService
                     serverConfig = config.Configs["GatekeeperService"];
                     m_GridName = serverConfig.GetString("ExternalName", string.Empty);
                 }
+                registry.RegisterInterface<IUserAgentService>(this);
             }
         }
 

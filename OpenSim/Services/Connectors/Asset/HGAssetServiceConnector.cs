@@ -34,10 +34,11 @@ using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Services.Connectors.Hypergrid;
 using OpenSim.Services.Connectors.SimianGrid;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class HGAssetServiceConnector : IAssetService
+    public class HGAssetServiceConnector : IAssetService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -45,22 +46,21 @@ namespace OpenSim.Services.Connectors
 
         private Dictionary<string, IAssetService> m_connectors = new Dictionary<string, IAssetService>();
 
-        public HGAssetServiceConnector(IConfigSource source)
+        public string Name
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                // string name = moduleConfig.GetString("AssetServices", "");
+            get { return GetType().Name; }
+        }
 
-                IConfig assetConfig = source.Configs["AssetService"];
-                if (assetConfig == null)
-                {
-                    m_log.Error("[HG ASSET SERVICE]: AssetService missing from OpenSim.ini");
-                    return;
-                }
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", Name) != Name)
+                return;
+            m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
+        }
 
-                m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
-            }
+        public void PostInitialize(IRegistryCore registry)
+        {
         }
 
         private bool StringToUrlAndAssetID(string id, out string url, out string assetID)

@@ -78,6 +78,7 @@ namespace OpenSim.Services.HypergridService
                 //m_WelcomeMessage = serverConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
                 m_AllowTeleportsToAnyRegion = serverConfig.GetBoolean("AllowTeleportsToAnyRegion", true);
                 m_ExternalName = serverConfig.GetString("ExternalName", string.Empty);
+                registry.RegisterInterface<IGatekeeperService>(this);
             }
         }
 

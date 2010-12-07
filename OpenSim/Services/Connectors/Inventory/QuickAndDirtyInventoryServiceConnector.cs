@@ -175,12 +175,6 @@ namespace OpenSim.Services.Connectors
             return 0;
         }
 
-        public bool LinkItem(IClientAPI client, UUID oldItemID, UUID parentID, uint Callback)
-        {
-            return false;
-        }
-
-
         #region IService Members
 
         public string Name
