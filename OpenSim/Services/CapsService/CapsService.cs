@@ -40,7 +40,7 @@ namespace OpenSim.Services.CapsService
         protected ILibraryService m_LibraryService;
         protected string m_hostName;
         protected uint m_port;
-        protected string HostURI
+        public string HostURI
         {
             get { return m_hostName + ":" + m_port; }
         }
@@ -81,20 +81,36 @@ namespace OpenSim.Services.CapsService
 
         public void RemoveCAPS(UUID AgentID)
         {
-            m_CapsServices.Remove(AgentID);
+            if(m_CapsServices.ContainsKey(AgentID))
+            {
+                List<ulong> regionHandles = new List<ulong>(m_CapsServices[AgentID].Keys);
+                foreach (ulong regionHandle in regionHandles)
+                {
+                    RemoveCAPS(AgentID, regionHandle);
+                }
+                m_CapsServices.Remove(AgentID);
+            }
         }
 
         public void RemoveCAPS(UUID AgentID, ulong regionHandle)
         {
+            //Remove all the CAPS handlers
+            m_CapsServices[AgentID][regionHandle].RemoveCAPS();
+            //Remove the SEED cap
+            m_server.RemoveStreamHandler("POST", m_CapsServices[AgentID][regionHandle].CapsURL);
             m_CapsServices[AgentID].Remove(regionHandle);
         }
 
-        public void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle)
+        public string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle)
         {
             //Add the HostURI so that it ends up here
+            string CAPSBase = CAPS;
             CAPS = HostURI + CAPS;
             //This makes the new SEED url on the CAPS server
-            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, m_GridUserService, m_GridService, m_PresenceService, SimCAPS, AgentID, m_hostName, true, regionHandle, this, CAPS), CAPS, AgentID);
+            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, m_GridUserService, m_GridService, m_PresenceService, SimCAPS, AgentID, m_hostName, regionHandle, this, CAPS, CAPSBase));
+            //Now make sure we didn't use an old one or something
+            IPrivateCapsService service = GetCapsService(regionHandle, AgentID);
+            return service.CapsURL;
         }
 
         public IPrivateCapsService GetCapsService(ulong regionID, UUID agentID)
@@ -104,15 +120,15 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
-        public void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID)
+        public void AddCapsService(IPrivateCapsService handler)
         {
-            if (!m_CapsServices.ContainsKey(agentID))
-                m_CapsServices.Add(agentID, new Dictionary<ulong,IPrivateCapsService>());
-            if (!m_CapsServices[agentID].ContainsKey(handler.RegionHandle))
+            if (!m_CapsServices.ContainsKey(handler.AgentID))
+                m_CapsServices.Add(handler.AgentID, new Dictionary<ulong, IPrivateCapsService>());
+            if (!m_CapsServices[handler.AgentID].ContainsKey(handler.RegionHandle))
             {
-                m_CapsServices[agentID][handler.RegionHandle] = handler;
+                m_CapsServices[handler.AgentID][handler.RegionHandle] = handler;
                 handler.Initialise();
-                m_server.AddStreamHandler(new RestStreamHandler("POST", CAPS, handler.CapsRequest));
+                m_server.AddStreamHandler(new RestStreamHandler("POST", handler.CapsBase, handler.CapsRequest));
             }
         }
     }

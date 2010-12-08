@@ -609,7 +609,9 @@ namespace OpenSim.Services.LLLoginService
 
             if(m_CapsService != null)
             {
-                m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle);
+                //Remove any previous users
+                m_CapsService.RemoveCAPS(AgentID);
+                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle);
             }
             else
             {

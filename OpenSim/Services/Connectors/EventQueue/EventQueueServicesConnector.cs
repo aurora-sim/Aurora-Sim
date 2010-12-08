@@ -56,7 +56,7 @@ namespace OpenSim.Services.Connectors
         
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private string m_serverURL = "";
-        private ICapabilitiesModule m_capsModule = null;
+        private List<ICapabilitiesModule> m_capsModules = new List<ICapabilitiesModule>();
 
         #region IService Members
 
@@ -84,7 +84,7 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IRegistryCore registry)
         {
-            m_capsModule = registry.Get<ICapabilitiesModule>();
+            m_capsModules.Add(registry.Get<ICapabilitiesModule>());
         }
 
         #endregion
@@ -93,17 +93,20 @@ namespace OpenSim.Services.Connectors
         /// Find the password of the user that we may have recieved in the CAPS seed request.
         /// </summary>
         /// <param name="agentID"></param>
-        private void FindAndPopulateEQMPassword(UUID agentID)
+        private void FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle)
         {
-            if (m_capsModule != null)
+            if (m_capsModules.Count != 0)
             {
-                Caps caps = m_capsModule.GetCapsHandlerForUser(agentID);
-                if (caps != null)
+                foreach (ICapabilitiesModule m in m_capsModules)
                 {
-                    if (caps.RequestMap.ContainsKey("EventQueuePass"))
+                    Caps caps = m.GetCapsHandlerForUser(agentID);
+                    if (caps != null && caps.RegionHandle == RegionHandle)
                     {
-                        UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
-                        m_AvatarPasswordMap[agentID] = Password;
+                        if (caps.RequestMap.ContainsKey("EventQueuePass"))
+                        {
+                            UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
+                            m_AvatarPasswordMap[agentID] = Password;
+                        }
                     }
                 }
             }
@@ -123,7 +126,7 @@ namespace OpenSim.Services.Connectors
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
-                FindAndPopulateEQMPassword(avatarID);
+                FindAndPopulateEQMPassword(avatarID, regionHandle);
 
                 if (!m_AvatarPasswordMap.ContainsKey(avatarID))
                     return false;

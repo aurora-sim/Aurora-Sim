@@ -29,8 +29,16 @@ namespace OpenSim.Services.CapsService
 
         #region IService Members
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
+                return; 
             registry.RegisterInterface<IEventQueueService>(this);
         }
 
@@ -134,20 +142,7 @@ namespace OpenSim.Services.CapsService
                         string SeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
                         ulong regionHandle = ((OSDMap)map["body"])["region-handle"].AsULong();
 
-                        uint x, y;
-                        Utils.LongToUInts(regionHandle, out x, out y);
-                        OpenSim.Services.Interfaces.GridRegion region = m_handlers[avatarID].GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-
-                        //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-                        IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService,
-                            SeedCap, avatarID, m_handlers[avatarID].HostName, true, regionHandle, m_handlers[avatarID].PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
-
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
-                        handler = m_handlers[avatarID].PublicHandler.GetCapsService(regionHandle, handler.AgentID);
-                        handler.SimToInform = SeedCap;
-
-                        //Get the seed cap from the CapsService for that region
-                        SeedCap = handler.HostName + handler.CapsURL;
+                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
 
                         ((OSDMap)map["body"])["seed-capability"] = SeedCap;
                     }
@@ -156,19 +151,8 @@ namespace OpenSim.Services.CapsService
                         OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0]);
                         string SeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
-                        uint x, y;
-                        Utils.LongToUInts(regionHandle, out x, out y);
-                        OpenSim.Services.Interfaces.GridRegion region = m_handlers[avatarID].GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
 
-                        //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-                        IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService,
-                            SeedCap, avatarID, m_handlers[avatarID].HostName, true, regionHandle, m_handlers[avatarID].PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
-
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
-                        handler = m_handlers[avatarID].PublicHandler.GetCapsService(regionHandle, handler.AgentID);
-                        handler.SimToInform = SeedCap;
-                        //Get the seed cap from the CapsService for that region
-                        SeedCap = handler.HostName + handler.CapsURL;
+                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = SeedCap;
@@ -179,21 +163,7 @@ namespace OpenSim.Services.CapsService
                         string SeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
 
-                        //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-                        uint x, y;
-                        Utils.LongToUInts(regionHandle, out x, out y);
-                        OpenSim.Services.Interfaces.GridRegion region = m_handlers[avatarID].GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-
-                        //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-                        IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService,
-                            SeedCap, avatarID, m_handlers[avatarID].HostName, true, regionHandle, m_handlers[avatarID].PublicHandler, CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()));
-
-                        handler.PublicHandler.AddCapsService(handler, handler.CapsURL, handler.AgentID);
-                        handler = m_handlers[avatarID].PublicHandler.GetCapsService(regionHandle, handler.AgentID);
-                        handler.SimToInform = SeedCap;
-
-                        //Get the seed cap from the CapsService for that region
-                        SeedCap = handler.HostName + handler.CapsURL;
+                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = SeedCap;
@@ -209,6 +179,20 @@ namespace OpenSim.Services.CapsService
             }
 
             return true;
+        }
+
+        public string CreateNewCAPSClient(string SeedCap, ulong regionHandle, UUID avatarID)
+        {
+            //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
+            string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+            IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService,
+                SeedCap, avatarID, m_handlers[avatarID].HostName, regionHandle, m_handlers[avatarID].PublicHandler, m_handlers[avatarID].PublicHandler.HostURI + newSeedCap, newSeedCap);
+
+            handler.PublicHandler.AddCapsService(handler);
+            //Now make sure we have the right one, as there could have already been a CAP in that region
+            handler = m_handlers[avatarID].PublicHandler.GetCapsService(regionHandle, handler.AgentID);
+            //Now send the client the Seed created by the CapsService
+            return handler.CapsURL;
         }
 
         /*private void ClientClosed(UUID AgentID, Scene scene)
@@ -482,6 +466,27 @@ namespace OpenSim.Services.CapsService
                     array.Add(item);
                     thisID++;
                 }
+            }
+            //Nothing to process... don't confuse the client
+            if (array.Count == 0)
+            {
+                //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
+                if (thisID == -1) // close-request
+                {
+                    m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
+                    responsedata["int_response_code"] = 404; //501; //410; //404;
+                    responsedata["content_type"] = "text/plain";
+                    responsedata["keepalive"] = false;
+                    responsedata["str_response_string"] = "Closed EQG";
+                    return responsedata;
+                }
+                responsedata["int_response_code"] = 502;
+                responsedata["content_type"] = "text/plain";
+                responsedata["keepalive"] = false;
+                responsedata["str_response_string"] = "Upstream error: ";
+                responsedata["error_status_text"] = "Upstream error:";
+                responsedata["http_protocol_version"] = "HTTP/1.0";
+                return responsedata;
             }
 
             OSDMap events = new OSDMap();

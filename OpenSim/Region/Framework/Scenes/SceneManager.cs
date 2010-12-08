@@ -58,7 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
         public int AllRegions = 0;
         private string LastEstateName = "";
         private string LastEstateChoise = "no";
-        
+
         public List<Scene> Scenes
         {
             get { return m_localScenes; }
@@ -183,7 +183,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_localScenes.RemoveAt(RegionSceneElement);
             }
 
-            
+
             ShutdownClientServer(info);
             IScene scene;
             CreateRegion(info, true, out scene);
@@ -226,7 +226,7 @@ namespace OpenSim.Region.Framework.Scenes
                 MainConsole.Instance.Output(String.Format("Couldn't select region {0}", newRegionName));
                 return;
             }
-            
+
             string regionName = (CurrentScene == null ? "root" : CurrentScene.RegionInfo.RegionName);
             MainConsole.Instance.DefaultPrompt = String.Format("Region ({0}) ", regionName);
             MainConsole.Instance.ConsoleScene = CurrentScene;
@@ -337,7 +337,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool TrySetCurrentScene(string regionName)
         {
-            if ((String.Compare(regionName, "root") == 0) 
+            if ((String.Compare(regionName, "root") == 0)
                 || (String.Compare(regionName, "..") == 0)
                 || (String.Compare(regionName, "/") == 0))
             {
@@ -419,7 +419,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Create a new estate
                     ES = new EstateSettings();
                     ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
-                    
+
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
                     LastEstateChoise = "yes";
@@ -518,7 +518,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return true;
                 }
             }
-            
+
             scene = null;
             return false;
         }
@@ -534,7 +534,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return true;
                 }
             }
-            
+
             scene = null;
             return false;
         }
@@ -550,7 +550,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return true;
                 }
             }
-            
+
             scene = null;
             return false;
         }
@@ -593,7 +593,7 @@ namespace OpenSim.Region.Framework.Scenes
                     scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
                     {
                         //if (!scenePresence.IsChildAgent)
-                            avatars.Add(scenePresence);
+                        avatars.Add(scenePresence);
                     });
                 }
             );
@@ -1059,7 +1059,7 @@ namespace OpenSim.Region.Framework.Scenes
             clientServer.Initialise(
                     listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
                     m_config, circuitManager);
-            
+
             regionInfo.InternalEndPoint.Port = (int)port;
 
             Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
@@ -1075,7 +1075,7 @@ namespace OpenSim.Region.Framework.Scenes
             Add(scene);
 
             scene.PhysicsScene = GetPhysicsScene(m_config, scene.RegionInfo.RegionName);
-            
+
             return scene;
         }
         List<IService> serviceConnectors;
@@ -1087,6 +1087,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_serviceRegistry = new RegistryCore();
                 m_serviceRegistry.RegisterInterface<ISimulationBase>(m_OpenSimBase);
+                scene.RegisterInterface<ISimulationBase>(m_OpenSimBase);
                 serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
                 connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
                 foreach (IService connector in serviceConnectors)

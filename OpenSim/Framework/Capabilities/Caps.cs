@@ -97,6 +97,10 @@ namespace OpenSim.Framework.Capabilities
 
         //private string eventQueue = "0100/";
         private IScene m_Scene;
+        public ulong RegionHandle
+        {
+            get { return m_Scene.RegionInfo.RegionHandle; }
+        }
         private IHttpServer m_httpListener;
         private UUID m_agentID;
         private IAssetService m_assetCache;
@@ -290,7 +294,7 @@ namespace OpenSim.Framework.Capabilities
 
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {
-                m_log.DebugFormat("[CAPS]: Unauthorized CAPS client");
+                m_log.Warn("[CAPS]: Unauthorized CAPS client");
                 return string.Empty;
             }
             try

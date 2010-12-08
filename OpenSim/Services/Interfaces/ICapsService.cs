@@ -7,14 +7,30 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
+    /// <summary>
+    /// This controls what regions and users have Caps SEED requests and all of the Cap handlers associated with those requests
+    /// </summary>
     public interface ICapsService
     {
+        /// <summary>
+        /// All of the loaded modules that add CAP requests
+        /// </summary>
         List<ICapsServiceConnector> CapsModules { get; }
+        /// <summary>
+        /// Remove all instances of the agent from the Caps server
+        /// </summary>
+        /// <param name="AgentID"></param>
         void RemoveCAPS(UUID AgentID);
+        /// <summary>
+        /// Remove the user from the given region
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="regionHandle"></param>
         void RemoveCAPS(UUID AgentID, ulong regionHandle);
-        void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle);
-        void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID);
+        string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle);
+        void AddCapsService(IPrivateCapsService handler);
         IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);
+        string HostURI { get; }
     }
 
     public interface IPrivateCapsService
@@ -22,6 +38,7 @@ namespace OpenSim.Services.Interfaces
         void AddCAPS(string method, string caps);
         void Initialise();
         string CapsURL { get; }
+        string CapsBase { get; }
         UUID AgentID { get; }
         string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse);
@@ -39,6 +56,8 @@ namespace OpenSim.Services.Interfaces
         ICapsService PublicHandler { get; }
         ulong RegionHandle { get; }
         IInternalEventQueueService EventQueueService { get; }
+
+        void RemoveCAPS();
     }
 
     public interface ICapsServiceConnector

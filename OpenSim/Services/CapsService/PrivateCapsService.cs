@@ -92,7 +92,6 @@ namespace OpenSim.Services.CapsService
             set { postToSendToSim = value; }
         }
 
-        private bool m_runTheEQM;
         private ulong m_regionHandle = 0;
         public ulong RegionHandle
         {
@@ -104,12 +103,18 @@ namespace OpenSim.Services.CapsService
             get { return m_publicHandler; }
         }
         private string m_capsURL;
+        private string m_CapsBase;
         public string CapsURL
         {
             get { return m_capsURL; }
         }
+        public string CapsBase
+        {
+            get { return m_CapsBase; }
+        }
+        private List<IRequestHandler> m_CAPSAdded = new List<IRequestHandler>();
 
-        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, string URL, UUID agentID, string HostName, bool runTheEQM, ulong regionHandle, ICapsService handler, string capsURL)
+        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, string URL, UUID agentID, string HostName, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
         {
             m_server = server;
             m_InventoryService = inventoryService;
@@ -120,10 +125,10 @@ namespace OpenSim.Services.CapsService
             SimToInform = URL;
             m_AgentID = agentID;
             m_HostName = HostName;
-            m_runTheEQM = runTheEQM;
             m_regionHandle = regionHandle;
             m_publicHandler = handler;
             m_capsURL = capsURL;
+            m_CapsBase = capsBase;
         }
 
         public void Initialise()
@@ -136,14 +141,11 @@ namespace OpenSim.Services.CapsService
         {
             List<IRequestHandler> handlers = new List<IRequestHandler>();
 
-            if (m_runTheEQM)
-            {
-                // The EventQueue module is now handled by the CapsService (if we arn't disabling it) as it needs to be completely protected
+            // The EventQueue module is now handled by the CapsService (if we arn't disabling it) as it needs to be completely protected
                 //  This means we deal with all teleports and keeping track of the passwords for the agents
-                IRequestHandler handle = EQMHandler.RegisterCap(m_AgentID, m_server, this);
-                if (handle != null)
-                    handlers.Add(handle);
-            }
+            IRequestHandler handle = EQMHandler.RegisterCap(m_AgentID, m_server, this);
+            if (handle != null)
+                handlers.Add(handle);
 
             foreach (ICapsServiceConnector conn in m_publicHandler.CapsModules)
             {
@@ -155,10 +157,18 @@ namespace OpenSim.Services.CapsService
 
         private void AddServerCAPS()
         {
-            List<IRequestHandler> handlers = GetServerCAPS();
-            foreach (IRequestHandler handle in handlers)
+            m_CAPSAdded = GetServerCAPS();
+            foreach (IRequestHandler handle in m_CAPSAdded)
             {
                 m_server.AddStreamHandler(handle);
+            }
+        }
+
+        public void RemoveCAPS()
+        {
+            foreach (IRequestHandler handle in m_CAPSAdded)
+            {
+                m_server.RemoveStreamHandler(handle.HttpMethod, handle.Path);
             }
         }
 
@@ -206,8 +216,9 @@ namespace OpenSim.Services.CapsService
 
         public void AddCAPS(string method, string caps)
         {
-            registeredCAPS[method] = m_HostName + caps;
-            registeredCAPSPath[m_HostName + caps] = method;
+            string CAPSPath = this.PublicHandler.HostURI + caps;
+            registeredCAPS[method] = CAPSPath;
+            registeredCAPSPath[CAPSPath] = method;
         }
 
         public string GetCAPS(string method)
