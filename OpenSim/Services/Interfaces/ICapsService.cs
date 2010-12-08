@@ -11,6 +11,7 @@ namespace OpenSim.Services.Interfaces
     {
         List<ICapsServiceConnector> CapsModules { get; }
         void RemoveCAPS(UUID AgentID);
+        void RemoveCAPS(UUID AgentID, ulong regionHandle);
         void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle);
         void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID);
         IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);

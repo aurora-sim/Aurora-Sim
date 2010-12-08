@@ -21,7 +21,7 @@ using OpenSim.Server.Handlers.Base;
 namespace OpenSim.Services.CapsService
 {
     /// <summary>
-    /// This is loaded ONCE by the service loader
+    /// This is loaded ONCE by the service loader and runs events depending on where the user is in the grid
     /// </summary>
     public class EventQueueMasterService : EventQueueModuleBase, IService, IEventQueueService
     {
@@ -45,12 +45,14 @@ namespace OpenSim.Services.CapsService
 
         public override bool Enqueue(OSD o, UUID avatarID, ulong regionHandle)
         {
+            //Find the CapsService for the user and enqueue the event
             PrivateCapsService service = (PrivateCapsService)m_service.GetCapsService(regionHandle, avatarID);
             return service.EventQueueService.Enqueue(o, avatarID);
         }
 
         public bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle)
         {
+            //Find the CapsService for the user and check their authentication
             PrivateCapsService service = (PrivateCapsService)m_service.GetCapsService(RegionHandle, agentID);
             return service.EventQueueService.AuthenticateRequest(agentID, password);
         }
@@ -109,6 +111,12 @@ namespace OpenSim.Services.CapsService
             }
         }
 
+        /// <summary>
+        /// Add the given event into the client's queue so that it is sent on the next 
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
+        /// <returns></returns>
         public bool Enqueue(OSD ev, UUID avatarID)
         {
             try
@@ -119,6 +127,7 @@ namespace OpenSim.Services.CapsService
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
+                        //m_handlers[avatarID].PublicHandler.RemoveCAPS(avatarID)
                     }
                     if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {

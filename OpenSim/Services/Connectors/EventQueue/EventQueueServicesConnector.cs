@@ -58,6 +58,41 @@ namespace OpenSim.Services.Connectors
         private string m_serverURL = "";
         private ICapabilitiesModule m_capsModule = null;
 
+        #region IService Members
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
+                return;
+
+            IConfig serviceConfig = config.Configs["EventQueueService"];
+            if (serviceConfig != null)
+            {
+                string url = serviceConfig.GetString("EventQueueServiceURI");
+                //Clean it up a bit
+                url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
+                m_serverURL = url + "/CAPS/EQMPOSTER";
+                registry.RegisterInterface<IEventQueueService>(this);
+            }
+        }
+
+        public void PostInitialize(IRegistryCore registry)
+        {
+            m_capsModule = registry.Get<ICapabilitiesModule>();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Find the password of the user that we may have recieved in the CAPS seed request.
+        /// </summary>
+        /// <param name="agentID"></param>
         private void FindAndPopulateEQMPassword(UUID agentID)
         {
             if (m_capsModule != null)
@@ -76,6 +111,13 @@ namespace OpenSim.Services.Connectors
 
         #region IEventQueue Members
 
+        /// <summary>
+        /// Add an EQ message into the queue on the remote EventQueueService 
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
         public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
@@ -104,38 +146,8 @@ namespace OpenSim.Services.Connectors
 
         public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
         {
+            //Remote connectors do not get to deal with authentication
             return true;
-        }
-
-        #endregion
-
-        #region IService Members
-
-        public string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
-                return;
-
-            IConfig serviceConfig = config.Configs["EventQueueService"];
-            if (serviceConfig != null)
-            {
-                string url = serviceConfig.GetString("EventQueueServiceURI");
-                //Clean it up a bit
-                url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
-                m_serverURL = url + "/CAPS/EQMPOSTER";
-                registry.RegisterInterface<IEventQueueService>(this);
-            }
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
-            m_capsModule = registry.Get<ICapabilitiesModule>();
         }
 
         #endregion

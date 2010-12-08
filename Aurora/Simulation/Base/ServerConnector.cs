@@ -32,13 +32,40 @@ using OpenSim.Framework;
 
 namespace Aurora.Simulation.Base
 {
+    /// <summary>
+    /// IServiceConnector is a module that is loaded after the IService modules are loaded and they are used by remote connectors
+    ///  to allow IService modules to be accessed from a remote server.
+    /// </summary>
     public interface IServiceConnector
     {
+        /// <summary>
+        /// Set up the module
+        /// </summary>
+        /// <param name="config">Config File</param>
+        /// <param name="simBase">The ServiceBase</param>
+        /// <param name="configName">The default config name of the module</param>
+        /// <param name="sim">Place to register the module into</param>
         void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim);
     }
+
+    /// <summary>
+    /// IService is a module that loads up by default and is loaded on every startup by either OpenSim.exe or Aurora.Server.exe
+    /// It loads modules including IAssetService and others
+    /// </summary>
     public interface IService
     {
+        /// <summary>
+        /// Set up and register the module
+        /// NOTE: Do NOT load module interfaces from this method, wait until PostInit runs
+        /// </summary>
+        /// <param name="config">Config file</param>
+        /// <param name="registry">Place to register the modules into</param>
         void Initialize(IConfigSource config, IRegistryCore registry);
+
+        /// <summary>
+        /// Load other IService modules now that this is set up
+        /// </summary>
+        /// <param name="registry"></param>
         void PostInitialize(IRegistryCore registry);
     }
 }

@@ -84,6 +84,11 @@ namespace OpenSim.Services.CapsService
             m_CapsServices.Remove(AgentID);
         }
 
+        public void RemoveCAPS(UUID AgentID, ulong regionHandle)
+        {
+            m_CapsServices[AgentID].Remove(regionHandle);
+        }
+
         public void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle)
         {
             //Add the HostURI so that it ends up here
