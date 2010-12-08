@@ -396,14 +396,21 @@ namespace Aurora.Simulation.Base
             return new OSDMap { { "Message", OSD.FromString("Service request failed. " + errorMessage) } };
         }
 
-        public static string BuildQueryString(NameValueCollection requestArgs)
+        public static string BuildQueryString(NameValueCollection parameters)
         {
-            Dictionary<string, object> d = new Dictionary<string, object>();
-            foreach (KeyValuePair<string, object> kvp in requestArgs)
+            List<string> items = new List<string>(parameters.Count);
+
+            foreach (string key in parameters.Keys)
             {
-                d[kvp.Key] = kvp.Value;
+                string[] values = parameters.GetValues(key);
+                if (values != null)
+                {
+                    foreach (string value in values)
+                        items.Add(String.Concat(key, "=", HttpUtility.UrlEncode(value ?? String.Empty)));
+                }
             }
-            return BuildQueryString(d);
+
+            return String.Join("&", items.ToArray());
         }
     }
 
