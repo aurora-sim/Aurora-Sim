@@ -154,7 +154,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
             //sp.ControllingClient.SendTeleportProgress("resolving");
 
-            IEventQueue eq = sp.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
 
             // Reset animations; the viewer does that in teleports.
             if(sp.Animator != null)
@@ -267,7 +267,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueue eq)
+        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueueService eq)
         {
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
             if (reg == null || finalDestination == null)
@@ -386,14 +386,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         }
                         #endregion
 
-                        eq.EnableSimulator(destinationHandle, endPoint, sp.UUID);
+                        eq.EnableSimulator(destinationHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
 
                         // ES makes the client send a UseCircuitCode message to the destination, 
                         // which triggers a bunch of things there.
                         // So let's wait
                         Thread.Sleep(200);
 
-                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, capsPath);
+                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, capsPath, sp.Scene.RegionInfo.RegionHandle);
 
                     }
                     else
@@ -435,7 +435,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (eq != null)
                 {
                     eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
-                                           4, teleportFlags, capsPath, sp.UUID, teleportFlags);
+                                           4, teleportFlags, capsPath, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {
@@ -949,11 +949,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
 
-                IEventQueue eq = agent.Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.CrossRegion(neighbourHandle, pos, agent.Velocity, neighbourRegion.ExternalEndPoint,
-                                   capsPath, agent.UUID, agent.ControllingClient.SessionId);
+                                   capsPath, agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {
@@ -1043,11 +1043,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
 
-                IEventQueue eq = agent.Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.CrossRegion(neighbourRegion.RegionHandle, agent.AbsolutePosition, agent.Velocity, neighbourRegion.ExternalEndPoint,
-                                   capsPath, agent.UUID, agent.ControllingClient.SessionId);
+                                   capsPath, agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {
@@ -1363,7 +1363,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             if (regionAccepted && newAgent)
             {
-                IEventQueue eq = sp.Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     #region IP Translation for NAT
@@ -1378,8 +1378,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //    "and EstablishAgentCommunication with seed cap {4}",
                     //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
 
-                    eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID);
-                    eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, capsPath);
+                    eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
+                    eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, capsPath, sp.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {

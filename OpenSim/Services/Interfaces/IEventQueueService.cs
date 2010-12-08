@@ -31,33 +31,41 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Services.Interfaces
 {
-    public interface IEventQueue
+    public interface IEventQueueService
     {
-        bool Enqueue(OSD o, UUID avatarID);
+        bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle);
 
         // These are required to decouple Scenes from EventQueueHelper
-        void DisableSimulator(ulong handle, UUID avatarID);
-        void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID);
-        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, 
-                                         string capsPath);
+        void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
+        void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle);
+        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint,
+                                         string capsPath, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
                                  uint locationID, uint flags, string capsURL,
-                                 UUID agentID, uint teleportFlags);
+                                 UUID agentID, uint teleportFlags, ulong RegionHandle);
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPEndPoint newRegionExternalEndPoint,
-                         string capsURL, UUID avatarID, UUID sessionID);
+                         string capsURL, UUID avatarID, UUID sessionID, ulong RegionHandle);
         void ChatterboxInvitation(UUID sessionID, string sessionName,
                                   UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                   uint timeStamp, bool offline, int parentEstateID, Vector3 position,
-                                  uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket);
-        void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat, 
-                                               bool isModerator, bool textMute);
-        void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID);
-        void ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message, UUID toAgent, string Transition);
-        void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID);
-        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes);
+                                  uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket, ulong RegionHandle);
+        void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat,
+                                               bool isModerator, bool textMute, ulong RegionHandle);
+        void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID, ulong RegionHandle);
+        void ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message, UUID toAgent, string Transition, ulong RegionHandle);
+        void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle);
+        void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
+
+        bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
+    }
+
+    public interface IInternalEventQueueService
+    {
+        bool Enqueue(OSD o, UUID avatarID);
+        bool AuthenticateRequest(UUID agentID, UUID password);
     }
 }

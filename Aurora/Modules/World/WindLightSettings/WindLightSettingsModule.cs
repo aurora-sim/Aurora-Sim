@@ -43,6 +43,7 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.DataManager;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -560,9 +561,9 @@ namespace Aurora.Modules
         public void SendProfileToClientEQ(ScenePresence presence, RegionLightShareData wl)
         {
             OSD item = BuildSendEQMessage(wl.ToOSD());
-            IEventQueue eq = presence.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
-                eq.Enqueue(item, presence.UUID);
+                eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
         }
 
         private OSD BuildSendEQMessage(OSDMap body)

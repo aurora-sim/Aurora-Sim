@@ -5,6 +5,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
@@ -22,7 +23,7 @@ namespace Aurora.Modules.World.SimConsole
     {
         #region Declares
 
-        private Scene m_scene;
+        private List<Scene> m_scenes = new List<Scene>();
         private bool m_enabled = false;
         private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
         private DoubleValueDictionary<string, string, Access> m_userKeys = new DoubleValueDictionary<string, string, Access>();
@@ -74,7 +75,7 @@ namespace Aurora.Modules.World.SimConsole
 
             MainConsole.OnIncomingLogWrite += IncomingLogWrite;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
-            m_scene = scene;
+            m_scenes.Add(scene);
         }
 
         public void RegionLoaded(Scene scene)
@@ -123,7 +124,7 @@ namespace Aurora.Modules.World.SimConsole
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
 
-            ScenePresence SP = m_scene.GetScenePresence(agentID);
+            ScenePresence SP = findScene(agentID).GetScenePresence(agentID);
             if (SP == null)
                 return responsedata; //They don't exist
 
@@ -218,9 +219,20 @@ namespace Aurora.Modules.World.SimConsole
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
             OSDString t = (OSDString)OSD.FromString(text);
-            IEventQueue eq = m_scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = findScene(AgentID).RequestModuleInterface<IEventQueueService>();
             if (eq != null)
-                eq.Enqueue(t, AgentID);
+                eq.Enqueue(t, AgentID, findScene(AgentID).RegionInfo.RegionHandle);
+        }
+
+        private Scene findScene(UUID agentID)
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                ScenePresence SP = scene.GetScenePresence(agentID);
+                if (SP != null && !SP.IsChildAgent)
+                    return scene;
+            }
+            return null;
         }
     }
 }

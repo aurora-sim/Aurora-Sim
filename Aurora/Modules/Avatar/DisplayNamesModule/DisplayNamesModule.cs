@@ -14,6 +14,7 @@ using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using Aurora.DataManager;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -29,7 +30,7 @@ namespace Aurora.Modules
         private bool m_enabled = false;
         private IProfileConnector m_profileConnector = null;
         private List<string> bannedNames = new List<string>();
-        private IEventQueue m_eventQueue = null;
+        private IEventQueueService m_eventQueue = null;
 
         public void Initialise(IConfigSource source)
         {
@@ -60,7 +61,7 @@ namespace Aurora.Modules
 
         public void RegionLoaded(Scene scene)
         {
-            m_eventQueue = scene.RequestModuleInterface<IEventQueue>();
+            m_eventQueue = scene.RequestModuleInterface<IEventQueueService>();
             m_profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
         }
 
@@ -276,7 +277,7 @@ namespace Aurora.Modules
                     isDefaultName = true;
 
                 OSD item = DisplayNameUpdate(newDisplayName, oldDisplayName, InfoFromAv.UUID, isDefaultName, InfoFromAv.Firstname, InfoFromAv.Lastname, InfoFromAv.Firstname + "." + InfoFromAv.Lastname);
-                m_eventQueue.Enqueue(item, ToAgentID);
+                m_eventQueue.Enqueue(item, ToAgentID, InfoFromAv.Scene.RegionInfo.RegionHandle);
             }
         }
 
@@ -297,7 +298,7 @@ namespace Aurora.Modules
                     isDefaultName = true;
 
                 OSD item = DisplayNameReply(newDisplayName, oldDisplayName, m_avatar.UUID, isDefaultName, m_avatar.Firstname, m_avatar.Lastname, m_avatar.Firstname + "." + m_avatar.Lastname);
-                m_eventQueue.Enqueue(item,  m_avatar.UUID);
+                m_eventQueue.Enqueue(item, m_avatar.UUID, m_avatar.Scene.RegionInfo.RegionHandle);
             }
         }
 

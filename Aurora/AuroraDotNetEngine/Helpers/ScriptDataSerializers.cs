@@ -11,7 +11,6 @@ using System.Xml;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.EventQueue;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;

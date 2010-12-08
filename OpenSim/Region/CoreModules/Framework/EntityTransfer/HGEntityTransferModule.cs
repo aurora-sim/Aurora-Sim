@@ -223,7 +223,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            IEventQueue eq = sp.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
             GridRegion homeGatekeeper = MakeRegion(aCircuit);
             
             m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: teleporting user {0} {1} home to {2} via {3}:{4}:{5}",

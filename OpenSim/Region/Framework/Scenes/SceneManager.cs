@@ -1086,6 +1086,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_serviceRegistry == null)
             {
                 m_serviceRegistry = new RegistryCore();
+                m_serviceRegistry.RegisterInterface<ISimulationBase>(m_OpenSimBase);
                 serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
                 connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
                 foreach (IService connector in serviceConnectors)

@@ -159,7 +159,7 @@ namespace OpenSim.Framework
             if (sources.Count == 0)
             {
                 m_log.FatalFormat("[CONFIG]: Could not load any configuration");
-                m_log.FatalFormat("[CONFIG]: Did you copy the OpenSim.ini.example file to OpenSim.ini?");
+                m_log.FatalFormat("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile + "?");
                 throw new NotSupportedException();
             }
 

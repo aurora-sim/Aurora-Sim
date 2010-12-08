@@ -76,6 +76,7 @@ namespace OpenSim.Services.LLLoginService
         protected IAvatarService m_AvatarService;
         protected IUserAgentService m_UserAgentService;
         protected IAssetService m_AssetService;
+        protected ICapsService m_CapsService;
 
         protected GatekeeperServiceConnector m_GatekeeperConnector;
 
@@ -99,8 +100,6 @@ namespace OpenSim.Services.LLLoginService
         protected string m_TutorialURL = "";
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
-        protected string CAPSServerURL = "";
-        protected string CAPSServicePassword = "";
         protected GridAvatarArchiver archiver;
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
         protected bool allowExportPermission = true;
@@ -120,8 +119,6 @@ namespace OpenSim.Services.LLLoginService
             m_TutorialURL = m_LoginServerConfig.GetString("TutorialURL", m_TutorialURL);
             ReadEventValues(m_LoginServerConfig);
             ReadClassifiedValues(m_LoginServerConfig);
-            CAPSServerURL = m_LoginServerConfig.GetString("CAPSServiceURL", "");
-            CAPSServicePassword = m_LoginServerConfig.GetString("CAPSServicePassword", "");
             allowExportPermission = m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true);
 
             m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
@@ -149,6 +146,7 @@ namespace OpenSim.Services.LLLoginService
             m_UserAgentService = registry.Get<IUserAgentService>();
             m_AssetService = registry.Get<IAssetService>();
             m_LibraryService = registry.Get<ILibraryService>();
+            m_CapsService = registry.Get<ICapsService>();
             
             m_GatekeeperConnector = new GatekeeperServiceConnector();
 
@@ -609,67 +607,16 @@ namespace OpenSim.Services.LLLoginService
             // Kept here so it doesn't happen again!
             // response.SeedCapability = regionInfo.ServerURI + capsSeedPath;
 
-            if (CAPSServerURL != "")
+            if(m_CapsService != null)
             {
-                if (CAPSServerURL.StartsWith("http")) //Note: Don't do any more than http, we allow for https
-                {
-                    capsSeedPath = CAPSServerURL + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-                }
-                else
-                {
-                    capsSeedPath
-                        = "http://"
-                          + CAPSServerURL
-                          + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
-                }
-
-                if (!InformCAPSServerAboutIncomingConnection(capsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle, SimcapsSeedPath, AgentID))
-                {
-                    capsSeedPath = SimcapsSeedPath;
-                }
+                m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle);
             }
             else
             {
                 capsSeedPath = SimcapsSeedPath;
             }
-
+            
             return capsSeedPath;
-        }
-
-        private bool InformCAPSServerAboutIncomingConnection(string capsSeedPath, string CAPSSeed, ulong regionHandle, string SimCAPS, UUID AgentID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["CAPSSEEDPATH"] = CAPSSeed;
-            sendData["SIMCAPS"] = SimCAPS;
-            sendData["PASS"] = CAPSServicePassword;
-            sendData["REGIONHANDLE"] = regionHandle;
-            sendData["AGENTID"] = AgentID.ToString();
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-
-            try
-            {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        CAPSServerURL + "/CAPS/REGISTER",
-                        reqString);
-                if (reply != "")
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        if (replyData.ContainsKey("result") && (string)replyData["result"] == "true")
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
-            return false;
         }
 
         protected GridRegion FindDestination(UserAccount account, UUID scopeID, GridUserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out GridRegion gatekeeper, out string where, out Vector3 position, out Vector3 lookAt)

@@ -829,7 +829,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 if (im.message.StartsWith("[grouptest]"))
                 { // this block is test code for implementing group IM - delete when group IM is finished
-                    IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
+                    IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                     if (eq != null)
                     {
                         im.dialog = 17;
@@ -842,11 +842,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         eq.ChatterboxInvitation(
                             new UUID("00000000-68f9-1111-024e-222222111123"),
                             "OpenSimulator Testing", new UUID(im.fromAgentID), im.message, new UUID(im.toAgentID), im.fromAgentName, im.dialog, 0,
-                            false, 0, new Vector3(), 1, new UUID(im.imSessionID), im.fromGroup, Util.StringToBytes256("OpenSimulator Testing"));
+                            false, 0, new Vector3(), 1, new UUID(im.imSessionID), im.fromGroup, Util.StringToBytes256("OpenSimulator Testing"), m_scene.RegionInfo.RegionHandle);
 
                         eq.ChatterBoxSessionAgentListUpdates(
                             new UUID("00000000-68f9-1111-024e-222222111123"),
-                            new UUID(im.fromAgentID), new UUID(im.toAgentID), false, false, false);
+                            new UUID(im.fromAgentID), new UUID(im.toAgentID), false, false, false, m_scene.RegionInfo.RegionHandle);
                     }
 
                     Console.WriteLine("SendInstantMessage: " + msg);
@@ -1586,10 +1586,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             PlacesReply.TransactionData.TransactionID = transactionID;
             try
             {
-                IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.QueryReply(PlacesReply, AgentId, RegionTypes.ToArray());
+                    eq.QueryReply(PlacesReply, AgentId, RegionTypes.ToArray(), Scene.RegionInfo.RegionHandle);
                 }
             }
             catch (Exception ex)
@@ -2652,10 +2652,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.GroupMembership(Groupupdate, this.AgentId);
+                    eq.GroupMembership(Groupupdate, this.AgentId, this.Scene.RegionInfo.RegionHandle);
                 }
             }
             catch (Exception ex)
@@ -3228,10 +3228,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
              llsd.Add("GroupData", GroupData);
              llsd.Add("NewGroupData", NewGroupData);
 
-             IEventQueue eq = this.Scene.RequestModuleInterface<IEventQueue>();
+             IEventQueueService eq = this.Scene.RequestModuleInterface<IEventQueueService>();
              if (eq != null)
              {
-                 eq.Enqueue(BuildEvent("AvatarGroupsReply", llsd), this.AgentId);
+                 eq.Enqueue(BuildEvent("AvatarGroupsReply", llsd), this.AgentId, Scene.RegionInfo.RegionHandle);
              }
         }
 
@@ -4511,10 +4511,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();
+                IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.ParcelProperties(updateMessage, this.AgentId);
+                    eq.ParcelProperties(updateMessage, this.AgentId, this.Scene.RegionInfo.RegionHandle);
                 } else {
                     m_log.Warn("No EQ Interface when sending parcel data.");
                 }

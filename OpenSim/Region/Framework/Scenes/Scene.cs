@@ -4477,10 +4477,10 @@ namespace OpenSim.Region.Framework.Scenes
                 if (presence.IsChildAgent)
                 {
                     // Tell a single agent to disconnect from the region.
-                    IEventQueue eq = RequestModuleInterface<IEventQueue>();
+                    IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
                     if (eq != null)
                     {
-                        eq.DisableSimulator(RegionInfo.RegionHandle, agentID);
+                        eq.DisableSimulator(RegionInfo.RegionHandle, agentID, RegionInfo.RegionHandle);
                     }
                     else
                         presence.ControllingClient.SendShutdownConnectionNotice();

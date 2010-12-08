@@ -99,15 +99,9 @@ namespace OpenSim.Services.AssetService
 
             if (m_AssetLoader != null)
             {
-
                 string loaderArgs = assetConfig.GetString("AssetLoaderArgs",
                         String.Empty);
-                bool assetLoaderEnabled = true;
-                IConfig auroraConfig = config.Configs["AuroraStartup"];
-                if (auroraConfig != null)
-                {
-                    assetLoaderEnabled = auroraConfig.GetBoolean("AssetLoaderEnabled", true);
-                }
+                bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", true);
 
                 if (assetLoaderEnabled)
                 {
@@ -117,11 +111,8 @@ namespace OpenSim.Services.AssetService
                             {
                                 Store(a);
                             });
-                    if (auroraConfig != null)
-                    {
-                        auroraConfig.Set("AssetLoaderEnabled", false);
-                        auroraConfig.ConfigSource.Save();
-                    }
+                    assetConfig.Set("AssetLoaderEnabled", false);
+                    assetConfig.ConfigSource.Save();
                 }
                 registry.RegisterInterface<IAssetService>(this);
 

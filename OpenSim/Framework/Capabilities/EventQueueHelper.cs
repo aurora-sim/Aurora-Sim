@@ -32,7 +32,7 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
 
-namespace OpenSim.Region.CoreModules.Framework.EventQueue
+namespace OpenSim.Framework.Capabilities
 {
     public struct QueueItem
     {
@@ -42,8 +42,6 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
 
     public class EventQueueHelper
     {
-        private EventQueueHelper() {} // no construction possible, it's an utility class
-
         private static byte[] ulongToByteArray(ulong uLongValue)
         {
             // Reverse endianness of RegionHandle

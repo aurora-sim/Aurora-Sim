@@ -40,16 +40,13 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.EventQueue;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-
 using OpenSim.Services.Interfaces;
 
 using Caps = OpenSim.Framework.Capabilities.Caps;
 using DirFindFlags = OpenMetaverse.DirectoryManager.DirFindFlags;
-
-
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
@@ -1474,13 +1471,21 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 m_log.InfoFormat("[GROUPS]: {0}", OSDParser.SerializeJsonString(llDataStruct));
             }
 
-            IEventQueue queue = remoteClient.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
 
             if (queue != null)
             {
-                queue.Enqueue(EventQueueHelper.buildEvent("AgentGroupDataUpdate", llDataStruct), GetRequestingAgentID(remoteClient));
+                queue.Enqueue(buildEvent("AgentGroupDataUpdate", llDataStruct), GetRequestingAgentID(remoteClient), remoteClient.Scene.RegionInfo.RegionHandle);
             }
-            
+        }
+
+        public OSD buildEvent(string eventName, OSD eventBody)
+        {
+            OSDMap llsdEvent = new OSDMap(2);
+            llsdEvent.Add("body", eventBody);
+            llsdEvent.Add("message", new OSDString(eventName));
+
+            return llsdEvent;
         }
 
         private void SendScenePresenceUpdate(UUID AgentID, string Title)

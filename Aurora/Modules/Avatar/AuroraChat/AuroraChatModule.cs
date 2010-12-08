@@ -43,6 +43,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -772,7 +773,7 @@ namespace Aurora.Modules
             UUID sessionid = UUID.Parse(rm["session-id"].AsString());
 
             ScenePresence SP = findScenePresence(Agent);
-            IEventQueue eq = SP.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = SP.Scene.RequestModuleInterface<IEventQueueService>();
 
             if (method == "start conference")
             {
@@ -811,7 +812,7 @@ namespace Aurora.Modules
                 block.MuteText = false;
                 block.MuteVoice = false;
                 block.Transition = "ENTER";
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, Agent, "ENTER");
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, Agent, "ENTER", findScene(Agent).RegionInfo.RegionHandle);
 
                 OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage cs = new OpenMetaverse.Messages.Linden.ChatterBoxSessionStartReplyMessage();
                 cs.VoiceEnabled = true;
@@ -864,12 +865,12 @@ namespace Aurora.Modules
                         if (member.AvatarKey == thismember.AvatarKey)
                         {
                             //Tell 'us' about all the other agents in the group
-                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER");
+                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER", findScene(Agent).RegionInfo.RegionHandle);
                         }
                         else
                         {
                             //Tell 'other' agents about the new agent ('us')
-                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER");
+                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", findScene(Agent).RegionInfo.RegionHandle);
                         }
                     }
                 }
@@ -912,7 +913,7 @@ namespace Aurora.Modules
                 block.Transition = "ENTER";
 
                 // Send an update to the affected user
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "");
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", findScene(Agent).RegionInfo.RegionHandle);
                 
                 responsedata["int_response_code"] = 200; //501; //410; //404;
                 responsedata["content_type"] = "text/plain";
@@ -930,6 +931,17 @@ namespace Aurora.Modules
                 responsedata["str_response_string"] = "Accepted";
                 return responsedata;
             }
+        }
+
+        private Scene findScene(UUID agentID)
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                ScenePresence SP = scene.GetScenePresence(agentID);
+                if (SP != null && !SP.IsChildAgent)
+                    return scene;
+            }
+            return null;
         }
 
         /// <summary>
@@ -1060,10 +1072,10 @@ namespace Aurora.Modules
             block.MuteText = member.MuteText;
             block.MuteVoice = member.MuteVoice;
             block.Transition = "LEAVE";
-            IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
             foreach (ChatSessionMember sessionMember in session.Members)
             {
-                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, sessionMember.AvatarKey, "LEAVE");
+                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, sessionMember.AvatarKey, "LEAVE", findScene(sessionMember.AvatarKey).RegionInfo.RegionHandle);
             }
         }
 
@@ -1078,7 +1090,7 @@ namespace Aurora.Modules
             ChatSessions.TryGetValue(UUID.Parse(im.imSessionID.ToString()), out session);
             if (session == null)
                 return;
-            IEventQueue eq = client.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
             foreach (ChatSessionMember member in session.Members)
             {
                 if (member.HasBeenAdded)
@@ -1109,6 +1121,7 @@ namespace Aurora.Modules
                         , new UUID(im.imSessionID)
                         , false
                         , OpenMetaverse.Utils.StringToBytes(session.Name)
+                        , findScene(member.AvatarKey).RegionInfo.RegionHandle
                         );
                 }
             }

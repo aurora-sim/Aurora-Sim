@@ -38,7 +38,8 @@ using System.Xml;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.EventQueue;
+using OpenSim.Framework.Capabilities;
+using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
@@ -742,7 +743,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (id == null)
                 return;        
 
-            IEventQueue eq = id.World.RequestModuleInterface<IEventQueue>();
+            IEventQueueService eq = id.World.RequestModuleInterface<IEventQueueService>();
             if (eq == null)
             {
                 controllingClient.SendScriptRunningReply(objectID, itemID,
@@ -751,7 +752,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 eq.Enqueue(EventQueueHelper.ScriptRunningReplyEvent(objectID, itemID, id.Running, true),
-                           controllingClient.AgentId);
+                           controllingClient.AgentId, controllingClient.Scene.RegionInfo.RegionHandle);
             }
         }
 
@@ -1078,10 +1079,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptPlugin GetScriptPlugin(string Name)
         {
-            foreach (IScriptPlugin plugin in ScriptPlugins)
+            lock (ScriptPlugins)
             {
-                if (plugin.Name == Name)
-                    return plugin;
+                foreach (IScriptPlugin plugin in ScriptPlugins)
+                {
+                    if (plugin.Name == Name)
+                        return plugin;
+                }
             }
             return null;
         }
@@ -1133,7 +1137,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 plugin.Initialize(this, scene);
             }
-            ScriptPlugins.AddRange(nonSharedPlugins.ToArray());
+            lock (ScriptPlugins)
+            {
+                ScriptPlugins.AddRange(nonSharedPlugins.ToArray());
+            }
         }
 
         /// <summary>
@@ -1146,14 +1153,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 plugin.Initialize(this);
             }
-            ScriptPlugins.AddRange(sharedPlugins.ToArray());
+            lock (ScriptPlugins)
+            {
+                ScriptPlugins.AddRange(sharedPlugins.ToArray());
+            }
         }
 
         public void DoOneScriptPluginPass()
         {
-            foreach (IScriptPlugin plugin in ScriptPlugins)
+            lock (ScriptPlugins)
             {
-                plugin.Check();
+                foreach (IScriptPlugin plugin in ScriptPlugins)
+                {
+                    plugin.Check();
+                }
             }
         }
 
@@ -1164,9 +1177,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="itemID"></param>
         public void RemoveScript(UUID primID, UUID itemID)
         {
-            foreach (IScriptPlugin plugin in ScriptPlugins)
+            lock (ScriptPlugins)
             {
-                plugin.RemoveScript(primID, itemID);
+                foreach (IScriptPlugin plugin in ScriptPlugins)
+                {
+                    plugin.RemoveScript(primID, itemID);
+                }
             }
         }
 
@@ -1174,15 +1190,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             List<Object> data = new List<Object>();
 
-            foreach (IScriptPlugin plugin in ScriptPlugins)
+            lock (ScriptPlugins)
             {
-                try
+                foreach (IScriptPlugin plugin in ScriptPlugins)
                 {
-                    data.AddRange(plugin.GetSerializationData(itemID, primID));
-                }
-                catch(Exception ex)
-                {
-                    m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString());
+                    try
+                    {
+                        data.AddRange(plugin.GetSerializationData(itemID, primID));
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString());
+                    }
                 }
             }
 

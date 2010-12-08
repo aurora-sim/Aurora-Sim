@@ -7,6 +7,15 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
+    public interface ICapsService
+    {
+        List<ICapsServiceConnector> CapsModules { get; }
+        void RemoveCAPS(UUID AgentID);
+        void CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle);
+        void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID);
+        IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);
+    }
+
     public interface IPrivateCapsService
     {
         void AddCAPS(string method, string caps);
@@ -26,14 +35,9 @@ namespace OpenSim.Services.Interfaces
         IGridService GridService { get; }
         string SimToInform { get; set; }
         string HostName { get; }
-        ICAPSPublicHandler PublicHandler { get; }
+        ICapsService PublicHandler { get; }
         ulong RegionHandle { get; }
-    }
-
-    public interface ICAPSPublicHandler
-    {
-        void AddCapsService(IPrivateCapsService handler, string CAPS, UUID agentID);
-        IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);
+        IInternalEventQueueService EventQueueService { get; }
     }
 
     public interface ICapsServiceConnector

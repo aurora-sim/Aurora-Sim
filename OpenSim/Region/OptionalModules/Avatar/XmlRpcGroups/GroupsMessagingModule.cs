@@ -33,10 +33,11 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.EventQueue;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 
 using Caps = OpenSim.Framework.Capabilities.Caps;
 
@@ -364,7 +365,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                                 // Force? open the group session dialog???
                                 // and simultanously deliver the message, so we don't need to do a seperate client.SendInstantMessage(msg);
-                                IEventQueue eq = activeClient.Scene.RequestModuleInterface<IEventQueue>();
+                                IEventQueueService eq = activeClient.Scene.RequestModuleInterface<IEventQueueService>();
                                 eq.ChatterboxInvitation(
                                     GroupID
                                     , groupInfo.GroupName
@@ -381,6 +382,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                     , new UUID(msg.imSessionID)
                                     , msg.fromGroup
                                     , OpenMetaverse.Utils.StringToBytes(groupInfo.GroupName)
+                                    , activeClient.Scene.RegionInfo.RegionHandle
                                     );
 
                                 eq.ChatterBoxSessionAgentListUpdates(
@@ -390,6 +392,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                     , false //canVoiceChat
                                     , false //isModerator
                                     , false //text mute
+                                    , activeClient.Scene.RegionInfo.RegionHandle
                                     );
                             }
                         }
@@ -447,7 +450,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                     ChatterBoxSessionStartReplyViaCaps(remoteClient, groupInfo.GroupName, GroupID);
 
-                    IEventQueue queue = remoteClient.Scene.RequestModuleInterface<IEventQueue>();
+                    IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
                     queue.ChatterBoxSessionAgentListUpdates(
                         GroupID
                         , AgentID
@@ -455,6 +458,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         , false //canVoiceChat
                         , false //isModerator
                         , false //text mute
+                        , remoteClient.Scene.RegionInfo.RegionHandle
                         );
                 }
             }
@@ -496,11 +500,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             bodyMap.Add("success", OSD.FromBoolean(true));
             bodyMap.Add("session_info", sessionMap);
 
-            IEventQueue queue = remoteClient.Scene.RequestModuleInterface<IEventQueue>();
+            IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
 
             if (queue != null)
             {
-                queue.Enqueue(EventQueueHelper.buildEvent("ChatterBoxSessionStartReply", bodyMap), remoteClient.AgentId);
+                queue.Enqueue(EventQueueHelper.buildEvent("ChatterBoxSessionStartReply", bodyMap), remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
             }
         }
 

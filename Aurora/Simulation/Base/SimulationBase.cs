@@ -109,6 +109,8 @@ namespace Aurora.Simulation.Base
             // This thread will go on to become the console listening thread
             if (System.Threading.Thread.CurrentThread.Name != "ConsoleThread")
                 System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
+            //Register the interface
+            ApplicationRegistry.RegisterInterface<ISimulationBase>(this);
 
             Configuration(configSource);
 
