@@ -24,7 +24,7 @@ using Aurora.Framework;
 
 namespace Aurora.Simulation.Base
 {
-    public class SimulationBase : ISimulationBase, ISimulationBase
+    public class SimulationBase : ISimulationBase
     {
         protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -82,6 +82,8 @@ namespace Aurora.Simulation.Base
         {
             get { return m_stats; }
         }
+
+        protected List<IApplicationPlugin> m_applicationPlugins = new List<IApplicationPlugin>();
 
         public IHttpServer HttpServer
         {
@@ -313,15 +315,23 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void StartModules()
         {
-            List<IApplicationPlugin> plugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
-            foreach (IApplicationPlugin plugin in plugins)
+            m_applicationPlugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
             {
                 plugin.Initialize(this);
             }
 
-            foreach (IApplicationPlugin plugin in plugins)
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
             {
                 plugin.PostInitialise();
+            }
+        }
+
+        public virtual void CloseModules()
+        {
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
+            {
+                plugin.Close();
             }
         }
 
@@ -556,7 +566,15 @@ namespace Aurora.Simulation.Base
                 {
                     //It doesn't matter, just shut down
                 }
-
+                try
+                {
+                    //Close out all the modules
+                    CloseModules();
+                }
+                catch
+                {
+                    //Just shut down already
+                }
                 try
                 {
                     //Close the thread pool

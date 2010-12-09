@@ -45,7 +45,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private OpenSimBase m_openSim;
+        private ISimulationBase m_openSim;
         private IRegionCreator m_creator;
         private IConfigSource m_configSource;
         private bool m_default = false;
@@ -54,12 +54,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             m_configSource = configSource;
             m_creator = creator;
-            m_openSim = (OpenSimBase)openSim;
+            m_openSim = openSim;
             MainConsole.Instance.Commands.AddCommand("base", false, "export database regions", "export database regions", "Exports regions in the database to an .ini file", Export);
 
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
                 m_default = config.GetString("Default") == Name;
+        }
+
+        public void Close()
+        {
         }
 
         public string Name
@@ -97,7 +101,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             if (!m_default)
                 return;
-            RegionManager manager = new RegionManager(true, (OpenSimBase)baseOS);
+            RegionManager manager = new RegionManager(true, baseOS);
             System.Windows.Forms.Application.Run(manager);
         }
 

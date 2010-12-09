@@ -44,13 +44,13 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_configSource;
         private bool m_default = true;
-        private OpenSimBase m_openSim;
+        private ISimulationBase m_openSim;
         private string m_regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
-            m_openSim = (OpenSimBase)openSim;
+            m_openSim = openSim;
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
             {

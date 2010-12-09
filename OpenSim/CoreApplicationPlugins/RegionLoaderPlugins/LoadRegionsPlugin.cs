@@ -69,20 +69,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
         }
 
-        protected void OpenRegionManager(string module, string[] cmdparams)
-        {
-            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
-            thread.Start();
-        }
-
-        protected void StartRegionManagerThread()
-        {
-            RegionManager manager = new RegionManager(false, m_openSim);
-            System.Windows.Forms.Application.Run(manager);
-        }
-
         public void PostInitialise()
         {
+            IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
+                return;
+
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
             List<RegionInfo[]> regions = new List<RegionInfo[]>();
             SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
@@ -115,11 +107,27 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
+        public void Close()
+        {
+        }
+
         public void Dispose()
         {
         }
 
         #endregion
+
+        protected void OpenRegionManager(string module, string[] cmdparams)
+        {
+            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
+            thread.Start();
+        }
+
+        protected void StartRegionManagerThread()
+        {
+            RegionManager manager = new RegionManager(false, m_openSim);
+            System.Windows.Forms.Application.Run(manager);
+        }
 
         /// <summary>
         /// Check that region configuration information makes sense.

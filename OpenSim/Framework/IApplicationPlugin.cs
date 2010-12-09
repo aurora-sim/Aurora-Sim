@@ -47,6 +47,8 @@ namespace OpenSim.Framework
         /// Called when the application loading is completed 
         /// </summary>
         void PostInitialise();
+
+        void Close();
     }
 
     public class ApplicationPluginInitialiser : PluginInitialiserBase

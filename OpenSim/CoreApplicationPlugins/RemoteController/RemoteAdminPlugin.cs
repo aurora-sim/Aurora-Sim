@@ -93,11 +93,6 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             get { return m_name; }
         }
 
-        public void Initialise()
-        {
-            m_log.Info("[RADMIN]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
-        }
         public void Initialize(ISimulationBase openSim)
         {
             IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
@@ -193,6 +188,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
                     m_log.Info("[RADMIN]: Default avatars not loaded");
                 }
             }
+        }
+
+        public void Close()
+        {
         }
 
         public XmlRpcResponse XmlRpcRestartMethod(XmlRpcRequest request, IPEndPoint remoteClient)
@@ -437,7 +436,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         private void shutdownTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            ((OpenSimBase)m_application).Shutdown(true);
+            m_application.Shutdown(true);
         }
 
         /// <summary>

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using OpenSim.Framework;
 using log4net;
+using Aurora.Services.DataService;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -10,16 +12,20 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        OpenSim.Framework.ISimulationBase OpenSimBase;
-        public void Initialize(OpenSim.Framework.ISimulationBase openSim)
+        ISimulationBase OpenSimBase;
+        public void Initialize(ISimulationBase openSim)
         {
             m_log.Info("[AURORADATA]: Setting up the data service");
             OpenSimBase = openSim;
-            Aurora.Services.DataService.LocalDataService service = new Aurora.Services.DataService.LocalDataService();
+            LocalDataService service = new LocalDataService();
             service.Initialise(openSim.ConfigSource);
         }
 
         public void PostInitialise()
+        {
+        }
+
+        public void Close()
         {
         }
 

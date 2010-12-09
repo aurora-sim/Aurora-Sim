@@ -75,109 +75,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
             m_openSim = openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
-            //m_log.DebugFormat("[REGIONMODULES]: Initializing...");
-
-            // Who we are
-            /*string id = AddinManager.CurrentAddin.Id;
-
-            // Make friendly name
-            int pos = id.LastIndexOf(".");
-            if (pos == -1)
-                m_name = id;
-            else
-                m_name = id.Substring(pos + 1);
-
-            // The [Modules] section in the ini file
-            IConfig modulesConfig =
-                    m_openSim.ConfigSource.Configs["Modules"];
-            if (modulesConfig == null)
-                modulesConfig = m_openSim.ConfigSource.AddConfig("Modules");*/
-
             // Scan modules and load all that aren't disabled
             m_sharedInstances = Aurora.Framework.AuroraModuleLoader.PickupModules<ISharedRegionModule>();
-            /*foreach (TypeExtensionNode node in
-                    AddinManager.GetExtensionNodes("/OpenSim/RegionModules"))
-            {
-                if (node.Type.GetInterface(typeof(ISharedRegionModule).ToString()) != null)
-                {
-                    // Get the config string
-                    string moduleString =
-                            modulesConfig.GetString("Setup_" + node.Id, String.Empty);
-
-                    // We have a selector
-                    if (moduleString != String.Empty)
-                    {
-                        // Allow disabling modules even if they don't have
-                        // support for it
-                        if (moduleString == "disabled")
-                            continue;
-
-                        // Split off port, if present
-                        string[] moduleParts = moduleString.Split(new char[] { '/' }, 2);
-                        // Format is [port/][class]
-                        string className = moduleParts[0];
-                        if (moduleParts.Length > 1)
-                            className = moduleParts[1];
-
-                        // Match the class name if given
-                        if (className != String.Empty &&
-                                node.Type.ToString() != className)
-                            continue;
-                    }
-
-                    //m_log.DebugFormat("[REGIONMODULES]: Found shared region module {0}, class {1}", node.Id, node.Type);
-                    m_sharedModules.Add(node);
-                }
-                else if (node.Type.GetInterface(typeof(INonSharedRegionModule).ToString()) != null)
-                {
-                    // Get the config string
-                    string moduleString =
-                            modulesConfig.GetString("Setup_" + node.Id, String.Empty);
-
-                    // We have a selector
-                    if (moduleString != String.Empty)
-                    {
-                        // Allow disabling modules even if they don't have
-                        // support for it
-                        if (moduleString == "disabled")
-                            continue;
-
-                        // Split off port, if present
-                        string[] moduleParts = moduleString.Split(new char[] { '/' }, 2);
-                        // Format is [port/][class]
-                        string className = moduleParts[0];
-                        if (moduleParts.Length > 1)
-                            className = moduleParts[1];
-
-                        // Match the class name if given
-                        if (className != String.Empty &&
-                                node.Type.ToString() != className)
-                            continue;
-                    }
-
-                    //m_log.DebugFormat("[REGIONMODULES]: Found non-shared region module {0}, class {1}", node.Id, node.Type);
-                    m_nonSharedModules.Add(node);
-                }
-                else
-                    m_log.DebugFormat("[REGIONMODULES]: Found unknown type of module {0}, class {1}", node.Id, node.Type);
-            }*/
-
-            /*// Load and init the module. We try a constructor with a port
-            // if a port was given, fall back to one without if there is
-            // no port or the more specific constructor fails.
-            // This will be removed, so that any module capable of using a port
-            // must provide a constructor with a port in the future.
-            // For now, we do this so migration is easy.
-            //
-            foreach (TypeExtensionNode node in m_sharedModules)
-            {
-                ISharedRegionModule module = (ISharedRegionModule)Activator.CreateInstance(
-                            node.Type);
-
-                // OK, we're up and running
-                m_sharedInstances.Add(module);
-                module.Initialise(m_openSim.ConfigSource);
-            }*/
             foreach (ISharedRegionModule module in m_sharedInstances)
             {
                 module.Initialise(m_openSim.ConfigSource);
@@ -186,6 +85,10 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
         public void PostInitialise ()
         {
+            IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
+                return;
+
             //m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
 
             // Immediately run PostInitialise on shared modules
@@ -193,6 +96,10 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             {
                 module.PostInitialise();
             }
+        }
+
+        public void Close()
+        {
         }
 
 #endregion
@@ -493,7 +400,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
         public void RemoveRegionFromModules (Scene scene)
         {
-            foreach (IRegionModuleBase module in RegionModules.Values)
+            foreach (IRegionModuleBase module in RegionModules[scene].Values)
             {
                 m_log.DebugFormat("[REGIONMODULE]: Removing scene {0} from module {1}",
                                   scene.RegionInfo.RegionName, module.Name);
@@ -504,7 +411,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     module.Close();
                 }
             }
-            RegionModules.Clear();
+            RegionModules[scene].Clear();
         }
 
 #endregion

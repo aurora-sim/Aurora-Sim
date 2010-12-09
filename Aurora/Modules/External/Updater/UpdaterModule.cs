@@ -96,5 +96,9 @@ namespace Aurora.Modules
         public void Dispose()
         {
         }
+
+        public void Close()
+        {
+        }
     }
 }
