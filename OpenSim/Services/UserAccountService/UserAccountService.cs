@@ -32,7 +32,6 @@ using Nini.Config;
 using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Base;
 using OpenSim.Framework.Console;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 

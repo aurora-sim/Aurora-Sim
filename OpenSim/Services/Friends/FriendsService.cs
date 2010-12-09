@@ -34,7 +34,6 @@ using OpenSim.Data;
 using Nini.Config;
 using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using OpenSim.Services.Base;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 

@@ -484,6 +484,7 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -515,6 +516,7 @@
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Data"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
