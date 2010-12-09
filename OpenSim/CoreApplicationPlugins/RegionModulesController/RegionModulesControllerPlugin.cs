@@ -483,7 +483,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
         {
             if (!RegionModules.ContainsKey(scene))
                 RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
-            RegionModules[scene].Add(p, module);
+            RegionModules[scene][p] = module;
         }
 
         public void RemoveRegionFromModules (Scene scene)
