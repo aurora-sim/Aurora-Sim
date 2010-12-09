@@ -3562,7 +3562,7 @@ namespace OpenSim.Region.Framework.Scenes
             UUID = UUID.Random();
             //LinkNum = linkNum;
             Inventory.ResetInventoryIDs(false);
-            LocalId = ParentGroup.Scene.AllocateLocalId();
+            LocalId = ParentGroup.Scene.SceneGraph.AllocateLocalId();
 
             //Fix the localID now for the physics engine
             if (m_physActor != null)

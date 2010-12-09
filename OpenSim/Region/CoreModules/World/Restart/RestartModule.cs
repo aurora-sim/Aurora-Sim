@@ -118,7 +118,7 @@ namespace OpenSim.Region.CoreModules.World.Region
 
             if (alerts == null)
             {
-                m_Scene.RestartNow();
+                m_Scene.Restart();
                 return;
             }
 
@@ -131,7 +131,7 @@ namespace OpenSim.Region.CoreModules.World.Region
 
             if (m_Alerts[0] == 0)
             {
-                m_Scene.RestartNow();
+                m_Scene.Restart();
                 return;
             }
 
@@ -144,7 +144,7 @@ namespace OpenSim.Region.CoreModules.World.Region
         {
             if (m_Alerts.Count == 0 || m_Alerts[0] == 0)
             {
-                m_Scene.RestartNow();
+                m_Scene.Restart();
                 return 0;
             }
 

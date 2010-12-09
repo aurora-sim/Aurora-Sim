@@ -282,7 +282,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 //                  scene.RegionInfo.RegionName, module.Name);
 
                 module.AddRegion(scene);
-                scene.AddRegionModule(module.Name, module);
+                AddRegionModule(scene, module.Name, module);
 
                 IRegionModuleBaseModules.Add(module);
                 sharedlist.Add(module);
@@ -391,7 +391,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             foreach (INonSharedRegionModule module in list)
             {
                 module.AddRegion(scene);
-                scene.AddRegionModule(module.Name, module);
+                AddRegionModule(scene, module.Name, module);
             }
 
             // Now all modules without a replaceable base interface are loaded
@@ -414,7 +414,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
                 // Not replaced, load the module
                 module.AddRegion(scene);
-                scene.AddRegionModule(module.Name, module);
+                AddRegionModule(scene, module.Name, module);
 
                 IRegionModuleBaseModules.Add(module);
                 sharedlist.Add(module);
@@ -453,7 +453,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             foreach (INonSharedRegionModule module in deferredlist)
             {
                 module.AddRegion(scene);
-                scene.AddRegionModule(module.Name, module);
+                AddRegionModule(scene, module.Name, module);
             }
 
             // This is needed for all module types. Modules will register
@@ -477,9 +477,18 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             }
         }
 
+        protected Dictionary<Scene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<Scene, Dictionary<string, IRegionModuleBase>>();
+
+        private void AddRegionModule(Scene scene, string p, IRegionModuleBase module)
+        {
+            if (!RegionModules.ContainsKey(scene))
+                RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
+            RegionModules[scene].Add(p, module);
+        }
+
         public void RemoveRegionFromModules (Scene scene)
         {
-            foreach (IRegionModuleBase module in scene.RegionModules.Values)
+            foreach (IRegionModuleBase module in RegionModules.Values)
             {
                 m_log.DebugFormat("[REGIONMODULE]: Removing scene {0} from module {1}",
                                   scene.RegionInfo.RegionName, module.Name);
@@ -490,7 +499,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     module.Close();
                 }
             }
-            scene.RegionModules.Clear();
+            RegionModules.Clear();
         }
 
 #endregion

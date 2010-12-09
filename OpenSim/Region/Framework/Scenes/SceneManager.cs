@@ -1185,7 +1185,7 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
 
                 case "restart":
-                    ForEachCurrentScene(delegate(Scene scene) { scene.RestartNow(); });
+                    ForEachCurrentScene(delegate(Scene scene) { scene.Restart(); });
                     break;
                 case "restart-instance":
                     //This kills the instance and restarts it

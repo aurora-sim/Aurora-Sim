@@ -705,7 +705,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = world;
             m_uuid = client.AgentId;
             m_regionInfo = reginfo;
-            m_localId = m_scene.AllocateLocalId();
+            m_localId = m_scene.SceneGraph.AllocateLocalId();
 
             CreateSceneViewer();
 

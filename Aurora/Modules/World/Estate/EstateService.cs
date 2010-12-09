@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Net;
+using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
@@ -413,21 +415,38 @@ namespace Aurora.Modules
                     reason = "Banned from this region.";
                     return false;
                 }
-                if (ban.BannedHostIPMask == ACD.IPAddress)
+                IClientIPEndpoint ipEndpoint;
+                if (((IClientCore)Sp.ControllingClient).TryGet(out ipEndpoint))
                 {
-                    //Ban the new user
-                    ES.AddBan(new EstateBan()
+                    IPAddress end = ipEndpoint.EndPoint;
+                    IPHostEntry rDNS = null;
+                    try
                     {
-                        EstateID = ES.EstateID,
-                        BannedHostIPMask = ACD.IPAddress,
-                        BannedUserID = userID,
-                        BannedHostAddress = ACD.IPAddress,
-                        BannedHostNameMask = ACD.IPAddress
-                    });
-                    ES.Save();
+                        rDNS = Dns.GetHostEntry(end);
+                    }
+                    catch (System.Net.Sockets.SocketException)
+                    {
+                        m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
+                        rDNS = null;
+                    }
+                    if (ban.BannedHostIPMask == ACD.IPAddress ||
+                            (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
+                                end.ToString().StartsWith(ban.BannedHostIPMask))
+                    {
+                        //Ban the new user
+                        ES.AddBan(new EstateBan()
+                        {
+                            EstateID = ES.EstateID,
+                            BannedHostIPMask = ACD.IPAddress,
+                            BannedUserID = userID,
+                            BannedHostAddress = ACD.IPAddress,
+                            BannedHostNameMask = ACD.IPAddress
+                        });
+                        ES.Save();
 
-                    reason = "Banned from this region.";
-                    return false;
+                        reason = "Banned from this region.";
+                        return false;
+                    }
                 }
                 i++;
             }

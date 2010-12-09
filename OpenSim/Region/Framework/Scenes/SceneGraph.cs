@@ -94,6 +94,14 @@ namespace OpenSim.Region.Framework.Scenes
         protected int m_activeScripts = 0;
         protected int m_scriptEPS = 0;
 
+        /// <summary>
+        /// The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
+        /// dispensed.
+        /// </summary>
+        protected uint m_lastAllocatedLocalId = 720000;
+
+        private readonly Mutex _primAllocateMutex = new Mutex(false);
+
         protected internal object m_syncRoot = new object();
 
         protected internal PhysicsScene _PhyScene;
@@ -117,6 +125,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal SceneGraph(Scene parent, RegionInfo regInfo)
         {
+            Random random = new Random();
+            m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
             m_parentScene = parent;
             m_regInfo = regInfo;
         }
@@ -1751,7 +1761,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (((SceneObjectPart)child).PhysActor != null)
                     ((SceneObjectPart)child).PhysActor.LocalID = child.LocalId;
                 if (child.LocalId == 0)
-                    child.LocalId = m_parentScene.AllocateLocalId();
+                    child.LocalId = AllocateLocalId();
                 entity.AddChild(child, child.LinkNum);
             }
             //Force the prim to backup now that it has been added
@@ -1797,6 +1807,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Private Methods
+
         ///These methods are UNSAFE to be accessed from outside this manager, if they are, BAD things WILL happen.
         /// If these are changed so that they can be accessed from the outside, ghost prims and other nasty things will occur unless you are EXTREMELY careful.
         /// If more changes need to occur in this area, you must use public methods to safely add/update/remove objects from the EntityManager
@@ -1842,6 +1853,46 @@ namespace OpenSim.Region.Framework.Scenes
                 child.ResetEntityIDs();
                 entity.AddChild(child, child.LinkNum);
             }
+        }
+
+        /// <summary>
+        /// Returns a new unallocated local ID
+        /// </summary>
+        /// <returns>A brand new local ID</returns>
+        public uint AllocateLocalId()
+        {
+            uint myID;
+
+            _primAllocateMutex.WaitOne();
+            myID = ++m_lastAllocatedLocalId;
+            _primAllocateMutex.ReleaseMutex();
+
+            return myID;
+        }
+
+        /// <summary>
+        /// Check all the localIDs in this group to make sure that they have not been used previously
+        /// </summary>
+        /// <param name="group"></param>
+        public void CheckAllocationOfLocalIds(SceneObjectGroup group)
+        {
+            foreach (SceneObjectPart part in group.ChildrenList)
+            {
+                if (part.LocalId != 0)
+                    CheckAllocationOfLocalId(part.LocalId);
+            }
+        }
+
+        /// <summary>
+        /// Make sure that this localID has not been used earlier in the Scene Startup
+        /// </summary>
+        /// <param name="LocalID"></param>
+        private void CheckAllocationOfLocalId(uint LocalID)
+        {
+            _primAllocateMutex.WaitOne();
+            if (LocalID > m_lastAllocatedLocalId)
+                m_lastAllocatedLocalId = LocalID;
+            _primAllocateMutex.ReleaseMutex();
         }
 
         #endregion

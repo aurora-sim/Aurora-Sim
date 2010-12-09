@@ -55,12 +55,16 @@ using OpenSim.Region.Framework.Scenes.Animation;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public partial class Scene : SceneBase
+    public partial class Scene : IScene, IRegistryCore
     {
+        #region Fields
+
+        #region Constants
+
         private const long DEFAULT_MIN_TIME_FOR_PERSISTENCE = 60L;
         private const long DEFAULT_MAX_TIME_FOR_PERSISTENCE = 600L;
 
-        #region Fields
+        #endregion
 
         public SimStatsReporter StatsReporter;
 
@@ -75,6 +79,44 @@ namespace OpenSim.Region.Framework.Scenes
         /// The scene graph for this scene
         /// </value>
         private SceneGraph m_sceneGraph;
+
+        protected readonly ClientManager m_clientManager = new ClientManager();
+
+        protected RegionInfo m_regInfo;
+
+        public ITerrainChannel Heightmap;
+
+        /// <value>
+        /// Allows retrieval of land information for this scene.
+        /// </value>
+        public ILandChannel LandChannel;
+
+        protected AuroraEventManager m_AuroraEventManager = null;
+        protected EventManager m_eventManager;
+        /// <value>
+        /// Manage events that occur in this scene (avatar movement, script rez, etc.).  Commonly used by region modules
+        /// to subscribe to scene events.
+        /// </value>
+        public EventManager EventManager
+        {
+            get { return m_eventManager; }
+        }
+        /// <summary>
+        /// Generic manager to send and recieve events. Used mainly by region modules
+        /// </summary>
+        public AuroraEventManager AuroraEventManager
+        {
+            get { return m_AuroraEventManager; }
+        }
+
+        protected ScenePermissions m_permissions;
+        /// <summary>
+        /// Controls permissions for the Scene
+        /// </summary>
+        public ScenePermissions Permissions
+        {
+            get { return m_permissions; }
+        }
 
         public volatile bool m_backingup = false;
         private DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
@@ -224,6 +266,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGraph; }
         }
 
+        public RegionInfo RegionInfo
+        {
+            get { return m_regInfo; }
+        }
+
         // an instance to the physics plugin's Scene object.
         public PhysicsScene PhysicsScene
         {
@@ -281,14 +328,14 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGraph.Entities; }
         }
 
-        public override string GetSimulatorVersion()
+        public string GetSimulatorVersion()
         {
             return m_simulatorVersion;
         }
 
-        protected override IConfigSource GetConfig()
+        public IConfigSource Config
         {
-            return m_config;
+            get { return m_config; }
         }
 
         public string DefaultObjectName
@@ -306,7 +353,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_UseSelectionParticles; }
         }
 
-        public new float TimeDilation
+        public float TimeDilation
         {
             get { return m_sceneGraph.PhysicsScene.TimeDilation; }
         }
@@ -480,8 +527,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_stats = stats;
             m_config = config;
-            Random random = new Random();
-            m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
             m_authenticateHandler = authen;
             m_regInfo = regInfo;
             m_lastUpdate = Util.EnvironmentTickCount();
@@ -511,7 +556,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             BordersLocked = false;
 
-            AuroraEventManager = new AuroraEventManager();
+            m_AuroraEventManager = new AuroraEventManager();
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
@@ -719,7 +764,7 @@ namespace OpenSim.Region.Framework.Scenes
             BordersLocked = false;
 
             m_eventManager = new EventManager();
-            AuroraEventManager = new AuroraEventManager();
+            m_AuroraEventManager = new AuroraEventManager();
 
 
             m_lastUpdate = Util.EnvironmentTickCount();
@@ -739,7 +784,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="otherRegion">RegionInfo handle for the new region.</param>
         /// <returns>True after all operations complete, throws exceptions otherwise.</returns>
-        public override void OtherRegionUp(GridRegion otherRegion)
+        public void OtherRegionUp(GridRegion otherRegion)
         {
             uint xcell = (uint)((int)otherRegion.RegionLocX / (int)Constants.RegionSize);
             uint ycell = (uint)((int)otherRegion.RegionLocY / (int)Constants.RegionSize);
@@ -839,7 +884,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // This causes the region to restart immediatley.
-        public void RestartNow()
+        public void Restart()
         {
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig != null)
@@ -867,7 +912,10 @@ namespace OpenSim.Region.Framework.Scenes
             Close();
 
             m_log.Error("[REGION]: Firing Region Restart Message");
-            base.Restart();
+
+            restart handlerPhysicsCrash = OnRestart;
+            if (handlerPhysicsCrash != null)
+                handlerPhysicsCrash(RegionInfo);
         }
 
         public void UpdateGridRegion()
@@ -924,7 +972,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // This is the method that shuts down the scene.
-        public override void Close()
+        public void Close()
         {
             m_log.InfoFormat("[SCENE]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
@@ -974,8 +1022,15 @@ namespace OpenSim.Region.Framework.Scenes
             if (!GridService.DeregisterRegion(m_regInfo.RegionID, RegionInfo.GridSecureSessionID))
                 m_log.WarnFormat("[SCENE]: Deregister from grid failed for region {0}", m_regInfo.RegionName);
 
-            // call the base class Close method.
-            base.Close();
+            //Trigger the last event
+            try
+            {
+                EventManager.TriggerShutdown();
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[SCENE]: Close() - Failed with exception ", e);
+            }
         }
 
         public AuroraThreadTracker tracker = null;
@@ -1665,7 +1720,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Performs per-frame updates on the scene, this should be the central scene loop
         /// </summary>
-        public override void Update()
+        public void Update()
         {
             float physicsFPS;
             int maintc;
@@ -2124,7 +2179,7 @@ namespace OpenSim.Region.Framework.Scenes
             List<SceneObjectGroup> PrimsFromDB = SimulationDataService.LoadObjects(regionID, this);
             foreach (SceneObjectGroup group in PrimsFromDB)
             {
-                CheckAllocationOfLocalIds(group);
+                SceneGraph.CheckAllocationOfLocalIds(group);
                 if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
                     (group.RootPart.Shape.PCode == (byte)PCode.None ||
                     group.RootPart.Shape.PCode == (byte)PCode.Prim ||
@@ -2616,7 +2671,7 @@ namespace OpenSim.Region.Framework.Scenes
             return offsets.ToArray();
         }
 
-        public override ISceneObject DeserializeObject(string representation)
+        public ISceneObject DeserializeObject(string representation)
         {
             return SceneObjectSerializer.FromXml2Format(representation, this);
         }
@@ -3261,7 +3316,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Adding a New Client and Create a Presence for it.
         /// </summary>
         /// <param name="client"></param>
-        public override void AddNewClient(IClientAPI client)
+        public void AddNewClient(IClientAPI client)
         {
             AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(client.CircuitCode);
             bool vialogin = false;
@@ -3354,7 +3409,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // Called by Caps, on the first HTTP contact from the client
-        public override bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
+        public bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
         {
             AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(agentID);
             if (aCircuit != null)
@@ -3665,6 +3720,15 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Send the region heightmap to the client
+        /// </summary>
+        /// <param name="RemoteClient">Client to send to</param>
+        public void SendLayerData(IClientAPI RemoteClient)
+        {
+            RemoteClient.SendLayerData(Heightmap.GetFloatsSerialised(this));
+        }
+
+        /// <summary>
         /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
         /// RayEnd and RayStart to determine what the angle of the ray is
         /// </summary>
@@ -3832,7 +3896,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Remove the given client from the scene.
         /// </summary>
         /// <param name="agentID"></param>
-        public override void RemoveClient(UUID agentID)
+        public void RemoveClient(UUID agentID)
         {
             bool childagentYN = false;
             ScenePresence avatar = GetScenePresence(agentID);
@@ -4669,7 +4733,20 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        public override bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
+        public bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence)
+        {
+            scenePresence = null;
+            ScenePresence sp = null;
+            if (TryGetScenePresence(agentID, out sp))
+            {
+                scenePresence = sp;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
         {
             return m_sceneGraph.TryGetScenePresence(avatarId, out avatar);
         }
@@ -4951,10 +5028,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override void Show(string[] showParams)
+        public void Show(string[] showParams)
         {
-            base.Show(showParams);
-
             switch (showParams[0])
             {
                 case "users":
@@ -5263,8 +5338,279 @@ namespace OpenSim.Region.Framework.Scenes
                 LoginsDisabled = false;
             }
 
-            base.StartupComplete(this, data);
+            //Tell the SceneManager about it
+            if (OnStartupComplete != null)
+                OnStartupComplete(this, data);
         }
+
+        #endregion
+
+        #region Module Methods
+
+        /// <value>
+        /// The module interfaces available from this scene.
+        /// </value>
+        protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
+
+        /// <value>
+        /// The module commanders available from this scene
+        /// </value>
+        protected Dictionary<string, ICommander> m_moduleCommanders = new Dictionary<string, ICommander>();
+
+        /// <value>
+        /// Registered classes that are capable of creating entities.
+        /// </value>
+        protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
+        
+        /// <summary>
+        /// Register a module commander.
+        /// </summary>
+        /// <param name="commander"></param>
+        public void RegisterModuleCommander(ICommander commander)
+        {
+            lock (m_moduleCommanders)
+            {
+                m_moduleCommanders.Add(commander.Name, commander);
+            }
+        }
+
+        /// <summary>
+        /// Unregister a module commander and all its commands
+        /// </summary>
+        /// <param name="name"></param>
+        public void UnregisterModuleCommander(string name)
+        {
+            lock (m_moduleCommanders)
+            {
+                ICommander commander;
+                if (m_moduleCommanders.TryGetValue(name, out commander))
+                    m_moduleCommanders.Remove(name);
+            }
+        }
+
+        /// <summary>
+        /// Get a module commander
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>The module commander, null if no module commander with that name was found</returns>
+        public ICommander GetCommander(string name)
+        {
+            lock (m_moduleCommanders)
+            {
+                if (m_moduleCommanders.ContainsKey(name))
+                    return m_moduleCommanders[name];
+            }
+
+            return null;
+        }
+
+        public Dictionary<string, ICommander> GetCommanders()
+        {
+            return m_moduleCommanders;
+        }
+
+        /// <summary>
+        /// Register an interface to a region module.  This allows module methods to be called directly as
+        /// well as via events.  If there is already a module registered for this interface, it is not replaced
+        /// (is this the best behaviour?)
+        /// </summary>
+        /// <param name="mod"></param>
+        public void RegisterModuleInterface<M>(M mod)
+        {
+            //            m_log.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
+
+            List<Object> l = null;
+            if (!ModuleInterfaces.TryGetValue(typeof(M), out l))
+            {
+                l = new List<Object>();
+                ModuleInterfaces.Add(typeof(M), l);
+            }
+
+            if (l.Count > 0)
+                l.Clear();
+
+            l.Add(mod);
+
+            if (mod is IEntityCreator)
+            {
+                IEntityCreator entityCreator = (IEntityCreator)mod;
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = entityCreator;
+                }
+            }
+        }
+
+        public void AddModuleInterfaces(Dictionary<Type, object> dictionary)
+        {
+            foreach (KeyValuePair<Type, object> kvp in dictionary)
+            {
+                List<Object> l = null;
+                if (!ModuleInterfaces.TryGetValue(kvp.Key, out l))
+                {
+                    l = new List<Object>();
+                    ModuleInterfaces.Add(kvp.Key, l);
+                }
+
+                if (l.Count > 0)
+                    l.Clear();
+
+                l.Add(kvp.Value);
+            }
+        }
+
+        public void UnregisterModuleInterface<M>(M mod)
+        {
+            List<Object> l;
+            if (ModuleInterfaces.TryGetValue(typeof(M), out l))
+            {
+                if (l.Remove(mod))
+                {
+                    if (mod is IEntityCreator)
+                    {
+                        IEntityCreator entityCreator = (IEntityCreator)mod;
+                        foreach (PCode pcode in entityCreator.CreationCapabilities)
+                        {
+                            m_entityCreators[pcode] = null;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void RegisterInterface<M>(M mod)
+        {
+            RegisterModuleInterface<M>(mod);
+        }
+
+        public void StackModuleInterface<M>(M mod)
+        {
+            List<Object> l;
+            if (ModuleInterfaces.ContainsKey(typeof(M)))
+                l = ModuleInterfaces[typeof(M)];
+            else
+                l = new List<Object>();
+
+            if (l.Contains(mod))
+                return;
+
+            l.Add(mod);
+
+            if (mod is IEntityCreator)
+            {
+                IEntityCreator entityCreator = (IEntityCreator)mod;
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = entityCreator;
+                }
+            }
+
+            ModuleInterfaces[typeof(M)] = l;
+        }
+
+        /// <summary>
+        /// For the given interface, retrieve the region module which implements it.
+        /// </summary>
+        /// <returns>null if there is no registered module implementing that interface</returns>
+        public T RequestModuleInterface<T>()
+        {
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+                return (T)ModuleInterfaces[typeof(T)][0];
+            else
+                return default(T);
+        }
+
+        public T Get<T>()
+        {
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+                return (T)ModuleInterfaces[typeof(T)][0];
+            else
+                return default(T);
+        }
+
+        public bool TryGet<T>(out T iface)
+        {
+            iface = default(T);
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+            {
+                iface = (T)ModuleInterfaces[typeof(T)][0];
+                return true;
+            }
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// For the given interface, retrieve an array of region modules that implement it.
+        /// </summary>
+        /// <returns>an empty array if there are no registered modules implementing that interface</returns>
+        public T[] RequestModuleInterfaces<T>()
+        {
+            if (ModuleInterfaces.ContainsKey(typeof(T)))
+            {
+                List<T> ret = new List<T>();
+
+                foreach (Object o in ModuleInterfaces[typeof(T)])
+                    ret.Add((T)o);
+                return ret.ToArray();
+            }
+            else
+            {
+                return new T[] { default(T) };
+            }
+        }
+
+        #endregion
+
+        #region Console Commander
+
+        public void AddCommand(object mod, string command, string shorthelp, string longhelp, CommandDelegate callback)
+        {
+            AddCommand(mod, command, shorthelp, longhelp, string.Empty, callback);
+        }
+
+        /// <summary>
+        /// Call this from a region module to add a command to the OpenSim console.
+        /// </summary>
+        /// <param name="mod"></param>
+        /// <param name="command"></param>
+        /// <param name="shorthelp"></param>
+        /// <param name="longhelp"></param>
+        /// <param name="descriptivehelp"></param>
+        /// <param name="callback"></param>
+        public void AddCommand(
+            object mod, string command, string shorthelp, string longhelp, string descriptivehelp, CommandDelegate callback)
+        {
+            if (MainConsole.Instance == null)
+                return;
+
+            string modulename = String.Empty;
+            bool shared = false;
+
+            if (mod != null)
+            {
+                if (mod is IRegionModuleBase)
+                {
+                    IRegionModuleBase module = (IRegionModuleBase)mod;
+                    modulename = module.Name;
+                    shared = mod is ISharedRegionModule;
+                }
+                else throw new Exception("AddCommand module parameter must be IRegionModule or IRegionModuleBase");
+            }
+
+            MainConsole.Instance.Commands.AddCommand(
+                modulename, shared, command, shorthelp, longhelp, descriptivehelp, callback);
+        }
+
+        #endregion
+
+        #region Events
+
+        public event restart OnRestart;
+        public event startupComplete OnStartupComplete;
 
         #endregion
     }

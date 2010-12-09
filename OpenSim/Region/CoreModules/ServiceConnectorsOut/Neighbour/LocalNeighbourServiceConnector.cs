@@ -252,6 +252,10 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
         {
             List<GridRegion> m_informedRegions = new List<GridRegion>();
+
+            if (!m_KnownNeighbors.ContainsKey(closingRegion.RegionID))
+                return new List<GridRegion>();
+
             List<GridRegion> neighbors = m_KnownNeighbors[closingRegion.RegionID];
             m_KnownNeighbors.Remove(closingRegion.RegionID);
 
@@ -288,6 +292,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
         {
+            if (!m_KnownNeighbors.ContainsKey(regionID))
+                return;
+
             //Send the updates to all known neighbors
             foreach (GridRegion region in m_KnownNeighbors[regionID])
             {
@@ -297,6 +304,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
         {
+            if (!m_KnownNeighbors.ContainsKey(currentRegionID))
+                return;
             List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
             m_log.DebugFormat(
                 "[NeighborService]: Closing all child agents for " + AgentID + ". Checking {0} regions.",
@@ -316,6 +325,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
         {
+            if (!m_KnownNeighbors.ContainsKey(currentRegionID))
+                return;
             List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
             List<GridRegion> byebyeRegions = new List<GridRegion>();
             m_log.DebugFormat(
@@ -353,6 +364,10 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
             bool RetVal = false;
+
+            if (!m_KnownNeighbors.ContainsKey(region.RegionID))
+                return RetVal;
+
             foreach (GridRegion neighbor in m_KnownNeighbors[region.RegionID])
             {
                 if (neighbor.RegionID == region.RegionID)

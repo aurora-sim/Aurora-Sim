@@ -65,8 +65,6 @@ namespace OpenSim.Framework
         
         IConfigSource Config { get; }
 
-        float TimeDilation { get; }
-
         event restart OnRestart;
 
         void AddNewClient(IClientAPI client);

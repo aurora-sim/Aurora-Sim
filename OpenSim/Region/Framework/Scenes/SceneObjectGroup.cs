@@ -3320,7 +3320,7 @@ namespace OpenSim.Region.Framework.Scenes
             scriptRotTarget waypoint = new scriptRotTarget();
             waypoint.targetRot = target;
             waypoint.tolerance = tolerance;
-            uint handle = m_scene.AllocateLocalId();
+            uint handle = m_scene.SceneGraph.AllocateLocalId();
             waypoint.handle = handle;
             lock (m_rotTargets)
             {
@@ -3345,7 +3345,7 @@ namespace OpenSim.Region.Framework.Scenes
             scriptPosTarget waypoint = new scriptPosTarget();
             waypoint.targetPos = target;
             waypoint.tolerance = tolerance;
-            uint handle = m_scene.AllocateLocalId();
+            uint handle = m_scene.SceneGraph.AllocateLocalId();
             waypoint.handle = handle;
             lock (m_targets)
             {

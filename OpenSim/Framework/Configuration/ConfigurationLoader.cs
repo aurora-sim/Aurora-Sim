@@ -51,12 +51,12 @@ namespace OpenSim.Framework
         /// <summary>
         /// Should we save all merging of the .ini files to the filesystem?
         /// </summary>
-        protected bool inidbg;
+        protected bool inidbg = false;
 
         /// <summary>
         /// Should we show all the loading of the config files?
         /// </summary>
-        protected bool showIniLoading;
+        protected bool showIniLoading = false;
 
         public string defaultIniFile = "OpenSim.ini";
 
@@ -77,10 +77,10 @@ namespace OpenSim.Framework
             List<string> sources = new List<string>();
 
             inidbg =
-                startupConfig.GetBoolean("inidbg", false);
+                startupConfig.GetBoolean("inidbg", inidbg);
 
             showIniLoading =
-                startupConfig.GetBoolean("inishowfileloading", false);
+                startupConfig.GetBoolean("inishowfileloading", showIniLoading);
 
             string masterFileName =
                 startupConfig.GetString("inimaster", String.Empty);
