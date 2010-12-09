@@ -32,7 +32,6 @@ using System.Reflection;
 using System.Xml;
 
 using OpenSim.Framework;
-using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 
 using log4net;
@@ -46,7 +45,7 @@ namespace OpenSim.Services.InventoryService
     /// Basically a hack to give us a Inventory library while we don't have a inventory server
     /// once the server is fully implemented then should read the data from that
     /// </summary>
-    public class LibraryService : ServiceBase, ILibraryService, IService
+    public class LibraryService : ILibraryService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

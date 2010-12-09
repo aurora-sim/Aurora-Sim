@@ -31,10 +31,10 @@ using OpenMetaverse;
 using log4net;
 using Nini.Config;
 using System.Reflection;
-using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.InventoryService
@@ -82,7 +82,7 @@ namespace OpenSim.Services.InventoryService
             if (dllName == String.Empty)
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IXInventoryData>(dllName,
+            m_Database = AuroraModuleLoader.LoadPlugin<IXInventoryData>(dllName,
                     new Object[] {connString, String.Empty});
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");

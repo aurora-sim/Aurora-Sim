@@ -35,6 +35,7 @@ using System.Reflection;
 using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AuthenticationService
@@ -88,7 +89,7 @@ namespace OpenSim.Services.AuthenticationService
             if (dllName == String.Empty || realm == String.Empty)
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IAuthenticationData>(dllName,
+            m_Database = AuroraModuleLoader.LoadPlugin<IAuthenticationData>(dllName,
                     new Object[] { connString, realm });
             if (m_Database == null)
                 throw new Exception(string.Format("Could not find a storage interface in module {0}", dllName));

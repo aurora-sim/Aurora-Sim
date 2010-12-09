@@ -30,7 +30,6 @@ using OpenMetaverse;
 using log4net;
 using Nini.Config;
 using System.Reflection;
-using OpenSim.Services.Base;
 using OpenSim.Data;
 using OpenSim.Framework;
 
@@ -42,7 +41,7 @@ namespace OpenSim.Services.AuthenticationService
     // or any other components that need 
     // verifiable identification.
     //
-    public class AuthenticationServiceBase : ServiceBase
+    public class AuthenticationServiceBase
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(

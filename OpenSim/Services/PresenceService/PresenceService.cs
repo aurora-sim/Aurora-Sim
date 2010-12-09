@@ -35,13 +35,13 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Base;
 using OpenMetaverse;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.PresenceService
 {
-    public class PresenceService : ServiceBase, IPresenceService, IService
+    public class PresenceService : IPresenceService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -88,7 +88,7 @@ namespace OpenSim.Services.PresenceService
             if (dllName.Equals(String.Empty))
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IPresenceData>(dllName, new Object[] { connString, realm });
+            m_Database = AuroraModuleLoader.LoadPlugin<IPresenceData>(dllName, new Object[] { connString, realm });
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module " + dllName);
 

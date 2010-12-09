@@ -38,18 +38,17 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using log4net;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.UserAccountService
 {
-    public class UserAccountService : ServiceBase, IUserAccountService, IService
+    public class UserAccountService : IUserAccountService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static UserAccountService m_RootInstance;
 
         protected IGridService m_GridService;
         protected IAuthenticationService m_AuthenticationService;
-        protected IGridUserService m_GridUserService;
         protected IInventoryService m_InventoryService;
         protected IUserAccountData m_Database = null;
 
@@ -77,27 +76,20 @@ namespace OpenSim.Services.UserAccountService
             if (dllName == String.Empty)
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
+            m_Database = AuroraModuleLoader.LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
 
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
-            // In case there are several instances of this class in the same process,
-            // the console commands are only registered for the root instance
-            if (m_RootInstance == null)
+            if (MainConsole.Instance != null)
             {
-                m_RootInstance = this;
-                if (MainConsole.Instance != null)
-                {
-                    MainConsole.Instance.Commands.AddCommand("UserService", false,
-                            "create user",
-                            "create user [<first> [<last> [<pass> [<email>]]]]",
-                            "Create a new user", HandleCreateUser);
-                    MainConsole.Instance.Commands.AddCommand("UserService", false, "reset user password",
-                            "reset user password [<first> [<last> [<password>]]]",
-                            "Reset a user password", HandleResetUserPassword);
-                }
-
+                MainConsole.Instance.Commands.AddCommand("UserService", false,
+                        "create user",
+                        "create user [<first> [<last> [<pass> [<email>]]]]",
+                        "Create a new user", HandleCreateUser);
+                MainConsole.Instance.Commands.AddCommand("UserService", false, "reset user password",
+                        "reset user password [<first> [<last> [<password>]]]",
+                        "Reset a user password", HandleResetUserPassword);
             }
             registry.RegisterInterface<IUserAccountService>(this);
         }
@@ -112,9 +104,6 @@ namespace OpenSim.Services.UserAccountService
 
             if (m_InventoryService == null)
                 m_InventoryService = registry.Get<IInventoryService>();
-
-            if (m_GridUserService == null)
-                m_GridUserService = registry.Get<IGridUserService>();
         }
 
         #region IUserAccountService
@@ -409,23 +398,6 @@ namespace OpenSim.Services.UserAccountService
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
                                 firstName, lastName);
                     }
-
-                    GridRegion home = null;
-                    if (m_GridService != null)
-                    {
-                        List<GridRegion> defaultRegions = m_GridService.GetDefaultRegions(UUID.Zero);
-                        if (defaultRegions != null && defaultRegions.Count >= 1)
-                            home = defaultRegions[0];
-
-                        if (m_GridUserService != null && home != null)
-                            m_GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
-                        else
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
-                               firstName, lastName);
-                    }
-                    else
-                        m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
-                           firstName, lastName);
 
                     if (m_InventoryService != null)
                     {

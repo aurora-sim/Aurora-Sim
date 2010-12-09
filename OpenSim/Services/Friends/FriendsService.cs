@@ -35,11 +35,12 @@ using Nini.Config;
 using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenSim.Services.Base;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Friends
 {
-    public class FriendsService : ServiceBase, IFriendsService, IService
+    public class FriendsService : IFriendsService, IService
     {
         protected IFriendsData m_Database = null;
 
@@ -80,7 +81,7 @@ namespace OpenSim.Services.Friends
             if (friendsConfig != null)
                 realm = friendsConfig.GetString("Realm", realm);
 
-            m_Database = LoadPlugin<IFriendsData>(dllName, new Object[] { connString, realm });
+            m_Database = AuroraModuleLoader.LoadPlugin<IFriendsData>(dllName, new Object[] { connString, realm });
             if (m_Database == null)
             {
                 throw new Exception(

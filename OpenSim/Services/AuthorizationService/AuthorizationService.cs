@@ -34,12 +34,12 @@ using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
-using OpenSim.Services.Base;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AuthorizationService
 {
-    public class AuthorizationService : ServiceBase, IAuthorizationService, IService
+    public class AuthorizationService : IAuthorizationService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -80,7 +80,7 @@ namespace OpenSim.Services.AuthorizationService
             if (dllName.Equals(String.Empty))
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IAssetDataPlugin>(dllName);
+            m_Database = AuroraModuleLoader.LoadPlugin<IAssetDataPlugin>(dllName);
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 

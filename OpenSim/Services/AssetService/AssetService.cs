@@ -33,13 +33,13 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Base;
 using OpenMetaverse;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AssetService
 {
-    public class AssetService : ServiceBase, IAssetService, IService
+    public class AssetService : IAssetService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -80,7 +80,7 @@ namespace OpenSim.Services.AssetService
             if (dllName.Equals(String.Empty))
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IAssetDataPlugin>(dllName);
+            m_Database = AuroraModuleLoader.LoadPlugin<IAssetDataPlugin>(dllName);
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
@@ -91,7 +91,7 @@ namespace OpenSim.Services.AssetService
 
             if (loaderName != String.Empty)
             {
-                m_AssetLoader = LoadPlugin<IAssetLoader>(loaderName);
+                m_AssetLoader = AuroraModuleLoader.LoadPlugin<IAssetLoader>(loaderName);
 
                 if (m_AssetLoader == null)
                     throw new Exception("Asset loader could not be loaded");

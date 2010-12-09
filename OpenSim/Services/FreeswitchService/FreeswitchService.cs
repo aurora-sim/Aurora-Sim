@@ -33,7 +33,6 @@ using log4net;
 using OpenSim.Framework;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System.Collections;
@@ -41,7 +40,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.FreeswitchService
 {
-    public class FreeswitchService : ServiceBase, IFreeswitchService, IService
+    public class FreeswitchService : IFreeswitchService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

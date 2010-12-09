@@ -34,15 +34,15 @@ using log4net;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Data;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse;
 
 namespace OpenSim.Services.GridService
 {
-    public class GridService : ServiceBase, IGridService, IService
+    public class GridService : IGridService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -96,7 +96,7 @@ namespace OpenSim.Services.GridService
             if (dllName.Equals(String.Empty))
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = LoadPlugin<IRegionData>(dllName, new Object[] { connString, realm });
+            m_Database = AuroraModuleLoader.LoadPlugin<IRegionData>(dllName, new Object[] { connString, realm });
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 

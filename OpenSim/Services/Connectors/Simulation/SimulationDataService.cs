@@ -31,17 +31,17 @@ using OpenMetaverse;
 using log4net;
 using Nini.Config;
 using System.Reflection;
-using OpenSim.Services.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Data;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class SimulationDataService : ServiceBase, ISimulationDataService
+    public class SimulationDataService : ISimulationDataService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -74,7 +74,7 @@ namespace OpenSim.Services.Connectors
             if (dllName == String.Empty)
                 dllName = "OpenSim.Data.Null.dll";
 
-            m_database = LoadPlugin<ISimulationDataStore>(dllName, new Object[] { connString });
+            m_database = AuroraModuleLoader.LoadPlugin<ISimulationDataStore>(dllName, new Object[] { connString });
             if (m_database == null)
                 throw new Exception("Could not find a storage interface in the given module");
         }
