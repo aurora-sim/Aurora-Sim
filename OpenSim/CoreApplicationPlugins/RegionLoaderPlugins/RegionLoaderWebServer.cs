@@ -51,7 +51,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         private IConfigSource m_configSource;
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
+        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
         }
@@ -97,7 +97,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             return null;
         }
 
-        public void AddRegion(IOpenSimBase baseOS, string[] cmd)
+        public void AddRegion(ISimulationBase baseOS, string[] cmd)
         {
             //Can't add regions to remote locations
         }

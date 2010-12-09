@@ -33,8 +33,8 @@ namespace OpenSim.Framework
     {
         RegionInfo[] LoadRegions();
 
-        void AddRegion(IOpenSimBase baseOS, string[] cmd);
+        void AddRegion(ISimulationBase baseOS, string[] cmd);
 
-        void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim);
+        void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim);
     }
 }

@@ -30,7 +30,7 @@ using System.Data;
 using Nini.Config;
 using OpenSim.Framework;
 
-namespace OpenSim
+namespace OpenSim.Framework
 {
     /// <summary>
     /// OpenSimulator Application Plugin framework interface
@@ -41,7 +41,7 @@ namespace OpenSim
         /// Initialize the Plugin
         /// </summary>
         /// <param name="openSim">The Application instance</param>
-        void Initialize(IOpenSimBase openSim);
+        void Initialize(ISimulationBase openSim);
 
         /// <summary>
         /// Called when the application loading is completed 
@@ -51,10 +51,10 @@ namespace OpenSim
 
     public class ApplicationPluginInitialiser : PluginInitialiserBase
     {
-        private IOpenSimBase m_server;
+        private ISimulationBase m_server;
         protected List<IApplicationPlugin> m_plugins = new List<IApplicationPlugin>();
 
-        public ApplicationPluginInitialiser(IOpenSimBase s)
+        public ApplicationPluginInitialiser(ISimulationBase s)
         {
             m_server = s;
         }

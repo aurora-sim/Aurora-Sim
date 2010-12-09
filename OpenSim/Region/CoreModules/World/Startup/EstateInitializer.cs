@@ -21,7 +21,7 @@ namespace OpenSim.Region.CoreModules
         private string LastEstateName = "";
         private string LastEstateChoise = "no";
 
-        public void Initialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (scene.EstateService != null)
             {
@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules
             return ES;
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             //Now make sure we have an owner and that the owner's account exists on the grid
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, scene.RegionInfo.EstateSettings.EstateOwner);

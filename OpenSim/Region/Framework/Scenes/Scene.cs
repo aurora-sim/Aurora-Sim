@@ -1010,13 +1010,15 @@ namespace OpenSim.Region.Framework.Scenes
             //m_heartbeatTimer.Close();
             shuttingdown = true;
 
-            m_log.Debug("[SCENE]: Persisting changed objects");
+            m_log.Info("[SCENE]: Persisting changed objects...");
 
             //Backup uses the new taints system
             m_backingup = true; //Clear out all other threads
             ProcessPrimBackupTaints(true, false);
 
             m_sceneGraph.Close();
+
+            m_log.InfoFormat("[SCENE]: Deregistering region {0} from the grid...", m_regInfo.RegionName);
 
             //Deregister from the grid server
             if (!GridService.DeregisterRegion(m_regInfo.RegionID, RegionInfo.GridSecureSessionID))

@@ -12,7 +12,7 @@ namespace OpenSim.Region.CoreModules
 {
     public class PhysicsInitializer : ISharedRegionStartupModule
     {
-        public void Initialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             IConfig PhysConfig = source.Configs["Physics"];
             IConfig MeshingConfig = source.Configs["Meshing"];
@@ -43,7 +43,7 @@ namespace OpenSim.Region.CoreModules
             scene.PhysicsScene = pScene;
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
     }

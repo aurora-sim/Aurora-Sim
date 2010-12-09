@@ -10,7 +10,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ISharedRegionStartupModule
     {
-        void Initialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase);
-        void PostInitialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase);
+        void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
     }
 }

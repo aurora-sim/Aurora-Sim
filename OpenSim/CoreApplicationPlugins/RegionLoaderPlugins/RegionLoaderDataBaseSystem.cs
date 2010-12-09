@@ -50,7 +50,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private IConfigSource m_configSource;
         private bool m_default = false;
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
+        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
             m_creator = creator;
@@ -93,7 +93,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 return infos;
         }
 
-        public void AddRegion(IOpenSimBase baseOS, string[] cmd)
+        public void AddRegion(ISimulationBase baseOS, string[] cmd)
         {
             if (!m_default)
                 return;

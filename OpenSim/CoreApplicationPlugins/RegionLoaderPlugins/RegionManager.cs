@@ -23,9 +23,9 @@ namespace Aurora.Modules.RegionLoader
         public event NewRegion OnNewRegion;
         private bool OpenedForCreateRegion = false;
         private UUID CurrentRegionID = UUID.Zero;
-        private OpenSimBase m_OpenSimBase;
+        private ISimulationBase m_OpenSimBase;
 
-        public RegionManager(bool create, OpenSimBase baseOpenSim)
+        public RegionManager(bool create, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
             OpenedForCreateRegion = create;

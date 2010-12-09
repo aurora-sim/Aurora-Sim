@@ -36,11 +36,11 @@ using OpenSim.Region.CoreModules.Avatar.InstantMessage;
 using OpenSim.Region.CoreModules.Scripting.DynamicTexture;
 using OpenSim.Region.CoreModules.Scripting.LoadImageURL;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
-using OpenSim;
 using OpenSim.Framework.Console;
 using Aurora.Modules.RegionLoader;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
+using Nini.Config;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -56,11 +56,15 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_name; }
         }
 
-        protected OpenSimBase m_openSim;
+        protected ISimulationBase m_openSim;
 
-        public void Initialize(IOpenSimBase openSim)
+        public void Initialize(ISimulationBase openSim)
         {
-            m_openSim = (OpenSimBase)openSim;
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
+                return;
+
+            m_openSim = openSim;
             MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
         }

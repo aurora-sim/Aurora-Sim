@@ -569,7 +569,7 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public virtual void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        public virtual void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
         {
             if (source.Configs["Console"] != null)
             {

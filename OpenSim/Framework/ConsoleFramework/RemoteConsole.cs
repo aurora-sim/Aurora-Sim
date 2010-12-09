@@ -69,7 +69,7 @@ namespace OpenSim.Framework
             get { return "RemoteConsole"; }
         }
 
-        public override void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        public override void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
         {
             m_Config = source;
             uint m_consolePort = 0;

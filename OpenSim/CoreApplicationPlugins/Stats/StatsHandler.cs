@@ -23,9 +23,13 @@ namespace OpenSim.ApplicationPlugins.RemoteController
     public class StatsHandler : IApplicationPlugin
     {
         private string userStatsURI = "";
-        private IOpenSimBase m_OpenSimBase;
-        public void Initialize(IOpenSimBase openSim)
+        private ISimulationBase m_OpenSimBase;
+        public void Initialize(ISimulationBase openSim)
         {
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("StatsHandler", "") != Name)
+                return;
+
             m_OpenSimBase = openSim;
             IConfig statsConfig = openSim.ConfigSource.Configs["Stats"];
             if (statsConfig != null)
@@ -83,10 +87,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         /// </summary>
         public class UXSimStatusHandler : IStreamedRequestHandler
         {
-            IOpenSimBase m_opensim;
+            ISimulationBase m_opensim;
             string osUXStatsURI = String.Empty;
 
-            public UXSimStatusHandler(IOpenSimBase sim, string userStatsURI)
+            public UXSimStatusHandler(ISimulationBase sim, string userStatsURI)
             {
                 m_opensim = sim;
                 osUXStatsURI = userStatsURI;

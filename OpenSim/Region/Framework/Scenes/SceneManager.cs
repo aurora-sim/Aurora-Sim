@@ -56,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private List<Scene> m_localScenes;
         private Scene m_currentScene = null;
-        private IOpenSimBase m_OpenSimBase;
+        private ISimulationBase m_OpenSimBase;
         private IConfigSource m_config = null;
         private int RegionsFinishedStarting = 0;
         public int AllRegions = 0;
@@ -108,8 +108,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region IApplicationPlugin members
 
-        public void Initialize(IOpenSimBase openSim)
+        public void Initialize(ISimulationBase openSim)
         {
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("SceneManager", "") != Name)
+                return;
+
             m_OpenSimBase = openSim;
             m_localScenes = new List<Scene>();
 

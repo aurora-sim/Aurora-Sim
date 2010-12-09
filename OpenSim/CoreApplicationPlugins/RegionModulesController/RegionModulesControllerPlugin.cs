@@ -34,6 +34,7 @@ using OpenSim;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.ApplicationPlugins.RegionModulesController
 {
@@ -46,7 +47,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         // Config access
-        private OpenSimBase m_openSim;
+        private ISimulationBase m_openSim;
 
         // Our name
         private string m_name = "RegionModulesControllerPlugin";
@@ -66,9 +67,13 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
 #region IApplicationPlugin implementation
 
-        public void Initialize (IOpenSimBase openSim)
+        public void Initialize (ISimulationBase openSim)
         {
-            m_openSim = (OpenSimBase)openSim;
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
+                return;
+
+            m_openSim = openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
             //m_log.DebugFormat("[REGIONMODULES]: Initializing...");
 

@@ -66,43 +66,6 @@ namespace Aurora.Server
             m_console.DefaultPrompt = "Aurora.Server ";
         }
 
-        public override void StartModules()
-        {
-            List<IService> serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
-            foreach (IService connector in serviceConnectors)
-            {
-                try
-                {
-                    connector.Initialize(m_config, ApplicationRegistry);
-                }
-                catch
-                {
-                }
-            }
-            foreach (IService connector in serviceConnectors)
-            {
-                try
-                {
-                    connector.PostInitialize(ApplicationRegistry);
-                }
-                catch
-                {
-                }
-            }
-
-            List<IServiceConnector> connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
-            foreach (IServiceConnector connector in connectors)
-            {
-                try
-                {
-                    connector.Initialize(m_config, this, "", ApplicationRegistry);
-                }
-                catch
-                {
-                }
-            }
-        }
-
         /// <summary>
         /// Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>

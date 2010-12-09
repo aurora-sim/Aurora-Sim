@@ -37,7 +37,7 @@ namespace OpenSim
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "", new OpenSimBase());
+            BaseApplication.BaseMain(args, "", new SimulationBase());
         }
     }
 }

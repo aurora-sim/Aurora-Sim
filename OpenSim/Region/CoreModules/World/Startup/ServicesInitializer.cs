@@ -22,7 +22,7 @@ namespace OpenSim.Region.CoreModules
         private List<IServiceConnector> connectors;
         private RegistryCore m_serviceRegistry = null;
         
-        public void Initialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (m_serviceRegistry == null)
             {
@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules
             scene.AddModuleInterfaces(m_serviceRegistry.GetInterfaces());
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, IOpenSimBase openSimBase)
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             foreach (IService connector in serviceConnectors)
             {

@@ -39,7 +39,7 @@ namespace OpenSim.Framework
     public interface ICommandConsole: IPlugin
     {
         Commands Commands { get; set; }
-        void Initialize(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim);
+        void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim);
         string DefaultPrompt { get; set; }
         void LockOutput();
         void UnlockOutput();
@@ -68,8 +68,8 @@ namespace OpenSim.Framework
     {
         private IConfigSource m_source;
         private string m_defaultPrompt;
-        private IOpenSimBase m_baseOpenSim;
-        public ConsolePluginInitialiser(string defaultPrompt, IConfigSource source, IOpenSimBase baseOpenSim)
+        private ISimulationBase m_baseOpenSim;
+        public ConsolePluginInitialiser(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
         {
             m_baseOpenSim = baseOpenSim;
             m_source = source;

@@ -61,7 +61,7 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         private static Object   m_requestLock = new Object();
         private static Object   m_saveOarLock = new Object();
 
-        private IOpenSimBase m_application;
+        private ISimulationBase m_application;
         private SceneManager manager;
         private IHttpServer m_httpServer;
         private IConfig m_config;
@@ -98,9 +98,12 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             m_log.Info("[RADMIN]: " + Name + " cannot be default-initialized!");
             throw new PluginNotInitialisedException(Name);
         }
-        public void Initialize(IOpenSimBase iopenSim)
+        public void Initialize(ISimulationBase openSim)
         {
-            IOpenSimBase openSim = (IOpenSimBase)iopenSim;
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("RemoteAdminPlugin", "") != Name)
+                return;
+
             m_configSource = openSim.ConfigSource;
             try
             {

@@ -24,7 +24,7 @@ using Aurora.Framework;
 
 namespace Aurora.Simulation.Base
 {
-    public class SimulationBase : IOpenSimBase, ISimulationBase
+    public class SimulationBase : ISimulationBase, ISimulationBase
     {
         protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -308,8 +308,21 @@ namespace Aurora.Simulation.Base
             m_Servers.Add(m_Port, m_BaseHTTPServer);
         }
 
+        /// <summary>
+        /// Start the application modules
+        /// </summary>
         public virtual void StartModules()
         {
+            List<IApplicationPlugin> plugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
+            foreach (IApplicationPlugin plugin in plugins)
+            {
+                plugin.Initialize(this);
+            }
+
+            foreach (IApplicationPlugin plugin in plugins)
+            {
+                plugin.PostInitialise();
+            }
         }
 
         public void RunStartupCommands()
@@ -543,6 +556,7 @@ namespace Aurora.Simulation.Base
                 {
                     //It doesn't matter, just shut down
                 }
+
                 try
                 {
                     //Close the thread pool
@@ -612,9 +626,9 @@ namespace Aurora.Simulation.Base
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         IStatsCollector m_stats;
-        IOpenSimBase m_OpenSimBase;
+        ISimulationBase m_OpenSimBase;
 
-        public DiagnosticsManager(IStatsCollector stats, IOpenSimBase baseOpenSim)
+        public DiagnosticsManager(IStatsCollector stats, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
             m_stats = stats;

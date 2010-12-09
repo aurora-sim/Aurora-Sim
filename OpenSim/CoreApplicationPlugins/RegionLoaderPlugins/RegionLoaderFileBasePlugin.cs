@@ -47,7 +47,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private OpenSimBase m_openSim;
         private string m_regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, IOpenSimBase openSim)
+        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
             m_openSim = (OpenSimBase)openSim;
@@ -100,7 +100,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             return regionInfos.ToArray();
         }
 
-        public void AddRegion(IOpenSimBase baseOS, string[] cmd)
+        public void AddRegion(ISimulationBase baseOS, string[] cmd)
         {
             if (!m_default)
                 return;
