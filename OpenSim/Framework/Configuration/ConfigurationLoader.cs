@@ -60,12 +60,14 @@ namespace OpenSim.Framework
 
         public string defaultIniFile = "OpenSim.ini";
 
+        public string iniFilePath = "";
+
         /// <summary>
         /// Loads the region configuration
         /// </summary>
         /// <param name="argvSource">Parameters passed into the process when started</param>
         /// <returns>A configuration that gets passed to modules</returns>
-        public IConfigSource LoadConfigSettings(IConfigSource argvSource, out string iniFilePath)
+        public IConfigSource LoadConfigSettings(IConfigSource argvSource)
         {
             iniFilePath = "";
             bool iniFileExists = false;

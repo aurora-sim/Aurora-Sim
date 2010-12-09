@@ -450,8 +450,7 @@ namespace Aurora.Simulation.Base
         {
             //Rebuild the configs
             ConfigurationLoader loader = new ConfigurationLoader();
-            string iniFilePath;
-            m_config = loader.LoadConfigSettings(m_original_config, out iniFilePath);
+            m_config = loader.LoadConfigSettings(m_original_config);
             MainConsole.Instance.Output("Finished reloading configuration.");
         }
 

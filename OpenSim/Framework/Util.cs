@@ -336,23 +336,32 @@ namespace OpenSim.Framework
             // Must have .NET 2.0 (Generics / libsl)
             if (Environment.Version.Major < 2)
             {
-                reason = ".NET 1.0/1.1 lacks components that is used by OpenSim";
+                reason = ".NET 1.0/1.1 lacks components that are used by Aurora";
                 return false;
             }
 
             // Windows 95/98/ME are unsupported
-            if (Environment.OSVersion.Platform == PlatformID.Win32Windows &&
-                Environment.OSVersion.Platform != PlatformID.Win32NT)
+            if (Environment.OSVersion.Platform == PlatformID.Win32Windows ||
+                Environment.OSVersion.Platform == PlatformID.Win32S ||
+                Environment.OSVersion.Platform == PlatformID.WinCE)
             {
-                reason = "Windows 95/98/ME will not run OpenSim";
+                reason = "Windows 95/98/ME will not run Aurora";
                 return false;
             }
 
             // Windows 2000 / Pre-SP2 XP
-            if (Environment.OSVersion.Version.Major == 5 &&
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                Environment.OSVersion.Version.Major == 5 &&
                 Environment.OSVersion.Version.Minor == 0)
             {
-                reason = "Please update to Windows XP Service Pack 2 or Server2003";
+                reason = "Please update to Windows XP Service Pack 2 or Server 2003 with .NET 3.5 installed";
+                return false;
+            }
+
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                Environment.Version.Build < 50727) //.net 3.5
+            {
+                reason = ".NET versions before 3.5 lack components that are used by Aurora";
                 return false;
             }
 

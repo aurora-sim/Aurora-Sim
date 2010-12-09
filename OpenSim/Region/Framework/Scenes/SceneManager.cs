@@ -191,6 +191,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void FinishStartUp()
         {
             m_OpenSimBase.RunStartupCommands();
+            AddPluginCommands();
 
             // For now, start at the 'root' level by default
             if (Scenes.Count == 1)
@@ -1299,7 +1300,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="mod"></param>
         /// <param name="cmd"></param>
-        public override void HandleShow(string mod, string[] cmd)
+        public void HandleShow(string mod, string[] cmd)
         {
             m_OpenSimBase.HandleShow(mod, cmd);
             if (cmd.Length == 1)
@@ -1604,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override void AddPluginCommands()
+        public void AddPluginCommands()
         {
             // If console exists add plugin commands.
             if (MainConsole.Instance != null)
