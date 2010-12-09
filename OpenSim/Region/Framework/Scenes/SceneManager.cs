@@ -919,6 +919,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
 
+            MainConsole.Instance.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
+
             MainConsole.Instance.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet <level>", "Turn on packet debugging", Debug);
@@ -1306,7 +1308,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cmd"></param>
         public void HandleShow(string mod, string[] cmd)
         {
-            m_OpenSimBase.HandleShow(mod, cmd);
             if (cmd.Length == 1)
             {
                 m_log.Warn("Incorrect number of parameters!");
@@ -1317,6 +1318,17 @@ namespace OpenSim.Region.Framework.Scenes
             string[] showParams = args.ToArray();
             switch (showParams[0])
             {
+                case "help":
+                    MainConsole.Instance.Output("show assets - Show asset information");
+                    MainConsole.Instance.Output("show connections - Show connection data");
+                    MainConsole.Instance.Output("show users - Show all users connected");
+                    MainConsole.Instance.Output("show users [full] - Without the 'full' option, only users actually on the region are shown."
+                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
+                    MainConsole.Instance.Output("show regions - Show all regions");
+                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
+                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
+                    MainConsole.Instance.Output("show maturity - Show region maturity levels");
+                    break;
                 case "assets":
                     MainConsole.Instance.Output("Not implemented.");
                     break;
@@ -1353,7 +1365,6 @@ namespace OpenSim.Region.Framework.Scenes
                         MainConsole.Instance.Output(String.Format("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", presence.Firstname, presence.Lastname, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString()));
                     }
 
-
                     MainConsole.Instance.Output(String.Empty);
                     MainConsole.Instance.Output(String.Empty);
                     break;
@@ -1366,7 +1377,10 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
 
                 case "regions":
-                    ForEachScene(delegate(Scene scene) { MainConsole.Instance.Output(String.Format("Region Name: {0}, Region XLoc: {1}, Region YLoc: {2}, Region Port: {3}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY, scene.RegionInfo.InternalEndPoint.Port)); });
+                    ForEachScene(delegate(Scene scene) 
+                    { 
+                        MainConsole.Instance.Output(String.Format("Region Name: {0}, Region XLoc: {1}, Region YLoc: {2}, Region Port: {3}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY, scene.RegionInfo.InternalEndPoint.Port));
+                    });
                     break;
 
                 case "queues":
@@ -1374,16 +1388,16 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
 
                 case "maturity":
-                    ForEachScene(delegate(Scene scene)
+                    ForEachCurrentScene(delegate(Scene scene)
                     {
                         string rating = "";
                         if (scene.RegionInfo.RegionSettings.Maturity == 1)
                         {
-                            rating = "MATURE";
+                            rating = "Mature";
                         }
                         else if (scene.RegionInfo.RegionSettings.Maturity == 2)
                         {
-                            rating = "ADULT";
+                            rating = "Adult";
                         }
                         else
                         {

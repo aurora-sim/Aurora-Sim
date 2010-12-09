@@ -495,20 +495,6 @@ namespace Aurora.Simulation.Base
             switch (showParams[0])
             {
                 case "help":
-                    MainConsole.Instance.Output("show info - Shows general information about the simulator");
-                    MainConsole.Instance.Output("show stats - Show statistics");
-                    MainConsole.Instance.Output("show threads - Show thread status");
-                    MainConsole.Instance.Output("show uptime - Show server uptime");
-                    MainConsole.Instance.Output("show version - Show server version");
-                    MainConsole.Instance.Output("show assets - Show asset information");
-                    MainConsole.Instance.Output("show connections - Show connection data");
-                    MainConsole.Instance.Output("show users - Show all users connected");
-                    MainConsole.Instance.Output("show users [full] - Without the 'full' option, only users actually on the region are shown."
-                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
-                    MainConsole.Instance.Output("show regions - Show all regions");
-                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
-                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
-                    MainConsole.Instance.Output("show maturity - Show region maturity levels");
                     MainConsole.Instance.Output("set log level [level] - Change the console logging level only.  For example, off or debug.");
                     MainConsole.Instance.Output("show info - Show server information (e.g. startup path).");
                     MainConsole.Instance.Output("show threads - List tracked threads");
