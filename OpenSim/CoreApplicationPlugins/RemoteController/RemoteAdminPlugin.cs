@@ -2333,78 +2333,14 @@ namespace OpenSim.ApplicationPlugins.RemoteController
             XmlRpcResponse response = new XmlRpcResponse();
             Hashtable responseData = new Hashtable();
 
-            lock (m_requestLock)
-            {
-                try
-                {
-                    Hashtable requestData = (Hashtable) request.Params[0];
+            responseData["loaded"] = false;
+            responseData["switched"] = false;
+            responseData["error"] = "Not Supported";
 
-                    // check completeness
-                    foreach (string p in new string[] {"password", "filename"})
-                    {
-                        if (!requestData.Contains(p))
-                            throw new Exception(String.Format("missing parameter {0}", p));
-                        if (String.IsNullOrEmpty((string) requestData[p]))
-                            throw new Exception(String.Format("parameter {0} is empty"));
-                    }
+            response.Value = responseData;
 
-                    // check password
-                    if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                        (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
-
-                    string filename = (string) requestData["filename"];
-                    if (requestData.Contains("region_uuid"))
-                    {
-                        UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                        if (!manager.TrySetCurrentScene(region_uuid))
-                            throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
-                        m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
-                    }
-                    else if (requestData.Contains("region_name"))
-                    {
-                        string region_name = (string) requestData["region_name"];
-                        if (!manager.TrySetCurrentScene(region_name))
-                            throw new Exception(String.Format("failed to switch to region {0}", region_name));
-                        m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
-                    }
-                    else throw new Exception("neither region_name nor region_uuid given");
-
-                    responseData["switched"] = true;
-
-                    string xml_version = "1";
-                    if (requestData.Contains("xml_version"))
-                    {
-                        xml_version = (string) requestData["xml_version"];
-                    }
-
-                    switch (xml_version)
-                    {
-                        case "2":
-                            manager.LoadCurrentSceneFromXml2(filename);
-                            break;
-
-                        default:
-                            throw new Exception(String.Format("unknown Xml{0} format", xml_version));
-                    }
-
-                    responseData["loaded"] = true;
-                    response.Value = responseData;
-                }
-                catch (Exception e)
-                {
-                    m_log.InfoFormat("[RADMIN] LoadXml: {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] LoadXml: {0}", e.ToString());
-
-                    responseData["loaded"] = false;
-                    responseData["switched"] = false;
-                    responseData["error"] = e.Message;
-
-                    response.Value = responseData;
-                }
-
-                m_log.Info("[RADMIN]: Load XML Administrator Request complete");
-                return response;
-            }
+            m_log.Info("[RADMIN]: Load XML Administrator Request complete");
+            return response;
         }
 
         public XmlRpcResponse XmlRpcSaveXMLMethod(XmlRpcRequest request, IPEndPoint remoteClient)

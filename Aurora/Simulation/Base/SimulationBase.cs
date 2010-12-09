@@ -121,6 +121,38 @@ namespace Aurora.Simulation.Base
 
         public virtual void Configuration(IConfigSource configSource)
         {
+            IConfig startupConfig = m_config.Configs["Startup"];
+
+            int stpMaxThreads = 15;
+
+            if (startupConfig != null)
+            {
+                m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
+                m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
+
+                m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
+                m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
+                if (m_TimerScriptTime < 5) //Limit for things like backup and etc...
+                    m_TimerScriptTime = 5;
+
+                string pidFile = startupConfig.GetString("PIDFile", String.Empty);
+                if (pidFile != String.Empty)
+                    CreatePIDFile(pidFile);
+            }
+
+            IConfig SystemConfig = m_config.Configs["System"];
+            if (SystemConfig != null)
+            {
+                string asyncCallMethodStr = SystemConfig.GetString("AsyncCallMethod", String.Empty);
+                FireAndForgetMethod asyncCallMethod;
+                if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse<FireAndForgetMethod>(asyncCallMethodStr, out asyncCallMethod))
+                    Util.FireAndForgetMethod = asyncCallMethod;
+
+                stpMaxThreads = SystemConfig.GetInt("MaxPoolThreads", 15);
+            }
+
+            if (Util.FireAndForgetMethod == FireAndForgetMethod.SmartThreadPool)
+                Util.InitThreadPool(stpMaxThreads);
         }
 
         /// <summary>
@@ -282,6 +314,7 @@ namespace Aurora.Simulation.Base
 
         public void RunStartupCommands()
         {
+            PrintFileToConsole("startuplogo.txt");
             //Run Startup Commands
             if (!String.IsNullOrEmpty(m_startupCommandsFile))
                 RunCommandScript(m_startupCommandsFile);
@@ -293,6 +326,23 @@ namespace Aurora.Simulation.Base
                 m_TimerScriptTimer.Enabled = true;
                 m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
                 m_TimerScriptTimer.Elapsed += RunAutoTimerScript;
+            }
+        }
+
+        /// <summary>
+        /// Opens a file and uses it as input to the console command parser.
+        /// </summary>
+        /// <param name="fileName">name of file to use as input to the console</param>
+        private void PrintFileToConsole(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                StreamReader readFile = File.OpenText(fileName);
+                string currentLine;
+                while ((currentLine = readFile.ReadLine()) != null)
+                {
+                    m_log.Info("[!]" + currentLine);
+                }
             }
         }
 
@@ -493,6 +543,15 @@ namespace Aurora.Simulation.Base
                 catch
                 {
                     //It doesn't matter, just shut down
+                }
+                try
+                {
+                    //Close the thread pool
+                    Util.CloseThreadPool();
+                }
+                catch
+                {
+                    //Just shut down already
                 }
                 try
                 {

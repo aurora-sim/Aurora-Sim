@@ -44,6 +44,7 @@ namespace OpenSim.Framework
     {
         IHttpServer GetHttpServer(uint port);
     }
+
     public interface IOpenSimBase : ISimulationBase
 	{
         IConfigSource ConfigSource { get; set; }
@@ -52,5 +53,7 @@ namespace OpenSim.Framework
         DateTime StartupTime { get; }
         string Version { get; }
         void RunStartupCommands();
+        void HandleShow(string mod, string[] cmd);
+        void RunCommandScript(string p);
     }
 }

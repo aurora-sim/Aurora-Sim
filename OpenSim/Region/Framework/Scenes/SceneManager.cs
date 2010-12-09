@@ -26,10 +26,12 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
@@ -44,10 +46,12 @@ using Aurora.Framework;
 namespace OpenSim.Region.Framework.Scenes
 {
     /// <summary>
-    /// Manager for adding, closing and restarting scenes.
+    /// Manager for adding, closing, reseting, and restarting scenes.
     /// </summary>
     public class SceneManager : IApplicationPlugin
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private List<Scene> m_localScenes;
@@ -56,8 +60,17 @@ namespace OpenSim.Region.Framework.Scenes
         private IConfigSource m_config = null;
         private int RegionsFinishedStarting = 0;
         public int AllRegions = 0;
-        private string LastEstateName = "";
-        private string LastEstateChoise = "no";
+        private string proxyUrl = "";
+        private int proxyOffset = 0;
+        private string SecretID = UUID.Random().ToString();
+        protected ISimulationDataService m_simulationDataService;
+        protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
+
+        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        public List<IClientNetworkServer> ClientServers
+        {
+            get { return m_clientServers; }
+        }
 
         public List<Scene> Scenes
         {
@@ -91,6 +104,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        #endregion
+
+        #region IApplicationPlugin members
+
         public void Initialize(IOpenSimBase openSim)
         {
             m_OpenSimBase = openSim;
@@ -118,6 +135,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[0]);
             m_simulationDataService.Initialize(m_config, null);
 
+            AddConsoleCommands();
+
+            //Load the startup modules for the region
+            m_startupPlugins = AuroraModuleLoader.PickupModules<ISharedRegionStartupModule>();
+
             //Register us!
             m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
         }
@@ -134,8 +156,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void Dispose()
         {
         }
-
-        protected ISimulationDataService m_simulationDataService;
 
         public void Close()
         {
@@ -155,39 +175,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void Add(Scene scene)
-        {
-            scene.OnRestart += HandleRestart;
-            scene.OnStartupComplete += HandleStartupComplete;
-            m_localScenes.Add(scene);
-        }
+        #endregion
 
-        public void HandleRestart(RegionInfo rdata)
-        {
-            m_log.Error("[SCENEMANAGER]: Got Restart message for region : " + rdata.RegionName + ".");
-            RegionInfo info = null;
-            int RegionSceneElement = -1;
-            for (int i = 0; i < m_localScenes.Count; i++)
-            {
-                if (rdata.RegionName == m_localScenes[i].RegionInfo.RegionName)
-                {
-                    RegionSceneElement = i;
-                }
-            }
-
-            // Now we make sure the region is no longer known about by the SceneManager
-            // Prevents duplicates.
-            info = m_localScenes[RegionSceneElement].RegionInfo;
-            if (RegionSceneElement >= 0)
-            {
-                m_localScenes.RemoveAt(RegionSceneElement);
-            }
-
-
-            ShutdownClientServer(info);
-            IScene scene;
-            CreateRegion(info, true, out scene);
-        }
+        #region Startup complete
 
         public void HandleStartupComplete(IScene scene, List<string> data)
         {
@@ -201,7 +191,6 @@ namespace OpenSim.Region.Framework.Scenes
         private void FinishStartUp()
         {
             m_OpenSimBase.RunStartupCommands();
-            PrintFileToConsole("startuplogo.txt");
 
             // For now, start at the 'root' level by default
             if (Scenes.Count == 1)
@@ -219,79 +208,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.InfoFormat("[SCENEMANAGER]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
 
-        public void ChangeSelectedRegion(string newRegionName)
-        {
-            if (!TrySetCurrentScene(newRegionName))
-            {
-                MainConsole.Instance.Output(String.Format("Couldn't select region {0}", newRegionName));
-                return;
-            }
+        #endregion
 
-            string regionName = (CurrentScene == null ? "root" : CurrentScene.RegionInfo.RegionName);
-            MainConsole.Instance.DefaultPrompt = String.Format("Region ({0}) ", regionName);
-            MainConsole.Instance.ConsoleScene = CurrentScene;
-        }
-
-        /// <summary>
-        /// Opens a file and uses it as input to the console command parser.
-        /// </summary>
-        /// <param name="fileName">name of file to use as input to the console</param>
-        private void PrintFileToConsole(string fileName)
-        {
-            if (File.Exists(fileName))
-            {
-                StreamReader readFile = File.OpenText(fileName);
-                string currentLine;
-                while ((currentLine = readFile.ReadLine()) != null)
-                {
-                    m_log.Info("[!]" + currentLine);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Load an xml file of prims in OpenSimulator's current 'xml2' file format to the current scene
-        /// </summary>
-        public void LoadCurrentSceneFromXml2(string filename)
-        {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)
-                serialiser.LoadPrimsFromXml2(CurrentOrFirstScene, filename);
-        }
-
-        /// <summary>
-        /// Save the current scene to an OpenSimulator archive.  This archive will eventually include the prim's assets
-        /// as well as the details of the prims themselves.
-        /// </summary>
-        /// <param name="cmdparams"></param>
-        public void SaveCurrentSceneToArchive(string[] cmdparams)
-        {
-            IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
-            if (archiver != null)
-                archiver.HandleSaveOarConsoleCommand(string.Empty, cmdparams);
-        }
-
-        /// <summary>
-        /// Load an OpenSim archive into the current scene.  This will load both the shapes of the prims and upload
-        /// their assets to the asset service.
-        /// </summary>
-        /// <param name="cmdparams"></param>
-        public void LoadArchiveToCurrentScene(string[] cmdparams)
-        {
-            IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
-            if (archiver != null)
-                archiver.HandleLoadOarConsoleCommand(string.Empty, cmdparams);
-        }
-
-        public void SendCommandToPluginModules(string[] cmdparams)
-        {
-            ForEachCurrentScene(delegate(Scene scene) { scene.SendCommandToPlugins(cmdparams); });
-        }
-
-        public void SetBypassPermissionsOnCurrentScene(bool bypassPermissions)
-        {
-            ForEachCurrentScene(delegate(Scene scene) { scene.Permissions.SetBypassPermissions(bypassPermissions); });
-        }
+        #region ForEach functions
 
         private void ForEachCurrentScene(Action<Scene> func)
         {
@@ -305,35 +224,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void RestartCurrentScene()
+        public void ForEachScene(Action<Scene> action)
         {
-            ForEachCurrentScene(delegate(Scene scene) { scene.RestartNow(); });
+            m_localScenes.ForEach(action);
         }
 
-        public void ResetScene()
-        {
-            if (m_currentScene == null)
-            {
-                m_log.Warn("You must use this command on a region. Use 'change region' to change to the region you would like to change");
-                return;
-            }
-            m_currentScene.DeleteAllSceneObjects();
-            ITerrainModule module = m_currentScene.RequestModuleInterface<ITerrainModule>();
-            if (module != null)
-            {
-                module.ResetTerrain();
-            }
-        }
+        #endregion
 
-        public void BackupCurrentScene(bool backupAll)
-        {
-            ForEachCurrentScene(delegate(Scene scene)
-            {
-                scene.m_backingup = true; //Clear out all other threads
-                scene.ProcessPrimBackupTaints(true, backupAll);
-                scene.m_backingup = false; //Clear out all other threads
-            });
-        }
+        #region TrySetScene functions
 
         public bool TrySetCurrentScene(string regionName)
         {
@@ -375,124 +273,22 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        private void FindEstateInfo(Scene scene)
+        public void ChangeSelectedRegion(string newRegionName)
         {
-            if (scene.EstateService != null)
+            if (!TrySetCurrentScene(newRegionName))
             {
-                EstateSettings ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
-                if (ES != null && ES.EstateID == 0) // No record at all, new estate required
-                {
-                    m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
-                    ES = CreateEstateInfo(scene);
-                }
-                else if (ES == null) //Cannot connect to the estate service
-                {
-                    m_log.Warn("The connection to the estate service was broken, please try again soon.");
-                    while (true)
-                    {
-                        MainConsole.Instance.CmdPrompt("Press enter to try again.");
-                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
-                        if (ES != null && ES.EstateID == 0)
-                            ES = CreateEstateInfo(scene);
-                        else if (ES == null)
-                            continue;
-                        break;
-                    }
-                }
-                //This sets the password back so we can use it again to make changes to the estate settings later
-                if (ES.EstatePass == "" && scene.RegionInfo.EstateSettings.EstatePass != "")
-                    ES.EstatePass = scene.RegionInfo.EstateSettings.EstatePass;
-                scene.RegionInfo.EstateSettings = ES;
-                scene.RegionInfo.WriteNiniConfig();
+                MainConsole.Instance.Output(String.Format("Couldn't select region {0}", newRegionName));
+                return;
             }
+
+            string regionName = (CurrentScene == null ? "root" : CurrentScene.RegionInfo.RegionName);
+            MainConsole.Instance.DefaultPrompt = String.Format("Region ({0}) ", regionName);
+            MainConsole.Instance.ConsoleScene = CurrentScene;
         }
 
-        private EstateSettings CreateEstateInfo(Scene scene)
-        {
-            EstateSettings ES = null;
-            while (true)
-            {
-                string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no, find})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
-                LastEstateChoise = response;
-                if (response == "no")
-                {
-                    // Create a new estate
-                    ES = new EstateSettings();
-                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name", scene.RegionInfo.EstateSettings.EstateName);
+        #endregion
 
-                    //Set to auto connect to this region next
-                    LastEstateName = ES.EstateName;
-                    LastEstateChoise = "yes";
-
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
-                    ES.EstatePass = Password;
-                    ES = scene.EstateService.CreateEstate(ES, scene.RegionInfo.RegionID);
-                    if (ES == null)
-                    {
-                        m_log.Warn("The connection to the server was broken, please try again soon.");
-                        continue;
-                    }
-                    else if (ES.EstateID == 0)
-                    {
-                        m_log.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
-                        continue;
-                    }
-                    //We set this back if there wasn't an error because the EstateService will NOT send it back
-                    ES.EstatePass = Password;
-                    break;
-                }
-                else if (response == "yes")
-                {
-                    response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName);
-                    if (response == "None")
-                        continue;
-                    LastEstateName = response;
-
-                    List<int> estateIDs = scene.EstateService.GetEstates(response);
-                    if (estateIDs == null)
-                    {
-                        m_log.Warn("The connection to the server was broken, please try again soon.");
-                        continue;
-                    }
-                    if (estateIDs.Count < 1)
-                    {
-                        m_log.Warn("The name you have entered matches no known estate. Please try again");
-                        continue;
-                    }
-
-                    int estateID = estateIDs[0];
-
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password for the estate", "")));
-                    //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
-                    if (scene.EstateService.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
-                    {
-                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID); //We could do by EstateID now, but we need to completely make sure that it fully is set up
-                        if (ES == null)
-                        {
-                            m_log.Warn("The connection to the server was broken, please try again soon.");
-                            continue;
-                        }
-                        break;
-                    }
-
-                    m_log.Warn("Joining the estate failed. Please try again.");
-                    continue;
-                }
-                else if (response == "find")
-                {
-                    ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
-                    if (ES == null)
-                    {
-                        m_log.Warn("The connection to the estate service was broken, please try again soon.");
-                        continue;
-                    }
-                    break;
-                }
-            }
-            return ES;
-        }
-
-        #region TryGetScene functions
+        #region TryGet functions
 
         public bool TryGetScene(string regionName, out Scene scene)
         {
@@ -555,33 +351,53 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
+        {
+            foreach (Scene scene in m_localScenes)
+            {
+                if (scene.TryGetScenePresence(avatarId, out avatar))
+                {
+                    return true;
+                }
+            }
+
+            avatar = null;
+            return false;
+        }
+
+        public bool TryGetAvatarsScene(UUID avatarId, out Scene scene)
+        {
+            ScenePresence avatar = null;
+            foreach (Scene mScene in m_localScenes)
+            {
+                if (mScene.TryGetScenePresence(avatarId, out avatar))
+                {
+                    scene = mScene;
+                    return true;
+                }
+            }
+
+            scene = null;
+            return false;
+        }
+
+        public bool TryGetAvatarByName(string avatarName, out ScenePresence avatar)
+        {
+            foreach (Scene scene in m_localScenes)
+            {
+                if (scene.TryGetAvatarByName(avatarName, out avatar))
+                {
+                    return true;
+                }
+            }
+
+            avatar = null;
+            return false;
+        }
+
         #endregion
 
-        /// <summary>
-        /// Set the debug packet level on the current scene.  This level governs which packets are printed out to the
-        /// console.
-        /// </summary>
-        /// <param name="newDebug"></param>
-        public void SetDebugPacketLevelOnCurrentScene(int newDebug)
-        {
-            ForEachCurrentScene(
-                delegate(Scene scene)
-                {
-                    scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
-                    {
-                        if (!scenePresence.IsChildAgent)
-                        {
-                            m_log.DebugFormat("Packet debug for {0} {1} set to {2}",
-                                              scenePresence.Firstname,
-                                              scenePresence.Lastname,
-                                              newDebug);
-
-                            scenePresence.ControllingClient.SetDebugPacketLevel(newDebug);
-                        }
-                    });
-                }
-            );
-        }
+        #region Get functions
 
         public List<ScenePresence> GetCurrentSceneAvatars()
         {
@@ -616,69 +432,16 @@ namespace OpenSim.Region.Framework.Scenes
             return presences;
         }
 
-        public void ForceCurrentSceneClientUpdate()
+        #endregion
+
+        #region Add a region
+
+        public void Add(Scene scene)
         {
-            ForEachCurrentScene(delegate(Scene scene) { scene.ForceClientUpdate(); });
+            scene.OnRestart += HandleRestart;
+            scene.OnStartupComplete += HandleStartupComplete;
+            m_localScenes.Add(scene);
         }
-
-        public bool TryGetScenePresence(UUID avatarId, out ScenePresence avatar)
-        {
-            foreach (Scene scene in m_localScenes)
-            {
-                if (scene.TryGetScenePresence(avatarId, out avatar))
-                {
-                    return true;
-                }
-            }
-
-            avatar = null;
-            return false;
-        }
-
-        public bool TryGetAvatarsScene(UUID avatarId, out Scene scene)
-        {
-            ScenePresence avatar = null;
-            foreach (Scene mScene in m_localScenes)
-            {
-                if (mScene.TryGetScenePresence(avatarId, out avatar))
-                {
-                    scene = mScene;
-                    return true;
-                }
-            }
-
-            scene = null;
-            return false;
-        }
-
-        public void CloseScene(Scene scene)
-        {
-            m_localScenes.Remove(scene);
-            scene.Close();
-        }
-
-        public bool TryGetAvatarByName(string avatarName, out ScenePresence avatar)
-        {
-            foreach (Scene scene in m_localScenes)
-            {
-                if (scene.TryGetAvatarByName(avatarName, out avatar))
-                {
-                    return true;
-                }
-            }
-
-            avatar = null;
-            return false;
-        }
-
-        public void ForEachScene(Action<Scene> action)
-        {
-            m_localScenes.ForEach(action);
-        }
-
-        private string proxyUrl = "";
-        private int proxyOffset = 0;
-        private string SecretID = UUID.Random().ToString();
 
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
@@ -724,8 +487,9 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 m_log.Error("[MODULES]: The new RegionModulesController is missing...");
 
-            StartServiceConnectors(scene);
             scene.SetModuleInterfaces();
+            //Post init the modules now
+            PostInitModules(scene);
 
             // Prims have to be loaded after module configuration since some modules may be invoked during the load
             scene.LoadPrimsFromStorage(regionInfo.RegionID);
@@ -921,6 +685,99 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Create a scene and its initial base structures.
+        /// </summary>
+        /// <param name="regionInfo"></param>
+        /// <param name="proxyOffset"></param>
+        /// <param name="configSource"></param>
+        /// <param name="clientServer"> </param>
+        /// <returns></returns>
+        protected Scene SetupScene(RegionInfo regionInfo, int proxyOffset, IConfigSource configSource, out IClientNetworkServer clientServer)
+        {
+            AgentCircuitManager circuitManager = new AgentCircuitManager();
+            IPAddress listenIP = regionInfo.InternalEndPoint.Address;
+            //if (!IPAddress.TryParse(regionInfo.InternalEndPoint, out listenIP))
+            //    listenIP = IPAddress.Parse("0.0.0.0");
+
+            uint port = (uint)regionInfo.InternalEndPoint.Port;
+
+            string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
+
+            clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll);
+            clientServer.Initialise(
+                    listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
+                    m_config, circuitManager);
+
+            regionInfo.InternalEndPoint.Port = (int)port;
+
+            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
+
+            StartModules(scene);
+
+            clientServer.AddScene(scene);
+            m_clientServers.Add(clientServer);
+
+            //Do this here so that we don't have issues later when startup complete messages start coming in
+            Add(scene);
+
+            return scene;
+        }
+
+        #endregion
+
+        #region Reset a region
+
+        public void ResetScene()
+        {
+            if (m_currentScene == null)
+            {
+                m_log.Warn("You must use this command on a region. Use 'change region' to change to the region you would like to change");
+                return;
+            }
+            m_currentScene.DeleteAllSceneObjects();
+            ITerrainModule module = m_currentScene.RequestModuleInterface<ITerrainModule>();
+            if (module != null)
+            {
+                module.ResetTerrain();
+            }
+        }
+
+        #endregion
+
+        #region Restart a region
+
+        public void HandleRestart(RegionInfo rdata)
+        {
+            m_log.Error("[SCENEMANAGER]: Got Restart message for region : " + rdata.RegionName + ".");
+            RegionInfo info = null;
+            int RegionSceneElement = -1;
+            for (int i = 0; i < m_localScenes.Count; i++)
+            {
+                if (rdata.RegionName == m_localScenes[i].RegionInfo.RegionName)
+                {
+                    RegionSceneElement = i;
+                }
+            }
+
+            // Now we make sure the region is no longer known about by the SceneManager
+            // Prevents duplicates.
+            info = m_localScenes[RegionSceneElement].RegionInfo;
+            if (RegionSceneElement >= 0)
+            {
+                m_localScenes.RemoveAt(RegionSceneElement);
+            }
+
+
+            ShutdownClientServer(info);
+            IScene scene;
+            CreateRegion(info, true, out scene);
+        }
+
+        #endregion
+
+        #region Shutdown regions
+
         private void ShutdownRegion(Scene scene)
         {
             m_log.DebugFormat("[SHUTDOWN]: Shutting down region {0}", scene.RegionInfo.RegionName);
@@ -929,12 +786,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 controller.RemoveRegionFromModules(scene);
             }
-        }
-
-        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
-        public List<IClientNetworkServer> ClientServers
-        {
-            get { return m_clientServers; }
         }
 
         public void ShutdownClientServer(RegionInfo whichRegion)
@@ -1011,13 +862,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void RemoveRegion(string name, bool cleanUp)
-        {
-            Scene target;
-            if (TryGetScene(name, out target))
-                RemoveRegion(target, cleanUp);
-        }
-
         /// <summary>
         /// Remove a region from the simulator without deleting it permanently.
         /// </summary>
@@ -1036,146 +880,779 @@ namespace OpenSim.Region.Framework.Scenes
             ShutdownClientServer(scene.RegionInfo);
         }
 
-        /// <summary>
-        /// Create a scene and its initial base structures.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="proxyOffset"></param>
-        /// <param name="configSource"></param>
-        /// <param name="clientServer"> </param>
-        /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, int proxyOffset, IConfigSource configSource, out IClientNetworkServer clientServer)
+        public void CloseScene(Scene scene)
         {
-            AgentCircuitManager circuitManager = new AgentCircuitManager();
-            IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-            //if (!IPAddress.TryParse(regionInfo.InternalEndPoint, out listenIP))
-            //    listenIP = IPAddress.Parse("0.0.0.0");
-
-            uint port = (uint)regionInfo.InternalEndPoint.Port;
-
-            string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
-
-            clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll);
-            clientServer.Initialise(
-                    listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
-                    m_config, circuitManager);
-
-            regionInfo.InternalEndPoint.Port = (int)port;
-
-            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
-
-            StartModules(scene);
-
-            FindEstateInfo(scene);
-
-            clientServer.AddScene(scene);
-            m_clientServers.Add(clientServer);
-
-            //Do this here so that we don't have issues later when startup complete messages start coming in
-            Add(scene);
-
-            scene.PhysicsScene = GetPhysicsScene(m_config, scene.RegionInfo.RegionName);
-
-            return scene;
+            m_localScenes.Remove(scene);
+            scene.Close();
         }
-        List<IService> serviceConnectors;
-        List<IServiceConnector> connectors;
-        RegistryCore m_serviceRegistry = null;
+
+        #endregion
+
+        #region ISharedRegionStartupModule initialization
+
         public void StartModules(Scene scene)
         {
-            if (m_serviceRegistry == null)
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
-                m_serviceRegistry = new RegistryCore();
-                m_serviceRegistry.RegisterInterface<ISimulationBase>(m_OpenSimBase);
-                scene.RegisterInterface<ISimulationBase>(m_OpenSimBase);
-                serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
-                connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.Initialize(m_config, m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
+                module.Initialise(scene, m_config, m_OpenSimBase);
             }
-
-            scene.AddModuleInterfaces(m_serviceRegistry.GetInterfaces());
         }
 
-        public void StartServiceConnectors(Scene scene)
+        public void PostInitModules(Scene scene)
         {
-            foreach (IService connector in serviceConnectors)
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
-                try
+                module.PostInitialise(scene, m_config, m_OpenSimBase);
+            }
+        }
+
+        #endregion
+
+        #region Console Commands
+
+        private void AddConsoleCommands()
+        {
+            //m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "debug packet", "debug packet <level>", "Turn on packet debugging", Debug);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "debug scene", "debug scene <cripting> <collisions> <physics>", "Turn on scene debugging", Debug);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "change region", "change region <region name>", "Change current console region", ChangeSelectedRegion);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "load xml2", "load xml2", "Load a region's data from XML2 format", LoadXml2);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "load oar", "load oar [--merge] [--skip-assets] <oar name>", "Load a region's data from OAR archive.  --merge will merge the oar with the existing scene.  --skip-assets will load the oar but ignore the assets it contains", LoadOar);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "save oar", "save oar [-v|--version=N] [<OAR path>]", "Save a region's data to an OAR archive", "-v|--version=N generates scene objects as per older versions of the serialization (e.g. -v=0)" + Environment.NewLine
+                                           + "The OAR path must be a filesystem path."
+                                           + "  If this is not given then the oar is saved to region.oar in the current directory.", SaveOar);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "restart", "restart", "Restart the current sim selected (all if root)", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "remove-region", "remove-region <name>", "Remove a region from this simulator", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "delete-region", "delete-region <name>", "Delete a region from disk", RunCommand);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
+        }
+
+        protected virtual List<string> GetHelpTopics()
+        {
+            List<string> topics = new List<string>();
+            Scene s = CurrentOrFirstScene;
+            if (s != null && s.GetCommanders() != null)
+                topics.AddRange(s.GetCommanders().Keys);
+
+            return topics;
+        }
+
+        /// <summary>
+        /// Kicks users off the region
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmdparams">name of avatar to kick</param>
+        private void KickUserCommand(string module, string[] cmdparams)
+        {
+            string alert = null;
+            IList agents = GetCurrentSceneAvatars();
+
+            if (cmdparams.Length < 4)
+            {
+                if (cmdparams.Length < 3)
+                    return;
+                if (cmdparams[2] == "all")
                 {
-                    connector.PostInitialize(scene);
-                }
-                catch
-                {
+                    foreach (ScenePresence presence in agents)
+                    {
+                        RegionInfo regionInfo = presence.Scene.RegionInfo;
+
+                        MainConsole.Instance.Output(String.Format("Kicking user: {0,-16}{1,-16}{2,-37} in region: {3,-16}", presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
+
+                        // kick client...
+                        if (alert != null)
+                            presence.ControllingClient.Kick(alert);
+                        else
+                            presence.ControllingClient.Kick("\nThe OpenSim manager kicked you out.\n");
+
+                        // ...and close on our side
+                        presence.Scene.IncomingCloseAgent(presence.UUID);
+                    }
                 }
             }
-            foreach (IServiceConnector connector in connectors)
+
+            if (cmdparams.Length > 4)
+                alert = String.Format("\n{0}\n", String.Join(" ", cmdparams, 4, cmdparams.Length - 4));
+
+            foreach (ScenePresence presence in agents)
             {
-                try
+                RegionInfo regionInfo = presence.Scene.RegionInfo;
+
+                if (presence.Firstname.ToLower().StartsWith(cmdparams[2].ToLower()) && presence.Lastname.ToLower().StartsWith(cmdparams[3].ToLower()))
                 {
-                    connector.Initialize(m_config, m_OpenSimBase, "", scene);
+                    MainConsole.Instance.Output(String.Format("Kicking user: {0,-16}{1,-16}{2,-37} in region: {3,-16}", presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
+
+                    // kick client...
+                    if (alert != null)
+                        presence.ControllingClient.Kick(alert);
+                    else
+                        presence.ControllingClient.Kick("\nThe OpenSim manager kicked you out.\n");
+
+                    // ...and close on our side
+                    presence.Scene.IncomingCloseAgent(presence.UUID);
                 }
-                catch
+            }
+            MainConsole.Instance.Output("");
+        }
+
+        private void HandleClearAssets(string module, string[] args)
+        {
+            MainConsole.Instance.Output("Not implemented.");
+        }
+
+        /// <summary>
+        /// Force resending of all updates to all clients in active region(s)
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="args"></param>
+        private void HandleForceUpdate(string module, string[] args)
+        {
+            MainConsole.Instance.Output("Updating all clients");
+            ForEachCurrentScene(delegate(Scene scene) { scene.ForceClientUpdate(); });
+        }
+
+        /// <summary>
+        /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmd">0,1,region name, region XML file</param>
+        private void HandleCreateRegion(string module, string[] cmd)
+        {
+            List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
+            foreach (IRegionLoader loader in regionLoaders)
+            {
+                loader.Initialise(m_config, null, m_OpenSimBase);
+                loader.AddRegion(m_OpenSimBase, cmd);
+            }
+        }
+
+        /// <summary>
+        /// Load, Unload, and list Region modules in use
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmd"></param>
+        private void HandleModules(string module, string[] cmd)
+        {
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] cmdparams = args.ToArray();
+
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.Get<IRegionModulesController>();
+            if (cmdparams.Length > 0)
+            {
+                switch (cmdparams[0].ToLower())
                 {
+                    case "help":
+                        MainConsole.Instance.Output("modules list - List modules", "noTimeStamp");
+                        MainConsole.Instance.Output("modules unload - Unload a module", "noTimeStamp");
+                        break;
+                    case "list":
+                        foreach (IRegionModuleBase irm in controller.AllModules)
+                        {
+                            if (irm is ISharedRegionModule)
+                                MainConsole.Instance.Output(String.Format("Shared region module: {0}", irm.Name));
+                            else if (irm is INonSharedRegionModule)
+                                MainConsole.Instance.Output(String.Format("Nonshared region module: {0}", irm.Name));
+                            else
+                                MainConsole.Instance.Output(String.Format("Unknown type " + irm.GetType().ToString() + " region module: {0}", irm.Name));
+                        }
+
+                        break;
+                    case "unload":
+                        if (cmdparams.Length > 1)
+                        {
+                            foreach (IRegionModuleBase irm in controller.AllModules)
+                            {
+                                if (irm.Name.ToLower() == cmdparams[1].ToLower())
+                                {
+                                    MainConsole.Instance.Output(String.Format("Unloading module: {0}", irm.Name));
+                                    foreach (Scene scene in Scenes)
+                                        irm.RemoveRegion(scene);
+                                    irm.Close();
+                                }
+                            }
+                        }
+                        break;
                 }
             }
         }
 
         /// <summary>
-        /// Get a new physics scene.
+        /// Serialize region data to XML2Format
         /// </summary>
-        /// <param name="config">The configuration data to pass to the physics and mesh engines</param>
-        /// <param name="osSceneIdentifier">
-        /// The name of the OpenSim scene this physics scene is serving.  This will be used in log messages.
-        /// </param>
-        /// <returns></returns>
-        protected PhysicsScene GetPhysicsScene(IConfigSource config, string RegionName)
+        /// <param name="module"></param>
+        /// <param name="cmdparams"></param>
+        protected void SaveXml2(string module, string[] cmdparams)
         {
-            IConfig PhysConfig = config.Configs["Physics"];
-            IConfig MeshingConfig = config.Configs["Meshing"];
-            string engine = "";
-            string meshEngine = "";
-            if (PhysConfig != null)
+            if (cmdparams.Length > 2)
             {
-                engine = PhysConfig.GetString("DefaultPhysicsEngine", "OpenDynamicsEngine");
-                meshEngine = MeshingConfig.GetString("DefaultMeshingEngine", "Meshmerizer");
-                string regionName = RegionName.Trim().Replace(' ', '_');
-                string RegionPhysicsEngine = PhysConfig.GetString("Region_" + regionName + "_PhysicsEngine", String.Empty);
-                if (RegionPhysicsEngine != "")
-                    engine = RegionPhysicsEngine;
-                string RegionMeshingEngine = MeshingConfig.GetString("Region_" + regionName + "_MeshingEngine", String.Empty);
-                if (RegionMeshingEngine != "")
-                    meshEngine = RegionMeshingEngine;
+                IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+                if (serialiser != null)
+                    serialiser.SavePrimsToXml2(CurrentOrFirstScene, cmdparams[2]);
             }
             else
             {
-                //Load Sane defaults
-                engine = "OpenDynamicsEngine";
-                meshEngine = "Meshmerizer";
+                m_log.Warn("Wrong number of parameters!");
             }
-            PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
-            physicsPluginManager.LoadPluginsFromAssemblies("Physics");
-
-            return physicsPluginManager.GetPhysicsScene(engine, meshEngine, config, RegionName);
         }
 
         /// <summary>
-        /// Save the prims in the current scene to an xml file in OpenSimulator's current 'xml2' format
+        /// Runs commands issued by the server console from the operator
         /// </summary>
-        /// <param name="filename"></param>
-        public void SaveCurrentSceneToXml2(string filename)
+        /// <param name="command">The first argument of the parameter (the command)</param>
+        /// <param name="cmdparams">Additional arguments passed to the command</param>
+        public void RunCommand(string module, string[] cmdparams)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)
-                serialiser.SavePrimsToXml2(CurrentOrFirstScene, filename);
+            List<string> args = new List<string>(cmdparams);
+            if (args.Count < 1)
+                return;
+
+            string command = args[0];
+            args.RemoveAt(0);
+
+            cmdparams = args.ToArray();
+
+            switch (command)
+            {
+                case "reset":
+                    if (cmdparams.Length > 0)
+                        if (cmdparams[0] == "region")
+                            ResetScene();
+                    break;
+                case "command-script":
+                    if (cmdparams.Length > 0)
+                    {
+                        m_OpenSimBase.RunCommandScript(cmdparams[0]);
+                    }
+                    break;
+
+                case "backup":
+                    ForEachCurrentScene(delegate(Scene scene)
+                    {
+                        scene.m_backingup = true; //Clear out all other threads
+                        scene.ProcessPrimBackupTaints(true, args.Count == 1);
+                        scene.m_backingup = false; //Clear out all other threads
+                    });
+                    break;
+
+                case "remove-region":
+                    string regRemoveName = CombineParams(cmdparams, 0);
+
+                    Scene removeScene;
+                    if (TryGetScene(regRemoveName, out removeScene))
+                        RemoveRegion(removeScene, false);
+                    else
+                        MainConsole.Instance.Output("no region with that name");
+                    break;
+
+                case "delete-region":
+                    string regDeleteName = CombineParams(cmdparams, 0);
+
+                    Scene killScene;
+                    if (TryGetScene(regDeleteName, out killScene))
+                        RemoveRegion(killScene, true);
+                    else
+                        MainConsole.Instance.Output("no region with that name");
+                    break;
+
+                case "restart":
+                    ForEachCurrentScene(delegate(Scene scene) { scene.RestartNow(); });
+                    break;
+                case "restart-instance":
+                    //This kills the instance and restarts it
+                    MainConsole.Instance.EndConsoleProcessing();
+                    break;
+            }
         }
+
+        /// <summary>
+        /// Change the currently selected region.  The selected region is that operated upon by single region commands.
+        /// </summary>
+        /// <param name="cmdParams"></param>
+        protected void ChangeSelectedRegion(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length > 2)
+            {
+                string newRegionName = CombineParams(cmdparams, 2);
+                ChangeSelectedRegion(newRegionName);
+            }
+            else
+            {
+                MainConsole.Instance.Output("Usage: change region <region name>");
+            }
+        }
+
+        /// <summary>
+        /// Turn on some debugging values for OpenSim.
+        /// </summary>
+        /// <param name="args"></param>
+        protected void Debug(string module, string[] args)
+        {
+            if (args.Length == 1)
+                return;
+
+            switch (args[1])
+            {
+                case "packet":
+                    if (args.Length > 2)
+                    {
+                        int newDebug;
+                        if (int.TryParse(args[2], out newDebug))
+                        {
+                            SetDebugPacketLevelOnCurrentScene(newDebug);
+                        }
+                        else
+                        {
+                            MainConsole.Instance.Output("packet debug should be 0..255");
+                        }
+                        MainConsole.Instance.Output(String.Format("New packet debug: {0}", newDebug));
+                    }
+
+                    break;
+
+                case "scene":
+                    if (args.Length == 5)
+                    {
+                        if (CurrentScene == null)
+                        {
+                            MainConsole.Instance.Output("Please use 'change region <regioname>' first");
+                        }
+                        else
+                        {
+                            bool scriptingOn = !Convert.ToBoolean(args[2]);
+                            bool collisionsOn = !Convert.ToBoolean(args[3]);
+                            bool physicsOn = !Convert.ToBoolean(args[4]);
+                            CurrentScene.SetSceneCoreDebug(scriptingOn, collisionsOn, physicsOn);
+
+                            MainConsole.Instance.Output(String.Format("Set debug scene scripting = {0}, collisions = {1}, physics = {2}", !scriptingOn, !collisionsOn, !physicsOn));
+                        }
+                    }
+                    else
+                    {
+                        MainConsole.Instance.Output("debug scene <scripting> <collisions> <physics> (where inside <> is true/false)");
+                    }
+
+                    break;
+                default:
+
+                    MainConsole.Instance.Output("Unknown debug");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Set the debug packet level on the current scene.  This level governs which packets are printed out to the
+        /// console.
+        /// </summary>
+        /// <param name="newDebug"></param>
+        private void SetDebugPacketLevelOnCurrentScene(int newDebug)
+        {
+            ForEachCurrentScene(
+                delegate(Scene scene)
+                {
+                    scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
+                    {
+                        if (!scenePresence.IsChildAgent)
+                        {
+                            m_log.DebugFormat("Packet debug for {0} {1} set to {2}",
+                                              scenePresence.Firstname,
+                                              scenePresence.Lastname,
+                                              newDebug);
+
+                            scenePresence.ControllingClient.SetDebugPacketLevel(newDebug);
+                        }
+                    });
+                }
+            );
+        }
+
+        /// <summary>
+        /// Many commands list objects for debugging.  Some of the types are listed  here
+        /// </summary>
+        /// <param name="mod"></param>
+        /// <param name="cmd"></param>
+        public override void HandleShow(string mod, string[] cmd)
+        {
+            m_OpenSimBase.HandleShow(mod, cmd);
+            if (cmd.Length == 1)
+            {
+                m_log.Warn("Incorrect number of parameters!");
+                return;
+            }
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] showParams = args.ToArray();
+            switch (showParams[0])
+            {
+                case "assets":
+                    MainConsole.Instance.Output("Not implemented.");
+                    break;
+
+                case "users":
+                    IList agents;
+                    if (showParams.Length > 1 && showParams[1] == "full")
+                    {
+                        agents = GetCurrentScenePresences();
+                    }
+                    else
+                    {
+                        agents = GetCurrentSceneAvatars();
+                    }
+
+                    MainConsole.Instance.Output(String.Format("\nAgents connected: {0}\n", agents.Count));
+
+                    MainConsole.Instance.Output(String.Format("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
+
+                    foreach (ScenePresence presence in agents)
+                    {
+                        RegionInfo regionInfo = presence.Scene.RegionInfo;
+                        string regionName;
+
+                        if (regionInfo == null)
+                        {
+                            regionName = "Unresolvable";
+                        }
+                        else
+                        {
+                            regionName = regionInfo.RegionName;
+                        }
+
+                        MainConsole.Instance.Output(String.Format("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", presence.Firstname, presence.Lastname, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString()));
+                    }
+
+
+                    MainConsole.Instance.Output(String.Empty);
+                    MainConsole.Instance.Output(String.Empty);
+                    break;
+
+                case "connections":
+                    System.Text.StringBuilder connections = new System.Text.StringBuilder("Connections:\n");
+                    ForEachScene(delegate(Scene scene) { scene.ForEachClient(delegate(IClientAPI client) { connections.AppendFormat("{0}: {1} ({2}) from {3} on circuit {4}\n", scene.RegionInfo.RegionName, client.Name, client.AgentId, client.RemoteEndPoint, client.CircuitCode); }); });
+
+                    MainConsole.Instance.Output(connections.ToString());
+                    break;
+
+                case "regions":
+                    ForEachScene(delegate(Scene scene) { MainConsole.Instance.Output(String.Format("Region Name: {0}, Region XLoc: {1}, Region YLoc: {2}, Region Port: {3}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY, scene.RegionInfo.InternalEndPoint.Port)); });
+                    break;
+
+                case "queues":
+                    MainConsole.Instance.Output((GetQueuesReport(showParams)));
+                    break;
+
+                case "maturity":
+                    ForEachScene(delegate(Scene scene)
+                    {
+                        string rating = "";
+                        if (scene.RegionInfo.RegionSettings.Maturity == 1)
+                        {
+                            rating = "MATURE";
+                        }
+                        else if (scene.RegionInfo.RegionSettings.Maturity == 2)
+                        {
+                            rating = "ADULT";
+                        }
+                        else
+                        {
+                            rating = "PG";
+                        }
+                        MainConsole.Instance.Output(String.Format("Region Name: {0}, Region Rating {1}", scene.RegionInfo.RegionName, rating));
+                    });
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// print UDP Queue data for each client
+        /// </summary>
+        /// <returns></returns>
+        private string GetQueuesReport(string[] showParams)
+        {
+            bool showChildren = false;
+
+            if (showParams.Length > 1 && showParams[1] == "full")
+                showChildren = true;
+
+            StringBuilder report = new StringBuilder();
+
+            int columnPadding = 2;
+            int maxNameLength = 18;
+            int maxRegionNameLength = 14;
+            int maxTypeLength = 4;
+            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding + maxTypeLength + columnPadding;
+
+            report.AppendFormat("{0,-" + maxNameLength + "}{1,-" + columnPadding + "}", "User", "");
+            report.AppendFormat("{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}", "Region", "");
+            report.AppendFormat("{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}", "Type", "");
+
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Packets",
+                "Packets",
+                "Packets",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes");
+
+            report.AppendFormat("{0,-" + totalInfoFieldsLength + "}", "");
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Out",
+                "In",
+                "Unacked",
+                "Resend",
+                "Land",
+                "Wind",
+                "Cloud",
+                "Task",
+                "Texture",
+                "Asset",
+                "State");
+
+            ForEachScene(
+                delegate(Scene scene)
+                {
+                    scene.ForEachClient(
+                        delegate(IClientAPI client)
+                        {
+                            if (client is IStatsCollector)
+                            {
+                                bool isChild = scene.PresenceChildStatus(client.AgentId);
+                                if (isChild && !showChildren)
+                                    return;
+
+                                string name = client.Name;
+                                string regionName = scene.RegionInfo.RegionName;
+
+                                report.AppendFormat(
+                                    "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
+                                    name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
+                                report.AppendFormat(
+                                    "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
+                                    regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
+                                report.AppendFormat(
+                                    "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
+                                    isChild ? "Child" : "Root", "");
+
+                                IStatsCollector stats = (IStatsCollector)client;
+
+                                report.AppendLine(stats.Report());
+                            }
+                        });
+                });
+
+            return report.ToString();
+        }
+
+        public void SendCommandToPluginModules(string[] cmdparams)
+        {
+            ForEachCurrentScene(delegate(Scene scene) { scene.SendCommandToPlugins(cmdparams); });
+        }
+
+        public void SetBypassPermissionsOnCurrentScene(bool bypassPermissions)
+        {
+            ForEachCurrentScene(delegate(Scene scene) { scene.Permissions.SetBypassPermissions(bypassPermissions); });
+        }
+
+        /// <summary>
+        /// Load region data from Xml2Format
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmdparams"></param>
+        protected void LoadXml2(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length > 2)
+            {
+                try
+                {
+                    IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+                    if (serialiser != null)
+                        serialiser.LoadPrimsFromXml2(CurrentOrFirstScene, cmdparams[2]);
+                }
+                catch (FileNotFoundException)
+                {
+                    MainConsole.Instance.Output("Specified xml not found. Usage: load xml2 <filename>");
+                }
+            }
+            else
+            {
+                m_log.Warn("Not enough parameters!");
+            }
+        }
+
+        /// <summary>
+        /// Load a whole region from an opensimulator archive.
+        /// </summary>
+        /// <param name="cmdparams"></param>
+        protected void LoadOar(string module, string[] cmdparams)
+        {
+            try
+            {
+                IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
+                if (archiver != null)
+                    archiver.HandleLoadOarConsoleCommand(string.Empty, cmdparams);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Output(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Save a region to a file, including all the assets needed to restore it.
+        /// </summary>
+        /// <param name="cmdparams"></param>
+        protected void SaveOar(string module, string[] cmdparams)
+        {
+            IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
+            if (archiver != null)
+                archiver.HandleSaveOarConsoleCommand(string.Empty, cmdparams);
+        }
+
+        private static string CombineParams(string[] commandParams, int pos)
+        {
+            string result = String.Empty;
+            for (int i = pos; i < commandParams.Length; i++)
+            {
+                result += commandParams[i] + " ";
+            }
+            result = result.TrimEnd(' ');
+            return result;
+        }
+
+        /// <summary>
+        /// Kill an object given its UUID.
+        /// </summary>
+        /// <param name="cmdparams"></param>
+        protected void KillUUID(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length > 2)
+            {
+                UUID id = UUID.Zero;
+                SceneObjectGroup grp = null;
+                Scene sc = null;
+
+                if (!UUID.TryParse(cmdparams[2], out id))
+                {
+                    MainConsole.Instance.Output("[KillUUID]: Error bad UUID format!");
+                    return;
+                }
+
+                ForEachScene(delegate(Scene scene)
+                {
+                    SceneObjectPart part = scene.GetSceneObjectPart(id);
+                    if (part == null)
+                        return;
+
+                    grp = part.ParentGroup;
+                    sc = scene;
+                });
+
+                if (grp == null)
+                {
+                    MainConsole.Instance.Output(String.Format("[KillUUID]: Given UUID {0} not found!", id));
+                }
+                else
+                {
+                    MainConsole.Instance.Output(String.Format("[KillUUID]: Found UUID {0} in scene {1}", id, sc.RegionInfo.RegionName));
+                    try
+                    {
+                        sc.DeleteSceneObject(grp, false, true);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat("[KillUUID]: Error while removing objects from scene: " + e);
+                    }
+                }
+            }
+            else
+            {
+                MainConsole.Instance.Output("[KillUUID]: Usage: kill uuid <UUID>");
+            }
+        }
+
+        public override void AddPluginCommands()
+        {
+            // If console exists add plugin commands.
+            if (MainConsole.Instance != null)
+            {
+                List<string> topics = GetHelpTopics();
+
+                foreach (string topic in topics)
+                {
+                    MainConsole.Instance.Commands.AddCommand("plugin", false, "help " + topic, "help " + topic, "Get help on plugin command '" + topic + "'", HandleCommanderHelp);
+
+                    MainConsole.Instance.Commands.AddCommand("plugin", false, topic, topic, "Execute subcommand for plugin '" + topic + "'", null);
+
+                    ICommander commander = null;
+
+                    Scene s = CurrentOrFirstScene;
+
+                    if (s != null && s.GetCommanders() != null)
+                    {
+                        if (s.GetCommanders().ContainsKey(topic))
+                            commander = s.GetCommanders()[topic];
+                    }
+
+                    if (commander == null)
+                        continue;
+
+                    foreach (string command in commander.Commands.Keys)
+                    {
+                        MainConsole.Instance.Commands.AddCommand(topic, false, topic + " " + command, topic + " " + commander.Commands[command].ShortHelp(), String.Empty, HandleCommanderCommand);
+                    }
+                }
+            }
+        }
+
+        private void HandleCommanderCommand(string module, string[] cmd)
+        {
+            SendCommandToPluginModules(cmd);
+        }
+
+        private void HandleCommanderHelp(string module, string[] cmd)
+        {
+            // Only safe for the interactive console, since it won't
+            // let us come here unless both scene and commander exist
+            //
+            ICommander moduleCommander = CurrentOrFirstScene.GetCommander(cmd[1]);
+            if (moduleCommander != null)
+                MainConsole.Instance.Output(moduleCommander.Help);
+        }
+
+        #endregion
     }
 }

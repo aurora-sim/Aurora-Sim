@@ -59,29 +59,10 @@ namespace Aurora.Server
 {
     public class AuroraBase : SimulationBase
     {
-        public override void Configuration(IConfigSource configSource)
-        {
-            IConfig startupConfig = m_config.Configs["Startup"];
-
-            if (startupConfig != null)
-            {
-                m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
-                m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
-
-                m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
-                m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
-                if (m_TimerScriptTime < 5) //Limit for things like backup and etc...
-                    m_TimerScriptTime = 5;
-
-                string pidFile = startupConfig.GetString("PIDFile", String.Empty);
-                if (pidFile != String.Empty)
-                    CreatePIDFile(pidFile);
-            }
-        }
-
         public override void SetUpConsole()
         {
             base.SetUpConsole();
+            //Fix the default prompt
             m_console.DefaultPrompt = "Aurora.Server ";
         }
 

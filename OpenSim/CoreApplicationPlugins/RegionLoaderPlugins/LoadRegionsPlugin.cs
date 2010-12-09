@@ -48,9 +48,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public event NewRegionCreated OnNewRegionCreated;
-        private NewRegionCreated m_newRegionCreatedHandler;
-
         #region IApplicationPlugin Members
 
         private string m_name = "LoadRegionsPlugin";
@@ -83,6 +80,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void PostInitialise()
         {
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
+            List<RegionInfo[]> regions = new List<RegionInfo[]>();
+            SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
@@ -97,24 +96,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     m_log.Error("[LOADREGIONS]: Halting startup due to conflicts in region configurations");
                     throw new Exception();
                 }
-
-                SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
                 manager.AllRegions += regionsToLoad.Length;
                 Util.NumberofScenes += regionsToLoad.Length;
-
+                regions.Add(regionsToLoad);
+            }
+            foreach (RegionInfo[] regionsToLoad in regions)
+            {
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
                     IScene scene = null;
                     m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
                     manager.CreateRegion(regionsToLoad[i], true, out scene);
-                    if (scene != null)
-                    {
-                        m_newRegionCreatedHandler = OnNewRegionCreated;
-                        if (m_newRegionCreatedHandler != null)
-                        {
-                            m_newRegionCreatedHandler(scene);
-                        }
-                    }
                 }
             }
         }
