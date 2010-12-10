@@ -10,18 +10,24 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class ServicesLoader : IApplicationPlugin
     {
+        private ISimulationBase m_openSim;
         public void Initialize(ISimulationBase openSim)
         {
-            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            m_openSim = openSim;
+        }
+
+        public void PostInitialise()
+        {
+            IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("ServicesLoader", "") != Name)
-                return; 
-            
+                return;
+
             List<IService> serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
             foreach (IService connector in serviceConnectors)
             {
                 try
                 {
-                    connector.Initialize(openSim.ConfigSource, openSim.ApplicationRegistry);
+                    connector.Initialize(m_openSim.ConfigSource, m_openSim.ApplicationRegistry);
                 }
                 catch
                 {
@@ -31,7 +37,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    connector.PostInitialize(openSim.ApplicationRegistry);
+                    connector.PostInitialize(m_openSim.ApplicationRegistry);
                 }
                 catch
                 {
@@ -43,16 +49,12 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    connector.Initialize(openSim.ConfigSource, openSim, "", openSim.ApplicationRegistry);
+                    connector.Initialize(m_openSim.ConfigSource, m_openSim, "", m_openSim.ApplicationRegistry);
                 }
                 catch
                 {
                 }
             }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()

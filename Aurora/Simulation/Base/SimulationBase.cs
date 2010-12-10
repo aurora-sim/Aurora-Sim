@@ -257,7 +257,7 @@ namespace Aurora.Simulation.Base
 
         public IHttpServer GetHttpServer(uint port)
         {
-            m_log.InfoFormat("[SERVER]: Requested port {0}", port);
+            m_log.DebugFormat("[SERVER]: Requested port {0}", port);
             if (port == m_Port)
                 return HttpServer;
             if (port == 0)
