@@ -46,8 +46,8 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
-        private IImprovedAssetCache m_Cache = null;
+        protected string m_ServerURI = String.Empty;
+        protected IImprovedAssetCache m_Cache = null;
 
         public AssetServicesConnector()
         {
@@ -63,7 +63,7 @@ namespace OpenSim.Services.Connectors
             m_Cache = cache;
         }
 
-        public AssetBase Get(string id)
+        public virtual AssetBase Get(string id)
         {
             string uri = m_ServerURI + "/assets/" + id;
 
@@ -82,7 +82,7 @@ namespace OpenSim.Services.Connectors
             return asset;
         }
 
-        public AssetBase GetCached(string id)
+        public virtual AssetBase GetCached(string id)
         {
             if (m_Cache != null)
                 return m_Cache.Get(id);
@@ -90,7 +90,7 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public AssetMetadata GetMetadata(string id)
+        public virtual AssetMetadata GetMetadata(string id)
         {
             if (m_Cache != null)
             {
@@ -107,7 +107,7 @@ namespace OpenSim.Services.Connectors
             return asset;
         }
 
-        public byte[] GetData(string id)
+        public virtual byte[] GetData(string id)
         {
             if (m_Cache != null)
             {
@@ -140,7 +140,7 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public bool Get(string id, Object sender, AssetRetrieved handler)
+        public virtual bool Get(string id, Object sender, AssetRetrieved handler)
         {
             string uri = m_ServerURI + "/assets/" + id;
 
@@ -173,7 +173,7 @@ namespace OpenSim.Services.Connectors
             return true;
         }
 
-        public string Store(AssetBase asset)
+        public virtual string Store(AssetBase asset)
         {
             if (asset.Temporary || asset.Local)
             {
@@ -209,7 +209,7 @@ namespace OpenSim.Services.Connectors
             return newID;
         }
 
-        public bool UpdateContent(string id, byte[] data)
+        public virtual bool UpdateContent(string id, byte[] data)
         {
             AssetBase asset = null;
 
@@ -240,7 +240,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool Delete(string id)
+        public virtual bool Delete(string id)
         {
             string uri = m_ServerURI + "/assets/" + id;
 
@@ -255,7 +255,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        private void HandleDumpAsset(string module, string[] args)
+        protected virtual void HandleDumpAsset(string module, string[] args)
         {
             if (args.Length != 4)
             {
@@ -295,12 +295,12 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
@@ -330,7 +330,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IAssetService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public virtual void PostInitialize(IRegistryCore registry)
         {
             SetCache(registry.Get<IImprovedAssetCache>());
         }

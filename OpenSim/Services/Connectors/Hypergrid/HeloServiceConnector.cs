@@ -51,12 +51,6 @@ namespace OpenSim.Services.Connectors
             m_ServerURI = serverURI.TrimEnd('/');
         }
 
-        public void Initialize(IConfigSource config, OpenSim.Framework.ISimulationBase simBase, string configName, OpenSim.Framework.IRegistryCore sim)
-        {
-            throw new NotImplementedException();
-        }
-
-
         public virtual string Helo()
         {
             HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(m_ServerURI + "/helo");

@@ -70,46 +70,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
 
         public void Initialise(IConfigSource source)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("InventoryServices", "");
-                if (name == Name)
-                {
-                    IConfig inventoryConfig = source.Configs["InventoryService"];
-                    if (inventoryConfig == null)
-                    {
-                        m_log.Error("[HG INVENTORY CONNECTOR]: InventoryService missing from OpenSim.ini");
-                        return;
-                    }
+            IConfig handlerConfig = source.Configs["Handlers"];
+            if (handlerConfig.GetString("HGInventoryHandler", "") != Name)
+                return;
 
-                    string localDll = inventoryConfig.GetString("LocalGridInventoryService",
-                            String.Empty);
-                    //string HGDll = inventoryConfig.GetString("HypergridInventoryService",
-                    //        String.Empty);
-
-                    if (localDll == String.Empty)
-                    {
-                        m_log.Error("[HG INVENTORY CONNECTOR]: No LocalGridInventoryService named in section InventoryService");
-                        //return;
-                        throw new Exception("Unable to proceed. Please make sure your ini files in config-include are updated according to .example's");
-                    }
-
-                    Object[] args = new Object[] { source };
-                    m_LocalGridInventoryService =
-                            Aurora.Framework.AuroraModuleLoader.LoadPlugin<IInventoryService>(localDll,
-                            args);
-
-                    if (m_LocalGridInventoryService == null)
-                    {
-                        m_log.Error("[HG INVENTORY CONNECTOR]: Can't load local inventory service");
-                        return;
-                    }
-
-                    m_Enabled = true;
-                    m_log.InfoFormat("[HG INVENTORY CONNECTOR]: HG inventory broker enabled with inner connector of type {0}", m_LocalGridInventoryService.GetType());
-                }
-            }
+            m_Enabled = true;
         }
 
         public void PostInitialise()
@@ -124,6 +89,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Inventory
         {
             if (!m_Enabled)
                 return;
+
+            if (m_LocalGridInventoryService == null)
+            {
+                m_LocalGridInventoryService = scene.InventoryService;
+                m_log.InfoFormat("[HG INVENTORY CONNECTOR]: HG inventory broker enabled with inner connector of type {0}", m_LocalGridInventoryService.GetType());
+            }
 
             m_Scenes.Add(scene);
 

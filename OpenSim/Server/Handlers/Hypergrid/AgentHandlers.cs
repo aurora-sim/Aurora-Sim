@@ -64,7 +64,5 @@ namespace OpenSim.Server.Handlers.Hypergrid
         {
             return m_GatekeeperService.LoginAgent(aCircuit, destination, out reason);
         }
-
     }
-
 }

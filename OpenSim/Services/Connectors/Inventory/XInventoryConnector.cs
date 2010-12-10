@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        protected string m_ServerURI = String.Empty;
 
         public XInventoryServicesConnector(string Url)
         {
@@ -57,7 +57,7 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public bool CreateUserInventory(UUID principalID)
+        public virtual bool CreateUserInventory(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("CREATEUSERINVENTORY",
                     new Dictionary<string,object> {
@@ -72,7 +72,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
+        public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("GETINVENTORYSKELETON",
                     new Dictionary<string,object> {
@@ -99,7 +99,7 @@ namespace OpenSim.Services.Connectors
             return folders;
         }
 
-        public InventoryFolderBase GetRootFolder(UUID principalID)
+        public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("GETROOTFOLDER",
                     new Dictionary<string,object> {
@@ -114,7 +114,7 @@ namespace OpenSim.Services.Connectors
             return BuildFolder((Dictionary<string, object>)ret["folder"]);
         }
 
-        public InventoryFolderBase GetFolderForType(UUID principalID, AssetType type)
+        public virtual InventoryFolderBase GetFolderForType(UUID principalID, AssetType type)
         {
             Dictionary<string,object> ret = MakeRequest("GETFOLDERFORTYPE",
                     new Dictionary<string,object> {
@@ -130,7 +130,7 @@ namespace OpenSim.Services.Connectors
             return BuildFolder((Dictionary<string, object>)ret["folder"]);
         }
 
-        public InventoryCollection GetFolderContent(UUID principalID, UUID folderID)
+        public virtual InventoryCollection GetFolderContent(UUID principalID, UUID folderID)
         {
             InventoryCollection inventory = new InventoryCollection();
             
@@ -170,7 +170,7 @@ namespace OpenSim.Services.Connectors
             return inventory;
         }
 
-        public List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
+        public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
             Dictionary<string,object> ret = MakeRequest("GETFOLDERITEMS",
                     new Dictionary<string,object> {
@@ -191,7 +191,7 @@ namespace OpenSim.Services.Connectors
             return fitems;
         }
 
-        public bool AddFolder(InventoryFolderBase folder)
+        public virtual bool AddFolder(InventoryFolderBase folder)
         {
             if (folder == null)
                 return false;
@@ -212,7 +212,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool UpdateFolder(InventoryFolderBase folder)
+        public virtual bool UpdateFolder(InventoryFolderBase folder)
         {
             if (folder == null)
                 return false;
@@ -233,7 +233,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool MoveFolder(InventoryFolderBase folder)
+        public virtual bool MoveFolder(InventoryFolderBase folder)
         {
             if (folder == null)
                 return false;
@@ -251,7 +251,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
+        public virtual bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
             if (folderIDs == null)
                 return false;
@@ -275,7 +275,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool PurgeFolder(InventoryFolderBase folder)
+        public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
             if (folder == null)
                 return false;
@@ -291,7 +291,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool AddItem(InventoryItemBase item)
+        public virtual bool AddItem(InventoryItemBase item)
         {
             if (item == null)
                 return false;
@@ -326,7 +326,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool UpdateItem(InventoryItemBase item)
+        public virtual bool UpdateItem(InventoryItemBase item)
         {
             if (item == null)
                 return false;
@@ -361,7 +361,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool MoveItems(UUID principalID, List<InventoryItemBase> items)
+        public virtual bool MoveItems(UUID principalID, List<InventoryItemBase> items)
         {
             if (items == null)
                 return false;
@@ -388,7 +388,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public bool DeleteItems(UUID principalID, List<UUID> itemIDs)
+        public virtual bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
             if (itemIDs == null)
                 return false;
@@ -412,7 +412,7 @@ namespace OpenSim.Services.Connectors
             return bool.Parse(ret["RESULT"].ToString());
         }
 
-        public InventoryItemBase GetItem(InventoryItemBase item)
+        public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
             if (item == null)
                 return null;
@@ -439,7 +439,7 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public InventoryFolderBase GetFolder(InventoryFolderBase folder)
+        public virtual InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
             if (folder == null)
                 return null;
@@ -466,7 +466,7 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public List<InventoryItemBase> GetActiveGestures(UUID principalID)
+        public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("GETACTIVEGESTURES",
                     new Dictionary<string,object> {
@@ -484,7 +484,7 @@ namespace OpenSim.Services.Connectors
             return items;
         }
 
-        public int GetAssetPermissions(UUID principalID, UUID assetID)
+        public virtual int GetAssetPermissions(UUID principalID, UUID assetID)
         {
             Dictionary<string,object> ret = MakeRequest("GETASSETPERMISSIONS",
                     new Dictionary<string,object> {
@@ -499,7 +499,7 @@ namespace OpenSim.Services.Connectors
         }
 
 
-        public bool HasInventoryForUser(UUID principalID)
+        public virtual bool HasInventoryForUser(UUID principalID)
         {
             return false;
         }
@@ -579,12 +579,12 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
@@ -609,7 +609,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IInventoryService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public virtual void PostInitialize(IRegistryCore registry)
         {
         }
 

@@ -30,7 +30,9 @@ using Nini.Config;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Services.Interfaces;
 using OpenSim.Services.Connectors.Hypergrid;
 using OpenSim.Services.Connectors.SimianGrid;
@@ -38,7 +40,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors
 {
-    public class HGAssetServiceConnector : IAssetService, IService
+    public class HGAssetServiceConnector : AssetServicesConnector
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -46,21 +48,51 @@ namespace OpenSim.Services.Connectors
 
         private Dictionary<string, IAssetService> m_connectors = new Dictionary<string, IAssetService>();
 
-        public string Name
+        public override string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", Name) != Name)
                 return;
             m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
+
+            IConfig assetConfig = config.Configs["AssetService"];
+            if (assetConfig == null)
+            {
+                m_log.Error("[ASSET CONNECTOR]: AssetService missing from OpenSim.ini");
+                throw new Exception("Asset connector init error");
+            }
+
+            string serviceURI = assetConfig.GetString("AssetServerURI",
+                    String.Empty);
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[ASSET CONNECTOR]: No Server URI named in section AssetService");
+                throw new Exception("Asset connector init error");
+            }
+            m_ServerURI = serviceURI;
+
+            MainConsole.Instance.Commands.AddCommand("asset", false, "dump asset",
+                                          "dump asset <id> <file>",
+                                          "dump one cached asset", HandleDumpAsset);
+
+            registry.RegisterInterface<IAssetService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        private bool IsHG(string id)
         {
+            Uri assetUri;
+
+            if (Uri.TryCreate(id, UriKind.Absolute, out assetUri) &&
+                    assetUri.Scheme == Uri.UriSchemeHttp)
+                return true;
+
+            return false;
         }
 
         private bool StringToUrlAndAssetID(string id, out string url, out string assetID)
@@ -109,91 +141,187 @@ namespace OpenSim.Services.Connectors
             return connector;
         }
 
-        public AssetBase Get(string id)
+        public override AssetBase Get(string id)
         {
-            string url = string.Empty;
-            string assetID = string.Empty;
+            AssetBase asset = null;
 
-            if (StringToUrlAndAssetID(id, out url, out assetID))
+            if (m_Cache != null)
             {
-                IAssetService connector = GetConnector(url);
-                return connector.Get(assetID);
+                asset = m_Cache.Get(id);
+
+                if (asset != null)
+                    return asset;
             }
 
+            if (IsHG(id))
+            {
+                string url = string.Empty;
+                string assetID = string.Empty;
+
+                if (StringToUrlAndAssetID(id, out url, out assetID))
+                {
+                    IAssetService connector = GetConnector(url);
+                    asset = connector.Get(assetID);
+                }
+                if (asset != null)
+                {
+                    // Now store it locally
+                    // For now, let me just do it for textures and scripts
+                    if (((AssetType)asset.Type == AssetType.Texture) ||
+                        ((AssetType)asset.Type == AssetType.LSLBytecode) ||
+                        ((AssetType)asset.Type == AssetType.LSLText))
+                    {
+                        base.Store(asset);
+                    }
+                }
+            }
+            else
+                asset = base.Get(id);
+
+            if (m_Cache != null)
+                m_Cache.Cache(asset);
+
+            return asset;
+        }
+
+        public override AssetBase GetCached(string id)
+        {
+            AssetBase b = base.GetCached(id);
+            if (b != null)
+                return b;
+
+            if (IsHG(id))
+            {
+                string url = string.Empty;
+                string assetID = string.Empty;
+
+                if (StringToUrlAndAssetID(id, out url, out assetID))
+                {
+                    IAssetService connector = GetConnector(url);
+                    return connector.GetCached(assetID);
+                }
+            }
             return null;
         }
 
-        public AssetBase GetCached(string id)
+        public override AssetMetadata GetMetadata(string id)
         {
-            string url = string.Empty;
-            string assetID = string.Empty;
-
-            if (StringToUrlAndAssetID(id, out url, out assetID))
+            AssetBase asset = null;
+            
+            if (m_Cache != null)
             {
-                IAssetService connector = GetConnector(url);
-                return connector.GetCached(assetID);
+                if (m_Cache != null)
+                    m_Cache.Get(id);
+
+                if (asset != null)
+                    return asset.Metadata;
             }
 
-            return null;
+            AssetMetadata metadata = null;
+
+            if (IsHG(id))
+            {
+                string url = string.Empty;
+                string assetID = string.Empty;
+
+                if (StringToUrlAndAssetID(id, out url, out assetID))
+                {
+                    IAssetService connector = GetConnector(url);
+                    return connector.GetMetadata(assetID);
+                }
+            }
+            else
+                metadata = base.GetMetadata(id);
+
+            return metadata;
         }
 
-        public AssetMetadata GetMetadata(string id)
+        public override bool Get(string id, Object sender, AssetRetrieved handler)
         {
-            string url = string.Empty;
-            string assetID = string.Empty;
+            AssetBase asset = null;
 
-            if (StringToUrlAndAssetID(id, out url, out assetID))
+            if (m_Cache != null)
+                asset = m_Cache.Get(id);
+
+            if (asset != null)
             {
-                IAssetService connector = GetConnector(url);
-                return connector.GetMetadata(assetID);
+                Util.FireAndForget(delegate { handler(id, sender, asset); });
+                return true;
             }
 
-            return null;
-        }
-
-        public byte[] GetData(string id)
-        {
-            return null;
-        }
-
-        public bool Get(string id, Object sender, AssetRetrieved handler)
-        {
-            string url = string.Empty;
-            string assetID = string.Empty;
-
-            if (StringToUrlAndAssetID(id, out url, out assetID))
+            if (IsHG(id))
             {
-                IAssetService connector = GetConnector(url);
-                return connector.Get(assetID, sender, handler);
+                string url = string.Empty;
+                string assetID = string.Empty;
+
+                if (StringToUrlAndAssetID(id, out url, out assetID))
+                {
+                    IAssetService connector = GetConnector(url);
+                    return connector.Get(assetID, sender, delegate(string newAssetID, Object s, AssetBase a)
+                    {
+                        if (m_Cache != null)
+                            m_Cache.Cache(a);
+                        handler(assetID, s, a);
+                    });
+                }
+                return false;
+            }
+            else
+            {
+                return base.Get(id, sender, delegate(string assetID, Object s, AssetBase a)
+                {
+                    if (m_Cache != null)
+                        m_Cache.Cache(a);
+                    handler(assetID, s, a);
+                });
+            }
+        }
+
+        public override string Store(AssetBase asset)
+        {
+            bool isHG = IsHG(asset.ID);
+
+            if ((m_Cache != null) && !isHG)
+                // Don't store it in the cache if the asset is to 
+                // be sent to the other grid, because this is already
+                // a copy of the local asset.
+                m_Cache.Cache(asset);
+
+            if (asset.Temporary || asset.Local)
+            {
+                if (m_Cache != null)
+                    m_Cache.Cache(asset);
+                return asset.ID;
             }
 
-            return false;
-        }
-
-        public string Store(AssetBase asset)
-        {
-            string url = string.Empty;
-            string assetID = string.Empty;
-
-            if (StringToUrlAndAssetID(asset.ID, out url, out assetID))
+            string id = string.Empty;
+            if (IsHG(asset.ID))
             {
-                IAssetService connector = GetConnector(url);
-                // Restore the assetID to a simple UUID
-                asset.ID = assetID;
-                return connector.Store(asset);
+                string url = string.Empty;
+                string assetID = string.Empty;
+
+                if (StringToUrlAndAssetID(asset.ID, out url, out assetID))
+                {
+                    IAssetService connector = GetConnector(url);
+                    // Restore the assetID to a simple UUID
+                    asset.ID = assetID;
+                    return connector.Store(asset);
+                }
             }
+            else
+                id = base.Store(asset);
 
-            return String.Empty;
-        }
+            if (id != String.Empty)
+            {
+                // Placing this here, so that this work with old asset servers that don't send any reply back
+                // SynchronousRestObjectRequester returns somethins that is not an empty string
+                if (id != null)
+                    asset.ID = id;
 
-        public bool UpdateContent(string id, byte[] data)
-        {
-            return false;
-        }
-
-        public bool Delete(string id)
-        {
-            return false;
+                if (m_Cache != null)
+                    m_Cache.Cache(asset);
+            }
+            return id;
         }
     }
 }
