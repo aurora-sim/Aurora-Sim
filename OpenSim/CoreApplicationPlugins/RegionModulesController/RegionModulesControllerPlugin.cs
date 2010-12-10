@@ -69,11 +69,12 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
 
         public void Initialize (ISimulationBase openSim)
         {
+            m_openSim = openSim;
+
             IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
                 return;
 
-            m_openSim = openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionModulesController>(this);
             // Scan modules and load all that aren't disabled
             m_sharedInstances = Aurora.Framework.AuroraModuleLoader.PickupModules<ISharedRegionModule>();

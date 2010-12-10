@@ -60,11 +60,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void Initialize(ISimulationBase openSim)
         {
+            m_openSim = openSim;
+
             IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
                 return;
 
-            m_openSim = openSim;
             MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
         }

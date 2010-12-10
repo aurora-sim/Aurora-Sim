@@ -110,11 +110,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Initialize(ISimulationBase openSim)
         {
+            m_OpenSimBase = openSim;
+
             IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("SceneManager", "") != Name)
                 return;
 
-            m_OpenSimBase = openSim;
             m_localScenes = new List<Scene>();
 
             m_config = openSim.ConfigSource;

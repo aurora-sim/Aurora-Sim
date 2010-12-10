@@ -26,11 +26,12 @@ namespace OpenSim.ApplicationPlugins.RemoteController
         private ISimulationBase m_openSim;
         public void Initialize(ISimulationBase openSim)
         {
+            m_openSim = openSim;
+
             IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("StatsHandler", "") != Name)
                 return;
 
-            m_openSim = openSim;
             IConfig statsConfig = openSim.ConfigSource.Configs["Stats"];
             if (statsConfig != null)
                 userStatsURI = statsConfig.GetString("Stats_URI", String.Empty);
