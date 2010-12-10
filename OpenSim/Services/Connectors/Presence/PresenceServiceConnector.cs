@@ -386,15 +386,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            IConfig gridConfig = config.Configs["PresenceService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[PRESENCE CONNECTOR]: PresenceService missing from OpenSim.ini");
-                throw new Exception("Presence connector init error");
-            }
+            registry.RegisterInterface<IPresenceService>(this);
+        }
 
-            string serviceURI = gridConfig.GetString("PresenceServerURI",
-                    String.Empty);
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
+                        "PresenceService");
 
             if (serviceURI == String.Empty)
             {
@@ -402,12 +400,7 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Presence connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IPresenceService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
-        }
+         }
 
         #endregion
     }

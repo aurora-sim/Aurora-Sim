@@ -590,15 +590,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            IConfig assetConfig = config.Configs["InventoryService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[INVENTORY CONNECTOR]: InventoryService missing from OpenSim.ini");
-                throw new Exception("Inventory connector init error");
-            }
+            registry.RegisterInterface<IInventoryService>(this);
+        }
 
-            string serviceURI = assetConfig.GetString("InventoryServerURI",
-                    String.Empty);
+        public virtual void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("InventoryServerURI",
+                    "InventoryService");
 
             if (serviceURI == String.Empty)
             {
@@ -606,11 +604,6 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Inventory connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IInventoryService>(this);
-        }
-
-        public virtual void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

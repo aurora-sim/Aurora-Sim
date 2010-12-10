@@ -266,15 +266,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            IConfig assetConfig = config.Configs["UserAccountService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[ACCOUNT CONNECTOR]: UserAccountService missing from OpenSim.ini");
-                throw new Exception("User account connector init error");
-            }
+            registry.RegisterInterface<IUserAccountService>(this);
+        }
 
-            string serviceURI = assetConfig.GetString("UserAccountServerURI",
-                    String.Empty);
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("UserAccountServerURI",
+                        "UserAccountService");
 
             if (serviceURI == String.Empty)
             {
@@ -282,11 +280,6 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("User account connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IUserAccountService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

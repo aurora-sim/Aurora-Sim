@@ -210,15 +210,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            IConfig gridConfig = config.Configs["FriendsService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[FRIENDS CONNECTOR]: FriendsService missing from OpenSim.ini");
-                throw new Exception("Friends connector init error");
-            }
+            registry.RegisterInterface<IFriendsService>(this);
+        }
 
-            string serviceURI = gridConfig.GetString("FriendsServerURI",
-                    String.Empty);
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FriendsServerURI",
+                        "FriendsService");
 
             if (serviceURI == String.Empty)
             {
@@ -226,11 +224,6 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Friends connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IFriendsService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

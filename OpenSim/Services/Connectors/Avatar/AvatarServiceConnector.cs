@@ -304,15 +304,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            IConfig gridConfig = config.Configs["AvatarService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[AVATAR CONNECTOR]: AvatarService missing from OpenSim.ini");
-                throw new Exception("Avatar connector init error");
-            }
+            registry.RegisterInterface<IAvatarService>(this);
+        }
 
-            string serviceURI = gridConfig.GetString("AvatarServerURI",
-                    String.Empty);
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AvatarServerURI",
+                        "AvatarService");
 
             if (serviceURI == String.Empty)
             {
@@ -320,11 +318,6 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Avatar connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IAvatarService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

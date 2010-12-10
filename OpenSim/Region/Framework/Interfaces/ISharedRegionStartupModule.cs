@@ -12,5 +12,6 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
         void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase);
     }
 }

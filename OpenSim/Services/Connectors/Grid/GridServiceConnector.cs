@@ -849,27 +849,19 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            IConfig gridConfig = config.Configs["GridService"];
-            if (gridConfig == null)
-            {
-                m_log.Error("[GRID CONNECTOR]: GridService missing from OpenSim.ini");
-                throw new Exception("Grid connector init error");
-            }
+            registry.RegisterInterface<IGridService>(this);
+        }
 
-            string serviceURI = gridConfig.GetString("GridServerURI",
-                    String.Empty);
-
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("GridServerURI",
+                    "GridService");
             if (serviceURI == String.Empty)
             {
                 m_log.Error("[GRID CONNECTOR]: No Server URI named in section GridService");
                 throw new Exception("Grid connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IGridService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

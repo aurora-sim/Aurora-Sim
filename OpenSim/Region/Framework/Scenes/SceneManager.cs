@@ -910,6 +910,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.PostInitialise(scene, m_config, m_OpenSimBase);
             }
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.FinishStartup(scene, m_config, m_OpenSimBase);
+            }
         }
 
         #endregion

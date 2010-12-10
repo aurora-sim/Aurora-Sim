@@ -69,5 +69,9 @@ namespace OpenSim.Region.CoreModules
                 }
             }
         }
+
+        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
     }
 }

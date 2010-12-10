@@ -141,15 +141,13 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            IConfig assetConfig = config.Configs["AuthenticationService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[AUTH CONNECTOR]: AuthenticationService missing from OpenSim.ini");
-                throw new Exception("Authentication connector init error");
-            }
+            registry.RegisterInterface<IAuthenticationService>(this);
+        }
 
-            string serviceURI = assetConfig.GetString("AuthenticationServerURI",
-                    String.Empty);
+        public void PostInitialize(IRegistryCore registry)
+        {
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AuthenticationServerURI",
+                        "AuthenticationService");
 
             if (serviceURI == String.Empty)
             {
@@ -157,11 +155,6 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Authentication connector init error");
             }
             m_ServerURI = serviceURI;
-            registry.RegisterInterface<IAuthenticationService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
         }
 
         #endregion

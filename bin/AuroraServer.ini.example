@@ -8,7 +8,7 @@
 [AuroraData]
     ; Local Data Manager Config
     PluginModule = MySQL
-    ConnectionString = "Data Source=localhost;Database=aurora;User ID=root;Password=*;"
+    ;ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*;"
 	
 [Includes]
     ;; Start Aurora with no HG services enabled
@@ -20,6 +20,7 @@
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
+    Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
 
 [CAPSService]
     ;; Subsection Security
@@ -64,46 +65,3 @@
     DefaultAssetLoader = "OpenSim.Services.AssetService.dll"
     AssetLoaderArgs = "assets/AssetSets.xml"
     AllowRemoteDelete = "false"
-	
-[LoginService]
-    ;; This is what the login message is set to
-    ;; You can customize your user logins with their name by putting <USERNAME>
-    WelcomeMessage = "Welcome, <USERNAME>!"
-    AllowRemoteSetLoginLevel = "false"
-	
-    ;; For snowglobe's web map
-    ;; MapTileURL = ""
-
-    ;; For in-client search
-    ;; SearchURL = ""
-
-    ;; If you run this login server behind a proxy, set this to true
-    ;; HasProxy = true
-	
-    ;; Should new users be shown the ToS when they log in if they have not seen it before?
-    ;;  If this is enabled, the FileNameOfTOS will be used to set what the users see.
-    UseTermsOfServiceOnFirstLogin = false
-    ;; File name of the location of the ToS document in the /bin folder
-    FileNameOfTOS = ToS.txt
-    ;; Allow users to login anonymously and have a new account created automatically? This will create a new account for any user logging in.
-    AllowAnonymousLogin = false
-    ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive (in the console) then put the name of it here.
-    ;; To set this, create a user and set them up as you wish them to look.
-    ;;  Then save an Avatar Archive into the database by the command in the console "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)"
-    ;;   Where <First> <Last> is the user name, FileName (can end with .database to save into the database) which is used to identify which archive you wish to use, and the default folder name to create in the new user's inventory.
-    ;;  After saving this archive, put the name of the archive here to set the default avatar appearance.    
-    DefaultAvatarArchiveForNewUser = DefaultAvatar.aa
-    ;; Will hide the First Life setting of profile from all users if set to false
-    AllowFirstLifeInProfile = true
-    ;; Sets the tutorial URL for new users which will be displayed on first login.
-    ;; This is a website that appears in the client telling the user how to move, fly, etc.
-    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
-    TutorialURL = ""
-    ;; Allow the 'export' permission in the Imprudence viewer.
-    ;; This allows people to set whether they would like to allow others to export objects that are theirs.
-    AllowUseageOfExportPermissions = true
-    ;; If a user does not have a home location set, what region should it be set to for them?
-    DefaultHomeRegion = ""
-    ;; For more info, see AuroraDocs/CAPSService.txt
-    CAPSServiceURL = http://127.0.0.1:8007
-    CAPSServicePassword = TestPass

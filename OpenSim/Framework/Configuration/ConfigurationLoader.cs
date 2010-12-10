@@ -178,7 +178,6 @@ namespace OpenSim.Framework
                 m_log.FatalFormat("[CONFIG]: Configuration exists, but there was an error loading it!");
                 throw new NotSupportedException();
             }
-
             // Make sure command line options take precedence
             m_config.Merge(argvSource);
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -25,70 +25,40 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Nini.Config;
 using log4net;
 using System;
-using System.IO;
-using System.Collections;
 using System.Reflection;
-using Nini.Config;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Serialization;
+using Aurora.Simulation.Base;
+using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Server.Handlers
 {
-    public class RemoteFreeswitchConnector : IFreeswitchService, IService
+    public class AutoConfigurationPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+        private OSDMap m_configMap;
 
-        private string m_ServerURI = String.Empty;
-
-        public Hashtable HandleDirectoryRequest(Hashtable requestBody)
+        public AutoConfigurationPostHandler(OSDMap configMap) :
+                base("POST", "/autoconfig")
         {
-            // not used here
-            return new Hashtable();
+            m_configMap = configMap;
         }
 
-        public Hashtable HandleDialplanRequest(Hashtable requestBody)
+        public override byte[] Handle(string path, Stream request,
+                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            // not used here
-            return new Hashtable();
+            //Return the config map
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(OSDParser.SerializeJsonString(m_configMap));
         }
-
-        public string GetJsonConfig()
-        {
-            m_log.DebugFormat("[FREESWITCH CONNECTOR]: Requesting config from {0}", m_ServerURI);
-            return SynchronousRestFormsRequester.MakeRequest("GET",
-                    m_ServerURI, String.Empty);
-        }
-
-        #region IService Members
-
-        public string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        public void Initialize(IConfigSource source, IRegistryCore registry)
-        {
-            IConfig handlerConfig = source.Configs["Handlers"];
-            if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
-                return;
-
-            registry.RegisterInterface<IFreeswitchService>(this);
-        }
-
-        public void PostInitialize(IRegistryCore registry)
-        {
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
-                    "FreeSwitchVoice");
-            m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
-        }
-
-        #endregion
     }
 }

@@ -71,19 +71,15 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
-            IConfig serviceConfig = config.Configs["EventQueueService"];
-            if (serviceConfig != null)
-            {
-                string url = serviceConfig.GetString("EventQueueServiceURI");
-                //Clean it up a bit
-                url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
-                m_serverURL = url + "/CAPS/EQMPOSTER";
-                registry.RegisterInterface<IEventQueueService>(this);
-            }
+            registry.RegisterInterface<IEventQueueService>(this);
         }
 
         public void PostInitialize(IRegistryCore registry)
         {
+            string url = registry.Get<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
+            //Clean it up a bit
+            url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
+            m_serverURL = url + "/CAPS/EQMPOSTER";
             m_capsModules.Add(registry.Get<ICapabilitiesModule>());
         }
 
