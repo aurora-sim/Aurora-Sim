@@ -141,12 +141,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (g == null)
                         continue;
 
-                    // This is where we should check for draw distance
-                    // do culling and stuff. Problem with that is that until
-                    // we recheck in movement, that won't work right.
-                    // So it's not implemented now.
-                    // - This note is from OS core, and has since been implemented as seen below
-
                     if (m_presence.Scene.CheckForObjectCulling)
                     {
                         //Check for part position against the av and the camera position

@@ -1168,7 +1168,7 @@ namespace AvatarArchives
             {
                 m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
                 StreamReader reader = new StreamReader(FileName);
-                string fine = reader.ReadToEnd();
+                file = reader.ReadToEnd();
                 reader.Close();
                 reader.Dispose();
             }
