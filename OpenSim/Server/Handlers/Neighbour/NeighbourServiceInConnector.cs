@@ -34,7 +34,6 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Server.Handlers.Neighbour
 {

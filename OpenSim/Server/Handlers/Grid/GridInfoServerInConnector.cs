@@ -33,7 +33,6 @@ using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Server.Handlers.Base;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Server.Handlers.Grid

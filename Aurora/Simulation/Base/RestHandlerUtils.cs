@@ -31,10 +31,9 @@ using System.Net;
 
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 
-namespace OpenSim.Server.Handlers.Base
+namespace Aurora.Simulation.Base
 {
     public class RestHandlerUtils
     {

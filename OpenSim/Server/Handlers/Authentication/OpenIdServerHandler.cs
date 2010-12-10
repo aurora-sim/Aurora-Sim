@@ -36,7 +36,6 @@ using DotNetOpenId.Provider;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Server.Handlers.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse;

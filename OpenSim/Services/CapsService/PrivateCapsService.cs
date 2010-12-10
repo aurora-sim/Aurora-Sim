@@ -16,7 +16,6 @@ using OpenMetaverse.StructuredData;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
-using OpenSim.Server.Handlers.Base;
 
 namespace OpenSim.Services.CapsService
 {

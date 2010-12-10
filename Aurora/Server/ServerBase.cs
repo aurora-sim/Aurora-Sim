@@ -51,7 +51,6 @@ using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
-using OpenSim.Server.Handlers.Base;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 

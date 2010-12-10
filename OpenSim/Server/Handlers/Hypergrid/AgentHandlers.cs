@@ -33,7 +33,6 @@ using System.Net;
 using System.Text;
 
 using Aurora.Simulation.Base;
-using OpenSim.Server.Handlers.Base;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Framework;

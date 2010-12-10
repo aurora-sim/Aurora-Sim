@@ -30,7 +30,6 @@ using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Server.Handlers.Base;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
