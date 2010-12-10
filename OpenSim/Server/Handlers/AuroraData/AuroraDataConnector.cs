@@ -30,7 +30,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuroraDataHandler", Name) != Name)
+            if (handlerConfig.GetString("AuroraDataHandler", "") != Name)
                 return;
             IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuroraDataHandlerPort"));
 

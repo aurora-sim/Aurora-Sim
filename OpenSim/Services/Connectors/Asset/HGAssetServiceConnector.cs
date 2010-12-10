@@ -56,8 +56,8 @@ namespace OpenSim.Services.Connectors
         public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", Name) != Name)
-                return;
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return; 
             m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
 
             IConfig assetConfig = config.Configs["AssetService"];
