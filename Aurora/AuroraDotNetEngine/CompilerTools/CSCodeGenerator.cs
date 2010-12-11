@@ -126,7 +126,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private int m_braceCount;       // for indentation
         private int m_CSharpLine;       // the current line of generated C# code
         private int m_CSharpCol;        // the current column of generated C# code
-        private List<string> m_warnings = new List<string>();
         private bool IsParentEnumerable = false;
         private string OriginalScript = "";
         private Parser p = null;
@@ -161,6 +160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// Param 1 - the API function name, Param 2 - the API name
         /// </summary>
         private Dictionary<string, string> m_apiFunctions = new Dictionary<string, string>();
+        private Compiler m_compiler;
         //private IScriptApi[] m_Apis = new IScriptApi[0];
 
         private bool FuncCntr = false;
@@ -168,7 +168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
-        public CSCodeGenerator(IScriptApi[] Apis)
+        public CSCodeGenerator(IScriptApi[] Apis, Compiler compiler)
         {
             #region DTFunctions
 
@@ -247,6 +247,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //m_SLCompatabilityMode = compatMode;
             p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
+            m_compiler = compiler;
             //m_Apis = Apis;
         }
 
@@ -286,7 +287,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_astRoot = null;
             IsParentEnumerable = false;
             OriginalScript = "";
-            m_warnings.Clear();
             FuncCalls.Clear();
             FuncCntr = false;
         }
@@ -1360,21 +1360,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 charNumber, Problem + " in '" + EventName + "'\n"));
         }
 
-        /// <summary>
-        /// Get the set of warnings generated during compilation.
-        /// </summary>
-        /// <returns></returns>
-        public string[] GetWarnings()
-        {
-            return m_warnings.ToArray();
-        }
-
         private void AddWarning(string warning)
         {
-            if (!m_warnings.Contains(warning))
-            {
-                m_warnings.Add(warning);
-            }
+            m_compiler.AddWarning(warning);
         }
 
         /// <summary>

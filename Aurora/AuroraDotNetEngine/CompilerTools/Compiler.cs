@@ -222,16 +222,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return errtext;
             }
 
-            string[] Warnings;
             AllowedCompilers.TryGetValue(language, out converter);
 
-            converter.Convert(Script, out compileScript, out Warnings, out PositionMap);
-
-            // copy converter warnings into our warnings.
-            foreach (string warning in Warnings)
-            {
-                AddWarning(warning);
-            }
+            converter.Convert(Script, out compileScript, out PositionMap);
             return "";
         }
 
@@ -312,7 +305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return m_warnings.ToArray();
         }
 
-        private void AddWarning(string warning)
+        public void AddWarning(string warning)
         {
             if (!m_warnings.Contains(warning))
             {

@@ -21,11 +21,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
         }
 
-        public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+        public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Remove the //vb chars
             Script = Script.Substring(4, Script.Length - 4);
-            Warnings = new List<string>().ToArray();
             CompiledScript = CreateCompilerScript(Script);
             PositionMap = null;
         }

@@ -1982,7 +1982,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RemoveParticleSystem()
         {
-        ParticleSystem = Utils.EmptyBytes;
+            ParticleSystem = Utils.EmptyBytes;
         }
 
         /// Terse updates

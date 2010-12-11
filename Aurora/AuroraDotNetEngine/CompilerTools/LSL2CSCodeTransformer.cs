@@ -86,25 +86,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // ie: since IdentConstant and StringConstant inherit from Constant,
             // put IdentConstant and StringConstant before Constant
             if (s is Declaration)
-                ((Declaration) s).Datatype = m_datatypeLSL2OpenSim[((Declaration) s).Datatype];
+                ((Declaration)s).Datatype = m_datatypeLSL2OpenSim[((Declaration)s).Datatype];
             else if (s is Constant)
-                ((Constant) s).Type = m_datatypeLSL2OpenSim[((Constant) s).Type];
+                ((Constant)s).Type = m_datatypeLSL2OpenSim[((Constant)s).Type];
             else if (s is TypecastExpression)
-                ((TypecastExpression) s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression) s).TypecastType];
+                ((TypecastExpression)s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression)s).TypecastType];
             else if (s is GlobalFunctionDefinition)
-                {
+            {
                 if ("void" == ((GlobalFunctionDefinition)s).ReturnType) // we don't need to translate "void"
-                    {
-                    if (GlobalMethods != null)
+                {
+                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition)s).Name))
                         GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, "void");
-                    }
+                }
                 else
-                    {
+                {
                     ((GlobalFunctionDefinition)s).ReturnType = m_datatypeLSL2OpenSim[((GlobalFunctionDefinition)s).ReturnType];
                     if (GlobalMethods != null)
                         GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).ReturnType);
-                    }
                 }
+            }
 
             for (int i = 0; i < s.kids.Count; i++)
             {
@@ -123,7 +123,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
                         AddImplicitInitialization(s, i);
 
-                    TransformNode((SYMBOL)s.kids[i],null);
+                    TransformNode((SYMBOL)s.kids[i], null);
                 }
             }
         }

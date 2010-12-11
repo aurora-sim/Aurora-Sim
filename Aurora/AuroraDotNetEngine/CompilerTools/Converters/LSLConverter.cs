@@ -24,14 +24,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void Initialise(Compiler compiler)
         {
-            LSL_Converter = new CSCodeGenerator(null);
+            LSL_Converter = new CSCodeGenerator(null, compiler);
         }
 
-        public void Convert(string Script, out string CompiledScript, out string[] Warnings, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+        public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
             CompiledScript = LSL_Converter.Convert(Script);
-            Warnings = LSL_Converter.GetWarnings();
             PositionMap = LSL_Converter.PositionMap;
 
             LSL_Converter.Dispose(); //Resets it for next time
