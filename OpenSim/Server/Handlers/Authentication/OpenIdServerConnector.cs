@@ -36,7 +36,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Authentication
 {
-    public class OpenIdServerConnector : IServiceConnector
+    public class OpenIdServerConnector : IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -49,16 +49,24 @@ namespace OpenSim.Server.Handlers.Authentication
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("OpenIdHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
 
-            m_AuthenticationService = sim.Get<IAuthenticationService>();
-            m_UserAccountService = sim.Get<IUserAccountService>(); 
-            
+            m_AuthenticationService = registry.Get<IAuthenticationService>();
+            m_UserAccountService = registry.Get<IUserAccountService>();
+
             // Handler for OpenID user identity pages
             server.AddStreamHandler(new OpenIdStreamHandler("GET", "/users/", m_UserAccountService, m_AuthenticationService));
             // Handlers for the OpenID endpoint server

@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Presence
 {
-    public class PresenceServiceConnector : IServiceConnector
+    public class PresenceServiceConnector : IService
     {
         private IPresenceService m_PresenceService;
         public string Name
@@ -42,15 +42,27 @@ namespace OpenSim.Server.Handlers.Presence
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
-            m_PresenceService = sim.Get<IPresenceService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
+            m_PresenceService = registry.Get<IPresenceService>();
 
             server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
+        }
+
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        {
         }
     }
 }

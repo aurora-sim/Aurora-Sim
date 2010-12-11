@@ -34,7 +34,7 @@ using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Server.Handlers.Simulation
 {
-    public class SimulationServiceInConnector : IServiceConnector
+    public class SimulationServiceInConnector : IService
     {
         private ISimulationService m_LocalSimulationService;
         //private IAuthenticationService m_AuthenticationService;
@@ -43,12 +43,20 @@ namespace OpenSim.Server.Handlers.Simulation
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
             //IConfig serverConfig = config.Configs["SimulationService"];
             //if (serverConfig == null)
@@ -61,9 +69,9 @@ namespace OpenSim.Server.Handlers.Simulation
             //    throw new Exception("No SimulationService in config file");
 
             //Object[] args = new Object[] { config };
-            m_LocalSimulationService = sim.Get<ISimulationService>();
+            m_LocalSimulationService = registry.Get<ISimulationService>();
             m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
-                    //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
+            //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
 
             //System.Console.WriteLine("XXXXXXXXXXXXXXXXXXX m_AssetSetvice == null? " + ((m_AssetService == null) ? "yes" : "no"));
             //server.AddStreamHandler(new AgentGetHandler(m_SimulationService, m_AuthenticationService));

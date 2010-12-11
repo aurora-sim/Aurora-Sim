@@ -37,19 +37,17 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    connector.PostInitialize(m_openSim.ApplicationRegistry);
+                    connector.PostInitialize(m_openSim.ConfigSource, m_openSim.ApplicationRegistry);
                 }
                 catch
                 {
                 }
             }
-
-            List<IServiceConnector> connectors = AuroraModuleLoader.PickupModules<IServiceConnector>();
-            foreach (IServiceConnector connector in connectors)
+            foreach (IService connector in serviceConnectors)
             {
                 try
                 {
-                    connector.Initialize(m_openSim.ConfigSource, m_openSim, "", m_openSim.ApplicationRegistry);
+                    connector.Start(m_openSim.ConfigSource, m_openSim.ApplicationRegistry);
                 }
                 catch
                 {

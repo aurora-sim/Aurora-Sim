@@ -10,14 +10,22 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Server.Handlers
 {
-    public class AutoConfigurationInHandler : IServiceConnector
+    public class AutoConfigurationInHandler : IService
     {
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AutoConfigurationInHandler", "") != Name)
@@ -25,7 +33,7 @@ namespace OpenSim.Server.Handlers
             IConfig autoConfConfig = config.Configs["AutoConfiguration"];
             if (autoConfConfig == null)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AutoConfigurationInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AutoConfigurationInHandlerPort"));
             OSDMap configMap = new OSDMap();
             configMap["GridServerURI"] = autoConfConfig.GetString("GridServerURI", "");
             configMap["GridUserServerURI"] = autoConfConfig.GetString("GridUserServerURI", "");

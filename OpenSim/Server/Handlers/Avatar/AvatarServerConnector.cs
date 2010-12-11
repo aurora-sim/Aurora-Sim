@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Avatar
 {
-    public class AvatarServiceConnector : IServiceConnector
+    public class AvatarServiceConnector : IService
     {
         private IAvatarService m_AvatarService;
         public string Name
@@ -44,13 +44,25 @@ namespace OpenSim.Server.Handlers.Avatar
 
         public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
         {
+        }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
 
-            m_AvatarService = sim.Get<IAvatarService>();
-            
+            m_AvatarService = registry.Get<IAvatarService>();
+
             server.AddStreamHandler(new AvatarServerPostHandler(m_AvatarService));
         }
     }

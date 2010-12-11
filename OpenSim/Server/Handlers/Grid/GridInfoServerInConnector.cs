@@ -37,7 +37,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Server.Handlers.Grid
 {
-    public class GridInfoServerInConnector : IServiceConnector
+    public class GridInfoServerInConnector : IService
     {
         //private string m_ConfigName = "GridInfoService";
         public string Name
@@ -45,18 +45,30 @@ namespace OpenSim.Server.Handlers.Grid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridInfoInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GridInfoInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInfoInHandlerPort"));
             GridInfoHandlers handlers = new GridInfoHandlers(config);
 
             server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",
                                                                handlers.RestGetGridInfoMethod));
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
+        }
+
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        {
         }
     }
 }

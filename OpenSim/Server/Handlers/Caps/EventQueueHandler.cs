@@ -18,21 +18,30 @@ using Aurora.Services.DataService;
 
 namespace OpenSim.Server.Handlers
 {
-    public class EventQueueHandler : IServiceConnector
+    public class EventQueueHandler : IService
     {
-        #region IServiceConnector Members
+        #region IService Members
+
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            ICapsService service = sim.Get<ICapsService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
+            ICapsService service = registry.Get<ICapsService>();
             server.AddStreamHandler(new EQMEventPoster(service));
         }
 

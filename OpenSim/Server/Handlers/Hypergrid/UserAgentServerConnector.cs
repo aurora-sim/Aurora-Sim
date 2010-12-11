@@ -44,7 +44,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class UserAgentServerConnector : IServiceConnector
+    public class UserAgentServerConnector : IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -56,16 +56,24 @@ namespace OpenSim.Server.Handlers.Hypergrid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAgentInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAgentInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAgentInHandlerPort"));
             IConfig gridConfig = config.Configs["UserAgentService"];
 
-            m_HomeUsersService = sim.Get<IUserAgentService>(); 
+            m_HomeUsersService = registry.Get<IUserAgentService>();
             string loginServerIP = gridConfig.GetString("LoginServerIP", "127.0.0.1");
             bool proxy = gridConfig.GetBoolean("HasProxy", false);
 

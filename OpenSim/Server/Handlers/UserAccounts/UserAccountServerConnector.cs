@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.UserAccounts
 {
-    public class UserAccountServiceConnector : IServiceConnector
+    public class UserAccountServiceConnector : IService
     {
         private IUserAccountService m_UserAccountService;
         public string Name
@@ -42,13 +42,21 @@ namespace OpenSim.Server.Handlers.UserAccounts
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
-            m_UserAccountService = sim.Get<IUserAccountService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
+            m_UserAccountService = registry.Get<IUserAccountService>();
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }
     }

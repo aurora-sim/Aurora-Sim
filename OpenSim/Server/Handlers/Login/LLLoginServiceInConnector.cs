@@ -37,7 +37,7 @@ using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Server.Handlers.Login
 {
-    public class LLLoginServiceInConnector : IServiceConnector
+    public class LLLoginServiceInConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -50,19 +50,27 @@ namespace OpenSim.Server.Handlers.Login
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("LLLoginHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));
             m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             ReadLocalServiceFromConfig(config);
 
-            ISimulationService simService = sim.Get<ISimulationService>();
-            ILibraryService libService = sim.Get<ILibraryService>();
-            m_LoginService = sim.Get<ILoginService>();
+            ISimulationService simService = registry.Get<ISimulationService>();
+            ILibraryService libService = registry.Get<ILibraryService>();
+            m_LoginService = registry.Get<ILoginService>();
 
             InitializeHandlers(server);
         }
@@ -84,6 +92,5 @@ namespace OpenSim.Server.Handlers.Login
             server.AddXmlRPCHandler("set_login_level", loginHandlers.HandleXMLRPCSetLoginLevel, false);
             server.SetDefaultLLSDHandler(loginHandlers.HandleLLSDLogin);
         }
-
     }
 }

@@ -53,10 +53,8 @@ namespace OpenSim.Services.Connectors
             get { return GetType().Name; }
         }
 
-        public override void Initialize(IConfigSource config, IRegistryCore registry)
+        public override void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            m_config = config;
-
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return; 

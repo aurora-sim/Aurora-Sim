@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Friends
 {
-    public class FriendsServiceConnector : IServiceConnector
+    public class FriendsServiceConnector : IService
     {
         private IFriendsService m_FriendsService;
         public string Name
@@ -42,15 +42,23 @@ namespace OpenSim.Server.Handlers.Friends
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
-            m_FriendsService = sim.Get<IFriendsService>();
-            
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
+            m_FriendsService = registry.Get<IFriendsService>();
+
             server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
         }
     }

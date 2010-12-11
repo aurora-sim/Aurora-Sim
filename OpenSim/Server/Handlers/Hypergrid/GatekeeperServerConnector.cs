@@ -38,7 +38,7 @@ using log4net;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class GatekeeperServiceInConnector : IServiceConnector
+    public class GatekeeperServiceInConnector : IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -56,16 +56,24 @@ namespace OpenSim.Server.Handlers.Hypergrid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GatekeeperInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GatekeeperInHandlerPort"));
-            m_GatekeeperService = sim.Get<IGatekeeperService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GatekeeperInHandlerPort"));
+            m_GatekeeperService = registry.Get<IGatekeeperService>();
             IConfig gridConfig = config.Configs["GatekeeperService"];
-            
+
             m_Proxy = gridConfig.GetBoolean("HasProxy", false);
 
             HypergridHandlers hghandlers = new HypergridHandlers(m_GatekeeperService);

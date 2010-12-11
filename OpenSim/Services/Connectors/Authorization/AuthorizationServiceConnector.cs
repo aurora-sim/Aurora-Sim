@@ -90,6 +90,10 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthorizationHandler", "") != Name)
                 return;
@@ -120,7 +124,7 @@ namespace OpenSim.Services.Connectors
             m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_userAccountService = registry.Get<IUserAccountService>();
         }

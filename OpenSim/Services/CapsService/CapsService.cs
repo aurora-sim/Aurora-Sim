@@ -65,7 +65,11 @@ namespace OpenSim.Services.CapsService
             registry.RegisterInterface<ICapsService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             m_InventoryService = registry.Get<IInventoryService>();

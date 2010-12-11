@@ -41,7 +41,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Asset
 {
-    public class XInventoryInConnector : IServiceConnector
+    public class XInventoryInConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -51,15 +51,23 @@ namespace OpenSim.Server.Handlers.Asset
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
-            
-            m_InventoryService = sim.Get<IInventoryService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
+
+            m_InventoryService = registry.Get<IInventoryService>();
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(m_InventoryService));
         }

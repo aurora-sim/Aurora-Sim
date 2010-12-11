@@ -73,16 +73,20 @@ namespace OpenSim.Services.Connectors
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource source, IRegistryCore registry)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = source.Configs["Handlers"];
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
 
             registry.RegisterInterface<IFreeswitchService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
                     "FreeSwitchVoice");

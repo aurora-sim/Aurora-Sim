@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Authentication
 {
-    public class AuthenticationServiceConnector : IServiceConnector
+    public class AuthenticationServiceConnector : IService
     {
         private IAuthenticationService m_AuthenticationService;
         public string Name
@@ -42,14 +42,23 @@ namespace OpenSim.Server.Handlers.Authentication
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthenticationInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuthenticationInHandlerPort"));
 
-            m_AuthenticationService = sim.Get<IAuthenticationService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuthenticationInHandlerPort"));
+
+            m_AuthenticationService = registry.Get<IAuthenticationService>();
 
             server.AddStreamHandler(new AuthenticationServerPostHandler(m_AuthenticationService));
         }

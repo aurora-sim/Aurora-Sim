@@ -136,7 +136,11 @@ namespace OpenSim.Services.GridService
             registry.RegisterInterface<IGridService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
             m_AuthenticationService = registry.Get<IAuthenticationService>();

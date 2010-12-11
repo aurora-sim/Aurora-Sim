@@ -40,7 +40,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Freeswitch
 {
-    public class FreeswitchServerConnector : IServiceConnector
+    public class FreeswitchServerConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -51,14 +51,22 @@ namespace OpenSim.Server.Handlers.Freeswitch
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeswitchInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
-            m_FreeswitchService = sim.Get<IFreeswitchService>();
-            
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
+            m_FreeswitchService = registry.Get<IFreeswitchService>();
+
             server.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
             server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);
         }

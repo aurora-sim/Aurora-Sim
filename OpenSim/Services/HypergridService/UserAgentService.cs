@@ -93,7 +93,11 @@ namespace OpenSim.Services.HypergridService
             }
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_GridService = registry.Get<IGridService>();
             m_GridUserService = registry.Get<IGridUserService>();

@@ -39,20 +39,28 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Hypergrid
 {
-    public class HeloServiceInConnector : IServiceConnector
+    public class HeloServiceInConnector : IService
     {
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("HeloInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("HeloInHandlerPort"));
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("HeloInHandlerPort"));
             server.AddStreamHandler(new HeloServerGetHandler("opensim-robust"));
         }
     }

@@ -91,7 +91,11 @@ namespace OpenSim.Services.InventoryService
             registry.RegisterInterface<IInventoryService>(this);
         }
 
-        public override void PostInitialize(IRegistryCore registry)
+        public override void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public override void Start(IConfigSource config, IRegistryCore registry)
         {
             m_UserAccountService = registry.Get<IUserAccountService>();
         }

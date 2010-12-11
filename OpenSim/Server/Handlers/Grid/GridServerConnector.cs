@@ -37,7 +37,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Grid
 {
-    public class GridServiceConnector : IServiceConnector
+    public class GridServiceConnector : IService
     {
         private IGridService m_GridService;
         public string Name
@@ -45,15 +45,23 @@ namespace OpenSim.Server.Handlers.Grid
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridInHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
-            m_GridService = sim.Get<IGridService>();
-            
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
+            m_GridService = registry.Get<IGridService>();
+
             GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
             server.AddStreamHandler(handler);
         }

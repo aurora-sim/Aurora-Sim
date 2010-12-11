@@ -93,7 +93,11 @@ namespace OpenSim.Services.UserAccountService
             registry.RegisterInterface<IUserAccountService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             if (m_GridService == null)
                 m_GridService = registry.Get<IGridService>();

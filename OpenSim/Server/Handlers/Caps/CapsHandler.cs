@@ -20,7 +20,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Server.Handlers.Caps
 {
-    public class AuroraCAPSHandler : IServiceConnector
+    public class AuroraCAPSHandler : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public IHttpServer m_server = null;
@@ -29,13 +29,21 @@ namespace OpenSim.Server.Handlers.Caps
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CAPSHandler", "") != Name)
                 return;
-            m_server = simBase.GetHttpServer(handlerConfig.GetUInt("CAPSHandlerPort"));
-            ICapsService m_capsService = sim.Get<ICapsService>();
+            m_server = registry.Get<ISimulationBase>().GetHttpServer(handlerConfig.GetUInt("CAPSHandlerPort"));
+            ICapsService m_capsService = registry.Get<ICapsService>();
 
             string Password = handlerConfig.GetString("CAPSHandlerPassword", String.Empty);
             if (Password != "" & m_capsService != null)

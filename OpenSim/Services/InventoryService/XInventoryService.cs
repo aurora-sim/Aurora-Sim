@@ -92,7 +92,11 @@ namespace OpenSim.Services.InventoryService
             registry.RegisterInterface<IInventoryService>(this);
         }
 
-        public virtual void PostInitialize(IRegistryCore registry)
+        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             m_UserAccountService = registry.Get<IUserAccountService>();
         }

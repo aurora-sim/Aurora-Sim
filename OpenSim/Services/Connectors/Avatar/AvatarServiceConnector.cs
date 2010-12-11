@@ -293,8 +293,6 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        protected IConfigSource m_config;
-
         public string Name
         {
             get { return GetType().Name; }
@@ -302,8 +300,10 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            m_config = config;
+        }
 
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
@@ -311,9 +311,9 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IAvatarService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = m_config.Configs["Handlers"];
+            IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 

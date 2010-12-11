@@ -579,8 +579,6 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        protected IConfigSource m_config;
-
         public virtual string Name
         {
             get { return GetType().Name; }
@@ -588,8 +586,10 @@ namespace OpenSim.Services.Connectors
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            m_config = config;
+        }
 
+        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
@@ -597,9 +597,9 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IInventoryService>(this);
         }
 
-        public virtual void PostInitialize(IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = m_config.Configs["Handlers"];
+            IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 

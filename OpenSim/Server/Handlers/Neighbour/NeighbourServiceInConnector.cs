@@ -37,7 +37,7 @@ using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Server.Handlers.Neighbour
 {
-    public class NeighbourServiceInConnector : IServiceConnector
+    public class NeighbourServiceInConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -48,15 +48,23 @@ namespace OpenSim.Server.Handlers.Neighbour
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("NeighbourHandler", "") != Name)
                 return;
 
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("NeighbourHandlerPort"));
-            m_NeighbourService = sim.Get<INeighbourService>();
-            m_AuthenticationService = sim.Get<IAuthenticationService>();
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighbourHandlerPort"));
+            m_NeighbourService = registry.Get<INeighbourService>();
+            m_AuthenticationService = registry.Get<IAuthenticationService>();
             if (m_NeighbourService == null)
             {
                 m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");

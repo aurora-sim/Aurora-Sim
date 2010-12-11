@@ -650,12 +650,16 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlers = config.Configs["Handlers"];
-            if(handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
+            if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
                 registry.RegisterInterface<ISimulationService>(this);
         }
 
-        public void PostInitialize(IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
     }

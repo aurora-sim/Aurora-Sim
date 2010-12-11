@@ -34,7 +34,7 @@ using OpenSim.Framework;
 
 namespace OpenSim.Server.Handlers.Authorization
 {
-    public class AuthorizationServerConnector : IServiceConnector
+    public class AuthorizationServerConnector : IService
     {
         private IAuthorizationService m_AuthorizationService;
         public string Name
@@ -42,14 +42,22 @@ namespace OpenSim.Server.Handlers.Authorization
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthorizationInHandler", "") != Name)
                 return;
-            IHttpServer server = simBase.GetHttpServer((uint)handlerConfig.GetInt("AuthorizationInHandlerPort"));
-            m_AuthorizationService = sim.Get<IAuthorizationService>(); 
-            
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuthorizationInHandlerPort"));
+            m_AuthorizationService = registry.Get<IAuthorizationService>();
+
             server.AddStreamHandler(new AuthorizationServerPostHandler(m_AuthorizationService));
         }
     }
