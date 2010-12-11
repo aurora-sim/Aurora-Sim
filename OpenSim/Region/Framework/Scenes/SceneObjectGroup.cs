@@ -1472,7 +1472,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="shouldReaddToLoop">Should we even check this prim again until it is changed again?</param>
         /// <param name="shouldReaddToLoopNow">Should this prim be readded to the backup loop for immediate checking next loop?</param>
         /// <returns></returns>
-        public virtual bool ProcessBackup(ISimulationDataService datastore, bool forcedBackup, out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
+        public virtual bool ProcessBackup(ISimulationDataStore datastore, bool forcedBackup, out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
         {
             shouldReaddToLoop = true;
             shouldReaddToLoopNow = false;

@@ -122,7 +122,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool LoginsDisabled = true;
 
-        protected ISimulationDataService m_SimulationDataService;
+        protected ISimulationDataStore m_SimulationDataService;
         protected IAssetService m_AssetService;
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;
@@ -232,7 +232,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_authenticateHandler; }
         }
 
-        public ISimulationDataService SimulationDataService
+        public ISimulationDataStore SimulationDataService
         {
             get { return m_SimulationDataService; }
         }
@@ -498,7 +498,7 @@ namespace OpenSim.Region.Framework.Scenes
         #region Constructors
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen,
-            IConfigSource config, string simulatorVersion, ISimulationDataService simDataService, IStatsCollector stats)
+            IConfigSource config, string simulatorVersion, ISimulationDataStore simDataService, IStatsCollector stats)
         {
             //THIS NEEDS RESET TO FIX RESTARTS
             shuttingdown = false;

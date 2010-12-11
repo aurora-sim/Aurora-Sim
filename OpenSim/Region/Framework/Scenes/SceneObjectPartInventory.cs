@@ -1026,7 +1026,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Process inventory backup
         /// </summary>
         /// <param name="datastore"></param>
-        public void ProcessInventoryBackup(ISimulationDataService datastore)
+        public void ProcessInventoryBackup(ISimulationDataStore datastore)
         {
             if (HasInventoryChanged)
             {

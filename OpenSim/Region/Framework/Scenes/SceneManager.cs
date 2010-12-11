@@ -63,7 +63,7 @@ namespace OpenSim.Region.Framework.Scenes
         private string proxyUrl = "";
         private int proxyOffset = 0;
         private string SecretID = UUID.Random().ToString();
-        protected ISimulationDataService m_simulationDataService;
+        protected ISimulationDataStore m_simulationDataService;
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
 
         protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
@@ -122,30 +122,38 @@ namespace OpenSim.Region.Framework.Scenes
 
             string StorageDLL = "";
 
-            IConfig dbConfig = m_config.Configs["DatabaseService"];
-            IConfig simDataConfig = m_config.Configs["SimulationDataStore"];
+            string dllName = String.Empty;
+            string connString = String.Empty;
 
-            //Default to the database service config
+            // Try reading the [DatabaseService] section, if it exists
+            IConfig dbConfig = openSim.ConfigSource.Configs["DatabaseService"];
             if (dbConfig != null)
             {
-                StorageDLL = dbConfig.GetString("StorageProvider", String.Empty);
+                dllName = dbConfig.GetString("StorageProvider", String.Empty);
+                connString = dbConfig.GetString("ConnectionString", String.Empty);
             }
-            if (simDataConfig != null)
+
+            // Try reading the [SimulationDataStore] section
+            IConfig simConfig = openSim.ConfigSource.Configs["SimulationDataStore"];
+            if (simConfig != null)
             {
-                StorageDLL = simDataConfig.GetString("LocalServiceModule", String.Empty);
+                dllName = simConfig.GetString("StorageProvider", dllName);
+                connString = simConfig.GetString("ConnectionString", connString);
             }
-            if (StorageDLL == String.Empty)
-                StorageDLL = "OpenSim.Services.Connectors.dll:SimulationDataService";
 
-            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[0]);
+            // We tried, but this doesn't exist. We can't proceed
+            if (dllName == String.Empty)
+                dllName = "OpenSim.Data.Null.dll";
 
+            m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataStore>(dllName);
+            
             if (m_simulationDataService == null)
             {
                 m_log.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", StorageDLL);
                 System.Threading.Thread.Sleep(10000);
                 Environment.Exit(0);
             }
-            m_simulationDataService.Initialize(m_config, null);
+            m_simulationDataService.Initialise(connString);
 
             AddConsoleCommands();
 

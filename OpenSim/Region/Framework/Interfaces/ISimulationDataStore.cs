@@ -102,13 +102,42 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns>Heightfield data</returns>
         double[,] LoadTerrain(UUID regionID, bool RevertMap);
 
+        /// <summary>
+        /// Store the given regions settings (this includes some of the Region/Estate pieces)
+        /// </summary>
+        /// <param name="rs"></param>
         void StoreRegionSettings(RegionSettings rs);
+
+        /// <summary>
+        /// Load stored region settings from the database
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
         RegionSettings LoadRegionSettings(UUID regionUUID);
 
+        /// <summary>
+        /// Store the given parcel info in the database
+        /// </summary>
+        /// <param name="args"></param>
         void StoreLandObject(LandData args);
+
+        /// <summary>
+        /// Remove the given parcel from the database
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <param name="ParcelID"></param>
         void RemoveLandObject(UUID RegionID, UUID ParcelID);
+
+        /// <summary>
+        /// Load all parcels from the database
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        /// <returns></returns>
         List<LandData> LoadLandObjects(UUID regionUUID);
 
+        /// <summary>
+        /// Shutdown and exit the module
+        /// </summary>
         void Shutdown();
     }
 }
