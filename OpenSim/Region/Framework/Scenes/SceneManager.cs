@@ -141,7 +141,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_simulationDataService == null)
             {
-                m_log.Error("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...");
+                m_log.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", StorageDLL);
                 System.Threading.Thread.Sleep(10000);
                 Environment.Exit(0);
             }

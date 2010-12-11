@@ -1555,7 +1555,7 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.Data.NxGSQLite" path="OpenSim/Data/NxGSQLite" type="Library">
+    <Project frameworkVersion="v3_5" name="OpenSim.Data.SQLite" path="OpenSim/Data/SQLite" type="Library">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -1589,43 +1589,6 @@
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.migrations"/>
       </Files>
     </Project>
-
-    <Project frameworkVersion="v3_5" name="OpenSim.Data.SQLite" path="OpenSim/Data/SQLite" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Data"/>
-      <Reference name="OpenSim.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
-      <Reference name="Community.CsharpSqlite"/>
-      <Reference name="Community.CsharpSqlite.Sqlite"/>
-      <Reference name="Mono.Data.Sqlite"/>
-      <Reference name="log4net" path="../../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true">
-          <Exclude name="Tests" pattern="Tests"/>
-        </Match>
-        <Match buildAction="EmbeddedResource" path="Resources" pattern="*.migrations"/>
-      </Files>
-    </Project>
-
 
     <Project frameworkVersion="v3_5" name="OpenSim.Region.ScriptEngine.YieldProlog" path="OpenSim/Region/ScriptEngine/YieldProlog/" type="Library">
       <Configuration name="Debug">
