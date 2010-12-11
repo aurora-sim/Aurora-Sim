@@ -36,6 +36,7 @@ namespace OpenSim.Services.CapsService
         protected IPresenceService m_PresenceService;
         protected IInventoryService m_InventoryService;
         protected ILibraryService m_LibraryService;
+        protected IAssetService m_AssetService;
         protected string m_hostName;
         protected uint m_port;
         public string HostURI
@@ -72,6 +73,7 @@ namespace OpenSim.Services.CapsService
             m_GridUserService = registry.Get<IGridUserService>();
             m_PresenceService = registry.Get<IPresenceService>();
             m_GridService = registry.Get<IGridService>();
+            m_AssetService = registry.Get<IAssetService>();
             ISimulationBase simBase = registry.Get<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
         }
@@ -104,7 +106,7 @@ namespace OpenSim.Services.CapsService
             string CAPSBase = CAPS;
             CAPS = HostURI + CAPS;
             //This makes the new SEED url on the CAPS server
-            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, m_GridUserService, m_GridService, m_PresenceService, SimCAPS, AgentID, m_hostName, regionHandle, this, CAPS, CAPSBase));
+            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, m_GridUserService, m_GridService, m_PresenceService, m_AssetService, SimCAPS, AgentID, m_hostName, regionHandle, this, CAPS, CAPSBase));
             //Now make sure we didn't use an old one or something
             IPrivateCapsService service = GetCapsService(regionHandle, AgentID);
             return service.CapsURL;

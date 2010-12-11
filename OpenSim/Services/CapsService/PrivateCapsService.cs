@@ -31,6 +31,7 @@ namespace OpenSim.Services.CapsService
         private IInventoryService m_InventoryService;
         private ILibraryService m_LibraryService;
         private IGridService m_GridService;
+        private IAssetService m_AssetService;
         public IGridUserService GridUserService
         {
             get { return m_GridUserService; }
@@ -50,6 +51,10 @@ namespace OpenSim.Services.CapsService
         public IGridService GridService
         {
             get { return m_GridService; }
+        }
+        public IAssetService AssetService
+        {
+            get { return m_AssetService; }
         }
         private IHttpServer m_server;
         public IHttpServer HttpServer
@@ -113,7 +118,7 @@ namespace OpenSim.Services.CapsService
         }
         private List<IRequestHandler> m_CAPSAdded = new List<IRequestHandler>();
 
-        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, string URL, UUID agentID, string HostName, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
+        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, IAssetService assetService, string URL, UUID agentID, string HostName, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
         {
             m_server = server;
             m_InventoryService = inventoryService;
@@ -121,6 +126,7 @@ namespace OpenSim.Services.CapsService
             m_GridUserService = guService;
             m_GridService = gService;
             m_PresenceService = presenceService;
+            m_AssetService = assetService;
             SimToInform = URL;
             m_AgentID = agentID;
             m_HostName = HostName;

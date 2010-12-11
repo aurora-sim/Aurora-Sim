@@ -1,133 +1,71 @@
-/*
- * Copyright (c) Contributors, http://opensimulator.org/
- * See CONTRIBUTORS.TXT for a full list of copyright holders.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the OpenSimulator Project nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-using System;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Reflection;
 using System.IO;
+using System.Net;
+using System.Reflection;
 using System.Web;
 using log4net;
 using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse.Imaging;
+using Aurora.Simulation.Base;
+using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
-using Aurora.Simulation.Base;
+using OpenSim.Framework.Capabilities;
 
-namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
+using OpenMetaverse;
+using Aurora.DataManager;
+using Aurora.Framework;
+using Aurora.Services.DataService;
+using OpenMetaverse.StructuredData;
+using OpenMetaverse.Imaging;
+
+namespace OpenSim.Services.CapsService
 {
-    #region Stream Handler
-
-    public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-    public class StreamHandler : BaseStreamHandler
+    public class AssetCAPS : ICapsServiceConnector
     {
-        StreamHandlerCallback m_callback;
+        #region Stream Handler
 
-        public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
-            : base(httpMethod, path)
+        public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+
+        public class StreamHandler : BaseStreamHandler
         {
-            m_callback = callback;
+            StreamHandlerCallback m_callback;
+
+            public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
+                : base(httpMethod, path)
+            {
+                m_callback = callback;
+            }
+
+            public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return m_callback(path, request, httpRequest, httpResponse);
+            }
         }
 
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            return m_callback(path, request, httpRequest, httpResponse);
-        }
-    }
+        #endregion Stream Handler
 
-    #endregion Stream Handler
-
-    public class GetTextureModule : INonSharedRegionModule
-    {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
-        private IAssetService m_assetService;
-
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected IPrivateCapsService m_handler;
+        protected IAssetService m_assetService;
         public const string DefaultFormat = "x-j2c";
-
         // TODO: Change this to a config option
-        const string REDIRECT_URL = null;
+        protected string REDIRECT_URL = null;
 
-        #region IRegionModule Members
-
-        public void Initialise(IConfigSource pSource)
+        public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
+            m_assetService = handler.AssetService;
+            m_handler = handler;
+            List<IRequestHandler> handlers = new List<IRequestHandler>();
+            handlers.Add(new StreamHandler("GET", handler.CreateCAPS("GetTexture"),
+                                                      ProcessGetTexture));
+            return handlers;
         }
-
-        public void AddRegion(Scene scene)
-        {
-            m_scene = scene;
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-            m_assetService = m_scene.RequestModuleInterface<IAssetService>();
-            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close() { }
-
-        public string Name { get { return "GetTextureModule"; } }
-        public bool IsSharedModule { get { return false; } }
-
-        public void RegisterCaps(UUID agentID, Caps caps)
-        {
-            UUID capID = UUID.Random();
-
-            //m_log.InfoFormat("[GETTEXTURE]: /CAPS/{0} in region {1}", capID, m_scene.RegionInfo.RegionName);
-            caps.RegisterHandler("GetTexture", new StreamHandler("GET", "/CAPS/" + capID, ProcessGetTexture));
-        }
-
-        #endregion
 
         private byte[] ProcessGetTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
@@ -319,7 +257,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     response.ContentType = texture.Metadata.ContentType;
                 else
                     response.ContentType = "image/" + format;
-                 response.Body.Write(texture.Data, 0, texture.Data.Length);
+                response.Body.Write(texture.Data, 0, texture.Data.Length);
             }
         }
 

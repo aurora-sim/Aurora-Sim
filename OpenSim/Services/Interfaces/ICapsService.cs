@@ -46,6 +46,7 @@ namespace OpenSim.Services.Interfaces
         string GetCAPS(string method);
         string CreateCAPS(string method);
         string CreateCAPS(string method, string appendedPath);
+        IAssetService AssetService { get; }
         IPresenceService PresenceService { get; }
         IInventoryService InventoryService { get; }
         ILibraryService LibraryService { get; }
