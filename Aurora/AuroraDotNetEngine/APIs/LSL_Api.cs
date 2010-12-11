@@ -3589,7 +3589,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 ScenePresence presence = World.GetScenePresence(m_host.OwnerID);
 
-                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
                 if (attachmentsModule != null)
                     attachmentsModule.AttachObject(
                         presence.ControllingClient, grp,
@@ -3619,7 +3619,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
             {
-                IAttachmentsModule attachmentsModule = World.AttachmentsModule;
+                IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
                 if (attachmentsModule != null)
                     Util.FireAndForget(DetachWrapper, m_host);
             }
@@ -3633,7 +3633,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID itemID = grp.GetFromItemID();
             ScenePresence presence = World.GetScenePresence(host.OwnerID);
 
-            IAttachmentsModule attachmentsModule = World.AttachmentsModule;
+            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
                 attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
         }

@@ -500,7 +500,6 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 m_log.Error("[MODULES]: The new RegionModulesController is missing...");
 
-            scene.SetModuleInterfaces();
             //Post init the modules now
             PostInitModules(scene);
 

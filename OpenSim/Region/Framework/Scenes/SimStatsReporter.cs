@@ -339,6 +339,13 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     handlerSendStatResult(simStats);
                 }
+                m_scene.ForEachScenePresence(
+                    delegate(ScenePresence agent)
+                    {
+                        if (!agent.IsChildAgent)
+                            agent.ControllingClient.SendSimStats(simStats);
+                    }
+                );
                 resetvalues();
             }
         }

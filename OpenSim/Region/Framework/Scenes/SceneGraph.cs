@@ -43,12 +43,6 @@ namespace OpenSim.Region.Framework.Scenes
 
     public delegate void PhysicsCrash();
 
-    public delegate void ObjectDuplicateDelegate(EntityBase original, EntityBase clone);
-
-    public delegate void ObjectCreateDelegate(EntityBase obj);
-
-    public delegate void ObjectDeleteDelegate(EntityBase obj);
-
     #endregion
 
     /// <summary>
@@ -60,22 +54,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        #region Events
-
-#pragma warning disable 67
-
-        public event ObjectDuplicateDelegate OnObjectDuplicate;
-
-        public event ObjectCreateDelegate OnObjectCreate;
-
-        public event ObjectDeleteDelegate OnObjectRemove;
-
-#pragma warning restore 67
-
-        #endregion
-
-        #region Fields
 
         protected object m_presenceLock = new object();
         protected Dictionary<UUID, ScenePresence> m_scenePresenceMap = new Dictionary<UUID, ScenePresence>();
@@ -116,8 +94,6 @@ namespace OpenSim.Region.Framework.Scenes
                 _PhyScene = value;
             }
         }
-
-        #endregion
 
         #endregion
 
@@ -332,15 +308,17 @@ namespace OpenSim.Region.Framework.Scenes
         public void DropObject(uint LocalID, IClientAPI remoteClient)
         {
             EntityBase entity;
-            if (TryGetEntity(LocalID, out entity))
-                m_parentScene.AttachmentsModule.DetachSingleAttachmentToGround(entity.UUID, remoteClient);
+            IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
+            if (TryGetEntity(LocalID, out entity) && attachModule != null)
+                attachModule.DetachSingleAttachmentToGround(entity.UUID, remoteClient);
         }
 
         protected internal void DetachObject(uint LocalID, IClientAPI remoteClient)
         {
             EntityBase entity;
-            if (TryGetEntity(LocalID, out entity))
-                m_parentScene.AttachmentsModule.ShowDetachInUserInventory(((SceneObjectGroup)entity).GetFromItemID(), remoteClient);
+            IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
+            if (TryGetEntity(LocalID, out entity) && attachModule != null)
+                attachModule.ShowDetachInUserInventory(((SceneObjectGroup)entity).GetFromItemID(), remoteClient);
         }
 
         protected internal void HandleUndo(IClientAPI remoteClient, UUID primId)
@@ -990,8 +968,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (((SceneObjectGroup)entity).IsAttachment || (((SceneObjectGroup)entity).RootPart.Shape.PCode == 9 && ((SceneObjectGroup)entity).RootPart.Shape.State != 0))
                     {
-                        if (m_parentScene.AttachmentsModule != null)
-                            m_parentScene.AttachmentsModule.UpdateAttachmentPosition(remoteClient, ((SceneObjectGroup)entity), pos);
+                        IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
+                        if (attachModule != null)
+                            attachModule.UpdateAttachmentPosition(remoteClient, ((SceneObjectGroup)entity), pos);
                     }
                     else
                     {

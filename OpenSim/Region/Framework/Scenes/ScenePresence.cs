@@ -3060,7 +3060,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Throttles 
             float multiplier = 1;
-            int innacurateNeighbors = m_scene.GetInaccurateNeighborCount();
+            int innacurateNeighbors = m_scene.Get<INeighbourService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
             if (innacurateNeighbors != 0)
             {
                 multiplier = 1f / innacurateNeighbors;
@@ -3934,7 +3934,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    m_scene.AttachmentsModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
+                    IAttachmentsModule attachModule = m_scene.RequestModuleInterface<IAttachmentsModule>();
+                    if(attachModule != null)
+                        attachModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
                 }
                 catch (Exception e)
                 {

@@ -97,7 +97,7 @@ namespace OpenSim.Server.Handlers.Login
                     //MAC BANNING START
                     string mac = (string)requestData["mac"];
                     Aurora.Framework.IAgentConnector AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
-                    if (AgentConnector != null)
+                    if (AgentConnector != null && mac != null && clientVersion != null)
                     {
                         if (!AgentConnector.CheckMacAndViewer(mac, clientVersion))
                             return FailedXMLRPCResponse("You have been banned from this grid.");
