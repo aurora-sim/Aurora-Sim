@@ -47,6 +47,7 @@ namespace OpenSim.Services.Connectors
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ServerURI = String.Empty;
+        protected IConfigSource m_config;
 
         #region IPresenceService
 
@@ -382,6 +383,7 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_config = config;
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
@@ -391,6 +393,10 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IRegistryCore registry)
         {
+            IConfig handlerConfig = m_config.Configs["Handlers"];
+            if (handlerConfig.GetString("PresenceHandler", "") != Name)
+                return;
+
             string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
                         "PresenceService");
 

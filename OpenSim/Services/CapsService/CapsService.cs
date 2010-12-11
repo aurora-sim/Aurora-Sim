@@ -59,7 +59,6 @@ namespace OpenSim.Services.CapsService
             m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
             //Sanitize the results, remove / and :
             m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
-            m_hostName = m_hostName.EndsWith(":") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
             
             m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
             registry.RegisterInterface<ICapsService>(this);

@@ -29,7 +29,8 @@
     ;; For more info, see AuroraDocs/CAPSService.txt
     Password = TestPass
     ;; 127.0.0.1 should be your IP address or DNS
-    HostName = http://127.0.0.1:8007
+    HostName = http://127.0.0.1
+    Port = 8007
 	
 [LibraryService]
     LibraryName = "OpenSim Library"
