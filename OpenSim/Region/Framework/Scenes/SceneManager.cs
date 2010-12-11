@@ -138,6 +138,13 @@ namespace OpenSim.Region.Framework.Scenes
                 StorageDLL = "OpenSim.Services.Connectors.dll:SimulationDataService";
 
             m_simulationDataService = AuroraModuleLoader.LoadPlugin<ISimulationDataService>(StorageDLL, new object[0]);
+
+            if (m_simulationDataService == null)
+            {
+                m_log.Error("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...");
+                System.Threading.Thread.Sleep(10000);
+                Environment.Exit(0);
+            }
             m_simulationDataService.Initialize(m_config, null);
 
             AddConsoleCommands();
