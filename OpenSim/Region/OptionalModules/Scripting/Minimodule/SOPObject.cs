@@ -392,7 +392,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 return;
 
             SceneObjectPart sop = GetSOP();
-            m_rootScene.SimChat(msg, ChatTypeEnum.Say, sop.AbsolutePosition, sop.Name, sop.UUID, false);
+            m_rootScene.SimChat(msg, ChatTypeEnum.Say, 0, sop.AbsolutePosition, sop.Name, sop.UUID, false);
         }
 
         public void Say(string msg,int channel)

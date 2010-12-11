@@ -124,8 +124,6 @@ namespace OpenSim.Region.DataSnapshot.Providers
             ILandChannel landChannel = m_scene.LandChannel;
             List<ILandObject> parcels = landChannel.AllParcels();
 
-            IDwellModule dwellModule = m_scene.RequestModuleInterface<IDwellModule>();
-
             XmlNode parent = nodeFactory.CreateNode(XmlNodeType.Element, "parceldata", "");
             if (parcels != null)
             {
@@ -210,10 +208,7 @@ namespace OpenSim.Region.DataSnapshot.Providers
                         xmlparcel.AppendChild(infouuid);
 
                         XmlNode dwell = nodeFactory.CreateNode(XmlNodeType.Element, "dwell", "");
-                        if (dwellModule != null)
-                            dwell.InnerText = dwellModule.GetDwell(parcel.GlobalID).ToString();
-                        else
-                            dwell.InnerText = "0";
+                        dwell.InnerText = parcel.Dwell.ToString();
                         xmlparcel.AppendChild(dwell);
 
                         //land texture snapshot uuid

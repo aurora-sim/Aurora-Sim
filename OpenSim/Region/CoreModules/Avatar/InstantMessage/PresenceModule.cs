@@ -42,7 +42,7 @@ using PresenceInfo = OpenSim.Services.Interfaces.PresenceInfo;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
-    public class PresenceModule : ISharedRegionModule, IPresenceModule
+    public class PresenceModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
@@ -78,8 +78,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
-
-            scene.RegisterModuleInterface<IPresenceModule>(this);
         }
 
         public void RegionLoaded(Scene scene)
@@ -92,8 +90,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-
-            scene.UnregisterModuleInterface<IPresenceModule>(this);
         }
 
         public void PostInitialise()
@@ -112,10 +108,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void RequestBulkPresenceData(UUID[] users)
-        {
         }
 
         public void OnNewClient(IClientAPI client)

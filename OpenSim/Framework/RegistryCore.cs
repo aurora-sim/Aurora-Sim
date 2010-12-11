@@ -50,10 +50,9 @@ namespace OpenSim.Framework
         {
             lock (m_moduleInterfaces)
             {
-                if (!m_moduleInterfaces.ContainsKey(typeof(T)))
-                {
-                    m_moduleInterfaces.Add(typeof(T), iface);
-                }
+                if (m_moduleInterfaces.ContainsKey(typeof(T)))
+                    m_moduleInterfaces.Remove(typeof(T));
+                m_moduleInterfaces.Add(typeof(T), iface);
             }
         }
 

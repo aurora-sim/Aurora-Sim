@@ -37,7 +37,7 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public partial class Scene
     {
-        protected void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                                UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID)
         {
             OSChatMessage args = new OSChatMessage();
@@ -72,39 +72,14 @@ namespace OpenSim.Region.Framework.Scenes
                 EventManager.TriggerOnChatFromWorld(this, args);
         }
         
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="type"></param>
-        /// <param name="fromPos"></param>
-        /// <param name="fromName"></param>
-        /// <param name="fromAgentID"></param>
-        /// 
-        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, float range)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, range, UUID.Zero);
-        }
-
         public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                             UUID fromID, bool fromAgent)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, -1);
-        }
-
-        public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, bool fromAgent)
-        {
-            SimChat(message, type, 0, fromPos, fromName, fromID, fromAgent);
-        }
-
-        public void SimChat(string message, string fromName)
-        {
-            SimChat(message, ChatTypeEnum.Broadcast, Vector3.Zero, fromName, UUID.Zero, false);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, -1,  UUID.Zero);
         }
 
         /// <summary>
-        ///
+        /// Say this message directly to a single person
         /// </summary>
         /// <param name="message"></param>
         /// <param name="type"></param>
@@ -124,16 +99,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         public void RequestPrim(uint primLocalID, IClientAPI remoteClient)
         {
-            EntityBase[] entityList = GetEntities();
-            foreach (EntityBase ent in entityList)
+            EntityBase entity;
+            if (Entities.TryGetChildPrimParent(primLocalID, out entity))
             {
-                if (ent is SceneObjectGroup)
+                if (entity is SceneObjectGroup)
                 {
-                    if (((SceneObjectGroup)ent).LocalId == primLocalID)
-                    {
-                        ((SceneObjectGroup)ent).SendFullUpdateToClient(remoteClient, PrimUpdateFlags.FullUpdate);
-                        return;
-                    }
+                    ((SceneObjectGroup)entity).SendFullUpdateToClient(remoteClient, PrimUpdateFlags.FullUpdate);
                 }
             }
         }
@@ -542,6 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ownerID"></param>
         public void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
+            m_log.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
             if (LibraryService != null && LibraryService.LibraryRootFolder != null && ownerID == LibraryService.LibraryRootFolder.Owner)
             {
                 //m_log.Debug("request info for library item");
@@ -570,6 +542,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleFetchInventoryDescendents(IClientAPI remoteClient, UUID folderID, UUID ownerID,
                                                     bool fetchFolders, bool fetchItems, int sortOrder)
         {
+            m_log.Warn("[Scene.PacketHandler]: Depriated UDP FetchInventoryDescendents request!");
             if (folderID == UUID.Zero)
                 return;
 
@@ -608,64 +581,6 @@ namespace OpenSim.Region.Framework.Scenes
             d.EndInvoke(iar);
         }
 
-        /// <summary>
-        /// Handle the caps inventory descendents fetch.
-        ///
-        /// Since the folder structure is sent to the client on login, I believe we only need to handle items.
-        /// Diva comment 8/13/2009: what if someone gave us a folder in the meantime??
-        /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="folderID"></param>
-        /// <param name="ownerID"></param>
-        /// <param name="fetchFolders"></param>
-        /// <param name="fetchItems"></param>
-        /// <param name="sortOrder"></param>
-        /// <returns>null if the inventory look up failed</returns>
-        public InventoryCollection HandleFetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
-                                                   bool fetchFolders, bool fetchItems, int sortOrder, out int version)
-        {
-            m_log.DebugFormat(
-                "[INVENTORY CACHE]: Fetching folders ({0}), items ({1}) from {2} for agent {3}",
-                fetchFolders, fetchItems, folderID, agentID);
-
-            // FIXME MAYBE: We're not handling sortOrder!
-
-            // TODO: This code for looking in the folder for the library should be folded back into the
-            // CachedUserInfo so that this class doesn't have to know the details (and so that multiple libraries, etc.
-            // can be handled transparently).
-            InventoryFolderImpl fold;
-            if (LibraryService != null && LibraryService.LibraryRootFolder != null)
-                if ((fold = LibraryService.LibraryRootFolder.FindFolder(folderID)) != null)
-                {
-                    version = 0;
-                    InventoryCollection ret = new InventoryCollection();
-                    ret.Folders = new List<InventoryFolderBase>();
-                    ret.Items = fold.RequestListOfItems();
-
-                    return ret;
-                }
-
-            InventoryCollection contents = new InventoryCollection();
-
-            if (folderID != UUID.Zero)
-            {
-                contents = InventoryService.GetFolderContent(agentID, folderID); 
-                InventoryFolderBase containingFolder = new InventoryFolderBase();
-                containingFolder.ID = folderID;
-                containingFolder.Owner = agentID;
-                containingFolder = InventoryService.GetFolder(containingFolder);
-                version = containingFolder.Version;
-            }
-            else
-            {
-                // Lost itemsm don't really need a version
-                version = 1;
-            }
-
-            return contents;
-
-        }
-        
         /// <summary>
         /// Handle an inventory folder creation request from the client.
         /// </summary>
@@ -744,37 +659,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderID"></param>
-
-        delegate void PurgeFolderDelegate(UUID userID, UUID folder);
-
         public void HandlePurgeInventoryDescendents(IClientAPI remoteClient, UUID folderID)
         {
-            PurgeFolderDelegate d = PurgeFolderAsync;
-            try
-            {
-                d.BeginInvoke(remoteClient.AgentId, folderID, PurgeFolderCompleted, d);
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[AGENT INVENTORY]: Exception on purge folder for user {0}: {1}", remoteClient.AgentId, e.Message);
-            }
+            InventoryFolderBase folder = new InventoryFolderBase(folderID, remoteClient.AgentId);
+            Util.FireAndForget(PurgeFolderAsync, folder);
         }
 
-
-        private void PurgeFolderAsync(UUID userID, UUID folderID)
+        private void PurgeFolderAsync(object folder)
         {
-            InventoryFolderBase folder = new InventoryFolderBase(folderID, userID);
-
-            if (InventoryService.PurgeFolder(folder))
-                m_log.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", folderID);
+            if (InventoryService.PurgeFolder((InventoryFolderBase)folder))
+                m_log.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", ((InventoryFolderBase)folder).ID);
             else
-                m_log.WarnFormat("[AGENT INVENTORY]: could not purge folder {0}", folderID);
-        }
-
-        private void PurgeFolderCompleted(IAsyncResult iar)
-        {
-            PurgeFolderDelegate d = (PurgeFolderDelegate)iar.AsyncState;
-            d.EndInvoke(iar);
+                m_log.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", ((InventoryFolderBase)folder).ID, ((InventoryFolderBase)folder).Owner);
         }
     }
 }

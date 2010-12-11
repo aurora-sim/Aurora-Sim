@@ -126,7 +126,6 @@ namespace OpenSim.Framework.Capabilities
         public NewAsset AddNewAsset = null;
         public ItemUpdatedCallback ItemUpdatedCall = null;
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
-        public FetchInventoryDescendentsCAPS CAPSFetchInventoryDescendents = null;
         public OSDMap RequestMap = new OSDMap();
         
         public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,

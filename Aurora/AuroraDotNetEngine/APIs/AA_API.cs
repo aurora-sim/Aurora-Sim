@@ -301,7 +301,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 text = text.Substring(0, 1023);
 
             World.SimChat(text,
-                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, Distance);
+                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, false, Distance, UUID.Zero);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
