@@ -6,7 +6,7 @@ using OpenSim.Framework;
 using log4net;
 using Aurora.Services.DataService;
 
-namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
+namespace OpenSim.CoreApplicationPlugins
 {
     public class AuroraDataStartupPlugin : IApplicationPlugin
     {

@@ -101,6 +101,11 @@ namespace Aurora.Simulation.Base
 
         protected string m_pidFile = String.Empty;
 
+        /// <summary>
+        /// Do the initial setup for the application
+        /// </summary>
+        /// <param name="originalConfig"></param>
+        /// <param name="configSource"></param>
         public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource)
         {
             m_StartupTime = DateTime.Now;
@@ -121,6 +126,10 @@ namespace Aurora.Simulation.Base
             RegisterConsoleCommands();
         }
 
+        /// <summary>
+        /// Read the configuration
+        /// </summary>
+        /// <param name="configSource"></param>
         public virtual void Configuration(IConfigSource configSource)
         {
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -158,7 +167,7 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Performs initialisation of the scene, such as loading configuration from disk.
+        /// Performs initialisation of the application, such as loading the HTTP server and modules
         /// </summary>
         public virtual void Startup()
         {
@@ -179,6 +188,9 @@ namespace Aurora.Simulation.Base
             AddPluginCommands();
         }
 
+        /// <summary>
+        /// Run the console now that we are all done with startup
+        /// </summary>
         public virtual void Run()
         {
             try
@@ -198,6 +210,9 @@ namespace Aurora.Simulation.Base
         {
         }
 
+        /// <summary>
+        /// Find the console plugin and initialize the logger for it
+        /// </summary>
         public virtual void SetUpConsole()
         {
             List<ICommandConsole> Plugins = AuroraModuleLoader.PickupModules<ICommandConsole>();
@@ -255,6 +270,11 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance = m_console;
         }
 
+        /// <summary>
+        /// Get an HTTPServer on the given port. It will create one if one does not exist
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
             m_log.DebugFormat("[SERVER]: Requested port {0}", port);
@@ -274,6 +294,9 @@ namespace Aurora.Simulation.Base
             return m_Servers[port];
         }
 
+        /// <summary>
+        /// Set up the base HTTP server 
+        /// </summary>
         public virtual void SetUpHTTPServer()
         {
             m_Port =
@@ -332,6 +355,9 @@ namespace Aurora.Simulation.Base
             }
         }
 
+        /// <summary>
+        /// Close all the Application Plugins
+        /// </summary>
         public virtual void CloseModules()
         {
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
@@ -340,8 +366,12 @@ namespace Aurora.Simulation.Base
             }
         }
 
+        /// <summary>
+        /// Run the commands given now that startup is complete
+        /// </summary>
         public void RunStartupCommands()
         {
+            //Draw the file on the console
             PrintFileToConsole("startuplogo.txt");
             //Run Startup Commands
             if (!String.IsNullOrEmpty(m_startupCommandsFile))
@@ -598,6 +628,10 @@ namespace Aurora.Simulation.Base
             }
         }
 
+        /// <summary>
+        /// Write the PID file to the hard drive
+        /// </summary>
+        /// <param name="path"></param>
         protected void CreatePIDFile(string path)
         {
             try
@@ -615,6 +649,9 @@ namespace Aurora.Simulation.Base
             }
         }
 
+        /// <summary>
+        /// Delete the PID file now that we are done running
+        /// </summary>
         protected void RemovePIDFile()
         {
             if (m_pidFile != String.Empty)

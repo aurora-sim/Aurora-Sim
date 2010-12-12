@@ -42,7 +42,7 @@ using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 
-namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
+namespace OpenSim.CoreApplicationPlugins
 {
     public class LoadRegionsPlugin : IApplicationPlugin, IRegionCreator
     {

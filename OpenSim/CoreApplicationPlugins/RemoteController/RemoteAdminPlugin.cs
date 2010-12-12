@@ -51,7 +51,7 @@ using OpenSim.Services.Interfaces;
 using PresenceInfo = OpenSim.Services.Interfaces.PresenceInfo;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.ApplicationPlugins.RemoteController
+namespace OpenSim.CoreApplicationPlugins
 {
     public class RemoteAdminPlugin : IApplicationPlugin
     {

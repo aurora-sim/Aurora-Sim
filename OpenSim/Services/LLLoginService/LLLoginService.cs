@@ -54,7 +54,7 @@ namespace OpenSim.Services.LLLoginService
 {
     public interface ILoginModule
     {
-        void Initialize(LLLoginService service, IConfigSource source, IUserAccountService UAService);
+        void Initialize(LLLoginService service, IConfigSource config, IUserAccountService UAService);
         bool Login(Hashtable request, UUID User, out string message);
     }
 
@@ -585,7 +585,7 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
-        private string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
+        protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
         {
             string capsSeedPath = String.Empty;
             string SimcapsSeedPath = String.Empty;
@@ -816,7 +816,7 @@ namespace OpenSim.Services.LLLoginService
 
         }
 
-        private GridRegion FindForeignRegion(string domainName, uint port, string regionName, out GridRegion gatekeeper)
+        protected GridRegion FindForeignRegion(string domainName, uint port, string regionName, out GridRegion gatekeeper)
         {
             gatekeeper = new GridRegion();
             gatekeeper.ExternalHostName = domainName;
@@ -839,7 +839,7 @@ namespace OpenSim.Services.LLLoginService
         private string hostName = string.Empty;
         private int port = 0;
 
-        private void SetHostAndPort(string url)
+        protected void SetHostAndPort(string url)
         {
             try
             {
@@ -994,7 +994,7 @@ namespace OpenSim.Services.LLLoginService
                 return null;
         }
 
-        private AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
+        protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
             AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position,
             string ipaddress, string viewer, string channel, string mac, string id0)
         {
@@ -1033,7 +1033,7 @@ namespace OpenSim.Services.LLLoginService
 
         }
 
-        private void SetServiceURLs(AgentCircuitData aCircuit, UserAccount account)
+        protected void SetServiceURLs(AgentCircuitData aCircuit, UserAccount account)
         {
             aCircuit.ServiceURLs = new Dictionary<string, object>();
             if (account.ServiceURLs == null)
@@ -1061,12 +1061,12 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
-        private bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)
+        protected bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)
         {
             return simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, out reason);
         }
 
-        private bool LaunchAgentIndirectly(GridRegion gatekeeper, GridRegion destination, AgentCircuitData aCircuit, IPEndPoint clientIP, out string reason)
+        protected bool LaunchAgentIndirectly(GridRegion gatekeeper, GridRegion destination, AgentCircuitData aCircuit, IPEndPoint clientIP, out string reason)
         {
             m_log.Debug("[LLOGIN SERVICE] Launching agent at " + destination.RegionName);
             if (m_UserAgentService.LoginAgentToGrid(aCircuit, gatekeeper, destination, clientIP, out reason))
@@ -1075,7 +1075,8 @@ namespace OpenSim.Services.LLLoginService
         }
 
         #region Console Commands
-        private void RegisterCommands()
+
+        protected void RegisterCommands()
         {
             //MainConsole.Instance.Commands.AddCommand
             MainConsole.Instance.Commands.AddCommand("loginservice", false, "login level",
@@ -1093,7 +1094,7 @@ namespace OpenSim.Services.LLLoginService
 
         }
 
-        private void HandleLoginCommand(string module, string[] cmd)
+        protected void HandleLoginCommand(string module, string[] cmd)
         {
             string subcommand = cmd[1];
 
@@ -1116,9 +1117,10 @@ namespace OpenSim.Services.LLLoginService
                     break;
             }
         }
+
+        #endregion
     }
 }
-    #endregion
 
 namespace AvatarArchives
 {

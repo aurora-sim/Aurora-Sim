@@ -149,6 +149,7 @@ namespace Aurora.Simulation.Base
             // load Crash directory config
             m_crashDir = m_configSource.Configs["Startup"].GetString("crash_dir", m_crashDir);
 
+            // check auto restart
             bool AutoRestart = m_configSource.Configs["Startup"].GetBoolean("AutoRestartOnCrash", true);
 
             //Set up the error reporting
@@ -159,21 +160,26 @@ namespace Aurora.Simulation.Base
             }
 
             bool Running = true;
+            //If auto restart is set, then we always run.
+            // otherwise, just run the first time that Running == true
             while (AutoRestart || Running)
             {
                 //Always run once, then disable this
                 Running = false;
-                //! because if it crashes, it needs restarted, if it didn't crash, don't restart it
+                //Initialize the sim base now
                 Startup(configSource, m_configSource, simBase);
             }
         }
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, SimulationBase simBase)
         {
+            //Get it ready to run
             simBase.Initialize(originalConfigSource, configSource);
             try
             {
+                //Start it. This starts ALL modules and completes the startup of the application
                 simBase.Startup();
+                //Run the console now that we are done
                 simBase.Run();
             }
             catch (Exception ex)
@@ -187,12 +193,19 @@ namespace Aurora.Simulation.Base
                 }
                 //Just clean it out as good as we can
                 simBase.Shutdown(false);
-                //Then let it restart if it needs
+                //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
                 return;
             }
+            //If it didn't throw an error, it wants to quit
             Environment.Exit(0);
         }
 
+        /// <summary>
+        /// Load the configuration for the Application
+        /// </summary>
+        /// <param name="configSource"></param>
+        /// <param name="defaultIniFile"></param>
+        /// <returns></returns>
         private static IConfigSource Configuration(IConfigSource configSource, string defaultIniFile)
         {
             ConfigurationLoader m_configLoader = new ConfigurationLoader();
@@ -237,6 +250,11 @@ namespace Aurora.Simulation.Base
             _IsHandlingException = false;
         }
 
+        /// <summary>
+        /// Deal with sending the error to the error reporting service and saving the dump to the harddrive if needed
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="ex"></param>
         public static void handleException(string msg, Exception ex)
         {
             if (m_saveCrashDumps)

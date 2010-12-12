@@ -36,10 +36,9 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.ApplicationPlugins.RegionModulesController
+namespace OpenSim.CoreApplicationPlugins
 {
-    public class RegionModulesControllerPlugin : IRegionModulesController,
-            IApplicationPlugin
+    public class RegionModulesControllerPlugin : IRegionModulesController, IApplicationPlugin
     {
         // Logger
         private static readonly ILog m_log =

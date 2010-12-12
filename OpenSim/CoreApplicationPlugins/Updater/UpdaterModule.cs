@@ -11,13 +11,13 @@ using OpenSim;
 using OpenSim.Framework;
 using Aurora.Framework;
 
-namespace Aurora.Modules
+namespace OpenSim.CoreApplicationPlugins
 {
     public class UpdaterPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Initialize(OpenSim.Framework.ISimulationBase openSim)
+        public void Initialize(ISimulationBase openSim)
         {
             try
             {
