@@ -648,18 +648,18 @@ namespace OpenSim.Services.Connectors.Simulation
 
         #endregion Objects
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
                 registry.RegisterInterface<ISimulationService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }
     }

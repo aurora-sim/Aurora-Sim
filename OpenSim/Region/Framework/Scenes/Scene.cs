@@ -5419,6 +5419,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// We don't support this in the Scene...
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<Type, object> GetInterfaces()
+        {
+            return new Dictionary<Type, object>();
+        }
+
         #endregion
 
         #region Console Commander

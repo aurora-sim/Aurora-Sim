@@ -39,6 +39,7 @@ using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
 using Nwc.XmlRpc;
 using log4net;
+using Nini.Config;
 
 using OpenSim.Services.Connectors.Simulation;
 
@@ -53,6 +54,21 @@ namespace OpenSim.Services.Connectors.Hypergrid
         private IAssetService m_AssetService;
 
         public GatekeeperServiceConnector() : base()
+        {
+        }
+
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("SimulationHandler", "") == "GatekeeperServiceConnector")
+                registry.RegisterInterface<ISimulationService>(this);
+        }
+
+        public override void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public override void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 

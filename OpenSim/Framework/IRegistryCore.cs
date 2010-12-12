@@ -39,5 +39,7 @@ namespace OpenSim.Framework
 
         void StackModuleInterface<M>(M mod);
         T[] RequestModuleInterfaces<T>();
+
+        Dictionary<Type, object> GetInterfaces();
     }
 }

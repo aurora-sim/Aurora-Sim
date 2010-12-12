@@ -63,25 +63,11 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 
         public virtual void Initialise(IConfigSource config)
         {
-            IConfig moduleConfig = config.Configs["Modules"];
-            if (moduleConfig != null)
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("SimulationHandler", "") == Name)
             {
-                string name = moduleConfig.GetString("SimulationServices", "");
-                if (name == Name)
-                {
-                    //IConfig userConfig = config.Configs["SimulationService"];
-                    //if (userConfig == null)
-                    //{
-                    //    m_log.Error("[AVATAR CONNECTOR]: SimulationService missing from OpenSim.ini");
-                    //    return;
-                    //}
-
-                    m_remoteConnector = new SimulationServiceConnector();
-
-                    m_enabled = true;
-
-                    //m_log.Info("[SIMULATION CONNECTOR]: Remote simulation enabled");
-                }
+                m_remoteConnector = new SimulationServiceConnector();
+                m_enabled = true;
             }
         }
 

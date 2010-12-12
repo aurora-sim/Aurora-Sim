@@ -19,53 +19,44 @@ namespace OpenSim.Region.CoreModules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<IService> serviceConnectors;
-        private RegistryCore m_serviceRegistry = null;
-        
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (m_serviceRegistry == null)
+            serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
+            foreach (IService connector in serviceConnectors)
             {
-                m_serviceRegistry = new RegistryCore();
-                m_serviceRegistry.RegisterInterface<ISimulationBase>(openSimBase);
-                scene.RegisterInterface<ISimulationBase>(openSimBase);
-                serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
-                foreach (IService connector in serviceConnectors)
+                try
                 {
-                    try
-                    {
-                        connector.Initialize(source, m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
+                    connector.Initialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
                 }
-                foreach (IService connector in serviceConnectors)
+                catch
                 {
-                    try
-                    {
-                        connector.PostInitialize(source, m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.Start(source, m_serviceRegistry);
-                    }
-                    catch
-                    {
-                    }
                 }
             }
-
-            scene.AddModuleInterfaces(m_serviceRegistry.GetInterfaces());
+            foreach (IService connector in serviceConnectors)
+            {
+                try
+                {
+                    connector.PostInitialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                }
+                catch
+                {
+                }
+            }
+            scene.AddModuleInterfaces(openSimBase.ApplicationRegistry.GetInterfaces());
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            foreach (IService connector in serviceConnectors)
+            {
+                try
+                {
+                    connector.Start(openSimBase.ConfigSource, scene);
+                }
+                catch
+                {
+                }
+            }
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
