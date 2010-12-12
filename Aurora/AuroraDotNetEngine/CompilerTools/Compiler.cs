@@ -400,6 +400,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (results.Errors.Count > 0)
             {
+                string srcFileName = FilePrefix + "_source_" +
+                        Path.GetFileNameWithoutExtension(assembly) + ext;
+                try
+                {
+                    File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
+                        srcFileName), Script);
+                }
+                catch (Exception ex) //NOTLEGIT - Should be just FileIOException
+                {
+                    m_log.Error("[Compiler]: Exception while " +
+                                "trying to write script source to file \"" +
+                                srcFileName + "\": " + ex.Message.ToString());
+                }
+
                 foreach (CompilerError CompErr in results.Errors)
                 {
                     string severity = CompErr.IsWarning ? "Warning" : "Error";

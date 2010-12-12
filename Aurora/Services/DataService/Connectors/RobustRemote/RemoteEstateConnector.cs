@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
             }
 
             return null;
