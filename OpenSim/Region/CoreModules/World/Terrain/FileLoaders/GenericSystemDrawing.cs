@@ -29,6 +29,8 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
+using log4net;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -43,6 +45,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
     public class GenericSystemDrawing : ITerrainLoader
     {
         #region ITerrainLoader Members
+
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public string FileExtension
         {
@@ -64,7 +68,42 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public ITerrainChannel LoadFile(string filename, int x, int y, int fileWidth, int fileHeight, int w, int h)
         {
-            throw new NotImplementedException();
+            // [[THEMAJOR]] Some work on tile loading..
+            // terrain load-tile Tile.png 5 5 10000 10050
+            Bitmap tilemap = new Bitmap(filename);
+
+            // Prevents off-by-one issue
+            fileHeight--;
+
+            int xoffset = w * x;
+            int yoffset = h * (fileHeight - y);
+
+            //m_log.DebugFormat(
+            //    "[TERRAIN]: Loading tile {0},{1} (offset {2},{3}) from tilemap size of {4},{5}",
+            //    x, y, xoffset, yoffset, fileWidth, fileHeight);
+
+            Rectangle tileRect = new Rectangle(xoffset, yoffset, w, h);
+            PixelFormat format = tilemap.PixelFormat;
+            Bitmap cloneBitmap = null;
+            try
+            {
+                cloneBitmap = tilemap.Clone(tileRect, format);
+            }
+            catch (OutOfMemoryException e)
+            {
+                // This error WILL appear if the number of Y tiles is too high because of how it works from the bottom up
+                // However, this still spits out ugly unreferenced object errors on the console
+                m_log.ErrorFormat(
+                "[TERRAIN]: Couldn't load tile {0},{1} (from bitmap coordinates {2},{3}). Number of specified Y tiles may be too high: {4}",
+                x, y, xoffset, yoffset, e);
+            }
+            finally
+            {
+                // Some attempt at keeping a clean memory
+                tilemap.Dispose();
+            }
+
+            return LoadBitmap(cloneBitmap);
         }
 
         public virtual ITerrainChannel LoadStream(Stream stream)
