@@ -180,6 +180,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         public void PostInitialise()
         {
+        }
+
+        public void Start()
+        {
             if (m_enabled)
             {
                 manager = m_application.ApplicationRegistry.Get<SceneManager>();

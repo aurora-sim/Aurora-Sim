@@ -25,6 +25,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
         }
 
+        public void Start()
+        {
+        }
+
         public void Close()
         {
         }

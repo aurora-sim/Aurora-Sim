@@ -325,6 +325,11 @@ namespace Aurora.Simulation.Base
             {
                 plugin.PostInitialise();
             }
+
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
+            {
+                plugin.Start();
+            }
         }
 
         public virtual void CloseModules()

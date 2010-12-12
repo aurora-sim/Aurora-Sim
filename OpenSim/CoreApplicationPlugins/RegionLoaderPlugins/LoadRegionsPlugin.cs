@@ -72,6 +72,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void PostInitialise()
         {
+        }
+
+        public void Start()
+        {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
                 return;

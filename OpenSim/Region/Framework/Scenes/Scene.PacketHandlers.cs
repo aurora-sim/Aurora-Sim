@@ -513,7 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ownerID"></param>
         public void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
-            m_log.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
+            //m_log.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
             if (LibraryService != null && LibraryService.LibraryRootFolder != null && ownerID == LibraryService.LibraryRootFolder.Owner)
             {
                 //m_log.Debug("request info for library item");
@@ -542,7 +542,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleFetchInventoryDescendents(IClientAPI remoteClient, UUID folderID, UUID ownerID,
                                                     bool fetchFolders, bool fetchItems, int sortOrder)
         {
-            m_log.Warn("[Scene.PacketHandler]: Depriated UDP FetchInventoryDescendents request!");
+            //m_log.Warn("[Scene.PacketHandler]: Depriated UDP FetchInventoryDescendents request!");
             if (folderID == UUID.Zero)
                 return;
 

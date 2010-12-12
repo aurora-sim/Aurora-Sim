@@ -88,6 +88,10 @@ namespace Aurora.Modules
         {
         }
 
+        public void Start()
+        {
+        }
+
         public string Name
         {
             get { return "AuroraDataStartupPlugin"; }

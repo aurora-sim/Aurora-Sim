@@ -84,7 +84,11 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             }
         }
 
-        public void PostInitialise ()
+        public void PostInitialise()
+        {
+        }
+
+        public void Start()
         {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)

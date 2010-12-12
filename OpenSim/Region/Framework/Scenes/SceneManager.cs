@@ -168,6 +168,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
+        public void Start()
+        {
+        }
+
         public string Name
         {
             get { return "SceneManager"; }

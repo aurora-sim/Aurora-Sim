@@ -55,6 +55,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
+        public void Start()
+        {
+        }
+
         public void Close()
         {
         }

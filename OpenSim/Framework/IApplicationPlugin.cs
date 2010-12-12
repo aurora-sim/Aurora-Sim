@@ -44,37 +44,16 @@ namespace OpenSim.Framework
         void Initialize(ISimulationBase openSim);
 
         /// <summary>
-        /// Called when the application loading is completed 
+        /// Called when the application initialization is completed 
         /// </summary>
         void PostInitialise();
 
+        /// <summary>
+        /// Called when the application loading is completed 
+        /// </summary>
+        void Start();
+
         void Close();
-    }
-
-    public class ApplicationPluginInitialiser : PluginInitialiserBase
-    {
-        private ISimulationBase m_server;
-        protected List<IApplicationPlugin> m_plugins = new List<IApplicationPlugin>();
-
-        public ApplicationPluginInitialiser(ISimulationBase s)
-        {
-            m_server = s;
-        }
-
-        public override void Initialise(IPlugin plugin)
-        {
-            IApplicationPlugin p = plugin as IApplicationPlugin;
-            p.Initialize(m_server);
-            m_plugins.Add(p);
-        }
-
-        public void PostInitialise()
-        {
-            foreach (IApplicationPlugin plugin in m_plugins)
-            {
-                plugin.PostInitialise();
-            }
-        }
     }
 }
 namespace Aurora.Framework

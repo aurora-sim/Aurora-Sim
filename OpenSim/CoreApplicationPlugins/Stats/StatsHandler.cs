@@ -39,6 +39,10 @@ namespace OpenSim.ApplicationPlugins.RemoteController
 
         public void PostInitialise()
         {
+        }
+
+        public void Start()
+        {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("StatsHandler", "") != Name)
                 return;
