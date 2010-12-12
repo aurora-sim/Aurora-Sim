@@ -19,27 +19,31 @@ namespace OpenSim.Region.CoreModules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<IService> serviceConnectors;
+        private bool m_loaded = false;
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
-            foreach (IService connector in serviceConnectors)
+            if (serviceConnectors == null)
             {
-                try
+                serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
+                foreach (IService connector in serviceConnectors)
                 {
-                    connector.Initialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                    try
+                    {
+                        connector.Initialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
+                foreach (IService connector in serviceConnectors)
                 {
-                }
-            }
-            foreach (IService connector in serviceConnectors)
-            {
-                try
-                {
-                    connector.PostInitialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
-                }
-                catch
-                {
+                    try
+                    {
+                        connector.PostInitialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             scene.AddModuleInterfaces(openSimBase.ApplicationRegistry.GetInterfaces());
@@ -47,14 +51,18 @@ namespace OpenSim.Region.CoreModules
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            foreach (IService connector in serviceConnectors)
+            if (!m_loaded)
             {
-                try
+                m_loaded = true;
+                foreach (IService connector in serviceConnectors)
                 {
-                    connector.Start(openSimBase.ConfigSource, scene);
-                }
-                catch
-                {
+                    try
+                    {
+                        connector.Start(openSimBase.ConfigSource, scene);
+                    }
+                    catch
+                    {
+                    }
                 }
             }
         }
