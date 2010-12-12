@@ -131,6 +131,10 @@ namespace OpenSim.Services.Connectors
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthorizationHandler", "") != Name)
+                return;
+
             registry.RegisterInterface<IAuthorizationService>(this);
         }
 

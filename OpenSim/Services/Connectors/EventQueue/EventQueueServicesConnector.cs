@@ -89,6 +89,10 @@ namespace OpenSim.Services.Connectors
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
+                return;
+
             registry.RegisterInterface<IEventQueueService>(this);
             m_capsModules.Add(registry.Get<ICapabilitiesModule>());
         }

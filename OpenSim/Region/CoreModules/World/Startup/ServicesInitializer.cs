@@ -71,7 +71,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.AddNewRegistry(scene);
+                        connector.AddNewRegistry(openSimBase.ConfigSource, scene);
                     }
                     catch
                     {

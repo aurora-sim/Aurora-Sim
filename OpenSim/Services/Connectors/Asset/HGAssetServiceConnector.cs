@@ -84,6 +84,34 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IAssetService>(this);
         }
 
+        public override void Start(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AssetServerURI",
+                    "AssetService");
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[ASSET CONNECTOR]: No Server URI named in section AssetService");
+                throw new Exception("Asset connector init error");
+            }
+            m_ServerURI = serviceURI;
+
+            SetCache(registry.Get<IImprovedAssetCache>());
+        }
+
+        public override void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IAssetService>(this);
+        }
+
         private bool IsHG(string id)
         {
             Uri assetUri;
