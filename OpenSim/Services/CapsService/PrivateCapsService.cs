@@ -24,6 +24,8 @@ namespace OpenSim.Services.CapsService
     /// </summary>
     public class PrivateCapsService : IPrivateCapsService
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGridUserService m_GridUserService;
@@ -113,6 +115,10 @@ namespace OpenSim.Services.CapsService
         }
         private List<IRequestHandler> m_CAPSAdded = new List<IRequestHandler>();
 
+        #endregion
+
+        #region Constructor
+
         public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, IAssetService assetService, string URL, UUID agentID, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
         {
             m_server = server;
@@ -130,12 +136,20 @@ namespace OpenSim.Services.CapsService
             m_CapsBase = capsBase;
         }
 
+        #endregion
+
+        #region IPrivateCapsService members
+
         public void Initialise()
         {
             if (m_server != null)
                 AddServerCAPS();
         }
 
+        /// <summary>
+        /// Returns a list of all known CAPS requests that are on the CAPSService
+        /// </summary>
+        /// <returns></returns>
         public List<IRequestHandler> GetServerCAPS()
         {
             List<IRequestHandler> handlers = new List<IRequestHandler>();
@@ -191,7 +205,6 @@ namespace OpenSim.Services.CapsService
                         //    m_log.WarnFormat("[CAPSService]: Simulator tried to override grid CAPS setting! @ {0}", SimToInform);
                     }
                 }
-                //m_log.Warn("[CAPS]: EQM Request for " + registeredCAPS["EventQueueGet"].AsString());
             }
             catch
             {
@@ -226,14 +239,7 @@ namespace OpenSim.Services.CapsService
                 return registeredCAPS[method].ToString();
             return "";
         }
+
+        #endregion
     }
-
-    #region EQM
-
-    public class CAPSEQMHandler// : ICapsServiceModule
-    {
-        
-    }
-
-    #endregion
 }

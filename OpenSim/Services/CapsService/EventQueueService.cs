@@ -24,7 +24,11 @@ namespace OpenSim.Services.CapsService
     /// </summary>
     public class EventQueueMasterService : EventQueueModuleBase, IService, IEventQueueService
     {
+        #region Declares
+
         protected ICapsService m_service = null;
+
+        #endregion
 
         #region IService Members
 
@@ -52,6 +56,10 @@ namespace OpenSim.Services.CapsService
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
+                return;
+            registry.RegisterInterface<IEventQueueService>(this);
         }
 
         #endregion
@@ -80,6 +88,8 @@ namespace OpenSim.Services.CapsService
     /// </summary>
     public class EventQueueService : IInternalEventQueueService
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Dictionary<UUID, int> m_ids = new Dictionary<UUID, int>();
@@ -89,6 +99,12 @@ namespace OpenSim.Services.CapsService
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private IHttpServer m_server;
         protected Dictionary<UUID, IPrivateCapsService> m_handlers = new Dictionary<UUID, IPrivateCapsService>();
+
+        #endregion
+
+        #region IInternalEventQueueService members
+
+        #region TryGet/Get queue's
 
         /// <summary>
         ///  Always returns a valid queue
@@ -126,6 +142,10 @@ namespace OpenSim.Services.CapsService
             }
         }
 
+        #endregion
+
+        #region Enqueue a message/Create/Remove handlers
+
         /// <summary>
         /// Add the given event into the client's queue so that it is sent on the next 
         /// </summary>
@@ -136,6 +156,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
+                //Check the messages to pull out ones that are creating or destroying CAPS in this or other regions
                 Queue<OSD> queue = GetQueue(avatarID);
                 if (ev.Type == OSDType.Map)
                 {
@@ -188,6 +209,13 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
+        /// <summary>
+        /// If a EQM comes in that is going to open a new connection in another region, this gets called to make sure that we open a new CAPS handler there and then fix the URL to it
+        /// </summary>
+        /// <param name="SeedCap"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="avatarID"></param>
+        /// <returns></returns>
         public string CreateNewCAPSClient(string SeedCap, ulong regionHandle, UUID avatarID)
         {
             //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
@@ -202,6 +230,7 @@ namespace OpenSim.Services.CapsService
             return handler.CapsURL;
         }
 
+        //We don't have a way to implement this yet...
         /*private void ClientClosed(UUID AgentID, Scene scene)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Closed client {0} in region {1}", AgentID, m_scene.RegionInfo.RegionName);
@@ -256,6 +285,17 @@ namespace OpenSim.Services.CapsService
             }
         }*/
 
+        #endregion
+
+        #region Register and authenticate requests
+
+        /// <summary>
+        /// Register our EventQueue CAP
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="server"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
         public IRequestHandler RegisterCap(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
             m_server = server;
@@ -320,12 +360,22 @@ namespace OpenSim.Services.CapsService
             return rhandler;
         }
 
+        /// <summary>
+        /// Check to make sure that the password we sent to the region is the same as the one here
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="Password"></param>
+        /// <returns></returns>
         public bool AuthenticateRequest(UUID agentID, UUID Password)
         {
-            //if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID] == Password)
-            return true;
-            //return false;
+            if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID] == Password)
+                return true;
+            return false;
         }
+
+        #endregion
+
+        #region Process Get/Has events
 
         public bool HasEvents(UUID requestID, UUID agentID)
         {
@@ -518,5 +568,9 @@ namespace OpenSim.Services.CapsService
         {
             return new Hashtable();
         }
+
+        #endregion
+
+        #endregion
     }
 }
