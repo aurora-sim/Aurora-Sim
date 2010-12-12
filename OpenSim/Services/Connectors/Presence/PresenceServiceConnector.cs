@@ -408,7 +408,12 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Presence connector init error");
             }
             m_ServerURI = serviceURI;
-         }
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IPresenceService>(this);
+        }
 
         #endregion
     }

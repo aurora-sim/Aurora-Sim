@@ -67,7 +67,7 @@ namespace OpenSim.Server.Handlers.Grid
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }
     }

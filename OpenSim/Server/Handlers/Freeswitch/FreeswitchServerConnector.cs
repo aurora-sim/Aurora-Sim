@@ -71,6 +71,10 @@ namespace OpenSim.Server.Handlers.Freeswitch
             server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public Hashtable FreeSwitchConfigHTTPHandler(Hashtable request)
         {
             Hashtable response = new Hashtable();

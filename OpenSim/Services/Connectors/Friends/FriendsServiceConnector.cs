@@ -234,6 +234,11 @@ namespace OpenSim.Services.Connectors
             m_ServerURI = serviceURI;
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IFriendsService>(this);
+        }
+
         #endregion
     }
 }

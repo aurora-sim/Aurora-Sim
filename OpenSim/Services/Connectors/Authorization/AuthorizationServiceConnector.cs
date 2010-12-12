@@ -129,6 +129,11 @@ namespace OpenSim.Services.Connectors
             m_userAccountService = registry.Get<IUserAccountService>();
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IAuthorizationService>(this);
+        }
+
         #endregion
 
         #region IAuthorizationService Members

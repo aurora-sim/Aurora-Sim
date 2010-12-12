@@ -104,6 +104,10 @@ namespace OpenSim.Services.AuthenticationService
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public string Authenticate(UUID principalID, string password, int lifetime)
         {
             //Return automatically if we do not auth users

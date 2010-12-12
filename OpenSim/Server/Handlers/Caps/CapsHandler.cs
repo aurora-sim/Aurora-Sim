@@ -52,6 +52,10 @@ namespace OpenSim.Server.Handlers.Caps
                 m_server.AddStreamHandler(new CAPSHandler(Password, m_capsService));
             }
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 
     public class CAPSHandler : BaseStreamHandler

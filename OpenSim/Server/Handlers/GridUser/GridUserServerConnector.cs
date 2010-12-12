@@ -61,5 +61,9 @@ namespace OpenSim.Server.Handlers.GridUser
 
             server.AddStreamHandler(new GridUserServerPostHandler(m_GridUserService));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

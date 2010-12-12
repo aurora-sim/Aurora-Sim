@@ -122,6 +122,10 @@ namespace OpenSim.Services.InventoryService
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public InventoryItemBase CreateItem(UUID inventoryID, UUID assetID, string name, string description,
                                             int assetType, int invType, UUID parentFolderID)
         {

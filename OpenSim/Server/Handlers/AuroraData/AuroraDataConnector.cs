@@ -49,6 +49,10 @@ namespace OpenSim.Server.Handlers.AuroraData
             server.AddStreamHandler(new AuroraDataServerPostHandler());
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         #endregion
     }
 }

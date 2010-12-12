@@ -82,5 +82,9 @@ namespace OpenSim.Server.Handlers.Hypergrid
 
             server.AddHTTPHandler("/foreignagent/", new GatekeeperAgentHandler(m_GatekeeperService, m_Proxy).Handler);
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

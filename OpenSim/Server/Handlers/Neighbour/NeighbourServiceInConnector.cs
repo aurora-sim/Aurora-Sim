@@ -72,5 +72,9 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
             server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, m_AuthenticationService, config));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

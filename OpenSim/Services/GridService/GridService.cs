@@ -147,6 +147,10 @@ namespace OpenSim.Services.GridService
             m_HypergridLinker.PostInitialize(registry);
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         #region IGridService
 
         public string RegisterRegion(UUID scopeID, GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)

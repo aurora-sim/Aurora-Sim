@@ -65,6 +65,19 @@ namespace OpenSim.Region.CoreModules
                     }
                 }
             }
+            else
+            {
+                foreach (IService connector in serviceConnectors)
+                {
+                    try
+                    {
+                        connector.AddNewRegistry(scene);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)

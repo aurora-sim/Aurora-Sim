@@ -60,5 +60,9 @@ namespace OpenSim.Server.Handlers.Authorization
 
             server.AddStreamHandler(new AuthorizationServerPostHandler(m_AuthorizationService));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

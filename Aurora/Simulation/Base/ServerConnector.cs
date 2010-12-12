@@ -60,5 +60,12 @@ namespace Aurora.Simulation.Base
         /// <param name="config">Config file</param>
         /// <param name="registry">Place to register and retrieve module interfaces</param>
         void Start(IConfigSource config, IRegistryCore registry);
+
+        /// <summary>
+        /// If there is a reason that another registry needs added, we call this to register the relevent interfaces
+        /// </summary>
+        /// <param name="config">Config file</param>
+        /// <param name="registry">Place to register and retrieve module interfaces</param>
+        void AddNewRegistry(IConfigSource config, IRegistryCore registry);
     }
 }

@@ -64,6 +64,11 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IAutoConfigurationService>(this);
+        }
+
         public string FindValueOf(string key, string configurationSource)
         {
             if (m_autoConfig.ContainsKey(key))

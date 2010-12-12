@@ -59,5 +59,9 @@ namespace OpenSim.Server.Handlers.UserAccounts
             m_UserAccountService = registry.Get<IUserAccountService>();
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

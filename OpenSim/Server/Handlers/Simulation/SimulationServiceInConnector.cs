@@ -84,5 +84,9 @@ namespace OpenSim.Server.Handlers.Simulation
 
             //server.AddStreamHandler(new ObjectPostHandler(m_SimulationService, authentication));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

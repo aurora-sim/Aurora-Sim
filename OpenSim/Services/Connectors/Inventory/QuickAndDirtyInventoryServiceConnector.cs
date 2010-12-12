@@ -199,6 +199,11 @@ namespace OpenSim.Services.Connectors
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IInventoryService>(this);
+        }
+
         #endregion
     }
 }

@@ -336,6 +336,11 @@ namespace OpenSim.Services.Connectors
             SetCache(registry.Get<IImprovedAssetCache>());
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IAssetService>(this);
+        }
+
         #endregion
     }
 }

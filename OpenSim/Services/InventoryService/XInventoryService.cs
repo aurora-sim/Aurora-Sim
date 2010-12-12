@@ -101,6 +101,10 @@ namespace OpenSim.Services.InventoryService
             m_UserAccountService = registry.Get<IUserAccountService>();
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public virtual bool CreateUserInventory(UUID principalID)
         {
             // This is braindeaad. We can't ever communicate that we fixed

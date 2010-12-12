@@ -114,6 +114,10 @@ namespace OpenSim.Services.PresenceService
             m_GridService = registry.Get<IGridService>();
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public bool LoginAgent(string userID, UUID sessionID,
                 UUID secureSessionID)
         {

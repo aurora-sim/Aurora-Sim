@@ -45,6 +45,16 @@ namespace OpenSim.Server.Handlers
             server.AddStreamHandler(new EQMEventPoster(service));
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
+                return;
+            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
+            ICapsService service = registry.Get<ICapsService>();
+            server.AddStreamHandler(new EQMEventPoster(service));
+        }
+
         #endregion
     }
 

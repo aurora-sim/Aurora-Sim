@@ -50,6 +50,10 @@ namespace OpenSim.Services.CapsService
             m_service = registry.Get<ICapsService>();
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         #endregion
 
         #region IEventQueueService Members

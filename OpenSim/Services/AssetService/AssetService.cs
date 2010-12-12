@@ -138,6 +138,10 @@ namespace OpenSim.Services.AssetService
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public AssetBase Get(string id)
         {
             UUID assetID;

@@ -93,6 +93,11 @@ namespace OpenSim.Services.Connectors
             m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IFreeswitchService>(this);
+        }
+
         #endregion
     }
 }

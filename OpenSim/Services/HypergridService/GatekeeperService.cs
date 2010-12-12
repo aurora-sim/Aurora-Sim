@@ -101,6 +101,10 @@ namespace OpenSim.Services.HypergridService
             m_log.Debug("[GATEKEEPER SERVICE]: Starting...");
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         #endregion
 
         public bool LinkRegion(string regionName, out UUID regionID, out ulong regionHandle, out string externalName, out string imageURL, out string reason)

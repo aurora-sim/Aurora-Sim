@@ -102,7 +102,11 @@ namespace OpenSim.Services.HypergridService
             m_GridService = registry.Get<IGridService>();
             m_GridUserService = registry.Get<IGridUserService>();
             m_GatekeeperConnector = new GatekeeperServiceConnector();
-            m_GatekeeperService = registry.Get<IGatekeeperService>();     
+            m_GatekeeperService = registry.Get<IGatekeeperService>();
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         #endregion

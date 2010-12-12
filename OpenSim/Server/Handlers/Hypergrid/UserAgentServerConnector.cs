@@ -86,6 +86,10 @@ namespace OpenSim.Server.Handlers.Hypergrid
             server.AddHTTPHandler("/homeagent/", new HomeAgentHandler(m_HomeUsersService, loginServerIP, proxy).Handler);
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public XmlRpcResponse GetHomeRegion(XmlRpcRequest request, IPEndPoint remoteClient)
         {
             Hashtable requestData = (Hashtable)request.Params[0];

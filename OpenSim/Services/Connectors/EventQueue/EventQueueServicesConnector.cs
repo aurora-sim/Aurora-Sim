@@ -87,6 +87,12 @@ namespace OpenSim.Services.Connectors
             m_capsModules.Add(registry.Get<ICapabilitiesModule>());
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IEventQueueService>(this);
+            m_capsModules.Add(registry.Get<ICapabilitiesModule>());
+        }
+
         #endregion
 
         /// <summary>

@@ -49,5 +49,9 @@ namespace OpenSim.Server.Handlers
             configMap["FreeswitchServiceURL"] = autoConfConfig.GetString("FreeswitchServiceURL", "");
             server.AddStreamHandler(new AutoConfigurationPostHandler(configMap));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

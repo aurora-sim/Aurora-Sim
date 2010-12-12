@@ -61,7 +61,7 @@ namespace OpenSim.Server.Handlers.Presence
             server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }
     }

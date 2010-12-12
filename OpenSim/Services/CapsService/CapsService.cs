@@ -82,6 +82,10 @@ namespace OpenSim.Services.CapsService
             m_server = simBase.GetHttpServer(m_port);
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void RemoveCAPS(UUID AgentID)
         {
             if(m_CapsServices.ContainsKey(AgentID))

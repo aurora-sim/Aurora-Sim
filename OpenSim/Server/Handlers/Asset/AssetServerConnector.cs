@@ -68,5 +68,9 @@ namespace OpenSim.Server.Handlers.Asset
             server.AddStreamHandler(new AssetServerPostHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, allowDelete));
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
     }
 }

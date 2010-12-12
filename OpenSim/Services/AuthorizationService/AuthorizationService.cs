@@ -98,6 +98,10 @@ namespace OpenSim.Services.AuthorizationService
         {
         }
 
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public bool IsAuthorizedForRegion(string userID, string regionID, out string message)
         {
             message = "Authorized";
