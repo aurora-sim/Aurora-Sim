@@ -59,7 +59,6 @@ namespace OpenSim.Services.Connectors
         protected IGridService m_GridService = null;
         protected Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         protected Dictionary<UUID, List<NeighborPassword>> m_KnownNeighborsPass = new Dictionary<UUID, List<NeighborPassword>>();
-        private IConfigSource m_config = null;
         private LocalNeighborServiceConnector m_LocalService;
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
