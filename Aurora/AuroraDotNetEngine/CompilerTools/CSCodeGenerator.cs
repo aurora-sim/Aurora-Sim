@@ -2114,102 +2114,46 @@ default
             string retstr = "";
             string tmpstr = "";
             bool DoBrace = false;
-            tmpstr += GenerateIndented("if (", ifs);
             bool marc = FuncCallsMarc();
-            SYMBOL s = (SYMBOL)ifs.kids.Pop();
-            if (s is BinaryExpression)
-            {
-                BinaryExpression be = s as BinaryExpression;
-                string innerRetStr = "";
-                if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
-                {
-                    // special case handling for logical and/or, see Mantis 3174
-                    innerRetStr += "((bool)(";
-                    innerRetStr += GenerateNode((SYMBOL)be.kids.Pop());
-                    innerRetStr += "))";
-                    innerRetStr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
-                    innerRetStr += "((bool)(";
-                    foreach (SYMBOL kid in be.kids)
-                        innerRetStr += GenerateNode(kid);
-                    innerRetStr += "))";
-                }
-                else
-                {
-                    SYMBOL c = (SYMBOL)be.kids.Pop();
-                    if (c is FunctionCallExpression)
-                    {
-                        FunctionCallExpression f = c as FunctionCallExpression;
-                        foreach (SYMBOL akid in f.kids)
-                        {
-                            if (akid is FunctionCall)
-                            {
-                                innerRetStr += GenerateFunctionCall(akid as FunctionCall, true);
-                            }
-                            else
-                                innerRetStr += GenerateNode(akid);
-                        }
-                    }
-                    else
-                        innerRetStr += GenerateNode(c);
-                    innerRetStr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
-                    foreach (SYMBOL kid in be.kids)
-                        innerRetStr += GenerateNode(kid);
-                }
-                //Force the DumpFunc here so that we put out all of the code before it as it should be
-                tmpstr = DumpFunc(true) + tmpstr + innerRetStr;
-            }
-            else
-                tmpstr += GenerateNode(s);
+            tmpstr += GenerateIndented("if (", ifs);
+            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
             tmpstr += GenerateLine(")");
+
+            retstr += DumpFunc(marc) + tmpstr.ToString();
 
             // CompoundStatement handles indentation itself but we need to do it
             // otherwise.
 
-//            bool indentHere = ifs.kids.Top is Statement;
-//            if (indentHere) m_braceCount++;
+            // bool indentHere = ifs.kids.Top is Statement;
+            // if (indentHere) m_braceCount++;
             DoBrace = !(ifs.kids.Top is CompoundStatement);
-            if(DoBrace)
-                tmpstr += GenerateLine("{");
-
-            SYMBOL child = (SYMBOL)ifs.kids.Pop();
-            tmpstr += GenerateInnerIfStatement(child);
-//            if (indentHere) m_braceCount--;
             if (DoBrace)
-                tmpstr += GenerateLine("}");
+                retstr += GenerateLine("{");
+
+            retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
+            // if (indentHere) m_braceCount--;
+            if (DoBrace)
+                retstr += GenerateLine("}");
 
 
             if (0 < ifs.kids.Count) // do it again for an else
             {
-                tmpstr += GenerateIndentedLine("else", null);
-                bool DoElseIfBrace = (ifs.kids.Top is IfStatement);
-                if (DoElseIfBrace)
-                    tmpstr += GenerateIndentedLine("{", null);
-                //Because of the enumeration, we HAVE to break else if statements up into something like this...
-                // if .. {}
-                // else { if "the old else if statement" {} else {} }
-                // Messy... but necessary
+                retstr += GenerateIndentedLine("else", ifs);
 
-//                indentHere = ifs.kids.Top is Statement;
-//                if (indentHere) m_braceCount++;
-                DoBrace = !(ifs.kids.Top is CompoundStatement || ifs.kids.Top is IfStatement);
+                // indentHere = ifs.kids.Top is Statement;
+                // if (indentHere) m_braceCount++;
+                DoBrace = !(ifs.kids.Top is CompoundStatement);
                 if (DoBrace)
-                    tmpstr += GenerateLine("{");
+                    retstr += GenerateLine("{");
 
-                SYMBOL childChild = (SYMBOL)ifs.kids.Pop();
-                tmpstr += GenerateInnerIfStatement(childChild);
-
+                retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
 
                 if (DoBrace)
-                    tmpstr += GenerateLine("}");
-                //close the else statement
-                if (DoElseIfBrace)
-                    tmpstr += GenerateLine("}");
+                    retstr += GenerateLine("}");
 
 
-//                if (indentHere) m_braceCount--;
+                // if (indentHere) m_braceCount--;
             }
-
-            retstr += DumpFunc(marc) + tmpstr.ToString();
 
             return retstr.ToString();
         }

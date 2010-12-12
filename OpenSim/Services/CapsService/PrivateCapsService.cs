@@ -82,12 +82,7 @@ namespace OpenSim.Services.CapsService
         {
             get { return EQMHandler; }
         }
-        private string m_HostName;
-        public string HostName
-        {
-            get { return m_HostName; }
-            set { m_HostName = value; }
-        }
+
         private OSDMap postToSendToSim = new OSDMap();
 
         public OSDMap PostToSendToSim
@@ -118,7 +113,7 @@ namespace OpenSim.Services.CapsService
         }
         private List<IRequestHandler> m_CAPSAdded = new List<IRequestHandler>();
 
-        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, IAssetService assetService, string URL, UUID agentID, string HostName, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
+        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, IAssetService assetService, string URL, UUID agentID, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
         {
             m_server = server;
             m_InventoryService = inventoryService;
@@ -129,7 +124,6 @@ namespace OpenSim.Services.CapsService
             m_AssetService = assetService;
             SimToInform = URL;
             m_AgentID = agentID;
-            m_HostName = HostName;
             m_regionHandle = regionHandle;
             m_publicHandler = handler;
             m_capsURL = capsURL;

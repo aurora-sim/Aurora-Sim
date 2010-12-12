@@ -86,6 +86,10 @@ namespace OpenSim.Services.CapsService
         {
         }
 
+        /// <summary>
+        /// Remove the user's CAPS from the system
+        /// </summary>
+        /// <param name="AgentID"></param>
         public void RemoveCAPS(UUID AgentID)
         {
             if(m_CapsServices.ContainsKey(AgentID))

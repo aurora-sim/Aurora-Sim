@@ -35,6 +35,13 @@ namespace OpenSim.Services.Interfaces
 {
     public interface IEventQueueService
     {
+        /// <summary>
+        /// This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <returns>Whether it was added successfully</returns>
         bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle);
 
         // These are required to decouple Scenes from EventQueueHelper
@@ -63,9 +70,25 @@ namespace OpenSim.Services.Interfaces
         bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
     }
 
+    /// <summary>
+    /// This is the internal per user/per region EventQueueService
+    /// </summary>
     public interface IInternalEventQueueService
     {
+        /// <summary>
+        /// Enqueues an EQM to the given user
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="avatarID"></param>
+        /// <returns></returns>
         bool Enqueue(OSD o, UUID avatarID);
+
+        /// <summary>
+        /// Check to make sure the request to add the EQM is not being faked by some outside source by checking the password
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
         bool AuthenticateRequest(UUID agentID, UUID password);
     }
 }
