@@ -119,7 +119,7 @@ namespace OpenSim.Region.CoreModules
                     position = ((ScenePresence)sp).AbsolutePosition;
                     lookat = ((ScenePresence)sp).Lookat;
                 }
-                m_log.DebugFormat("[ActivityDetector]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
+                m_log.InfoFormat("[ActivityDetector]: Detected client logout {0} in {1}", client.AgentId, client.Scene.RegionInfo.RegionName);
                 m_PresenceService.LogoutAgent(client.SessionId);
                 m_GridUserService.LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
             }

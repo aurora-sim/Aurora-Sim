@@ -1,30 +1,4 @@
-/*
- * Copyright (c) Contributors, http://opensimulator.org/
- * See CONTRIBUTORS.TXT for a full list of copyright holders.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the OpenSimulator Project nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
@@ -35,14 +9,14 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Aurora.Simulation.Base;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
+namespace OpenSim.Services.Connectors.Simulation
 {
-    public class LocalSimulationConnectorModule : ISharedRegionModule, ISimulationService
+    public class LocalSimulationServiceConnector : IService, ISimulationService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_sceneList = new List<Scene>();
-
         private IEntityTransferModule m_AgentTransferModule;
         protected IEntityTransferModule AgentTransferModule
         {
@@ -54,92 +28,31 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
             }
         }
 
-        private bool m_ModuleEnabled = false;
+        #region IService Members
 
-        #region IRegionModule
-
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("SimulationHandler", "") == Name)
-            {
-                m_ModuleEnabled = true;
-                m_log.Info("[SIMULATION CONNECTOR]: Local simulation enabled");
-            }
+            if (handlers.GetString("SimulationHandler", "") == "LocalSimulationServiceConnector")
+                registry.RegisterInterface<ISimulationService>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void AddRegion(Scene scene)
-        {
-            if (!m_ModuleEnabled)
-                return;
-
-            Init(scene);
-            scene.RegisterModuleInterface<ISimulationService>(this);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-            if (!m_ModuleEnabled)
-                return;
-
-            RemoveScene(scene);
-            scene.UnregisterModuleInterface<ISimulationService>(this);
-        }
-
-        public void RegionLoaded(Scene scene)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void Close()
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("SimulationHandler", "") == "LocalSimulationServiceConnector")
+                registry.RegisterInterface<ISimulationService>(this);
         }
 
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public string Name
-        {
-            get { return "LocalSimulationConnectorModule"; }
-        }
-
-        /// <summary>
-        /// Can be called from other modules.
-        /// </summary>
-        /// <param name="scene"></param>
-        public void RemoveScene(Scene scene)
-        {
-            lock (m_sceneList)
-            {
-                if (m_sceneList.Contains(scene))
-                {
-                    m_sceneList.Remove(scene);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Can be called from other modules.
-        /// </summary>
-        /// <param name="scene"></param>
-        public void Init(Scene scene)
-        {
-            if (!m_sceneList.Contains(scene))
-            {
-                lock (m_sceneList)
-                {
-                    m_sceneList.Add(scene);
-                }
-
-            }
-        }
-
-        #endregion /* IRegionModule */
+        #endregion
 
         #region ISimulation
 
@@ -157,6 +70,38 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
         public ISimulationService GetInnerService()
         {
             return this;
+        }
+
+        /// <summary>
+        /// Can be called from other modules.
+        /// </summary>
+        /// <param name="scene"></param>
+        public void RemoveScene(IScene sscene)
+        {
+            Scene scene = (Scene)sscene;
+            lock (m_sceneList)
+            {
+                if (m_sceneList.Contains(scene))
+                {
+                    m_sceneList.Remove(scene);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Can be called from other modules.
+        /// </summary>
+        /// <param name="scene"></param>
+        public void Init(IScene sscene)
+        {
+            Scene scene = (Scene)sscene;
+            if (!m_sceneList.Contains(scene))
+            {
+                lock (m_sceneList)
+                {
+                    m_sceneList.Add(scene);
+                }
+            }
         }
 
         /**
@@ -204,7 +149,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
                 }
             }
 
-//            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
+            //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
             return false;
         }
 
@@ -229,7 +174,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
         public bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent)
         {
             agent = null;
-            
+
             if (destination == null)
                 return false;
 
@@ -254,7 +199,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
                     //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
                     AgentTransferModule.AgentArrivedAtDestination(id);
                     return true;
-//                    return s.IncomingReleaseAgent(id);
+                    //                    return s.IncomingReleaseAgent(id);
                 }
             }
             //m_log.Debug("[LOCAL COMMS]: region not found in SendReleaseAgent " + origin);
@@ -324,8 +269,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
             return false;
         }
 
-
-        #endregion /* IInterregionComms */
+        #endregion /* ISimulationService */
 
         #region Misc
 

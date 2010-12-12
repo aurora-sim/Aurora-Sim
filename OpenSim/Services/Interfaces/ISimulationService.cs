@@ -104,5 +104,11 @@ namespace OpenSim.Services.Interfaces
 
         #endregion Objects
 
+        #region Local Initalization
+
+        void RemoveScene(IScene scene);
+        void Init(IScene scene);
+
+        #endregion
     }
 }

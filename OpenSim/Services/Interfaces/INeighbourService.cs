@@ -105,5 +105,17 @@ namespace OpenSim.Services.Interfaces
         /// <param name="newRegionY">new Y pos</param>
         /// <returns></returns>
         bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY);
+
+        /// <summary>
+        /// Remove the local region from the Neighbor service
+        /// </summary>
+        /// <param name="scene"></param>
+        void RemoveScene(IScene scene);
+
+        /// <summary>
+        /// Add the local region to the Neighbor Service
+        /// </summary>
+        /// <param name="scene"></param>
+        void Init(IScene scene);
     }
 }

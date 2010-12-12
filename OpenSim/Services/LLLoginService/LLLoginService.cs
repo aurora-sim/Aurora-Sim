@@ -573,7 +573,7 @@ namespace OpenSim.Services.LLLoginService
                     where, startLocation, position, lookAt, gestures, m_WelcomeMessage, home, clientIP, MaxMaturity, MaturityRating, m_MapTileURL, m_SearchURL,
                     m_AllowFirstLife ? "Y" : "N", m_TutorialURL, eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), allowExportPermission, m_config);
 
-                m_log.DebugFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
+                m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
             }
             catch (Exception e)

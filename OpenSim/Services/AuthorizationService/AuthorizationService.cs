@@ -87,7 +87,7 @@ namespace OpenSim.Services.AuthorizationService
             m_Database.Initialise(connString);
             registry.RegisterInterface<IAuthorizationService>(this);
 
-            m_log.Info("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
+            m_log.Debug("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)

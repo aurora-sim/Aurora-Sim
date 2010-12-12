@@ -24,57 +24,65 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Aurora.Simulation.Base;
 
-namespace OpenSim.Server.Handlers.Neighbour
+namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
 {
-    public class NeighbourServiceInConnector : IService
+    public class LocalSimulationConnectorModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private INeighbourService m_NeighbourService;
-        private IAuthenticationService m_AuthenticationService;
+        private bool m_ModuleEnabled = false;
+
+        #region ISharedRegionModule
+
+        public void Initialise(IConfigSource config)
+        {
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            scene.RequestModuleInterface<ISimulationService>().Init(scene);
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            scene.RequestModuleInterface<ISimulationService>().RemoveScene(scene);
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
         public string Name
         {
-            get { return GetType().Name; }
+            get { return "LocalSimulationConnectorModule"; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("NeighbourInHandler", "") != Name)
-                return;
-
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighbourInHandlerPort"));
-            m_NeighbourService = registry.Get<INeighbourService>();
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
-            if (m_NeighbourService == null)
-            {
-                m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
-                return;
-            }
-            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, m_AuthenticationService, config));
-        }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
+        #endregion ISharedRegionModule
     }
 }

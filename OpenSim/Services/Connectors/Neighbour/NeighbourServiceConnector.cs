@@ -50,7 +50,7 @@ namespace OpenSim.Services.Connectors
         public UUID RegionID;
         public UUID Password;
     }
-    public class NeighbourServicesConnector : INeighbourService
+    public class NeighbourServiceConnector : IService, INeighbourService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -59,29 +59,39 @@ namespace OpenSim.Services.Connectors
         protected IGridService m_GridService = null;
         protected Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         protected Dictionary<UUID, List<NeighborPassword>> m_KnownNeighborsPass = new Dictionary<UUID, List<NeighborPassword>>();
+        private IConfigSource m_config = null;
+        private LocalNeighborServiceConnector m_LocalService;
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
         {
             get { return m_KnownNeighbors; }
         }
 
-        public NeighbourServicesConnector()
-        {
-        }
-
-        public NeighbourServicesConnector(IGridService gridServices)
-        {
-            Initialise(gridServices);
-        }
-
-        public virtual void Initialise(IGridService gridServices)
-        {
-            m_GridService = gridServices;
-        }
+        #region INeighborService
 
         public virtual List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
-            return new List<GridRegion>();
+            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsUp(incomingRegion);
+
+            //Get the known regions from the local connector, as it queried the grid service to find them all
+            m_KnownNeighbors = m_LocalService.Neighbors;
+
+            int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+
+            //We informed all of them locally, so quit early
+            if (RegionsNotInformed == 0)
+                return nowInformedRegions;
+
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            nowInformedRegions.AddRange(InformNeighborsRegionIsUp(incomingRegion, nowInformedRegions));
+
+            //Now check to see if we informed everyone
+            RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+            if (RegionsNotInformed != 0)
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely about a new neighbor.");
+            }
+            return nowInformedRegions;
         }
 
         public List<GridRegion> InformNeighborsRegionIsUp(RegionInfo incomingRegion, List<GridRegion> alreadyInformedRegions)
@@ -222,22 +232,56 @@ namespace OpenSim.Services.Connectors
 
         public virtual void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
         {
-            //The remote connector has to deal with it
+            m_LocalService.SendChildAgentUpdate(childAgentUpdate, regionID);
         }
 
         public virtual List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
         {
-            return new List<GridRegion>();
+            List<GridRegion> neighbors = m_KnownNeighbors[closingRegion.RegionID];
+            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsDown(closingRegion);
+
+            int RegionsNotInformed = neighbors.Count - nowInformedRegions.Count;
+
+            //We informed all of them locally, so quit early
+            if (RegionsNotInformed == 0)
+                return nowInformedRegions;
+
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            nowInformedRegions.AddRange(InformNeighborsRegionIsDown(closingRegion, nowInformedRegions, neighbors));
+
+            //Now check to see if we informed everyone
+            RegionsNotInformed = neighbors.Count - nowInformedRegions.Count;
+            if (RegionsNotInformed != 0)
+            {
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely about a closing neighbor.");
+            }
+            return nowInformedRegions;
         }
 
         public virtual bool SendChatMessageToNeighbors(OSChatMessage message, ChatSourceType type, RegionInfo region)
         {
-            return false;
+            bool RetVal = false;
+            List<GridRegion> NotifiedRegions = m_LocalService.SendChatMessageToNeighbors(message, type, region, out RetVal);
+
+            int RegionsNotInformed = m_KnownNeighbors[region.RegionID].Count - NotifiedRegions.Count;
+
+            //We informed all of them locally, so quit early
+            if (RegionsNotInformed == 0)
+                return RetVal;
+
+            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+            InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
+
+            //This tells the chat module whether we should send the message in the region it originated from, and if it 
+            return RetVal;
         }
 
         public virtual List<GridRegion> GetNeighbors(RegionInfo region)
         {
-            List<GridRegion> neighbors = new List<GridRegion>();
+            List<GridRegion> neighbors = m_LocalService.GetNeighbors(region);
+            if (neighbors.Count != 0)
+                return neighbors;
+            
             string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + region.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
@@ -328,15 +372,17 @@ namespace OpenSim.Services.Connectors
 
         public virtual void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
         {
+            m_LocalService.CloseAllNeighborAgents(AgentID, currentRegionID);
         }
 
         public virtual void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
         {
+            m_LocalService.CloseNeighborAgents(newRegionX, newRegionY, AgentID, currentRegionID);
         }
 
         public virtual bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
         {
-            return false;
+            return m_LocalService.IsOutsideView(x, newRegionX, y, newRegionY);
         }
 
         private Dictionary<string, object> PackRegionInfo(RegionInfo thisRegion, UUID uUID)
@@ -352,5 +398,55 @@ namespace OpenSim.Services.Connectors
             }
             return Util.OSDToDictionary(thisRegion.PackRegionInfoData());
         }
+
+        public void RemoveScene(IScene scene)
+        {
+            m_LocalService.RemoveScene(scene);
+        }
+
+        public void Init(IScene scene)
+        {
+            m_LocalService.Init(scene);
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("NeighbourHandler", "") == Name)
+            {
+                registry.RegisterInterface<INeighbourService>(this);
+                m_LocalService = new LocalNeighborServiceConnector();
+                m_LocalService.ReadConfig(config);
+            }
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("NeighbourHandler", "") == Name)
+                m_LocalService.Start(config, registry);
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("NeighbourHandler", "") == Name)
+                registry.RegisterInterface<INeighbourService>(this);
+        }
+
+        #endregion
     }
 }

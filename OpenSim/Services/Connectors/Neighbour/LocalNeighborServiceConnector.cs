@@ -1,31 +1,4 @@
-/*
- * Copyright (c) Contributors, http://opensimulator.org/
- * See CONTRIBUTORS.TXT for a full list of copyright holders.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the OpenSimulator Project nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-using log4net;
+﻿using log4net;
 using Nini.Config;
 using System;
 using System.Collections.Generic;
@@ -38,14 +11,13 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
+namespace OpenSim.Services.Connectors
 {
-    public class LocalNeighbourServicesConnector :
-            ISharedRegionModule, INeighbourService
+    public class LocalNeighborServiceConnector : IService, INeighbourService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+                       LogManager.GetLogger(
+                       MethodBase.GetCurrentMethod().DeclaringType);
 
         private List<Scene> m_Scenes = new List<Scene>();
         private IGridService m_gridService = null;
@@ -59,86 +31,85 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             get { return m_KnownNeighbors; }
         }
 
-        private bool m_Enabled = false;
-
-        #region ISharedRegionModule
-
-        public Type ReplaceableInterface 
-        {
-            get { return null; }
-        }
+        #region IService Members
 
         public string Name
         {
-            get { return "LocalNeighbourServicesConnector"; }
+            get { return GetType().Name; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig neighborService = source.Configs["NeighborService"];
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("NeighbourHandler", "") == Name)
+                registry.RegisterInterface<INeighbourService>(this);
+        }
+
+        public void ReadConfig(IConfigSource config)
+        {
+            IConfig neighborService = config.Configs["NeighborService"];
             if (neighborService != null)
             {
                 RegionViewSize = neighborService.GetInt("RegionSightSize", RegionViewSize);
                 //This option is the opposite of the config to make it easier on the user
                 CloseLocalRegions = !neighborService.GetBoolean("SeeIntoAllLocalRegions", CloseLocalRegions);
             }
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_gridService = registry.Get<IGridService>();
+            m_simService = registry.Get<ISimulationService>();
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("NeighbourHandler", "") == Name)
+                registry.RegisterInterface<INeighbourService>(this);
+        }
+
+        #endregion
+
+        #region Region add/remove
+
+        /// <summary>
+        /// Can be called from other modules.
+        /// </summary>
+        /// <param name="scene"></param>
+        public void RemoveScene(IScene sscene)
+        {
+            Scene scene = (Scene)sscene;
+            lock (m_Scenes)
             {
-                string name = moduleConfig.GetString("NeighbourServices", this.Name);
-                if (name == Name)
+                if (m_Scenes.Contains(scene))
                 {
-                    // m_Enabled rules whether this module registers as INeighbourService or not
-                    m_Enabled = true;
-                    //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled");
+                    m_Scenes.Remove(scene);
                 }
             }
         }
 
-        public void PostInitialise()
+        /// <summary>
+        /// Can be called from other modules.
+        /// </summary>
+        /// <param name="scene"></param>
+        public void Init(IScene sscene)
         {
+            Scene scene = (Scene)sscene;
+            if (!m_Scenes.Contains(scene))
+            {
+                lock (m_Scenes)
+                {
+                    m_Scenes.Add(scene);
+                }
+            }
         }
 
-        public void Close()
-        {
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            //Keep this here so that we register the region no matter what as the remote service needs this
-            m_Scenes.Add(scene);
-
-            if (!m_Enabled)
-                return;
-
-            scene.RegisterModuleInterface<INeighbourService>(this);
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-            if (m_gridService == null)
-                m_gridService = scene.GridService;
-            if (m_simService == null)
-                m_simService = scene.SimulationService;
-            //m_log.Info("[NEIGHBOUR CONNECTOR]: Local neighbour connector enabled for region " + scene.RegionInfo.RegionName);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-            // Always remove as the remote service uses this
-            if (m_Scenes.Contains(scene))
-                m_Scenes.Remove(scene);
-        }
-
-        #endregion ISharedRegionModule
-
-        public void SetServices(IGridService gridService, ISimulationService simService)
-        {
-            if (m_gridService == null)
-                m_gridService = gridService;
-            if (m_simService == null)
-                m_simService = simService;
-        }
+        #endregion
 
         #region INeighbourService
 
@@ -148,7 +119,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_KnownNeighbors[incomingRegion.RegionID] = FindNewNeighbors(incomingRegion);
 
             //We need to inform all the regions around us that our region now exists
-            
+
             foreach (Scene s in m_Scenes)
             {
                 //Don't tell ourselves about us
@@ -172,9 +143,9 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 }
             }
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
-            if (RegionsNotInformed != 0 && m_Enabled) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            if (RegionsNotInformed != 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
-                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a new neighbor."); 
+                m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a new neighbor.");
             }
 
             return m_informedRegions;
@@ -282,7 +253,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
                 }
             }
             int RegionsNotInformed = neighbors.Count - m_informedRegions.Count;
-            if (RegionsNotInformed != 0 && m_Enabled) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            if (RegionsNotInformed != 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a closing neighbor.");
             }
@@ -332,7 +303,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
             m_log.DebugFormat(
                 "[NeighborService]: Closing child agents. Checking {0} regions in {1}",
                 NeighborsOfCurrentRegion.Count, FindSceneByUUID(currentRegionID).RegionInfo.RegionName);
-            
+
             foreach (GridRegion region in NeighborsOfCurrentRegion)
             {
                 uint x, y;

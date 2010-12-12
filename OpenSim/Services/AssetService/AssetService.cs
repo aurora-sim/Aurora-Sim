@@ -126,7 +126,7 @@ namespace OpenSim.Services.AssetService
                         "delete asset <ID>",
                         "Delete asset from database", HandleDeleteAsset);
 
-                m_log.Info("[ASSET SERVICE]: Local asset service enabled");
+                m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
             }
         }
 
