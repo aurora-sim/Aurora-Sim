@@ -74,7 +74,7 @@ namespace OpenSim.Server.Handlers.Simulation
             UUID objectID;
             UUID regionID;
             string action;
-            if (!Utils.GetParams((string)request["uri"], out objectID, out regionID, out action))
+            if (!WebUtils.GetParams((string)request["uri"], out objectID, out regionID, out action))
             {
                 m_log.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
@@ -113,7 +113,7 @@ namespace OpenSim.Server.Handlers.Simulation
 
         protected void DoObjectPost(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = Utils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;
@@ -201,7 +201,7 @@ namespace OpenSim.Server.Handlers.Simulation
 
         protected virtual void DoObjectPut(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = Utils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;

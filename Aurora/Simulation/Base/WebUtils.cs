@@ -488,6 +488,65 @@ namespace Aurora.Simulation.Base
             }
             return new string[0];
         }
+
+        /// <summary>
+        /// Extract the param from an uri.
+        /// </summary>
+        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
+        /// <param name="uri">uuid on uuid field</param>
+        /// <param name="action">optional action</param>
+        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action)
+        {
+            uuid = UUID.Zero;
+            regionID = UUID.Zero;
+            action = "";
+
+            uri = uri.Trim(new char[] { '/' });
+            string[] parts = uri.Split('/');
+            if (parts.Length <= 1)
+            {
+                return false;
+            }
+            else
+            {
+                if (!UUID.TryParse(parts[1], out uuid))
+                    return false;
+
+                if (parts.Length >= 3)
+                    UUID.TryParse(parts[2], out regionID);
+                if (parts.Length >= 4)
+                    action = parts[3];
+
+                return true;
+            }
+        }
+
+        public static OSDMap GetOSDMap(string data)
+        {
+            OSDMap args = null;
+            try
+            {
+                OSD buffer;
+                // We should pay attention to the content-type, but let's assume we know it's Json
+                buffer = OSDParser.DeserializeJson(data);
+                if (buffer.Type == OSDType.Map)
+                {
+                    args = (OSDMap)buffer;
+                    return args;
+                }
+                else
+                {
+                    // uh?
+                    m_log.Debug(("[REST COMMS]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                m_log.Debug("[REST COMMS]: exception on parse of REST message " + ex.Message);
+                return null;
+            }
+        }
     }
 
     /// <summary>Class supporting the request side of an XML-RPC transaction.</summary>

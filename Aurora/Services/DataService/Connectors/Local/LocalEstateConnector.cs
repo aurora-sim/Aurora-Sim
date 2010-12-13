@@ -17,8 +17,9 @@ namespace Aurora.Services.DataService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData GD = null;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;

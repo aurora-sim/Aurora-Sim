@@ -62,26 +62,4 @@ namespace OpenSim.Framework
 
         void EndConsoleProcessing();
     }
-
-
-    public class ConsolePluginInitialiser : PluginInitialiserBase
-    {
-        private IConfigSource m_source;
-        private string m_defaultPrompt;
-        private ISimulationBase m_baseOpenSim;
-        public ConsolePluginInitialiser(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
-        {
-            m_baseOpenSim = baseOpenSim;
-            m_source = source;
-            m_defaultPrompt = defaultPrompt;
-        }
-
-        public override void Initialise(IPlugin plugin)
-        {
-            ICommandConsole console = plugin as ICommandConsole;
-            if (console == null)
-                return;
-            console.Initialize(m_defaultPrompt, m_source, m_baseOpenSim);
-        }
-    }
 }

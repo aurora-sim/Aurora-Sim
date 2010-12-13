@@ -17,8 +17,9 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD = null;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             //Disabled for now until it is fixed
             if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
             {

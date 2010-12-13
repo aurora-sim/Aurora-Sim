@@ -52,7 +52,6 @@ namespace OpenSim.Data.MySQL
         public void Initialise()
         {
             m_log.Info("[MySQLInventoryData]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException (Name);
         }
 
         /// <summary>

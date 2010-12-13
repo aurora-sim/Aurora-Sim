@@ -30,16 +30,6 @@ using System;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Exception thrown if Initialise has been called, but failed.
-    /// </summary>
-    public class PluginNotInitialisedException : Exception
-    {
-        public PluginNotInitialisedException () : base() {}
-        public PluginNotInitialisedException (string msg) : base(msg) {}
-        public PluginNotInitialisedException (string msg, Exception e) : base(msg, e) {}
-    }
-
-    /// <summary>
     /// This interface, describes a generic plugin
     /// </summary>
     public interface IPlugin : IDisposable
@@ -50,19 +40,4 @@ namespace OpenSim.Framework
         /// <returns>Plugin name, eg MySQL User Provider</returns>
         string Name { get; }
     }
-
-    /// <summary>
-    /// Any plugins which need to pass parameters to their initialisers must
-    /// inherit this class and use it to set the PluginLoader Initialiser property
-    /// </summary>
-    public class PluginInitialiserBase
-    {
-        // this would be a lot simpler if C# supported currying or typedefs
-
-        // default initialisation
-        public virtual void Initialise (IPlugin plugin)
-        {
-        }
-    }
-
 }

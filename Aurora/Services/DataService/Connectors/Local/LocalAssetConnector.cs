@@ -6,6 +6,8 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Framework;
+using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {
@@ -13,8 +15,9 @@ namespace Aurora.Services.DataService
 	{
 		private IGenericData GD = null;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;

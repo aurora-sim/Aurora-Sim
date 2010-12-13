@@ -20,8 +20,9 @@ namespace Aurora.Services.DataService
         private string StorageProvider = "";
         private string ConnectionString = "";
 
-        public void Initialise(IConfigSource source)
+        public void Initialise(ISimulationBase simBase)
         {
+            IConfigSource source = simBase.ConfigSource;
             //
             // Try reading the [DatabaseService] section, if it exists
             //
@@ -75,28 +76,8 @@ namespace Aurora.Services.DataService
             List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
             foreach (IAuroraDataPlugin plugin in Plugins)
             {
-                plugin.Initialize(DataConnector, source, ConnectionString);
+                plugin.Initialize(DataConnector, simBase, ConnectionString);
             }
-        }
-    }
-
-    public class AuroraDataPluginInitialiser : PluginInitialiserBase
-    {
-        IGenericData GD;
-        IConfigSource m_source;
-        string m_defaultConnectionString = "";
-
-        public AuroraDataPluginInitialiser(IGenericData GenericData, IConfigSource source, string DefaultConnectionString)
-        {
-            GD = GenericData;
-            m_source = source;
-            m_defaultConnectionString = DefaultConnectionString;
-        }
-        public override void Initialise(IPlugin plugin)
-        {
-            IAuroraDataPlugin dataplugin = plugin as IAuroraDataPlugin;
-            IGenericData GenericData = GD.Copy();
-            dataplugin.Initialize(GenericData, m_source, m_defaultConnectionString);
         }
     }
 }

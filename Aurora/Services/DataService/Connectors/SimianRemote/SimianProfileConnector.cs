@@ -26,11 +26,12 @@ namespace Aurora.Services.DataService
 
         private string m_ServerURI = "";
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("ProfileConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", "");
+                m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }

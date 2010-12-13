@@ -92,6 +92,10 @@ namespace OpenSim.CoreApplicationPlugins
         {
         }
 
+        public void PostStart()
+        {
+        }
+
         public string Name
         {
             get { return "AuroraDataStartupPlugin"; }

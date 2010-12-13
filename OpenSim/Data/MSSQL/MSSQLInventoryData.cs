@@ -57,7 +57,6 @@ namespace OpenSim.Data.MSSQL
         public void Initialise()
         {
             m_log.Info("[MSSQLInventoryData]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
         }
 
         /// <summary>

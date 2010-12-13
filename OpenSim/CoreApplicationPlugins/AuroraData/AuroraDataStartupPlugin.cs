@@ -15,17 +15,21 @@ namespace OpenSim.CoreApplicationPlugins
         ISimulationBase OpenSimBase;
         public void Initialize(ISimulationBase openSim)
         {
-            m_log.Debug("[AURORADATA]: Setting up the data service");
             OpenSimBase = openSim;
-            LocalDataService service = new LocalDataService();
-            service.Initialise(openSim.ConfigSource);
         }
 
         public void PostInitialise()
         {
+            m_log.Debug("[AURORADATA]: Setting up the data service");
+            LocalDataService service = new LocalDataService();
+            service.Initialise(OpenSimBase);
         }
 
         public void Start()
+        {
+        }
+
+        public void PostStart()
         {
         }
 

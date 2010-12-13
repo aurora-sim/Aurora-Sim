@@ -24,18 +24,20 @@ namespace Aurora.Services.DataService
                 MethodBase.GetCurrentMethod().DeclaringType);
         private string m_ServerURI = "";
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, string DefaultConnectionString)
+        public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "RemoteConnector")
             {
                 //Later thought... we really do need just the AuroraServerURI, since it won't work with the normal grid server most of the time
                 //We want the grid server URL, but if we can't find it, resort to trying the default Aurora one
                 /*if (source.Configs["GridService"].GetString("GridServerURI", string.Empty) != string.Empty)
                     m_ServerURI = source.Configs["GridService"].GetString("GridServerURI", string.Empty);
-                else */if (source.Configs["AuroraData"].GetString("RemoteRegionServerURI", string.Empty) != string.Empty)
-                    m_ServerURI = source.Configs["AuroraData"].GetString("RemoteRegionServerURI", string.Empty);
+                else */
+                if (simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteRegionServerURI", "AuroraData") != string.Empty)
+                    m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteRegionServerURI", "AuroraData");
                 else
-                    m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", string.Empty);
+                    m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 
                 //If both are blank, no connector
                 if (m_ServerURI != string.Empty)

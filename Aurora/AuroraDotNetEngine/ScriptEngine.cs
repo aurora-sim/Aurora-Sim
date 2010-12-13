@@ -1090,42 +1090,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        #region Plugin Initializers
-
-        public class NonSharedScriptPluginInitialiser : PluginInitialiserBase
-        {
-            ScriptEngine m_engine;
-            Scene m_scene;
-            public NonSharedScriptPluginInitialiser(ScriptEngine engine, Scene scene)
-            {
-                m_scene = scene;
-                m_engine = engine;
-            }
-
-            public override void Initialise(IPlugin plugin)
-            {
-                INonSharedScriptPlugin nonSharedPlugin = (INonSharedScriptPlugin)plugin;
-                nonSharedPlugin.Initialize(m_engine, m_scene);
-            }
-        }
-
-        public class SharedScriptPluginInitialiser : PluginInitialiserBase
-        {
-            ScriptEngine m_engine;
-            public SharedScriptPluginInitialiser(ScriptEngine engine)
-            {
-                m_engine = engine;
-            }
-
-            public override void Initialise(IPlugin plugin)
-            {
-                ISharedScriptPlugin sharedPlugin = (ISharedScriptPlugin)plugin;
-                sharedPlugin.Initialize(m_engine);
-            }
-        }
-
-        #endregion
-
         /// <summary>
         /// Starts all non shared script plugins
         /// </summary>

@@ -18,8 +18,9 @@ namespace Aurora.Services.DataService
         private int minTimeBeforeNextParcelUpdate = 60;
         private Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;

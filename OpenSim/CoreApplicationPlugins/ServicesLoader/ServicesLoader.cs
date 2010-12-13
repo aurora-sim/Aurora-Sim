@@ -18,6 +18,10 @@ namespace OpenSim.CoreApplicationPlugins
 
         public void PostInitialise()
         {
+        }
+
+        public void Start()
+        {
             IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("ServicesLoader", "") != Name)
                 return;
@@ -55,7 +59,7 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        public void Start()
+        public void PostStart()
         {
         }
 

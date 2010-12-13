@@ -184,6 +184,10 @@ namespace OpenSim.CoreApplicationPlugins
 
         public void Start()
         {
+        }
+
+        public void PostStart()
+        {
             if (m_enabled)
             {
                 manager = m_application.ApplicationRegistry.Get<SceneManager>();

@@ -78,7 +78,7 @@ namespace OpenSim.Server.Handlers.Simulation
             UUID agentID;
             UUID regionID;
             string action;
-            if (!Utils.GetParams((string)request["uri"], out agentID, out regionID, out action))
+            if (!WebUtils.GetParams((string)request["uri"], out agentID, out regionID, out action))
             {
                 m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
@@ -122,7 +122,7 @@ namespace OpenSim.Server.Handlers.Simulation
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
         {
-            OSDMap args = Utils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
@@ -213,7 +213,7 @@ namespace OpenSim.Server.Handlers.Simulation
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)
         {
-            OSDMap args = Utils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;

@@ -15,8 +15,9 @@ namespace Aurora.Services.DataService
         private IGenericData GD = null;
         private Dictionary<UUID, StateSave> m_cachedStateSaves = new Dictionary<UUID, StateSave>();
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
+            IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("IScriptDataConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;

@@ -13,7 +13,7 @@ using log4net;
 
 namespace OpenSim.Services.Connectors.AutoConfiguration
 {
-    public class AutoConfigurationService : IAutoConfigurationService, IService
+    public class AutoConfigurationService : IAutoConfigurationService, IApplicationPlugin
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -26,18 +26,18 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public void Initialize(ISimulationBase openSim)
         {
             //Register by default as this only gets used in remote grid mode
-            registry.RegisterInterface<IAutoConfigurationService>(this);
+            openSim.ApplicationRegistry.RegisterInterface<IAutoConfigurationService>(this);
 
-            m_config = config;
+            m_config = openSim.ConfigSource;
 
-            IConfig handlerConfig = config.Configs["Handlers"];
+            IConfig handlerConfig = m_config.Configs["Handlers"];
             if (handlerConfig.GetString("AutoConfigurationHandler", "") != Name)
                 return;
 
-            IConfig autoConfig = config.Configs["AutoConfiguration"];
+            IConfig autoConfig = m_config.Configs["AutoConfiguration"];
             if (autoConfig == null)
                 return;
 
@@ -56,17 +56,24 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
             m_autoConfig = (OSDMap)OSDParser.DeserializeJson(resp);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        public void PostInitialise()
         {
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public void Start()
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        public void PostStart()
         {
-            registry.RegisterInterface<IAutoConfigurationService>(this);
+        }
+
+        public void Close()
+        {
+        }
+
+        public void Dispose()
+        {
         }
 
         public string FindValueOf(string key, string configurationSource)
@@ -75,7 +82,7 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
                 return m_autoConfig[key].AsString();
 
             IConfig config = m_config.Configs[configurationSource];
-            if(config == null)
+            if (config == null)
                 return "";
 
             return config.GetString(key, "");

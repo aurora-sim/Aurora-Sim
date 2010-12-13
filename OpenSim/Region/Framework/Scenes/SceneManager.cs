@@ -172,6 +172,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
+        public void PostStart()
+        {
+        }
+
         public string Name
         {
             get { return "SceneManager"; }

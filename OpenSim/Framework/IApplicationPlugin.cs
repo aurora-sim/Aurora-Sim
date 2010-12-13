@@ -53,6 +53,14 @@ namespace OpenSim.Framework
         /// </summary>
         void Start();
 
+        /// <summary>
+        /// Called when the application loading is completed 
+        /// </summary>
+        void PostStart();
+
+        /// <summary>
+        /// Close out the module
+        /// </summary>
         void Close();
     }
 }
@@ -169,6 +177,6 @@ namespace Aurora.Framework
         /// <param name="GenericData">The Database Plugin</param>
         /// <param name="source">Config if more parameters are needed</param>
         /// <param name="DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, ISimulationBase simBase, string DefaultConnectionString);
     }
 }

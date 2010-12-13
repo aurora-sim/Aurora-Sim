@@ -62,7 +62,6 @@ namespace OpenSim.Data.MSSQL
         override public void Initialise()
         {
             m_log.Info("[MSSQLAssetData]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
         }
 
         /// <summary>
