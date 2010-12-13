@@ -44,12 +44,8 @@ using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
-
-
 namespace OpenSim.Region.Framework.Scenes
 {
-    
-                                      
     public class RegionStatsHandler : IStreamedRequestHandler
     {
         private string osRXStatsURI = String.Empty;
@@ -105,7 +101,6 @@ namespace OpenSim.Region.Framework.Scenes
             strBuffer = OSDParser.SerializeJsonString(args);
 
             return strBuffer;
-            
-         }
+        }
     }
 }

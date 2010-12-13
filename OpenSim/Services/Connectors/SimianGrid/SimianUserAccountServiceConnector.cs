@@ -45,7 +45,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects user account data (creating new users, looking up existing 
     /// users) to the SimianGrid backend
     /// </summary>
-    public class SimianUserAccountServiceConnector : IUserAccountService, ISharedRegionModule
+    public class SimianUserAccountServiceConnector : IUserAccountService, IService
     {
         private const double CACHE_EXPIRATION_SECONDS = 120.0;
 

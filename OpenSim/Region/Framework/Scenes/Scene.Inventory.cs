@@ -155,21 +155,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
         }
-        
-        /// <summary>
-        /// Add the given inventory item to a user's inventory.
-        /// </summary>
-        /// <param name="AgentID">
-        /// A <see cref="UUID"/>
-        /// </param>
-        /// <param name="item">
-        /// A <see cref="InventoryItemBase"/>
-        /// </param>
-        [Obsolete("Use AddInventoryItem(InventoryItemBase item) instead.  This was deprecated in OpenSim 0.7.1")]
-        public void AddInventoryItem(UUID AgentID, InventoryItemBase item)
-        {
-            AddInventoryItem(item);
-        }
 
         /// <summary>
         /// Add an inventory item to an avatar's inventory.
@@ -2137,7 +2122,7 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.TriggerGetScriptRunning(controllingClient, objectID, itemID);
         }
 
-        void ObjectOwner(IClientAPI remoteClient, UUID ownerID, UUID groupID, List<uint> localIDs)
+        protected void ObjectOwner(IClientAPI remoteClient, UUID ownerID, UUID groupID, List<uint> localIDs)
         {
             if (!Permissions.IsGod(remoteClient.AgentId))
             {

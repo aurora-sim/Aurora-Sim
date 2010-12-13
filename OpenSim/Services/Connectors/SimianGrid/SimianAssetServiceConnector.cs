@@ -54,7 +54,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         private string m_serverUrl = String.Empty;
         private IImprovedAssetCache m_cache;
-        private bool m_Enabled = false;
 
         public SimianAssetServiceConnector() { }
         public SimianAssetServiceConnector(string url) { m_serverUrl = url; }
@@ -78,6 +77,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_cache = registry.Get<IImprovedAssetCache>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -107,8 +107,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             if (String.IsNullOrEmpty(m_serverUrl))
                 m_log.Info("[SIMIAN ASSET CONNECTOR]: No AssetServerURI specified, disabling connector");
-            else
-                m_Enabled = true;
         }
 
         #region IAssetService

@@ -39,12 +39,6 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    #region Delegates
-
-    public delegate void PhysicsCrash();
-
-    #endregion
-
     /// <summary>
     /// This class used to be called InnerScene and may not yet truly be a SceneGraph.  The non scene graph components
     /// should be migrated out over time.

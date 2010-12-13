@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Scenes
         Distance = 1,
         SimpleAngularDistance = 2,
         FrontBack = 3,
-        BestAvatarResponsiveness = 4,
+        BestAvatarResponsiveness = 4
     }
 
     public class Prioritizer
