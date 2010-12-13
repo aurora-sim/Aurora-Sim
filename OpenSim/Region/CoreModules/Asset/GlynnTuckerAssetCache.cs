@@ -36,11 +36,14 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Region.CoreModules.Asset
 {
-    public class GlynnTuckerAssetCache : ISharedRegionModule, IImprovedAssetCache
+    public class GlynnTuckerAssetCache : IService, IImprovedAssetCache
     {
+        #region Declares
+
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
@@ -53,19 +56,18 @@ namespace OpenSim.Region.CoreModules.Asset
         // Instrumentation
         private uint m_DebugRate;
 
-        public Type ReplaceableInterface 
-        {
-            get { return null; }
-        }
-
         public string Name
         {
             get { return "GlynnTuckerAssetCache"; }
         }
 
-        public void Initialise(IConfigSource source)
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
+            IConfig moduleConfig = config.Configs["Modules"];
 
             if (moduleConfig != null)
             {
@@ -80,34 +82,34 @@ namespace OpenSim.Region.CoreModules.Asset
                     m_log.Info("[ASSET CACHE]: GlynnTucker asset cache enabled");
 
                     // Instrumentation
-                    IConfig cacheConfig = source.Configs["AssetCache"];
+                    IConfig cacheConfig = config.Configs["AssetCache"];
                     if (cacheConfig != null)
                         m_DebugRate = (uint)cacheConfig.GetInt("DebugRate", 0);
+                    registry.RegisterInterface<IImprovedAssetCache>(this);
                 }
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void Close()
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void AddRegion(Scene scene)
-        {
-            if (m_Enabled)
-                scene.RegisterModuleInterface<IImprovedAssetCache>(this);
-        }
-
-        public void RemoveRegion(Scene scene)
+        public void PostStart(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterInterface<IImprovedAssetCache>(this);
         }
+
+        #endregion
+
+        #region IImprovedAssetCache
 
         ////////////////////////////////////////////////////////////
         // IImprovedAssetCache
@@ -155,5 +157,7 @@ namespace OpenSim.Region.CoreModules.Asset
             }
             // End instrumentation
         }
+
+        #endregion
     }
 }

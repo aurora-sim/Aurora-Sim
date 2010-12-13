@@ -46,11 +46,14 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
 
 namespace Flotsam.RegionModules.AssetCache
 {
-    public class FlotsamAssetCache : ISharedRegionModule, IImprovedAssetCache, IAssetService
+    public class FlotsamAssetCache : IService, IImprovedAssetCache, IAssetService
     {
+        #region Declares
+
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
@@ -108,20 +111,19 @@ namespace Flotsam.RegionModules.AssetCache
             m_InvalidChars.AddRange(Path.GetInvalidFileNameChars());
         }
 
-        public Type ReplaceableInterface 
-        {
-            get { return null; }
-        }
-
         public string Name
         {
             get { return m_ModuleName; }
         }
 
-        public void Initialise(IConfigSource source)
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            
+            IConfig moduleConfig = config.Configs["Modules"];
+
             if (moduleConfig != null)
             {
                 string name = moduleConfig.GetString("AssetCaching", String.Empty);
@@ -133,7 +135,7 @@ namespace Flotsam.RegionModules.AssetCache
 
                     //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} enabled", this.Name);
 
-                    IConfig assetConfig = source.Configs["AssetCache"];
+                    IConfig assetConfig = config.Configs["AssetCache"];
                     if (assetConfig == null)
                     {
                         //m_log.Warn("[FLOTSAM ASSET CACHE]: AssetCache missing from OpenSim.ini, using defaults.");
@@ -190,51 +192,35 @@ namespace Flotsam.RegionModules.AssetCache
                     m_DeepScanBeforePurge = assetConfig.GetBoolean("DeepScanBeforePurge", false);
 
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache status", "fcache status", "Display cache status", HandleConsoleCommand);
-                    MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache clear",  "fcache clear [file] [memory]", "Remove all assets in the file and/or memory cache", HandleConsoleCommand);
+                    MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache clear", "fcache clear [file] [memory]", "Remove all assets in the file and/or memory cache", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache assets", "fcache assets", "Attempt a deep scan and cache of all assets in all scenes", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache expire", "fcache expire <datetime>", "Purge cached assets older then the specified date/time", HandleConsoleCommand);
+                    registry.RegisterInterface<IImprovedAssetCache>(this);
                 }
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void Close()
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            if (m_Enabled)
-            {
-                scene.RegisterModuleInterface<IImprovedAssetCache>(this);
-                m_Scenes.Add(scene);
-
-                if (m_AssetService == null)
-                {
-                    m_AssetService = scene.RequestModuleInterface<IAssetService>();
-                }
-            }
+            m_AssetService = registry.Get<IAssetService>();
         }
 
-        public void RemoveRegion(Scene scene)
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            if (m_Enabled)
-            {
-                scene.UnregisterModuleInterface<IImprovedAssetCache>(this);
-                m_Scenes.Remove(scene);
-            }
+            registry.RegisterInterface<IImprovedAssetCache>(this);
         }
 
-        public void RegionLoaded(Scene scene)
-        {
-            if (m_AssetService == null)
-            {
-                m_AssetService = scene.RequestModuleInterface<IAssetService>();
-            }
-        }
+        #endregion
+
+        #region IImprovedAssetCache
 
         ////////////////////////////////////////////////////////////
         // IImprovedAssetCache
@@ -908,6 +894,8 @@ namespace Flotsam.RegionModules.AssetCache
             Expire(id);
             return true;
         }
+
+        #endregion
 
         #endregion
     }

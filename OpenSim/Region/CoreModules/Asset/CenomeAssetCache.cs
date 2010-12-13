@@ -32,6 +32,7 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Region.CoreModules.Asset
 {
@@ -89,8 +90,10 @@ namespace OpenSim.Region.CoreModules.Asset
     /// ExpirationTime = 60
     /// </code>
     /// </example>
-    public class CenomeMemoryAssetCache : IImprovedAssetCache, ISharedRegionModule
+    public class CenomeMemoryAssetCache : IImprovedAssetCache, IService
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         /// <summary>
@@ -151,6 +154,46 @@ namespace OpenSim.Region.CoreModules.Asset
         /// </summary>
         private int m_hitCount;
 
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_cache = null;
+            m_enabled = false;
+
+            IConfig moduleConfig = config.Configs["Modules"];
+            if (moduleConfig == null)
+                return;
+
+            string name = moduleConfig.GetString("AssetCaching");
+            //m_log.DebugFormat("[XXX] name = {0} (this module's name: {1}", name, Name);
+
+            if (name != Name)
+                return;
+
+            long maxSize = DefaultMaxSize;
+            int maxCount = DefaultMaxCount;
+            TimeSpan expirationTime = DefaultExpirationTime;
+
+            IConfig assetConfig = config.Configs["AssetCache"];
+            if (assetConfig != null)
+            {
+                // Get optional configurations
+                maxSize = assetConfig.GetLong("MaxSize", DefaultMaxSize);
+                maxCount = assetConfig.GetInt("MaxCount", DefaultMaxCount);
+                expirationTime =
+                    TimeSpan.FromMinutes(assetConfig.GetInt("ExpirationTime", (int)DefaultExpirationTime.TotalMinutes));
+
+                // Debugging purposes only
+                m_debugEpoch = assetConfig.GetInt("DebugEpoch", 0);
+            }
+
+            Initialize(maxSize, maxCount, expirationTime);
+            registry.RegisterInterface<IImprovedAssetCache>(this);
+        }
+
         /// <summary>
         /// Initialize asset cache module, with custom parameters.
         /// </summary>
@@ -189,6 +232,25 @@ namespace OpenSim.Region.CoreModules.Asset
                 maximalCount,
                 expirationTime);
         }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            registry.RegisterInterface<IImprovedAssetCache>(this);
+        }
+
+        #endregion
 
         #region IImprovedAssetCache Members
 
@@ -272,129 +334,12 @@ namespace OpenSim.Region.CoreModules.Asset
             return assetBase;
         }
 
-        #endregion
-
-        #region ISharedRegionModule Members
-
         /// <summary>
         /// Gets region module's name.
         /// </summary>
         public string Name
         {
             get { return "CenomeMemoryAssetCache"; }
-        }
-
-        public Type ReplaceableInterface 
-        {
-            get { return null; }
-        }
-
-        /// <summary>
-        /// New region is being added to server.
-        /// </summary>
-        /// <param name="scene">
-        /// Region's scene.
-        /// </param>
-        public void AddRegion(Scene scene)
-        {
-            if (m_enabled)
-                scene.RegisterModuleInterface<IImprovedAssetCache>(this);
-        }
-
-        /// <summary>
-        /// Close region module.
-        /// </summary>
-        public void Close()
-        {
-            m_enabled = false;
-            m_cache.Clear();
-            m_cache = null;
-        }
-
-        /// <summary>
-        /// Initialize region module.
-        /// </summary>
-        /// <param name="source">
-        /// Configuration source.
-        /// </param>
-        public void Initialise(IConfigSource source)
-        {
-            m_cache = null;
-            m_enabled = false;
-
-            IConfig moduleConfig = source.Configs[ "Modules" ];
-            if (moduleConfig == null)
-                return;
-
-            string name = moduleConfig.GetString("AssetCaching");
-            //m_log.DebugFormat("[XXX] name = {0} (this module's name: {1}", name, Name);
-
-            if (name != Name)
-                return;
-            
-            long maxSize = DefaultMaxSize;
-            int maxCount = DefaultMaxCount;
-            TimeSpan expirationTime = DefaultExpirationTime;
-
-            IConfig assetConfig = source.Configs["AssetCache"];
-            if (assetConfig != null)
-            {
-                // Get optional configurations
-                maxSize = assetConfig.GetLong("MaxSize", DefaultMaxSize);
-                maxCount = assetConfig.GetInt("MaxCount", DefaultMaxCount);
-                expirationTime =
-                    TimeSpan.FromMinutes(assetConfig.GetInt("ExpirationTime", (int)DefaultExpirationTime.TotalMinutes));
-
-                // Debugging purposes only
-                m_debugEpoch = assetConfig.GetInt("DebugEpoch", 0);
-            }
-
-            Initialize(maxSize, maxCount, expirationTime);
-        }
-
-        /// <summary>
-        /// Initialization post handling.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Modules can use this to initialize connection with other modules.
-        /// </para>
-        /// </remarks>
-        public void PostInitialise()
-        {
-        }
-
-        /// <summary>
-        /// Region has been loaded.
-        /// </summary>
-        /// <param name="scene">
-        /// Region's scene.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// This is needed for all module types. Modules will register
-        /// Interfaces with scene in AddScene, and will also need a means
-        /// to access interfaces registered by other modules. Without
-        /// this extra method, a module attempting to use another modules'
-        /// interface would be successful only depending on load order,
-        /// which can't be depended upon, or modules would need to resort
-        /// to ugly kludges to attempt to request interfaces when needed
-        /// and unnecessary caching logic repeated in all modules.
-        /// The extra function stub is just that much cleaner.
-        /// </para>
-        /// </remarks>
-        public void RegionLoaded(Scene scene)
-        {
-        }
-
-        /// <summary>
-        /// Region is being removed.
-        /// </summary>
-        /// <param name="scene">
-        /// Region scene that is being removed.
-        /// </param>
-        public void RemoveRegion(Scene scene)
-        {
         }
 
         #endregion
