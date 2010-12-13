@@ -353,6 +353,11 @@ namespace Aurora.Simulation.Base
             {
                 plugin.Start();
             }
+
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
+            {
+                plugin.PostStart();
+            }
         }
 
         /// <summary>

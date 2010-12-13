@@ -130,7 +130,10 @@ namespace OpenSim.Services.Connectors
                 {
                     if (n.RegionID == s.RegionInfo.RegionID)
                     {
-                        m_log.DebugFormat("[NeighborConnector]: HelloNeighbour from {0} to {1}.",
+                        //Fix this regions neighbors now that it has a new one
+                        m_KnownNeighbors[s.RegionInfo.RegionID] = FindNewNeighbors(s.RegionInfo);
+
+                        m_log.InfoFormat("[NeighborConnector]: HelloNeighbour from {0} to {1}.",
                             incomingRegion.RegionName, n.RegionName);
 
                         //Tell this region about the original region
