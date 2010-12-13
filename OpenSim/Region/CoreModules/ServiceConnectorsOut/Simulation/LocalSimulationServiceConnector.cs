@@ -43,8 +43,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Simulation
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_ModuleEnabled = false;
-
         #region ISharedRegionModule
 
         public void Initialise(IConfigSource config)

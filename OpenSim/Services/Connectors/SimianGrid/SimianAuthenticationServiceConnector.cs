@@ -43,44 +43,45 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Connects authentication/authorization to the SimianGrid backend
     /// </summary>
-    public class SimianAuthenticationServiceConnector : IAuthenticationService, ISharedRegionModule
+    public class SimianAuthenticationServiceConnector : IAuthenticationService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        private bool m_Enabled = false;
+        public string Name { get { return GetType().Name; } }
+        
+        #region IService Members
 
-        #region ISharedRegionModule
-
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
-
-        public SimianAuthenticationServiceConnector() { }
-        public string Name { get { return "SimianAuthenticationServiceConnector"; } }
-        public void AddRegion(Scene scene) { if (m_Enabled) { scene.RegisterModuleInterface<IAuthenticationService>(this); } }
-        public void RemoveRegion(Scene scene) { if (m_Enabled) { scene.UnregisterModuleInterface<IAuthenticationService>(this); } }
-
-        #endregion ISharedRegionModule
-
-        public SimianAuthenticationServiceConnector(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            CommonInit(source);
         }
 
-        public void Initialise(IConfigSource source)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("AuthenticationServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IAuthenticationService>(this);
         }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IAuthenticationService>(this);
+        }
+
+        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -93,7 +94,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
                         serviceUrl = serviceUrl + '/';
                     m_serverUrl = serviceUrl;
-                    m_Enabled = true;
                 }
             }
 

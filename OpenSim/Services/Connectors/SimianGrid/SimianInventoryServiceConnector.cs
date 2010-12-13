@@ -59,7 +59,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Connects avatar inventories to the SimianGrid backend
     /// </summary>
-    public class SimianInventoryServiceConnector : IInventoryService, ISharedRegionModule
+    public class SimianInventoryServiceConnector : IInventoryService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -68,41 +68,43 @@ namespace OpenSim.Services.Connectors.SimianGrid
         private string m_serverUrl = String.Empty;
         private string m_userServerUrl = String.Empty;
 //        private object m_gestureSyncRoot = new object();
-        private bool m_Enabled = false;
 
-        #region ISharedRegionModule
+        #region IService Members
 
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
+        public string Name { get { return GetType().Name; } }
 
-        public SimianInventoryServiceConnector() { }
-        public string Name { get { return "SimianInventoryServiceConnector"; } }
-        public void AddRegion(Scene scene) { if (m_Enabled) { scene.RegisterModuleInterface<IInventoryService>(this); } }
-        public void RemoveRegion(Scene scene) { if (m_Enabled) { scene.UnregisterModuleInterface<IInventoryService>(this); } }
-
-        #endregion ISharedRegionModule
-
-        public SimianInventoryServiceConnector(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            CommonInit(source);
         }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IInventoryService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IInventoryService>(this);
+        }
+
+        #endregion
 
         public SimianInventoryServiceConnector(string url)
         {
             m_serverUrl = url;
-        }
-
-        public void Initialise(IConfigSource source)
-        {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("InventoryServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
         }
 
         private void CommonInit(IConfigSource source)
@@ -124,7 +126,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                         if (!String.IsNullOrEmpty(serviceUrl))
                         {
                             m_userServerUrl = serviceUrl;
-                            m_Enabled = true;
                         }
                     }
                 }

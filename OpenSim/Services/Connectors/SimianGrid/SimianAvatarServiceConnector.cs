@@ -47,45 +47,45 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Connects avatar appearance data to the SimianGrid backend
     /// </summary>
-    public class SimianAvatarServiceConnector : IAvatarService, ISharedRegionModule
+    public class SimianAvatarServiceConnector : IAvatarService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        //        private static string ZeroID = UUID.Zero.ToString();
 
         private string m_serverUrl = String.Empty;
-        private bool m_Enabled = false;
+        public string Name { get { return GetType().Name; } }
+        
+        #region IService Members
 
-        #region ISharedRegionModule
-
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
-
-        public SimianAvatarServiceConnector() { }
-        public string Name { get { return "SimianAvatarServiceConnector"; } }
-        public void AddRegion(Scene scene) { if (m_Enabled) { scene.RegisterModuleInterface<IAvatarService>(this); } }
-        public void RemoveRegion(Scene scene) { if (m_Enabled) { scene.UnregisterModuleInterface<IAvatarService>(this); } }
-
-        #endregion ISharedRegionModule
-
-        public SimianAvatarServiceConnector(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            CommonInit(source);
         }
 
-        public void Initialise(IConfigSource source)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("AvatarServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IAvatarService>(this);
         }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IAvatarService>(this);
+        }
+
+        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -98,7 +98,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
                         serviceUrl = serviceUrl + '/';
                     m_serverUrl = serviceUrl;
-                    m_Enabled = true;
                 }
             }
 

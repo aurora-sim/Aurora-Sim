@@ -62,11 +62,16 @@ namespace OpenSim.Region.CoreModules
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnAvatarEnteringNewParcel += OnEnteringNewParcel;
         }
 
         public void RemoveRegion(Scene scene)
         {
             m_PresenceService.LogoutRegionAgents(scene.RegionInfo.RegionID);
+            scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnAvatarEnteringNewParcel -= OnEnteringNewParcel;
         }
 
         public void RegionLoaded(Scene scene)
@@ -123,7 +128,15 @@ namespace OpenSim.Region.CoreModules
                 m_PresenceService.LogoutAgent(client.SessionId);
                 m_GridUserService.LoggedOut(client.AgentId.ToString(), client.SessionId, client.Scene.RegionInfo.RegionID, position, lookat);
             }
+        }
 
+        public void OnEnteringNewParcel(ScenePresence sp, int localLandID, UUID regionID)
+        {
+            // Asynchronously update the position stored in the session table for this agent
+            Util.FireAndForget(delegate(object o)
+            {
+                m_GridUserService.SetLastPosition(sp.UUID.ToString(), sp.ControllingClient.SessionId, sp.Scene.RegionInfo.RegionID, sp.AbsolutePosition, sp.Lookat);
+            });
         }
     }
 }

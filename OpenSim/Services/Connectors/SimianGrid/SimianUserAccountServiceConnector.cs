@@ -55,37 +55,39 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         private string m_serverUrl = String.Empty;
         private ExpiringCache<UUID, UserAccount> m_accountCache = new ExpiringCache<UUID,UserAccount>();
-        private bool m_Enabled;
 
-        #region ISharedRegionModule
+        #region IService Members
 
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
+        public string Name { get { return GetType().Name; } }
 
-        public SimianUserAccountServiceConnector() { }
-        public string Name { get { return "SimianUserAccountServiceConnector"; } }
-        public void AddRegion(Scene scene) { if (m_Enabled) { scene.RegisterModuleInterface<IUserAccountService>(this); } }
-        public void RemoveRegion(Scene scene) { if (m_Enabled) { scene.UnregisterModuleInterface<IUserAccountService>(this); } }
-
-        #endregion ISharedRegionModule
-
-        public SimianUserAccountServiceConnector(IConfigSource source)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            CommonInit(source);
         }
 
-        public void Initialise(IConfigSource source)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("UserAccountServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IUserAccountService>(this);
         }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IUserAccountService>(this);
+        }
+
+        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -98,7 +100,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
                         serviceUrl = serviceUrl + '/';
                     m_serverUrl = serviceUrl;
-                    m_Enabled = true;
                 }
             }
 

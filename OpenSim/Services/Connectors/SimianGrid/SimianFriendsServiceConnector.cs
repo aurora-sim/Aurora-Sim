@@ -52,12 +52,40 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         private string m_serverUrl = String.Empty;
 
-        public SimianFriendsServiceConnector(IConfigSource source)
+        #region IService Members
+
+        public string Name { get { return GetType().Name; } }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            Initialise(source);
         }
 
-        public void Initialise(IConfigSource source)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FriendsHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IFriendsService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("FriendsHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IFriendsService>(this);
+        }
+
+        #endregion
+
+        private void CommonInit(IConfigSource source)
         {
             IConfig gridConfig = source.Configs["FriendsService"];
             if (gridConfig != null)

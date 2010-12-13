@@ -54,6 +54,19 @@ namespace Aurora.Modules
     {
         #region Declares
 
+        /// <summary>
+        /// Avatar profile flags
+        /// </summary>
+        [Flags]
+        public enum ProfileFlags : uint
+        {
+            AllowPublish = 1,
+            MaturePublish = 2,
+            Identified = 4,
+            Transacted = 8,
+            Online = 16
+        }
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileFrontend = null;
         private IFriendsModule m_friendsModule;

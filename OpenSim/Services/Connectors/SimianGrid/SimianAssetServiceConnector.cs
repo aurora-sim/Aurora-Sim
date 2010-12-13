@@ -38,13 +38,14 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
     /// <summary>
     /// Connects to the SimianGrid asset service
     /// </summary>
-    public class SimianAssetServiceConnector : IAssetService, ISharedRegionModule
+    public class SimianAssetServiceConnector : IAssetService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -55,49 +56,41 @@ namespace OpenSim.Services.Connectors.SimianGrid
         private IImprovedAssetCache m_cache;
         private bool m_Enabled = false;
 
-        #region ISharedRegionModule
-
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene)
-        {
-            if (m_cache == null)
-            {
-                IImprovedAssetCache cache = scene.RequestModuleInterface<IImprovedAssetCache>();
-                if (cache is ISharedRegionModule)
-                    m_cache = cache;
-            }
-        }
-        public void PostInitialise() { }
-        public void Close() { }
-
         public SimianAssetServiceConnector() { }
-        public string Name { get { return "SimianAssetServiceConnector"; } }
-        public void AddRegion(Scene scene) { if (m_Enabled) { scene.RegisterModuleInterface<IAssetService>(this); } }
-        public void RemoveRegion(Scene scene) { if (m_Enabled) { scene.UnregisterModuleInterface<IAssetService>(this); } }
+        public SimianAssetServiceConnector(string url) { m_serverUrl = url; }
+        public string Name { get { return GetType().Name; } }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IAssetService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IAssetService>(this);
+        }
+
+        #endregion
         
-        #endregion ISharedRegionModule
-
-        public SimianAssetServiceConnector(IConfigSource source)
-        {
-            CommonInit(source);
-        }
-
-        public SimianAssetServiceConnector(string url)
-        {
-            m_serverUrl = url;
-        }
-
-        public void Initialise(IConfigSource source)
-        {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("AssetServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
-        }
-
         private void CommonInit(IConfigSource source)
         {
             IConfig gridConfig = source.Configs["AssetService"];

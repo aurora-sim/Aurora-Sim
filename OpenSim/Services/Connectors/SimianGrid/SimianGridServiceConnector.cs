@@ -51,7 +51,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects region registration and neighbor lookups to the SimianGrid
     /// backend
     /// </summary>
-    public class SimianGridServiceConnector : IGridService, ISharedRegionModule
+    public class SimianGridServiceConnector : IGridService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -59,57 +59,39 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         private string m_serverUrl = String.Empty;
         private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
-        private bool m_Enabled = false;
 
-        #region ISharedRegionModule
+        #region IService Members
 
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
+        public string Name { get { return GetType().Name; } }
 
-        public SimianGridServiceConnector() { }
-        public string Name { get { return "SimianGridServiceConnector"; } }
-        public void AddRegion(Scene scene)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            if (!m_Enabled)
+        }
+
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            // Every shared region module has to maintain an indepedent list of
-            // currently running regions
-            lock (m_scenes)
-                m_scenes[scene.RegionInfo.RegionID] = scene;
-
-            scene.RegisterModuleInterface<IGridService>(this);
+            CommonInit(config);
+            registry.RegisterInterface<IGridService>(this);
         }
-        public void RemoveRegion(Scene scene)
+
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if (!m_Enabled)
+        }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            lock (m_scenes)
-                m_scenes.Remove(scene.RegionInfo.RegionID);
-
-            scene.UnregisterModuleInterface<IGridService>(this);
+            registry.RegisterInterface<IGridService>(this);
         }
 
-        #endregion ISharedRegionModule
-
-        public SimianGridServiceConnector(IConfigSource source)
-        {
-            CommonInit(source);
-        }
-
-        public void Initialise(IConfigSource source)
-        {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("GridServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
-        }
+        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -122,7 +104,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
                         serviceUrl = serviceUrl + '/';
                     m_serverUrl = serviceUrl;
-                    m_Enabled = true;
                 }
             }
 

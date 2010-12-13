@@ -47,67 +47,48 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// Connects avatar presence information (for tracking current location and
     /// message routing) to the SimianGrid backend
     /// </summary>
-    public class SimianPresenceServiceConnector : IPresenceService, IGridUserService, ISharedRegionModule
+    public class SimianPresenceServiceConnector : IPresenceService, IGridUserService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        private SimianActivityDetector m_activityDetector;
-        private bool m_Enabled = false;
 
-        #region ISharedRegionModule
+        #region IService Members
 
-        public Type ReplaceableInterface { get { return null; } }
-        public void RegionLoaded(Scene scene) { }
-        public void PostInitialise() { }
-        public void Close() { }
+        public string Name { get { return GetType().Name; } }
 
-        public SimianPresenceServiceConnector() { m_activityDetector = new SimianActivityDetector(this); }
-        public string Name { get { return "SimianPresenceServiceConnector"; } }
-        public void AddRegion(Scene scene)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            if (m_Enabled)
-            {
-                scene.RegisterModuleInterface<IPresenceService>(this);
-                scene.RegisterModuleInterface<IGridUserService>(this);
-
-                m_activityDetector.AddRegion(scene);
-
-                LogoutRegionAgents(scene.RegionInfo.RegionID);
-            }
-        }
-        public void RemoveRegion(Scene scene)
-        {
-            if (m_Enabled)
-            {
-                scene.UnregisterModuleInterface<IPresenceService>(this);
-                scene.UnregisterModuleInterface<IGridUserService>(this);
-
-                m_activityDetector.RemoveRegion(scene);
-
-                LogoutRegionAgents(scene.RegionInfo.RegionID);
-            }
         }
 
-        #endregion ISharedRegionModule
-
-        public SimianPresenceServiceConnector(IConfigSource source)
+        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            CommonInit(source);
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("PresenceHandler", "") != Name)
+                return;
+
+            CommonInit(config);
+            registry.RegisterInterface<IPresenceService>(this);
+            registry.RegisterInterface<IGridUserService>(this);
         }
 
-        public void Initialise(IConfigSource source)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig moduleConfig = source.Configs["Modules"];
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("PresenceServices", "");
-                if (name == Name)
-                    CommonInit(source);
-            }
         }
+
+        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("PresenceHandler", "") != Name)
+                return;
+
+            registry.RegisterInterface<IPresenceService>(this);
+            registry.RegisterInterface<IGridUserService>(this);
+        }
+
+        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -120,7 +101,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     if (!serviceUrl.EndsWith("/") && !serviceUrl.EndsWith("="))
                         serviceUrl = serviceUrl + '/';
                     m_serverUrl = serviceUrl;
-                    m_Enabled = true;
                 }
             }
 
