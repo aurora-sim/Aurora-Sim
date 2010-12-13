@@ -88,6 +88,10 @@ namespace OpenSim.Services.HypergridService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             m_GridService = registry.Get<IGridService>();
             m_PresenceService = registry.Get<IPresenceService>();
 

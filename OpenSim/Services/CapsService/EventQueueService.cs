@@ -51,6 +51,10 @@ namespace OpenSim.Services.CapsService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             m_service = registry.Get<ICapsService>();
         }
 

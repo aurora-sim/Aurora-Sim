@@ -138,6 +138,10 @@ namespace OpenSim.Services.AssetService
         {
         }
 
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }

@@ -142,6 +142,10 @@ namespace OpenSim.Services.GridService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
             m_AuthenticationService = registry.Get<IAuthenticationService>();
             m_HypergridLinker.PostInitialize(registry);

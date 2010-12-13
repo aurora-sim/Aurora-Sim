@@ -84,7 +84,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterInterface<IAssetService>(this);
         }
 
-        public override void Start(IConfigSource config, IRegistryCore registry)
+        public override void PostStart(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)

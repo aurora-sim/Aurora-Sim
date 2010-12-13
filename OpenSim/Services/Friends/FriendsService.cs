@@ -98,6 +98,10 @@ namespace OpenSim.Services.Friends
         {
         }
 
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }

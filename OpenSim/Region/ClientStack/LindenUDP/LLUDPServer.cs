@@ -976,6 +976,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             client.SendLogoutPacket();
             if (client.IsActive)
                 RemoveClient(((LLClientView)client).UDPClient);
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
             if (m_scene.Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
             {
                 OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_scene.Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;

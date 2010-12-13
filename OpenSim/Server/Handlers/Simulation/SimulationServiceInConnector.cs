@@ -53,6 +53,10 @@ namespace OpenSim.Server.Handlers.Simulation
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
                 return;

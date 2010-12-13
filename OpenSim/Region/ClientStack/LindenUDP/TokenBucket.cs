@@ -26,6 +26,7 @@
  */
 
 using System;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -201,7 +202,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                int now = Environment.TickCount & Int32.MaxValue;
+                int now = Util.EnvironmentTickCount();
                 int deltaMS = now - lastDrip;
 
                 if (deltaMS <= 0)

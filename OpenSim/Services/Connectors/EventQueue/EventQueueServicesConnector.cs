@@ -80,6 +80,10 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             string url = registry.Get<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
             //Clean it up a bit
             url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;

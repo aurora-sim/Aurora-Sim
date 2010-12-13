@@ -55,6 +55,10 @@ namespace OpenSim.Server.Handlers.Grid
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridInHandler", "") != Name)
                 return;

@@ -470,14 +470,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PAY_HIDE = new LSLInteger(-1);
         public static readonly LSLInteger PAY_DEFAULT = new LSLInteger(-2);
 
-        public const string NULL_KEY = "00000000-0000-0000-0000-000000000000";
-        public const string EOF = "\n\n\n";
-        public const double PI = 3.14159274f;
-        public const double TWO_PI = 6.28318548f;
-        public const double PI_BY_TWO = 1.57079637f;
-        public const double DEG_TO_RAD = 0.01745329238f;
-        public const double RAD_TO_DEG = 57.29578f;
-        public const double SQRT2 = 1.414213538f;
+        public static readonly string NULL_KEY = "00000000-0000-0000-0000-000000000000";
+        public static readonly string EOF = "\n\n\n";
+        public static readonly double PI = 3.14159274f;
+        public static readonly double TWO_PI = 6.28318548f;
+        public static readonly double PI_BY_TWO = 1.57079637f;
+        public static readonly double DEG_TO_RAD = 0.01745329238f;
+        public static readonly double RAD_TO_DEG = 57.29578f;
+        public static readonly double SQRT2 = 1.414213538f;
         public static readonly LSLInteger STRING_TRIM_HEAD = 1;
         public static readonly LSLInteger STRING_TRIM_TAIL = 2;
         public static readonly LSLInteger STRING_TRIM = 3;

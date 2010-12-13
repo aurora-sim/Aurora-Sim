@@ -57,6 +57,16 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                 }
             }
+            foreach (IService connector in serviceConnectors)
+            {
+                try
+                {
+                    connector.PostStart(m_openSim.ConfigSource, m_openSim.ApplicationRegistry);
+                }
+                catch
+                {
+                }
+            }
         }
 
         public void PostStart()

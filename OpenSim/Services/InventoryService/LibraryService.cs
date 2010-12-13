@@ -122,6 +122,10 @@ namespace OpenSim.Services.InventoryService
         {
         }
 
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }

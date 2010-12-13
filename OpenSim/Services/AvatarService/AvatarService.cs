@@ -98,6 +98,10 @@ namespace OpenSim.Services.AvatarService
         {
         }
 
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }

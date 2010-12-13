@@ -88,6 +88,10 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
                     "FreeSwitchVoice");
             m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";

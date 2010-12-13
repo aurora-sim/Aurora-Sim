@@ -138,6 +138,10 @@ namespace OpenSim.Services.LLLoginService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             m_UserAccountService = registry.Get<IUserAccountService>();
             m_GridUserService = registry.Get<IGridUserService>();
             m_AuthenticationService = registry.Get<IAuthenticationService>();

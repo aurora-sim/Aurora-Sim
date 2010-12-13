@@ -41,6 +41,7 @@ namespace Aurora.Simulation.Base
         /// <summary>
         /// Set up and register the module
         /// NOTE: Do NOT load module interfaces from this method, wait until PostInit runs
+        /// NOTE: This is normally used to set up the 'base' services, ones that should be used in standalone or Aurora.Server
         /// </summary>
         /// <param name="config">Config file</param>
         /// <param name="registry">Place to register the modules into</param>
@@ -49,6 +50,7 @@ namespace Aurora.Simulation.Base
         /// <summary>
         /// Finish setting up any module pieces
         /// NOTE: Do NOT load module interfaces from this method, wait until PostInit runs
+        /// NOTE: This is normally used to load remote connectors for remote grid mode
         /// </summary>
         /// <param name="config">Config file</param>
         /// <param name="registry">Place to register the modules into</param>
@@ -56,13 +58,23 @@ namespace Aurora.Simulation.Base
 
         /// <summary>
         /// Load other IService modules now that this is set up
+        /// NOTE: This is normally used to allow the connectors in PostInit to be overriden for things like HG or IWC.
         /// </summary>
         /// <param name="config">Config file</param>
         /// <param name="registry">Place to register and retrieve module interfaces</param>
         void Start(IConfigSource config, IRegistryCore registry);
 
         /// <summary>
+        /// Load other IService modules now that this is set up
+        /// NOTE: This is normally used to start up the handlers that Aurora.Server uses to allow for remote connections
+        /// </summary>
+        /// <param name="config">Config file</param>
+        /// <param name="registry">Place to register and retrieve module interfaces</param>
+        void PostStart(IConfigSource config, IRegistryCore registry);
+
+        /// <summary>
         /// If there is a reason that another registry needs added, we call this to register the relevent interfaces
+        /// NOTE: This is normally used to add the Scene interfaces to IService modules
         /// </summary>
         /// <param name="config">Config file</param>
         /// <param name="registry">Place to register and retrieve module interfaces</param>

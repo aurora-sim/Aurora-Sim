@@ -77,6 +77,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             m_cache = registry.Get<IImprovedAssetCache>();
         }
 

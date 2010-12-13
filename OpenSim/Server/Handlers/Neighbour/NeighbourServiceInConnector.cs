@@ -58,6 +58,10 @@ namespace OpenSim.Server.Handlers.Neighbour
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("NeighbourInHandler", "") != Name)
                 return;
