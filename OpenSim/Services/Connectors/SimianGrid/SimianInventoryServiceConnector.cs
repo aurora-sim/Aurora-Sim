@@ -107,6 +107,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             m_serverUrl = url;
         }
 
+        public SimianInventoryServiceConnector()
+        {
+        }
+
         private void CommonInit(IConfigSource source)
         {
             IConfig gridConfig = source.Configs["InventoryService"];
