@@ -36,7 +36,6 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
-using OpenSim.Framework.Statistics;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 
@@ -482,10 +481,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_log.Warn("[LLUDPSERVER]: Ack timeout, disconnecting " + udpClient.AgentID);
 
-                if (m_scene.Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+                ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
+                if (monitor != null)
                 {
-                    OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_scene.Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
-                    stats.AddAbnormalClientThreadTermination();
+                    monitor.AddAbnormalClientThreadTermination();
                 }
                 RemoveClient(udpClient);
                 return;
@@ -976,11 +975,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             client.SendLogoutPacket();
             if (client.IsActive)
                 RemoveClient(((LLClientView)client).UDPClient);
-            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
-            if (m_scene.Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
+            if (monitor != null)
             {
-                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_scene.Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
-                stats.AddLogout();
+                monitor.AddLogout();
             }
         }
 

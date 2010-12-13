@@ -36,7 +36,7 @@ namespace Aurora.Modules
         protected DateTime SimZeroFPSStartTime = DateTime.MinValue;
         protected Timer TimerToCheckHeartbeat = null;
         protected float TimeBetweenChecks = 1;
-        protected SimStatsReporter m_statsReporter = null;
+        protected ISimFrameStats m_statsReporter = null;
 
         #endregion
 
@@ -92,7 +92,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
             m_scene = scene;
-            m_statsReporter = scene.RequestModuleInterface<SimStatsReporter>();
+            m_statsReporter =  (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if (m_statsReporter == null)
             {
                 m_log.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");
@@ -110,7 +110,7 @@ namespace Aurora.Modules
 
         private void OnCheck(object sender, ElapsedEventArgs e)
         {
-            if (m_statsReporter.getLastReportedSimFPS() < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) && m_statsReporter.getLastReportedSimFPS() != 0 && AllowDisableScripts)
+            if (m_statsReporter.LastReportedSimFPS < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) && m_statsReporter.LastReportedSimFPS != 0 && AllowDisableScripts)
             {
                 //Less than the percent to start shutting things down... Lets kill some stuff
                 IScriptModule scriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
@@ -120,7 +120,7 @@ namespace Aurora.Modules
                 }
             }
 
-            if (m_statsReporter.getLastReportedSimFPS() == 0 && KillSimOnZeroFPS)
+            if (m_statsReporter.LastReportedSimFPS == 0 && KillSimOnZeroFPS)
             {
                 if (SimZeroFPSStartTime == DateTime.MinValue)
                     SimZeroFPSStartTime = DateTime.Now;
@@ -129,9 +129,9 @@ namespace Aurora.Modules
             }
             else if (SimZeroFPSStartTime != DateTime.MinValue)
                 SimZeroFPSStartTime = DateTime.MinValue;
-
-            if (m_statsReporter.getLastReportedSimStats()[2]/*PhysicsFPS*/ < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
-                m_statsReporter.getLastReportedSimStats()[2] != 0 &&
+            float[] stats = m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats(m_scene.RegionInfo.RegionID.ToString());
+            if (stats[2]/*PhysicsFPS*/ < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
+                stats[2] != 0 &&
                 AllowDisablePhysics &&
                 !m_scene.RegionInfo.RegionSettings.DisablePhysics) //Don't redisable physics again, physics will be frozen at the last FPS
             {

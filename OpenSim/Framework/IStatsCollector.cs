@@ -25,6 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using OpenMetaverse;
+
 namespace OpenSim.Framework
 {
     /// <summary>
@@ -37,13 +40,143 @@ namespace OpenSim.Framework
         /// </summary>
         /// <returns></returns>
         string Report();
-         
+    }
+
+    public delegate void SendStatResult(SimStats stats);
+    public delegate void YourStatsAreWrong();
+
+    public interface IMonitorModule
+    {
+        event SendStatResult OnSendStatsResult;
+
+        event YourStatsAreWrong OnStatsIncorrect;
+
         /// <summary>
-        /// Report back collected statistical information in json
+        /// Get a monitor module by the RegionID (key parameter, can be "" to get the base monitors) and Name of the monitor
         /// </summary>
-        /// <returns>
-        /// A <see cref="System.String"/>
-        /// </returns>
-        string XReport(string uptime, string version);
+        /// <param name="Key"></param>
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        IMonitor GetMonitor(string Key, string Name);
+
+        /// <summary>
+        /// Get the latest stats
+        /// </summary>
+        /// <param name="p">The RegionID of the region</param>
+        /// <returns></returns>
+        float[] GetRegionStats(string Key);
+    }
+
+    public interface IMonitor
+    {
+        double GetValue();
+        string GetName();
+        string GetFriendlyValue(); // Convert to readable numbers
+    }
+
+    public delegate void Alert(Type reporter, string reason, bool fatal);
+
+    public interface IAlert
+    {
+        string GetName();
+        void Test();
+        event Alert OnTriggerAlert;
+    }
+
+    public interface IAssetMonitor
+    {
+        /// <summary>
+        /// Add a failure to ask the asset service
+        /// </summary>
+        void AddAssetServiceRequestFailure();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ts"></param>
+        void AddAssetRequestTimeAfterCacheMiss(TimeSpan ts);
+
+        /// <summary>
+        /// Add the asset's memory to the memory count
+        /// </summary>
+        /// <param name="asset"></param>
+        void AddAsset(AssetBase asset);
+
+        /// <summary>
+        /// This asset was removed, take it out of the asset list
+        /// </summary>
+        /// <param name="uuid"></param>
+        void RemoveAsset(UUID uuid);
+
+        /// <summary>
+        /// Clear the cache for assets
+        /// </summary>
+        void ClearAssetCacheStatistics();
+
+        /// <summary>
+        /// Add a missing texture request
+        /// </summary>
+        void AddBlockedMissingTextureRequest();
+    }
+
+    public interface ISimFrameStats
+    {
+        void AddAgentTime(int ms);
+        void AddPacketsStats(int inPackets, int outPackets, int unAckedBytes);
+        void AddTimeDilation(float td);
+        void AddFPS(int frames);
+        void AddPhysicsFPS(float frames);
+        void AddAgentUpdates(int numUpdates);
+        void AddInPackets(int numPackets);
+        void AddOutPackets(int numPackets);
+        void AddUnackedBytes(int numBytes);
+        void AddFrameMS(int ms);
+        void AddNetMS(int ms);
+        void AddAgentMS(int ms);
+        void AddPhysicsMS(int ms);
+        void AddPhysicsStep(int ms);
+        void AddImageMS(int ms);
+        void AddOtherMS(int ms);
+        void AddSleepMS(int ms);
+        void AddPhysicsOther(int ms);
+        void AddPendingDownloads(int count);
+        void ResetStats();
+
+        float LastReportedSimFPS { get; set; }
+        float TimeDilation { get; }
+        float SimFPS { get; }
+        float AgentUpdates { get; }
+        float TotalFrameTime { get; }
+        float NetFrameTime { get; }
+        float PhysicsFrameTime { get; }
+        float PhysicsFrameTimeOther { get; }
+        float PhysicsStep { get; }
+        float OtherFrameTime { get; }
+        float ImageFrameTime { get; }
+        float SleepFrameTime { get; }
+        float InPacketsPerSecond { get; }
+        float OutPacketsPerSecond { get; }
+        float UnackedBytes { get; }
+        float AgentFrameTime { get; }
+        float PendingDownloads { get; }
+        float PendingUploads { get; }
+    }
+
+    public interface ILoginMonitor
+    {
+        /// <summary>
+        /// Add a successful login to the stats
+        /// </summary>
+        void AddSuccessfulLogin();
+
+        /// <summary>
+        /// Add a successful logout to the stats
+        /// </summary>
+        void AddLogout();
+
+        /// <summary>
+        /// Add a terminated client thread to the stats
+        /// </summary>
+        void AddAbnormalClientThreadTermination();
     }
 }

@@ -135,9 +135,9 @@ namespace OpenSim.Region.UserStatistics
                     m_simstatsCounters.Remove(scene.RegionInfo.RegionID);
 
                 m_simstatsCounters.Add(scene.RegionInfo.RegionID, new USimStatsData(scene.RegionInfo.RegionID));
-                SimStatsReporter reporter = scene.RequestModuleInterface<SimStatsReporter>();
-                if (reporter != null)
-                    reporter.OnSendStatsResult += ReceiveClassicSimStatsPacket;
+                IMonitorModule mod = scene.RequestModuleInterface<IMonitorModule>();
+                if (mod != null)
+                    mod.OnSendStatsResult += ReceiveClassicSimStatsPacket;
             }
         }
 

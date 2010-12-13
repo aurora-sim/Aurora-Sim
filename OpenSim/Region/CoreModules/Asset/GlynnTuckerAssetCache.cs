@@ -48,7 +48,6 @@ namespace OpenSim.Region.CoreModules.Asset
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_Enabled;
         private ICache m_Cache;
         private ulong m_Hits;
         private ulong m_Requests;
@@ -77,8 +76,7 @@ namespace OpenSim.Region.CoreModules.Asset
                 if (name == Name)
                 {
                     m_Cache = new GlynnTucker.Cache.SimpleMemoryCache();
-                    m_Enabled = true;
-
+                    
                     m_log.Info("[ASSET CACHE]: GlynnTucker asset cache enabled");
 
                     // Instrumentation

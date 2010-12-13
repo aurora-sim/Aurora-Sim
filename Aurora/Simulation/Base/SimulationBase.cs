@@ -16,7 +16,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Statistics;
 using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
@@ -36,7 +35,6 @@ namespace Aurora.Simulation.Base
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
-        protected DiagnosticsManager m_DiagnosticsManager = null;
         protected BaseHttpServer m_BaseHTTPServer;
 
         /// <value>
@@ -72,15 +70,6 @@ namespace Aurora.Simulation.Base
         public DateTime StartupTime
         {
             get { return m_StartupTime; }
-        }
-
-        /// <summary>
-        /// Holds the non-viewer statistics collection object for this service/server
-        /// </summary>
-        protected IStatsCollector m_stats;
-        public IStatsCollector Stats
-        {
-            get { return m_stats; }
         }
 
         protected List<IApplicationPlugin> m_applicationPlugins = new List<IApplicationPlugin>();
@@ -177,10 +166,6 @@ namespace Aurora.Simulation.Base
             m_log.Warn("[AURORASTARTUP]: Version: " + Version + "\n");
 
             SetUpHTTPServer();
-
-            //Move out!
-            m_stats = StatsManager.StartCollectingSimExtraStats();
-            m_DiagnosticsManager = new DiagnosticsManager(null, this);
 
             StartModules();
 
@@ -540,8 +525,6 @@ namespace Aurora.Simulation.Base
                     MainConsole.Instance.Output("show threads - List tracked threads");
                     MainConsole.Instance.Output("show uptime - Show server startup time and uptime.");
                     MainConsole.Instance.Output("show version - Show server version.");
-                    if (m_stats != null)
-                        MainConsole.Instance.Output("show stats - Show statistical information for this server");
                     break;
 
                 case "info":
@@ -549,23 +532,10 @@ namespace Aurora.Simulation.Base
                     m_console.Output(("Startup directory: " + Environment.CurrentDirectory));
                     break;
 
-                case "stats":
-                    if (m_stats != null)
-                        m_log.Info(m_stats.Report());
-                    break;
-
                 case "version":
                     m_console.Output((
                         String.Format(
                             "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion)));
-                    break;
-
-                case "threads":
-                    m_console.Output(m_DiagnosticsManager.GetThreadsReport());
-                    break;
-
-                case "uptime":
-                    m_console.Output(m_DiagnosticsManager.GetUptimeReport());
                     break;
             }
         }
@@ -670,100 +640,6 @@ namespace Aurora.Simulation.Base
                 {
                 }
             }
-        }
-    }
-
-    public class DiagnosticsManager
-    {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        IStatsCollector m_stats;
-        ISimulationBase m_OpenSimBase;
-
-        public DiagnosticsManager(IStatsCollector stats, ISimulationBase baseOpenSim)
-        {
-            m_OpenSimBase = baseOpenSim;
-            m_stats = stats;
-            Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
-            PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
-            PeriodicDiagnosticsTimer.Enabled = true;
-            PeriodicDiagnosticsTimer.Start();
-        }
-
-        /// <summary>
-        /// Print statistics to the logfile, if they are active
-        /// </summary>
-        private void LogDiagnostics(object source, ElapsedEventArgs e)
-        {
-            m_log.Debug(LogDiagnostics());
-        }
-
-        public string LogDiagnostics()
-        {
-            StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
-            sb.Append(GetUptimeReport());
-
-            if (m_stats != null)
-                sb.Append(m_stats.Report());
-
-            sb.Append(Environment.NewLine);
-            sb.Append(GetThreadsReport());
-
-            return sb.ToString();
-        }
-
-        public static ProcessThreadCollection GetThreads()
-        {
-            Process thisProc = Process.GetCurrentProcess();
-            return thisProc.Threads;
-        }
-
-        /// <summary>
-        /// Get a report about the registered threads in this server.
-        /// </summary>
-        public string GetThreadsReport()
-        {
-            StringBuilder sb = new StringBuilder();
-
-            ProcessThreadCollection threads = GetThreads();
-            if (threads == null)
-            {
-                sb.Append("OpenSim thread tracking is only enabled in DEBUG mode.");
-            }
-            else
-            {
-                sb.Append(threads.Count + " threads are being tracked:" + Environment.NewLine);
-                foreach (ProcessThread t in threads)
-                {
-                    sb.Append("ID: " + t.Id + ", TotalProcessorTime: " + t.TotalProcessorTime + ", TimeRunning: " +
-                        (DateTime.Now - t.StartTime) + ", Pri: " + t.CurrentPriority + ", State: " + t.ThreadState);
-                    if (t.ThreadState == System.Diagnostics.ThreadState.Wait)
-                        sb.Append(", Reason: " + t.WaitReason + Environment.NewLine);
-                    else
-                        sb.Append(Environment.NewLine);
-
-                }
-            }
-            int workers = 0, ports = 0, maxWorkers = 0, maxPorts = 0;
-            System.Threading.ThreadPool.GetAvailableThreads(out workers, out ports);
-            System.Threading.ThreadPool.GetMaxThreads(out maxWorkers, out maxPorts);
-
-            sb.Append(Environment.NewLine + "*** ThreadPool threads ***" + Environment.NewLine);
-            sb.Append("workers: " + (maxWorkers - workers) + " (" + maxWorkers + "); ports: " + (maxPorts - ports) + " (" + maxPorts + ")" + Environment.NewLine);
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Return a report about the uptime of this server
-        /// </summary>
-        /// <returns></returns>
-        public string GetUptimeReport()
-        {
-            StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
-            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_OpenSimBase.StartupTime.DayOfWeek, m_OpenSimBase.StartupTime));
-            sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_OpenSimBase.StartupTime));
-
-            return sb.ToString();
         }
     }
 }

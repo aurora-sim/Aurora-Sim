@@ -202,8 +202,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
+                int deltaMS = Util.EnvironmentTickCountSubtract(lastDrip);
                 int now = Util.EnvironmentTickCount();
-                int deltaMS = now - lastDrip;
 
                 if (deltaMS <= 0)
                 {

@@ -41,7 +41,6 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Client;
-using OpenSim.Framework.Statistics;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -12430,11 +12429,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public string Report()
         {
             return m_udpClient.GetStats();
-        }
-
-        public string XReport(string uptime, string version)
-        {
-            return String.Empty;
         }
 
         /// <summary>

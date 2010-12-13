@@ -28,172 +28,879 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Text;
+using System.Timers;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.Packets;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.CoreModules.Framework.Monitoring.Alerts;
 using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring
 {
-    public class MonitorModule : INonSharedRegionModule 
+    public class MonitorModule : IApplicationPlugin, IMonitorModule
     {
-        private Scene m_scene;
-        private readonly List<IMonitor> m_monitors = new List<IMonitor>();
-        private readonly List<IAlert> m_alerts = new List<IAlert>();
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #region Events
 
-        public void DebugMonitors(string module, string[] args)
+        public event SendStatResult OnSendStatsResult;
+        public event YourStatsAreWrong OnStatsIncorrect;
+
+        #endregion
+
+        #region Declares
+
+        #region Enums
+
+        private enum Stats : uint
         {
-            foreach (IMonitor monitor in m_monitors)
+            TimeDilation = 0,
+            SimFPS = 1,
+            PhysicsFPS = 2,
+            AgentUpdates = 3,
+            FrameMS = 4,
+            NetMS = 5,
+            OtherMS = 6,
+            PhysicsMS = 7,
+            AgentMS = 8,
+            ImageMS = 9,
+            ScriptMS = 10,
+            TotalPrim = 11,
+            ActivePrim = 12,
+            Agents = 13,
+            ChildAgents = 14,
+            ActiveScripts = 15,
+            ScriptLinesPerSecond = 16,
+            InPacketsPerSecond = 17,
+            OutPacketsPerSecond = 18,
+            PendingDownloads = 19,
+            PendingUploads = 20,
+            UnknownB = 21,
+            UnknownC = 22,
+            UnknownA = 23,
+            UnAckedBytes = 24,
+            PinnedObjects = 25,
+            LowLodObjects = 26,
+            PhysicsStep = 27,
+            UpdatePhysicsShapes = 28,
+            PhysicsOther = 29,
+            MemoryAllocated = 30,
+            ScriptEventsPerSecond = 31,
+            SpareTime = 32,
+            SleepTime = 33,
+            PumpIO = 34,
+        }
+
+        #endregion
+
+        public class MonitorRegistry
+        {
+            #region Declares
+
+            protected Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
+            protected Dictionary<string, IAlert> m_alerts = new Dictionary<string, IAlert>();
+            protected Scene m_currentScene = null;
+            private Timer m_report = new Timer();
+            // Sending a stats update every 3 seconds-
+            private int statsUpdatesEveryMS = 3000;
+            // How long between the sending of stats updates in seconds
+            private float statsUpdateFactor = 0;
+            private IEstateModule m_estateModule;
+            private MonitorModule m_module;
+
+            private float[] lastReportedSimStats = new float[33];
+            public float[] LastReportedSimStats
             {
-                m_log.Info("[MonitorModule] " + m_scene.RegionInfo.RegionName + " reports " + monitor.GetName() + " = " + monitor.GetFriendlyValue());
+                get { return lastReportedSimStats; }
             }
-        }
+        
+            #endregion
 
-        public void TestAlerts()
-        {
-            foreach (IAlert alert in m_alerts)
+            #region Constructor
+
+            public MonitorRegistry(MonitorModule module)
             {
-                alert.Test();
+                m_module = module;
             }
-        }
 
-        #region Implementation of IRegionModule
+            #endregion
 
-        public void Initialise(IConfigSource source)
-        {
-        }
+            #region Add Region
 
-        public void AddRegion(Scene scene)
-        {
-            m_scene = scene;
+            public void AddScene(Scene scene)
+            {
+                if (scene != null)
+                {
+                    m_currentScene = scene;
+                    MainServer.Instance.AddHTTPHandler("/monitorstats/" + scene.RegionInfo.RegionID + "/", StatsPage);
+                    AddRegionMonitors(scene);
 
+                    SetUpdateMS(3000);
+                    m_report.AutoReset = true;
+                    m_report.Interval = statsUpdatesEveryMS;
+                    m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
+                    m_report.Enabled = true;
 
-            m_scene.AddCommand(this, "monitor report",
-                               "monitor report",
-                               "Returns a variety of statistics about the current region and/or simulator",
-                               DebugMonitors);
+                    scene.EventManager.OnNewClient += OnNewClient;
+                    scene.EventManager.OnClosingClient += OnClosingClient;
+                }
+                else
+                    AddDefaultMonitors();
+            }
 
-            MainServer.Instance.AddHTTPHandler("/monitorstats/" + m_scene.RegionInfo.RegionID + "/", StatsPage);
-        }
+            #endregion
 
-        public void RemoveRegion(Scene scene)
-        {
+            #region Default
 
-        }
+            protected void AddDefaultMonitors()
+            {
+                AddMonitor(new PWSMemoryMonitor());
+                AddMonitor(new ThreadCountMonitor());
+                AddMonitor(new GCMemoryMonitor());
+                AddMonitor(new LoginMonitor());
+            }
 
-        public void RegionLoaded(Scene scene)
-        {
-            m_monitors.Add(new AgentCountMonitor(m_scene));
-            m_monitors.Add(new ChildAgentCountMonitor(m_scene));
-            m_monitors.Add(new GCMemoryMonitor());
-            m_monitors.Add(new ObjectCountMonitor(m_scene));
-            m_monitors.Add(new PhysicsFrameMonitor(m_scene));
-            m_monitors.Add(new PhysicsUpdateFrameMonitor(m_scene));
-            m_monitors.Add(new PWSMemoryMonitor());
-            m_monitors.Add(new ThreadCountMonitor());
-            m_monitors.Add(new TotalFrameMonitor(m_scene));
-            m_monitors.Add(new EventFrameMonitor(m_scene));
-            m_monitors.Add(new LandFrameMonitor(m_scene));
-            m_monitors.Add(new LastFrameTimeMonitor(m_scene));
+            protected void AddRegionMonitors(Scene scene)
+            {
+                AddMonitor(new AgentCountMonitor(scene));
+                AddMonitor(new ChildAgentCountMonitor(scene));
+                AddMonitor(new ObjectCountMonitor(scene));
+                AddMonitor(new PhysicsFrameMonitor(scene));
+                AddMonitor(new PhysicsUpdateFrameMonitor(scene));
+                AddMonitor(new TotalFrameMonitor(scene));
+                AddMonitor(new EventFrameMonitor(scene));
+                AddMonitor(new LandFrameMonitor(scene));
+                AddMonitor(new LastFrameTimeMonitor(scene));
 
-            m_alerts.Add(new DeadlockAlert(m_monitors.Find(x => x is LastFrameTimeMonitor) as LastFrameTimeMonitor));
+                AddAlert(new DeadlockAlert(GetMonitor("Last Completed Frame At") as LastFrameTimeMonitor));
+            }
 
-            foreach (IAlert alert in m_alerts)
+            #endregion
+
+            #region Add/Remove/Get Monitor and Alerts
+
+            public void AddMonitor(IMonitor monitor)
+            {
+                m_monitors.Add(monitor.GetName(), monitor);
+            }
+
+            public void AddAlert(IAlert alert)
             {
                 alert.OnTriggerAlert += OnTriggerAlert;
+                m_alerts.Add(alert.GetName(), alert);
             }
-        }
 
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public Hashtable StatsPage(Hashtable request)
-        {
-            // If request was for a specific monitor
-            // eg url/?monitor=Monitor.Name
-            if (request.ContainsKey("monitor"))
+            public void RemoveMonitor(string Name)
             {
-                string monID = (string) request["monitor"];
+                m_monitors.Remove(Name);
+            }
 
-                foreach (IMonitor monitor in m_monitors)
+            public void RemoveAlert(string Name)
+            {
+                m_alerts.Remove(Name);
+            }
+
+            public IMonitor GetMonitor(string Name)
+            {
+                if (m_monitors.ContainsKey(Name))
+                    return m_monitors[Name];
+                return null;
+            }
+
+            public IAlert GetAlert(string Name)
+            {
+                if (m_alerts.ContainsKey(Name))
+                    return m_alerts[Name];
+                return null;
+            }
+
+            #endregion
+
+            #region Trigger Alert
+
+            void OnTriggerAlert(System.Type reporter, string reason, bool fatal)
+            {
+                string regionName = m_currentScene != null ? " for " + m_currentScene.RegionInfo.RegionName : "";
+                m_log.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason + " (Fatal: " + fatal + ")");
+            }
+
+            #endregion
+
+            #region Report
+
+            public string Report()
+            {
+                string report = "";
+                foreach (IMonitor monitor in m_monitors.Values)
+                {
+                    string regionName = m_currentScene != null ? m_currentScene.RegionInfo.RegionName + ": " : "";
+                    report += regionName + monitor.GetName() + " reports " + monitor.GetFriendlyValue();
+                }
+                return report;
+            }
+
+            #endregion
+
+            #region HTTP Stats page
+
+            public Hashtable StatsPage(Hashtable request)
+            {
+                // If request was for a specific monitor
+                // eg url/?monitor=Monitor.Name
+                if (request.ContainsKey("monitor"))
+                {
+                    string monID = (string)request["monitor"];
+
+                    foreach (IMonitor monitor in m_monitors.Values)
+                    {
+                        string elemName = monitor.ToString();
+                        if (elemName.StartsWith(monitor.GetType().Namespace))
+                            elemName = elemName.Substring(monitor.GetType().Namespace.Length + 1);
+                        if (elemName == monID || monitor.ToString() == monID)
+                        {
+                            Hashtable ereply3 = new Hashtable();
+
+                            ereply3["int_response_code"] = 404; // 200 OK
+                            ereply3["str_response_string"] = monitor.GetValue().ToString();
+                            ereply3["content_type"] = "text/plain";
+
+                            return ereply3;
+                        }
+                    }
+
+                    // No monitor with that name
+                    Hashtable ereply2 = new Hashtable();
+
+                    ereply2["int_response_code"] = 404; // 200 OK
+                    ereply2["str_response_string"] = "No such monitor";
+                    ereply2["content_type"] = "text/plain";
+
+                    return ereply2;
+                }
+
+                string xml = "<data>";
+                foreach (IMonitor monitor in m_monitors.Values)
                 {
                     string elemName = monitor.ToString();
                     if (elemName.StartsWith(monitor.GetType().Namespace))
                         elemName = elemName.Substring(monitor.GetType().Namespace.Length + 1);
-                    if (elemName == monID || monitor.ToString() == monID)
-                    {
-                        Hashtable ereply3 = new Hashtable();
 
-                        ereply3["int_response_code"] = 404; // 200 OK
-                        ereply3["str_response_string"] = monitor.GetValue().ToString();
-                        ereply3["content_type"] = "text/plain";
-
-                        return ereply3;
-                    }
+                    xml += "<" + elemName + ">" + monitor.GetValue() + "</" + elemName + ">";
                 }
+                xml += "</data>";
 
-                // No monitor with that name
-                Hashtable ereply2 = new Hashtable();
+                Hashtable ereply = new Hashtable();
 
-                ereply2["int_response_code"] = 404; // 200 OK
-                ereply2["str_response_string"] = "No such monitor";
-                ereply2["content_type"] = "text/plain";
+                ereply["int_response_code"] = 200; // 200 OK
+                ereply["str_response_string"] = xml;
+                ereply["content_type"] = "text/xml";
 
-                return ereply2;
+                return ereply;
             }
 
-            string xml = "<data>";
-            foreach (IMonitor monitor in m_monitors)
+            #endregion
+
+            #region Stats Heartbeat
+
+            protected void statsHeartBeat(object sender, EventArgs e)
             {
-                string elemName = monitor.ToString();
-                if (elemName.StartsWith(monitor.GetType().Namespace))
-                    elemName = elemName.Substring(monitor.GetType().Namespace.Length + 1);
+                SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[33];
+                SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
 
-                xml += "<" + elemName + ">" + monitor.GetValue() + "</" + elemName + ">";
+                // Know what's not thread safe in Mono... modifying timers.
+                // m_log.Debug("Firing Stats Heart Beat");
+                lock (m_report)
+                {
+                    uint regionFlags = 0;
+
+                    try
+                    {
+                        if (m_estateModule == null)
+                            m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
+                        regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : (uint)0;
+                    }
+                    catch (Exception)
+                    {
+                        // leave region flags at 0
+                    }
+
+                    #region various statistic googly moogly
+
+                    ISimFrameStats stats = (ISimFrameStats)GetMonitor("SimFrameStats");
+
+                    // Our FPS is actually 10fps, so multiplying by 5 to get the amount that people expect there
+                    // 0-50 is pretty close to 0-45
+                    float simfps = (int)((stats.SimFPS * 5));
+                    // save the reported value so there is something available for llGetRegionFPS 
+                    stats.LastReportedSimFPS = (float)simfps / statsUpdateFactor;
+
+                    //if (simfps > 45)
+                    //simfps = simfps - (simfps - 45);
+                    //if (simfps < 0)
+                    //simfps = 0;
+
+                    //
+                    float physfps = ((stats.PhysicsFrameTime / 1000));
+
+                    //if (physfps > 600)
+                    //physfps = physfps - (physfps - 600);
+
+                    if (physfps < 0)
+                        physfps = 0;
+
+                    #endregion
+
+                    //Our time dilation is 0.91 when we're running a full speed,
+                    // therefore to make sure we get an appropriate range,
+                    // we have to factor in our error.   (0.10f * statsUpdateFactor)
+                    // multiplies the fix for the error times the amount of times it'll occur a second
+                    // / 10 divides the value by the number of times the sim heartbeat runs (10fps)
+                    // Then we divide the whole amount by the amount of seconds pass in between stats updates.
+
+                    // 'statsUpdateFactor' is how often stats packets are sent in seconds. Used below to change
+                    // values to X-per-second values.
+
+                    for (int i = 0; i < 33; i++)
+                    {
+                        sb[i] = new SimStatsPacket.StatBlock();
+                    }
+
+                    sb[0].StatID = (uint)Stats.TimeDilation;
+                    sb[0].StatValue = (Single.IsNaN(stats.TimeDilation)) ? 0.1f : stats.TimeDilation; //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
+
+                    sb[1].StatID = (uint)Stats.SimFPS;
+                    sb[1].StatValue = simfps / statsUpdateFactor;
+
+                    sb[2].StatID = (uint)Stats.PhysicsFPS;
+                    sb[2].StatValue = physfps / statsUpdateFactor;
+
+                    sb[3].StatID = (uint)Stats.AgentUpdates;
+                    sb[3].StatValue = (stats.AgentUpdates / statsUpdateFactor);
+
+                    sb[4].StatID = (uint)Stats.Agents;
+                    sb[4].StatValue = m_currentScene.SceneGraph.GetRootAgentCount();
+
+                    sb[5].StatID = (uint)Stats.ChildAgents;
+                    sb[5].StatValue = m_currentScene.SceneGraph.GetChildAgentCount();
+
+                    sb[6].StatID = (uint)Stats.TotalPrim;
+                    sb[6].StatValue = m_currentScene.SceneGraph.GetTotalObjectsCount();
+
+                    sb[7].StatID = (uint)Stats.ActivePrim;
+                    sb[7].StatValue = m_currentScene.SceneGraph.GetActiveObjectsCount();
+
+                    sb[8].StatID = (uint)Stats.FrameMS;
+                    sb[8].StatValue = stats.SimFPS / statsUpdateFactor;
+
+                    sb[9].StatID = (uint)Stats.NetMS;
+                    sb[9].StatValue = stats.NetFrameTime / statsUpdateFactor;
+
+                    sb[10].StatID = (uint)Stats.PhysicsMS;
+                    sb[10].StatValue = stats.PhysicsFrameTime / statsUpdateFactor;
+
+                    sb[11].StatID = (uint)Stats.ImageMS;
+                    sb[11].StatValue = stats.ImageFrameTime / statsUpdateFactor;
+
+                    sb[12].StatID = (uint)Stats.OtherMS;
+                    sb[12].StatValue = stats.OtherFrameTime / statsUpdateFactor;
+
+                    sb[13].StatID = (uint)Stats.InPacketsPerSecond;
+                    sb[13].StatValue = (stats.InPacketsPerSecond / statsUpdateFactor);
+
+                    sb[14].StatID = (uint)Stats.OutPacketsPerSecond;
+                    sb[14].StatValue = (stats.OutPacketsPerSecond / statsUpdateFactor);
+
+                    sb[15].StatID = (uint)Stats.UnAckedBytes;
+                    sb[15].StatValue = stats.UnackedBytes;
+
+                    sb[16].StatID = (uint)Stats.AgentMS;
+                    sb[16].StatValue = stats.AgentFrameTime / statsUpdateFactor;
+
+                    sb[17].StatID = (uint)Stats.PendingDownloads;
+                    sb[17].StatValue = stats.PendingDownloads;
+
+                    sb[18].StatID = (uint)Stats.PendingUploads;
+                    sb[18].StatValue = stats.PendingUploads;
+
+                    sb[19].StatID = (uint)Stats.ActiveScripts;
+                    sb[19].StatValue = m_currentScene.SceneGraph.GetActiveScriptsCount();
+
+                    sb[20].StatID = (uint)Stats.ScriptEventsPerSecond;
+                    sb[20].StatValue = m_currentScene.SceneGraph.GetScriptEPS() / statsUpdateFactor;
+
+                    sb[21].StatID = (uint)Stats.SpareTime;
+                    sb[21].StatValue = 0;
+
+                    sb[22].StatID = (uint)Stats.SleepTime;
+                    sb[22].StatValue = stats.SleepFrameTime;
+
+                    sb[23].StatID = (uint)Stats.PumpIO;
+                    sb[23].StatValue = 0;
+
+                    long pws = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
+
+                    if (pws > Int32.MaxValue)
+                        pws = Int32.MaxValue;
+                    if (pws < 0)
+                        pws = 0;
+
+                    sb[25].StatID = (uint)Stats.MemoryAllocated;
+                    sb[25].StatValue = pws / 4096000;
+
+                    sb[26].StatID = (uint)Stats.PhysicsOther;
+                    sb[26].StatValue = stats.PhysicsFrameTimeOther;
+
+                    sb[27].StatID = (uint)Stats.UpdatePhysicsShapes;
+                    sb[27].StatValue = 0;
+
+                    sb[28].StatID = (uint)Stats.PhysicsStep;
+                    sb[28].StatValue = stats.PhysicsStep;
+
+                    sb[29].StatID = (uint)Stats.LowLodObjects;
+                    sb[29].StatValue = 0;
+
+                    sb[30].StatID = (uint)Stats.PinnedObjects;
+                    sb[30].StatValue = 0;
+
+                    sb[31].StatID = (uint)Stats.UnknownA;
+                    sb[31].StatValue = 0;
+
+                    sb[32].StatID = (uint)Stats.UnknownB;
+                    sb[32].StatValue = 0;
+
+                    sb[24].StatID = (uint)Stats.UnknownC;
+                    sb[24].StatValue = 0;
+
+                    for (int i = 0; i < 33; i++)
+                    {
+                        lastReportedSimStats[i] = sb[i].StatValue;
+                    }
+
+                    SimStats simStats
+                        = new SimStats(
+                            m_currentScene.RegionInfo.RegionLocX, m_currentScene.RegionInfo.RegionLocY, regionFlags, (uint)m_currentScene.RegionInfo.ObjectCapacity, rb, sb, m_currentScene.RegionInfo.RegionID);
+
+                    m_module.SendStatsResults(simStats);
+
+                    m_currentScene.ForEachScenePresence(
+                        delegate(ScenePresence agent)
+                        {
+                            if (!agent.IsChildAgent)
+                                agent.ControllingClient.SendSimStats(simStats);
+                        }
+                    );
+                    ResetValues();
+                }
             }
-            xml += "</data>";
 
-            Hashtable ereply = new Hashtable();
+            public void ResetValues()
+            {
+                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
+                monitor.ResetStats();
+            }
 
-            ereply["int_response_code"] = 200; // 200 OK
-            ereply["str_response_string"] = xml;
-            ereply["content_type"] = "text/xml";
+            public void CheckStatSanity()
+            {
+                //Force the recalculation of the stats
+                m_currentScene.SceneGraph.RecalculateStats();
 
-            return ereply;
+                m_module.SendYourStatsAreWrong();
+            }
+
+            #endregion
+
+            #region Client Handling
+
+            protected void OnNewClient(IClientAPI client)
+            {
+                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
+                client.OnNetworkStatsUpdate += monitor.AddPacketsStats;
+            }
+
+            protected void OnClosingClient(IClientAPI client)
+            {
+                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
+                client.OnNetworkStatsUpdate -= monitor.AddPacketsStats;
+            }
+
+            #endregion
+
+            public void SetUpdateMS(int ms)
+            {
+                statsUpdatesEveryMS = ms;
+                statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
+                m_report.Interval = statsUpdatesEveryMS;
+            }
+        }
+
+        protected Dictionary<string, MonitorRegistry> m_registry = new Dictionary<string, MonitorRegistry>();
+        private ISimulationBase m_simulationBase = null;
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        #endregion
+
+        #region Get
+
+        public IMonitor GetMonitor(string Key, string Name)
+        {
+            if (m_registry.ContainsKey(Key))
+            {
+                return m_registry[Key].GetMonitor(Name);
+            }
+            return null;
+        }
+
+        public float[] GetRegionStats(string Key)
+        {
+            if (m_registry.ContainsKey(Key))
+            {
+                return m_registry[Key].LastReportedSimStats;
+            }
+            return new float[0];
+        }
+
+        #endregion
+
+        #region Console
+
+        /// <summary>
+        /// This shows stats for ALL regions in the instance
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="args"></param>
+        protected void DebugMonitors(string module, string[] args)
+        {
+            foreach (MonitorRegistry registry in m_registry.Values)
+            {
+                m_log.Info("[Stats] " + registry.Report());
+            }
+        }
+
+        /// <summary>
+        /// This shows the stats for the given region
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="args"></param>
+        protected void DebugMonitorsInCurrentRegion(string module, string[] args)
+        {
+            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            manager.ForEachCurrentScene(delegate(Scene scene)
+            {
+                m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
+            });
+        }
+
+        /// <summary>
+        /// Many commands list objects for debugging.  Some of the types are listed  here
+        /// </summary>
+        /// <param name="mod"></param>
+        /// <param name="cmd"></param>
+        protected void HandleShow(string mod, string[] cmd)
+        {
+            if (cmd.Length == 1)
+            {
+                m_log.Warn("Incorrect number of parameters!");
+                return;
+            }
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] showParams = args.ToArray();
+            switch (showParams[0])
+            {
+                case "help":
+                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
+                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
+                    MainConsole.Instance.Output("show stats - Show statistical information for this server");
+                    break;
+
+                case "queues":
+                    m_log.Info(GetQueuesReport(showParams));
+                    break;
+
+                case "stats":
+                    DebugMonitorsInCurrentRegion(mod, cmd);
+                    break;
+
+                case "threads":
+                    m_log.Info(GetThreadsReport());
+                    break;
+
+                case "uptime":
+                    m_log.Info(GetUptimeReport());
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Print UDP Queue data for each client
+        /// </summary>
+        /// <returns></returns>
+        protected string GetQueuesReport(string[] showParams)
+        {
+            bool showChildren = false;
+
+            if (showParams.Length > 1 && showParams[1] == "full")
+                showChildren = true;
+
+            StringBuilder report = new StringBuilder();
+
+            int columnPadding = 2;
+            int maxNameLength = 18;
+            int maxRegionNameLength = 14;
+            int maxTypeLength = 4;
+            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding + maxTypeLength + columnPadding;
+
+            report.AppendFormat("{0,-" + maxNameLength + "}{1,-" + columnPadding + "}", "User", "");
+            report.AppendFormat("{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}", "Region", "");
+            report.AppendFormat("{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}", "Type", "");
+
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Packets",
+                "Packets",
+                "Packets",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes",
+                "Bytes");
+
+            report.AppendFormat("{0,-" + totalInfoFieldsLength + "}", "");
+            report.AppendFormat(
+                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
+                "Out",
+                "In",
+                "Unacked",
+                "Resend",
+                "Land",
+                "Wind",
+                "Cloud",
+                "Task",
+                "Texture",
+                "Asset",
+                "State");
+
+            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            if (manager != null)
+            {
+                manager.ForEachScene(
+                    delegate(Scene scene)
+                    {
+                        scene.ForEachClient(
+                            delegate(IClientAPI client)
+                            {
+                                if (client is IStatsCollector)
+                                {
+                                    bool isChild = scene.PresenceChildStatus(client.AgentId);
+                                    if (isChild && !showChildren)
+                                        return;
+
+                                    string name = client.Name;
+                                    string regionName = scene.RegionInfo.RegionName;
+
+                                    report.AppendFormat(
+                                        "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
+                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
+                                    report.AppendFormat(
+                                        "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
+                                        regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
+                                    report.AppendFormat(
+                                        "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
+                                        isChild ? "Child" : "Root", "");
+
+                                    IStatsCollector stats = (IStatsCollector)client;
+
+                                    report.AppendLine(stats.Report());
+                                }
+                            });
+                    });
+            }
+
+            return report.ToString();
+        }
+
+        #endregion
+
+        #region Diagonistics
+
+        /// <summary>
+        /// Print statistics to the logfile, if they are active
+        /// </summary>
+        private void LogDiagnostics(object source, ElapsedEventArgs e)
+        {
+            m_log.Debug(LogDiagnostics());
+        }
+
+        public string LogDiagnostics()
+        {
+            StringBuilder sb = new StringBuilder("DIAGNOSTICS\n\n");
+            sb.Append(GetUptimeReport());
+
+            foreach (MonitorRegistry registry in m_registry.Values)
+            {
+                sb.Append(registry.Report());
+            }
+
+            sb.Append(Environment.NewLine);
+            sb.Append(GetThreadsReport());
+
+            return sb.ToString();
+        }
+
+        public ProcessThreadCollection GetThreads()
+        {
+            Process thisProc = Process.GetCurrentProcess();
+            return thisProc.Threads;
+        }
+
+        /// <summary>
+        /// Get a report about the registered threads in this server.
+        /// </summary>
+        public string GetThreadsReport()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            ProcessThreadCollection threads = GetThreads();
+            if (threads == null)
+            {
+                sb.Append("OpenSim thread tracking is only enabled in DEBUG mode.");
+            }
+            else
+            {
+                sb.Append(threads.Count + " threads are being tracked:" + Environment.NewLine);
+                foreach (ProcessThread t in threads)
+                {
+                    sb.Append("ID: " + t.Id + ", TotalProcessorTime: " + t.TotalProcessorTime + ", TimeRunning: " +
+                        (DateTime.Now - t.StartTime) + ", Pri: " + t.CurrentPriority + ", State: " + t.ThreadState);
+                    if (t.ThreadState == System.Diagnostics.ThreadState.Wait)
+                        sb.Append(", Reason: " + t.WaitReason + Environment.NewLine);
+                    else
+                        sb.Append(Environment.NewLine);
+
+                }
+            }
+            int workers = 0, ports = 0, maxWorkers = 0, maxPorts = 0;
+            System.Threading.ThreadPool.GetAvailableThreads(out workers, out ports);
+            System.Threading.ThreadPool.GetMaxThreads(out maxWorkers, out maxPorts);
+
+            sb.Append(Environment.NewLine + "*** ThreadPool threads ***" + Environment.NewLine);
+            sb.Append("workers: " + (maxWorkers - workers) + " (" + maxWorkers + "); ports: " + (maxPorts - ports) + " (" + maxPorts + ")" + Environment.NewLine);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Return a report about the uptime of this server
+        /// </summary>
+        /// <returns></returns>
+        public string GetUptimeReport()
+        {
+            StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
+            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_simulationBase.StartupTime.DayOfWeek, m_simulationBase.StartupTime));
+            sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_simulationBase.StartupTime));
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region IApplicationPlugin Members
+
+        public void Initialize(ISimulationBase simulationBase)
+        {
+            Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
+            PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
+            PeriodicDiagnosticsTimer.Enabled = true;
+            PeriodicDiagnosticsTimer.Start();
+
+            m_simulationBase = simulationBase;
+
+            MainConsole.Instance.Commands.AddCommand("Stats", false, "stats report",
+                               "stats report",
+                               "Returns a variety of statistics about the current region and/or simulator",
+                               DebugMonitors);
+
+            MonitorRegistry reg = new MonitorRegistry(this);
+            //This registers the default commands, but not region specific ones
+            reg.AddScene(null);
+            m_registry.Add("", reg);
         }
 
         public void PostInitialise()
         {
+            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            if (manager != null)
+            {
+                manager.OnAddedScene += OnAddedScene;
+                manager.OnCloseScene += OnCloseScene;
+            }
         }
 
-        void OnTriggerAlert(System.Type reporter, string reason, bool fatal)
+        public void OnAddedScene(Scene scene)
         {
-            m_log.Error("[Monitor] " + reporter.Name + " for " + m_scene.RegionInfo.RegionName + " reports " + reason + " (Fatal: " + fatal + ")");
+            //Register all the commands for this region
+            MonitorRegistry reg = new MonitorRegistry(this);
+            reg.AddScene(scene);
+            m_registry.Add(scene.RegionInfo.RegionID.ToString(), reg);
+            scene.RegisterInterface<IMonitorModule>(this);
         }
 
-        public void Close()
+        public void OnCloseScene(Scene scene)
         {
-            
+            m_registry.Remove(scene.RegionInfo.RegionID.ToString());
+        }
+
+        public void Start()
+        {
+        }
+
+        public void PostStart()
+        {
+        }
+
+        public void Dispose()
+        {
         }
 
         public string Name
         {
-            get { return "Region Health Monitoring Module"; }
+            get { return "StatsModule"; }
         }
 
-        public bool IsSharedModule
+        public void Close()
         {
-            get { return false; }
         }
 
         #endregion
+
+        public void SendStatsResults(SimStats simStats)
+        {
+            SendStatResult handlerSendStatResult = OnSendStatsResult;
+            if (handlerSendStatResult != null)
+            {
+                handlerSendStatResult(simStats);
+            }
+        }
+
+        public void SendYourStatsAreWrong()
+        {
+            YourStatsAreWrong handlerStatsIncorrect = OnStatsIncorrect;
+            if (handlerStatsIncorrect != null)
+            {
+                handlerStatsIncorrect();
+            }
+        }
     }
 }

@@ -45,6 +45,7 @@ using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
+    public delegate void NewScene(Scene scene);
     /// <summary>
     /// Manager for adding, closing, reseting, and restarting scenes.
     /// </summary>
@@ -53,6 +54,9 @@ namespace OpenSim.Region.Framework.Scenes
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        public event NewScene OnAddedScene;
+        public event NewScene OnCloseScene;
 
         private List<Scene> m_localScenes;
         private Scene m_currentScene = null;
@@ -241,7 +245,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ForEach functions
 
-        private void ForEachCurrentScene(Action<Scene> func)
+        public void ForEachCurrentScene(Action<Scene> func)
         {
             if (m_currentScene == null)
             {
@@ -924,6 +928,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.Initialise(scene, m_config, m_OpenSimBase);
             }
+            if (OnAddedScene != null)
+                OnAddedScene(scene);
         }
 
         public void PostInitModules(Scene scene)
@@ -1352,8 +1358,6 @@ namespace OpenSim.Region.Framework.Scenes
                     MainConsole.Instance.Output("show users [full] - Without the 'full' option, only users actually on the region are shown."
                                                     + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
                     MainConsole.Instance.Output("show regions - Show all regions");
-                    MainConsole.Instance.Output("show queues [full] - Without the 'full' option, only users actually on the region are shown."
-                                                    + "  With the 'full' option child agents of users in neighbouring regions are also shown.");
                     MainConsole.Instance.Output("show maturity - Show region maturity levels");
                     break;
                 case "assets":
@@ -1410,10 +1414,6 @@ namespace OpenSim.Region.Framework.Scenes
                     });
                     break;
 
-                case "queues":
-                    MainConsole.Instance.Output((GetQueuesReport(showParams)));
-                    break;
-
                 case "maturity":
                     ForEachCurrentScene(delegate(Scene scene)
                     {
@@ -1434,93 +1434,6 @@ namespace OpenSim.Region.Framework.Scenes
                     });
                     break;
             }
-        }
-
-        /// <summary>
-        /// print UDP Queue data for each client
-        /// </summary>
-        /// <returns></returns>
-        private string GetQueuesReport(string[] showParams)
-        {
-            bool showChildren = false;
-
-            if (showParams.Length > 1 && showParams[1] == "full")
-                showChildren = true;
-
-            StringBuilder report = new StringBuilder();
-
-            int columnPadding = 2;
-            int maxNameLength = 18;
-            int maxRegionNameLength = 14;
-            int maxTypeLength = 4;
-            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding + maxTypeLength + columnPadding;
-
-            report.AppendFormat("{0,-" + maxNameLength + "}{1,-" + columnPadding + "}", "User", "");
-            report.AppendFormat("{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}", "Region", "");
-            report.AppendFormat("{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}", "Type", "");
-
-            report.AppendFormat(
-                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
-                "Packets",
-                "Packets",
-                "Packets",
-                "Bytes",
-                "Bytes",
-                "Bytes",
-                "Bytes",
-                "Bytes",
-                "Bytes",
-                "Bytes",
-                "Bytes");
-
-            report.AppendFormat("{0,-" + totalInfoFieldsLength + "}", "");
-            report.AppendFormat(
-                "{0,9} {1,9} {2,9} {3,8} {4,7} {5,7} {6,7} {7,7} {8,9} {9,7} {10,7}\n",
-                "Out",
-                "In",
-                "Unacked",
-                "Resend",
-                "Land",
-                "Wind",
-                "Cloud",
-                "Task",
-                "Texture",
-                "Asset",
-                "State");
-
-            ForEachScene(
-                delegate(Scene scene)
-                {
-                    scene.ForEachClient(
-                        delegate(IClientAPI client)
-                        {
-                            if (client is IStatsCollector)
-                            {
-                                bool isChild = scene.PresenceChildStatus(client.AgentId);
-                                if (isChild && !showChildren)
-                                    return;
-
-                                string name = client.Name;
-                                string regionName = scene.RegionInfo.RegionName;
-
-                                report.AppendFormat(
-                                    "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
-                                    name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
-                                report.AppendFormat(
-                                    "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
-                                    regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
-                                report.AppendFormat(
-                                    "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
-                                    isChild ? "Child" : "Root", "");
-
-                                IStatsCollector stats = (IStatsCollector)client;
-
-                                report.AppendLine(stats.Report());
-                            }
-                        });
-                });
-
-            return report.ToString();
         }
 
         public void SendCommandToPluginModules(string[] cmdparams)

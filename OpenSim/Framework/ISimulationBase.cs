@@ -45,7 +45,6 @@ namespace OpenSim.Framework
         IHttpServer GetHttpServer(uint port);
         IConfigSource ConfigSource { get; set; }
         IRegistryCore ApplicationRegistry { get; }
-        IStatsCollector Stats { get; }
         DateTime StartupTime { get; }
         string Version { get; }
         void RunStartupCommands();

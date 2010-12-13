@@ -326,7 +326,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
         {
             sender.Sending = false;
             //m_log.DebugFormat("[TEXTURE]: Removing download stat for {0}", sender.assetID);
-            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if(reporter != null)
                 reporter.AddPendingDownloads(-1);
         }

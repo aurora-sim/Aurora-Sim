@@ -58,8 +58,6 @@ namespace Flotsam.RegionModules.AssetCache
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_Enabled;
-
         private const string m_ModuleName = "FlotsamAssetCache";
         private const string m_DefaultCacheDirectory = m_ModuleName;
         private string m_CacheDirectory = m_DefaultCacheDirectory;
@@ -101,7 +99,7 @@ namespace Flotsam.RegionModules.AssetCache
         private System.Timers.Timer m_CacheCleanTimer;
 
         private IAssetService m_AssetService;
-        private List<Scene> m_Scenes = new List<Scene>();
+        private ISimulationBase m_simulationBase;
 
         private bool m_DeepScanBeforePurge;
 
@@ -131,8 +129,7 @@ namespace Flotsam.RegionModules.AssetCache
                 if (name == Name)
                 {
                     m_MemoryCache = new ExpiringCache<string, AssetBase>();
-                    m_Enabled = true;
-
+                    
                     //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} enabled", this.Name);
 
                     IConfig assetConfig = config.Configs["AssetCache"];
@@ -211,6 +208,7 @@ namespace Flotsam.RegionModules.AssetCache
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_AssetService = registry.Get<IAssetService>();
+            m_simulationBase = registry.Get<ISimulationBase>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -393,11 +391,10 @@ namespace Flotsam.RegionModules.AssetCache
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.", m_RequestsForInprogress);
                 
             }
-
-            if (m_Scenes[0].Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.Get<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            if (monitor != null)
             {
-                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_Scenes[0].Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
-                stats.AddAsset(asset);
+                monitor.AddAsset(asset);
             }
             return asset;
         }
@@ -448,10 +445,10 @@ namespace Flotsam.RegionModules.AssetCache
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
 
-            if (m_Scenes[0].Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.Get<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            if (monitor != null)
             {
-                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = m_Scenes[0].Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
-                stats.ClearAssetCacheStatistics();
+                monitor.ClearAssetCacheStatistics();
             }
         }
 
@@ -671,36 +668,37 @@ namespace Flotsam.RegionModules.AssetCache
         {
             //Make sure this is not null
             if (m_AssetService == null)
-                m_AssetService = m_Scenes[0].RequestModuleInterface<IAssetService>();
-
-            if (m_AssetService == null)
                 return 0;
 
-            UuidGatherer gatherer = new UuidGatherer(m_AssetService);
-
             Dictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
-            foreach (Scene s in m_Scenes)
+            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            if (manager != null)
             {
-                StampRegionStatusFile(s.RegionInfo.RegionID);
+                UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
-                s.ForEachSOG(delegate(SceneObjectGroup e)
+                foreach (Scene s in manager.Scenes)
                 {
-                    gatherer.GatherAssetUuids(e, assets, s);
+                    StampRegionStatusFile(s.RegionInfo.RegionID);
+
+                    s.ForEachSOG(delegate(SceneObjectGroup e)
+                    {
+                        gatherer.GatherAssetUuids(e, assets, s);
+                    }
+                    );
                 }
-                );
-            }
 
-            foreach (UUID assetID in assets.Keys)
-            {
-                string filename = GetFileName(assetID.ToString());
+                foreach (UUID assetID in assets.Keys)
+                {
+                    string filename = GetFileName(assetID.ToString());
 
-                if (File.Exists(filename))
-                {
-                    File.SetLastAccessTime(filename, DateTime.Now);
-                }
-                else
-                {
-                    m_AssetService.Get(assetID.ToString());
+                    if (File.Exists(filename))
+                    {
+                        File.SetLastAccessTime(filename, DateTime.Now);
+                    }
+                    else
+                    {
+                        m_AssetService.Get(assetID.ToString());
+                    }
                 }
             }
 

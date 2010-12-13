@@ -31,7 +31,6 @@ using System.Reflection;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Statistics;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -146,8 +145,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
 
                              return;
                          }*/
-
-            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if (reporter != null)
                 reporter.AddPendingDownloads(1);
 
