@@ -278,10 +278,16 @@ namespace OpenSim.Services.Connectors.Simulation
         private bool UpdateAgent(GridRegion destination, IAgentData cAgentData)
         {
             // Try local first
-            if (cAgentData is AgentData && m_localBackend.UpdateAgent(destination, (AgentData)cAgentData))
-                return true;
-            else if (m_localBackend.UpdateAgent(destination, (AgentPosition)cAgentData))
-                return true;
+            if (cAgentData is AgentData)
+            {
+                if (m_localBackend.UpdateAgent(destination, (AgentData)cAgentData))
+                    return true;
+            }
+            else if (cAgentData is AgentData)
+            {
+                if (m_localBackend.UpdateAgent(destination, (AgentPosition)cAgentData))
+                    return true;
+            }
 
             // else do the remote thing
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
