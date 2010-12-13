@@ -363,7 +363,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private Vector3 GetPositionAtGround(float x, float y)
         {
-            return new Vector3(x, y, m_scene.GetGroundHeight(x, y));
+            return new Vector3(x, y, m_scene.GetNormalizedGroundHeight(x, y));
         }
 
         #endregion

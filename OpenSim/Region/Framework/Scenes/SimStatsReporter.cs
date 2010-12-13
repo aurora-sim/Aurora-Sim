@@ -35,8 +35,10 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public class SimStatsReporter
+    public class SimStatsReporter : INonSharedRegionModule
     {
+        #region Declares
+
         public delegate void SendStatResult(SimStats stats);
 
         public delegate void YourStatsAreWrong();
@@ -106,9 +108,6 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_imageMS = 0;
         private int m_otherMS = 0;
 
-//Ckrinke: (3-21-08) Comment out to remove a compiler warning. Bring back into play when needed.
-//Ckrinke        private int m_scriptMS = 0;
-
         private int m_rootAgents = 0;
         private int m_childAgents = 0;
         private int m_numPrim = 0;
@@ -134,20 +133,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private IEstateModule estateModule;
 
-        public SimStatsReporter(Scene scene)
-        {
-            statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
-            m_scene = scene;
-            ReportingRegion = scene.RegionInfo;
+        #endregion
 
-            m_report.AutoReset = true;
-            m_report.Interval = statsUpdatesEveryMS;
-            m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
-            m_report.Enabled = true;
-
-            if (StatsManager.SimExtraStats != null)
-                OnSendStatsResult += StatsManager.SimExtraStats.ReceiveClassicSimStatsPacket;
-        }
+        #region Stats
 
         public void SetUpdateMS(int ms)
         {
@@ -402,6 +390,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_rootAgents < 0 || m_childAgents < 0)
             {
+                //Force the recalculation of the stats
+                m_scene.SceneGraph.RecalculateStats();
+
                 handlerStatsIncorrect = OnStatsIncorrect;
                 if (handlerStatsIncorrect != null)
                 {
@@ -550,6 +541,69 @@ namespace OpenSim.Region.Framework.Scenes
         {
             addFrameMS(ms);
             addAgentMS(ms);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region INonSharedRegionModule
+
+        public string Name
+        {
+            get { return "SimStatsReporter"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Initialise(Nini.Config.IConfigSource source)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            scene.RegisterInterface<SimStatsReporter>(this);
+            statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
+            m_scene = scene;
+            ReportingRegion = scene.RegionInfo;
+
+            m_report.AutoReset = true;
+            m_report.Interval = statsUpdatesEveryMS;
+            m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
+            m_report.Enabled = true;
+
+            if (StatsManager.SimExtraStats != null)
+                OnSendStatsResult += StatsManager.SimExtraStats.ReceiveClassicSimStatsPacket;
+
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+        }
+
+        protected void OnNewClient(IClientAPI client)
+        {
+            client.OnNetworkStatsUpdate += AddPacketsStats;
+        }
+
+        protected void OnClosingClient(IClientAPI client)
+        {
+            client.OnNetworkStatsUpdate -= AddPacketsStats;
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
         }
 
         #endregion

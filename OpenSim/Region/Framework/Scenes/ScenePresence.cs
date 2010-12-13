@@ -816,7 +816,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_sceneViewer.SendPrimUpdates();
 
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         #region Status Methods
@@ -1126,7 +1128,7 @@ namespace OpenSim.Region.Framework.Scenes
             // (may crash client otherwise)
             //
             Vector3 pos = AbsolutePosition;
-            float ground = m_scene.GetGroundHeight(pos.X, pos.Y);
+            float ground = m_scene.GetNormalizedGroundHeight(pos.X, pos.Y);
             if (pos.Z < ground + 1.5f)
             {
                 pos.Z = ground + 1.5f;
@@ -1584,7 +1586,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
                 Animator.UpdateMovementAnimations();
 
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         public void DoAutoPilot(uint not_used, Vector3 Pos, IClientAPI remote_client)
@@ -2378,7 +2382,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         #endregion
@@ -2517,8 +2523,12 @@ namespace OpenSim.Region.Framework.Scenes
                     PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity 
                     | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
 
-                m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-                m_scene.StatsReporter.AddAgentUpdates(1);
+                SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                if (reporter != null)
+                {
+                    reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+                    reporter.AddAgentUpdates(1);
+                }
             }
         }
 
@@ -2531,7 +2541,9 @@ namespace OpenSim.Region.Framework.Scenes
             
             m_scene.ForEachClient(SendTerseUpdateToClient);
 
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         public void SendCoarseLocations(List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
@@ -2553,7 +2565,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_perfMonMS = Util.EnvironmentTickCount();
             m_controllingClient.SendCoarseLocationUpdate(avatarUUIDs, coarseLocations);
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         /// <summary>
@@ -2615,8 +2629,12 @@ namespace OpenSim.Region.Framework.Scenes
                                              count++;
                                          });
 
-            m_scene.StatsReporter.AddAgentUpdates(count);
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+            {
+                reporter.AddAgentUpdates(count);
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            }
         }
 
         /// <summary>
@@ -2641,8 +2659,12 @@ namespace OpenSim.Region.Framework.Scenes
                                              count++;
                                          });
 
-            m_scene.StatsReporter.AddAgentUpdates(count);
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+            {
+                reporter.AddAgentUpdates(count);
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            }
         }
 
         /// <summary>
@@ -2681,8 +2703,12 @@ namespace OpenSim.Region.Framework.Scenes
                                              count++;
                                          });
 
-            m_scene.StatsReporter.AddAgentUpdates(count);
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+            {
+                reporter.AddAgentUpdates(count);
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            }
         }
 
         /// <summary>
@@ -2708,8 +2734,12 @@ namespace OpenSim.Region.Framework.Scenes
                 count++;
             });
 
-            m_scene.StatsReporter.AddAgentUpdates(count);
-            m_scene.StatsReporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+            if (reporter != null)
+            {
+                reporter.AddAgentUpdates(count);
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+            }
         }
 
         /// <summary>

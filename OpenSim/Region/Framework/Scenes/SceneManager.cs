@@ -739,7 +739,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             regionInfo.InternalEndPoint.Port = (int)port;
 
-            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService, m_OpenSimBase.Stats);
+            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService);
 
             StartModules(scene);
 
@@ -1525,7 +1525,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendCommandToPluginModules(string[] cmdparams)
         {
-            ForEachCurrentScene(delegate(Scene scene) { scene.SendCommandToPlugins(cmdparams); });
+            ForEachCurrentScene(delegate(Scene scene) { scene.EventManager.TriggerOnPluginConsole(cmdparams); });
         }
 
         public void SetBypassPermissionsOnCurrentScene(bool bypassPermissions)

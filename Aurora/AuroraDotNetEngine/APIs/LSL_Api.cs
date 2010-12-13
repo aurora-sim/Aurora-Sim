@@ -2160,7 +2160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
             LSL_Vector currentPos = GetPartLocalPos(part);
 
-            float ground = World.GetGroundHeight((float)targetPos.x, (float)targetPos.y);
+            float ground = World.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
             bool disable_underground_movement = m_ScriptEngine.Config.GetBoolean("DisableUndergroundMovement", true);
 
             if (part.ParentGroup == null)
@@ -10056,26 +10056,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     switch ((ParcelMediaCommandEnum) aList.Data[i])
                     {
                         case ParcelMediaCommandEnum.Url:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaURL));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaURL));
                             break;
                         case ParcelMediaCommandEnum.Desc:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaDescription));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaDescription));
                             break;
                         case ParcelMediaCommandEnum.Texture:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaID.ToString()));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaID.ToString()));
                             break;
                         case ParcelMediaCommandEnum.Type:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaType));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaType));
                             break;
                         case ParcelMediaCommandEnum.Loop:
-                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoop ? 1 : 0));
+                            list.Add(new LSL_Integer(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoop ? 1 : 0));
                             break;
                         case ParcelMediaCommandEnum.LoopSet:
-                            list.Add(new LSL_Integer(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaLoopSet));
+                            list.Add(new LSL_Integer(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoopSet));
                             break;
                         case ParcelMediaCommandEnum.Size:
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaHeight));
-                            list.Add(new LSL_String(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaWidth));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaHeight));
+                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaWidth));
                             break;
                         default:
                             ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
@@ -10861,9 +10861,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            
-            LandData land = World.GetLandData((float)pos.x, (float)pos.y);
+
+
+            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
 
             if (land == null)
             {
@@ -10961,7 +10961,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             // Alondria: This currently just is utilizing the normal grid's 0.22 prims/m2 calculation
             // Which probably will be irrelevent in OpenSim....
-            LandData land = World.GetLandData((float)pos.x, (float)pos.y);
+            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
 
             float bonusfactor = (float)World.RegionInfo.RegionSettings.ObjectBonus;
 
@@ -10989,8 +10989,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llGetParcelDetails(LSL_Vector pos, LSL_List param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            LandData land = World.GetLandData((float)pos.x, (float)pos.y);
+
+            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
             if (land == null)
             {
                 return new LSL_List(0);

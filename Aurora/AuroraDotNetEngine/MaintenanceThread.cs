@@ -256,6 +256,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
+            Thread.Sleep(10); // don't burn cpu
             threadpool.QueueEvent(CmdHandlerQueue, 2);
             return false;
         }

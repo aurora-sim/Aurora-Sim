@@ -71,7 +71,6 @@ namespace OpenSim.Framework
         void RemoveClient(UUID agentID);
 
         void Restart();
-        //RegionInfo OtherRegionUp(RegionInfo thisRegion);
 
         string GetSimulatorVersion();
 

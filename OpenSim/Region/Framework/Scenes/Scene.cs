@@ -59,8 +59,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Fields
 
-        public SimStatsReporter StatsReporter;
-
         protected List<UUID> m_needsDeleted = new List<UUID>();
         public List<SceneObjectGroup> PhysicsReturns = new List<SceneObjectGroup>();
 
@@ -133,12 +131,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected IUserAccountService m_UserAccountService;
         protected IAvatarService m_AvatarService;
         protected IGridUserService m_GridUserService;
-
-        /// <summary>
-        /// Holds the non-viewer statistics collection object for this service/server
-        /// </summary>
-        protected IStatsCollector m_stats;
-
 
         // Central Update Loop
 
@@ -291,12 +283,24 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public float SimulatorFPS
         {
-            get { return StatsReporter.getLastReportedSimFPS(); }
+            get 
+            {
+                SimStatsReporter reporter = RequestModuleInterface<SimStatsReporter>();
+                if(reporter != null)
+                    return reporter.getLastReportedSimFPS();
+                return 0;
+            }
         }
 
         public float[] SimulatorStats
         {
-            get { return StatsReporter.getLastReportedSimStats(); }
+            get
+            {
+                SimStatsReporter reporter = RequestModuleInterface<SimStatsReporter>();
+                if (reporter != null)
+                    return reporter.getLastReportedSimStats();
+                return new float[0];
+            }
         }
 
         public string DefaultScriptEngine
@@ -322,11 +326,6 @@ namespace OpenSim.Region.Framework.Scenes
         public string DefaultObjectName
         {
             get { return m_DefaultObjectName; }
-        }
-
-        public IStatsCollector Stats
-        {
-            get { return m_stats; }
         }
 
         public bool UseSelectionParticles
@@ -497,8 +496,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
-        public Scene(RegionInfo regInfo, AgentCircuitManager authen,
-            IConfigSource config, string simulatorVersion, ISimulationDataStore simDataService, IStatsCollector stats)
+        public Scene(RegionInfo regInfo, AgentCircuitManager authen, IConfigSource config, string simulatorVersion, ISimulationDataStore simDataService)
         {
             //THIS NEEDS RESET TO FIX RESTARTS
             shuttingdown = false;
@@ -506,7 +504,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Register to regInfo events
             regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
 
-            m_stats = stats;
             m_config = config;
             m_authenticateHandler = authen;
             m_regInfo = regInfo;
@@ -569,9 +566,6 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.OnClosingClient += UnSubscribeToClientEvents;
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
-
-            StatsReporter = new SimStatsReporter(this);
-            StatsReporter.OnStatsIncorrect += m_sceneGraph.RecalculateStats;
 
             m_simulatorVersion = simulatorVersion + " (" + Util.GetRuntimeInformation() + ")";
 
@@ -752,12 +746,11 @@ namespace OpenSim.Region.Framework.Scenes
                             // If agent is a root agent.
                             if (!agent.IsChildAgent)
                             {
-                                //agent.ControllingClient.new
-                                //this.CommsManager.InterRegion.InformRegionOfChildAgent(otherRegion.RegionHandle, agent.ControllingClient.RequestClientInfo());
-
+                                //Fix its neighbor settings and add this new region
                                 List<ulong> old = new List<ulong>();
                                 old.Add(otherRegion.RegionHandle);
                                 agent.DropOldNeighbours(old);
+                                //Now add the agent to the reigon that is coming up
                                 IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
                                     transferModule.EnableChildAgent(agent, otherRegion);
@@ -799,7 +792,9 @@ namespace OpenSim.Region.Framework.Scenes
             //return new GridRegion(RegionInfo);
         }
 
-        // This causes the region to restart immediatley.
+        /// <summary>
+        /// This causes the region to restart immediatley.
+        /// </summary>
         public void Restart()
         {
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -834,6 +829,9 @@ namespace OpenSim.Region.Framework.Scenes
                 handlerPhysicsCrash(RegionInfo);
         }
 
+        /// <summary>
+        /// Update the grid server with new info about this region
+        /// </summary>
         public void UpdateGridRegion()
         {
             GridService.UpdateMap(RegionInfo.ScopeID, new GridRegion(RegionInfo), RegionInfo.GridSecureSessionID);
@@ -882,7 +880,9 @@ namespace OpenSim.Region.Framework.Scenes
             RegionInfo.RegionSettings.Save();
         }
 
-        // This is the method that shuts down the scene.
+        /// <summary>
+        /// This is the method that shuts down the scene.
+        /// </summary>
         public void Close()
         {
             m_log.InfoFormat("[SCENE]: Closing down the single simulator: {0}", RegionInfo.RegionName);
@@ -946,6 +946,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        #region Tracker
+
         public AuroraThreadTracker tracker = null;
         private bool UseTracker = true;
         /// <summary>
@@ -983,6 +985,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (type == "SceneBackupHeartbeat")
                 tracker.AddSceneHeartbeat(new Scene.SceneBackupHeartbeat(this), out thread);
         }
+
+        #endregion
 
         #endregion
 
@@ -1097,14 +1101,17 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
                         m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
 
-                        m_scene.StatsReporter.AddTimeDilation(m_scene.TimeDilation);
-                        m_scene.StatsReporter.AddFPS(1);
-                        m_scene.StatsReporter.addFrameMS(m_scene.frameMS);
-                        m_scene.StatsReporter.addPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
-                        m_scene.StatsReporter.addOtherMS(m_scene.otherMS);
-                        m_scene.StatsReporter.SetPhysicsOther(m_scene.physicsMS2);
-                        m_scene.StatsReporter.SetPhysicsStep((int)Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
-
+                        SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                        if (reporter != null)
+                        {
+                            reporter.AddTimeDilation(m_scene.TimeDilation);
+                            reporter.AddFPS(1);
+                            reporter.addFrameMS(m_scene.frameMS);
+                            reporter.addPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
+                            reporter.addOtherMS(m_scene.otherMS);
+                            reporter.SetPhysicsOther(m_scene.physicsMS2);
+                            reporter.SetPhysicsStep((int)Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                        }
                         CheckExit();
                     }
                     catch (NotImplementedException)
@@ -1128,7 +1135,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
                     maintc = (int)(m_scene.m_timespan * 1000) - maintc;
-                    m_scene.StatsReporter.SetSleepMS(maintc);
+                    SimStatsReporter statsreporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                    if (statsreporter != null)
+                        statsreporter.SetSleepMS(maintc);
 
                     if (maintc > 0)
                         Thread.Sleep(maintc / Scene.m_timeToSlowTheHeartbeat);
@@ -1225,7 +1234,9 @@ namespace OpenSim.Region.Framework.Scenes
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
                                 physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
                         }
-                        m_scene.StatsReporter.AddPhysicsFPS(physicsFPS);
+                        SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                        if (reporter != null)
+                            reporter.AddPhysicsFPS(physicsFPS);
                         CheckExit();
 
                         m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
@@ -1548,18 +1559,22 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
                         m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
 
-                        m_scene.StatsReporter.AddPhysicsFPS(physicsFPS);
-                        m_scene.StatsReporter.AddTimeDilation(m_scene.TimeDilation);
-                        m_scene.StatsReporter.AddFPS(1);
-                        m_scene.StatsReporter.SetRootAgents(m_scene.m_sceneGraph.GetRootAgentCount());
-                        m_scene.StatsReporter.SetChildAgents(m_scene.m_sceneGraph.GetChildAgentCount());
-                        m_scene.StatsReporter.SetObjects(m_scene.m_sceneGraph.GetTotalObjectsCount());
-                        m_scene.StatsReporter.SetActiveObjects(m_scene.m_sceneGraph.GetActiveObjectsCount());
-                        m_scene.StatsReporter.addFrameMS(m_scene.frameMS);
-                        m_scene.StatsReporter.addPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
-                        m_scene.StatsReporter.addOtherMS(m_scene.otherMS);
-                        m_scene.StatsReporter.SetActiveScripts(m_scene.m_sceneGraph.GetActiveScriptsCount());
-                        m_scene.StatsReporter.addScriptEvents(m_scene.m_sceneGraph.GetScriptEPS());
+                        SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                        if (reporter != null)
+                        {
+                            reporter.AddPhysicsFPS(physicsFPS);
+                            reporter.AddTimeDilation(m_scene.TimeDilation);
+                            reporter.AddFPS(1);
+                            reporter.SetRootAgents(m_scene.m_sceneGraph.GetRootAgentCount());
+                            reporter.SetChildAgents(m_scene.m_sceneGraph.GetChildAgentCount());
+                            reporter.SetObjects(m_scene.m_sceneGraph.GetTotalObjectsCount());
+                            reporter.SetActiveObjects(m_scene.m_sceneGraph.GetActiveObjectsCount());
+                            reporter.addFrameMS(m_scene.frameMS);
+                            reporter.addPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
+                            reporter.addOtherMS(m_scene.otherMS);
+                            reporter.SetActiveScripts(m_scene.m_sceneGraph.GetActiveScriptsCount());
+                            reporter.addScriptEvents(m_scene.m_sceneGraph.GetScriptEPS());
+                        }
                         CheckExit();
                     }
                     catch (NotImplementedException)
@@ -1712,18 +1727,22 @@ namespace OpenSim.Region.Framework.Scenes
                     otherMS = tempOnRezMS + eventMS + backupMS + terrainMS + landMS;
                     lastCompletedFrame = Util.EnvironmentTickCount();
 
-                    StatsReporter.AddPhysicsFPS(physicsFPS);
-                    StatsReporter.AddTimeDilation(TimeDilation);
-                    StatsReporter.AddFPS(1);
-                    StatsReporter.SetRootAgents(m_sceneGraph.GetRootAgentCount());
-                    StatsReporter.SetChildAgents(m_sceneGraph.GetChildAgentCount());
-                    StatsReporter.SetObjects(m_sceneGraph.GetTotalObjectsCount());
-                    StatsReporter.SetActiveObjects(m_sceneGraph.GetActiveObjectsCount());
-                    StatsReporter.addFrameMS(frameMS);
-                    StatsReporter.addPhysicsMS(physicsMS + physicsMS2);
-                    StatsReporter.addOtherMS(otherMS);
-                    StatsReporter.SetActiveScripts(m_sceneGraph.GetActiveScriptsCount());
-                    StatsReporter.addScriptEvents(m_sceneGraph.GetScriptEPS());
+                    SimStatsReporter reporter = RequestModuleInterface<SimStatsReporter>();
+                    if (reporter != null)
+                    {
+                        reporter.AddPhysicsFPS(physicsFPS);
+                        reporter.AddTimeDilation(TimeDilation);
+                        reporter.AddFPS(1);
+                        reporter.SetRootAgents(m_sceneGraph.GetRootAgentCount());
+                        reporter.SetChildAgents(m_sceneGraph.GetChildAgentCount());
+                        reporter.SetObjects(m_sceneGraph.GetTotalObjectsCount());
+                        reporter.SetActiveObjects(m_sceneGraph.GetActiveObjectsCount());
+                        reporter.addFrameMS(frameMS);
+                        reporter.addPhysicsMS(physicsMS + physicsMS2);
+                        reporter.addOtherMS(otherMS);
+                        reporter.SetActiveScripts(m_sceneGraph.GetActiveScriptsCount());
+                        reporter.addScriptEvents(m_sceneGraph.GetScriptEPS());
+                    }
                 }
                 catch (NotImplementedException)
                 {
@@ -3237,9 +3256,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_clientManager.Add(client);
             SubscribeToClientEvents(client);
 
-            if (!sp.IsChildAgent && Stats is OpenSim.Framework.Statistics.SimExtraStatsCollector)
+            IStatsCollector collector = RequestModuleInterface<IStatsCollector>();
+            if (!sp.IsChildAgent && collector != null && collector is OpenSim.Framework.Statistics.SimExtraStatsCollector)
             {
-                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = Stats as OpenSim.Framework.Statistics.SimExtraStatsCollector;
+                OpenSim.Framework.Statistics.SimExtraStatsCollector stats = collector as OpenSim.Framework.Statistics.SimExtraStatsCollector;
                 stats.AddSuccessfulLogin();
             }
         }
@@ -3442,7 +3462,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void SubscribeToClientNetworkEvents(IClientAPI client)
         {
-            client.OnNetworkStatsUpdate += StatsReporter.AddPacketsStats;
             client.OnViewerEffect += ProcessViewerEffect;
         }
 
@@ -3568,7 +3587,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void UnSubscribeToClientNetworkEvents(IClientAPI client)
         {
-            client.OnNetworkStatsUpdate -= StatsReporter.AddPacketsStats;
             client.OnViewerEffect -= ProcessViewerEffect;
         }
 
@@ -4063,9 +4081,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 //Keep users from being underground
-                if (agent.startpos.Z < GetGroundHeight(agent.startpos.X, agent.startpos.Y))
+                if (agent.startpos.Z < GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
                 {
-                    agent.startpos.Z = GetGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    agent.startpos.Z = GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
                 }
             }
 
@@ -4409,26 +4427,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (RegionInfo.ObjectCapacity == 0)
                 RegionInfo.ObjectCapacity = objects;
 
-            if (StatsReporter != null)
-                StatsReporter.SetObjectCapacity(objects);
-        }
-
-        #endregion
-
-        #region Script Handling Methods
-
-        /// <summary>
-        /// Console command handler to send script command to script engine.
-        /// </summary>
-        /// <param name="args"></param>
-        public void SendCommandToPlugins(string[] args)
-        {
-            m_eventManager.TriggerOnPluginConsole(args);
-        }
-
-        public LandData GetLandData(float x, float y)
-        {
-            return LandChannel.GetLandObject(x, y).LandData;
+            if (RequestModuleInterface<SimStatsReporter>() != null)
+                RequestModuleInterface<SimStatsReporter>().SetObjectCapacity(objects);
         }
 
         #endregion
@@ -4911,9 +4911,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Ground/Sun
+        #region Ground
 
-        public float GetGroundHeight(float x, float y)
+        /// <summary>
+        /// Gets the average height of the area +2 in both the X and Y directions from the given position
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public float GetNormalizedGroundHeight(float x, float y)
         {
             if (x < 0)
                 x = 0;

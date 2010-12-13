@@ -154,6 +154,11 @@ namespace OpenSim.Services.Connectors
             return m_informedRegions;
         }
 
+        /// <summary>
+        /// Get all the neighboring regions of the given region
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
         private List<GridRegion> FindNewNeighbors(RegionInfo region)
         {
             List<GridRegion> neighbors = new List<GridRegion>();
@@ -200,6 +205,7 @@ namespace OpenSim.Services.Connectors
                 //Get the range of regions defined by RegionViewSize
                 neighbors = m_gridService.GetRegionRange(region.ScopeID, (int)(region.RegionLocX - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocX + RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY + RegionViewSize) * (int)Constants.RegionSize);
             }
+            //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
             if (!CloseLocalRegions)
             {
                 foreach (Scene scene in m_Scenes)
@@ -213,6 +219,11 @@ namespace OpenSim.Services.Connectors
             return neighbors;
         }
 
+        /// <summary>
+        /// Get the cached list of neighbors
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
         public List<GridRegion> GetNeighbors(RegionInfo region)
         {
             List<GridRegion> neighbors = new List<GridRegion>();
@@ -223,6 +234,11 @@ namespace OpenSim.Services.Connectors
             return neighbors;
         }
 
+        /// <summary>
+        /// Tell the neighbors that this region is going down
+        /// </summary>
+        /// <param name="closingRegion"></param>
+        /// <returns></returns>
         public List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
         {
             List<GridRegion> m_informedRegions = new List<GridRegion>();

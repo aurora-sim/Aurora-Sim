@@ -95,7 +95,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public void RegionLoaded(Scene scene) 
         {
             if (m_collectStats)
-                m_scene.StatsReporter.OnSendStatsResult += LogSimStats;
+            {
+                SimStatsReporter reporter = m_scene.RequestModuleInterface<SimStatsReporter>();
+                if (reporter != null)
+                    reporter.OnSendStatsResult += LogSimStats;
+            }
         }
         
         public void Close() 
