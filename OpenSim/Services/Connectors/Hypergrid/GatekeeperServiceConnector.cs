@@ -61,7 +61,10 @@ namespace OpenSim.Services.Connectors.Hypergrid
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "GatekeeperServiceConnector")
+            {
                 registry.RegisterInterface<ISimulationService>(this);
+                m_localBackend = new LocalSimulationServiceConnector();
+            }
         }
 
         public override void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -70,6 +73,13 @@ namespace OpenSim.Services.Connectors.Hypergrid
 
         public override void Start(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public override void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("SimulationHandler", "") == "GatekeeperServiceConnector")
+                registry.RegisterInterface<ISimulationService>(this);
         }
 
         public GatekeeperServiceConnector(IAssetService assService)
