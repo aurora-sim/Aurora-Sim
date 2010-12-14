@@ -1,9 +1,0 @@
-<Addin id="OpenSim.Region.DataSnapshot" version="0.2">
-    <Runtime>
-        <Import assembly="OpenSim.Region.DataSnapshot.dll"/>
-    </Runtime>
-
-    <Dependencies>
-        <Addin id="OpenSim" version="0.5" />
-    </Dependencies>
-</Addin>
