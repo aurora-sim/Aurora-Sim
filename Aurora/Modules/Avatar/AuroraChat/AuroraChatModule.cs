@@ -399,7 +399,7 @@ namespace Aurora.Modules
                             return;
                         }
                         ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
-                        if (avatar != null)
+                        if (avatar != null && message == "")
                         {
                             fromPos = avatar.AbsolutePosition;
                             fromName = avatar.Name;
@@ -420,7 +420,6 @@ namespace Aurora.Modules
                     break;
             }
 
-            // TODO: iterate over message
             if (message.Length >= 1000) // libomv limit
                 message = message.Substring(0, 1000);
 
@@ -450,35 +449,6 @@ namespace Aurora.Modules
                         {
                             continue;
                         }
-                        //The client actually does this on its own, we don't need to
-                        /*//Check whether the user is muted
-                        bool IsMuted = false;
-                        if (message != "" && m_useMuteListModule)
-                        {
-                            Dictionary<UUID, bool> cache = new Dictionary<UUID,bool>();
-                            //Check the cache first so that we don't kill the server
-                            if (IsMutedCache.TryGetValue(presence.UUID, out cache))
-                            {
-                                //If the cache doesn't contain the person, they arn't used
-                                if (!cache.TryGetValue(fromID, out IsMuted))
-                                {
-                                    cache[fromID] = IsMuted = false;
-                                }
-                            }
-                            else
-                            {
-                                cache = new Dictionary<UUID, bool>();
-                                //This loads all mutes into the list
-                                MuteList[] List = MuteListConnector.GetMuteList(presence.UUID);
-                                foreach (MuteList mute in List)
-                                {
-                                    cache[mute.MuteID] = true;
-                                }
-                                IsMutedCache[presence.UUID] = cache;
-                            }
-                        }
-                        if (!IsMuted)
-                            */
                         TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                     }
                 }

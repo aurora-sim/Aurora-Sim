@@ -390,7 +390,7 @@ namespace OpenSim.Services.Connectors
                 if (scene != null)
                 {
                     Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
-                    if (chatModule != null)
+                    if (chatModule != null && !RetVal)
                     {
                         chatModule.DeliverChatToAvatars(type, message);
                         RetVal = true;
