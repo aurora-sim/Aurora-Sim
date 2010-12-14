@@ -57,6 +57,8 @@ namespace Aurora.Server
 {
     public class AuroraBase : SimulationBase
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public override void SetUpConsole()
         {
             base.SetUpConsole();
