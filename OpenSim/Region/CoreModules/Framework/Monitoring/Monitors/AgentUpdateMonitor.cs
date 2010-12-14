@@ -72,5 +72,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         {
             agentTime += value;
         }
+
+        public void ResetStats()
+        {
+            agentUpdates = 0;
+            agentTime = 0;
+        }
     }
 }
