@@ -265,7 +265,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnChatFromClient(object sender, OSChatMessage e)
+        protected void OnChatFromClient(object sender, OSChatMessage e)
         {
             //For Estate Password
             EstateChange Change = null;

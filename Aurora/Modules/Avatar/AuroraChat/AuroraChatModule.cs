@@ -281,7 +281,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="c"></param>
-        public virtual void OnChatFromClient(Object sender, OSChatMessage c)
+        protected virtual void OnChatFromClient(Object sender, OSChatMessage c)
         {
             c = FixPositionOfChatMessage(c);
 
@@ -457,7 +457,7 @@ namespace Aurora.Modules
 
         static private Vector3 CenterOfRegion = new Vector3(Constants.RegionSize, Constants.RegionSize, 30);
 
-        public virtual void OnChatBroadcast(Object sender, OSChatMessage c)
+        protected virtual void OnChatBroadcast(Object sender, OSChatMessage c)
         {
             // unless the chat to be broadcast is of type Region, we
             // drop it if its channel is neither 0 nor DEBUG_CHANNEL

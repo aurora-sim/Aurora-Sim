@@ -25,7 +25,7 @@ namespace Aurora.Simulation.Base
 {
     public class SimulationBase : ISimulationBase
     {
-        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected string m_startupCommandsFile;
         protected string m_shutdownCommandsFile;

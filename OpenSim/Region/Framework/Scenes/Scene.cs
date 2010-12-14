@@ -487,9 +487,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
-            m_asyncSceneObjectDeleter = new AsyncSceneObjectGroupDeleter(this);
-            m_asyncSceneObjectDeleter.Enabled = true;
-
             m_SimulationDataService = simDataService;
 
             // Load region settings
@@ -500,16 +497,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (conn != null)
             {
                 EventManager.OnLandObjectAdded +=
-                    new EventManager.LandObjectAdded(conn.StoreLandObject);
+                    conn.StoreLandObject;
                 EventManager.OnLandObjectRemoved +=
-                    new EventManager.LandObjectRemoved(conn.RemoveLandObject);
-            }
-            else
-            {
-                EventManager.OnLandObjectAdded +=
-                    new EventManager.LandObjectAdded(SimulationDataService.StoreLandObject);
-                EventManager.OnLandObjectRemoved +=
-                    new EventManager.LandObjectRemoved(SimulationDataService.RemoveLandObject);
+                    conn.RemoveLandObject;
             }
 
             EventManager.OnClosingClient += UnSubscribeToClientEvents;
@@ -588,11 +578,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_persistAfter =
                         persistanceConfig.GetLong("MaximumTimeBeforePersistenceConsidered", m_persistAfter);
-                }
-                else
-                {
-                    m_dontPersistBefore = 60;
-                    m_persistAfter = 600;
                 }
                 IConfig scriptEngineConfig = m_config.Configs["ScriptEngines"];
                 if (scriptEngineConfig != null)
@@ -4963,9 +4948,13 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         m_log.Info("[SCENE]: Returning 1 object due to parcel auto return.");
 
-                    m_asyncSceneObjectDeleter.DeleteToInventory(
-                        DeRezAction.Return, ret.Value.Groups[0].RootPart.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootPart.OwnerID,
-                        true, true);
+                    AsyncSceneObjectGroupDeleter async = RequestModuleInterface<AsyncSceneObjectGroupDeleter>();
+                    if (async != null)
+                    {
+                        async.DeleteToInventory(
+                                DeRezAction.Return, ret.Value.Groups[0].RootPart.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootPart.OwnerID,
+                                true, true);
+                    }
                     EventManager.TriggerParcelPrimCountTainted();
                 }
                 m_returns.Clear();

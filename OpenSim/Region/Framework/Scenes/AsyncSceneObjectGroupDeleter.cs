@@ -36,7 +36,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    class DeleteToInventoryHolder
+    public class DeleteToInventoryHolder
     {
         public DeRezAction action;
         public UUID agentId;
@@ -50,7 +50,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
     /// up the main client thread.
     /// </summary>
-    public class AsyncSceneObjectGroupDeleter
+    public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -66,10 +66,43 @@ namespace OpenSim.Region.Framework.Scenes
         private bool SendToInventoryLoopInUse = false;
         private Scene m_scene;
 
-        public AsyncSceneObjectGroupDeleter(Scene scene)
+        #region INonSharedRegionModule Members
+
+        public string Name
         {
+            get { return "AsyncSceneObjectGroupDeleter"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Initialise(Nini.Config.IConfigSource source)
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public void AddRegion(Scene scene)
+        {
+            scene.RegisterModuleInterface<AsyncSceneObjectGroupDeleter>(this);
             m_scene = scene;
         }
+
+        public void RemoveRegion(Scene scene)
+        {
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+        }
+
+        #endregion
+
+        #region Delete To Inventory
 
         /// <summary>
         /// Delete the given object from the scene
@@ -243,5 +276,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Debug("[SCENE]: No objects left in inventory send queue.");
             return false;
         }
+
+        #endregion
     }
 }
