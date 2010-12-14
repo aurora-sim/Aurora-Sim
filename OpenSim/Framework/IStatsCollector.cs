@@ -47,8 +47,14 @@ namespace OpenSim.Framework
 
     public interface IMonitorModule
     {
+        /// <summary>
+        /// Event that gives others the SimStats class that is being sent out to the client
+        /// </summary>
         event SendStatResult OnSendStatsResult;
 
+        /// <summary>
+        /// Event that tells others that their stats are incorrect and need to be recalculated
+        /// </summary>
         event YourStatsAreWrong OnStatsIncorrect;
 
         /// <summary>
@@ -69,17 +75,43 @@ namespace OpenSim.Framework
 
     public interface IMonitor
     {
+        /// <summary>
+        /// Get the value of this monitor
+        /// </summary>
+        /// <returns></returns>
         double GetValue();
+
+        /// <summary>
+        /// Get the name of this monitor
+        /// </summary>
+        /// <returns></returns>
         string GetName();
-        string GetFriendlyValue(); // Convert to readable numbers
+
+        /// <summary>
+        /// Get the nice looking value of GetValue()
+        /// </summary>
+        /// <returns></returns>
+        string GetFriendlyValue();
     }
 
     public delegate void Alert(Type reporter, string reason, bool fatal);
 
     public interface IAlert
     {
+        /// <summary>
+        /// The name of the alert
+        /// </summary>
+        /// <returns></returns>
         string GetName();
+
+        /// <summary>
+        /// Test the alert
+        /// </summary>
         void Test();
+        
+        /// <summary>
+        /// What will happen when the alert is triggered
+        /// </summary>
         event Alert OnTriggerAlert;
     }
 
@@ -91,7 +123,7 @@ namespace OpenSim.Framework
         void AddAssetServiceRequestFailure();
 
         /// <summary>
-        /// 
+        /// The time that it took to request the asset after it was not found in the cache
         /// </summary>
         /// <param name="ts"></param>
         void AddAssetRequestTimeAfterCacheMiss(TimeSpan ts);
@@ -121,38 +153,117 @@ namespace OpenSim.Framework
 
     public interface INetworkMonitor
     {
+        /// <summary>
+        /// The number of packets coming in per second
+        /// </summary>
         float InPacketsPerSecond { get; }
+
+        /// <summary>
+        /// The number of packets going out per second
+        /// </summary>
         float OutPacketsPerSecond { get; }
+
+        /// <summary>
+        /// The number of bytes that we have not acked yet (see LLUDPClient for more info)
+        /// </summary>
         float UnackedBytes { get; }
+
+        /// <summary>
+        /// The number of downloads that the client has requested, but has not recieved at this time
+        /// </summary>
         float PendingDownloads { get; }
+
+        /// <summary>
+        /// The number of updates that the client has started, but not finished
+        /// </summary>
         float PendingUploads { get; }
 
+        /// <summary>
+        /// Add the number of packets that are incoming
+        /// </summary>
+        /// <param name="numPackets"></param>
         void AddInPackets(int numPackets);
+
+        /// <summary>
+        /// Add the number of outgoing packets
+        /// </summary>
+        /// <param name="numPackets"></param>
         void AddOutPackets(int numPackets);
+
+        /// <summary>
+        /// Add the current bytes that are not acked
+        /// </summary>
+        /// <param name="numBytes"></param>
         void AddUnackedBytes(int numBytes);
+
+        /// <summary>
+        /// Add new pending downloads
+        /// </summary>
+        /// <param name="count"></param>
         void AddPendingDownloads(int count);
+
+        /// <summary>
+        /// Add new pending upload
+        /// </summary>
+        /// <param name="count"></param>
         void AddPendingUploads(int count);
     }
 
     public interface ISetMonitor : IMonitor
     {
+        /// <summary>
+        /// Set the Value for the monitor
+        /// </summary>
+        /// <param name="value"></param>
         void SetValue(int value);
     }
 
     public interface ISimFrameMonitor
     {
-        void AddFPS(int frames);
-        void ResetStats();
-
+        /// <summary>
+        /// The last reported Sim FPS (for llGetRegionFPS())
+        /// </summary>
         float LastReportedSimFPS { get; set; }
+
+        /// <summary>
+        /// The 'current' Sim FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Sim FPS)
+        /// </summary>
         float SimFPS { get; }
+
+        /// <summary>
+        /// Add X frames to the stats
+        /// </summary>
+        /// <param name="frames"></param>
+        void AddFPS(int frames);
+
+        /// <summary>
+        /// Reset the stats
+        /// </summary>
+        void ResetStats();
     }
 
     public interface IAgentUpdateMonitor
     {
+        /// <summary>
+        /// The time it takes to update the agent with info
+        /// </summary>
         int AgentFrameTime { get; }
+
+        /// <summary>
+        /// The number of updates sent to the agent
+        /// </summary>
         int AgentUpdates { get; }
+
+        /// <summary>
+        /// Add the agent updates
+        /// </summary>
+        /// <param name="value"></param>
         void AddAgentUpdates(int value);
+
+        /// <summary>
+        /// Add the amount of time it took to update the client
+        /// </summary>
+        /// <param name="value"></param>
         void AddAgentTime(int value);
     }
 

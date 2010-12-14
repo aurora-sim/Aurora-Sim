@@ -160,23 +160,28 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
             protected void AddDefaultMonitors()
             {
-                AddMonitor(new PWSMemoryMonitor());
-                AddMonitor(new ThreadCountMonitor());
+                AddMonitor(new AssetMonitor());
                 AddMonitor(new GCMemoryMonitor());
                 AddMonitor(new LoginMonitor());
-                AddMonitor(new AssetMonitor());
+                AddMonitor(new PWSMemoryMonitor());
+                AddMonitor(new ThreadCountMonitor());
             }
 
             protected void AddRegionMonitors(Scene scene)
             {
                 AddMonitor(new AgentCountMonitor(scene));
+                AddMonitor(new AgentUpdateMonitor(scene));
                 AddMonitor(new ChildAgentCountMonitor(scene));
+                AddMonitor(new LastFrameTimeMonitor(scene));
+                AddMonitor(new NetworkMonitor(scene));
                 AddMonitor(new ObjectCountMonitor(scene));
+                AddMonitor(new OtherFrameMonitor(scene));
                 AddMonitor(new PhysicsFrameMonitor(scene));
                 AddMonitor(new PhysicsUpdateFrameMonitor(scene));
-                AddMonitor(new TotalFrameMonitor(scene));
-                AddMonitor(new LastFrameTimeMonitor(scene));
                 AddMonitor(new SimFrameMonitor(scene));
+                AddMonitor(new SleepFrameMonitor(scene));
+                AddMonitor(new TimeDilationMonitor(scene));
+                AddMonitor(new TotalFrameMonitor(scene));
 
                 AddAlert(new DeadlockAlert(GetMonitor("Last Completed Frame At") as LastFrameTimeMonitor));
             }
@@ -583,10 +588,17 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         protected void DebugMonitorsInCurrentRegion(string module, string[] args)
         {
             SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
-            manager.ForEachCurrentScene(delegate(Scene scene)
+            if (manager != null)
             {
-                m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
-            });
+                manager.ForEachCurrentScene(delegate(Scene scene)
+                {
+                    m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
+                });
+            }
+            else
+            {
+                DebugMonitors(module, args);
+            }
         }
 
         /// <summary>
