@@ -916,6 +916,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_localScenes.Remove(scene);
             scene.Close();
+            CloseModules(scene);
         }
 
         #endregion
@@ -942,6 +943,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.FinishStartup(scene, m_config, m_OpenSimBase);
             }
+        }
+
+        public void CloseModules(Scene scene)
+        {
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.Close(scene);
+            }
+            if (OnCloseScene != null)
+                OnCloseScene(scene);
         }
 
         #endregion

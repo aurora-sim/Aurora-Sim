@@ -316,5 +316,9 @@ namespace OpenSim.Region.CoreModules
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
+
+        public void Close(Scene scene)
+        {
+        }
     }
 }
