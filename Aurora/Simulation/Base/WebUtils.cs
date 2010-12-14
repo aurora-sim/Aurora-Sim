@@ -537,13 +537,13 @@ namespace Aurora.Simulation.Base
                 else
                 {
                     // uh?
-                    m_log.Debug(("[REST COMMS]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                    m_log.Warn(("[REST COMMS]: Got OSD of unexpected type " + buffer.Type.ToString()));
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                m_log.Debug("[REST COMMS]: exception on parse of REST message " + ex.Message);
+                m_log.Warn("[REST COMMS]: exception on parse of REST message " + ex.Message);
                 return null;
             }
         }

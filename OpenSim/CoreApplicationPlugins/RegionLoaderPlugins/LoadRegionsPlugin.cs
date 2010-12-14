@@ -110,7 +110,7 @@ namespace OpenSim.CoreApplicationPlugins
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
                     IScene scene = null;
-                    m_log.Debug("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
+                    m_log.Info("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
                     manager.CreateRegion(regionsToLoad[i], true, out scene);
                 }
             }

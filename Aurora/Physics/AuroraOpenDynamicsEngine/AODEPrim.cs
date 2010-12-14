@@ -1110,7 +1110,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                                 else
                                 {
-                                    m_log.Debug("[PHYSICS]:I ain't got no boooooooooddy, no body");
+                                    m_log.Warn("[PHYSICS]:I ain't got no boooooooooddy, no body");
                                 }
 
 

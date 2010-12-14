@@ -79,7 +79,7 @@ namespace Aurora.Modules
 		protected void HandleLoadAvatarArchive(string module, string[] cmdparams)
 		{
 			if (cmdparams.Length != 6) {
-				m_log.Debug("[AvatarArchive] Not enough parameters!");
+                m_log.Info("[AvatarArchive] Not enough parameters!");
 				return;
 			}
 			LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
@@ -88,7 +88,7 @@ namespace Aurora.Modules
         public void LoadAvatarArchive(string FileName, string First, string Last)
         {
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
-            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+            m_log.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
                 m_log.Error("[AvatarArchive] User not found!");
@@ -156,7 +156,7 @@ namespace Aurora.Modules
                     SP.ControllingClient.SendBulkUpdateInventory(itemCopy);
                 }
             }
-            m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
+            m_log.Info("[AvatarArchive] Loaded archive from " + FileName);
         }
 
         private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
@@ -219,7 +219,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 7)
             {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
+                m_log.Info("[AvatarArchive] Not enough parameters!");
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
@@ -270,7 +270,7 @@ namespace Aurora.Modules
             writer.Write(OSDParser.SerializeLLSDXmlString(map));
             writer.Close();
             writer.Dispose();
-            m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            m_log.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
         }
 
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
@@ -283,6 +283,11 @@ namespace Aurora.Modules
                 CreateMetaDataMap(asset.Metadata, assetData);
                 assetData.Add("AssetData", OSD.FromBinary(asset.Data));
                 assetMap.Add(asset.ID, assetData);
+            }
+            else
+            {
+                m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
+                return;
             }
         }
 
@@ -323,6 +328,11 @@ namespace Aurora.Modules
         private void SaveItem(UUID ItemID, OSDMap itemMap)
         {
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
+            if (saveItem == null)
+            {
+                m_log.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
+                return;
+            }
             m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
             string serialization = UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);

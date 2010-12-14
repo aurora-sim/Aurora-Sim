@@ -71,7 +71,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
@@ -126,13 +126,13 @@ namespace Aurora.Modules
             reader.Close();
             reader.Dispose();
 
-            m_log.Debug("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
+            m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
         protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
@@ -153,7 +153,7 @@ namespace Aurora.Modules
             writer.Write(UDAxmlString + "\n");
             writer.Write(UPIxmlString + "\n");
             writer.Write("</profile>\n");
-            m_log.Debug("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
             writer.Close();
             writer.Dispose();
         }

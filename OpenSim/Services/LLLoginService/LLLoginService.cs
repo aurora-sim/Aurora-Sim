@@ -1143,7 +1143,7 @@ namespace AvatarArchives
             AvatarService = AS;
             InventoryService = IS;
             AssetService = AService;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)", HandleSaveAvatarArchive);
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto (This is the name of the folder that will appear in the client's Clothing folder when the AA is loaded)>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderNameToSaveInto if you need more than one word)", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
 
@@ -1151,7 +1151,7 @@ namespace AvatarArchives
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
+                m_log.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
             LoadAvatarArchive(cmdparams[5], cmdparams[3], cmdparams[4]);
@@ -1160,7 +1160,7 @@ namespace AvatarArchives
         public void LoadAvatarArchive(string FileName, string First, string Last)
         {
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, First, Last);
-            m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+            m_log.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
                 m_log.Error("[AvatarArchive] User not found!");
@@ -1169,7 +1169,7 @@ namespace AvatarArchives
             string file = "";
             if (FileName.EndsWith(".database"))
             {
-                m_log.Debug("[AvatarArchive] Loading archive from the database " + FileName);
+                m_log.Info("[AvatarArchive] Loading archive from the database " + FileName);
 
                 FileName = FileName.Substring(0, FileName.Length - 9);
 
@@ -1180,7 +1180,7 @@ namespace AvatarArchives
             }
             else
             {
-                m_log.Debug("[AvatarArchive] Loading archive from " + FileName);
+                m_log.Info("[AvatarArchive] Loading archive from " + FileName);
                 StreamReader reader = new StreamReader(FileName);
                 file = reader.ReadToEnd();
                 reader.Close();
@@ -1232,7 +1232,7 @@ namespace AvatarArchives
             AvatarData adata = new AvatarData(appearance);
             AvatarService.SetAvatar(account.PrincipalID, adata);
 
-            m_log.Debug("[AvatarArchive] Loaded archive from " + FileName);
+            m_log.Info("[AvatarArchive] Loaded archive from " + FileName);
         }
 
         private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
@@ -1296,7 +1296,7 @@ namespace AvatarArchives
         {
             if (cmdparams.Length != 7)
             {
-                m_log.Debug("[AvatarArchive] Not enough parameters!");
+                m_log.Info("[AvatarArchive] Not enough parameters!");
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
@@ -1305,8 +1305,7 @@ namespace AvatarArchives
                 return;
             }
 
-            AvatarData avatarData = AvatarService.GetAvatar(account.PrincipalID);
-            AvatarAppearance appearance = avatarData.ToAvatarAppearance(account.PrincipalID);
+            AvatarAppearance appearance = AvatarService.GetAppearance(account.PrincipalID);
             OSDMap map = new OSDMap();
             OSDMap body = new OSDMap();
             OSDMap assets = new OSDMap();
@@ -1349,7 +1348,7 @@ namespace AvatarArchives
 
                 DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
 
-                m_log.Debug("[AvatarArchive] Saved archive to database " + cmdparams[5]);
+                m_log.Info("[AvatarArchive] Saved archive to database " + cmdparams[5]);
             }
             else
             {
@@ -1357,7 +1356,7 @@ namespace AvatarArchives
                 writer.Write(OSDParser.SerializeLLSDXmlString(map));
                 writer.Close();
                 writer.Dispose();
-                m_log.Debug("[AvatarArchive] Saved archive to " + cmdparams[5]);
+                m_log.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
             }
         }
 
@@ -1371,6 +1370,11 @@ namespace AvatarArchives
                 CreateMetaDataMap(asset.Metadata, assetData);
                 assetData.Add("AssetData", OSD.FromBinary(asset.Data));
                 assetMap.Add(asset.ID, assetData);
+            }
+            else
+            {
+                m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
+                return;
             }
         }
 
@@ -1411,6 +1415,11 @@ namespace AvatarArchives
         private void SaveItem(UUID ItemID, OSDMap itemMap)
         {
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
+            if (saveItem == null)
+            {
+                m_log.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
+                return;
+            }
             m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
             string serialization = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);
@@ -1466,7 +1475,7 @@ namespace AvatarArchives
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
@@ -1522,13 +1531,13 @@ namespace AvatarArchives
             reader.Close();
             reader.Dispose();
 
-            m_log.Debug("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
+            m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
         protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Debug("[AvatarProfileArchiver] Not enough parameters!");
+                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
@@ -1547,7 +1556,7 @@ namespace AvatarArchives
             writer.Write(UDAxmlString + "\n");
             writer.Write(UPIxmlString + "\n");
             writer.Write("</profile>\n");
-            m_log.Debug("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
             writer.Close();
             writer.Dispose();
         }

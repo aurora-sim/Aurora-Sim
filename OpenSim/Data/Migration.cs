@@ -203,8 +203,8 @@ namespace OpenSim.Data
                 }
                 catch (Exception e)
                 {
-                    m_log.DebugFormat("[MIGRATIONS]: Cmd was {0}", e.Message.Replace("\n", " "));
-                    m_log.Debug("[MIGRATIONS]: An error has occurred in the migration.  If you're running OpenSim for the first time then you can probably safely ignore this, since certain migration commands attempt to fetch data out of old tables.  However, if you're using an existing database and you see database related errors while running OpenSim then you will need to fix these problems manually. Continuing.");
+                    m_log.WarnFormat("[MIGRATIONS]: Cmd was {0}", e.Message.Replace("\n", " "));
+                    m_log.Warn("[MIGRATIONS]: An error has occurred in the migration.  If you're running OpenSim for the first time then you can probably safely ignore this, since certain migration commands attempt to fetch data out of old tables.  However, if you're using an existing database and you see database related errors while running OpenSim then you will need to fix these problems manually. Continuing.");
                     ExecuteScript("ROLLBACK;");
                 }
 

@@ -421,7 +421,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 else
                 {
-                    m_log.Debug("Not restarting all scripts");
+                    m_log.Info("Not restarting all scripts");
                 }
             }
             else if (cmdparams[1] == "stop")
@@ -434,7 +434,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 else
                 {
-                    m_log.Debug("Not restarting all scripts");
+                    m_log.Info("Not restarting all scripts");
                 }
             }
             else if (cmdparams[1] == "stats")

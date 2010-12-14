@@ -524,7 +524,7 @@ namespace OpenSim.Data.MySQL
 
                                 ++count;
                                 if (count % ROWS_PER_QUERY == 0)
-                                    m_log.Debug("[REGION DB]: Loaded " + count + " prims...");
+                                    m_log.Info("[REGION DB]: Loaded " + count + " prims...");
                             }
                         }
                     }

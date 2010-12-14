@@ -799,7 +799,12 @@ namespace OpenSim.Services.GridService
                 string first = Number.Remove(Number.Length - 1);
                 if (first == "")
                     return 0;
-                int FirstNumber = int.Parse(first);
+                int FirstNumber = 0;
+                if (first.StartsWith("."))
+                    FirstNumber = 0;
+                else
+                    FirstNumber = int.Parse(first);
+
                 string endNumber = Number.Remove(0, Number.Length - 1);
                 if (endNumber == "")
                     return 0;

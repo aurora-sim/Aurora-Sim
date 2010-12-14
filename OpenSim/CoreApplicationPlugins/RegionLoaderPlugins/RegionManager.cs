@@ -67,7 +67,7 @@ namespace Aurora.Modules.RegionLoader
 
             Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(Disabled.Text));
             IScene scene;
-            m_log.Debug("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.Get<SceneManager>();
             manager.CreateRegion(region, true, out scene);
 

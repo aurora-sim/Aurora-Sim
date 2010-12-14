@@ -851,7 +851,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
-            m_log.Debug(LogDiagnostics());
+            m_log.Info(LogDiagnostics());
         }
 
         public string LogDiagnostics()

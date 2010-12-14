@@ -299,7 +299,7 @@ namespace OpenSim.Framework
         private void WriteConfigFile(int i, IConfigSource m_config)
         {
             string m_fileName = "ConfigFileDump" + i + ".ini";
-            m_log.Debug("Writing config dump file to " + m_fileName);
+            m_log.Info("Writing config dump file to " + m_fileName);
             try
             {
                 //Add the user

@@ -75,7 +75,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     m_log.Debug("[WEBLOADER]: Sending Download Request...");
                     HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
 
-                    m_log.Debug("[WEBLOADER]: Downloading Region Information From Remote Server...");
+                    m_log.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
                     StreamReader reader = new StreamReader(webResponse.GetResponseStream());
 
                     m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
