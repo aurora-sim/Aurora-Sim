@@ -47,11 +47,6 @@ namespace OpenSim.Region.Framework.Scenes
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Allows asynchronous derezzing of objects from the scene into a client's inventory.
-        /// </summary>
-        protected AsyncSceneObjectGroupDeleter m_asyncSceneObjectDeleter;
-
-        /// <summary>
         /// Start all the scripts in the scene which should be started.
         /// </summary>
         public void CreateScriptInstances()
@@ -1813,17 +1808,13 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            //if (permissionToTake)
-            //{
-                m_asyncSceneObjectDeleter.DeleteToInventory(
-                    action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
-                        permissionToDelete, permissionToTake);
-            //}
-            //else if (permissionToDelete)
-            //{
-            //    foreach (SceneObjectGroup g in deleteGroups)
-            //        DeleteSceneObject(g, false, true);
-            //}
+            AsyncSceneObjectGroupDeleter async = RequestModuleInterface<AsyncSceneObjectGroupDeleter>();
+            if (async != null)
+            {
+                async.DeleteToInventory(
+                       action, destinationID, deleteGroups, remoteClient == null ? UUID.Zero : remoteClient.AgentId,
+                           permissionToDelete, permissionToTake);
+            }
         }
 
         public UUID attachObjectAssetStore(IClientAPI remoteClient, SceneObjectGroup grp, UUID AgentId, out UUID itemID)

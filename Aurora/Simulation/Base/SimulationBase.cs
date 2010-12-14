@@ -98,7 +98,7 @@ namespace Aurora.Simulation.Base
         public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource)
         {
             m_StartupTime = DateTime.Now;
-            m_version = VersionInfo.Version;
+            m_version = VersionInfo.Version + " (" + Util.GetRuntimeInformation() + ")";
             m_original_config = configSource;
             m_config = configSource;
 

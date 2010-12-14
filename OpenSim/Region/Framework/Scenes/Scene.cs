@@ -98,6 +98,8 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_AuroraEventManager; }
         }
 
+        private SceneManager m_sceneManager;
+
         protected ScenePermissions m_permissions;
         /// <summary>
         /// Controls permissions for the Scene
@@ -188,7 +190,6 @@ namespace OpenSim.Region.Framework.Scenes
         public double ReprioritizationInterval { get { return m_reprioritizationInterval; } }
         public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
-        protected string m_simulatorVersion = "OpenSimulator Server";
         protected Timer m_restartWaitTimer = new Timer();
         protected static int m_timeToSlowTheHeartbeat = 3;
         protected static int m_timeToSlowThePhysHeartbeat = 2;
@@ -264,7 +265,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public string GetSimulatorVersion()
         {
-            return m_simulatorVersion;
+            return m_sceneManager.GetSimulatorVersion();
         }
 
         public IConfigSource Config
@@ -445,15 +446,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
-        public Scene(RegionInfo regInfo, AgentCircuitManager authen, IConfigSource config, string simulatorVersion, ISimulationDataStore simDataService)
+        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager)
         {
             //THIS NEEDS RESET TO FIX RESTARTS
             shuttingdown = false;
 
+            m_sceneManager = manager;
+
             //Register to regInfo events
             regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
 
-            m_config = config;
+            m_config = manager.ConfigSource;
             m_authenticateHandler = authen;
             m_regInfo = regInfo;
             m_lastUpdate = Util.EnvironmentTickCount();
@@ -487,7 +490,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
-            m_SimulationDataService = simDataService;
+            m_SimulationDataService = manager.SimulationDataService;
 
             // Load region settings
             m_regInfo.RegionSettings = m_SimulationDataService.LoadRegionSettings(m_regInfo.RegionID);
@@ -505,8 +508,6 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.OnClosingClient += UnSubscribeToClientEvents;
 
             m_sceneGraph = new SceneGraph(this, m_regInfo);
-
-            m_simulatorVersion = simulatorVersion + " (" + Util.GetRuntimeInformation() + ")";
 
             #region Region Config
 

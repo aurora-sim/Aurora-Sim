@@ -29,7 +29,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.Initialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                        connector.Initialize(source, openSimBase.ApplicationRegistry);
                     }
                     catch
                     {
@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.PostInitialize(openSimBase.ConfigSource, openSimBase.ApplicationRegistry);
+                        connector.PostInitialize(source, openSimBase.ApplicationRegistry);
                     }
                     catch
                     {
@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.Start(openSimBase.ConfigSource, scene);
+                        connector.Start(source, scene);
                     }
                     catch
                     {
@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.PostStart(openSimBase.ConfigSource, scene);
+                        connector.PostStart(source, scene);
                     }
                     catch
                     {
@@ -81,7 +81,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     try
                     {
-                        connector.AddNewRegistry(openSimBase.ConfigSource, scene);
+                        connector.AddNewRegistry(source, scene);
                     }
                     catch
                     {

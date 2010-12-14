@@ -62,6 +62,10 @@ namespace OpenSim.Region.Framework.Scenes
         private Scene m_currentScene = null;
         private ISimulationBase m_OpenSimBase;
         private IConfigSource m_config = null;
+        public IConfigSource ConfigSource
+        {
+            get { return m_config; }
+        }
         private int RegionsFinishedStarting = 0;
         public int AllRegions = 0;
         private string proxyUrl = "";
@@ -69,11 +73,21 @@ namespace OpenSim.Region.Framework.Scenes
         private string SecretID = UUID.Random().ToString();
         protected ISimulationDataStore m_simulationDataService;
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
-
         protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        
+        public ISimulationDataStore SimulationDataService
+        {
+            get { return m_simulationDataService; }
+        }
+
         public List<IClientNetworkServer> ClientServers
         {
             get { return m_clientServers; }
+        }
+
+        public string GetSimulatorVersion()
+        {
+            return m_OpenSimBase.Version;
         }
 
         public List<Scene> Scenes
@@ -743,7 +757,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             regionInfo.InternalEndPoint.Port = (int)port;
 
-            Scene scene = new Scene(regionInfo, circuitManager, m_config, m_OpenSimBase.Version, m_simulationDataService);
+            Scene scene = new Scene(regionInfo, circuitManager, this);
 
             StartModules(scene);
 
@@ -961,8 +975,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void AddConsoleCommands()
         {
-            //m_console.Commands.AddCommand("region", false, "clear assets", "clear assets", "Clear the asset cache", HandleClearAssets);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "show", "show", "Shows information about this simulator", HandleShow);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
