@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return simFPS;
+            return LastReportedSimFPS;
         }
 
         public string GetName()

@@ -30,10 +30,14 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    public class PhysicsFrameMonitor : IMonitor, ISetMonitor
+    public class PhysicsFrameMonitor : IMonitor, IPhysicsFrameMonitor
     {
         private readonly Scene m_scene;
-        private int MonitorPhysicsFrameTime;
+        private float physicsFPS;
+        private float lastReportedPhysicsFPS;
+
+        public float LastReportedPhysicsFPS { get { return lastReportedPhysicsFPS; } set { lastReportedPhysicsFPS = value; } }
+        public float PhysicsFPS { get { return physicsFPS; } }
 
         public PhysicsFrameMonitor(Scene scene)
         {
@@ -44,7 +48,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return MonitorPhysicsFrameTime;
+            return (double)LastReportedPhysicsFPS;
         }
 
         public string GetName()
@@ -59,9 +63,18 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #endregion
 
-        public void SetValue(int value)
+        #region Other Methods
+
+        public void AddFPS(int value)
         {
-            MonitorPhysicsFrameTime = value;
+            physicsFPS += value;
         }
+
+        public void ResetStats()
+        {
+            physicsFPS = 0;
+        }
+
+        #endregion
     }
 }

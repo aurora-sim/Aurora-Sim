@@ -340,11 +340,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     ISetMonitor lastFrameMonitor = (ISetMonitor)GetMonitor("Last Completed Frame At");
                     ISetMonitor sleepFrameMonitor = (ISetMonitor)GetMonitor("Sleep Frame");
                     ISetMonitor otherFrameMonitor = (ISetMonitor)GetMonitor("Other Frame Time");
-                    ISetMonitor physicsFrameMonitor = (ISetMonitor)GetMonitor("Total Physics Frame Time");
+                    IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)GetMonitor("Total Physics Frame Time");
                     ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)GetMonitor("Physics Update Frame Time");
                     IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor("Agent Update Count");
                     INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor("Network Monitor");
-                    IMonitor timeDilationMonitor = (ISetMonitor)GetMonitor("Time Dilation");
+                    IMonitor timeDilationMonitor = (IMonitor)GetMonitor("Time Dilation");
 
                     #region various statistic googly moogly
 
@@ -360,7 +360,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //simfps = 0;
 
                     //
-                    float physfps = (float)((physicsFrameMonitor.GetValue() / 1000));
+                    float physfps = (float)physicsFrameMonitor.PhysicsFPS / statsUpdateFactor;
+                    physicsFrameMonitor.LastReportedPhysicsFPS = physfps;
 
                     //if (physfps > 600)
                     //physfps = physfps - (physfps - 600);
@@ -416,7 +417,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[9].StatValue = 0;
 
                     sb[10].StatID = (uint)Stats.PhysicsMS;
-                    sb[10].StatValue = (float)physicsFrameMonitor.GetValue() / statsUpdateFactor;
+                    sb[10].StatValue = (float)physfps;
 
                     sb[11].StatID = (uint)Stats.ImageMS;
                     sb[11].StatValue = 0;
@@ -577,6 +578,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             foreach (MonitorRegistry registry in m_registry.Values)
             {
                 m_log.Info("[Stats] " + registry.Report());
+                MainConsole.Instance.Output("");
             }
         }
 
@@ -593,6 +595,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 manager.ForEachCurrentScene(delegate(Scene scene)
                 {
                     m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
+                    MainConsole.Instance.Output("");
                 });
             }
             else

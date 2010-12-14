@@ -217,30 +217,6 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.Framework.Statistics" path="OpenSim/Framework/Statistics" type="Library">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
-      <Reference name="OpenSim.Framework"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
     <Project frameworkVersion="v3_5" name="OpenSim.Data" path="OpenSim/Data" type="Library">
       <Configuration name="Debug">
         <Options>
@@ -401,7 +377,6 @@
       <Reference name="OpenSim.Framework"/>
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
@@ -444,7 +419,6 @@
       <Reference name="OpenSim.Data"/>
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
@@ -1137,7 +1111,6 @@
       <Reference name="OpenSim.Framework.Serialization"/>
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
@@ -1186,7 +1159,6 @@
       <Reference name="OpenSim.Framework.Capabilities"/>
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="OpenSim.Server.Handlers"/>
@@ -1262,7 +1234,6 @@
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Data"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="BclExtras35" path="../../../../bin/"/>
@@ -1327,7 +1298,6 @@
       <Reference name="OpenSim.Region.Physics.Manager"/>
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="Aurora.Simulation.Base"/>
@@ -1365,7 +1335,6 @@
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="Aurora.Simulation.Base"/>
@@ -1404,7 +1373,6 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="XMLRPC" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -1651,7 +1619,6 @@
 <!--      <Reference name="OpenSim.Framework.Servers"/> -->
       <Reference name="OpenSim.Framework.Capabilities"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-      <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Mono.Data.SqliteClient"/>
 

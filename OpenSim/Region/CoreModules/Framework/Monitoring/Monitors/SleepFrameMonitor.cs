@@ -54,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return GetValue().ToString();
+            return GetValue() + "ms";
         }
 
         #endregion

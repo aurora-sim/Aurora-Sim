@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.TimeDilation;
+            return 0;
         }
 
         public string GetName()
@@ -107,7 +107,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return GetValue().ToString();
+            return "InPackets: " + inPacketsPerSecond + " p/sec \n"
+                 + "OutPackets: " + outPacketsPerSecond + " p/sec \n"
+                 + "UnackedBytes: " + unackedBytes + " bytes \n"
+                 + "PendingDownloads: " + pendingDownloads + " \n"
+                 + "PendingUploads: " + pendingUploads + " \n";
         }
 
         #endregion

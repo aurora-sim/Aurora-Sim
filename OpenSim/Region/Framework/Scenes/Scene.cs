@@ -1154,7 +1154,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             private void Update()
             {
-                ISetMonitor physicsFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
+                IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
                 ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
                 int maintc;
 
@@ -1196,7 +1196,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
 
-                        physicsFrameMonitor.SetValue(MonitorPhysicsUpdateTime);
+                        physicsFrameMonitor.AddFPS(1);
                         physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
                         
                         CheckExit();
@@ -1455,7 +1455,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ISetMonitor lastFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Last Completed Frame At");
                 ISetMonitor sleepFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame");
                 ISetMonitor otherFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
-                ISetMonitor physicsFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
+                IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
                 ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
                 
                 int maintc;
@@ -1560,11 +1560,11 @@ namespace OpenSim.Region.Framework.Scenes
                         //Now that we have collected all the stats from above, we can tell the stats modules about it
 
                         simFrameMonitor.AddFPS(1);
+                        physicsFrameMonitor.AddFPS(1);
                         totalFrameMonitor.SetValue(MonitorFrameTime);
                         lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
                         sleepFrameMonitor.SetValue(MonitorSleepFrameTime);
                         otherFrameMonitor.SetValue(MonitorOtherFrameTime);
-                        physicsFrameMonitor.SetValue(MonitorPhysicsUpdateTime);
                         physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
 
                         CheckExit();

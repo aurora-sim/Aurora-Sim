@@ -218,6 +218,30 @@ namespace OpenSim.Framework
         void SetValue(int value);
     }
 
+    public interface IPhysicsFrameMonitor
+    {
+        /// <summary>
+        /// The last reported PhysicsSim FPS
+        /// </summary>
+        float LastReportedPhysicsFPS { get; set; }
+
+        /// <summary>
+        /// The 'current' Physics FPS (NOTE: This will NOT be what you expect, you will have to divide by the time since the last check to get the correct average Physics FPS)
+        /// </summary>
+        float PhysicsFPS { get; }
+
+        /// <summary>
+        /// Add X frames to the stats
+        /// </summary>
+        /// <param name="frames"></param>
+        void AddFPS(int frames);
+
+        /// <summary>
+        /// Reset the stats
+        /// </summary>
+        void ResetStats();
+    }
+
     public interface ISimFrameMonitor
     {
         /// <summary>
