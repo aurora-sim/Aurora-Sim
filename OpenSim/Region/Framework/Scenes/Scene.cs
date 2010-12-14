@@ -148,32 +148,6 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_land = 1;
         private int m_update_coarse_locations = 50;
 
-        #region Monitor trackings
-
-        private int frameMS;
-        private int physicsMS2;
-        private int physicsMS;
-        private int otherMS;
-        private int tempOnRezMS;
-        private int eventMS;
-        private int backupMS;
-        private int terrainMS;
-        private int landMS;
-        private int lastCompletedFrame;
-
-        public int MonitorFrameTime { get { return frameMS; } }
-        public int MonitorPhysicsUpdateTime { get { return physicsMS; } }
-        public int MonitorPhysicsSyncTime { get { return physicsMS2; } }
-        public int MonitorOtherTime { get { return otherMS; } }
-        public int MonitorTempOnRezTime { get { return tempOnRezMS; } }
-        public int MonitorEventTime { get { return eventMS; } } // This may need to be divided into each event?
-        public int MonitorBackupTime { get { return backupMS; } }
-        public int MonitorTerrainTime { get { return terrainMS; } }
-        public int MonitorLandTime { get { return landMS; } }
-        public int MonitorLastFrameTick { get { return lastCompletedFrame; } }
-
-        #endregion
-
         private string m_defaultScriptEngine;
         private Thread HeartbeatThread;
         private static volatile bool shuttingdown = false;
@@ -931,23 +905,24 @@ namespace OpenSim.Region.Framework.Scenes
         public void StartTimer()
         {
             m_lastUpdate = Util.EnvironmentTickCount();
+            if (tracker == null)
+                tracker = new AuroraThreadTracker();
             if (UseTracker)
             {
-                if (tracker == null)
-                    tracker = new AuroraThreadTracker();
                 ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
                 SceneBackupHeartbeat sbhb = new SceneBackupHeartbeat(this);
                 SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
                 tracker.AddSceneHeartbeat(suhb, out HeartbeatThread);
                 tracker.AddSceneHeartbeat(shb, out HeartbeatThread);
                 tracker.AddSceneHeartbeat(sbhb, out HeartbeatThread);
-                //tracker.AddSceneHeartbeat(new SceneHeartbeat(this), out HeartbeatThread);
-                //Start this after the threads are started.
-                tracker.Init(this);
-                tracker.OnNeedToAddThread += NeedsNewThread;
             }
             else
-                HeartbeatThread = Watchdog.StartThread(Update, "Heartbeat for region " + RegionInfo.RegionName, ThreadPriority.Normal, false);
+            {
+                tracker.AddSceneHeartbeat(new SceneHeartbeat(this), out HeartbeatThread);
+            }
+            //Start this after the threads are started.
+            tracker.Init(this);
+            tracker.OnNeedToAddThread += NeedsNewThread;
         }
 
         protected void NeedsNewThread(string type)
@@ -971,6 +946,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected class SceneBackupHeartbeat : IThread
         {
+            #region Constructor and IThread
+
             public SceneBackupHeartbeat(Scene scene)
             {
                 type = "SceneBackupHeartbeat";
@@ -1015,8 +992,14 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception("Closing");
             }
 
+            #endregion
+
+            #region Update
+
             private void Update()
             {
+                ISetMonitor otherFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
+                ISetMonitor sleepFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame");
                 int maintc;
 
                 while (!ShouldExit)
@@ -1025,44 +1008,19 @@ namespace OpenSim.Region.Framework.Scenes
 
                     maintc = Util.EnvironmentTickCount();
                     int tmpFrameMS = maintc;
-                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
-
+                    
                     // Increment the frame counter
                     ++m_scene.m_frame;
 
                     try
                     {
-                        if (m_scene.m_frame % m_scene.m_update_events == 0)
-                        {
-                            int evMS = Util.EnvironmentTickCount();
-                            m_scene.UpdateEvents();
-                            m_scene.eventMS = Util.EnvironmentTickCountSubtract(evMS); ;
-                        }
-                        CheckExit();
+                        int OtherFrameTime = Util.EnvironmentTickCount();
+                        // Delete temp-on-rez stuff
                         if (m_scene.m_frame % m_scene.m_update_backup == 0)
                         {
-                            int backMS = Util.EnvironmentTickCount();
-                            m_scene.UpdateStorageBackup();
-                            m_scene.backupMS = Util.EnvironmentTickCountSubtract(backMS);
+                            m_scene.CleanTempObjects();
+                            m_scene.CheckParcelReturns();
                         }
-                        CheckExit();
-
-                        if (m_scene.m_frame % m_scene.m_update_terrain == 0)
-                        {
-                            int terMS = Util.EnvironmentTickCount();
-                            m_scene.UpdateTerrain();
-                            m_scene.terrainMS = Util.EnvironmentTickCountSubtract(terMS);
-                        }
-                        CheckExit();
-
-                        if (m_scene.m_frame % m_scene.m_update_land == 0)
-                        {
-                            int ldMS = Util.EnvironmentTickCount();
-                            m_scene.UpdateLand();
-                            m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
-                        }
-                        CheckExit();
-
                         if (m_scene.PhysicsReturns.Count != 0)
                         {
                             lock (m_scene.PhysicsReturns)
@@ -1071,22 +1029,40 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_scene.PhysicsReturns.Clear();
                             }
                         }
-
-                        m_scene.frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
-                        m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
-                        m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
-
-                        ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                        if (reporter != null)
+                        if (m_scene.m_frame % m_scene.m_update_coarse_locations == 0)
                         {
-                            reporter.AddTimeDilation(m_scene.TimeDilation);
-                            reporter.AddFPS(1);
-                            reporter.AddFrameMS(m_scene.frameMS);
-                            reporter.AddPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
-                            reporter.AddOtherMS(m_scene.otherMS);
-                            reporter.AddPhysicsOther(m_scene.physicsMS2);
-                            reporter.AddPhysicsStep((int)Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                            List<Vector3> coarseLocations;
+                            List<UUID> avatarUUIDs;
+                            m_scene.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                            // Send coarse locations to clients 
+                            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+                            {
+                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                            });
                         }
+                        CheckExit();
+                        if (m_scene.m_frame % m_scene.m_update_events == 0)
+                            m_scene.UpdateEvents();
+
+                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
+                            m_scene.UpdateStorageBackup();
+
+                        if (m_scene.m_frame % m_scene.m_update_terrain == 0)
+                            m_scene.UpdateTerrain();
+
+                        if (m_scene.m_frame % m_scene.m_update_land == 0)
+                            m_scene.UpdateLand();
+
+                        int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
+
+                        maintc = Util.EnvironmentTickCountSubtract(maintc);
+                        maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+
+                        int MonitorSleepFrameTime = maintc;
+
+                        sleepFrameMonitor.SetValue(MonitorSleepFrameTime);
+                        otherFrameMonitor.SetValue(MonitorOtherFrameTime);
+
                         CheckExit();
                     }
                     catch (NotImplementedException)
@@ -1108,12 +1084,6 @@ namespace OpenSim.Region.Framework.Scenes
                         break;
                     }
 
-                    maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
-                    ISimFrameStats statsreporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                    if (statsreporter != null)
-                        statsreporter.AddSleepMS(maintc);
-
                     if (maintc > 0)
                         Thread.Sleep(maintc / Scene.m_timeToSlowTheHeartbeat);
                     try
@@ -1126,10 +1096,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            #endregion
         }
 
         protected class ScenePhysicsHeartbeat : IThread
         {
+            #region Constructor and IThread
+
             public ScenePhysicsHeartbeat(Scene scene)
             {
                 type = "ScenePhysicsHeartbeat";
@@ -1174,47 +1148,58 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception("Closing");
             }
 
+            #endregion
+
+            #region Update
+
             private void Update()
             {
-                float physicsFPS;
+                ISetMonitor physicsFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
+                ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
                 int maintc;
 
                 while (!ShouldExit)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-                    physicsFPS = 0f;
 
                     maintc = Util.EnvironmentTickCount();
-                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
-
-                    // Increment the frame counter
-                    ++m_scene.m_frame;
-
+                    
                     try
                     {
                         CheckExit();
-                        int tmpPhysicsMS2 = Util.EnvironmentTickCount();
+
+                        int PhysicsSyncTime = Util.EnvironmentTickCount();
+
                         if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
                             m_scene.m_sceneGraph.UpdatePreparePhysics();
-                        m_scene.physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
+                        
                         CheckExit();
 
                         if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
                             m_scene.m_sceneGraph.UpdateScenePresenceMovement();
                         CheckExit();
 
-                        int tmpPhysicsMS = Util.EnvironmentTickCount();
                         if (m_scene.m_frame % m_scene.m_update_physics == 0)
                         {
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                                physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
                         }
-                        ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                        if (reporter != null)
-                            reporter.AddPhysicsFPS(physicsFPS);
-                        CheckExit();
 
-                        m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
+                        int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
+
+                        int PhysicsUpdateTime = Util.EnvironmentTickCount();
+                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
+                        {
+                            if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
+                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                        }
+
+                        int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
+
+                        physicsFrameMonitor.SetValue(MonitorPhysicsUpdateTime);
+                        physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
+                        
+                        CheckExit();
                     }
                     catch (NotImplementedException)
                     {
@@ -1261,10 +1246,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            #endregion
         }
 
         protected class SceneUpdateHeartbeat : IThread
         {
+            #region Constructor and IThread
+
             public SceneUpdateHeartbeat(Scene scene)
             {
                 type = "SceneUpdateHeartbeat";
@@ -1308,15 +1297,23 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception("Closing");
             }
 
+            #endregion
+
+            #region Update
+
             private void Update()
             {
+                ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
+                ISetMonitor totalFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
+                ISetMonitor lastFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Last Completed Frame At");
+                
                 int maintc;
 
                 while (!ShouldExit)
                 {
                     maintc = Util.EnvironmentTickCount();
-                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
-
+                    int BeginningFrameTime = maintc;
+                    
                     // Increment the frame counter
                     ++m_scene.m_frame;
 
@@ -1350,14 +1347,13 @@ namespace OpenSim.Region.Framework.Scenes
                             });
                         }
 
-                        // Delete temp-on-rez stuff
-                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
-                        {
-                            int tmpTempOnRezMS = Util.EnvironmentTickCount();
-                            m_scene.CleanTempObjects();
-                            m_scene.tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
-                            m_scene.CheckParcelReturns();
-                        }
+                        int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
+                        int MonitorFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
+                        
+                        //Now fix the stats
+                        simFrameMonitor.AddFPS(1);
+                        totalFrameMonitor.SetValue(MonitorFrameTime);
+                        lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
                     }
                     catch (NotImplementedException)
                     {
@@ -1397,10 +1393,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            #endregion
         }
 
         protected class SceneHeartbeat : IThread
         {
+            #region Constructor and IThread
+
             public SceneHeartbeat(Scene scene)
             {
                 type = "SceneHeartbeat";
@@ -1444,26 +1444,38 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception("Closing");
             }
 
+            #endregion
+
+            #region Update
+
             private void Update()
             {
-                float physicsFPS;
+                ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
+                ISetMonitor totalFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
+                ISetMonitor lastFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Last Completed Frame At");
+                ISetMonitor sleepFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame");
+                ISetMonitor otherFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
+                ISetMonitor physicsFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
+                ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
+                
                 int maintc;
 
                 while (!ShouldExit)
                 {
                     m_scene.m_lastupdate = DateTime.Now;
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-                    physicsFPS = 0f;
-
+                    
                     maintc = Util.EnvironmentTickCount();
-                    int tmpFrameMS = maintc;
-                    m_scene.tempOnRezMS = m_scene.eventMS = m_scene.backupMS = m_scene.terrainMS = m_scene.landMS = 0;
-
+                    int BeginningFrameTime = maintc;
+                    
                     // Increment the frame counter
                     ++m_scene.m_frame;
 
                     try
                     {
+                        //Start physics sync here
+                        int PhysicsSyncTime = Util.EnvironmentTickCount();
+                        
                         // Check if any objects have reached their targets
                         m_scene.CheckAtTargets();
                         CheckExit();
@@ -1477,73 +1489,84 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_scene.m_frame % m_scene.m_update_presences == 0)
                             m_scene.m_sceneGraph.UpdatePresences();
                         CheckExit();
-                        int tmpPhysicsMS2 = Util.EnvironmentTickCount();
                         if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
                             m_scene.m_sceneGraph.UpdatePreparePhysics();
-                        m_scene.physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
+                        
                         CheckExit();
                         if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
                             m_scene.m_sceneGraph.UpdateScenePresenceMovement();
+                        
+                        int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
 
-                        int tmpPhysicsMS = Util.EnvironmentTickCount();
+                        int PhysicsUpdateTime = Util.EnvironmentTickCount();
                         if (m_scene.m_frame % m_scene.m_update_physics == 0)
                         {
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                                physicsFPS = m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
                         }
-                        m_scene.physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
+
+                        int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
+
                         CheckExit();
+
+                        int OtherFrameTime = Util.EnvironmentTickCount();
                         // Delete temp-on-rez stuff
                         if (m_scene.m_frame % m_scene.m_update_backup == 0)
                         {
-                            int tmpTempOnRezMS = Util.EnvironmentTickCount();
                             m_scene.CleanTempObjects();
-                            m_scene.tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
                             m_scene.CheckParcelReturns();
+                        }
+                        if (m_scene.PhysicsReturns.Count != 0)
+                        {
+                            lock (m_scene.PhysicsReturns)
+                            {
+                                m_scene.returnObjects(m_scene.PhysicsReturns.ToArray(), UUID.Zero);
+                                m_scene.PhysicsReturns.Clear();
+                            }
+                        }
+                        if (m_scene.m_frame % m_scene.m_update_coarse_locations == 0)
+                        {
+                            List<Vector3> coarseLocations;
+                            List<UUID> avatarUUIDs;
+                            m_scene.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                            // Send coarse locations to clients 
+                            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+                            {
+                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                            });
                         }
                         CheckExit();
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
-                        {
-                            int evMS = Util.EnvironmentTickCount();
                             m_scene.UpdateEvents();
-                            m_scene.eventMS = Util.EnvironmentTickCountSubtract(evMS); ;
-                        }
 
                         if (m_scene.m_frame % m_scene.m_update_backup == 0)
-                        {
-                            int backMS = Util.EnvironmentTickCount();
                             m_scene.UpdateStorageBackup();
-                            m_scene.backupMS = Util.EnvironmentTickCountSubtract(backMS);
-                        }
 
                         if (m_scene.m_frame % m_scene.m_update_terrain == 0)
-                        {
-                            int terMS = Util.EnvironmentTickCount();
                             m_scene.UpdateTerrain();
-                            m_scene.terrainMS = Util.EnvironmentTickCountSubtract(terMS);
-                        }
 
                         if (m_scene.m_frame % m_scene.m_update_land == 0)
-                        {
-                            int ldMS = Util.EnvironmentTickCount();
                             m_scene.UpdateLand();
-                            m_scene.landMS = Util.EnvironmentTickCountSubtract(ldMS);
-                        }
 
-                        m_scene.frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
-                        m_scene.otherMS = m_scene.tempOnRezMS + m_scene.eventMS + m_scene.backupMS + m_scene.terrainMS + m_scene.landMS;
-                        m_scene.lastCompletedFrame = Util.EnvironmentTickCount();
+                        int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
+                        int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
+                        int MonitorFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
+                        
+                        maintc = Util.EnvironmentTickCountSubtract(maintc);
+                        maintc = (int)(m_scene.m_timespan * 1000) - maintc;
 
-                        ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                        if (reporter != null)
-                        {
-                            reporter.AddPhysicsFPS(physicsFPS);
-                            reporter.AddTimeDilation(m_scene.TimeDilation);
-                            reporter.AddFPS(1);
-                            reporter.AddFrameMS(m_scene.frameMS);
-                            reporter.AddPhysicsMS(m_scene.physicsMS + m_scene.physicsMS2);
-                            reporter.AddOtherMS(m_scene.otherMS);
-                        }
+                        int MonitorSleepFrameTime = maintc;
+                        
+                        //Now that we have collected all the stats from above, we can tell the stats modules about it
+
+                        simFrameMonitor.AddFPS(1);
+                        totalFrameMonitor.SetValue(MonitorFrameTime);
+                        lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
+                        sleepFrameMonitor.SetValue(MonitorSleepFrameTime);
+                        otherFrameMonitor.SetValue(MonitorOtherFrameTime);
+                        physicsFrameMonitor.SetValue(MonitorPhysicsUpdateTime);
+                        physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
+
                         CheckExit();
                     }
                     catch (NotImplementedException)
@@ -1571,9 +1594,6 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.m_lastupdate = DateTime.UtcNow;
                     }
 
-                    maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
-
                     if (maintc > 0)
                         Thread.Sleep(maintc);
                     try
@@ -1586,161 +1606,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-        }
 
-        /// <summary>
-        /// Performs per-frame updates on the scene, this should be the central scene loop
-        /// </summary>
-        protected void Update()
-        {
-            float physicsFPS;
-            int maintc;
-
-            while (!shuttingdown)
-            {
-                TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastupdate;
-                physicsFPS = 0f;
-
-                maintc = Util.EnvironmentTickCount();
-                int tmpFrameMS = maintc;
-                tempOnRezMS = eventMS = backupMS = terrainMS = landMS = 0;
-
-                // Increment the frame counter
-                ++m_frame;
-
-                try
-                {
-                    // Check if any objects have reached their targets
-                    CheckAtTargets();
-
-                    // Update SceneObjectGroups that have scheduled themselves for updates
-                    // Objects queue their updates onto all scene presences
-                    if (m_frame % m_update_objects == 0)
-                        m_sceneGraph.UpdateObjectGroups();
-
-                    // Run through all ScenePresences looking for updates
-                    // Presence updates and queued object updates for each presence are sent to clients
-                    if (m_frame % m_update_presences == 0)
-                        m_sceneGraph.UpdatePresences();
-
-                    // Coarse locations relate to positions of green dots on the mini-map (on a SecondLife client)
-                    if (m_frame % m_update_coarse_locations == 0)
-                    {
-                        List<Vector3> coarseLocations;
-                        List<UUID> avatarUUIDs;
-                        GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
-                        // Send coarse locations to clients 
-                        ForEachScenePresence(delegate(ScenePresence presence)
-                        {
-                            presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                        });
-                    }
-
-                    int tmpPhysicsMS2 = Util.EnvironmentTickCount();
-                    if ((m_frame % m_update_physics == 0) && !RegionInfo.RegionSettings.DisablePhysics)
-                        m_sceneGraph.UpdatePreparePhysics();
-                    physicsMS2 = Util.EnvironmentTickCountSubtract(tmpPhysicsMS2);
-
-                    // Apply any pending avatar force input to the avatar's velocity
-                    if (m_frame % m_update_entitymovement == 0)
-                        m_sceneGraph.UpdateScenePresenceMovement();
-
-                    // Perform the main physics update.  This will do the actual work of moving objects and avatars according to their
-                    // velocity
-                    int tmpPhysicsMS = Util.EnvironmentTickCount();
-                    if (m_frame % m_update_physics == 0)
-                    {
-                        if (!RegionInfo.RegionSettings.DisablePhysics)
-                            physicsFPS = m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_timespan));
-                    }
-                    physicsMS = Util.EnvironmentTickCountSubtract(tmpPhysicsMS);
-
-                    // Delete temp-on-rez stuff
-                    if (m_frame % m_update_backup == 0)
-                    {
-                        int tmpTempOnRezMS = Util.EnvironmentTickCount();
-                        CleanTempObjects();
-                        tempOnRezMS = Util.EnvironmentTickCountSubtract(tmpTempOnRezMS);
-                        CheckParcelReturns();
-                    }
-
-                    if (m_frame % m_update_events == 0)
-                    {
-                        int evMS = Util.EnvironmentTickCount();
-                        UpdateEvents();
-                        eventMS = Util.EnvironmentTickCountSubtract(evMS); ;
-                    }
-
-                    if (m_frame % m_update_backup == 0)
-                    {
-                        int backMS = Util.EnvironmentTickCount();
-                        UpdateStorageBackup();
-                        backupMS = Util.EnvironmentTickCountSubtract(backMS);
-                    }
-
-                    if (m_frame % m_update_terrain == 0)
-                    {
-                        int terMS = Util.EnvironmentTickCount();
-                        UpdateTerrain();
-                        terrainMS = Util.EnvironmentTickCountSubtract(terMS);
-                    }
-
-                    if (m_frame % m_update_land == 0)
-                    {
-                        int ldMS = Util.EnvironmentTickCount();
-                        UpdateLand();
-                        landMS = Util.EnvironmentTickCountSubtract(ldMS);
-                    }
-
-                    frameMS = Util.EnvironmentTickCountSubtract(tmpFrameMS);
-                    otherMS = tempOnRezMS + eventMS + backupMS + terrainMS + landMS;
-                    lastCompletedFrame = Util.EnvironmentTickCount();
-
-                    ISimFrameStats reporter = (ISimFrameStats)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
-                    if (reporter != null)
-                    {
-                        reporter.AddPhysicsFPS(physicsFPS);
-                        reporter.AddTimeDilation(TimeDilation);
-                        reporter.AddFPS(1);
-                        reporter.AddFrameMS(frameMS);
-                        reporter.AddPhysicsMS(physicsMS + physicsMS2);
-                        reporter.AddOtherMS(otherMS);
-                    }
-                }
-                catch (NotImplementedException)
-                {
-                    throw;
-                }
-                catch (AccessViolationException e)
-                {
-                    m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
-                }
-                //catch (NullReferenceException e)
-                //{
-                //   m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
-                //}
-                catch (InvalidOperationException e)
-                {
-                    m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
-                }
-                finally
-                {
-                    m_lastupdate = DateTime.UtcNow;
-                }
-
-                maintc = Util.EnvironmentTickCountSubtract(maintc);
-                maintc = (int)(m_timespan * 1000) - maintc;
-
-                if (maintc > 0)
-                    Thread.Sleep(maintc);
-
-                // Tell the watchdog that this thread is still alive
-                Watchdog.UpdateThread();
-            }
+            #endregion
         }
 
         #endregion

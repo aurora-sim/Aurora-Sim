@@ -36,7 +36,7 @@ namespace Aurora.Modules
         protected DateTime SimZeroFPSStartTime = DateTime.MinValue;
         protected Timer TimerToCheckHeartbeat = null;
         protected float TimeBetweenChecks = 1;
-        protected ISimFrameStats m_statsReporter = null;
+        protected ISimFrameMonitor m_statsReporter = null;
 
         #endregion
 
@@ -92,7 +92,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
             m_scene = scene;
-            m_statsReporter =  (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
+            m_statsReporter =  (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if (m_statsReporter == null)
             {
                 m_log.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");

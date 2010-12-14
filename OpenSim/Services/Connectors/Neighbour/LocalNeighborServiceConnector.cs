@@ -40,6 +40,7 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            ReadConfig(config);
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighbourHandler", "") == Name)
                 registry.RegisterInterface<INeighbourService>(this);

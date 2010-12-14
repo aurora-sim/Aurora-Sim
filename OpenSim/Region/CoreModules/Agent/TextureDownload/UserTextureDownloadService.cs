@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
 
                              return;
                          }*/
-            ISimFrameStats reporter = (ISimFrameStats)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
+            INetworkMonitor reporter = (INetworkMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
             if (reporter != null)
                 reporter.AddPendingDownloads(1);
 

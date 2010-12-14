@@ -140,11 +140,6 @@ namespace OpenSim.Region.CoreModules.Asset
         private int m_debugEpoch;
 
         /// <summary>
-        /// Is Cenome asset cache enabled.
-        /// </summary>
-        private bool m_enabled;
-
-        /// <summary>
         /// Count of get requests
         /// </summary>
         private int m_getCount;
@@ -161,7 +156,6 @@ namespace OpenSim.Region.CoreModules.Asset
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_cache = null;
-            m_enabled = false;
 
             IConfig moduleConfig = config.Configs["Modules"];
             if (moduleConfig == null)
@@ -211,7 +205,6 @@ namespace OpenSim.Region.CoreModules.Asset
             if (maximalSize <= 0 || maximalCount <= 0)
             {
                 //m_log.Debug("[ASSET CACHE]: Cenome asset cache is not enabled.");
-                m_enabled = false;
                 return;
             }
 
@@ -225,7 +218,6 @@ namespace OpenSim.Region.CoreModules.Asset
             m_cache =
                 CnmSynchronizedCache<string, AssetBase>.Synchronized(new CnmMemoryCache<string, AssetBase>(
                     maximalSize, maximalCount, expirationTime));
-            m_enabled = true;
             m_log.DebugFormat(
                 "[ASSET CACHE]: Cenome asset cache enabled (MaxSize = {0} bytes, MaxCount = {1}, ExpirationTime = {2})",
                 maximalSize,

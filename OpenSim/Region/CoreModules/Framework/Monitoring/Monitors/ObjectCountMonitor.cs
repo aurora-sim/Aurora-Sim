@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + " Object(s)";
+            return (int)GetValue() + " Object(s), " + m_scene.SceneGraph.GetActiveObjectsCount() + " active Object(s)";
         }
 
         #endregion

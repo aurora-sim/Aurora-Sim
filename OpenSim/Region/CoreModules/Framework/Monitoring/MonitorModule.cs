@@ -149,9 +149,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     m_report.Interval = statsUpdatesEveryMS;
                     m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
                     m_report.Enabled = true;
-
-                    scene.EventManager.OnNewClient += OnNewClient;
-                    scene.EventManager.OnClosingClient += OnClosingClient;
                 }
                 else
                     AddDefaultMonitors();
@@ -167,6 +164,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 AddMonitor(new ThreadCountMonitor());
                 AddMonitor(new GCMemoryMonitor());
                 AddMonitor(new LoginMonitor());
+                AddMonitor(new AssetMonitor());
             }
 
             protected void AddRegionMonitors(Scene scene)
@@ -177,9 +175,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 AddMonitor(new PhysicsFrameMonitor(scene));
                 AddMonitor(new PhysicsUpdateFrameMonitor(scene));
                 AddMonitor(new TotalFrameMonitor(scene));
-                AddMonitor(new EventFrameMonitor(scene));
-                AddMonitor(new LandFrameMonitor(scene));
                 AddMonitor(new LastFrameTimeMonitor(scene));
+                AddMonitor(new SimFrameMonitor(scene));
 
                 AddAlert(new DeadlockAlert(GetMonitor("Last Completed Frame At") as LastFrameTimeMonitor));
             }
@@ -243,7 +240,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 foreach (IMonitor monitor in m_monitors.Values)
                 {
                     string regionName = m_currentScene != null ? m_currentScene.RegionInfo.RegionName + ": " : "";
-                    report += regionName + monitor.GetName() + " reports " + monitor.GetFriendlyValue();
+                    report += regionName + monitor.GetName() + " reports " + monitor.GetFriendlyValue() + "\n";
                 }
                 return report;
             }
@@ -333,15 +330,24 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                         // leave region flags at 0
                     }
 
-                    #region various statistic googly moogly
+                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
+                    ISetMonitor totalFrameMonitor = (ISetMonitor)GetMonitor("Total Frame Time");
+                    ISetMonitor lastFrameMonitor = (ISetMonitor)GetMonitor("Last Completed Frame At");
+                    ISetMonitor sleepFrameMonitor = (ISetMonitor)GetMonitor("Sleep Frame");
+                    ISetMonitor otherFrameMonitor = (ISetMonitor)GetMonitor("Other Frame Time");
+                    ISetMonitor physicsFrameMonitor = (ISetMonitor)GetMonitor("Total Physics Frame Time");
+                    ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)GetMonitor("Physics Update Frame Time");
+                    IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor("Agent Update Count");
+                    INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor("Network Monitor");
+                    IMonitor timeDilationMonitor = (ISetMonitor)GetMonitor("Time Dilation");
 
-                    ISimFrameStats stats = (ISimFrameStats)GetMonitor("SimFrameStats");
+                    #region various statistic googly moogly
 
                     // Our FPS is actually 10fps, so multiplying by 5 to get the amount that people expect there
                     // 0-50 is pretty close to 0-45
-                    float simfps = (int)((stats.SimFPS * 5));
+                    float simfps = (int)((simFrameMonitor.SimFPS * 5));
                     // save the reported value so there is something available for llGetRegionFPS 
-                    stats.LastReportedSimFPS = (float)simfps / statsUpdateFactor;
+                    simFrameMonitor.LastReportedSimFPS = (float)simfps / statsUpdateFactor;
 
                     //if (simfps > 45)
                     //simfps = simfps - (simfps - 45);
@@ -349,7 +355,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //simfps = 0;
 
                     //
-                    float physfps = ((stats.PhysicsFrameTime / 1000));
+                    float physfps = (float)((physicsFrameMonitor.GetValue() / 1000));
 
                     //if (physfps > 600)
                     //physfps = physfps - (physfps - 600);
@@ -375,7 +381,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     }
 
                     sb[0].StatID = (uint)Stats.TimeDilation;
-                    sb[0].StatValue = (Single.IsNaN(stats.TimeDilation)) ? 0.1f : stats.TimeDilation; //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
+                    sb[0].StatValue = (float)timeDilationMonitor.GetValue(); //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
 
                     sb[1].StatID = (uint)Stats.SimFPS;
                     sb[1].StatValue = simfps / statsUpdateFactor;
@@ -384,7 +390,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[2].StatValue = physfps / statsUpdateFactor;
 
                     sb[3].StatID = (uint)Stats.AgentUpdates;
-                    sb[3].StatValue = (stats.AgentUpdates / statsUpdateFactor);
+                    sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates / statsUpdateFactor);
 
                     sb[4].StatID = (uint)Stats.Agents;
                     sb[4].StatValue = m_currentScene.SceneGraph.GetRootAgentCount();
@@ -399,37 +405,37 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[7].StatValue = m_currentScene.SceneGraph.GetActiveObjectsCount();
 
                     sb[8].StatID = (uint)Stats.FrameMS;
-                    sb[8].StatValue = stats.SimFPS / statsUpdateFactor;
+                    sb[8].StatValue = simFrameMonitor.SimFPS / statsUpdateFactor;
 
                     sb[9].StatID = (uint)Stats.NetMS;
-                    sb[9].StatValue = stats.NetFrameTime / statsUpdateFactor;
+                    sb[9].StatValue = 0;
 
                     sb[10].StatID = (uint)Stats.PhysicsMS;
-                    sb[10].StatValue = stats.PhysicsFrameTime / statsUpdateFactor;
+                    sb[10].StatValue = (float)physicsFrameMonitor.GetValue() / statsUpdateFactor;
 
                     sb[11].StatID = (uint)Stats.ImageMS;
-                    sb[11].StatValue = stats.ImageFrameTime / statsUpdateFactor;
+                    sb[11].StatValue = 0;
 
                     sb[12].StatID = (uint)Stats.OtherMS;
-                    sb[12].StatValue = stats.OtherFrameTime / statsUpdateFactor;
+                    sb[12].StatValue = (float)otherFrameMonitor.GetValue() / statsUpdateFactor;
 
                     sb[13].StatID = (uint)Stats.InPacketsPerSecond;
-                    sb[13].StatValue = (stats.InPacketsPerSecond / statsUpdateFactor);
+                    sb[13].StatValue = (networkMonitor.InPacketsPerSecond / statsUpdateFactor);
 
                     sb[14].StatID = (uint)Stats.OutPacketsPerSecond;
-                    sb[14].StatValue = (stats.OutPacketsPerSecond / statsUpdateFactor);
+                    sb[14].StatValue = (networkMonitor.OutPacketsPerSecond / statsUpdateFactor);
 
                     sb[15].StatID = (uint)Stats.UnAckedBytes;
-                    sb[15].StatValue = stats.UnackedBytes;
+                    sb[15].StatValue = networkMonitor.UnackedBytes;
 
                     sb[16].StatID = (uint)Stats.AgentMS;
-                    sb[16].StatValue = stats.AgentFrameTime / statsUpdateFactor;
+                    sb[16].StatValue = agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor;
 
                     sb[17].StatID = (uint)Stats.PendingDownloads;
-                    sb[17].StatValue = stats.PendingDownloads;
+                    sb[17].StatValue = networkMonitor.PendingDownloads;
 
                     sb[18].StatID = (uint)Stats.PendingUploads;
-                    sb[18].StatValue = stats.PendingUploads;
+                    sb[18].StatValue = networkMonitor.PendingUploads;
 
                     sb[19].StatID = (uint)Stats.ActiveScripts;
                     sb[19].StatValue = m_currentScene.SceneGraph.GetActiveScriptsCount();
@@ -441,7 +447,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[21].StatValue = 0;
 
                     sb[22].StatID = (uint)Stats.SleepTime;
-                    sb[22].StatValue = stats.SleepFrameTime;
+                    sb[22].StatValue = (float)sleepFrameMonitor.GetValue();
 
                     sb[23].StatID = (uint)Stats.PumpIO;
                     sb[23].StatValue = 0;
@@ -457,13 +463,13 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[25].StatValue = pws / 4096000;
 
                     sb[26].StatID = (uint)Stats.PhysicsOther;
-                    sb[26].StatValue = stats.PhysicsFrameTimeOther;
+                    sb[26].StatValue = (float)physicsSyncFrameMonitor.GetValue();
 
                     sb[27].StatID = (uint)Stats.UpdatePhysicsShapes;
                     sb[27].StatValue = 0;
 
                     sb[28].StatID = (uint)Stats.PhysicsStep;
-                    sb[28].StatValue = stats.PhysicsStep;
+                    sb[28].StatValue = 0;
 
                     sb[29].StatID = (uint)Stats.LowLodObjects;
                     sb[29].StatValue = 0;
@@ -504,7 +510,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
             public void ResetValues()
             {
-                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
+                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameStats");
                 monitor.ResetStats();
             }
 
@@ -514,22 +520,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 m_currentScene.SceneGraph.RecalculateStats();
 
                 m_module.SendYourStatsAreWrong();
-            }
-
-            #endregion
-
-            #region Client Handling
-
-            protected void OnNewClient(IClientAPI client)
-            {
-                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
-                client.OnNetworkStatsUpdate += monitor.AddPacketsStats;
-            }
-
-            protected void OnClosingClient(IClientAPI client)
-            {
-                SimFrameMonitor monitor = (SimFrameMonitor)GetMonitor("SimFrameMonitor");
-                client.OnNetworkStatsUpdate -= monitor.AddPacketsStats;
             }
 
             #endregion
@@ -820,12 +810,15 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         public void Initialize(ISimulationBase simulationBase)
         {
+            m_simulationBase = simulationBase;
+
             Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
             PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
             PeriodicDiagnosticsTimer.Enabled = true;
             PeriodicDiagnosticsTimer.Start();
 
-            m_simulationBase = simulationBase;
+            MainConsole.Instance.Commands.AddCommand("region", false, "show", "show",
+                "Shows information about this simulator", HandleShow);
 
             MainConsole.Instance.Commands.AddCommand("Stats", false, "stats report",
                                "stats report",
@@ -836,6 +829,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             //This registers the default commands, but not region specific ones
             reg.AddScene(null);
             m_registry.Add("", reg);
+
+            m_simulationBase.ApplicationRegistry.RegisterInterface<IMonitorModule>(this);
         }
 
         public void PostInitialise()

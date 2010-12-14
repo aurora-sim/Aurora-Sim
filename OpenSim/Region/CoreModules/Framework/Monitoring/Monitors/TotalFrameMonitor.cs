@@ -30,9 +30,10 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class TotalFrameMonitor : IMonitor
+    public class TotalFrameMonitor : IMonitor, ISetMonitor
     {
         private readonly Scene m_scene;
+        private int MonitorFrameTime = 0;
 
         public TotalFrameMonitor(Scene scene)
         {
@@ -43,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.MonitorFrameTime;
+            return MonitorFrameTime;
         }
 
         public string GetName()
@@ -57,5 +58,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         #endregion
+
+        public void SetValue(int value)
+        {
+            MonitorFrameTime = value;
+        }
     }
 }

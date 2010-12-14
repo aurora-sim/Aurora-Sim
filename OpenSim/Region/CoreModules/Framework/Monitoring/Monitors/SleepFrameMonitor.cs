@@ -30,12 +30,12 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    public class PhysicsFrameMonitor : IMonitor, ISetMonitor
+    public class SleepFrameMonitor : IMonitor, ISetMonitor
     {
         private readonly Scene m_scene;
-        private int MonitorPhysicsFrameTime;
+        private int SleepFrame;
 
-        public PhysicsFrameMonitor(Scene scene)
+        public SleepFrameMonitor(Scene scene)
         {
             m_scene = scene;
         }
@@ -44,24 +44,24 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return MonitorPhysicsFrameTime;
+            return SleepFrame;
         }
 
         public string GetName()
         {
-            return "Total Physics Frame Time";
+            return "Sleep Frame";
         }
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return GetValue().ToString();
         }
 
         #endregion
 
         public void SetValue(int value)
         {
-            MonitorPhysicsFrameTime = value;
+            SleepFrame = value;
         }
     }
 }

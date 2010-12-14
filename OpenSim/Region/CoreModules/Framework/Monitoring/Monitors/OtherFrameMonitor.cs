@@ -30,12 +30,12 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    public class PhysicsFrameMonitor : IMonitor, ISetMonitor
+    public class OtherFrameMonitor : IMonitor, ISetMonitor
     {
         private readonly Scene m_scene;
-        private int MonitorPhysicsFrameTime;
+        private int MonitorOtherFrameTime = 0;
 
-        public PhysicsFrameMonitor(Scene scene)
+        public OtherFrameMonitor(Scene scene)
         {
             m_scene = scene;
         }
@@ -44,12 +44,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return MonitorPhysicsFrameTime;
+            return MonitorOtherFrameTime;
         }
 
         public string GetName()
         {
-            return "Total Physics Frame Time";
+            return "Other Frame Time";
         }
 
         public string GetFriendlyValue()
@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public void SetValue(int value)
         {
-            MonitorPhysicsFrameTime = value;
+            MonitorOtherFrameTime = value;
         }
     }
 }

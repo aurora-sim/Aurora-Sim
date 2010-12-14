@@ -119,47 +119,41 @@ namespace OpenSim.Framework
         void AddBlockedMissingTextureRequest();
     }
 
-    public interface ISimFrameStats
+    public interface INetworkMonitor
     {
-        void AddAgentTime(int ms);
-        void AddPacketsStats(int inPackets, int outPackets, int unAckedBytes);
-        void AddTimeDilation(float td);
-        void AddFPS(int frames);
-        void AddPhysicsFPS(float frames);
-        void AddAgentUpdates(int numUpdates);
-        void AddInPackets(int numPackets);
-        void AddOutPackets(int numPackets);
-        void AddUnackedBytes(int numBytes);
-        void AddFrameMS(int ms);
-        void AddNetMS(int ms);
-        void AddAgentMS(int ms);
-        void AddPhysicsMS(int ms);
-        void AddPhysicsStep(int ms);
-        void AddImageMS(int ms);
-        void AddOtherMS(int ms);
-        void AddSleepMS(int ms);
-        void AddPhysicsOther(int ms);
-        void AddPendingDownloads(int count);
-        void ResetStats();
-
-        float LastReportedSimFPS { get; set; }
-        float TimeDilation { get; }
-        float SimFPS { get; }
-        float AgentUpdates { get; }
-        float TotalFrameTime { get; }
-        float NetFrameTime { get; }
-        float PhysicsFrameTime { get; }
-        float PhysicsFrameTimeOther { get; }
-        float PhysicsStep { get; }
-        float OtherFrameTime { get; }
-        float ImageFrameTime { get; }
-        float SleepFrameTime { get; }
         float InPacketsPerSecond { get; }
         float OutPacketsPerSecond { get; }
         float UnackedBytes { get; }
-        float AgentFrameTime { get; }
         float PendingDownloads { get; }
         float PendingUploads { get; }
+
+        void AddInPackets(int numPackets);
+        void AddOutPackets(int numPackets);
+        void AddUnackedBytes(int numBytes);
+        void AddPendingDownloads(int count);
+        void AddPendingUploads(int count);
+    }
+
+    public interface ISetMonitor : IMonitor
+    {
+        void SetValue(int value);
+    }
+
+    public interface ISimFrameMonitor
+    {
+        void AddFPS(int frames);
+        void ResetStats();
+
+        float LastReportedSimFPS { get; set; }
+        float SimFPS { get; }
+    }
+
+    public interface IAgentUpdateMonitor
+    {
+        int AgentFrameTime { get; }
+        int AgentUpdates { get; }
+        void AddAgentUpdates(int value);
+        void AddAgentTime(int value);
     }
 
     public interface ILoginMonitor

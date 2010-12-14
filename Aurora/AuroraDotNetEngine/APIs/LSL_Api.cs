@@ -6663,7 +6663,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            ISimFrameStats reporter = (ISimFrameStats)World.RequestModuleInterface<IMonitorModule>().GetMonitor(World.RegionInfo.RegionID.ToString(), "SimFrameStats");
+            ISimFrameMonitor reporter = (ISimFrameMonitor)World.RequestModuleInterface<IMonitorModule>().GetMonitor(World.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if (reporter != null)
                 return reporter.LastReportedSimFPS;
             return 0;

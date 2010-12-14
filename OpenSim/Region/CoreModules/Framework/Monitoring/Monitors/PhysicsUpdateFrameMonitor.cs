@@ -30,9 +30,10 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class PhysicsUpdateFrameMonitor : IMonitor
+    public class PhysicsUpdateFrameMonitor : IMonitor, ISetMonitor
     {
         private readonly Scene m_scene;
+        private int MonitorPhysicsUpdateTime;
 
         public PhysicsUpdateFrameMonitor(Scene scene)
         {
@@ -43,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.MonitorPhysicsUpdateTime;
+            return MonitorPhysicsUpdateTime;
         }
 
         public string GetName()
@@ -57,5 +58,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         #endregion
+
+        public void SetValue(int value)
+        {
+            MonitorPhysicsUpdateTime = value;
+        }
     }
 }

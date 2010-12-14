@@ -30,11 +30,11 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class EventFrameMonitor : IMonitor
+    class TimeDilationMonitor : IMonitor
     {
         private readonly Scene m_scene;
 
-        public EventFrameMonitor(Scene scene)
+        public TimeDilationMonitor(Scene scene)
         {
             m_scene = scene;
         }
@@ -43,17 +43,17 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.MonitorEventTime;
+            return m_scene.TimeDilation;
         }
 
         public string GetName()
         {
-            return "Total Event Frame Time";
+            return "Time Dilation";
         }
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return GetValue().ToString();
         }
 
         #endregion

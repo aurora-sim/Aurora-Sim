@@ -31,9 +31,10 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class LastFrameTimeMonitor : IMonitor
+    public class LastFrameTimeMonitor : IMonitor, ISetMonitor
     {
         private readonly Scene m_scene;
+        private int MonitorLastFrameTick;
 
         public LastFrameTimeMonitor(Scene scene)
         {
@@ -44,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return Environment.TickCount - m_scene.MonitorLastFrameTick;
+            return Util.EnvironmentTickCountSubtract(MonitorLastFrameTick);
         }
 
         public string GetName()
@@ -58,5 +59,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         }
 
         #endregion
+
+        public void SetValue(int value)
+        {
+            MonitorLastFrameTick = value;
+        }
     }
 }

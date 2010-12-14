@@ -98,12 +98,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             string Value = "";
             Value += "CONNECTION STATISTICS" + "\n";
             Value += 
-string.Format(@"Successful logins Total: {0} \n
-Successful logins Today: {1} \n
-Successful logins Yesterday: {2} \n
-Logouts Total: {3} \n
-Logouts Today: {4} \n
-Logouts Yesterday: {5} \n 
+string.Format(@"Successful logins Total: {0}
+Successful logins Today: {1}
+Successful logins Yesterday: {2}
+Logouts Total: {3}
+Logouts Today: {4}
+Logouts Yesterday: {5} 
 Abnormal client thread terminations: {6}",
                     SuccessfulLoginsTotal,
                     SuccessfulLoginsToday,

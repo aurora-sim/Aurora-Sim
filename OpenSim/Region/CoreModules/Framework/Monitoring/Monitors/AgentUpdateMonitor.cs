@@ -30,11 +30,16 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class LandFrameMonitor : IMonitor
+    public class AgentUpdateMonitor : IMonitor, IAgentUpdateMonitor
     {
         private readonly Scene m_scene;
+        private int agentUpdates = 0;
+        private int agentTime = 0;
 
-        public LandFrameMonitor(Scene scene)
+        public int AgentFrameTime { get { return agentTime; } }
+        public int AgentUpdates { get { return agentUpdates; } }
+
+        public AgentUpdateMonitor(Scene scene)
         {
             m_scene = scene;
         }
@@ -43,19 +48,29 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.MonitorLandTime;
+            return agentUpdates;
         }
 
         public string GetName()
         {
-            return "Land Frame Time";
+            return "Agent Update Count";
         }
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return (int)GetValue() + " updates/sec";
         }
 
         #endregion
+
+        public void AddAgentUpdates(int value)
+        {
+            agentUpdates += value;
+        }
+
+        public void AddAgentTime(int value)
+        {
+            agentTime += value;
+        }
     }
 }
