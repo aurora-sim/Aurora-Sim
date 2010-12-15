@@ -566,22 +566,22 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[26].StatValue = 0;
 
                     sb[27].StatID = (uint)Stats.SimPhysicsStepMS;
-                    sb[27].StatValue = (float)(physicsSyncFrameMonitor.GetValue()  / statsUpdateFactor);
-
+                    sb[27].StatValue = m_currentScene.SceneGraph.PhysicsScene.StepTime;
+                    
                     sb[28].StatID = (uint)Stats.SimPhysicsShape;
-                    sb[28].StatValue = physfps;
+                    sb[28].StatValue = 0;
 
                     sb[29].StatID = (uint)Stats.SimPhysicsOtherMS;
-                    sb[29].StatValue = (float)(otherFrameMonitor.GetValue() / statsUpdateFactor);
+                    sb[29].StatValue = (float)(physicsSyncFrameMonitor.GetValue()  / statsUpdateFactor);
 
                     sb[30].StatID = (uint)Stats.SimPhysicsMemory;
-                    sb[30].StatValue = physfps;
+                    sb[30].StatValue = 0;
 
                     sb[31].StatID = (uint)Stats.ScriptEPS;
                     sb[31].StatValue = m_currentScene.SceneGraph.GetScriptEPS() / statsUpdateFactor;
 
                     sb[32].StatID = (uint)Stats.SimSpareTime;
-                    sb[32].StatValue = 0;
+                    sb[32].StatValue = (float)(totalFrameMonitor.GetValue() - (timeDilationMonitor.GetValue() * totalFrameMonitor.GetValue()));
 
                     sb[33].StatID = (uint)Stats.SimSleepTime;
                     sb[33].StatValue = (float)(sleepFrameMonitor.GetValue() / statsUpdateFactor);

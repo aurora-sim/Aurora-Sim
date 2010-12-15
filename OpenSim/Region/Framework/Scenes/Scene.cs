@@ -1177,7 +1177,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
                     maintc = (int)((m_scene.m_timespan * 1000) - maintc) / Scene.m_timeToSlowThePhysHeartbeat;
-
                     if (maintc > 0 && shouldSleep)
                         Thread.Sleep(maintc);
                 }

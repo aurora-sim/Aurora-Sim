@@ -87,6 +87,11 @@ namespace OpenSim.Region.Physics.Manager
             set { }
         }
 
+        public virtual float StepTime
+        {
+            get { return 0; }
+        }
+
         public virtual bool SupportsNINJAJoints
         {
             get { return false; }

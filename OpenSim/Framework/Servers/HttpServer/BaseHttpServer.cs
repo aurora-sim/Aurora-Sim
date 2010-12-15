@@ -1688,12 +1688,12 @@ namespace OpenSim.Framework.Servers.HttpServer
             HTTPDRunning = false;
             try
             {
+                m_httpListener2.Stop();
                 m_httpListener2.ExceptionThrown -= httpServerException;
                 //m_httpListener2.DisconnectHandler = null;
 
                 m_httpListener2.LogWriter = null;
                 m_httpListener2.RequestReceived -= OnRequest;
-                m_httpListener2.Stop();
             }
             catch (NullReferenceException)
             {

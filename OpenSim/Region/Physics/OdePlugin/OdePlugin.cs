@@ -276,6 +276,11 @@ namespace OpenSim.Region.Physics.OdePlugin
         private const float m_SkipFramesAtms = 0.40f; // Drop frames gracefully at a 400 ms lag
         private readonly PhysicsActor PANull = new NullPhysicsActor();
         private float step_time = 0.0f;
+
+        public override float StepTime
+        {
+            get { return step_time; }
+        }
 //Ckrinke: Comment out until used. We declare it, initialize it, but do not use it
 //Ckrinke        private int ms = 0;
         public IntPtr world;

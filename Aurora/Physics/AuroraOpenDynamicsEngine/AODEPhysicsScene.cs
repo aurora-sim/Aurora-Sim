@@ -109,7 +109,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float avMovementDivisorRun = 0.8f;
         private float minimumGroundFlightOffset = 3f;
         public float maximumMassObject = 10000.01f;
-        public bool m_allowTimeDilation = false;
 
         public bool meshSculptedPrim = true;
         public bool forceSimplePrimMeshing = false;
@@ -174,6 +173,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private const float m_SkipFramesAtms = 0.40f; // Drop frames gracefully at a 400 ms lag
         private readonly PhysicsActor PANull = new NullPhysicsActor();
         private float step_time = 0.0f;
+
+        public override float StepTime
+        {
+            get { return step_time; }
+        }
 
         public IntPtr world;
         private uint obj2LocalID = 0;
@@ -402,7 +406,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
-                    m_allowTimeDilation = physicsconfig.GetBoolean("allow_Time_Dilation", m_allowTimeDilation);
                     physics_logging = physicsconfig.GetBoolean("physics_logging", false);
                     physics_logging_interval = physicsconfig.GetInt("physics_logging_interval", 0);
                     physics_logging_append_existing_logfile = physicsconfig.GetBoolean("physics_logging_append_existing_logfile", false);
@@ -2494,8 +2497,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //(step_time == 0.004f, there's 250 of those per second.   Times the step time/step size
 
                 fps = (step_time / ODE_STEPSIZE) * 1000;
-                //m_timeDilation = (step_time / ODE_STEPSIZE) / (0.09375f / ODE_STEPSIZE);
-
+                
                 //step_time = 0.09375f;
 
                 while (step_time > 0.0f)
@@ -2959,7 +2961,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 ActiveCollisionQueue.Clear();
             }
 
-            /*if (m_timeDilation < 0.5f)
+            if (m_timeDilation < 0.5f)
             {
                 //Slow it down a bit
                 geomContactPointsStartthrottle++;
@@ -2969,23 +2971,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else
             {
                 geomContactPointsStartthrottle--;
-                if (geomContactPointsStartthrottle < 1)
-                    geomContactPointsStartthrottle = 1;
-            }*/
-            //StartFPS = 0;
-            if (fps > StartFPS && fps < 10000)
-            {
-                if (fps > (fps - StartFPS) / 3 + StartFPS)
-                    StartFPS += (fps - StartFPS) / 100;
+                if (geomContactPointsStartthrottle < 3)
+                    geomContactPointsStartthrottle = 3;
             }
-            else
-            {
-                if (fps < (fps - StartFPS) / 10000 + StartFPS)
-                    StartFPS += (fps - StartFPS) / 10000;
-            }
-
-            if(m_allowTimeDilation)
-                m_timeDilation = (fps / StartFPS);
 
             return fps;
         }
