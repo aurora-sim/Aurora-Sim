@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Timers;
+using System.Threading;
 using log4net;
 using OpenSim.Region.Framework.Scenes;
 
@@ -252,10 +253,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void AddSceneHeartbeat(IThread heartbeat, out System.Threading.Thread thread)
+        public void AddSceneHeartbeat(IThread heartbeat)
         {
             //m_log.Warn("[SceneHeartbeatTracker]: " + heartbeat.type + " has been started");
-            thread = new System.Threading.Thread(heartbeat.Start);
+            Thread thread = new System.Threading.Thread(heartbeat.Start);
             thread.Name = "SceneHeartbeat";
             thread.Priority = System.Threading.ThreadPriority.Normal;
             thread.IsBackground = true;

@@ -58,7 +58,46 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         #region Enums
 
-        private enum Stats : uint
+        public enum Stats : uint
+        {
+            TimeDilation,		   // 0
+            FPS,
+            PhysFPS,
+            AgentUpdates,
+            FrameMS,
+            NetMS,			       // 5
+            SimOtherMS,
+            SimPhysicsMS,
+            AgentMS,
+            ImagesMS,
+            ScriptMS,			   // 10
+            TotalObjects,
+            ActiveObjects,
+            NumAgentMain,
+            NumAgentChild,
+            NumScriptActive,	   // 15
+            LSLIPS,
+            InPPS,
+            OutPPS,
+            PendingDownloads,
+            PendingUploads,		   // 20
+            VirtualSizeKB,
+            ResidentSizeKB,
+            PendingLocalUploads,
+            TotalUnackedBytes,
+            PhysicsPinnedTasks,	   // 25
+            PhysicsLODTasks,
+            SimPhysicsStepMS,
+            SimPhysicsShape,
+            SimPhysicsOtherMS,
+            SimPhysicsMemory,      // 30
+            ScriptEPS,
+            SimSpareTime,
+            SimSleepTime,
+            IOPumpTime             //34
+        }
+
+        private enum AStats : uint
         {
             TimeDilation = 0,
             SimFPS = 1,
@@ -122,7 +161,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             private IEstateModule m_estateModule;
             private MonitorModule m_module;
 
-            private float[] lastReportedSimStats = new float[33];
+            private float[] lastReportedSimStats = new float[35];
             /// <summary>
             /// The last reported stats for this region
             /// </summary>
@@ -391,7 +430,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// <param name="e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
-                SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[33];
+                SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
                 SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
 
                 // Know what's not thread safe in Mono... modifying timers.
@@ -410,6 +449,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                         // leave region flags at 0
                     }
 
+                    rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
+                    rb.RegionFlags = regionFlags;
+                    rb.RegionX = m_currentScene.RegionInfo.RegionLocX;
+                    rb.RegionY = m_currentScene.RegionInfo.RegionLocY;
+
                     ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
                     ISetMonitor totalFrameMonitor = (ISetMonitor)GetMonitor("Total Frame Time");
                     ISetMonitor lastFrameMonitor = (ISetMonitor)GetMonitor("Last Completed Frame At");
@@ -423,170 +467,145 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     #region various statistic googly moogly
 
-                    // Our FPS is actually 10fps, so multiplying by 5 to get the amount that people expect there
-                    // 0-50 is pretty close to 0-45
-                    float simfps = (int)((simFrameMonitor.SimFPS * 5));
+                    float simfps = simFrameMonitor.SimFPS / statsUpdateFactor;
                     // save the reported value so there is something available for llGetRegionFPS 
-                    simFrameMonitor.LastReportedSimFPS = (float)simfps / statsUpdateFactor;
+                    simFrameMonitor.LastReportedSimFPS = simfps;
 
-                    //if (simfps > 45)
-                    //simfps = simfps - (simfps - 45);
-                    //if (simfps < 0)
-                    //simfps = 0;
-
-                    //
                     float physfps = (float)physicsFrameMonitor.PhysicsFPS / statsUpdateFactor;
                     physicsFrameMonitor.LastReportedPhysicsFPS = physfps;
 
-                    //if (physfps > 600)
-                    //physfps = physfps - (physfps - 600);
-
-                    if (physfps < 0)
-                        physfps = 0;
-
                     #endregion
-
-                    //Our time dilation is 0.91 when we're running a full speed,
-                    // therefore to make sure we get an appropriate range,
-                    // we have to factor in our error.   (0.10f * statsUpdateFactor)
-                    // multiplies the fix for the error times the amount of times it'll occur a second
-                    // / 10 divides the value by the number of times the sim heartbeat runs (10fps)
-                    // Then we divide the whole amount by the amount of seconds pass in between stats updates.
-
-                    // 'statsUpdateFactor' is how often stats packets are sent in seconds. Used below to change
-                    // values to X-per-second values.
-
-                    for (int i = 0; i < 33; i++)
+                    for (int i = 0; i < sb.Length; i++)
                     {
                         sb[i] = new SimStatsPacket.StatBlock();
                     }
 
+                    #region Add the stats packets
+
                     sb[0].StatID = (uint)Stats.TimeDilation;
                     sb[0].StatValue = (float)timeDilationMonitor.GetValue(); //((((m_timeDilation + (0.10f * statsUpdateFactor)) /10)  / statsUpdateFactor));
 
-                    sb[1].StatID = (uint)Stats.SimFPS;
-                    sb[1].StatValue = simfps / statsUpdateFactor;
+                    sb[1].StatID = (uint)Stats.FPS;
+                    sb[1].StatValue = simfps;
 
-                    sb[2].StatID = (uint)Stats.PhysicsFPS;
-                    sb[2].StatValue = physfps / statsUpdateFactor;
+                    sb[2].StatID = (uint)Stats.PhysFPS;
+                    sb[2].StatValue = physfps;
 
                     sb[3].StatID = (uint)Stats.AgentUpdates;
                     sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates / statsUpdateFactor);
 
-                    sb[4].StatID = (uint)Stats.Agents;
-                    sb[4].StatValue = m_currentScene.SceneGraph.GetRootAgentCount();
+                    sb[4].StatID = (uint)Stats.FrameMS;
+                    sb[4].StatValue = (float)totalFrameMonitor.GetValue();
 
-                    sb[5].StatID = (uint)Stats.ChildAgents;
-                    sb[5].StatValue = m_currentScene.SceneGraph.GetChildAgentCount();
+                    sb[5].StatID = (uint)Stats.NetMS;
+                    sb[5].StatValue = 0;
 
-                    sb[6].StatID = (uint)Stats.TotalPrim;
-                    sb[6].StatValue = m_currentScene.SceneGraph.GetTotalObjectsCount();
+                    sb[6].StatID = (uint)Stats.SimOtherMS;
+                    sb[6].StatValue = (float)otherFrameMonitor.GetValue();
 
-                    sb[7].StatID = (uint)Stats.ActivePrim;
-                    sb[7].StatValue = m_currentScene.SceneGraph.GetActiveObjectsCount();
+                    sb[7].StatID = (uint)Stats.SimPhysicsMS;
+                    sb[7].StatValue = (float)(physicsFrameMonitor.PhysicsFPS / statsUpdateFactor);
 
-                    sb[8].StatID = (uint)Stats.FrameMS;
-                    sb[8].StatValue = simFrameMonitor.SimFPS / statsUpdateFactor;
+                    sb[8].StatID = (uint)Stats.AgentMS;
+                    sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor);
 
-                    sb[9].StatID = (uint)Stats.NetMS;
+                    sb[9].StatID = (uint)Stats.ImagesMS;
                     sb[9].StatValue = 0;
 
-                    sb[10].StatID = (uint)Stats.PhysicsMS;
-                    sb[10].StatValue = (float)physfps;
+                    sb[10].StatID = (uint)Stats.ScriptMS;
+                    sb[10].StatValue = 0;
 
-                    sb[11].StatID = (uint)Stats.ImageMS;
-                    sb[11].StatValue = 0;
+                    sb[11].StatID = (uint)Stats.TotalObjects;
+                    sb[11].StatValue = m_currentScene.SceneGraph.GetTotalObjectsCount();
 
-                    sb[12].StatID = (uint)Stats.OtherMS;
-                    sb[12].StatValue = (float)otherFrameMonitor.GetValue() / statsUpdateFactor;
+                    sb[12].StatID = (uint)Stats.ActiveObjects;
+                    sb[12].StatValue = m_currentScene.SceneGraph.GetActiveObjectsCount();
 
-                    sb[13].StatID = (uint)Stats.InPacketsPerSecond;
-                    sb[13].StatValue = (networkMonitor.InPacketsPerSecond / statsUpdateFactor);
+                    sb[13].StatID = (uint)Stats.NumAgentMain;
+                    sb[13].StatValue = m_currentScene.SceneGraph.GetRootAgentCount();
 
-                    sb[14].StatID = (uint)Stats.OutPacketsPerSecond;
-                    sb[14].StatValue = (networkMonitor.OutPacketsPerSecond / statsUpdateFactor);
+                    sb[14].StatID = (uint)Stats.NumAgentChild;
+                    sb[14].StatValue = m_currentScene.SceneGraph.GetChildAgentCount();
 
-                    sb[15].StatID = (uint)Stats.UnAckedBytes;
-                    sb[15].StatValue = networkMonitor.UnackedBytes;
+                    sb[15].StatID = (uint)Stats.NumScriptActive;
+                    sb[15].StatValue = m_currentScene.SceneGraph.GetActiveScriptsCount();
 
-                    sb[16].StatID = (uint)Stats.AgentMS;
-                    sb[16].StatValue = agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor;
+                    sb[16].StatID = (uint)Stats.LSLIPS;
+                    sb[16].StatValue = 0;
 
-                    sb[17].StatID = (uint)Stats.PendingDownloads;
-                    sb[17].StatValue = networkMonitor.PendingDownloads;
+                    sb[17].StatID = (uint)Stats.InPPS;
+                    sb[17].StatValue = (float)(networkMonitor.InPacketsPerSecond / statsUpdateFactor);
 
-                    sb[18].StatID = (uint)Stats.PendingUploads;
-                    sb[18].StatValue = networkMonitor.PendingUploads;
+                    sb[18].StatID = (uint)Stats.OutPPS;
+                    sb[18].StatValue = (float)(networkMonitor.OutPacketsPerSecond / statsUpdateFactor);
 
-                    sb[19].StatID = (uint)Stats.ActiveScripts;
-                    sb[19].StatValue = m_currentScene.SceneGraph.GetActiveScriptsCount();
+                    sb[19].StatID = (uint)Stats.PendingDownloads;
+                    sb[19].StatValue = (float)(networkMonitor.PendingDownloads / statsUpdateFactor);
 
-                    sb[20].StatID = (uint)Stats.ScriptEventsPerSecond;
-                    sb[20].StatValue = m_currentScene.SceneGraph.GetScriptEPS() / statsUpdateFactor;
+                    sb[20].StatID = (uint)Stats.PendingUploads;
+                    sb[20].StatValue = (float)(networkMonitor.PendingUploads / statsUpdateFactor);
 
-                    sb[21].StatID = (uint)Stats.SpareTime;
-                    sb[21].StatValue = 0;
+                    sb[21].StatID = (uint)Stats.VirtualSizeKB;
+                    sb[21].StatValue = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
 
-                    sb[22].StatID = (uint)Stats.SleepTime;
-                    sb[22].StatValue = (float)sleepFrameMonitor.GetValue();
+                    sb[22].StatID = (uint)Stats.ResidentSizeKB;
+                    sb[22].StatValue = (float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
 
-                    sb[23].StatID = (uint)Stats.PumpIO;
-                    sb[23].StatValue = 0;
+                    sb[23].StatID = (uint)Stats.PendingLocalUploads;
+                    sb[23].StatValue = (float)(networkMonitor.PendingUploads / statsUpdateFactor);
 
-                    long pws = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
+                    sb[24].StatID = (uint)Stats.TotalUnackedBytes;
+                    sb[24].StatValue = (float)(networkMonitor.UnackedBytes / statsUpdateFactor);
 
-                    if (pws > Int32.MaxValue)
-                        pws = Int32.MaxValue;
-                    if (pws < 0)
-                        pws = 0;
+                    sb[25].StatID = (uint)Stats.PhysicsPinnedTasks;
+                    sb[25].StatValue = 0;
 
-                    sb[25].StatID = (uint)Stats.MemoryAllocated;
-                    sb[25].StatValue = pws / 4096000;
+                    sb[26].StatID = (uint)Stats.PhysicsLODTasks;
+                    sb[26].StatValue = 0;
 
-                    sb[26].StatID = (uint)Stats.PhysicsOther;
-                    sb[26].StatValue = (float)physicsSyncFrameMonitor.GetValue();
+                    sb[27].StatID = (uint)Stats.SimPhysicsStepMS;
+                    sb[27].StatValue = (float)(physicsSyncFrameMonitor.GetValue()  / statsUpdateFactor);
 
-                    sb[27].StatID = (uint)Stats.UpdatePhysicsShapes;
-                    sb[27].StatValue = 0;
+                    sb[28].StatID = (uint)Stats.SimPhysicsShape;
+                    sb[28].StatValue = physfps;
 
-                    sb[28].StatID = (uint)Stats.PhysicsStep;
-                    sb[28].StatValue = 0;
+                    sb[29].StatID = (uint)Stats.SimPhysicsOtherMS;
+                    sb[29].StatValue = (float)(otherFrameMonitor.GetValue() / statsUpdateFactor);
 
-                    sb[29].StatID = (uint)Stats.LowLodObjects;
-                    sb[29].StatValue = 0;
+                    sb[30].StatID = (uint)Stats.SimPhysicsMemory;
+                    sb[30].StatValue = physfps;
 
-                    sb[30].StatID = (uint)Stats.PinnedObjects;
-                    sb[30].StatValue = 0;
+                    sb[31].StatID = (uint)Stats.ScriptEPS;
+                    sb[31].StatValue = m_currentScene.SceneGraph.GetScriptEPS() / statsUpdateFactor;
 
-                    sb[31].StatID = (uint)Stats.UnknownA;
-                    sb[31].StatValue = 0;
-
-                    sb[32].StatID = (uint)Stats.UnknownB;
+                    sb[32].StatID = (uint)Stats.SimSpareTime;
                     sb[32].StatValue = 0;
 
-                    sb[24].StatID = (uint)Stats.UnknownC;
-                    sb[24].StatValue = 0;
+                    sb[33].StatID = (uint)Stats.SimSleepTime;
+                    sb[33].StatValue = (float)(sleepFrameMonitor.GetValue() / statsUpdateFactor);
 
-                    for (int i = 0; i < 33; i++)
+                    sb[34].StatID = (uint)Stats.IOPumpTime;
+                    sb[34].StatValue = 0;
+
+                    #endregion
+
+                    for (int i = 0; i < sb.Length; i++)
                     {
                         lastReportedSimStats[i] = sb[i].StatValue;
                     }
 
                     SimStats simStats
-                        = new SimStats(
-                            m_currentScene.RegionInfo.RegionLocX, m_currentScene.RegionInfo.RegionLocY, regionFlags, (uint)m_currentScene.RegionInfo.ObjectCapacity, rb, sb, m_currentScene.RegionInfo.RegionID);
+                        = new SimStats(rb, sb, m_currentScene.RegionInfo.RegionID);
 
                     //Fire the event and tell followers about the new stats
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-                    m_currentScene.ForEachScenePresence(
-                        delegate(ScenePresence agent)
-                        {
-                            if (!agent.IsChildAgent)
-                                agent.ControllingClient.SendSimStats(simStats);
-                        }
-                    );
+                    foreach (ScenePresence agent in m_currentScene.ScenePresences)
+                    {
+                        if (!agent.IsChildAgent)
+                            agent.ControllingClient.SendSimStats(simStats);
+                    }
                     //Now fix any values that require reseting
                     ResetValues();
                 }

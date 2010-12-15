@@ -246,14 +246,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
 
             // Start the packet processing threads
-            Thread thread = null;
             if (m_scene.tracker == null)
             {
                 m_scene.tracker = new AuroraThreadTracker();
                 m_scene.tracker.Init(m_scene);
             }
-            m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
-            m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
+            m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this));
+            m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this));
             
             m_elapsedMSSinceLastStatReport = Environment.TickCount;
             m_scene.tracker.OnNeedToAddThread += NeedsNewThread;
@@ -993,9 +992,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             public override void Restart()
             {
-                System.Threading.Thread thread;
                 ShouldExit = true;
-                m_server.m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(m_server), out thread);
+                m_server.m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(m_server));
             }
 
             /// <summary>
@@ -1154,9 +1152,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             public override void Restart()
             {
-                System.Threading.Thread thread;
                 ShouldExit = true;
-                m_server.m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(m_server), out thread);
+                m_server.m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(m_server));
             }
 
             /// <summary>
@@ -1271,11 +1268,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void NeedsNewThread(string type)
         {
-            System.Threading.Thread thread;
             if (type == "IncomingPacketHandler")
-                m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this), out thread);
+                m_scene.tracker.AddSceneHeartbeat(new IncomingPacketHandler(this));
             if (type == "OutgoingPacketHandler")
-                m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this), out thread);
+                m_scene.tracker.AddSceneHeartbeat(new OutgoingPacketHandler(this));
         }
     }
 }

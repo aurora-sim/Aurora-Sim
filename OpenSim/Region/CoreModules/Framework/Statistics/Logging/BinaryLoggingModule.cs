@@ -121,12 +121,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         private void LogSimStats(SimStats stats)
         {
             SimStatsPacket pack = new SimStatsPacket();
-            pack.Region = new SimStatsPacket.RegionBlock();
-            pack.Region.RegionX = stats.RegionX;
-            pack.Region.RegionY = stats.RegionY;
-            pack.Region.RegionFlags = stats.RegionFlags;
-            pack.Region.ObjectCapacity = stats.ObjectCapacity;
-            //pack.Region = //stats.RegionBlock;
+            pack.Region = stats.RegionBlock;
             pack.Stat = stats.StatsBlock;
             pack.Header.Reliable = false;
 
