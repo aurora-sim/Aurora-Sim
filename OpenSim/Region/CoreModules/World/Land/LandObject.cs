@@ -255,15 +255,33 @@ namespace OpenSim.Region.CoreModules.World.Land
                             remote_client.SendAlertMessage("Permissions: You cannot set this parcel for sale");
                     }
 
-                    newData.Category = args.Category;
-                    newData.Description = args.Desc;
-                    newData.GroupID = args.GroupID;
-                    newData.LandingType = args.LandingType;
-                    newData.MediaAutoScale = args.MediaAutoScale;
-                    newData.MediaID = args.MediaID;
-                    newData.MediaURL = args.MediaURL;
-                    newData.MusicURL = args.MusicURL;
-                    newData.Name = args.Name;
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandSetSale))
+                    {
+                        if (!LandData.IsGroupOwned)
+                        {
+                            newData.GroupID = args.GroupID;
+                        }
+                    }
+
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.FindPlaces))
+                    {
+                        newData.Category = args.Category;
+                    }
+
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.ChangeMedia))
+                    {
+                        newData.MediaAutoScale = args.MediaAutoScale;
+                        newData.MediaID = args.MediaID;
+                        newData.MediaURL = args.MediaURL;
+                        newData.MusicURL = args.MusicURL;
+                        newData.MediaType = args.MediaType;
+                        newData.MediaDescription = args.MediaDescription;
+                        newData.MediaWidth = args.MediaWidth;
+                        newData.MediaHeight = args.MediaHeight;
+                        newData.MediaLoop = args.MediaLoop;
+                        newData.ObscureMusic = args.ObscureMusic;
+                        newData.ObscureMedia = args.ObscureMedia;
+                    }
 
                     if (!m_scene.RegionInfo.RegionSettings.AllowDamage &&
                         ((args.ParcelFlags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage))
@@ -290,19 +308,27 @@ namespace OpenSim.Region.CoreModules.World.Land
                         //Vanquish show in search as per estate settings!
                         args.ParcelFlags &= ~(uint)ParcelFlags.ShowDirectory;
 
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.SetLandingPoint))
+                    {
+                        newData.LandingType = args.LandingType;
+                        newData.UserLocation = args.UserLocation;
+                        newData.UserLookAt = args.UserLookAt;
+                    }
+
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandChangeIdentity))
+                    {
+                        newData.Description = args.Desc;
+                        newData.Name = args.Name;
+                        newData.SnapshotID = args.SnapshotID;
+                    }
+
+                    if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandManagePasses))
+                    {
+                        newData.PassHours = args.PassHours;
+                        newData.PassPrice = args.PassPrice;
+                    }
+
                     newData.Flags = args.ParcelFlags;
-                    newData.PassHours = args.PassHours;
-                    newData.PassPrice = args.PassPrice;
-                    newData.SnapshotID = args.SnapshotID;
-                    newData.UserLocation = args.UserLocation;
-                    newData.UserLookAt = args.UserLookAt;
-                    newData.MediaType = args.MediaType;
-                    newData.MediaDescription = args.MediaDescription;
-                    newData.MediaWidth = args.MediaWidth;
-                    newData.MediaHeight = args.MediaHeight;
-                    newData.MediaLoop = args.MediaLoop;
-                    newData.ObscureMusic = args.ObscureMusic;
-                    newData.ObscureMedia = args.ObscureMedia;
 
                     m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
 

@@ -171,6 +171,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnDeleteObject += CanDeleteObject;
             m_scene.Permissions.OnEditObject += CanEditObject; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnEditParcel += CanEditParcel;
+            m_scene.Permissions.OnEditParcelProperties += CanEditParcelProperties; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnInstantMessage += CanInstantMessage;
             m_scene.Permissions.OnInventoryTransfer += CanInventoryTransfer; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnIssueEstateCommand += CanIssueEstateCommand; 
@@ -882,6 +883,14 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return false;
 
             return true;
+        }
+
+        private bool CanEditParcelProperties(UUID user, ILandObject parcel, GroupPowers p, Scene scene)
+        {
+            DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
+            if (m_bypassPermissions) return m_bypassPermissionsValue;
+
+            return GenericParcelOwnerPermission(user, parcel, (ulong)p);
         }
     
         protected bool GenericParcelOwnerPermission(UUID user, ILandObject parcel, ulong groupPowers)
@@ -1995,7 +2004,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.LandManageAllowed))
                     return false;
             else if (AccessFlag == AccessList.Ban)
-                if (!GenericParcelOwnerPermission(userID, parcel, (ulong)GroupPowers.LandManageBanned))
+                if (!GenericParcelOwnerPermission(userID, parcel, (ulong)(GroupPowers.LandManageAllowed | GroupPowers.LandManageBanned)))
                     return false;
             return true;
         }
