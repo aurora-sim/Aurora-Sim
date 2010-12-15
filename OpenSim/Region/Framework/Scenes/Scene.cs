@@ -140,15 +140,15 @@ namespace OpenSim.Region.Framework.Scenes
         protected float m_timespan = 0.089f;
         protected DateTime m_lastupdate = DateTime.UtcNow;
 
-        private int m_update_physics = 1;
-        private int m_update_entitymovement = 1;
+        private int m_update_physics = 1; //Trigger the physics update
+        private int m_update_entitymovement = 1; //Update the movement of scene presences
         private int m_update_objects = 1; // Update objects which have scheduled themselves for updates
-        private int m_update_presences = 1; // Update scene presence movements
-        private int m_update_events = 1;
-        private int m_update_backup = 50;
-        private int m_update_terrain = 50;
-        private int m_update_land = 1;
-        private int m_update_coarse_locations = 50;
+        private int m_update_presences = 1; // Update scene presences which have scheduled updates
+        private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
+        private int m_update_backup = 50; //Trigger backup
+        private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
+        private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
+        private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
 
         private string m_defaultScriptEngine;
         private static volatile bool shuttingdown = false;
@@ -981,8 +981,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 while (!ShouldExit)
                 {
-                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-
                     maintc = Util.EnvironmentTickCount();
                     int BeginningFrameTime = maintc;
                     
@@ -1017,7 +1015,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                             });
                         }
-                        CheckExit();
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
 
@@ -1073,14 +1070,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (maintc > 0 && shouldSleep)
                         Thread.Sleep(maintc);
-                    try
-                    {
-                        CheckExit();
-                    }
-                    catch
-                    {
-                        break;
-                    }
                 }
             }
 
@@ -1169,15 +1158,10 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
                             m_scene.m_sceneGraph.UpdateScenePresenceMovement();
 
-                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
-                        {
-                            if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
-                        }
-
                         int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
 
                         int PhysicsUpdateTime = Util.EnvironmentTickCount();
+
                         if (m_scene.m_frame % m_scene.m_update_physics == 0)
                         {
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
@@ -1191,24 +1175,6 @@ namespace OpenSim.Region.Framework.Scenes
                         
                         CheckExit();
                     }
-                    catch (NotImplementedException)
-                    {
-                        throw;
-                    }
-                    catch (AccessViolationException e)
-                    {
-                        if (e.Message != "Closing")
-                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                    }
-                    //catch (NullReferenceException e)
-                    //{
-                    //   m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + RegionInfo.RegionName);
-                    //}
-                    catch (InvalidOperationException e)
-                    {
-                        if (e.Message != "Closing")
-                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                    }
                     catch (Exception e)
                     {
                         if (e.Message != "Closing")
@@ -1217,7 +1183,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     finally
                     {
-                        m_scene.m_lastupdate = DateTime.UtcNow;
                         m_scene.m_lastupdate = DateTime.UtcNow;
                     }
 
