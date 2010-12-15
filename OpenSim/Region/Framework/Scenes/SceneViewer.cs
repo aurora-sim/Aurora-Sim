@@ -40,6 +40,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
+        protected List<UUID> m_removeNextUpdateOf = new List<UUID>();
         protected bool m_SentInitialObjects = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
 
@@ -69,6 +70,15 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_objectsInView.Contains(part.UUID))
                     m_objectsInView.Remove(part.UUID);
             }
+        }
+
+        public void ClearUpdatesForPart(SceneObjectPart part)
+        {
+            //Add it to the list to check and make sure that we do not send updates for this object
+            m_removeNextUpdateOf.Add(part.UUID);
+            //Make it check when the user comes around to it again
+            if (m_objectsInView.Contains(part.UUID))
+                m_objectsInView.Remove(part.UUID);
         }
 
         private void SignificantClientMovement(IClientAPI remote_client)
@@ -144,16 +154,30 @@ namespace OpenSim.Region.Framework.Scenes
 
             #region stuff
 
-            while (m_partsUpdateQueue.Count > 0)
+            List<PrimUpdate> updates = new List<PrimUpdate>();
+            lock (m_partsUpdateQueue)
             {
-                PrimUpdate update = m_partsUpdateQueue.Dequeue();
+                while (m_partsUpdateQueue.Count > 0)
+                {
+                    PrimUpdate update = m_partsUpdateQueue.Dequeue();
 
-                if (update == null)
-                    continue;
+                    if (update == null)
+                        continue;
 
-                if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
-                    continue;
+                    if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
+                        continue;
 
+                    //Make sure we are not supposed to remove it
+                    if (m_removeNextUpdateOf.Contains(update.Part.UUID))
+                        continue;
+
+                    updates.Add(update);
+                }
+                //Clear this now that we are done with the batch of updates
+                m_removeNextUpdateOf.Clear();
+            }
+            foreach (PrimUpdate update in updates)
+            {
                 //Check for culling here!
                 if (!CheckForCulling(update.Part.ParentGroup))
                     continue;
@@ -168,30 +192,30 @@ namespace OpenSim.Region.Framework.Scenes
                     //if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
                     //        update.Part.IsAttachment)
                     //{
-                        //m_log.DebugFormat(
-                        //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
-                        //  part.Name, part.UUID, part.TimeStampFull);
+                    //m_log.DebugFormat(
+                    //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
+                    //  part.Name, part.UUID, part.TimeStampFull);
 
-                        SendFullUpdate(update.Part,
-                               m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+                    SendFullUpdate(update.Part,
+                           m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
 
-                        // We'll update to the part's timestamp rather than
-                        // the current time to avoid the race condition
-                        // whereby the next tick occurs while we are doing
-                        // this update. If this happened, then subsequent
-                        // updates which occurred on the same tick or the
-                        // next tick of the last update would be ignored.
+                    // We'll update to the part's timestamp rather than
+                    // the current time to avoid the race condition
+                    // whereby the next tick occurs while we are doing
+                    // this update. If this happened, then subsequent
+                    // updates which occurred on the same tick or the
+                    // next tick of the last update would be ignored.
 
-                        //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+                    //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
 
                     //}
                     //else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
                     //{
-                        //m_log.DebugFormat(
-                        //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
-                        //  part.Name, part.UUID, part.TimeStampTerse);
+                    //m_log.DebugFormat(
+                    //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
+                    //  part.Name, part.UUID, part.TimeStampTerse);
 
-                        SendTerseUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part);
+                    SendTerseUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part);
 
                     //    partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
                     //}

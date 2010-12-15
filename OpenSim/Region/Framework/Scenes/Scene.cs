@@ -1729,7 +1729,7 @@ namespace OpenSim.Region.Framework.Scenes
                 sceneObject.m_lastSignificantPosition = pos;
 
                 AddPrimToScene(sceneObject);
-                sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                sceneObject.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 sceneObject.SetGroup(groupID, null);
             }
 
@@ -2634,7 +2634,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 AddPrimToScene(sceneObject);
             }
-            sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+            sceneObject.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
 
             return true;
         }
@@ -4336,7 +4336,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    ((SceneObjectGroup)ent).ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
             }
         }

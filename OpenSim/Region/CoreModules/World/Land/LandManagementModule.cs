@@ -593,7 +593,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                             group.RootPart.UpdatePrimFlags(false, wasTemporary, wasPhantom, wasVD);
                         }
                         //Send an update so that all clients see it
-                        group.ScheduleGroupForTerseUpdate();
+                        group.ScheduleGroupTerseUpdate();
                     }
                     else
                         group.m_lastParcelUUID = over.LandData.GlobalID; //Update the UUID then

@@ -762,7 +762,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                             rootPart.ParentGroup.ResumeScripts();
                         }
 
-                        group.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                        group.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                         if (!m_Scene.Permissions.BypassPermissions())
                         {
                             if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
@@ -963,7 +963,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     NewPosOffset.Z = group.AbsolutePosition.Z - OldMiddlePos.Z;
                     group.AbsolutePosition = pos + NewPosOffset;
                 }
-                group.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                group.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
             }
             return NewGroup;
         }

@@ -1664,7 +1664,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, silent))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
-                grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                grp.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
             }
         }
 

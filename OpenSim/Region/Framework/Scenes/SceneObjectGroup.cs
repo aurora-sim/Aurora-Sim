@@ -1407,7 +1407,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.RemoveGroupTarget(this);
             }
 
-            ScheduleGroupForFullUpdate(PrimUpdateFlags.PrimFlags);
+            ScheduleGroupFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         public void SetText(string text, Vector3 color, double alpha)
@@ -1950,12 +1950,12 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        //#UpdateBranch EVIL
-        public void ScheduleFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
+        //#UpdateBranch
+        public void ScheduleGroupFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
 //            m_log.DebugFormat("[SOG]: Scheduling full update for {0} {1} just to avatar {2}", Name, UUID, presence.Name);
 
-            RootPart.AddUpdateToAvatar(presence, UpdateFlags);
+            RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
 
             lock (m_partsLock)
             {
@@ -1963,7 +1963,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part != RootPart)
                     {
-                        part.AddUpdateToAvatar(presence, UpdateFlags);
+                        part.ScheduleUpdateToAvatar(UpdateFlags, presence);
                     }
                 }
             }
@@ -1973,9 +1973,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Schedule a full update for this scene object
         /// </summary>
-        public void ScheduleGroupForFullUpdate(PrimUpdateFlags UpdateFlags)
+        public void ScheduleGroupFullUpdate(PrimUpdateFlags UpdateFlags)
         {
-            checkAtTargets();
             RootPart.ScheduleUpdate(UpdateFlags);
 
             lock (m_partsLock)
@@ -1994,7 +1993,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Schedule a terse update for this scene object
         /// </summary>
-        public void ScheduleGroupForTerseUpdate()
+        public void ScheduleGroupTerseUpdate()
         {
 //            m_log.DebugFormat("[SOG]: Scheduling terse update for {0} {1}", Name, UUID);
 
@@ -2242,7 +2241,7 @@ namespace OpenSim.Region.Framework.Scenes
             //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
             //We need to send this so that we don't have issues with the client not realizing that the prims were unlinked
-            ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+            ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
 
             return objectGroup;
         }
@@ -2306,7 +2305,7 @@ namespace OpenSim.Region.Framework.Scenes
                             // so that if the object is locked the client moving the object
                             // get's it's position on the simulator even if it was the same as before
                             // This keeps the moving user's client in sync with the rest of the world.
-                            ScheduleGroupForTerseUpdate();
+                            ScheduleGroupTerseUpdate();
                         }
                     }
                     else
@@ -2663,7 +2662,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //if (part.UUID != m_rootPart.UUID)
 
                 HasGroupChanged = true;
-                ScheduleGroupForFullUpdate(PrimUpdateFlags.Shape);
+                ScheduleGroupFullUpdate(PrimUpdateFlags.Shape);
 
                 //if (part.UUID == m_rootPart.UUID)
                 //{
@@ -2767,7 +2766,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.IgnoreUndoUpdate = false;
                 m_rootPart.IgnoreUndoUpdate = false;
                 HasGroupChanged = true;
-                ScheduleGroupForTerseUpdate();
+                ScheduleGroupTerseUpdate();
             }
         }
 
@@ -2811,7 +2810,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //we need to do a terse update even if the move wasn't allowed
             // so that the position is reset in the client (the object snaps back)
-            ScheduleGroupForTerseUpdate();
+            ScheduleGroupTerseUpdate();
             if (this.RootPart.SitTargetAvatar.Count != 0)
             {
                 foreach (UUID clientID in this.RootPart.SitTargetAvatar)
@@ -2888,7 +2887,7 @@ namespace OpenSim.Region.Framework.Scenes
             AbsolutePosition = newPos;
 
             HasGroupChanged = true;
-            ScheduleGroupForTerseUpdate();
+            ScheduleGroupTerseUpdate();
         }
 
         public void OffsetForNewRegion(Vector3 offset)
@@ -2920,7 +2919,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             HasGroupChanged = true;
-            ScheduleGroupForTerseUpdate();
+            ScheduleGroupTerseUpdate();
         }
 
         /// <summary>
@@ -2945,7 +2944,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             AbsolutePosition = pos;
             HasGroupChanged = true;
-            ScheduleGroupForTerseUpdate();
+            ScheduleGroupTerseUpdate();
         }
 
         /// <summary>

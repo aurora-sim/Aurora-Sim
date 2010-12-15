@@ -911,7 +911,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     ScenePresence SP = GetScenePresence(remoteClient.AgentId);
-                    ((SceneObjectGroup)entity).ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    ((SceneObjectGroup)entity).ScheduleGroupFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                 }
             }
         }
@@ -1014,7 +1014,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // so that if the object is locked the client moving the object
                 // get's it's position on the simulator even if it was the same as before
                 // This keeps the moving user's client in sync with the rest of the world.
-                ((SceneObjectGroup)group).ScheduleGroupForTerseUpdate();
+                ((SceneObjectGroup)group).ScheduleGroupTerseUpdate();
             }
         }
 
@@ -1032,7 +1032,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ((SceneObjectGroup)group).SetPartName(Util.CleanString(name), LocalID);
                     ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).ScheduleGroupFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1051,7 +1051,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ((SceneObjectGroup)group).SetPartDescription(Util.CleanString(description), LocalID);
                     ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).ScheduleGroupFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1066,7 +1066,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
                     ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).ScheduleGroupFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1081,7 +1081,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(LocalID);
                     part.Material = Convert.ToByte(material);
                     ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupForFullUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).ScheduleGroupFullUpdate(PrimUpdateFlags.ClickAction);
                 }
             }
         }
@@ -1240,7 +1240,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     duplicatedGroup.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
                     duplicatedGroup.HasGroupChanged = true;
-                    duplicatedGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    duplicatedGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                     duplicatedGroup.ResumeScripts();
 
                     // required for physics to update it's position
@@ -1327,7 +1327,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup.HasGroupChanged = true;
                 //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-                parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                parentGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
             }
             finally
@@ -1377,7 +1377,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // These are not in affected groups and will not be
                     // handled further. Do the honors here.
                     child.ParentGroup.HasGroupChanged = true;
-                    child.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    child.ParentGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
 
                 foreach (SceneObjectPart root in rootParts)
@@ -1442,7 +1442,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
                     g.HasGroupChanged = true; // Persist
-                    g.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    g.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
                 //Fix undo states now that the linksets have been changed
                 foreach (SceneObjectPart part in prims)

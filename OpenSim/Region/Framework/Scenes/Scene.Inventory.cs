@@ -2071,7 +2071,7 @@ namespace OpenSim.Region.Framework.Scenes
                             sourcePart.Inventory.RemoveInventoryItem(item.ItemID);
                     }
 
-                    group.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    group.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
                    
                     return rootPart.ParentGroup;
                 }
@@ -2139,7 +2139,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     sog.SetOwnerId(ownerID);
                     sog.SetGroup(groupID, remoteClient);
-                    sog.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+                    sog.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
 
                     foreach (SceneObjectPart child in sog.ChildrenList)
                         child.Inventory.ChangeInventoryOwner(ownerID);

@@ -569,7 +569,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             }
 
             m_scene.AddPrimToScene(sceneObject);
-            sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
+            sceneObject.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
             sceneObject.SetGroup(groupID, null);
 
             return sceneObject;
@@ -821,7 +821,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
                 tree.Name = copse.ToString();
                 copse.m_trees.Add(tree.UUID);
-                tree.ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
+                tree.ScheduleGroupFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
