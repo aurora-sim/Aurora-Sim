@@ -2638,6 +2638,7 @@ default
                 retstr += Generate("yield return ");
                 retstr += Generate(String.Format("{0}(", CheckName(fc.Id)), fc);
                 retstr += tempString;
+                retstr += Generate(")");
             }
             else if (isEnumerable)
             {
