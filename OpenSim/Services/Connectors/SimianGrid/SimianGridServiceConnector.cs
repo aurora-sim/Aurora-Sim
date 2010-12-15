@@ -84,6 +84,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
+            CheckForScenes(registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -93,6 +94,20 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             registry.RegisterInterface<IGridService>(this);
+            CheckForScenes(registry);
+        }
+
+        protected void CheckForScenes(IRegistryCore registry)
+        {
+            //This is a dirty nasty hack of a way to pull the Scene out of an IRegistryCore interface
+            // as this isn't a Scene module anymore. This is called by both AddNewRegistry and PostStart as
+            // both of those pass the Scene down to register interfaces into.
+
+            if (registry is Scene)
+            {
+                Scene s = (Scene)registry;
+                m_scenes.Add(s.RegionInfo.RegionID, s);
+            }
         }
 
         #endregion
