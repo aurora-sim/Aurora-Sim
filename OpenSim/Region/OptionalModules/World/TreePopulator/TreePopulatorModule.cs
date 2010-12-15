@@ -689,7 +689,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                             {
                                 s_tree.Scale += copse.m_rate;
                                 s_tree.ParentGroup.HasGroupChanged = true;
-                                s_tree.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                                s_tree.ScheduleUpdate(PrimUpdateFlags.FindBest);
                             }
                         }
                         else

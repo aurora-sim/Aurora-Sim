@@ -40,7 +40,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
-        protected Queue<SceneObjectGroup> m_pendingObjects;
+        protected bool m_SentInitialObjects = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
 
         protected Dictionary<UUID, ScenePartUpdate> m_updateTimes = new Dictionary<UUID, ScenePartUpdate>();
@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        void SignificantClientMovement(IClientAPI remote_client)
+        private void SignificantClientMovement(IClientAPI remote_client)
         {
             if (!m_presence.Scene.CheckForObjectCulling)
                 return;
@@ -111,19 +111,28 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendPrimUpdates()
         {
-            if (m_pendingObjects == null)
+            #region New client entering the Scene, requires all objects in the Scene
+
+            if (!m_SentInitialObjects)
             {
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
-                    m_pendingObjects = new Queue<SceneObjectGroup>();
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
 
-                    lock (m_pendingObjects)
+                    foreach (EntityBase e in entities)
                     {
-                        foreach (EntityBase e in entities)
+                        if (e != null && e is SceneObjectGroup)
                         {
-                            if (e != null && e is SceneObjectGroup)
-                                m_pendingObjects.Enqueue((SceneObjectGroup)e);
+                            SceneObjectGroup grp = (SceneObjectGroup)e;
+
+                            //Check for culling here!
+                            if (!CheckForCulling(grp))
+                                continue;
+
+                            // Don't even queue if we have sent this one
+                            //
+                            if (!m_updateTimes.ContainsKey(grp.UUID))
+                                grp.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
                         }
                     }
                     entities = null;
@@ -132,29 +141,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
-            lock (m_pendingObjects)
-            {
-                while (m_pendingObjects != null && m_pendingObjects.Count > 0)
-                {
-                    SceneObjectGroup g = m_pendingObjects.Dequeue();
-                    // Yes, this can really happen
-                    if (g == null)
-                        continue;
-
-                    if (m_presence.Scene.CheckForObjectCulling)
-                    {
-                        //Check for part position against the av and the camera position
-                        if (!Util.DistanceLessThan(m_presence.CameraPosition, g.AbsolutePosition, m_presence.DrawDistance))
-                            if (m_presence.DrawDistance != 0)
-                                continue;
-                    }
-
-                    // Don't even queue if we have sent this one
-                    //
-                    if (!m_updateTimes.ContainsKey(g.UUID))
-                        g.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
-                }
-            }
+            #endregion
 
             while (m_partsUpdateQueue.Count > 0)
             {
@@ -166,14 +153,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
                     continue;
 
-                if (m_presence.Scene.CheckForObjectCulling)
-                {
-                    //Check for part position against the av and the camera position
-                    if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, update.Part.AbsolutePosition, m_presence.DrawDistance) &&
-                        !Util.DistanceLessThan(m_presence.CameraPosition, update.Part.AbsolutePosition, m_presence.DrawDistance)))
-                        if (m_presence.DrawDistance != 0)
-                            continue;
-                }
+                //Check for culling here!
+                if (!CheckForCulling(update.Part.ParentGroup))
+                    continue;
 
                 if (m_updateTimes.ContainsKey(update.Part.UUID))
                 {
@@ -185,9 +167,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
                             update.Part.IsAttachment)
                     {
-                        //                            m_log.DebugFormat(
-                        //                                "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
-                        //                                part.Name, part.UUID, part.TimeStampFull);
+                        //m_log.DebugFormat(
+                        //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
+                        //  part.Name, part.UUID, part.TimeStampFull);
 
                         update.Part.SendFullUpdate(m_presence.ControllingClient,
                                m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
@@ -204,9 +186,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
                     {
-                        //                            m_log.DebugFormat(
-                        //                                "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
-                        //                                part.Name, part.UUID, part.TimeStampTerse);
+                        //m_log.DebugFormat(
+                        //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
+                        //  part.Name, part.UUID, part.TimeStampTerse);
 
                         update.Part.SendTerseUpdateToClient(m_presence.ControllingClient);
 
@@ -238,16 +220,32 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Checks to see whether the object should be sent to the client
+        /// Returns true if the client should be able to see the object, false if not
+        /// </summary>
+        /// <param name="grp"></param>
+        /// <returns></returns>
+        private bool CheckForCulling(SceneObjectGroup grp)
+        {
+            if (m_presence.Scene.CheckForObjectCulling)
+            {
+                //Check for part position against the av and the camera position
+                if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, grp.AbsolutePosition, m_presence.DrawDistance) &&
+                    !Util.DistanceLessThan(m_presence.CameraPosition, grp.AbsolutePosition, m_presence.DrawDistance)))
+                    if (m_presence.DrawDistance != 0)
+                        return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Reset all lists that have to deal with what updates the viewer has
+        /// </summary>
         public void Reset()
         {
-            if (m_pendingObjects != null && m_pendingObjects.Count != 0)
-            {
-                lock (m_pendingObjects)
-                {
-                    m_pendingObjects.Clear();
-                    m_pendingObjects = null;
-                }
-            }
+            m_SentInitialObjects = false;
+            m_objectsInView.Clear();
         }
 
         public void Close()

@@ -2166,7 +2166,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             obj.ParentGroup.HasGroupChanged = true;
-            obj.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            obj.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
 
         }
 

@@ -226,9 +226,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float scriptScore;
 
-        private Vector3 lastPhysGroupPos;
-        private Quaternion lastPhysGroupRot;
-
         //private bool m_isBackedUp = false;
 
         protected Dictionary<UUID, SceneObjectPart> m_parts = new Dictionary<UUID, SceneObjectPart>();
@@ -1221,7 +1218,7 @@ namespace OpenSim.Region.Framework.Scenes
             RootPart.Rezzed = DateTime.Now;
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
             m_scene.EventManager.TriggerParcelPrimCountTainted();
-            m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            m_rootPart.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         public void DetachToInventoryPrep()
@@ -1422,7 +1419,7 @@ namespace OpenSim.Region.Framework.Scenes
             Text = text;
 
             HasGroupChanged = true;
-            m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.Text);
+            m_rootPart.ScheduleUpdate(PrimUpdateFlags.Text);
         }
 
         /// <summary>
@@ -1899,7 +1896,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ApplyNextOwnerPermissions();
             }
 
-            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         #endregion
@@ -1998,7 +1995,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
             }
-            RootPart.AddFullUpdateToAvatar(presence, UpdateFlags);
+            RootPart.AddUpdateToAvatar(presence, UpdateFlags);
 
             lock (m_partsLock)
             {
@@ -2031,7 +2028,7 @@ namespace OpenSim.Region.Framework.Scenes
                             UpdateFlags |= PrimUpdateFlags.PrimFlags;
                             UpdateFlags |= PrimUpdateFlags.Position;
                         }
-                        part.AddFullUpdateToAvatar(presence, UpdateFlags);
+                        part.AddUpdateToAvatar(presence, UpdateFlags);
                     }
                 }
             }
@@ -2045,7 +2042,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.AddTerseUpdateToAvatar(presence, flags);
+                    part.AddUpdateToAvatar(presence, flags);
                 }
             }
         }
@@ -2081,7 +2078,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UpdateFlags |= PrimUpdateFlags.PrimFlags;
                 UpdateFlags |= PrimUpdateFlags.Position;
             }
-            RootPart.ScheduleFullUpdate(UpdateFlags);
+            RootPart.ScheduleUpdate(UpdateFlags);
 
             lock (m_partsLock)
             {
@@ -2115,7 +2112,7 @@ namespace OpenSim.Region.Framework.Scenes
                             UpdateFlags |= PrimUpdateFlags.PrimFlags;
                             UpdateFlags |= PrimUpdateFlags.Position;
                         }
-                        part.ScheduleFullUpdate(UpdateFlags);
+                        part.ScheduleUpdate(UpdateFlags);
                     }
                 }
             }
@@ -2189,24 +2186,6 @@ namespace OpenSim.Region.Framework.Scenes
             // the race conditions.
             if (m_isDeleted)
                 return;
-
-            // Even temporary objects take part in physics (e.g. temp-on-rez bullets)
-            //if ((RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
-            //    return;
-
-            bool UsePhysics = ((RootPart.Flags & PrimFlags.Physics) != 0);
-
-            if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
-            {
-                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
-                lastPhysGroupPos = AbsolutePosition;
-            }
-
-            if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
-            {
-                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
-                lastPhysGroupRot = GroupRotation;
-            }
 
             lock (m_partsLock)
             {

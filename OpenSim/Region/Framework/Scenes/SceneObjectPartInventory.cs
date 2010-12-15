@@ -272,7 +272,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
             m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
             if(SendUpdate)
-                m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
+                m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
         }
 
         public List<TaskInventoryItem> GetInventoryScripts()
@@ -376,7 +376,7 @@ namespace OpenSim.Region.Framework.Scenes
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
                     if (SendUpdate)
-                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
+                        m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                     return;
                 }
 
@@ -406,7 +406,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
                     m_part.ParentGroup.AddActiveScriptCount(1);
                     if (SendUpdate)
-                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
+                        m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                 }
             }
             HasInventoryChanged = true;
@@ -889,7 +889,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!ContainsScripts())
                 {
                     if (m_part.RemFlag(PrimFlags.Scripted))
-                        m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
+                        m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags);
 
                     return type;
                 }

@@ -722,7 +722,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             id.Running = true;
             id.part.SetScriptEvents(itemID, id.Script.GetStateEventFlags(id.State));
-            id.part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            id.part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void OnStopScript(uint localID, UUID itemID)
@@ -733,7 +733,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             ID.Running = false;
             ID.part.SetScriptEvents(itemID, 0);
-            ID.part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            ID.part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void OnGetScriptRunning(IClientAPI controllingClient,

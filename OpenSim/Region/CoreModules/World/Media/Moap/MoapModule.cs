@@ -232,7 +232,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 part.Shape.Media[face] = me;
             
             UpdateMediaUrl(part, UUID.Zero);
-            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
         
@@ -417,7 +417,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             UpdateMediaUrl(part, agentId);
             
             // Arguably, we could avoid sending a full update to the avatar that just changed the texture.
-            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
             
             part.TriggerScriptChangedEvent(Changed.MEDIA);
             
@@ -495,7 +495,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             
             UpdateMediaUrl(part, agentId);
             
-            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
             
             part.TriggerScriptChangedEvent(Changed.MEDIA);
             

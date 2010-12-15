@@ -1960,21 +1960,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Tell all scene presences that they should send updates for this part to their clients
         /// </summary>
-        public void AddFullUpdateToAllAvatars(PrimUpdateFlags flags)
+        public void AddUpdateToAllAvatars(PrimUpdateFlags flags)
         {
             m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                AddFullUpdateToAvatar(avatar, flags);
+                AddUpdateToAvatar(avatar, flags);
             });
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Tell the scene presence that it should send updates for this part to its client
-        /// </summary>
-        public void AddFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
-        {
-            presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
 
         public void AddNewParticleSystem(Primitive.ParticleSystem pSystem)
@@ -1987,16 +1978,8 @@ namespace OpenSim.Region.Framework.Scenes
             ParticleSystem = Utils.EmptyBytes;
         }
 
-        /// Terse updates
-        public void AddTerseUpdateToAllAvatars(PrimUpdateFlags flags)
-        {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                AddTerseUpdateToAvatar(avatar, flags);
-            });
-        }
-
-        public void AddTerseUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
+        //#UpdateBranch
+        public void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
         {
             presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
@@ -3584,7 +3567,7 @@ namespace OpenSim.Region.Framework.Scenes
             Scale = scale;
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            ScheduleUpdate(PrimUpdateFlags.Shape);
         }
         
         public void RotLookAt(Quaternion target, float strength, float damping)
@@ -3620,17 +3603,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         //#UpdateBranch
         /// <summary>
-        /// Schedules this prim for a full update
+        /// Schedules this prim for an update
         /// </summary>
-        public void ScheduleFullUpdate(PrimUpdateFlags UpdateFlags)
+        public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-//            m_log.DebugFormat("[SCENE OBJECT PART]: Scheduling full update for {0} {1}", Name, LocalId);
-            
-            if (m_parentGroup != null)
-            {
-                m_parentGroup.QueueForUpdateCheck();
-            }
-
             int timeNow = Util.UnixTimeSinceEpoch();
 
             // If multiple updates are scheduled on the same second, we still need to perform all of them
@@ -3678,15 +3654,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup.ChildrenList.Count != 1)
                     UpdateFlags |= PrimUpdateFlags.ParentID;
            
-            m_neededUpdateFlags |= UpdateFlags;
-            m_updateFlag = InternalUpdateFlags.FullUpdate;
-
             //Increment the CRC code so that the client won't be sent a cached update
             CRC++;
 
-            //            m_log.DebugFormat(
-            //                "[SCENE OBJECT PART]: Scheduling full  update for {0}, {1} at {2}",
-            //                UUID, Name, TimeStampFull);
+            if (m_parentGroup != null)
+            {
+                m_log.DebugFormat(
+                    "[SCENE OBJECT PART]: Scheduling full  update for {0}, {1} at {2}",
+                    UUID, Name, TimeStampFull);
+                m_parentGroup.QueueForUpdateCheck();
+            }
         }
 
         //#UpdateBranch
@@ -3700,13 +3677,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_updateFlag != InternalUpdateFlags.TerseUpdate)
                     CRC++;
-                if (m_parentGroup != null)
-                {
-                    //m_parentGroup.HasGroupChanged = true;
-                    m_parentGroup.QueueForUpdateCheck();
-                }
                 TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
                 m_updateFlag = InternalUpdateFlags.TerseUpdate;
+                if (m_parentGroup != null)
+                {
+                    m_parentGroup.QueueForUpdateCheck();
+                }
             }
         }
 
@@ -3905,7 +3881,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else if (m_updateFlag == InternalUpdateFlags.FullUpdate) // is a new prim, just created/reloaded or has major changes
             {
-                AddFullUpdateToAllAvatars(m_neededUpdateFlags);
+                AddUpdateToAllAvatars(m_neededUpdateFlags);
                 ClearUpdateSchedule();
             }
         }
@@ -4343,7 +4319,7 @@ namespace OpenSim.Region.Framework.Scenes
             _groupID = groupID;
             if (client != null)
                 GetProperties(client);
-            ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+            ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>
@@ -4406,7 +4382,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.HasGroupChanged = true;
             Text = text;
 
-            ScheduleFullUpdate(PrimUpdateFlags.Text);
+            ScheduleUpdate(PrimUpdateFlags.Text);
         }
         
         public void StopLookAt()
@@ -4976,7 +4952,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            ScheduleUpdate(PrimUpdateFlags.Shape);
         }
 
         public void UpdateGroupPosition(Vector3 pos)
@@ -5318,7 +5294,7 @@ namespace OpenSim.Region.Framework.Scenes
             //            m_log.Debug("Update:  PHY:" + UsePhysics.ToString() + ", T:" + IsTemporary.ToString() + ", PHA:" + IsPhantom.ToString() + " S:" + CastsShadows.ToString());
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
+            ScheduleUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         public void UpdateRotation(Quaternion rot)
@@ -5393,7 +5369,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate(PrimUpdateFlags.Shape);
+            ScheduleUpdate(PrimUpdateFlags.Shape);
         }
 
         /// <summary>
@@ -5466,7 +5442,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void aggregateScriptEvents()
@@ -5514,7 +5490,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
 //                m_log.DebugFormat(
 //                    "[SCENE OBJECT PART]: Scheduling part {0} {1} for full update in aggregateScriptEvents() since m_parentGroup == null", Name, LocalId);
-                ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+                ScheduleUpdate(PrimUpdateFlags.FullUpdate);
                 return;
             }
 
@@ -5528,7 +5504,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
 //                m_log.DebugFormat(
 //                    "[SCENE OBJECT PART]: Scheduling part {0} {1} for full update in aggregateScriptEvents()", Name, LocalId);
-                ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
+                ScheduleUpdate(PrimUpdateFlags.PrimFlags);
             }
         }
 

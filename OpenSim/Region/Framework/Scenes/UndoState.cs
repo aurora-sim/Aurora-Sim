@@ -126,7 +126,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 part.Undoing = false;
-                part.ScheduleFullUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
+                part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
                     (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
                     (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
             }
@@ -183,7 +183,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                part.ScheduleFullUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
+                part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
                     (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) | 
                     (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
                 part.Undoing = false;

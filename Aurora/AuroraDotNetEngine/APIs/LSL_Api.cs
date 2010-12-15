@@ -1583,7 +1583,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             tmp.Y = (float)scale.y;
             tmp.Z = (float)scale.z;
             part.Scale = tmp;
-            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -1600,7 +1600,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             m_host.ClickAction = (byte)action;
             if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llSetColor(LSL_Vector color, int face)
@@ -1855,7 +1855,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         /// <summary>
@@ -1890,7 +1890,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public LSL_Vector llGetColor(int face)
@@ -2572,7 +2572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = (int)SoundFlags.Loop;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llLoopSoundMaster(string sound, double volume)
@@ -2592,7 +2592,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     prim.SoundFlags = 1;      // looping
                     prim.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-                    prim.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                    prim.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
             if (m_host.Sound != UUID.Zero)
@@ -2603,7 +2603,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SoundFlags = 1;      // looping
             m_host.SoundRadius = 20;    // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
 
         public void llLoopSoundSlave(string sound, double volume)
@@ -2648,7 +2648,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         part.SoundGain = 0;
                         part.SoundFlags = 0;
                         part.SoundRadius = 0;
-                        part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                        part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                     }
                     m_host.ParentGroup.LoopSoundMasterPrim = null;
                     m_host.ParentGroup.LoopSoundSlavePrims.Clear();
@@ -2659,7 +2659,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_host.SoundGain = 0;
                     m_host.SoundFlags = 0;
                     m_host.SoundRadius = 0;
-                    m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                    m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
             else
@@ -2668,7 +2668,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.SoundGain = 0;
                 m_host.SoundFlags = 0;
                 m_host.SoundRadius = 0;
-                m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
@@ -6382,7 +6382,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             pTexAnim.Start = (float)start;
 
             part.AddTextureAnimation(pTexAnim);
-            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -6935,7 +6935,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.AddNewParticleSystem(prules);
                 part.ParentGroup.HasGroupChanged = true;
             }
-            part.ScheduleFullUpdate(PrimUpdateFlags.Particles);
+            part.ScheduleUpdate(PrimUpdateFlags.Particles);
         }
 
         public void llGroundRepel(double height, int water, double tau)

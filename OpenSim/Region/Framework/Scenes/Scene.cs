@@ -2134,7 +2134,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.GetProperties(remoteClient);
                     part.TriggerScriptChangedEvent(Changed.OWNER);
                     group.ResumeScripts();
-                    part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+                    part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
 
                     break;
 

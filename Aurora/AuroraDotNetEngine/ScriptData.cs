@@ -223,7 +223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #region Clean out script parts
             part.AngularVelocity = Vector3.Zero; // Removed in SL
-            part.ScheduleFullUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
+            part.ScheduleUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
             #endregion
 
             if (Script != null)

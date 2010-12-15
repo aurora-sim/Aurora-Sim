@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 part.GetProperties(remoteClient);
                 part.TriggerScriptChangedEvent(Changed.OWNER);
                 group.ResumeScripts();
-                part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
+                part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
 
                 break;
 
