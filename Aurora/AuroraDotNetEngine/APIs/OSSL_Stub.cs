@@ -83,14 +83,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public double osSunGetParam(string param)
-        {
+            {
             return m_OSSL_Functions.osSunGetParam(param);
-        }
+            }
+
+        public double osGetSunParam(string param)
+            {
+            return m_OSSL_Functions.osSunGetParam(param);
+            }
+
 
         public void osSunSetParam(string param, double value)
-        {
+            {
             m_OSSL_Functions.osSunSetParam(param, value);
-        }
+            }
+
+        public void osSetSunParam(string param, double value)
+            {
+            m_OSSL_Functions.osSunSetParam(param, value);
+            }
 
         public string osWindActiveModelPluginName()
         {
@@ -98,15 +109,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
 // Not yet plugged in as available OSSL functions, so commented out
-//        void osWindParamSet(string plugin, string param, float value)
-//        {
-//            m_OSSL_Functions.osWindParamSet(plugin, param, value);
-//        }
-//
-//        float osWindParamGet(string plugin, string param)
-//        {
-//            return m_OSSL_Functions.osWindParamGet(plugin, param);
-//        }
+        //        void osWindParamSet(string plugin, string param, float value)
+        //        {
+        //            m_OSSL_Functions.osWindParamSet(plugin, param, value);
+        //        }
+        //
+        //        float osWindParamGet(string plugin, string param)
+        //        {
+        //            return m_OSSL_Functions.osWindParamGet(plugin, param);
+        //        }
+        // also alias to older format ??
+        //        void osSetWindParam(string plugin, string param, float value)
+        //        {
+        //            m_OSSL_Functions.osWindParamSet(plugin, param, value);
+        //        }
+        //
+        //        float osGetWindParam(string plugin, string param)
+        //        {
+        //            return m_OSSL_Functions.osWindParamGet(plugin, param);
+        //        }
 
         public void osParcelJoin(vector pos1, vector pos2)
         {
