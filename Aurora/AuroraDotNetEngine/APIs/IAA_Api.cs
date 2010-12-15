@@ -39,49 +39,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
     public interface IAA_Api
     {
-        void AASetCloudDensity(LSL_Float density);
+        void aaSetCloudDensity(LSL_Float density);
 
-        void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token);
+        void aaUpdateDatabase(LSL_String key, LSL_String value, LSL_String token);
 
-        LSL_List AAQueryDatabase(LSL_String key, LSL_String token);
+        LSL_List aaQueryDatabase(LSL_String key, LSL_String token);
 
-        LSL_Types.list AADeserializeXMLValues(LSL_Types.LSLString xmlFile);
+        LSL_Types.list aaDeserializeXMLValues(LSL_Types.LSLString xmlFile);
 
-        LSL_Types.list AADeserializeXMLKeys(LSL_Types.LSLString xmlFile);
+        LSL_Types.list aaDeserializeXMLKeys(LSL_Types.LSLString xmlFile);
 
-        void AASetConeOfSilence(LSL_Float radius);
+        void aaSetConeOfSilence(LSL_Float radius);
 
-        LSL_Types.LSLString AASerializeXML(LSL_Types.list keys, LSL_Types.list values);
+        LSL_Types.LSLString aaSerializeXML(LSL_Types.list keys, LSL_Types.list values);
 
-        LSL_String AAGetTeam();
+        LSL_String aaGetTeam();
 
-        LSL_Float AAGetHealth();
+        LSL_Float aaGetHealth();
 
-        void AAJoinCombat();
+        void aaJoinCombat();
 
-        void AALeaveCombat();
+        void aaLeaveCombat();
 
-        void AAJoinCombatTeam(LSL_String team);
+        void aaJoinCombatTeam(LSL_String team);
 
-        LSL_List AAGetTeamMembers();
+        LSL_List aaGetTeamMembers();
 
-        LSL_String AAGetLastOwner();
+        LSL_String aaGetLastOwner();
 
-        LSL_String AAGetLastOwner(LSL_String PrimID);
+        LSL_String aaGetLastOwner(LSL_String PrimID);
 
-        void AASayDistance(int channelID, float Distance, string text);
+        void aaSayDistance(int channelID, float Distance, string text);
 
-        void AASayTo(string userID, string text);
+        void aaSayTo(string userID, string text);
 
-        bool AAGetWalkDisabled(string userID);
+        bool aaGetWalkDisabled(string userID);
 
-        void AASetWalkDisabled(string userID, bool Value);
+        void aaSetWalkDisabled(string userID, bool Value);
 
-        bool AAGetFlyDisabled(string userID);
+        bool aaGetFlyDisabled(string userID);
 
-        void AASetFlyDisabled(string userID, bool Value);
+        void aaSetFlyDisabled(string userID, bool Value);
 
-        string AAAvatarFullName2Key(string username);
+        string aaAvatarFullName2Key(string username);
 
         void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
 
@@ -89,8 +89,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         void osCauseDamage(string avatar, double damage);
 
-        void AASetCenterOfGravity(LSL_Types.Vector3 position);
+        void aaSetCenterOfGravity(LSL_Types.Vector3 position);
 
-        void AARaiseError(string message);
+        void aaRaiseError(string message);
     }
 }
