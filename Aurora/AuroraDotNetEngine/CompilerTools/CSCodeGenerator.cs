@@ -1748,7 +1748,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             foreach (Declaration d in adl.kids)
             {
-                retstr += GenerateDeclaration(d);
+//                retstr += GenerateDeclaration(d);  BADDD reverted to old code
+                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
                 if (0 < comma--)
                     retstr += Generate(", ");
             }
@@ -1810,6 +1811,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for Declaration d.</returns>
         private string GenerateDeclaration(Declaration d)
         {
+
+            return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+/* BAD revert to old code
             GlobalVar var = null;
             if(MethodVariables.TryGetValue(d.Id, out var))
             {
@@ -1834,6 +1838,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
                 return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
             }
+ */
         }
 
         /// <summary>
