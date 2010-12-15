@@ -57,7 +57,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected RegionInfo m_regInfo;
         protected Scene m_parentScene;
-        protected List<UUID> m_updateList = new List<UUID>();
         protected int m_numRootAgents = 0;
         protected int m_numPrim = 0;
         protected int m_numChildAgents = 0;
@@ -216,68 +215,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Entity Methods
-
-        /// <summary>
-        /// Add an object to the list of prims to process on the next update
-        /// </summary>
-        /// <param name="obj">
-        /// <see cref="SceneObjectGroup"/>
-        /// </param>
-        protected internal void AddToUpdateList(SceneObjectGroup obj)
-        {
-            lock (m_updateList)
-                if (!m_updateList.Contains(obj.UUID))
-                    m_updateList.Add(obj.UUID);
-        }
-
-        /// <summary>
-        /// Process all pending updates
-        /// </summary>
-        protected internal void UpdateObjectGroups()
-        {
-            if (!Monitor.TryEnter(m_updateLock))
-                return;
-            try
-            {
-                List<UUID> updates;
-
-                // Some updates add more updates to the updateList. 
-                // Get the current list of updates and clear the list before iterating
-                lock (m_updateList)
-                {
-                    updates = new List<UUID>(m_updateList);
-                    m_updateList.Clear();
-                }
-
-                // Go through all updates
-                for (int i = 0; i < updates.Count; i++)
-                {
-                    UUID ID = updates[i];
-
-                    // Don't abort the whole update if one entity happens to give us an exception.
-                    try
-                    {
-                        EntityBase e = null;
-                        if (TryGetEntity(ID, out e))
-                        {
-                            e.Update();
-                        }
-                        else
-                        {
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[INNER SCENE]: Failed to update {0} - {2}", ID, e);
-                    }
-                }
-            }
-            finally
-            {
-                Monitor.Exit(m_updateLock);
-            }
-        }
 
         protected internal void AddPhysicalPrim(int number)
         {

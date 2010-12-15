@@ -1956,6 +1956,7 @@ namespace OpenSim.Region.Framework.Scenes
             // m_log.Debug("Aprev: " + prevflag.ToString() + " curr: " + Flags.ToString());
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Tell all scene presences that they should send updates for this part to their clients
         /// </summary>
@@ -1967,6 +1968,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Tell the scene presence that it should send updates for this part to its client
         /// </summary>
@@ -3616,6 +3618,7 @@ namespace OpenSim.Region.Framework.Scenes
             APIDTarget = Quaternion.Identity;
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Schedules this prim for a full update
         /// </summary>
@@ -3686,6 +3689,7 @@ namespace OpenSim.Region.Framework.Scenes
             //                UUID, Name, TimeStampFull);
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Schedule a terse update for this prim.  Terse updates only send position,
         /// rotation, velocity, rotational velocity and shape information.
@@ -3763,16 +3767,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-//        /// <summary>
-//        ///
-//        /// </summary>
-//        /// <param name="remoteClient"></param>
-//        public void SendFullUpdate(IClientAPI remoteClient, uint clientFlags)
-//        {
-//            m_parentGroup.SendPartFullUpdate(remoteClient, this, clientFlags);
-//        }
-
-
+        //#UpdateBranch
         /// <summary>
         /// Send a full update to the client for the given part
         /// </summary>
@@ -3800,6 +3795,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Send a full update for this part to all clients.
         /// </summary>
@@ -3811,6 +3807,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Send a full update to all clients except the one nominated.
         /// </summary>
@@ -3825,6 +3822,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Sends a full update to the client
         /// </summary>
@@ -3837,6 +3835,7 @@ namespace OpenSim.Region.Framework.Scenes
             SendFullUpdateToClient(remoteClient, lPos, clientflags, changedFlags);
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Sends a full update to the client
         /// </summary>
@@ -3870,6 +3869,7 @@ namespace OpenSim.Region.Framework.Scenes
             remoteClient.SendPrimUpdate(this, changedFlags);
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Tell all the prims which have had updates scheduled
         /// </summary>
@@ -4001,6 +4001,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Send a terse update to all clients
         /// </summary>
@@ -5572,6 +5573,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion Public Methods
 
+        //#UpdateBranch
         public void SendTerseUpdateToClient(IClientAPI remoteClient)
         {
             if (ParentGroup == null || ParentGroup.IsDeleted)

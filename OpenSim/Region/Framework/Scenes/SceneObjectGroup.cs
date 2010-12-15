@@ -1918,54 +1918,6 @@ namespace OpenSim.Region.Framework.Scenes
                                                         RootPart.CreatorID, RootPart.Name, RootPart.Description);
         }
 
-        public override void Update()
-        {
-            // Check that the group was not deleted before the scheduled update
-            // FIXME: This is merely a temporary measure to reduce the incidence of failure when
-            // an object has been deleted from a scene before update was processed.
-            // A more fundamental overhaul of the update mechanism is required to eliminate all
-            // the race conditions.
-            if (m_isDeleted)
-                return;
-
-            // Even temporary objects take part in physics (e.g. temp-on-rez bullets)
-            //if ((RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
-            //    return;
-
-            bool UsePhysics = ((RootPart.Flags & PrimFlags.Physics) != 0);
-
-            if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
-            {
-                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
-                lastPhysGroupPos = AbsolutePosition;
-            }
-
-            if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
-            {
-                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
-                lastPhysGroupRot = GroupRotation;
-            }
-
-            lock (m_partsLock)
-            {
-                if(Scene != null && !Scene.LoadingPrims)
-                    CheckForSignificantMovement();
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    try
-                    {
-                        if (!IsSelected)
-                            part.UpdateLookAt();
-                        part.SendScheduledUpdates();
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.Error("[InnerScene] : Exception in updating SOG " + ex);
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// See if the object has moved enough to trigger the Significant Movement event
         /// </summary>
@@ -2221,6 +2173,7 @@ namespace OpenSim.Region.Framework.Scenes
             RootPart.SendTerseUpdateToAllClients();
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Queue a check to see if we should send this prim to clients
         /// </summary>
@@ -2228,10 +2181,54 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_scene == null) // Need to check here as it's null during object creation
                 return;
-            
-            m_scene.AddToUpdateList(this);
+
+            // Check that the group was not deleted before the scheduled update
+            // FIXME: This is merely a temporary measure to reduce the incidence of failure when
+            // an object has been deleted from a scene before update was processed.
+            // A more fundamental overhaul of the update mechanism is required to eliminate all
+            // the race conditions.
+            if (m_isDeleted)
+                return;
+
+            // Even temporary objects take part in physics (e.g. temp-on-rez bullets)
+            //if ((RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
+            //    return;
+
+            bool UsePhysics = ((RootPart.Flags & PrimFlags.Physics) != 0);
+
+            if (UsePhysics && !AbsolutePosition.ApproxEquals(lastPhysGroupPos, 0.02f))
+            {
+                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
+                lastPhysGroupPos = AbsolutePosition;
+            }
+
+            if (UsePhysics && !GroupRotation.ApproxEquals(lastPhysGroupRot, 0.1f))
+            {
+                m_rootPart.SetUpdateFlag(InternalUpdateFlags.TerseUpdate);
+                lastPhysGroupRot = GroupRotation;
+            }
+
+            lock (m_partsLock)
+            {
+                if (Scene != null && !Scene.LoadingPrims)
+                    CheckForSignificantMovement();
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    try
+                    {
+                        if (!IsSelected)
+                            part.UpdateLookAt();
+                        part.SendScheduledUpdates();
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.Error("[InnerScene] : Exception in updating SOG " + ex);
+                    }
+                }
+            }
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Immediately send a terse update for this scene object.
         /// </summary>

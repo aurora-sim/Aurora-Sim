@@ -142,7 +142,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int m_update_physics = 1; //Trigger the physics update
         private int m_update_entitymovement = 1; //Update the movement of scene presences
-        private int m_update_objects = 1; // Update objects which have scheduled themselves for updates
         private int m_update_presences = 1; // Update scene presences which have scheduled updates
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
         private int m_update_backup = 50; //Trigger backup
@@ -1130,11 +1129,6 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         int PhysicsSyncTime = Util.EnvironmentTickCount();
-
-                        // Update SceneObjectGroups that have scheduled themselves for updates
-                        // Objects queue their updates onto all scene presences
-                        if (m_scene.m_frame % m_scene.m_update_objects == 0)
-                            m_scene.m_sceneGraph.UpdateObjectGroups();
 
                         // Run through all ScenePresences looking for updates
                         // Presence updates and queued object updates for each presence are sent to clients
@@ -3946,11 +3940,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddActiveScripts(int count)
         {
             m_sceneGraph.AddActiveScripts(count);
-        }
-
-        public void AddToUpdateList(SceneObjectGroup g)
-        {
-            m_sceneGraph.AddToUpdateList(g);
         }
 
         /// <summary>
