@@ -167,14 +167,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public LSL_Float osTerrainGetHeight(int x, int y)
-        {
+            {
             return m_OSSL_Functions.osTerrainGetHeight(x, y);
-        }
+            }
+
+        public LSL_Float osGetTerrainHeight(int x, int y)
+            {
+            return m_OSSL_Functions.osTerrainGetHeight(x, y);
+            }
+
+
+        public LSL_Integer osSetTerrainHeight(int x, int y, double val)
+            {
+            return m_OSSL_Functions.osTerrainSetHeight(x, y, val);
+            }
 
         public LSL_Integer osTerrainSetHeight(int x, int y, double val)
-        {
+            {
             return m_OSSL_Functions.osTerrainSetHeight(x, y, val);
-        }
+            }
 
         public void osTerrainFlush()
         {
