@@ -544,8 +544,17 @@ namespace OpenSim.Framework
 
         public void WriteNiniConfig(IConfigSource source)
         {
-            //MUST reload or it will overwrite other changes!
-            source = new IniConfigSource(RegionFile, Nini.Ini.IniFileType.AuroraStyle);
+            try
+            {
+                //MUST reload or it will overwrite other changes!
+                source = new IniConfigSource(RegionFile, Nini.Ini.IniFileType.AuroraStyle);
+            }
+            catch (FileNotFoundException)
+            {
+                //If this happens, it is the first time a user has opened Aurora and the RegionFile doesn't exist 
+                // yet, so just let it gracefully fail and create itself later
+                return;
+            }
             
             IConfig config = source.Configs[RegionName];
 
