@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
@@ -45,7 +46,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected List<UUID> m_removeNextUpdateOf = new List<UUID>();
         protected bool m_SentInitialObjects = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
-        protected Timer m_reprioritization_timer;
+        protected Prioritizer m_prioritizer;
 
         protected Dictionary<UUID, ScenePartUpdate> m_updateTimes = new Dictionary<UUID, ScenePartUpdate>();
 
@@ -58,6 +59,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence = presence;
             if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
+            m_prioritizer = new Prioritizer(presence.Scene);
         }
 
         #endregion
@@ -173,11 +175,12 @@ namespace OpenSim.Region.Framework.Scenes
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects)
             {
+                m_SentInitialObjects = true;
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
-
+                    PriorityQueue entityUpdates = new PriorityQueue(entities.Length);
                     foreach (EntityBase e in entities)
                     {
                         if (e != null && e is SceneObjectGroup)
@@ -190,14 +193,18 @@ namespace OpenSim.Region.Framework.Scenes
 
                             // Don't even queue if we have sent this one
                             //
+                            double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, grp);
                             if (!m_updateTimes.ContainsKey(grp.UUID))
-                                SendFullUpdate(PrimUpdateFlags.FullUpdate, grp); //New object, send full
+                                entityUpdates.Enqueue(priority, new EntityUpdate(grp, PrimUpdateFlags.FullUpdate), grp.LocalId); //New object, send full
                         }
                     }
                     entities = null;
+                    EntityUpdate update;
+                    while (entityUpdates.TryDequeue(out update))
+                    {
+                        SendFullUpdate(PrimUpdateFlags.FullUpdate, ((SceneObjectGroup)update.Entity));
+                    }
                 }
-                //Do this HERE so that all those updates added are prioritized correctly.
-                Reprioritize();
             }
 
             #endregion
@@ -408,6 +415,169 @@ namespace OpenSim.Region.Framework.Scenes
                 LastFullUpdateTime = 0;
                 LastTerseUpdateTime = 0;
             }
+        }
+
+        public class PriorityQueue
+        {
+            internal delegate bool UpdatePriorityHandler(ref double priority, uint local_id);
+
+            private MinHeap<MinHeapItem>[] m_heaps = new MinHeap<MinHeapItem>[1];
+            private Dictionary<uint, LookupItem> m_lookupTable;
+            private Comparison<double> m_comparison;
+            private object m_syncRoot = new object();
+
+            internal PriorityQueue() :
+                this(MinHeap<MinHeapItem>.DEFAULT_CAPACITY, Comparer<double>.Default) { }
+            internal PriorityQueue(int capacity) :
+                this(capacity, Comparer<double>.Default) { }
+            internal PriorityQueue(IComparer<double> comparer) :
+                this(new Comparison<double>(comparer.Compare)) { }
+            internal PriorityQueue(Comparison<double> comparison) :
+                this(MinHeap<MinHeapItem>.DEFAULT_CAPACITY, comparison) { }
+            internal PriorityQueue(int capacity, IComparer<double> comparer) :
+                this(capacity, new Comparison<double>(comparer.Compare)) { }
+            internal PriorityQueue(int capacity, Comparison<double> comparison)
+            {
+                m_lookupTable = new Dictionary<uint, LookupItem>(capacity);
+
+                for (int i = 0; i < m_heaps.Length; ++i)
+                    m_heaps[i] = new MinHeap<MinHeapItem>(capacity);
+                this.m_comparison = comparison;
+            }
+
+            public object SyncRoot { get { return this.m_syncRoot; } }
+            internal int Count
+            {
+                get
+                {
+                    int count = 0;
+                    for (int i = 0; i < m_heaps.Length; ++i)
+                        count = m_heaps[i].Count;
+                    return count;
+                }
+            }
+
+            public bool Enqueue(double priority, EntityUpdate value, uint local_id)
+            {
+                LookupItem item;
+
+                if (m_lookupTable.TryGetValue(local_id, out item))
+                {
+                    // Combine flags
+                    value.Flags |= item.Heap[item.Handle].Value.Flags;
+
+                    item.Heap[item.Handle] = new MinHeapItem(priority, value, local_id, this.m_comparison);
+                    return false;
+                }
+                else
+                {
+                    item.Heap = m_heaps[0];
+                    item.Heap.Add(new MinHeapItem(priority, value, local_id, this.m_comparison), ref item.Handle);
+                    m_lookupTable.Add(local_id, item);
+                    return true;
+                }
+            }
+
+            internal EntityUpdate Peek()
+            {
+                for (int i = 0; i < m_heaps.Length; ++i)
+                    if (m_heaps[i].Count > 0)
+                        return m_heaps[i].Min().Value;
+                throw new InvalidOperationException(string.Format("The {0} is empty", this.GetType().ToString()));
+            }
+
+            internal bool TryDequeue(out EntityUpdate value)
+            {
+                for (int i = 0; i < m_heaps.Length; ++i)
+                {
+                    if (m_heaps[i].Count > 0)
+                    {
+                        MinHeapItem item = m_heaps[i].RemoveMin();
+                        m_lookupTable.Remove(item.LocalID);
+                        value = item.Value;
+                        return true;
+                    }
+                }
+
+                value = default(EntityUpdate);
+                return false;
+            }
+
+            internal void Reprioritize(UpdatePriorityHandler handler)
+            {
+                MinHeapItem item;
+                double priority;
+
+                foreach (LookupItem lookup in new List<LookupItem>(this.m_lookupTable.Values))
+                {
+                    if (lookup.Heap.TryGetValue(lookup.Handle, out item))
+                    {
+                        priority = item.Priority;
+                        if (handler(ref priority, item.LocalID))
+                        {
+                            if (lookup.Heap.ContainsHandle(lookup.Handle))
+                                lookup.Heap[lookup.Handle] =
+                                    new MinHeapItem(priority, item.Value, item.LocalID, this.m_comparison);
+                        }
+                        else
+                        {
+                            lookup.Heap.Remove(lookup.Handle);
+                            this.m_lookupTable.Remove(item.LocalID);
+                        }
+                    }
+                }
+            }
+
+            #region MinHeapItem
+            private struct MinHeapItem : IComparable<MinHeapItem>
+            {
+                private double priority;
+                private EntityUpdate value;
+                private uint local_id;
+                private Comparison<double> comparison;
+
+                internal MinHeapItem(double priority, EntityUpdate value, uint local_id) :
+                    this(priority, value, local_id, Comparer<double>.Default) { }
+                internal MinHeapItem(double priority, EntityUpdate value, uint local_id, IComparer<double> comparer) :
+                    this(priority, value, local_id, new Comparison<double>(comparer.Compare)) { }
+                internal MinHeapItem(double priority, EntityUpdate value, uint local_id, Comparison<double> comparison)
+                {
+                    this.priority = priority;
+                    this.value = value;
+                    this.local_id = local_id;
+                    this.comparison = comparison;
+                }
+
+                internal double Priority { get { return this.priority; } }
+                internal EntityUpdate Value { get { return this.value; } }
+                internal uint LocalID { get { return this.local_id; } }
+
+                public override string ToString()
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append("[");
+                    sb.Append(this.priority.ToString());
+                    sb.Append(",");
+                    if (this.value != null)
+                        sb.Append(this.value.ToString());
+                    sb.Append("]");
+                    return sb.ToString();
+                }
+
+                public int CompareTo(MinHeapItem other)
+                {
+                    return this.comparison(this.priority, other.priority);
+                }
+            }
+            #endregion
+
+            #region LookupItem
+            private struct LookupItem
+            {
+                internal MinHeap<MinHeapItem> Heap;
+                internal IHandle Handle;
+            }
+            #endregion
         }
     }
 }

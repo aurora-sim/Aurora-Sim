@@ -3830,36 +3830,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             }
                             else
                             {
-                                //                            if (update.Entity is SceneObjectPart && ((SceneObjectPart)update.Entity).IsAttachment)
-                                //                            {
-                                //                                SceneObjectPart sop = (SceneObjectPart)update.Entity;
-                                //                                string text = sop.Text;
-                                //                                if (text.IndexOf("\n") >= 0)
-                                //                                    text = text.Remove(text.IndexOf("\n"));
-                                //
-                                //                                if (m_attachmentsSent.Contains(sop.ParentID))
-                                //                                {
-                                ////                                    m_log.DebugFormat(
-                                ////                                        "[CLIENT]: Sending full info about attached prim {0} text {1}",
-                                ////                                        sop.LocalId, text);
-                                //
-                                //                                    objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock(sop, this.m_agentId));
-                                //
-                                //                                    m_attachmentsSent.Add(sop.LocalId);
-                                //                                }
-                                //                                else
-                                //                                {
-                                //                                    m_log.DebugFormat(
-                                //                                        "[CLIENT]: Requeueing full update of prim {0} text {1} since we haven't sent its parent {2} yet",
-                                //                                        sop.LocalId, text, sop.ParentID);
-                                //
-                                //                                    m_entityUpdates.Enqueue(double.MaxValue, update, sop.LocalId);
-                                //                                }
-                                //                            }
-                                //                            else
-                                //                            {
                                 objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
-                                //                            }
                             }
                         }
                         else if (!canUseImproved)
@@ -3989,7 +3960,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void FlushPrimUpdates()
         {
-            m_log.Debug("[CLIENT]: Flushing prim updates to " + m_firstName + " " + m_lastName);
+            m_log.Info("[CLIENT]: Flushing prim updates for " + m_firstName + " " + m_lastName);
 
             while (m_entityUpdates.Count > 0)
                 ProcessEntityUpdates(-1);
@@ -4001,8 +3972,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if ((categories & ThrottleOutPacketTypeFlags.Task) != 0)
             {
-                if (m_entityUpdates.Count > 0)
-                    ProcessEntityUpdates(m_udpServer.PrimUpdatesPerCallback);
+                ProcessEntityUpdates(m_udpServer.PrimUpdatesPerCallback);
             }
 
             if ((categories & ThrottleOutPacketTypeFlags.Texture) != 0)

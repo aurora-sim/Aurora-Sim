@@ -1887,6 +1887,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scheduling
 
+        public override void Update()
+        {
+        }
+
         /// <summary>
         ///
         /// </summary>
