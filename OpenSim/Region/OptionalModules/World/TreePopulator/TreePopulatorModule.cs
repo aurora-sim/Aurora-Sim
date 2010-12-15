@@ -821,7 +821,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
                 tree.Name = copse.ToString();
                 copse.m_trees.Add(tree.UUID);
-                tree.SendGroupFullUpdate(PrimUpdateFlags.FindBest);
+                tree.ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 

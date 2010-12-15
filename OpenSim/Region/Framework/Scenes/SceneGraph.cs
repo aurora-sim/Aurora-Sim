@@ -1240,7 +1240,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     duplicatedGroup.CreateScriptInstances(0, false, m_parentScene.DefaultScriptEngine, 0, UUID.Zero);
                     duplicatedGroup.HasGroupChanged = true;
-                    duplicatedGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    duplicatedGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                     duplicatedGroup.ResumeScripts();
 
                     // required for physics to update it's position
@@ -1327,7 +1327,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup.HasGroupChanged = true;
                 //parentGroup.RootPart.SendFullUpdateToAllClients(PrimUpdateFlags.FullUpdate);
                 //parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
-                parentGroup.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
             }
             finally

@@ -2634,7 +2634,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 AddPrimToScene(sceneObject);
             }
-            sceneObject.SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+            sceneObject.ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
 
             return true;
         }
@@ -4336,7 +4336,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)ent).SendGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate(PrimUpdateFlags.FullUpdate);
                 }
             }
         }

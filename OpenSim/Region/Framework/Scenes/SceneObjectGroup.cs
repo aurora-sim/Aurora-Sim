@@ -1902,7 +1902,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// See if the object has moved enough to trigger the Significant Movement event
         /// </summary>
-        private void CheckForSignificantMovement()
+        protected internal void CheckForSignificantMovement()
         {
             //How far the object can move before it triggers an update
             const float SIGNIFICANT_MOVEMENT = 1.0f;
@@ -1950,36 +1950,11 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        //#UpdateBranch
+        //#UpdateBranch EVIL
         public void ScheduleFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
 //            m_log.DebugFormat("[SOG]: Scheduling full update for {0} {1} just to avatar {2}", Name, UUID, presence.Name);
 
-            if (UpdateFlags == PrimUpdateFlags.FindBest)
-            {
-                UpdateFlags = PrimUpdateFlags.None;
-                if (RootPart.Text != "")
-                    UpdateFlags |= PrimUpdateFlags.Text;
-                if (RootPart.TextureAnimation.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                if (RootPart.Sound != UUID.Zero)
-                    UpdateFlags |= PrimUpdateFlags.Sound;
-                if (RootPart.ParticleSystem.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.Particles;
-                if (RootPart.ParentGroup.ChildrenList.Count != 1)
-                    UpdateFlags |= PrimUpdateFlags.ParentID;
-                if (RootPart.CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                    UpdateFlags |= PrimUpdateFlags.MediaURL;
-
-                UpdateFlags |= PrimUpdateFlags.ClickAction;
-                UpdateFlags |= PrimUpdateFlags.ExtraData;
-                UpdateFlags |= PrimUpdateFlags.Shape;
-                UpdateFlags |= PrimUpdateFlags.Material;
-                UpdateFlags |= PrimUpdateFlags.Textures;
-                UpdateFlags |= PrimUpdateFlags.Rotation;
-                UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                UpdateFlags |= PrimUpdateFlags.Position;
-            }
             RootPart.AddUpdateToAvatar(presence, UpdateFlags);
 
             lock (m_partsLock)
@@ -1988,31 +1963,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part != RootPart)
                     {
-                        if (UpdateFlags == PrimUpdateFlags.FindBest)
-                        {
-                            UpdateFlags = PrimUpdateFlags.None;
-                            if (part.Text != "")
-                                UpdateFlags |= PrimUpdateFlags.Text;
-                            if (part.TextureAnimation.Length != 0)
-                                UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                            if (part.Sound != UUID.Zero)
-                                UpdateFlags |= PrimUpdateFlags.Sound;
-                            if (part.ParticleSystem.Length != 0)
-                                UpdateFlags |= PrimUpdateFlags.Particles;
-                            if (part.ParentGroup.ChildrenList.Count != 1)
-                                UpdateFlags |= PrimUpdateFlags.ParentID;
-                            if (part.CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                                UpdateFlags |= PrimUpdateFlags.MediaURL;
-
-                            UpdateFlags |= PrimUpdateFlags.ClickAction;
-                            UpdateFlags |= PrimUpdateFlags.ExtraData;
-                            UpdateFlags |= PrimUpdateFlags.Shape;
-                            UpdateFlags |= PrimUpdateFlags.Material;
-                            UpdateFlags |= PrimUpdateFlags.Textures;
-                            UpdateFlags |= PrimUpdateFlags.Rotation;
-                            UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                            UpdateFlags |= PrimUpdateFlags.Position;
-                        }
                         part.AddUpdateToAvatar(presence, UpdateFlags);
                     }
                 }
@@ -2026,31 +1976,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ScheduleGroupForFullUpdate(PrimUpdateFlags UpdateFlags)
         {
             checkAtTargets();
-            if (UpdateFlags == PrimUpdateFlags.FindBest)
-            {
-                UpdateFlags = PrimUpdateFlags.None;
-                if (RootPart.Text != "")
-                    UpdateFlags |= PrimUpdateFlags.Text;
-                if (RootPart.TextureAnimation.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                if (RootPart.Sound != UUID.Zero)
-                    UpdateFlags |= PrimUpdateFlags.Sound;
-                if (RootPart.ParticleSystem.Length != 0)
-                    UpdateFlags |= PrimUpdateFlags.Particles;
-                if (RootPart.ParentGroup.ChildrenList.Count != 1)
-                    UpdateFlags |= PrimUpdateFlags.ParentID;
-                if (RootPart.CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                    UpdateFlags |= PrimUpdateFlags.MediaURL;
-
-                UpdateFlags |= PrimUpdateFlags.ClickAction;
-                UpdateFlags |= PrimUpdateFlags.ExtraData;
-                UpdateFlags |= PrimUpdateFlags.Shape;
-                UpdateFlags |= PrimUpdateFlags.Material;
-                UpdateFlags |= PrimUpdateFlags.Textures;
-                UpdateFlags |= PrimUpdateFlags.Rotation;
-                UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                UpdateFlags |= PrimUpdateFlags.Position;
-            }
             RootPart.ScheduleUpdate(UpdateFlags);
 
             lock (m_partsLock)
@@ -2059,38 +1984,13 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (part != RootPart)
                     {
-                        //Customize per prim always sends a compressed
-                        if (UpdateFlags == PrimUpdateFlags.FindBest)
-                        {
-                            UpdateFlags = PrimUpdateFlags.None;
-                            if (part.Text != "")
-                                UpdateFlags |= PrimUpdateFlags.Text;
-                            if (part.TextureAnimation.Length != 0)
-                                UpdateFlags |= PrimUpdateFlags.TextureAnim;
-                            if (part.Sound != UUID.Zero)
-                                UpdateFlags |= PrimUpdateFlags.Sound;
-                            if (part.ParticleSystem.Length != 0)
-                                UpdateFlags |= PrimUpdateFlags.Particles;
-                            if (part.ParentGroup.ChildrenList.Count != 1)
-                                UpdateFlags |= PrimUpdateFlags.ParentID;
-                            if (part.CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                                UpdateFlags |= PrimUpdateFlags.MediaURL;
-
-                            UpdateFlags |= PrimUpdateFlags.ClickAction;
-                            UpdateFlags |= PrimUpdateFlags.ExtraData;
-                            UpdateFlags |= PrimUpdateFlags.Shape;
-                            UpdateFlags |= PrimUpdateFlags.Material;
-                            UpdateFlags |= PrimUpdateFlags.Textures;
-                            UpdateFlags |= PrimUpdateFlags.Rotation;
-                            UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                            UpdateFlags |= PrimUpdateFlags.Position;
-                        }
                         part.ScheduleUpdate(UpdateFlags);
                     }
                 }
             }
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Schedule a terse update for this scene object
         /// </summary>
@@ -2103,65 +2003,6 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectPart part in m_partsList)
                 {
                     part.ScheduleTerseUpdate();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Immediately send a full update for this scene object.
-        /// </summary>
-        public void SendGroupFullUpdate(PrimUpdateFlags UpdateFlags)
-        {
-            if (IsDeleted)
-                return;
-
-//            m_log.DebugFormat("[SOG]: Sending immediate full group update for {0} {1}", Name, UUID);
-
-            RootPart.SendFullUpdateToAllClients(UpdateFlags);
-
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part != RootPart)
-                        part.SendFullUpdateToAllClients(UpdateFlags);
-                }
-            }
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Queue a check to see if we should send this prim to clients
-        /// </summary>
-        public void QueueForUpdateCheck()
-        {
-            if (m_scene == null) // Need to check here as it's null during object creation
-                return;
-
-            // Check that the group was not deleted before the scheduled update
-            // FIXME: This is merely a temporary measure to reduce the incidence of failure when
-            // an object has been deleted from a scene before update was processed.
-            // A more fundamental overhaul of the update mechanism is required to eliminate all
-            // the race conditions.
-            if (m_isDeleted)
-                return;
-
-            lock (m_partsLock)
-            {
-                if (Scene != null && !Scene.LoadingPrims)
-                    CheckForSignificantMovement();
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    try
-                    {
-                        if (!IsSelected)
-                            part.UpdateLookAt();
-                        part.SendScheduledUpdates();
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.Error("[InnerScene] : Exception in updating SOG " + ex);
-                    }
                 }
             }
         }

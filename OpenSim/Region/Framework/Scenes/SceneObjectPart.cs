@@ -304,14 +304,8 @@ namespace OpenSim.Region.Framework.Scenes
         }
         
         [XmlIgnore]
-        public uint TimeStampFull;
-        
-        [XmlIgnore]
         public uint TimeStampLastActivity; // Will be used for AutoReturn
         
-        [XmlIgnore]
-        public uint TimeStampTerse;
-
         [XmlIgnore]
         public UUID FromItemID;
 
@@ -550,7 +544,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int m_passTouches;
 
-        private InternalUpdateFlags m_updateFlag;
         private PrimUpdateFlags m_neededUpdateFlags = PrimUpdateFlags.None;
 
         private PhysicsActor m_physActor;
@@ -1902,14 +1895,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
-        /// <summary>
-        /// Clear all pending updates of parts to clients
-        /// </summary>
-        public void ClearUpdateSchedule()
-        {
-        }
-
         private void SendObjectPropertiesToClient(UUID AgentID)
         {
             ScenePresence SP = ParentGroup.Scene.GetScenePresence(AgentID);
@@ -1940,24 +1925,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             return false;
             // m_log.Debug("Aprev: " + prevflag.ToString() + " curr: " + Flags.ToString());
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Tell all scene presences that they should send updates for this part to their clients
-        /// </summary>
-        public void AddUpdateToAllAvatars(PrimUpdateFlags flags)
-        {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                AddUpdateToAvatar(avatar, flags);
-            });
-        }
-
-        //#UpdateBranch
-        public void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
-        {
-            presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
 
         public void AddNewParticleSystem(Primitive.ParticleSystem pSystem)
@@ -3589,69 +3556,32 @@ namespace OpenSim.Region.Framework.Scenes
 
         //#UpdateBranch
         /// <summary>
-        /// Schedules this prim for an update
+        /// Clear all pending updates of parts to clients
         /// </summary>
-        public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
+        public void ClearUpdateSchedule()
         {
-            int timeNow = Util.UnixTimeSinceEpoch();
-
-            // If multiple updates are scheduled on the same second, we still need to perform all of them
-            // So we'll force the issue by bumping up the timestamp so that later processing sees these need
-            // to be performed.
-            if (timeNow <= TimeStampFull)
+            foreach (ScenePresence SP in ParentGroup.Scene.ScenePresences)
             {
-                TimeStampFull += 1;
+                SP.SceneViewer.ClearUpdatesForPart(this);
             }
-            else
+        }
+
+        //#UpdateBranch
+        /// <summary>
+        /// Tell all scene presences that they should send updates for this part to their clients
+        /// </summary>
+        public void AddUpdateToAllAvatars(PrimUpdateFlags flags)
+        {
+            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                TimeStampFull = (uint)timeNow;
-            }
-            
-            if (UpdateFlags == PrimUpdateFlags.FindBest)
-            {
-                //Add the defaults
-                UpdateFlags = PrimUpdateFlags.None;
-                UpdateFlags |= PrimUpdateFlags.ClickAction;
-                UpdateFlags |= PrimUpdateFlags.ExtraData;
-                UpdateFlags |= PrimUpdateFlags.Shape;
-                UpdateFlags |= PrimUpdateFlags.Material;
-                UpdateFlags |= PrimUpdateFlags.Textures;
-                UpdateFlags |= PrimUpdateFlags.Rotation;
-                UpdateFlags |= PrimUpdateFlags.PrimFlags;
-                UpdateFlags |= PrimUpdateFlags.Position;
-                UpdateFlags |= PrimUpdateFlags.AngularVelocity;
-            }
+                AddUpdateToAvatar(avatar, flags);
+            });
+        }
 
-            //Must send these as well
-            if (Text != "")
-                UpdateFlags |= PrimUpdateFlags.Text;
-            if (AngularVelocity != Vector3.Zero)
-                UpdateFlags |= PrimUpdateFlags.AngularVelocity;
-            if (TextureAnimation != null && TextureAnimation.Length != 0)
-                UpdateFlags |= PrimUpdateFlags.TextureAnim;
-            if (Sound != UUID.Zero)
-                UpdateFlags |= PrimUpdateFlags.Sound;
-            if (ParticleSystem != null && ParticleSystem.Length != 0)
-                UpdateFlags |= PrimUpdateFlags.Particles;
-            if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
-                UpdateFlags |= PrimUpdateFlags.MediaURL;
-
-            if (m_parentGroup != null)
-                if (ParentGroup.ChildrenList.Count != 1)
-                    UpdateFlags |= PrimUpdateFlags.ParentID;
-           
-            //Increment the CRC code so that the client won't be sent a cached update
-            CRC++;
-
-            m_neededUpdateFlags |= UpdateFlags;
-
-            if (m_parentGroup != null)
-            {
-                m_log.DebugFormat(
-                    "[SCENE OBJECT PART]: Scheduling full  update for {0}, {1} at {2}",
-                    UUID, Name, TimeStampFull);
-                m_parentGroup.QueueForUpdateCheck();
-            }
+        //#UpdateBranch
+        public void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
+        {
+            presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
 
         //#UpdateBranch
@@ -3661,20 +3591,121 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ScheduleTerseUpdate()
         {
-            if (m_updateFlag != InternalUpdateFlags.FullUpdate)
+            //if (m_updateFlag != InternalUpdateFlags.FullUpdate)
+            //{
+                //TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
+            //    m_updateFlag = InternalUpdateFlags.TerseUpdate;
+
+            PrimUpdateFlags UpdateFlags = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity;
+
+            ScheduleUpdate(UpdateFlags);
+           // }
+
+        }
+
+        private bool IsTerse(PrimUpdateFlags flags)
+        {
+            if ((flags & PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity) == (PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity) &&
+                (flags | PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity) == 0)
             {
-                if (m_updateFlag != InternalUpdateFlags.TerseUpdate)
-                    CRC++;
-                TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
-                m_updateFlag = InternalUpdateFlags.TerseUpdate;
+                return true;
+            }
+            return false;
+        }
 
-                PrimUpdateFlags UpdateFlags = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity;
-
-                m_neededUpdateFlags |= UpdateFlags;
-                if (m_parentGroup != null)
+        //#UpdateBranch
+        public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
+        {
+            if (!IsTerse(UpdateFlags))
+            {
+                if (UpdateFlags == PrimUpdateFlags.FindBest)
                 {
-                    m_parentGroup.QueueForUpdateCheck();
+                    //Add the defaults
+                    UpdateFlags = PrimUpdateFlags.None;
+                    UpdateFlags |= PrimUpdateFlags.ClickAction;
+                    UpdateFlags |= PrimUpdateFlags.ExtraData;
+                    UpdateFlags |= PrimUpdateFlags.Shape;
+                    UpdateFlags |= PrimUpdateFlags.Material;
+                    UpdateFlags |= PrimUpdateFlags.Textures;
+                    UpdateFlags |= PrimUpdateFlags.Rotation;
+                    UpdateFlags |= PrimUpdateFlags.PrimFlags;
+                    UpdateFlags |= PrimUpdateFlags.Position;
+                    UpdateFlags |= PrimUpdateFlags.AngularVelocity;
                 }
+
+                //Must send these as well
+                if (Text != "")
+                    UpdateFlags |= PrimUpdateFlags.Text;
+                if (AngularVelocity != Vector3.Zero)
+                    UpdateFlags |= PrimUpdateFlags.AngularVelocity;
+                if (TextureAnimation != null && TextureAnimation.Length != 0)
+                    UpdateFlags |= PrimUpdateFlags.TextureAnim;
+                if (Sound != UUID.Zero)
+                    UpdateFlags |= PrimUpdateFlags.Sound;
+                if (ParticleSystem != null && ParticleSystem.Length != 0)
+                    UpdateFlags |= PrimUpdateFlags.Particles;
+                if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
+                    UpdateFlags |= PrimUpdateFlags.MediaURL;
+
+                if (m_parentGroup != null)
+                    if (ParentGroup.ChildrenList.Count != 1)
+                        UpdateFlags |= PrimUpdateFlags.ParentID;
+                //Increment the CRC code so that the client won't be sent a cached update
+                CRC++;
+            }
+
+            m_neededUpdateFlags |= UpdateFlags;
+            if (ParentGroup != null)
+            {
+                if (ParentGroup.Scene == null) // Need to check here as it's null during object creation
+                    return;
+
+                // Check that the group was not deleted before the scheduled update
+                // FIXME: This is merely a temporary measure to reduce the incidence of failure when
+                // an object has been deleted from a scene before update was processed.
+                // A more fundamental overhaul of the update mechanism is required to eliminate all
+                // the race conditions.
+                if (ParentGroup.IsDeleted)
+                    return;
+
+                if (!ParentGroup.Scene.LoadingPrims)
+                    ParentGroup.CheckForSignificantMovement();
+
+                if (!ParentGroup.IsSelected)
+                    UpdateLookAt();
+
+                const float ROTATION_TOLERANCE = 0.01f;
+                const float VELOCITY_TOLERANCE = 0.001f;
+                const float POSITION_TOLERANCE = 0.05f;
+                const int TIME_MS_TOLERANCE = 3000;
+
+                //if (m_updateFlag == InternalUpdateFlags.TerseUpdate)
+                //{
+                // Throw away duplicate or insignificant updates
+                if (!RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
+                    !Acceleration.Equals(m_lastAcceleration) ||
+                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
+                    !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
+                    !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
+                    Util.EnvironmentTickCount() - m_lastTerseSent > TIME_MS_TOLERANCE)
+                {
+                    AddUpdateToAllAvatars(m_neededUpdateFlags);
+
+                    // Update the "last" values
+                    m_lastPosition = OffsetPosition;
+                    m_lastRotation = RotationOffset;
+                    m_lastVelocity = Velocity;
+                    m_lastAcceleration = Acceleration;
+                    m_lastAngularVelocity = AngularVelocity;
+                    m_lastTerseSent = Util.EnvironmentTickCount();
+                }
+                //}
+                //else if (m_updateFlag == InternalUpdateFlags.FullUpdate) // is a new prim, just created/reloaded or has major changes
+                //{
+                AddUpdateToAllAvatars(m_neededUpdateFlags);
+                //}
+                //ClearUpdateSchedule();
             }
         }
 
@@ -3733,58 +3764,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Send a full update for this part to all clients.
-        /// </summary>
-        public void SendFullUpdateToAllClients(PrimUpdateFlags UpdateFlags)
-        {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                avatar.SceneViewer.SendFullUpdate(this, avatar.GenerateClientFlags(this), UpdateFlags);
-            });
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Tell all the prims which have had updates scheduled
-        /// </summary>
-        public void SendScheduledUpdates()
-        {
-            const float ROTATION_TOLERANCE = 0.01f;
-            const float VELOCITY_TOLERANCE = 0.001f;
-            const float POSITION_TOLERANCE = 0.05f;
-            const int TIME_MS_TOLERANCE = 3000;
-
-            if (m_updateFlag == InternalUpdateFlags.TerseUpdate)
-            {
-                // Throw away duplicate or insignificant updates
-                if (!RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
-                    !Acceleration.Equals(m_lastAcceleration) ||
-                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
-                    !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
-                    !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                    Util.EnvironmentTickCount() - m_lastTerseSent > TIME_MS_TOLERANCE)
-                {
-                    AddUpdateToAllAvatars(m_neededUpdateFlags);
-
-                    // Update the "last" values
-                    m_lastPosition = OffsetPosition;
-                    m_lastRotation = RotationOffset;
-                    m_lastVelocity = Velocity;
-                    m_lastAcceleration = Acceleration;
-                    m_lastAngularVelocity = AngularVelocity;
-                    m_lastTerseSent = Util.EnvironmentTickCount();
-                }
-            }
-            else if (m_updateFlag == InternalUpdateFlags.FullUpdate) // is a new prim, just created/reloaded or has major changes
-            {
-                AddUpdateToAllAvatars(m_neededUpdateFlags);
-            }
-            ClearUpdateSchedule();
         }
 
         /// <summary>
@@ -4942,7 +4921,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                 }
-                ParentGroup.SendGroupFullUpdate(PrimUpdateFlags.PrimFlags);
+                ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.PrimFlags);
 
                 SendObjectPropertiesToClient(AgentID);
 

@@ -165,9 +165,9 @@ namespace OpenSim.Region.Framework.Scenes
                     // We deal with the possibility that two updates occur at
                     // the same unix time at the update point itself.
 
-                    if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
-                            update.Part.IsAttachment)
-                    {
+                    //if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
+                    //        update.Part.IsAttachment)
+                    //{
                         //m_log.DebugFormat(
                         //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
                         //  part.Name, part.UUID, part.TimeStampFull);
@@ -182,26 +182,26 @@ namespace OpenSim.Region.Framework.Scenes
                         // updates which occurred on the same tick or the
                         // next tick of the last update would be ignored.
 
-                        partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+                        //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
 
-                    }
-                    else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
-                    {
+                    //}
+                    //else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
+                    //{
                         //m_log.DebugFormat(
                         //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
                         //  part.Name, part.UUID, part.TimeStampTerse);
 
                         SendTerseUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part);
 
-                        partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
-                    }
+                    //    partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
+                    //}
                 }
                 else
                 {
                     //never been sent to client before so do full update
                     ScenePartUpdate partupdate = new ScenePartUpdate();
                     partupdate.FullID = update.Part.UUID;
-                    partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
+                    //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
                     m_updateTimes.Add(update.Part.UUID, partupdate);
 
                     // Attachment handling

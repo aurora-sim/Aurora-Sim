@@ -97,45 +97,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             IOPumpTime             //34
         }
 
-        private enum AStats : uint
-        {
-            TimeDilation = 0,
-            SimFPS = 1,
-            PhysicsFPS = 2,
-            AgentUpdates = 3,
-            FrameMS = 4,
-            NetMS = 5,
-            OtherMS = 6,
-            PhysicsMS = 7,
-            AgentMS = 8,
-            ImageMS = 9,
-            ScriptMS = 10,
-            TotalPrim = 11,
-            ActivePrim = 12,
-            Agents = 13,
-            ChildAgents = 14,
-            ActiveScripts = 15,
-            ScriptLinesPerSecond = 16,
-            InPacketsPerSecond = 17,
-            OutPacketsPerSecond = 18,
-            PendingDownloads = 19,
-            PendingUploads = 20,
-            UnknownB = 21,
-            UnknownC = 22,
-            UnknownA = 23,
-            UnAckedBytes = 24,
-            PinnedObjects = 25,
-            LowLodObjects = 26,
-            PhysicsStep = 27,
-            UpdatePhysicsShapes = 28,
-            PhysicsOther = 29,
-            MemoryAllocated = 30,
-            ScriptEventsPerSecond = 31,
-            SpareTime = 32,
-            SleepTime = 33,
-            PumpIO = 34,
-        }
-
         #endregion
 
         #region Events
