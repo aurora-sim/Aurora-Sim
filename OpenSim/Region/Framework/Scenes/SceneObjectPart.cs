@@ -4942,7 +4942,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                 }
-                SendFullUpdateToAllClients(PrimUpdateFlags.PrimFlags);
+                ParentGroup.SendGroupFullUpdate(PrimUpdateFlags.PrimFlags);
 
                 SendObjectPropertiesToClient(AgentID);
 

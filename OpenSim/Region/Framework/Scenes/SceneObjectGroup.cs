@@ -1950,6 +1950,7 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        //#UpdateBranch
         public void ScheduleFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
 //            m_log.DebugFormat("[SOG]: Scheduling full update for {0} {1} just to avatar {2}", Name, UUID, presence.Name);
@@ -2018,19 +2019,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void ScheduleTerseUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
-        {
-//            m_log.DebugFormat("[SOG]: Scheduling terse update for {0} {1} just to avatar {2}", Name, UUID, presence.Name);
-
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.AddUpdateToAvatar(presence, flags);
-                }
-            }
-        }
-
+        //#UpdateBranch
         /// <summary>
         /// Schedule a full update for this scene object
         /// </summary>
