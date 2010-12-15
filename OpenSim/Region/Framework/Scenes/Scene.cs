@@ -1276,13 +1276,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void CheckAtTargets()
         {
+            Dictionary<UUID, SceneObjectGroup>.ValueCollection objs;
             lock (m_groupsWithTargets)
-            {
-                foreach (SceneObjectGroup entry in m_groupsWithTargets.Values)
-                {
-                    entry.checkAtTargets();
-                }
-            }
+                objs = m_groupsWithTargets.Values;
+            foreach (SceneObjectGroup entry in objs)
+                entry.checkAtTargets();
         }
 
         /// <summary>
@@ -2259,7 +2257,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        internal void DeleteGroups(List<SceneObjectGroup> objectGroups)
+        public void DeleteGroups(List<SceneObjectGroup> objectGroups)
         {
             List<ISceneEntity> DeleteGroups = new List<ISceneEntity>();
             foreach (SceneObjectGroup g in objectGroups)
@@ -4607,7 +4605,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                         m_log.Info("[SCENE]: Returning 1 object due to parcel auto return.");
 
-                    AsyncSceneObjectGroupDeleter async = RequestModuleInterface<AsyncSceneObjectGroupDeleter>();
+                    IAsyncSceneObjectGroupDeleter async = RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
                     if (async != null)
                     {
                         async.DeleteToInventory(

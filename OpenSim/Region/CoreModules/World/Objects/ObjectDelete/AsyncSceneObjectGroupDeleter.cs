@@ -33,8 +33,9 @@ using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.Framework.Scenes
+namespace OpenSim.Region.CoreModules
 {
     public class DeleteToInventoryHolder
     {
@@ -50,7 +51,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
     /// up the main client thread.
     /// </summary>
-    public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule
+    public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -88,12 +89,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AddRegion(Scene scene)
         {
-            scene.RegisterModuleInterface<AsyncSceneObjectGroupDeleter>(this);
+            scene.RegisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
             m_scene = scene;
         }
 
         public void RemoveRegion(Scene scene)
         {
+            scene.UnregisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
         }
 
         public void RegionLoaded(Scene scene)

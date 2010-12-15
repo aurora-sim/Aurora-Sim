@@ -1808,7 +1808,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            AsyncSceneObjectGroupDeleter async = RequestModuleInterface<AsyncSceneObjectGroupDeleter>();
+            IAsyncSceneObjectGroupDeleter async = RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
             if (async != null)
             {
                 async.DeleteToInventory(
