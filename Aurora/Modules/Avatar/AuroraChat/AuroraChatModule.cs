@@ -564,6 +564,8 @@ namespace Aurora.Modules
             int i = 0;
             bool cached = false;
             MuteList[] List = GetMutes(client.AgentId, out cached);
+            if (List == null)
+                return;
             if (cached)
                 client.SendUseCachedMuteList();
 
