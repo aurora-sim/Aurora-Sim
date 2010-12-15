@@ -132,7 +132,7 @@ namespace OpenSim.Region.Framework.Scenes
                             // Don't even queue if we have sent this one
                             //
                             if (!m_updateTimes.ContainsKey(grp.UUID))
-                                grp.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate); //New object, send full
+                                SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate, grp); //New object, send full
                         }
                     }
                     entities = null;
@@ -142,6 +142,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             #endregion
+
+            #region stuff
 
             while (m_partsUpdateQueue.Count > 0)
             {
@@ -190,7 +192,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
                         //  part.Name, part.UUID, part.TimeStampTerse);
 
-                        update.Part.SendTerseUpdateToClient(m_presence.ControllingClient);
+                        SendTerseUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part);
 
                         partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
                     }
@@ -210,12 +212,44 @@ namespace OpenSim.Region.Framework.Scenes
                         if (update.Part != update.Part.ParentGroup.RootPart)
                             continue;
 
-                        update.Part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags);
+                        SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part.ParentGroup);
                         continue;
                     }
 
                     update.Part.SendFullUpdate(m_presence.ControllingClient,
                             m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+                }
+            }
+
+            #endregion
+        }
+
+        //#UpdateBranch
+        public void SendTerseUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectPart part)
+        {
+            if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
+                return;
+
+            if (part.IsAttachment && part.ParentGroup.RootPart != part)
+                return;
+            
+            // Causes this thread to dig into the Client Thread Data.
+            // Remember your locking here!
+            remoteClient.SendPrimUpdate(part, UpdateFlags);
+        }
+
+        public void SendFullUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        {
+            grp.RootPart.SendFullUpdate(
+                remoteClient, m_presence.Scene.Permissions.GenerateClientFlags(remoteClient.AgentId, grp.RootPart), UpdateFlags);
+
+            lock (grp.ChildrenList)
+            {
+                foreach (SceneObjectPart part in grp.ChildrenList)
+                {
+                    if (part != grp.RootPart)
+                        part.SendFullUpdate(
+                            remoteClient, m_presence.Scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part), UpdateFlags);
                 }
             }
         }

@@ -104,7 +104,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (entity is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)entity).SendFullUpdateToClient(remoteClient, PrimUpdateFlags.FullUpdate);
+                    ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                    ((SceneObjectGroup)entity).ScheduleFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                 }
             }
         }

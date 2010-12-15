@@ -1902,33 +1902,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        //#UpdateBranch
         /// <summary>
         /// Clear all pending updates of parts to clients
         /// </summary>
         public void ClearUpdateSchedule()
         {
-            m_updateFlag = InternalUpdateFlags.NoUpdate;
-            m_neededUpdateFlags = PrimUpdateFlags.None;
-        }
-
-        public void SetUpdateFlag(InternalUpdateFlags flag)
-        {
-            //Full update overrides all and no update overrides all
-            if (m_updateFlag != InternalUpdateFlags.FullUpdate ||
-                flag == InternalUpdateFlags.NoUpdate)
-                m_updateFlag = flag;
         }
 
         private void SendObjectPropertiesToClient(UUID AgentID)
         {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                // Ugly reference :(
-                if (avatar.UUID == AgentID)
-                {
-                    m_parentGroup.GetProperties(avatar.ControllingClient);
-                }
-            });
+            ScenePresence SP = ParentGroup.Scene.GetScenePresence(AgentID);
+            if(SP != null)
+                m_parentGroup.GetProperties(SP.ControllingClient);
         }
 
         #endregion Private Methods
@@ -3657,6 +3643,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Increment the CRC code so that the client won't be sent a cached update
             CRC++;
 
+            m_neededUpdateFlags |= UpdateFlags;
+
             if (m_parentGroup != null)
             {
                 m_log.DebugFormat(
@@ -3679,6 +3667,10 @@ namespace OpenSim.Region.Framework.Scenes
                     CRC++;
                 TimeStampTerse = (uint) Util.UnixTimeSinceEpoch();
                 m_updateFlag = InternalUpdateFlags.TerseUpdate;
+
+                PrimUpdateFlags UpdateFlags = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity;
+
+                m_neededUpdateFlags |= UpdateFlags;
                 if (m_parentGroup != null)
                 {
                     m_parentGroup.QueueForUpdateCheck();
@@ -3752,7 +3744,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void SendFullUpdate(IClientAPI remoteClient, uint clientFlags, PrimUpdateFlags changedFlags)
         {
 //            m_log.DebugFormat(
-//                "[SOG]: Sendinging part full update to {0} for {1} {2}", remoteClient.Name, part.Name, part.LocalId);
+//                "[SOG]: Sending part full update to {0} for {1} {2}", remoteClient.Name, part.Name, part.LocalId);
 
             if (IsRoot)
             {
@@ -3867,7 +3859,7 @@ namespace OpenSim.Region.Framework.Scenes
                     !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
                     Util.EnvironmentTickCount() - m_lastTerseSent > TIME_MS_TOLERANCE)
                 {
-                    SendTerseUpdateToAllClients();
+                    AddUpdateToAllAvatars(m_neededUpdateFlags);
 
                     // Update the "last" values
                     m_lastPosition = OffsetPosition;
@@ -3877,13 +3869,12 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastAngularVelocity = AngularVelocity;
                     m_lastTerseSent = Util.EnvironmentTickCount();
                 }
-                ClearUpdateSchedule();
             }
             else if (m_updateFlag == InternalUpdateFlags.FullUpdate) // is a new prim, just created/reloaded or has major changes
             {
                 AddUpdateToAllAvatars(m_neededUpdateFlags);
-                ClearUpdateSchedule();
             }
+            ClearUpdateSchedule();
         }
 
         /// <summary>
@@ -3975,18 +3966,6 @@ namespace OpenSim.Region.Framework.Scenes
                         soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
                 }
             }
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Send a terse update to all clients
-        /// </summary>
-        public void SendTerseUpdateToAllClients()
-        {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                SendTerseUpdateToClient(avatar.ControllingClient);
-            });
         }
 
         public void SetAttachmentPoint(int AttachmentPoint)
@@ -5549,20 +5528,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion Public Methods
 
-        //#UpdateBranch
-        public void SendTerseUpdateToClient(IClientAPI remoteClient)
-        {
-            if (ParentGroup == null || ParentGroup.IsDeleted)
-                return;
-
-            if (IsAttachment && ParentGroup.RootPart != this)
-                return;
-            
-            // Causes this thread to dig into the Client Thread Data.
-            // Remember your locking here!
-            remoteClient.SendPrimUpdate(this, PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
-        }
-        
         public void ApplyNextOwnerPermissions()
         {
             _baseMask &= _nextOwnerMask;

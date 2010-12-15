@@ -1522,22 +1522,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        public void SendFullUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags)
-        {
-            RootPart.SendFullUpdate(
-                remoteClient, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart), UpdateFlags);
-
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part != RootPart)
-                        part.SendFullUpdate(
-                            remoteClient, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part), UpdateFlags);
-                }
-            }
-        }
-
         #region Copying
 
         /// <summary>
@@ -2156,20 +2140,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        /// <summary>
-        /// Immediately send an update for this scene object's root prim only.
-        /// This is for updates regarding the object as a whole, and none of its parts in particular.
-        /// Note: this may not be used by opensim (it probably should) but it's used by
-        /// external modules.
-        /// </summary>
-        public void SendGroupRootTerseUpdate()
-        {
-            if (IsDeleted)
-                return;
-
-            RootPart.SendTerseUpdateToAllClients();
-        }
-
         //#UpdateBranch
         /// <summary>
         /// Queue a check to see if we should send this prim to clients
@@ -2203,24 +2173,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.Error("[InnerScene] : Exception in updating SOG " + ex);
                     }
-                }
-            }
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Immediately send a terse update for this scene object.
-        /// </summary>
-        public void SendGroupTerseUpdate()
-        {
-            if (IsDeleted)
-                return;
-
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.SendTerseUpdateToAllClients();
                 }
             }
         }
@@ -2542,7 +2494,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void NonPhysicalGrabMovement(Vector3 pos)
         {
             AbsolutePosition = pos;
-            m_rootPart.SendTerseUpdateToAllClients();
+            m_rootPart.ScheduleTerseUpdate();
         }
 
         /// <summary>
