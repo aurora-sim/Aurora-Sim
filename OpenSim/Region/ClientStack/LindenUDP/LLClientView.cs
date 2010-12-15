@@ -3900,7 +3900,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #region Packet Sending
 
-            const float TIME_DILATION = 1.0f;
+            float TIME_DILATION = m_scene.TimeDilation;
             ushort timeDilation = Utils.FloatToUInt16(TIME_DILATION, 0.0f, 1.0f);
 
             if (objectUpdateBlocks.IsValueCreated)
@@ -12827,7 +12827,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 ImprovedTerseObjectUpdatePacket.ObjectDataBlock block =
                     CreateImprovedTerseBlock(p, false);
 
-                const float TIME_DILATION = 1.0f;
+                float TIME_DILATION = m_scene.TimeDilation;
                 ushort timeDilation = Utils.FloatToUInt16(TIME_DILATION, 0.0f, 1.0f);
 
 

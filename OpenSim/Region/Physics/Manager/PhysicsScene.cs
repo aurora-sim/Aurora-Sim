@@ -84,6 +84,7 @@ namespace OpenSim.Region.Physics.Manager
         public virtual float TimeDilation
         {
             get { return 1.0f; }
+            set { }
         }
 
         public virtual bool SupportsNINJAJoints

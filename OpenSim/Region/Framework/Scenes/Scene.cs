@@ -283,6 +283,7 @@ namespace OpenSim.Region.Framework.Scenes
         public float TimeDilation
         {
             get { return m_sceneGraph.PhysicsScene.TimeDilation; }
+            set { m_sceneGraph.PhysicsScene.TimeDilation = value; }
         }
 
         public bool BordersLocked
@@ -1049,18 +1050,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         CheckExit();
                     }
-                    catch (NotImplementedException)
-                    {
-                        throw;
-                    }
-                    catch (AccessViolationException e)
-                    {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                    }
-                    catch (InvalidOperationException e)
-                    {
-                        m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                    }
                     catch (Exception e)
                     {
                         if (e.Message != "Closing")
@@ -1187,10 +1176,10 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+                    maintc = (int)((m_scene.m_timespan * 1000) - maintc) / Scene.m_timeToSlowThePhysHeartbeat;
 
                     if (maintc > 0 && shouldSleep)
-                        Thread.Sleep(maintc / Scene.m_timeToSlowThePhysHeartbeat);
+                        Thread.Sleep(maintc);
                 }
             }
 

@@ -218,6 +218,15 @@ namespace OpenSim.Framework
         void SetValue(int value);
     }
 
+    public interface ITimeDilationMonitor : IMonitor
+    {
+        /// <summary>
+        /// Set the Value for the monitor
+        /// </summary>
+        /// <param name="value"></param>
+        void SetPhysicsFPS(float value);
+    }
+
     public interface IPhysicsFrameMonitor
     {
         /// <summary>

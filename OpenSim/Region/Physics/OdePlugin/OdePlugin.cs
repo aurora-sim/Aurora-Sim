@@ -1793,6 +1793,7 @@ namespace OpenSim.Region.Physics.OdePlugin
         public override float TimeDilation
         {
             get { return m_timeDilation; }
+            set { }
         }
 
         public override bool SupportsNINJAJoints

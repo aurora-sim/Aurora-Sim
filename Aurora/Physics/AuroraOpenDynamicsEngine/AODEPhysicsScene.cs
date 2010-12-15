@@ -1589,6 +1589,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override float TimeDilation
         {
             get { return m_timeDilation; }
+            set { m_timeDilation = value; }
         }
 
         public override bool SupportsNINJAJoints

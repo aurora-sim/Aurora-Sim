@@ -455,6 +455,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     rb.RegionY = m_currentScene.RegionInfo.RegionLocY;
 
                     ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
+                    ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor("Time Dilation");
                     ISetMonitor totalFrameMonitor = (ISetMonitor)GetMonitor("Total Frame Time");
                     ISetMonitor lastFrameMonitor = (ISetMonitor)GetMonitor("Last Completed Frame At");
                     ISetMonitor sleepFrameMonitor = (ISetMonitor)GetMonitor("Sleep Frame");
@@ -463,8 +464,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)GetMonitor("Physics Update Frame Time");
                     IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor("Agent Update Count");
                     INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor("Network Monitor");
-                    IMonitor timeDilationMonitor = (IMonitor)GetMonitor("Time Dilation");
-
+                    
                     #region various statistic googly moogly
 
                     float simfps = simFrameMonitor.SimFPS / statsUpdateFactor;
@@ -473,6 +473,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     float physfps = (float)physicsFrameMonitor.PhysicsFPS / statsUpdateFactor;
                     physicsFrameMonitor.LastReportedPhysicsFPS = physfps;
+                    //Update the time dilation with the newest physicsFPS
+                    timeDilationMonitor.SetPhysicsFPS(physfps);
 
                     #endregion
                     for (int i = 0; i < sb.Length; i++)
