@@ -1853,7 +1853,6 @@ namespace OpenSim.Region.Framework.Scenes
                 });
 
                 SimulationDataService.RemoveRegion(m_regInfo.RegionID);
-                EventManager.TriggerParcelPrimCountTainted();
             }
         }
 
@@ -1903,7 +1902,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (UnlinkSceneObject(group, false))
             {
                 EventManager.TriggerObjectBeingRemovedFromScene(group);
-                EventManager.TriggerParcelPrimCountTainted();
             }
 
             group.DeleteGroup(silent);
@@ -1924,11 +1922,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!softDelete)
                 {
-                    lock (m_needsDeleted)
-                    {
-                        if (!m_needsDeleted.Contains(so.UUID))
-                            m_needsDeleted.Add(so.UUID);
-                    }
+                    DeleteFromStorage(so.UUID);
                     // We need to keep track of this state in case this group is still queued for further backup.
                     so.IsDeleted = true;
                 }
@@ -4667,7 +4661,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 DeRezAction.Return, ret.Value.Groups[0].RootPart.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootPart.OwnerID,
                                 true, true);
                     }
-                    EventManager.TriggerParcelPrimCountTainted();
                 }
                 m_returns.Clear();
             }

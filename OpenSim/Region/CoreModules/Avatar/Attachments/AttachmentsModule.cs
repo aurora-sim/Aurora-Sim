@@ -605,7 +605,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             // Remove from database and parcel prim count
             m_scene.DeleteFromStorage(so.UUID);
-            m_scene.EventManager.TriggerParcelPrimCountTainted();
 
             so.RootPart.AttachedAvatar = avatar.UUID;
 

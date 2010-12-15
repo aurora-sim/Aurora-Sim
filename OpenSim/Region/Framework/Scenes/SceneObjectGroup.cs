@@ -1356,6 +1356,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+            m_scene.EventManager.TriggerParcelPrimCountTainted();
         }
 
         public void AddScriptEPS(int count)

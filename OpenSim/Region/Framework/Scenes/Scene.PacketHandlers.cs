@@ -129,10 +129,13 @@ namespace OpenSim.Region.Framework.Scenes
                         if (prim.IsRoot)
                         {
                             prim.ParentGroup.IsSelected = true;
-                            if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
-                                || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
+                            if (!prim.ParentGroup.IsAttachment)
                             {
-                                EventManager.TriggerParcelPrimCountTainted();
+                                if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
+                                || Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
+                                {
+                                    EventManager.TriggerParcelPrimCountTainted();
+                                }
                             }
                         }
                     }
@@ -141,7 +144,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntitiesToUpdate.Add(entity);
                 else
                 {
-                    m_log.Warn("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, running through all prims.");
+                    m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, running through all prims.");
                     EntityBase[] EntityList = Entities.GetEntities();
                     foreach (EntityBase ent in EntityList)
                     {
@@ -149,15 +152,8 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (((SceneObjectGroup)ent).LocalId == primLocalID)
                             {
-                                ((SceneObjectGroup)ent).GetProperties(remoteClient);
                                 ((SceneObjectGroup)ent).IsSelected = true;
-                                // A prim is only tainted if it's allowed to be edited by the person clicking it.
-                                if (Permissions.CanEditObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId)
-                                    || Permissions.CanMoveObject(((SceneObjectGroup)ent).UUID, remoteClient.AgentId))
-                                {
-                                    EventManager.TriggerParcelPrimCountTainted();
-                                }
-                                prim = ((SceneObjectGroup)ent).RootPart;
+                                EntitiesToUpdate.Add(((SceneObjectGroup)ent).RootPart);
                                 break;
                             }
                             else
