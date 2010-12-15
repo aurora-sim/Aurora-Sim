@@ -138,11 +138,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_OSSL_Functions.osParcelSubdivide(pos1, pos2);
         }
-        
+
         public void osParcelSetDetails(vector pos, LSL_List rules)
-        {
-            m_OSSL_Functions.osParcelSetDetails(pos,rules);
-        }
+            {
+            m_OSSL_Functions.osParcelSetDetails(pos, rules);
+            }
+
+        public void osSetParcelDetails(vector pos, LSL_List rules)
+            {
+            m_OSSL_Functions.osParcelSetDetails(pos, rules);
+            }
 
         public double osList2Double(LSL_Types.list src, int index)
         {
