@@ -1954,6 +1954,12 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
+        //#UpdateBranch
+        public void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
+        {
+            presence.SceneViewer.QueuePartForUpdate(this, flags);
+        }
+
         public void AddNewParticleSystem(Primitive.ParticleSystem pSystem)
         {
             ParticleSystem = pSystem.GetBytes();
@@ -1962,12 +1968,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void RemoveParticleSystem()
         {
             ParticleSystem = Utils.EmptyBytes;
-        }
-
-        //#UpdateBranch
-        public void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
-        {
-            presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
 
         public void AddTextureAnimation(Primitive.TextureAnimation pTexAnim)
@@ -3737,104 +3737,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         //#UpdateBranch
         /// <summary>
-        /// Send a full update to the client for the given part
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="clientFlags"></param>
-        protected internal void SendFullUpdate(IClientAPI remoteClient, uint clientFlags, PrimUpdateFlags changedFlags)
-        {
-//            m_log.DebugFormat(
-//                "[SOG]: Sending part full update to {0} for {1} {2}", remoteClient.Name, part.Name, part.LocalId);
-
-            if (IsRoot)
-            {
-                if (IsAttachment)
-                {
-                    SendFullUpdateToClient(remoteClient, AttachedPos, clientFlags, changedFlags);
-                }
-                else
-                {
-                    SendFullUpdateToClient(remoteClient, AbsolutePosition, clientFlags, changedFlags);
-                }
-            }
-            else
-            {
-                SendFullUpdateToClient(remoteClient, clientFlags, changedFlags);
-            }
-        }
-
-        //#UpdateBranch
-        /// <summary>
         /// Send a full update for this part to all clients.
         /// </summary>
         public void SendFullUpdateToAllClients(PrimUpdateFlags UpdateFlags)
         {
             m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                SendFullUpdate(avatar.ControllingClient, avatar.GenerateClientFlags(this), UpdateFlags);
+                avatar.SceneViewer.SendFullUpdate(this, avatar.GenerateClientFlags(this), UpdateFlags);
             });
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Send a full update to all clients except the one nominated.
-        /// </summary>
-        /// <param name="agentID"></param>
-        public void SendFullUpdateToAllClientsExcept(UUID agentID, PrimUpdateFlags UpdateFlags)
-        {
-            m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                // Ugly reference :(
-                if (avatar.UUID != agentID)
-                    SendFullUpdate(avatar.ControllingClient, avatar.GenerateClientFlags(this), UpdateFlags);
-            });
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Sends a full update to the client
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="clientFlags"></param>
-        public void SendFullUpdateToClient(IClientAPI remoteClient, uint clientflags, PrimUpdateFlags changedFlags)
-        {
-            Vector3 lPos;
-            lPos = OffsetPosition;
-            SendFullUpdateToClient(remoteClient, lPos, clientflags, changedFlags);
-        }
-
-        //#UpdateBranch
-        /// <summary>
-        /// Sends a full update to the client
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="lPos"></param>
-        /// <param name="clientFlags"></param>
-        public void SendFullUpdateToClient(IClientAPI remoteClient, Vector3 lPos, uint clientFlags, PrimUpdateFlags changedFlags)
-        {
-            // Suppress full updates during attachment editing
-            //
-            if (ParentGroup.IsSelected && IsAttachment)
-                return;
-            
-            if (ParentGroup.IsDeleted)
-                return;
-
-            clientFlags &= ~(uint) PrimFlags.CreateSelected;
-
-            if (remoteClient.AgentId == _ownerID)
-            {
-                if ((Flags & PrimFlags.CreateSelected) != 0)
-                {
-                    clientFlags |= (uint) PrimFlags.CreateSelected;
-                    Flags &= ~PrimFlags.CreateSelected;
-                }
-            }
-            //bool isattachment = IsAttachment;
-            //if (LocalId != ParentGroup.RootPart.LocalId)
-                //isattachment = ParentGroup.RootPart.IsAttachment;
-
-            remoteClient.SendPrimUpdate(this, changedFlags);
         }
 
         //#UpdateBranch

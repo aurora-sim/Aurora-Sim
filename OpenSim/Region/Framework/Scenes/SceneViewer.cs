@@ -95,13 +95,10 @@ namespace OpenSim.Region.Framework.Scenes
                         //Check if we already have sent them an update
                         if (!m_objectsInView.Contains(entity.UUID))
                         {
-                            if (m_pendingObjects != null)
-                            {
-                                //Update the list
-                                m_objectsInView.Add(entity.UUID);
-                                //Enqueue them for an update
-                                m_pendingObjects.Enqueue((SceneObjectGroup)entity);
-                            }
+                            //Update the list
+                            m_objectsInView.Add(entity.UUID);
+                            //Send the update
+                            SendFullUpdateToClient(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
                         }
                     }
                 }
@@ -113,8 +110,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             #region New client entering the Scene, requires all objects in the Scene
 
+            ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
             if (!m_SentInitialObjects)
             {
+                //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor))
                 {
                     EntityBase[] entities = m_presence.Scene.Entities.GetEntities();
@@ -132,12 +131,12 @@ namespace OpenSim.Region.Framework.Scenes
                             // Don't even queue if we have sent this one
                             //
                             if (!m_updateTimes.ContainsKey(grp.UUID))
-                                SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate, grp); //New object, send full
+                                SendFullUpdateToClient(PrimUpdateFlags.FullUpdate, grp); //New object, send full
                         }
                     }
                     entities = null;
                 }
-                //Do this HERE so that all those updates added are prioritized.
+                //Do this HERE so that all those updates added are prioritized correctly.
                 m_presence.ControllingClient.ReprioritizeUpdates();
             }
 
@@ -173,7 +172,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
                         //  part.Name, part.UUID, part.TimeStampFull);
 
-                        update.Part.SendFullUpdate(m_presence.ControllingClient,
+                        SendFullUpdate(update.Part,
                                m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
 
                         // We'll update to the part's timestamp rather than
@@ -212,11 +211,11 @@ namespace OpenSim.Region.Framework.Scenes
                         if (update.Part != update.Part.ParentGroup.RootPart)
                             continue;
 
-                        SendFullUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part.ParentGroup);
+                        SendFullUpdateToClient(update.UpdateFlags, update.Part.ParentGroup);
                         continue;
                     }
 
-                    update.Part.SendFullUpdate(m_presence.ControllingClient,
+                    SendFullUpdate(update.Part,
                             m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
                 }
             }
@@ -224,7 +223,6 @@ namespace OpenSim.Region.Framework.Scenes
             #endregion
         }
 
-        //#UpdateBranch
         public void SendTerseUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectPart part)
         {
             if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
@@ -233,23 +231,81 @@ namespace OpenSim.Region.Framework.Scenes
             if (part.IsAttachment && part.ParentGroup.RootPart != part)
                 return;
             
-            // Causes this thread to dig into the Client Thread Data.
-            // Remember your locking here!
             remoteClient.SendPrimUpdate(part, UpdateFlags);
         }
 
-        public void SendFullUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        /// <summary>
+        /// Send a full update to the client for the given part
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="clientFlags"></param>
+        protected internal void SendFullUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
         {
-            grp.RootPart.SendFullUpdate(
-                remoteClient, m_presence.Scene.Permissions.GenerateClientFlags(remoteClient.AgentId, grp.RootPart), UpdateFlags);
+            //            m_log.DebugFormat(
+            //                "[SOG]: Sending part full update to {0} for {1} {2}", remoteClient.Name, part.Name, part.LocalId);
+
+            if (part.IsRoot)
+            {
+                if (part.IsAttachment)
+                {
+                    SendFullUpdateToClient(part, part.AttachedPos, clientFlags, changedFlags);
+                }
+                else
+                {
+                    SendFullUpdateToClient(part, part.AbsolutePosition, clientFlags, changedFlags);
+                }
+            }
+            else
+            {
+                SendFullUpdateToClient(part, part.OffsetPosition, clientFlags, changedFlags);
+            }
+        }
+
+        /// <summary>
+        /// Sends a full update to the client
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="lPos"></param>
+        /// <param name="clientFlags"></param>
+        public void SendFullUpdateToClient(SceneObjectPart part, Vector3 lPos, uint clientFlags, PrimUpdateFlags changedFlags)
+        {
+            // Suppress full updates during attachment editing
+            //
+            if (part.ParentGroup.IsSelected && part.IsAttachment)
+                return;
+
+            if (part.ParentGroup.IsDeleted)
+                return;
+
+            clientFlags &= ~(uint)PrimFlags.CreateSelected;
+
+            if (m_presence.UUID == part.OwnerID)
+            {
+                if ((part.Flags & PrimFlags.CreateSelected) != 0)
+                {
+                    clientFlags |= (uint)PrimFlags.CreateSelected;
+                    part.Flags &= ~PrimFlags.CreateSelected;
+                }
+            }
+            //bool isattachment = IsAttachment;
+            //if (LocalId != ParentGroup.RootPart.LocalId)
+            //isattachment = ParentGroup.RootPart.IsAttachment;
+
+            m_presence.ControllingClient.SendPrimUpdate(part, changedFlags);
+        }
+
+        public void SendFullUpdateToClient(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        {
+            SendFullUpdate(
+                grp.RootPart, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootPart), UpdateFlags);
 
             lock (grp.ChildrenList)
             {
                 foreach (SceneObjectPart part in grp.ChildrenList)
                 {
                     if (part != grp.RootPart)
-                        part.SendFullUpdate(
-                            remoteClient, m_presence.Scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part), UpdateFlags);
+                        SendFullUpdate(
+                            part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
                 }
             }
         }
