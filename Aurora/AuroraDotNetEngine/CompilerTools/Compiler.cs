@@ -225,6 +225,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             AllowedCompilers.TryGetValue(language, out converter);
 
             converter.Convert(Script, out compileScript, out PositionMap);
+            if (GetErrors().Length != 0) //Check for parsing errors
+                return compileScript;
             return "";
         }
 
@@ -318,7 +320,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return m_errors.ToArray();
         }
 
-        private void AddError(string error)
+        public void AddError(string error)
         {
             if (!m_errors.Contains(error))
             {

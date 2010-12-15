@@ -361,7 +361,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         e.slInfo.lineNumber - 1,
                         e.slInfo.charPosition - 1, emessage, e.slInfo.sourceLine);
 
-                throw new Exception(message);
+                m_compiler.AddError(message);
+                p.m_lexer.Reset();
+                ResetCounters();
+                return "Error parsing the script. " + message;
             }
 
             m_astRoot = codeTransformer.Transform(LocalMethods);

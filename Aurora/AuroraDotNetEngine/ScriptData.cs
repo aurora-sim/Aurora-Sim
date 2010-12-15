@@ -605,7 +605,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        DisplayUserNotification(ex.Message, "compiling", reupload, true);
+                        //LEAVE IT AS ToString() SO THAT WE GET THE STACK TRACE TOO
+                        DisplayUserNotification(ex.ToString(), "(exception) compiling", reupload, true);
                         return;
                     }
                 }
