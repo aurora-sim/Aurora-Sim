@@ -1997,11 +1997,16 @@ namespace OpenSim.Region.Framework.Scenes
         {
 //            m_log.DebugFormat("[SOG]: Scheduling terse update for {0} {1}", Name, UUID);
 
+            RootPart.ScheduleTerseUpdate();
+
             lock (m_partsLock)
             {
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.ScheduleTerseUpdate();
+                    if (part != RootPart)
+                    {
+                        part.ScheduleTerseUpdate();
+                    }
                 }
             }
         }

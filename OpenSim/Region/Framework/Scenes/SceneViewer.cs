@@ -38,13 +38,20 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public class SceneViewer : ISceneViewer
     {
+        #region Declares
+
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
         protected List<UUID> m_removeNextUpdateOf = new List<UUID>();
         protected bool m_SentInitialObjects = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
+        protected Timer m_reprioritization_timer;
 
         protected Dictionary<UUID, ScenePartUpdate> m_updateTimes = new Dictionary<UUID, ScenePartUpdate>();
+
+        #endregion
+
+        #region Constructor
 
         public SceneViewer(ScenePresence presence)
         {
@@ -53,8 +60,12 @@ namespace OpenSim.Region.Framework.Scenes
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
         }
 
+        #endregion
+
+        #region Enqueue/Remove updates for objects
+
         /// <summary>
-        /// Add the part to the queue of parts for which we need to send an update to the client
+        /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>
         public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags)
@@ -72,23 +83,36 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Clear the updates for this part in the next update loop
+        /// </summary>
+        /// <param name="part"></param>
         public void ClearUpdatesForPart(SceneObjectPart part)
         {
-            //Add it to the list to check and make sure that we do not send updates for this object
-            m_removeNextUpdateOf.Add(part.UUID);
-            //Make it check when the user comes around to it again
-            if (m_objectsInView.Contains(part.UUID))
-                m_objectsInView.Remove(part.UUID);
+            lock (m_removeNextUpdateOf)
+            {
+                //Add it to the list to check and make sure that we do not send updates for this object
+                m_removeNextUpdateOf.Add(part.UUID);
+                //Make it check when the user comes around to it again
+                if (m_objectsInView.Contains(part.UUID))
+                    m_objectsInView.Remove(part.UUID);
+            }
         }
+
+        #endregion
+
+        #region Object Culling by draw distance
 
         private void SignificantClientMovement(IClientAPI remote_client)
         {
             if (!m_presence.Scene.CheckForObjectCulling)
                 return;
 
+            //Only check our presence
             if (remote_client.AgentId != m_presence.UUID)
                 return;
 
+            //If the draw distance is 0, the client has gotten messed up or something and we can't do this...
             if(m_presence.DrawDistance == 0)
                 return;
 
@@ -108,12 +132,38 @@ namespace OpenSim.Region.Framework.Scenes
                             //Update the list
                             m_objectsInView.Add(entity.UUID);
                             //Send the update
-                            SendFullUpdateToClient(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
+                            SendFullUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
                         }
                     }
                 }
             }
             Entities = null;
+        }
+
+        /// <summary>
+        /// Checks to see whether the object should be sent to the client
+        /// Returns true if the client should be able to see the object, false if not
+        /// </summary>
+        /// <param name="grp"></param>
+        /// <returns></returns>
+        private bool CheckForCulling(SceneObjectGroup grp)
+        {
+            if (m_presence.Scene.CheckForObjectCulling)
+            {
+                //Check for part position against the av and the camera position
+                if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, grp.AbsolutePosition, m_presence.DrawDistance) &&
+                    !Util.DistanceLessThan(m_presence.CameraPosition, grp.AbsolutePosition, m_presence.DrawDistance)))
+                    if (m_presence.DrawDistance != 0)
+                        return false;
+            }
+            return true;
+        }
+
+        #endregion
+
+        private void Reprioritize()
+        {
+            m_presence.ControllingClient.ReprioritizeUpdates();
         }
 
         public void SendPrimUpdates()
@@ -141,41 +191,48 @@ namespace OpenSim.Region.Framework.Scenes
                             // Don't even queue if we have sent this one
                             //
                             if (!m_updateTimes.ContainsKey(grp.UUID))
-                                SendFullUpdateToClient(PrimUpdateFlags.FullUpdate, grp); //New object, send full
+                                SendFullUpdate(PrimUpdateFlags.FullUpdate, grp); //New object, send full
                         }
                     }
                     entities = null;
                 }
                 //Do this HERE so that all those updates added are prioritized correctly.
-                m_presence.ControllingClient.ReprioritizeUpdates();
+                Reprioritize();
             }
 
             #endregion
 
-            #region stuff
+            #region Update loop that sends objects that have been recently added to the queue
 
+            //Pull the parts out into a list first so that we don't lock the queue for too long
             List<PrimUpdate> updates = new List<PrimUpdate>();
             lock (m_partsUpdateQueue)
             {
-                while (m_partsUpdateQueue.Count > 0)
+                lock (m_removeNextUpdateOf)
                 {
-                    PrimUpdate update = m_partsUpdateQueue.Dequeue();
+                    while (m_partsUpdateQueue.Count > 0)
+                    {
+                        PrimUpdate update = m_partsUpdateQueue.Dequeue();
 
-                    if (update == null)
-                        continue;
+                        if (update == null)
+                            continue;
+                        
+                        //Make sure not to send deleted or null objects
+                        if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
+                            continue;
 
-                    if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
-                        continue;
+                        //Make sure we are not supposed to remove it
+                        if (m_removeNextUpdateOf.Contains(update.Part.UUID))
+                            continue;
 
-                    //Make sure we are not supposed to remove it
-                    if (m_removeNextUpdateOf.Contains(update.Part.UUID))
-                        continue;
-
-                    updates.Add(update);
+                        updates.Add(update);
+                    }
+                    //Clear this now that we are done with the batch of updates
+                    m_removeNextUpdateOf.Clear();
                 }
-                //Clear this now that we are done with the batch of updates
-                m_removeNextUpdateOf.Clear();
             }
+
+            //Now loop through the list and send the updates
             foreach (PrimUpdate update in updates)
             {
                 //Check for culling here!
@@ -235,7 +292,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (update.Part != update.Part.ParentGroup.RootPart)
                             continue;
 
-                        SendFullUpdateToClient(update.UpdateFlags, update.Part.ParentGroup);
+                        SendFullUpdate(update.UpdateFlags, update.Part.ParentGroup);
                         continue;
                     }
 
@@ -247,58 +304,41 @@ namespace OpenSim.Region.Framework.Scenes
             #endregion
         }
 
-        public void SendTerseUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectPart part)
+        protected internal void SendTerseUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectPart part)
         {
-            if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
-                return;
-
             if (part.IsAttachment && part.ParentGroup.RootPart != part)
                 return;
             
             remoteClient.SendPrimUpdate(part, UpdateFlags);
         }
 
+
         /// <summary>
         /// Send a full update to the client for the given part
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="clientFlags"></param>
-        protected internal void SendFullUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
+        public void SendFullUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
         {
-            //            m_log.DebugFormat(
-            //                "[SOG]: Sending part full update to {0} for {1} {2}", remoteClient.Name, part.Name, part.LocalId);
-
+            Vector3 lPos;
             if (part.IsRoot)
             {
                 if (part.IsAttachment)
                 {
-                    SendFullUpdateToClient(part, part.AttachedPos, clientFlags, changedFlags);
+                    lPos = part.AttachedPos;
                 }
                 else
                 {
-                    SendFullUpdateToClient(part, part.AbsolutePosition, clientFlags, changedFlags);
+                    lPos = part.AbsolutePosition;
                 }
             }
             else
             {
-                SendFullUpdateToClient(part, part.OffsetPosition, clientFlags, changedFlags);
+                lPos = part.OffsetPosition;
             }
-        }
-
-        /// <summary>
-        /// Sends a full update to the client
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="lPos"></param>
-        /// <param name="clientFlags"></param>
-        public void SendFullUpdateToClient(SceneObjectPart part, Vector3 lPos, uint clientFlags, PrimUpdateFlags changedFlags)
-        {
             // Suppress full updates during attachment editing
             //
             if (part.ParentGroup.IsSelected && part.IsAttachment)
-                return;
-
-            if (part.ParentGroup.IsDeleted)
                 return;
 
             clientFlags &= ~(uint)PrimFlags.CreateSelected;
@@ -318,7 +358,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.ControllingClient.SendPrimUpdate(part, changedFlags);
         }
 
-        public void SendFullUpdateToClient(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        public void SendFullUpdate(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
         {
             SendFullUpdate(
                 grp.RootPart, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootPart), UpdateFlags);
@@ -332,25 +372,6 @@ namespace OpenSim.Region.Framework.Scenes
                             part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
                 }
             }
-        }
-
-        /// <summary>
-        /// Checks to see whether the object should be sent to the client
-        /// Returns true if the client should be able to see the object, false if not
-        /// </summary>
-        /// <param name="grp"></param>
-        /// <returns></returns>
-        private bool CheckForCulling(SceneObjectGroup grp)
-        {
-            if (m_presence.Scene.CheckForObjectCulling)
-            {
-                //Check for part position against the av and the camera position
-                if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, grp.AbsolutePosition, m_presence.DrawDistance) &&
-                    !Util.DistanceLessThan(m_presence.CameraPosition, grp.AbsolutePosition, m_presence.DrawDistance)))
-                    if (m_presence.DrawDistance != 0)
-                        return false;
-            }
-            return true;
         }
 
         /// <summary>

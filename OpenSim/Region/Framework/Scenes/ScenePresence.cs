@@ -190,9 +190,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         // Position of agent's camera in world (region cordinates)
         protected Vector3 m_CameraCenter;
-        protected Vector3 m_lastCameraCenter;
 
-        protected Timer m_reprioritization_timer;
         protected bool m_reprioritizing;
 
         // Use these three vectors to figure out what the agent is looking at
@@ -718,12 +716,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
             
-            AbsolutePosition = posLastSignificantMove = m_CameraCenter =
-                m_lastCameraCenter = m_controllingClient.StartPos;
-
-            m_reprioritization_timer = new Timer(world.ReprioritizationInterval);
-            m_reprioritization_timer.Elapsed += new ElapsedEventHandler(Reprioritize);
-            m_reprioritization_timer.AutoReset = false;
+            AbsolutePosition = posLastSignificantMove = m_CameraCenter = m_controllingClient.StartPos;
 
             AdjustKnownSeeds();
 
@@ -1256,11 +1249,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Camera location in world.  We'll need to raytrace
             // from this location from time to time.
             m_CameraCenter = agentData.CameraCenter;
-            if (Vector3.Distance(m_lastCameraCenter, m_CameraCenter) >= Scene.RootReprioritizationDistance)
-            {
-                ReprioritizeUpdates();
-                m_lastCameraCenter = m_CameraCenter;
-            }
 
             // Use these three vectors to figure out what the agent is looking at
             // Convert it to a Matrix and/or Quaternion
@@ -3049,12 +3037,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (cAgentData.Position != new Vector3(-1f, -1f, -1f)) // UGH!!
                 m_pos = cAgentData.Position + offset;
 
-            if (Vector3.Distance(AbsolutePosition, posLastSignificantMove) >= Scene.ChildReprioritizationDistance)
-            {
-                posLastSignificantMove = AbsolutePosition;
-                ReprioritizeUpdates();
-            }
-
             m_CameraCenter = cAgentData.Center + offset;
 
             m_avHeight = cAgentData.Size.Z;
@@ -3554,12 +3536,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_attachments.Clear();
             }
-
-            lock (m_reprioritization_timer)
-            {
-                m_reprioritization_timer.Enabled = false;
-                m_reprioritization_timer.Elapsed -= new ElapsedEventHandler(Reprioritize);
-            }
             
             // I don't get it but mono crashes when you try to dispose of this timer,
             // unsetting the elapsed callback should be enough to allow for cleanup however.
@@ -3972,28 +3948,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
                 }
-            }
-        }
-
-        private void ReprioritizeUpdates()
-        {
-            if (Scene.IsReprioritizationEnabled && Scene.UpdatePrioritizationScheme != UpdatePrioritizationSchemes.Time)
-            {
-                lock (m_reprioritization_timer)
-                {
-                    if (!m_reprioritizing)
-                        m_reprioritization_timer.Enabled = m_reprioritizing = true;
-                }
-            }
-        }
-
-        private void Reprioritize(object sender, ElapsedEventArgs e)
-        {
-            m_controllingClient.ReprioritizeUpdates();
-
-            lock (m_reprioritization_timer)
-            {
-                m_reprioritization_timer.Enabled = m_reprioritizing = false;
             }
         }
 
