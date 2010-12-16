@@ -252,6 +252,32 @@ namespace Aurora.Modules
                 }
 
                 m_currentPhysicsStats[RegionID] = stats;
+
+                PhysicsStats ProfilerStats = new PhysicsStats();
+                ProfilerStats.StatAvatarUpdatePosAndVelocity = scene.StatAvatarUpdatePosAndVelocity;
+                ProfilerStats.StatCollisionOptimizedTime = scene.StatCollisionOptimizedTime;
+                ProfilerStats.StatPhysicsMoveTime = scene.StatPhysicsMoveTime;
+                ProfilerStats.StatPhysicsTaintTime = scene.StatPhysicsTaintTime;
+                ProfilerStats.StatPrimUpdatePosAndVelocity = scene.StatPrimUpdatePosAndVelocity;
+                ProfilerStats.StatSendCollisionsTime = scene.StatSendCollisionsTime;
+                ProfilerStats.StatUnlockedArea = scene.StatUnlockedArea;
+
+                //Add the stats to the profiler
+                Profiler p = ProfilerManager.GetProfiler();
+                p.AddStat("CurrentStatAvatarUpdatePosAndVelocity " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatAvatarUpdatePosAndVelocity });
+                p.AddStat("CurrentStatCollisionOptimizedTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatCollisionOptimizedTime });
+                p.AddStat("CurrentStatPhysicsMoveTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatPhysicsMoveTime });
+                p.AddStat("CurrentStatPhysicsTaintTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatPhysicsTaintTime });
+                p.AddStat("CurrentStatPrimUpdatePosAndVelocity " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatPrimUpdatePosAndVelocity });
+                p.AddStat("CurrentStatSendCollisionsTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatSendCollisionsTime });
+                p.AddStat("CurrentStatUnlockedArea " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatUnlockedArea });
             }
         }
     }

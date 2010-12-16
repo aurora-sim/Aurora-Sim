@@ -68,6 +68,7 @@
             this.HMax7 = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
             this.Max7 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsTaintBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsMoveTimeBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CollisionOptimizedTimeBox)).BeginInit();
@@ -430,11 +431,22 @@
             this.Max7.TabIndex = 37;
             this.Max7.Text = "200";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(796, 10);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(152, 23);
+            this.button1.TabIndex = 40;
+            this.button1.Text = "Switch to Instant Updating";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // PhysicsProfilerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(962, 550);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.HMax7);
             this.Controls.Add(this.label29);
             this.Controls.Add(this.Max7);
@@ -532,5 +544,6 @@
         private System.Windows.Forms.Label HMax7;
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.Label Max7;
+        private System.Windows.Forms.Button button1;
     }
 }

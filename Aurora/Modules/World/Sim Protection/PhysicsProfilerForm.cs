@@ -18,6 +18,7 @@ namespace Aurora.Modules
         private List<Scene> m_scenes = new List<Scene>();
         private UUID SceneSelected = UUID.Zero;
         private int MaxVal = 200;
+        private bool m_useInstantUpdating = false;
 
         public PhysicsProfilerForm(List<Scene> scenes)
         {
@@ -62,13 +63,26 @@ namespace Aurora.Modules
         private void UpdateStatsBars()
         {
             Profiler p = ProfilerManager.GetProfiler();
-            PhysicsTaintBox.Image = p.DrawGraph("StatPhysicsTaintTime " + SceneSelected, MaxVal).Bitmap();
-            PhysicsMoveTimeBox.Image = p.DrawGraph("StatPhysicsMoveTime " + SceneSelected, MaxVal).Bitmap();
-            CollisionOptimizedTimeBox.Image = p.DrawGraph("StatCollisionOptimizedTime " + SceneSelected, MaxVal).Bitmap();
-            SendCollisionsTimeBox.Image = p.DrawGraph("StatSendCollisionsTime " + SceneSelected, MaxVal).Bitmap();
-            AvatarUpdatePosAndVelocityBox.Image = p.DrawGraph("StatAvatarUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
-            PrimUpdatePosAndVelocityBox.Image = p.DrawGraph("StatPrimUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
-            UnlockedTimeBox.Image = p.DrawGraph("StatUnlockedArea " + SceneSelected, MaxVal).Bitmap();
+            if (m_useInstantUpdating)
+            {
+                PhysicsTaintBox.Image = p.DrawGraph("CurrentStatPhysicsTaintTime " + SceneSelected, MaxVal).Bitmap();
+                PhysicsMoveTimeBox.Image = p.DrawGraph("CurrentStatPhysicsMoveTime " + SceneSelected, MaxVal).Bitmap();
+                CollisionOptimizedTimeBox.Image = p.DrawGraph("CurrentStatCollisionOptimizedTime " + SceneSelected, MaxVal).Bitmap();
+                SendCollisionsTimeBox.Image = p.DrawGraph("CurrentStatSendCollisionsTime " + SceneSelected, MaxVal).Bitmap();
+                AvatarUpdatePosAndVelocityBox.Image = p.DrawGraph("CurrentStatAvatarUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+                PrimUpdatePosAndVelocityBox.Image = p.DrawGraph("CurrentStatPrimUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+                UnlockedTimeBox.Image = p.DrawGraph("CurrentStatUnlockedArea " + SceneSelected, MaxVal).Bitmap();
+            }
+            else
+            {
+                PhysicsTaintBox.Image = p.DrawGraph("StatPhysicsTaintTime " + SceneSelected, MaxVal).Bitmap();
+                PhysicsMoveTimeBox.Image = p.DrawGraph("StatPhysicsMoveTime " + SceneSelected, MaxVal).Bitmap();
+                CollisionOptimizedTimeBox.Image = p.DrawGraph("StatCollisionOptimizedTime " + SceneSelected, MaxVal).Bitmap();
+                SendCollisionsTimeBox.Image = p.DrawGraph("StatSendCollisionsTime " + SceneSelected, MaxVal).Bitmap();
+                AvatarUpdatePosAndVelocityBox.Image = p.DrawGraph("StatAvatarUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+                PrimUpdatePosAndVelocityBox.Image = p.DrawGraph("StatPrimUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+                UnlockedTimeBox.Image = p.DrawGraph("StatUnlockedArea " + SceneSelected, MaxVal).Bitmap();
+            }
         }
 
         private void Change_Click(object sender, EventArgs e)
@@ -93,6 +107,23 @@ namespace Aurora.Modules
 
                 UpdateStatsBars();
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            m_useInstantUpdating = !m_useInstantUpdating;
+            if (m_useInstantUpdating)
+            {
+                button1.Text = "Switch to Average Updating";
+                m_updateStats.Interval = 500;
+            }
+            else
+            {
+                m_updateStats.Interval = 10000;
+                button1.Text = "Switch to Instant Updating";
+            }
+
+            UpdateStatsBars();
         }
     }
 }
