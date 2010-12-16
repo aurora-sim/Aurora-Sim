@@ -482,7 +482,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             private void FireDeadAvatarEvent(string KillerName, ScenePresence DeadAv, SceneObjectGroup killer)
             {
-                foreach (IScriptModule m in DeadAv.m_scriptEngines)
+                IScriptModule[] scriptEngines = DeadAv.Scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (IScriptModule m in scriptEngines)
                 {
                     if (killer != null)
                     {

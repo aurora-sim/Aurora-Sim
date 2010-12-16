@@ -43,7 +43,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
-        protected List<UUID> m_removeNextUpdateOf = new List<UUID>();
+        protected List<uint> m_removeNextUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
@@ -93,7 +93,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_removeNextUpdateOf)
             {
                 //Add it to the list to check and make sure that we do not send updates for this object
-                m_removeNextUpdateOf.Add(part.UUID);
+                m_removeNextUpdateOf.Add(part.LocalId);
                 //Make it check when the user comes around to it again
                 if (m_objectsInView.Contains(part.UUID))
                     m_objectsInView.Remove(part.UUID);
@@ -237,13 +237,11 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
 
                         //Make sure we are not supposed to remove it
-                        if (m_removeNextUpdateOf.Contains(update.Part.UUID))
+                        if (m_removeNextUpdateOf.Contains(update.Part.LocalId))
                             continue;
 
                         updates.Add(update);
                     }
-                    //Clear this now that we are done with the batch of updates
-                    m_removeNextUpdateOf.Clear();
                 }
             }
 
