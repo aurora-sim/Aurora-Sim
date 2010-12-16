@@ -19,6 +19,7 @@ namespace Aurora.Modules
         private UUID SceneSelected = UUID.Zero;
         private int MaxVal = 200;
         private bool m_useInstantUpdating = false;
+        private int TimeToUpdate = 500;
 
         public PhysicsProfilerForm(List<Scene> scenes)
         {
@@ -39,6 +40,11 @@ namespace Aurora.Modules
             m_updateStats.Enabled = true;
             m_updateStats.Elapsed += new System.Timers.ElapsedEventHandler(m_updateStats_Elapsed);
             m_updateStats.Start();
+
+            InstantUpdatesSet.Hide();
+            TimeBetweenUpdates.Hide();
+            IULabel.Hide();
+
             UpdateStatsBars();
         }
 
@@ -114,16 +120,37 @@ namespace Aurora.Modules
             m_useInstantUpdating = !m_useInstantUpdating;
             if (m_useInstantUpdating)
             {
+                InstantUpdatesSet.Show();
+                TimeBetweenUpdates.Show();
+                IULabel.Show();
+
                 button1.Text = "Switch to Average Updating";
-                m_updateStats.Interval = 500;
+                m_updateStats.Interval = TimeToUpdate;
             }
             else
             {
+                InstantUpdatesSet.Hide();
+                TimeBetweenUpdates.Hide();
+                IULabel.Hide();
+
                 m_updateStats.Interval = 10000;
                 button1.Text = "Switch to Instant Updating";
             }
 
             UpdateStatsBars();
+        }
+
+        private void InstantUpdatesSet_Click(object sender, EventArgs e)
+        {
+            if (int.TryParse(TimeBetweenUpdates.Text, out TimeToUpdate))
+            {
+                m_updateStats.Interval = TimeToUpdate;
+            }
+        }
+
+        private void PhysicsProfilerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            m_updateStats.Stop();
         }
     }
 }

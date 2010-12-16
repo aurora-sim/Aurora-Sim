@@ -69,6 +69,9 @@
             this.label29 = new System.Windows.Forms.Label();
             this.Max7 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.InstantUpdatesSet = new System.Windows.Forms.Button();
+            this.TimeBetweenUpdates = new System.Windows.Forms.TextBox();
+            this.IULabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsTaintBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsMoveTimeBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CollisionOptimizedTimeBox)).BeginInit();
@@ -81,7 +84,7 @@
             // RegionNameSelector
             // 
             this.RegionNameSelector.FormattingEnabled = true;
-            this.RegionNameSelector.Location = new System.Drawing.Point(90, 12);
+            this.RegionNameSelector.Location = new System.Drawing.Point(90, 13);
             this.RegionNameSelector.Name = "RegionNameSelector";
             this.RegionNameSelector.Size = new System.Drawing.Size(121, 21);
             this.RegionNameSelector.TabIndex = 0;
@@ -90,7 +93,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 15);
+            this.label1.Location = new System.Drawing.Point(12, 17);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(72, 13);
             this.label1.TabIndex = 1;
@@ -218,7 +221,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(243, 15);
+            this.label9.Location = new System.Drawing.Point(217, 17);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(97, 13);
             this.label9.TabIndex = 16;
@@ -226,7 +229,7 @@
             // 
             // MaxValBox
             // 
-            this.MaxValBox.Location = new System.Drawing.Point(346, 13);
+            this.MaxValBox.Location = new System.Drawing.Point(320, 13);
             this.MaxValBox.Name = "MaxValBox";
             this.MaxValBox.Size = new System.Drawing.Size(100, 20);
             this.MaxValBox.TabIndex = 17;
@@ -234,7 +237,7 @@
             // 
             // Change
             // 
-            this.Change.Location = new System.Drawing.Point(452, 12);
+            this.Change.Location = new System.Drawing.Point(426, 12);
             this.Change.Name = "Change";
             this.Change.Size = new System.Drawing.Size(75, 23);
             this.Change.TabIndex = 18;
@@ -433,7 +436,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(796, 10);
+            this.button1.Location = new System.Drawing.Point(796, 12);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(152, 23);
             this.button1.TabIndex = 40;
@@ -441,11 +444,41 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // InstantUpdatesSet
+            // 
+            this.InstantUpdatesSet.Location = new System.Drawing.Point(715, 12);
+            this.InstantUpdatesSet.Name = "InstantUpdatesSet";
+            this.InstantUpdatesSet.Size = new System.Drawing.Size(75, 23);
+            this.InstantUpdatesSet.TabIndex = 43;
+            this.InstantUpdatesSet.Text = "Set";
+            this.InstantUpdatesSet.UseVisualStyleBackColor = true;
+            this.InstantUpdatesSet.Click += new System.EventHandler(this.InstantUpdatesSet_Click);
+            // 
+            // TimeBetweenUpdates
+            // 
+            this.TimeBetweenUpdates.Location = new System.Drawing.Point(666, 13);
+            this.TimeBetweenUpdates.Name = "TimeBetweenUpdates";
+            this.TimeBetweenUpdates.Size = new System.Drawing.Size(43, 20);
+            this.TimeBetweenUpdates.TabIndex = 42;
+            this.TimeBetweenUpdates.Text = "500";
+            // 
+            // IULabel
+            // 
+            this.IULabel.AutoSize = true;
+            this.IULabel.Location = new System.Drawing.Point(507, 17);
+            this.IULabel.Name = "IULabel";
+            this.IULabel.Size = new System.Drawing.Size(153, 13);
+            this.IULabel.TabIndex = 41;
+            this.IULabel.Text = "Time Between Instant Updates";
+            // 
             // PhysicsProfilerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(962, 550);
+            this.Controls.Add(this.InstantUpdatesSet);
+            this.Controls.Add(this.TimeBetweenUpdates);
+            this.Controls.Add(this.IULabel);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.HMax7);
             this.Controls.Add(this.label29);
@@ -490,6 +523,7 @@
             this.Name = "PhysicsProfilerForm";
             this.Text = "PhysicsProfilerForm";
             this.Load += new System.EventHandler(this.PhysicsProfilerForm_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PhysicsProfilerForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsTaintBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsMoveTimeBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.CollisionOptimizedTimeBox)).EndInit();
@@ -545,5 +579,8 @@
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.Label Max7;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button InstantUpdatesSet;
+        private System.Windows.Forms.TextBox TimeBetweenUpdates;
+        private System.Windows.Forms.Label IULabel;
     }
 }
