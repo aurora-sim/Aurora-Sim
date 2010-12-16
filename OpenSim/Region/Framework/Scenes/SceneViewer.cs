@@ -134,7 +134,7 @@ namespace OpenSim.Region.Framework.Scenes
                             //Update the list
                             m_objectsInView.Add(entity.UUID);
                             //Send the update
-                            SendFullUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
+                            SendUpdate(PrimUpdateFlags.FullUpdate, (SceneObjectGroup)entity); //New object, send full
                         }
                     }
                 }
@@ -202,7 +202,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityUpdate update;
                     while (entityUpdates.TryDequeue(out update))
                     {
-                        SendFullUpdate(PrimUpdateFlags.FullUpdate, ((SceneObjectGroup)update.Entity));
+                        SendUpdate(PrimUpdateFlags.FullUpdate, ((SceneObjectGroup)update.Entity));
                     }
                 }
             }
@@ -246,86 +246,29 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!CheckForCulling(update.Part.ParentGroup))
                     continue;
 
-                if (m_updateTimes.ContainsKey(update.Part.UUID))
+                // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
+                if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
                 {
-                    ScenePartUpdate partupdate = m_updateTimes[update.Part.UUID];
-
-                    // We deal with the possibility that two updates occur at
-                    // the same unix time at the update point itself.
-
-                    //if ((partupdate.LastFullUpdateTime < update.Part.TimeStampFull) ||
-                    //        update.Part.IsAttachment)
-                    //{
-                    //m_log.DebugFormat(
-                    //  "[SCENE PRESENCE]: Fully   updating prim {0}, {1} - part timestamp {2}",
-                    //  part.Name, part.UUID, part.TimeStampFull);
-
-                    SendFullUpdate(update.Part,
-                           m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
-
-                    // We'll update to the part's timestamp rather than
-                    // the current time to avoid the race condition
-                    // whereby the next tick occurs while we are doing
-                    // this update. If this happened, then subsequent
-                    // updates which occurred on the same tick or the
-                    // next tick of the last update would be ignored.
-
-                    //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
-
-                    //}
-                    //else if (partupdate.LastTerseUpdateTime <= update.Part.TimeStampTerse)
-                    //{
-                    //m_log.DebugFormat(
-                    //  "[SCENE PRESENCE]: Tersely updating prim {0}, {1} - part timestamp {2}",
-                    //  part.Name, part.UUID, part.TimeStampTerse);
-
-                    SendTerseUpdateToClient(m_presence.ControllingClient, update.UpdateFlags, update.Part);
-
-                    //    partupdate.LastTerseUpdateTime = update.Part.TimeStampTerse;
-                    //}
-                }
-                else
-                {
-                    //never been sent to client before so do full update
-                    ScenePartUpdate partupdate = new ScenePartUpdate();
-                    partupdate.FullID = update.Part.UUID;
-                    //partupdate.LastFullUpdateTime = update.Part.TimeStampFull;
-                    m_updateTimes.Add(update.Part.UUID, partupdate);
-
-                    // Attachment handling
-                    //
-                    if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
-                    {
-                        if (update.Part != update.Part.ParentGroup.RootPart)
-                            continue;
-
-                        SendFullUpdate(update.UpdateFlags, update.Part.ParentGroup);
+                    if (update.Part != update.Part.ParentGroup.RootPart)
                         continue;
-                    }
 
-                    SendFullUpdate(update.Part,
-                            m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+                    SendUpdate(update.UpdateFlags, update.Part.ParentGroup);
+                    continue;
                 }
+
+                SendUpdate(update.Part,
+                        m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
             }
 
             #endregion
         }
-
-        protected internal void SendTerseUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags UpdateFlags, SceneObjectPart part)
-        {
-            if (part.IsAttachment && part.ParentGroup.RootPart != part)
-                return;
-            
-            remoteClient.SendPrimUpdate(part, UpdateFlags);
-        }
-
 
         /// <summary>
         /// Send a full update to the client for the given part
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="clientFlags"></param>
-        public void SendFullUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
+        protected internal void SendUpdate(SceneObjectPart part, uint clientFlags, PrimUpdateFlags changedFlags)
         {
             Vector3 lPos;
             if (part.IsRoot)
@@ -343,8 +286,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lPos = part.OffsetPosition;
             }
+
             // Suppress full updates during attachment editing
-            //
             if (part.ParentGroup.IsSelected && part.IsAttachment)
                 return;
 
@@ -361,13 +304,12 @@ namespace OpenSim.Region.Framework.Scenes
             //bool isattachment = IsAttachment;
             //if (LocalId != ParentGroup.RootPart.LocalId)
             //isattachment = ParentGroup.RootPart.IsAttachment;
-
             m_presence.ControllingClient.SendPrimUpdate(part, changedFlags);
         }
 
-        public void SendFullUpdate(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
+        protected internal void SendUpdate(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
         {
-            SendFullUpdate(
+            SendUpdate(
                 grp.RootPart, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootPart), UpdateFlags);
 
             lock (grp.ChildrenList)
@@ -375,7 +317,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectPart part in grp.ChildrenList)
                 {
                     if (part != grp.RootPart)
-                        SendFullUpdate(
+                        SendUpdate(
                             part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
                 }
             }

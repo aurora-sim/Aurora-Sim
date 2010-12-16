@@ -3818,7 +3818,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     try
                     {
-                        if (canUseCached)
+                        //Do NOT send cached updates for terse updates
+                        bool isTerse = updateFlags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
+                        if (canUseCached && !isTerse)
                         {
                             cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
                         }
