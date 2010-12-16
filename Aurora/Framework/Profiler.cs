@@ -79,16 +79,16 @@ namespace Aurora.Framework
             {
                 for (int y = 200; y > 0; y--)
                 {
-                    //Note: we do 200-x and 200-y to flip the graph on the X and Y axises
+                    //Note: we do 200-y to flip the graph on the Y axis
                     if (IsInGraphBar(x, y, Stats, ScaleFactor))
-                        bmp.SetPixel(200 - x, 200 - y, BarColor);
+                        bmp.SetPixel(x, 200 - y, BarColor);
                     else
                     {
                         //Check whether the line needs drawn
                         if (DrawLine(y, ScaleFactor))
-                            bmp.SetPixel(200 - x, 200 - y, LineColor);
+                            bmp.SetPixel(x, 200 - y, LineColor);
                         else
-                            bmp.SetPixel(200 - x, 200 - y, BackgroundColor);
+                            bmp.SetPixel(x, 200 - y, BackgroundColor);
                     }
                 }
             }
@@ -136,16 +136,16 @@ namespace Aurora.Framework
             {
                 for (int y = 200; y > 0; y--)
                 {
-                    //Note: we do 200-x and 200-y to flip the graph on the X and Y axises
+                    //Note: we do 200-y to flip the graph on the Y axis
                     if (IsInGraphBar(x, y, Stats, ScaleFactor))
-                        bmp.SetPixel(200 - x, 200 - y, BarColor);
+                        bmp.SetPixel(x, 200 - y, BarColor);
                     else
                     {
                         //Check whether the line needs drawn
                         if (DrawLine(y, ScaleFactor))
-                            bmp.SetPixel(200 - x, 200 - y, LineColor);
+                            bmp.SetPixel(x, 200 - y, LineColor);
                         else
-                            bmp.SetPixel(200 - x, 200 - y, BackgroundColor);
+                            bmp.SetPixel(x, 200 - y, BackgroundColor);
                     }
                 }
             }
