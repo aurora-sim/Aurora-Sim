@@ -1407,7 +1407,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.RemoveGroupTarget(this);
             }
 
-            ScheduleGroupFullUpdate(PrimUpdateFlags.PrimFlags);
+            ScheduleGroupUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         public void SetText(string text, Vector3 color, double alpha)
@@ -1954,11 +1954,14 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        //#UpdateBranch
-        public void ScheduleGroupFullUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
+        /// <summary>
+        /// Send an update to all prims in the group to a specific avatar
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="UpdateFlags"></param>
+        public void ScheduleGroupUpdateToAvatar(ScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
-//            m_log.DebugFormat("[SOG]: Scheduling full update for {0} {1} just to avatar {2}", Name, UUID, presence.Name);
-
+            //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
 
             lock (m_partsLock)
@@ -1973,12 +1976,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
         /// <summary>
-        /// Schedule a full update for this scene object
+        /// Send an update to all prims in the group
         /// </summary>
-        public void ScheduleGroupFullUpdate(PrimUpdateFlags UpdateFlags)
+        /// <param name="UpdateFlags"></param>
+        public void ScheduleGroupUpdate(PrimUpdateFlags UpdateFlags)
         {
+            //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdate(UpdateFlags);
 
             lock (m_partsLock)
@@ -1993,14 +1997,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
         /// <summary>
-        /// Schedule a terse update for this scene object
+        /// Schedule a terse update (position, rotation, velocity, and rotational velocity update) for this object to all clients
         /// </summary>
         public void ScheduleGroupTerseUpdate()
         {
-//            m_log.DebugFormat("[SOG]: Scheduling terse update for {0} {1}", Name, UUID);
-
+            //We have to send the root part first as the client wants it that way
             RootPart.ScheduleTerseUpdate();
 
             lock (m_partsLock)
@@ -2250,7 +2252,7 @@ namespace OpenSim.Region.Framework.Scenes
             //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
             //We need to send this so that we don't have issues with the client not realizing that the prims were unlinked
-            ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+            ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
             return objectGroup;
         }
@@ -2671,7 +2673,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //if (part.UUID != m_rootPart.UUID)
 
                 HasGroupChanged = true;
-                ScheduleGroupFullUpdate(PrimUpdateFlags.Shape);
+                ScheduleGroupUpdate(PrimUpdateFlags.Shape);
 
                 //if (part.UUID == m_rootPart.UUID)
                 //{

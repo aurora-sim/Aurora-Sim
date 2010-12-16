@@ -310,7 +310,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     if (tainted)
                         objatt.HasGroupChanged = true;
 
-                    objatt.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    objatt.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 4 == AttachedRez
@@ -640,7 +640,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
 
                 so.IsSelected = false; // fudge....
-                so.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                so.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
             }
 
             // In case it is later dropped again, don't let

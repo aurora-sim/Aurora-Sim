@@ -1587,7 +1587,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Commented out this code since it could never have executed, but might still be informative.
 //            if (proxyObjectGroup != null)
 //            {
-            proxyObjectGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate); 
+            proxyObjectGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate); 
                 remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
                 m_scene.DeleteSceneObject(proxyObjectGroup, false, true);
 //            }

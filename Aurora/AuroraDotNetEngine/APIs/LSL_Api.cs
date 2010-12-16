@@ -3982,7 +3982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // if attachment we set it's asset id so object updates can reflect that
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
-                    group.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
                     SceneObjectPart rootPart = null;
                     rootPart = group.GetChildPart(group.UUID);
@@ -4278,7 +4278,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             parentPrim.RootPart.CreateSelected = true;
             parentPrim.HasGroupChanged = true;
-            parentPrim.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+            parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
             if (client != null)
                 parentPrim.GetProperties(client);
@@ -4351,7 +4351,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     parentPrim.DelinkFromGroup(part, true);
                 }
                 parentPrim.HasGroupChanged = true;
-                parentPrim.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
 
                 if (parts.Count > 0)
@@ -4363,7 +4363,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         newRoot.ParentGroup.LinkToGroup(part.ParentGroup);
                     }
                     newRoot.ParentGroup.HasGroupChanged = true;
-                    newRoot.ParentGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                    newRoot.ParentGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 }
             }
             else
@@ -4373,7 +4373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 parentPrim.DelinkFromGroup(childPrim, true);
                 parentPrim.HasGroupChanged = true;
-                parentPrim.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+                parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
         }
@@ -4395,7 +4395,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             }
             parentPrim.HasGroupChanged = true;
-            parentPrim.ScheduleGroupFullUpdate(PrimUpdateFlags.FullUpdate);
+            parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         public LSL_String llGetLinkKey(int linknum)

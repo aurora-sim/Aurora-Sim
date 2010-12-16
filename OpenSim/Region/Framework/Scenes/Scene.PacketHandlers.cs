@@ -105,7 +105,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (entity is SceneObjectGroup)
                 {
                     ScenePresence SP = GetScenePresence(remoteClient.AgentId);
-                    ((SceneObjectGroup)entity).ScheduleGroupFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
                 }
             }
         }
@@ -226,7 +226,7 @@ namespace OpenSim.Region.Framework.Scenes
             else //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
             {
                 if(part.ParentGroup.RootPart.AngularVelocity != Vector3.Zero && !part.ParentGroup.IsDeleted)
-                    part.ParentGroup.ScheduleGroupFullUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    part.ParentGroup.ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
             }
 
             // If it's not an attachment, and we are allowed to move it,

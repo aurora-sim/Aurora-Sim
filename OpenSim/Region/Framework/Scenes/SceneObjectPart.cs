@@ -3551,7 +3551,6 @@ namespace OpenSim.Region.Framework.Scenes
             APIDTarget = Quaternion.Identity;
         }
 
-        //#UpdateBranch
         /// <summary>
         /// Clear all pending updates of parts to clients
         /// </summary>
@@ -3563,16 +3562,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
+        /// <summary>
+        /// Tell the SceneViewer for the given client about the update
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
         private void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
         {
             presence.SceneViewer.QueuePartForUpdate(this, flags);
         }
 
-        //#UpdateBranch
         /// <summary>
         /// Schedule a terse update for this prim.  Terse updates only send position,
-        /// rotation, velocity, rotational velocity and shape information.
+        /// rotation, velocity, and rotational velocity information.
         /// </summary>
         public void ScheduleTerseUpdate()
         {
@@ -3580,12 +3582,20 @@ namespace OpenSim.Region.Framework.Scenes
             ScheduleUpdate(UpdateFlags);
         }
 
+        /// <summary>
+        /// Check to see whether the given flags make it a terse update
+        /// </summary>
+        /// <param name="flags"></param>
+        /// <returns></returns>
         private bool IsTerse(PrimUpdateFlags flags)
         {
             return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
         }
 
-        //#UpdateBranch
+        /// <summary>
+        /// Tell all avatars in the Scene about the new update
+        /// </summary>
+        /// <param name="UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
             if (ShouldScheduleUpdate(UpdateFlags))
@@ -3597,7 +3607,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
+        /// <summary>
+        /// Tell a specific avatar about the update
+        /// </summary>
+        /// <param name="UpdateFlags"></param>
+        /// <param name="avatar"></param>
         public void ScheduleUpdateToAvatar(PrimUpdateFlags UpdateFlags, ScenePresence avatar)
         {
             if (ShouldScheduleUpdate(UpdateFlags))
@@ -3606,11 +3620,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        //#UpdateBranch
+        /// <summary>
+        /// Make sure that we should send the specified update to the client
+        /// </summary>
+        /// <param name="UpdateFlags"></param>
+        /// <returns></returns>
         protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
+            //If its not a terse update, we need to make sure to add the text, media, etc pieces on, otherwise the client will forget about them
             if (!IsTerse(UpdateFlags))
             {
+                //If it is find best, we add the defaults
                 if (UpdateFlags == PrimUpdateFlags.FindBest)
                 {
                     //Add the defaults
@@ -3640,10 +3660,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
                     UpdateFlags |= PrimUpdateFlags.MediaURL;
 
+                //Make sure that we send this! Otherwise, the client will only see one prim
                 if (m_parentGroup != null)
                     if (ParentGroup.ChildrenList.Count != 1)
                         UpdateFlags |= PrimUpdateFlags.ParentID;
-                //Increment the CRC code so that the client won't be sent a cached update
+
+                //Increment the CRC code so that the client won't be sent a cached update for this
                 CRC++;
             }
 
@@ -3660,6 +3682,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ParentGroup.IsDeleted)
                     return false;
 
+                //We don't check for significant movement when the scene is loading 
                 if (!ParentGroup.Scene.LoadingPrims)
                     ParentGroup.CheckForSignificantMovement();
 
@@ -3670,8 +3693,6 @@ namespace OpenSim.Region.Framework.Scenes
                 const float VELOCITY_TOLERANCE = 0.001f;
                 const float POSITION_TOLERANCE = 0.05f;
 
-                //if (m_updateFlag == InternalUpdateFlags.TerseUpdate)
-                //{
                 // Throw away duplicate or insignificant updates
                 if (RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
                     Acceleration.Equals(m_lastAcceleration) ||
@@ -3680,6 +3701,7 @@ namespace OpenSim.Region.Framework.Scenes
                     AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
                     OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
                 {
+                    return false;
                 }
                 else
                 {
@@ -3691,10 +3713,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastAngularVelocity = AngularVelocity;
                 }
                 return true;
-                //}
-                //else if (m_updateFlag == InternalUpdateFlags.FullUpdate) // is a new prim, just created/reloaded or has major changes
-                //{
-                //}
             }
             return false;
         }
@@ -4911,7 +4929,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         break;
                 }
-                ParentGroup.ScheduleGroupFullUpdate(PrimUpdateFlags.PrimFlags);
+                ParentGroup.ScheduleGroupUpdate(PrimUpdateFlags.PrimFlags);
 
                 SendObjectPropertiesToClient(AgentID);
 
