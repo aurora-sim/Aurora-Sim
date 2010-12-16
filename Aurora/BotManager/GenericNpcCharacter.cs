@@ -1185,10 +1185,6 @@ namespace Aurora.BotManager
         {
         }
 
-        public void ReprioritizeUpdates()
-        {
-        }
-
         public void SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
         {
         }

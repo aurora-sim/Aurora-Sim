@@ -659,10 +659,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void ReprioritizeUpdates()
-        {
-        }
-
         public void FlushPrimUpdates()
         {
         }

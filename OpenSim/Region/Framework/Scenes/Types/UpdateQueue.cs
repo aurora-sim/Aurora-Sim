@@ -35,15 +35,9 @@ using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Types
 {
-    public class PrimUpdate
-    {
-        public SceneObjectPart Part;
-        public PrimUpdateFlags UpdateFlags;
-    }
-
     public class UpdateQueue
     {
-        private Queue<PrimUpdate> m_queue;
+        private PriorityQueue m_queue;
 
         private Dictionary<UUID, bool> m_ids;
 
@@ -56,7 +50,7 @@ namespace OpenSim.Region.Framework.Scenes.Types
 
         public UpdateQueue()
         {
-            m_queue = new Queue<PrimUpdate>();
+            m_queue = new PriorityQueue();
             m_ids = new Dictionary<UUID, bool>();
         }
 
@@ -65,35 +59,45 @@ namespace OpenSim.Region.Framework.Scenes.Types
             lock (m_syncObject)
             {
                 m_ids.Clear();
-                m_queue.Clear();
             }
         }
 
-        public void Enqueue(PrimUpdate part)
+        public void Enqueue(double priority, EntityUpdate part, uint LocalID)
         {
             lock (m_syncObject)
             {
-                if (!m_ids.ContainsKey(part.Part.UUID))
+                if (!m_ids.ContainsKey(part.Entity.UUID))
                 {
-                    m_ids.Add(part.Part.UUID, true);
-                    m_queue.Enqueue(part);
+                    m_ids.Add(part.Entity.UUID, true);
+                    m_queue.Enqueue(priority, part, LocalID);
                 }
             }
         }
 
-        public PrimUpdate Dequeue()
+        public bool TryDequeue(out EntityUpdate part)
         {
-            PrimUpdate part = null;
+            bool RetVal = false;
             lock (m_syncObject)
             {
                 if (m_queue.Count > 0)
                 {
-                    part = m_queue.Dequeue();
-                    m_ids.Remove(part.Part.UUID);
+                    RetVal = m_queue.TryDequeue(out part);
+                    m_ids.Remove(part.Entity.UUID);
                 }
             }
 
-            return part;
+            part = null;
+            return RetVal;
+        }
+
+        public void Reprioritize(PriorityQueue.UpdatePriorityHandler handler)
+        {
+            m_queue.Reprioritize(handler);
+        }
+
+        public object SyncRoot
+        {
+            get { return m_queue.SyncRoot; }
         }
     }
 }

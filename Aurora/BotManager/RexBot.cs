@@ -2348,10 +2348,6 @@ namespace Aurora.BotManager
         {
         }
 
-        void IClientAPI.ReprioritizeUpdates()
-        {
-        }
-
         void IClientAPI.FlushPrimUpdates()
         {
             

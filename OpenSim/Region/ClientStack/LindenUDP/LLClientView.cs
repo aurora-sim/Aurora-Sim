@@ -43,6 +43,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.Framework.Scenes.Types;
 using OpenSim.Services.Interfaces;
 using Timer = System.Timers.Timer;
 using AssetLandmark = OpenSim.Framework.AssetLandmark;
@@ -319,7 +320,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly IGroupsModule m_GroupsModule;
 
         private int m_cachedTextureSerial;
-        private PriorityQueue m_entityUpdates;
+        private UpdateQueue m_entityUpdates;
         private Prioritizer m_prioritizer;
         private bool m_disableFacelights = false;
 
@@ -433,7 +434,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             m_scene = scene;
 
-            m_entityUpdates = new PriorityQueue(m_scene.Entities.Count);
+            m_entityUpdates = new UpdateQueue();
             m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 
@@ -3943,27 +3944,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             #endregion Packet Sending
-        }
-
-        public void ReprioritizeUpdates()
-        {
-            if (m_entityUpdates.Count == 0)
-                return;
-            //m_log.Debug("[CLIENT]: Reprioritizing prim updates for " + m_firstName + " " + m_lastName + " for " + m_entityUpdates.Count + " prims.");
-
-            lock (m_entityUpdates.SyncRoot)
-                m_entityUpdates.Reprioritize(UpdatePriorityHandler);
-        }
-
-        private bool UpdatePriorityHandler(ref double priority, uint localID)
-        {
-            EntityBase entity;
-            if (m_scene.Entities.TryGetValue(localID, out entity))
-            {
-                priority = m_prioritizer.GetUpdatePriority(this, entity);
-            }
-
-            return priority != double.NaN;
         }
 
         public void FlushPrimUpdates()

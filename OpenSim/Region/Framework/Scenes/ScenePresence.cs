@@ -194,6 +194,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Position of agent's camera in world (region cordinates)
         /// </summary>
         protected Vector3 m_CameraCenter;
+        /// <summary>
+        /// This is used for reprioritization of updates so that we can reprioritze every time the position gets too different
+        /// </summary>
+        protected Vector3 m_lastAbsolutePosition;
 
         // Use these three vectors to figure out what the agent is looking at
         // Convert it to a Matrix and/or Quaternion
@@ -1311,6 +1315,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (AllowMovement && !SitGround && !Frozen)
             {
+                if (Vector3.Distance(m_lastAbsolutePosition, AbsolutePosition) >= Scene.RootReprioritizationDistance)
+                {
+                    m_lastAbsolutePosition = AbsolutePosition;
+                    SceneViewer.Reprioritize();
+                }
+
                 if (agentData.UseClientAgentPosition)
                 {
                     m_moveToPositionInProgress = (agentData.ClientAgentPosition - AbsolutePosition).Length() > 0.2f;

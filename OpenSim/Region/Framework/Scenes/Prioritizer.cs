@@ -341,7 +341,7 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class PriorityQueue
     {
-        public delegate bool UpdatePriorityHandler(ref double priority, uint local_id);
+        public delegate bool UpdatePriorityHandler(ref double priority, ISceneEntity entity);
 
         private MinHeap<MinHeapItem>[] m_heaps = new MinHeap<MinHeapItem>[1];
         private Dictionary<uint, LookupItem> m_lookupTable;
@@ -435,7 +435,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (lookup.Heap.TryGetValue(lookup.Handle, out item))
                 {
                     priority = item.Priority;
-                    if (handler(ref priority, item.LocalID))
+                    if (handler(ref priority, item.Value.Entity))
                     {
                         if (lookup.Heap.ContainsHandle(lookup.Handle))
                             lookup.Heap[lookup.Handle] =

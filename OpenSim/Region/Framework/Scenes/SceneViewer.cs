@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using log4net;
@@ -41,11 +42,14 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         protected ScenePresence m_presence;
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
         protected List<uint> m_removeNextUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
+        protected volatile bool m_updatesNeedReprioritization = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
         protected Prioritizer m_prioritizer;
 
@@ -73,10 +77,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_partsUpdateQueue)
             {
-                PrimUpdate update = new PrimUpdate();
-                update.Part = part;
-                update.UpdateFlags = UpdateFlags;
-                m_partsUpdateQueue.Enqueue(update);
+                double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
+                EntityUpdate update = new EntityUpdate(part, UpdateFlags);
+                m_partsUpdateQueue.Enqueue(priority, update, update.Entity.LocalId);
 
                 //Make it check when the user comes around to it again
                 if (m_objectsInView.Contains(part.UUID))
@@ -98,6 +101,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_objectsInView.Contains(part.UUID))
                     m_objectsInView.Remove(part.UUID);
             }
+        }
+
+        public void Reprioritize()
+        {
+            m_updatesNeedReprioritization = true;
         }
 
         #endregion
@@ -217,27 +225,38 @@ namespace OpenSim.Region.Framework.Scenes
 
             #endregion
 
+            #region Reprioritization
+
+            if (m_updatesNeedReprioritization)
+            {
+                //Reset this first so that we have a minimum of time that this could affect the value
+                m_updatesNeedReprioritization = false;
+                m_log.Debug("[SceneViewer]: Reprioritizing prim updates for " + m_presence.Name + " for " + m_partsUpdateQueue.Count + " prims.");
+                m_partsUpdateQueue.Reprioritize(UpdatePriorityHandler);
+            }
+
+            #endregion
+
             #region Update loop that sends objects that have been recently added to the queue
 
             //Pull the parts out into a list first so that we don't lock the queue for too long
-            List<PrimUpdate> updates = new List<PrimUpdate>();
+            List<EntityUpdate> updates = new List<EntityUpdate>();
             lock (m_partsUpdateQueue)
             {
                 lock (m_removeNextUpdateOf)
                 {
-                    while (m_partsUpdateQueue.Count > 0)
+                    EntityUpdate update = null;
+                    while (m_partsUpdateQueue.TryDequeue(out update))
                     {
-                        PrimUpdate update = m_partsUpdateQueue.Dequeue();
-
                         if (update == null)
                             continue;
                         
                         //Make sure not to send deleted or null objects
-                        if (update.Part.ParentGroup == null || update.Part.ParentGroup.IsDeleted)
+                        if (((SceneObjectPart)update.Entity).ParentGroup == null || ((SceneObjectPart)update.Entity).ParentGroup.IsDeleted)
                             continue;
 
                         //Make sure we are not supposed to remove it
-                        if (m_removeNextUpdateOf.Contains(update.Part.LocalId))
+                        if (m_removeNextUpdateOf.Contains(update.Entity.LocalId))
                             continue;
 
                         updates.Add(update);
@@ -246,24 +265,25 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Now loop through the list and send the updates
-            foreach (PrimUpdate update in updates)
+            foreach (EntityUpdate update in updates)
             {
+                SceneObjectPart part = ((SceneObjectPart)update.Entity);
                 //Check for culling here!
-                if (!CheckForCulling(update.Part.ParentGroup))
+                if (!CheckForCulling(part.ParentGroup))
                     continue;
 
                 // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
-                if (update.Part.ParentGroup.RootPart.Shape.PCode == 9 && update.Part.ParentGroup.RootPart.Shape.State != 0)
+                if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
                 {
-                    if (update.Part != update.Part.ParentGroup.RootPart)
+                    if (part != part.ParentGroup.RootPart)
                         continue;
 
-                    SendUpdate(update.UpdateFlags, update.Part.ParentGroup);
+                    SendUpdate(update.Flags, part.ParentGroup);
                     continue;
                 }
 
-                SendUpdate(update.Part,
-                        m_presence.GenerateClientFlags(update.Part), update.UpdateFlags);
+                SendUpdate(part,
+                        m_presence.GenerateClientFlags(part), update.Flags);
             }
 
             #endregion
@@ -274,6 +294,12 @@ namespace OpenSim.Region.Framework.Scenes
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 
             m_inUse = false;
+        }
+
+        private bool UpdatePriorityHandler(ref double priority, ISceneEntity entity)
+        {
+            priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, entity);
+            return priority != double.NaN;
         }
 
         #endregion

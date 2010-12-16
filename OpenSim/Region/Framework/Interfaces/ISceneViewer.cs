@@ -38,5 +38,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags);
         void SendPrimUpdates();
         void ClearUpdatesForPart(SceneObjectPart sceneObjectPart);
+
+        void Reprioritize();
     }
 }
