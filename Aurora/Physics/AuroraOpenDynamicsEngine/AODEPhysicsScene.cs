@@ -295,6 +295,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_StatUnlockedArea; }
         }
 
+        private int m_StatFindContactsTime;
+        public override int StatFindContactsTime
+        {
+            get { return m_StatFindContactsTime; }
+        }
+
+        private int m_StatContactLoopTime;
+        public override int StatContactLoopTime
+        {
+            get { return m_StatContactLoopTime; }
+        }
+
+        private int m_StatCollisionAccountingTime;
+        public override int StatCollisionAccountingTime
+        {
+            get { return m_StatCollisionAccountingTime; }
+        }
         
         #endregion
 
@@ -720,6 +737,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             IntPtr b1 = d.GeomGetBody(g1);
             IntPtr b2 = d.GeomGetBody(g2);
 
+            int FindContactsTime = Util.EnvironmentTickCount();
+
             // d.GeomClassID id = d.GeomGetClass(g1);
 
             //if (id == d.GeomClassId.TriMeshClass)
@@ -766,6 +785,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.Message);
                 return;
             }
+            m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
 
             PhysicsActor p1;
             PhysicsActor p2;
@@ -797,6 +817,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     p2.CollisionScore += count;
                 }
             }
+
+            int ContactLoopTime = Util.EnvironmentTickCount();
+
+            #region Contact Loop
 
             for (int i = 0; i < count; i++)
             {
@@ -1136,6 +1160,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //m_log.Debug("near: A collision was detected between {1} and {2}", 0, name1, name2);
             }
 
+            #endregion
+
+            m_StatContactLoopTime = Util.EnvironmentTickCountSubtract(ContactLoopTime);
+
+            int CollisionAccountingTime = Util.EnvironmentTickCount();
+
             if (!DisableCollisions)
             {
                 p2.CollidingGround = false;
@@ -1180,6 +1210,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 collision_accounting_events(p1, p2, maxDepthContact);
             }
+            m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
         }
 
         private bool checkDupe(d.ContactGeom contactGeom, int atype)

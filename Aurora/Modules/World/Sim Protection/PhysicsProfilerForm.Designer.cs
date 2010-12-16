@@ -72,6 +72,21 @@
             this.InstantUpdatesSet = new System.Windows.Forms.Button();
             this.TimeBetweenUpdates = new System.Windows.Forms.TextBox();
             this.IULabel = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.FindContactsTimeBox = new System.Windows.Forms.PictureBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.ContactLoopTimeBox = new System.Windows.Forms.PictureBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.CollisionAccountingTimeBox = new System.Windows.Forms.PictureBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsTaintBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PhysicsMoveTimeBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CollisionOptimizedTimeBox)).BeginInit();
@@ -79,6 +94,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.AvatarUpdatePosAndVelocityBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PrimUpdatePosAndVelocityBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.UnlockedTimeBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FindContactsTimeBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ContactLoopTimeBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CollisionAccountingTimeBox)).BeginInit();
             this.SuspendLayout();
             // 
             // RegionNameSelector
@@ -471,11 +489,158 @@
             this.IULabel.TabIndex = 41;
             this.IULabel.Text = "Time Between Instant Updates";
             // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(1033, 50);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(98, 13);
+            this.label10.TabIndex = 45;
+            this.label10.Text = "Find Contacts Time";
+            // 
+            // FindContactsTimeBox
+            // 
+            this.FindContactsTimeBox.Location = new System.Drawing.Point(982, 75);
+            this.FindContactsTimeBox.Name = "FindContactsTimeBox";
+            this.FindContactsTimeBox.Size = new System.Drawing.Size(200, 200);
+            this.FindContactsTimeBox.TabIndex = 44;
+            this.FindContactsTimeBox.TabStop = false;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(951, 169);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(25, 13);
+            this.label11.TabIndex = 48;
+            this.label11.Text = "100";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(963, 262);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(13, 13);
+            this.label12.TabIndex = 47;
+            this.label12.Text = "0";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(951, 75);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(25, 13);
+            this.label13.TabIndex = 46;
+            this.label13.Text = "200";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(714, 432);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(25, 13);
+            this.label18.TabIndex = 51;
+            this.label18.Text = "100";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(726, 525);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(13, 13);
+            this.label19.TabIndex = 50;
+            this.label19.Text = "0";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(714, 338);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(25, 13);
+            this.label20.TabIndex = 49;
+            this.label20.Text = "200";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(797, 312);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(97, 13);
+            this.label21.TabIndex = 53;
+            this.label21.Text = "Contact Loop Time";
+            // 
+            // ContactLoopTimeBox
+            // 
+            this.ContactLoopTimeBox.Location = new System.Drawing.Point(745, 338);
+            this.ContactLoopTimeBox.Name = "ContactLoopTimeBox";
+            this.ContactLoopTimeBox.Size = new System.Drawing.Size(200, 200);
+            this.ContactLoopTimeBox.TabIndex = 52;
+            this.ContactLoopTimeBox.TabStop = false;
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(1018, 312);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(128, 13);
+            this.label22.TabIndex = 55;
+            this.label22.Text = "Collision Accounting Time";
+            // 
+            // CollisionAccountingTimeBox
+            // 
+            this.CollisionAccountingTimeBox.Location = new System.Drawing.Point(982, 338);
+            this.CollisionAccountingTimeBox.Name = "CollisionAccountingTimeBox";
+            this.CollisionAccountingTimeBox.Size = new System.Drawing.Size(200, 200);
+            this.CollisionAccountingTimeBox.TabIndex = 54;
+            this.CollisionAccountingTimeBox.TabStop = false;
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(951, 432);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(25, 13);
+            this.label24.TabIndex = 58;
+            this.label24.Text = "100";
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(963, 525);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(13, 13);
+            this.label25.TabIndex = 57;
+            this.label25.Text = "0";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(951, 338);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(25, 13);
+            this.label27.TabIndex = 56;
+            this.label27.Text = "200";
+            // 
             // PhysicsProfilerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(962, 550);
+            this.ClientSize = new System.Drawing.Size(1201, 550);
+            this.Controls.Add(this.label24);
+            this.Controls.Add(this.label25);
+            this.Controls.Add(this.label27);
+            this.Controls.Add(this.label22);
+            this.Controls.Add(this.CollisionAccountingTimeBox);
+            this.Controls.Add(this.label21);
+            this.Controls.Add(this.ContactLoopTimeBox);
+            this.Controls.Add(this.label18);
+            this.Controls.Add(this.label19);
+            this.Controls.Add(this.label20);
+            this.Controls.Add(this.label11);
+            this.Controls.Add(this.label12);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.FindContactsTimeBox);
             this.Controls.Add(this.InstantUpdatesSet);
             this.Controls.Add(this.TimeBetweenUpdates);
             this.Controls.Add(this.IULabel);
@@ -531,6 +696,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.AvatarUpdatePosAndVelocityBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PrimUpdatePosAndVelocityBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.UnlockedTimeBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FindContactsTimeBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ContactLoopTimeBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.CollisionAccountingTimeBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -582,5 +750,20 @@
         private System.Windows.Forms.Button InstantUpdatesSet;
         private System.Windows.Forms.TextBox TimeBetweenUpdates;
         private System.Windows.Forms.Label IULabel;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.PictureBox FindContactsTimeBox;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.PictureBox ContactLoopTimeBox;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.PictureBox CollisionAccountingTimeBox;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.Label label27;
     }
 }

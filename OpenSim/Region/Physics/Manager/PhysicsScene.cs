@@ -210,6 +210,21 @@ namespace OpenSim.Region.Physics.Manager
             get { return 0; }
         }
 
+        public virtual int StatFindContactsTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatContactLoopTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatCollisionAccountingTime
+        {
+            get { return 0; }
+        }
+
         /// <summary>
         /// True if the physics plugin supports raycasting against the physics scene
         /// </summary>

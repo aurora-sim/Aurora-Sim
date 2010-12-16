@@ -30,6 +30,9 @@ namespace Aurora.Modules
             public float StatAvatarUpdatePosAndVelocity;
             public float StatPrimUpdatePosAndVelocity;
             public float StatUnlockedArea;
+            public float StatContactLoopTime;
+            public float StatFindContactsTime;
+            public float StatCollisionAccountingTime;
         }
 
         #endregion
@@ -192,6 +195,9 @@ namespace Aurora.Modules
             MainConsole.Instance.Output("   These are in the order they are run in the PhysicsScene.", "Normal");
             MainConsole.Instance.Output(" PhysicsTaintTime: " + stats.StatPhysicsTaintTime, "Normal");
             MainConsole.Instance.Output(" PhysicsMoveTime: " + stats.StatPhysicsMoveTime, "Normal");
+            MainConsole.Instance.Output(" FindContactsTime: " + stats.StatFindContactsTime, "Normal");
+            MainConsole.Instance.Output(" ContactLoopTime: " + stats.StatContactLoopTime, "Normal");
+            MainConsole.Instance.Output(" CollisionAccountingTime: " + stats.StatCollisionAccountingTime, "Normal");
             MainConsole.Instance.Output(" CollisionOptimizedTime: " + stats.StatCollisionOptimizedTime, "Normal");
             MainConsole.Instance.Output(" SendCollisionsTime: " + stats.StatSendCollisionsTime, "Normal");
             MainConsole.Instance.Output(" AvatarUpdatePosAndVelocity: " + stats.StatAvatarUpdatePosAndVelocity, "Normal");
@@ -216,6 +222,9 @@ namespace Aurora.Modules
                     m_lastPhysicsStats[kvp.Key].StatPrimUpdatePosAndVelocity /= 10;
                     m_lastPhysicsStats[kvp.Key].StatSendCollisionsTime /= 10;
                     m_lastPhysicsStats[kvp.Key].StatUnlockedArea /= 10;
+                    m_lastPhysicsStats[kvp.Key].StatFindContactsTime /= 10;
+                    m_lastPhysicsStats[kvp.Key].StatContactLoopTime /= 10;
+                    m_lastPhysicsStats[kvp.Key].StatCollisionAccountingTime /= 10;
                     //Add the stats to the profiler
                     Profiler p = ProfilerManager.GetProfiler();
                     p.AddStat("StatAvatarUpdatePosAndVelocity " + kvp.Key,
@@ -232,6 +241,12 @@ namespace Aurora.Modules
                         new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatSendCollisionsTime });
                     p.AddStat("StatUnlockedArea " + kvp.Key,
                         new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatUnlockedArea });
+                    p.AddStat("StatFindContactsTime " + kvp.Key,
+                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatFindContactsTime });
+                    p.AddStat("StatContactLoopTime " + kvp.Key,
+                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatContactLoopTime });
+                    p.AddStat("StatCollisionAccountingTime " + kvp.Key,
+                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatCollisionAccountingTime });
                 }
             }
             m_lastUpdated = DateTime.Now;
@@ -252,6 +267,9 @@ namespace Aurora.Modules
                     stats.StatPrimUpdatePosAndVelocity = scene.StatPrimUpdatePosAndVelocity;
                     stats.StatSendCollisionsTime = scene.StatSendCollisionsTime;
                     stats.StatUnlockedArea = scene.StatUnlockedArea;
+                    stats.StatFindContactsTime = scene.StatFindContactsTime;
+                    stats.StatContactLoopTime = scene.StatContactLoopTime;
+                    stats.StatCollisionAccountingTime = scene.StatCollisionAccountingTime;
                 }
                 else
                 {
@@ -262,6 +280,9 @@ namespace Aurora.Modules
                     stats.StatPrimUpdatePosAndVelocity += scene.StatPrimUpdatePosAndVelocity;
                     stats.StatSendCollisionsTime += scene.StatSendCollisionsTime;
                     stats.StatUnlockedArea += scene.StatUnlockedArea;
+                    stats.StatFindContactsTime += scene.StatFindContactsTime;
+                    stats.StatContactLoopTime += scene.StatContactLoopTime;
+                    stats.StatCollisionAccountingTime += scene.StatCollisionAccountingTime;
                 }
 
                 m_currentPhysicsStats[RegionID] = stats;
@@ -274,6 +295,9 @@ namespace Aurora.Modules
                 ProfilerStats.StatPrimUpdatePosAndVelocity = scene.StatPrimUpdatePosAndVelocity;
                 ProfilerStats.StatSendCollisionsTime = scene.StatSendCollisionsTime;
                 ProfilerStats.StatUnlockedArea = scene.StatUnlockedArea;
+                ProfilerStats.StatFindContactsTime = scene.StatFindContactsTime;
+                ProfilerStats.StatContactLoopTime = scene.StatContactLoopTime;
+                ProfilerStats.StatCollisionAccountingTime = scene.StatCollisionAccountingTime;
 
                 //Add the stats to the profiler
                 Profiler p = ProfilerManager.GetProfiler();
@@ -291,6 +315,12 @@ namespace Aurora.Modules
                     new ProfilerValueInfo() { Value = ProfilerStats.StatSendCollisionsTime });
                 p.AddStat("CurrentStatUnlockedArea " + RegionID,
                     new ProfilerValueInfo() { Value = ProfilerStats.StatUnlockedArea });
+                p.AddStat("CurrentStatFindContactsTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatFindContactsTime });
+                p.AddStat("CurrentStatContactLoopTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatContactLoopTime });
+                p.AddStat("CurrentStatCollisionAccountingTime " + RegionID,
+                    new ProfilerValueInfo() { Value = ProfilerStats.StatCollisionAccountingTime });
             }
         }
     }
