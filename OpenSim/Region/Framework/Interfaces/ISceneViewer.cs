@@ -33,12 +33,39 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ISceneViewer
     {
-        void Reset();
-        void Close();
+        /// <summary>
+        /// Add the objects to the queue for which we need to send an update to the client
+        /// </summary>
+        /// <param name="part"></param>
         void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags);
+
+        /// <summary>
+        /// This loops through all of the lists that we have for the client
+        ///  as well as checking whether the client has ever entered the sim before
+        ///  and sending the needed updates to them if they have just entered.
+        /// </summary>
         void SendPrimUpdates();
+
+        /// <summary>
+        /// Clear the updates for this part in the next update loop
+        /// </summary>
+        /// <param name="part"></param>
         void ClearUpdatesForPart(SceneObjectPart sceneObjectPart);
 
+        /// <summary>
+        /// Run through all of the updates we have and re-assign their priority depending
+        ///  on what is now going on in the Scene
+        /// </summary>
         void Reprioritize();
+
+        /// <summary>
+        /// Reset all lists that have to deal with what updates the viewer has
+        /// </summary>
+        void Reset();
+
+        /// <summary>
+        /// Destroy all lists, prepare to close the 
+        /// </summary>
+        void Close();
     }
 }

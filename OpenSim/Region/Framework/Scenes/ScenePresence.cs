@@ -1315,6 +1315,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (AllowMovement && !SitGround && !Frozen)
             {
+                //! Note: we use last absolute position instead of camera pos as camera pos is updated far too often.
+                //! If you put your mouse on an object, it would reprioritize updates for over at the objects position, then again when you lifted the mouse off of the object if the object is more than 10 meters away.
+                //! So we only do AbsolutePosition for now until we can find a better way.
                 if (Vector3.Distance(m_lastAbsolutePosition, AbsolutePosition) >= Scene.RootReprioritizationDistance)
                 {
                     m_lastAbsolutePosition = AbsolutePosition;

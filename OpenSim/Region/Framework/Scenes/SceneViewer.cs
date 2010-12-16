@@ -103,6 +103,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Run through all of the updates we have and re-assign their priority depending
+        ///  on what is now going on in the Scene
+        /// </summary>
         public void Reprioritize()
         {
             m_updatesNeedReprioritization = true;
@@ -112,6 +116,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Object Culling by draw distance
 
+        /// <summary>
+        /// When the client moves enough to trigger this, make sure that we have sent
+        ///  the client all of the objects that have just entered their FOV in their draw distance.
+        /// </summary>
+        /// <param name="remote_client"></param>
         private void SignificantClientMovement(IClientAPI remote_client)
         {
             if (!m_presence.Scene.CheckForObjectCulling)
@@ -296,6 +305,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_inUse = false;
         }
 
+        /// <summary>
+        /// Reset the priority for the given entity
+        /// </summary>
+        /// <param name="priority"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         private bool UpdatePriorityHandler(ref double priority, ISceneEntity entity)
         {
             priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, entity);
