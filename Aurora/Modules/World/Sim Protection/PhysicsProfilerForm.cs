@@ -17,6 +17,8 @@ namespace Aurora.Modules
         private Timer m_updateStats = new Timer();
         private List<Scene> m_scenes = new List<Scene>();
         private UUID SceneSelected = UUID.Zero;
+        private int MaxVal = 200;
+
         public PhysicsProfilerForm(List<Scene> scenes)
         {
             m_scenes = scenes;
@@ -60,13 +62,37 @@ namespace Aurora.Modules
         private void UpdateStatsBars()
         {
             Profiler p = ProfilerManager.GetProfiler();
-            PhysicsTaintBox.Image = p.DrawGraph("StatPhysicsTaintTime " + SceneSelected, 200).Bitmap();
-            PhysicsMoveTimeBox.Image = p.DrawGraph("StatPhysicsMoveTime " + SceneSelected, 200).Bitmap();
-            CollisionOptimizedTimeBox.Image = p.DrawGraph("StatCollisionOptimizedTime " + SceneSelected, 200).Bitmap();
-            SendCollisionsTimeBox.Image = p.DrawGraph("StatSendCollisionsTime " + SceneSelected, 200).Bitmap();
-            AvatarUpdatePosAndVelocityBox.Image = p.DrawGraph("StatAvatarUpdatePosAndVelocity " + SceneSelected, 200).Bitmap();
-            PrimUpdatePosAndVelocityBox.Image = p.DrawGraph("StatPrimUpdatePosAndVelocity " + SceneSelected, 200).Bitmap();
-            UnlockedTimeBox.Image = p.DrawGraph("StatUnlockedArea " + SceneSelected, 200).Bitmap();
+            PhysicsTaintBox.Image = p.DrawGraph("StatPhysicsTaintTime " + SceneSelected, MaxVal).Bitmap();
+            PhysicsMoveTimeBox.Image = p.DrawGraph("StatPhysicsMoveTime " + SceneSelected, MaxVal).Bitmap();
+            CollisionOptimizedTimeBox.Image = p.DrawGraph("StatCollisionOptimizedTime " + SceneSelected, MaxVal).Bitmap();
+            SendCollisionsTimeBox.Image = p.DrawGraph("StatSendCollisionsTime " + SceneSelected, MaxVal).Bitmap();
+            AvatarUpdatePosAndVelocityBox.Image = p.DrawGraph("StatAvatarUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+            PrimUpdatePosAndVelocityBox.Image = p.DrawGraph("StatPrimUpdatePosAndVelocity " + SceneSelected, MaxVal).Bitmap();
+            UnlockedTimeBox.Image = p.DrawGraph("StatUnlockedArea " + SceneSelected, MaxVal).Bitmap();
+        }
+
+        private void Change_Click(object sender, EventArgs e)
+        {
+            if(int.TryParse(MaxValBox.Text, out MaxVal))
+            {
+                Max1.Text = MaxVal.ToString();
+                Max2.Text = MaxVal.ToString();
+                Max3.Text = MaxVal.ToString();
+                Max4.Text = MaxVal.ToString();
+                Max5.Text = MaxVal.ToString();
+                Max6.Text = MaxVal.ToString();
+                Max7.Text = MaxVal.ToString();
+
+                HMax1.Text = (MaxVal / 2).ToString();
+                HMax2.Text = (MaxVal / 2).ToString();
+                HMax3.Text = (MaxVal / 2).ToString();
+                HMax4.Text = (MaxVal / 2).ToString();
+                HMax5.Text = (MaxVal / 2).ToString();
+                HMax6.Text = (MaxVal / 2).ToString();
+                HMax7.Text = (MaxVal / 2).ToString();
+
+                UpdateStatsBars();
+            }
         }
     }
 }

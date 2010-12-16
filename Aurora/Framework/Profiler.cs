@@ -80,7 +80,7 @@ namespace Aurora.Framework
                 for (int y = 200; y > 0; y--)
                 {
                     //Note: we do 200-x and 200-y to flip the graph on the X and Y axises
-                    if (IsInGraphBar(x, y, Stats))
+                    if (IsInGraphBar(x, y, Stats, ScaleFactor))
                         bmp.SetPixel(200 - x, 200 - y, BarColor);
                     else
                     {
@@ -137,7 +137,7 @@ namespace Aurora.Framework
                 for (int y = 200; y > 0; y--)
                 {
                     //Note: we do 200-x and 200-y to flip the graph on the X and Y axises
-                    if (IsInGraphBar(x, y, Stats))
+                    if (IsInGraphBar(x, y, Stats, ScaleFactor))
                         bmp.SetPixel(200 - x, 200 - y, BarColor);
                     else
                     {
@@ -159,14 +159,14 @@ namespace Aurora.Framework
             return (y % 10) == 0;
         }
 
-        private bool IsInGraphBar(int x, int y, ProfilerValueInfo[] Stats)
+        private bool IsInGraphBar(int x, int y, ProfilerValueInfo[] Stats, double scaleFactor)
         {
             for (int i = Math.Min(GraphBarsStart.Length - 1, Stats.Length - 1); i >= 0; i--)
             {
                 //Check whether it is between both the start and end
                 if (x > GraphBarsStart[i] && x < GraphBarsEnd[i])
                 {
-                    if (Stats[i].Value >= y)
+                    if (Stats[i].Value >= (y / scaleFactor))
                         return true;
                 }
             }
