@@ -655,6 +655,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
+        public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        {
+        }
+
         public void ReprioritizeUpdates()
         {
         }

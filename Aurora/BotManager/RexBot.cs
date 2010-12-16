@@ -776,78 +776,78 @@ namespace Aurora.BotManager
         {
             get
             {
-                throw new NotImplementedException();
+                return Vector3.Zero;
             }
             set
             {
-                throw new NotImplementedException();
+                
             }
         }
 
         UUID IClientAPI.AgentId
         {
-            get { throw new NotImplementedException(); }
+            get { return UUID.Zero; }
         }
 
         UUID IClientAPI.SessionId
         {
-            get { throw new NotImplementedException(); }
+            get { return UUID.Zero; }
         }
 
         UUID IClientAPI.SecureSessionId
         {
-            get { throw new NotImplementedException(); }
+            get { return UUID.Zero; }
         }
 
         UUID IClientAPI.ActiveGroupId
         {
-            get { throw new NotImplementedException(); }
+            get { return UUID.Zero; }
         }
 
         string IClientAPI.ActiveGroupName
         {
-            get { throw new NotImplementedException(); }
+            get { return ""; }
         }
 
         ulong IClientAPI.ActiveGroupPowers
         {
-            get { throw new NotImplementedException(); }
+            get { return 0; }
         }
 
         string IClientAPI.FirstName
         {
-            get { throw new NotImplementedException(); }
+            get { return ""; }
         }
 
         string IClientAPI.LastName
         {
-            get { throw new NotImplementedException(); }
+            get { return ""; }
         }
 
         IScene IClientAPI.Scene
         {
-            get { throw new NotImplementedException(); }
+            get { return null; }
         }
 
         int IClientAPI.NextAnimationSequenceNumber
         {
-            get { throw new NotImplementedException(); }
+            get { return 0; }
         }
 
         string IClientAPI.Name
         {
-            get { throw new NotImplementedException(); }
+            get { return ""; }
         }
 
         bool IClientAPI.IsActive
         {
             get
             {
-                throw new NotImplementedException();
+                return true;
             }
             set
             {
-                throw new NotImplementedException();
+                
             }
         }
 
@@ -855,1362 +855,1362 @@ namespace Aurora.BotManager
         {
             get
             {
-                throw new NotImplementedException();
+                return false;
             }
             set
             {
-                throw new NotImplementedException();
+                
             }
         }
 
         bool IClientAPI.SendLogoutPacketWhenClosing
         {
-            set { throw new NotImplementedException(); }
+            set {  }
         }
 
         uint IClientAPI.CircuitCode
         {
-            get { throw new NotImplementedException(); }
+            get { return 0; }
         }
 
         IPEndPoint IClientAPI.RemoteEndPoint
         {
-            get { throw new NotImplementedException(); }
+            get { return null; }
         }
 
         event GenericMessage IClientAPI.OnGenericMessage
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ImprovedInstantMessage IClientAPI.OnInstantMessage
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ChatMessage IClientAPI.OnChatFromClient
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TextureRequest IClientAPI.OnRequestTexture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RezObject IClientAPI.OnRezObject
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ModifyTerrain IClientAPI.OnModifyTerrain
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event BakeTerrain IClientAPI.OnBakeTerrain
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateChangeInfo IClientAPI.OnEstateChangeInfo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetAppearance IClientAPI.OnSetAppearance
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AvatarNowWearing IClientAPI.OnAvatarNowWearing
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RezSingleAttachmentFromInv IClientAPI.OnRezSingleAttachmentFromInv
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RezMultipleAttachmentsFromInv IClientAPI.OnRezMultipleAttachmentsFromInv
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UUIDNameRequest IClientAPI.OnDetachAttachmentIntoInv
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectAttach IClientAPI.OnObjectAttach
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectDeselect IClientAPI.OnObjectDetach
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectDrop IClientAPI.OnObjectDrop
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event StartAnim IClientAPI.OnStartAnim
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event StopAnim IClientAPI.OnStopAnim
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event LinkObjects IClientAPI.OnLinkObjects
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DelinkObjects IClientAPI.OnDelinkObjects
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestMapBlocks IClientAPI.OnRequestMapBlocks
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestMapName IClientAPI.OnMapNameRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TeleportLocationRequest IClientAPI.OnTeleportLocationRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestAvatarProperties IClientAPI.OnRequestAvatarProperties
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetAlwaysRun IClientAPI.OnSetAlwaysRun
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TeleportLandmarkRequest IClientAPI.OnTeleportLandmarkRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DeRezObject IClientAPI.OnDeRezObject
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event Action<IClientAPI> IClientAPI.OnRegionHandShakeReply
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall1 IClientAPI.OnRequestWearables
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall1 IClientAPI.OnCompleteMovementToRegion
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateAgent IClientAPI.OnAgentUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AgentRequestSit IClientAPI.OnAgentRequestSit
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AgentSit IClientAPI.OnAgentSit
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AvatarPickerRequest IClientAPI.OnAvatarPickerRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event Action<IClientAPI> IClientAPI.OnRequestAvatarsData
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AddNewPrim IClientAPI.OnAddPrim
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FetchInventory IClientAPI.OnAgentDataUpdateRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TeleportLocationRequest IClientAPI.OnSetStartLocationRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestGodlikePowers IClientAPI.OnRequestGodlikePowers
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GodKickUser IClientAPI.OnGodKickUser
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectDuplicate IClientAPI.OnObjectDuplicate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectDuplicateOnRay IClientAPI.OnObjectDuplicateOnRay
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GrabObject IClientAPI.OnGrabObject
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DeGrabObject IClientAPI.OnDeGrabObject
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoveObject IClientAPI.OnGrabUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SpinStart IClientAPI.OnSpinStart
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SpinObject IClientAPI.OnSpinUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SpinStop IClientAPI.OnSpinStop
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateShape IClientAPI.OnUpdatePrimShape
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectExtraParams IClientAPI.OnUpdateExtraParams
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectRequest IClientAPI.OnObjectRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectSelect IClientAPI.OnObjectSelect
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectDeselect IClientAPI.OnObjectDeselect
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall7 IClientAPI.OnObjectDescription
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall7 IClientAPI.OnObjectName
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall7 IClientAPI.OnObjectClickAction
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GenericCall7 IClientAPI.OnObjectMaterial
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestObjectPropertiesFamily IClientAPI.OnRequestObjectPropertiesFamily
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimFlags IClientAPI.OnUpdatePrimFlags
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimTexture IClientAPI.OnUpdatePrimTexture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateVectorWithUpdate IClientAPI.OnUpdatePrimGroupPosition
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateVectorWithUpdate IClientAPI.OnUpdatePrimSinglePosition
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimRotation IClientAPI.OnUpdatePrimGroupRotation
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimSingleRotation IClientAPI.OnUpdatePrimSingleRotation
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimSingleRotationPosition IClientAPI.OnUpdatePrimSingleRotationPosition
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdatePrimGroupRotation IClientAPI.OnUpdatePrimGroupMouseRotation
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateVector IClientAPI.OnUpdatePrimScale
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateVector IClientAPI.OnUpdatePrimGroupScale
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event StatusChange IClientAPI.OnChildAgentStatus
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectPermissions IClientAPI.OnObjectPermissions
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event CreateNewInventoryItem IClientAPI.OnCreateNewInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event LinkInventoryItem IClientAPI.OnLinkInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event CreateInventoryFolder IClientAPI.OnCreateNewInventoryFolder
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateInventoryFolder IClientAPI.OnUpdateInventoryFolder
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoveInventoryFolder IClientAPI.OnMoveInventoryFolder
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FetchInventoryDescendents IClientAPI.OnFetchInventoryDescendents
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event PurgeInventoryDescendents IClientAPI.OnPurgeInventoryDescendents
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FetchInventory IClientAPI.OnFetchInventory
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestTaskInventory IClientAPI.OnRequestTaskInventory
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateInventoryItem IClientAPI.OnUpdateInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event CopyInventoryItem IClientAPI.OnCopyInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoveInventoryItem IClientAPI.OnMoveInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RemoveInventoryFolder IClientAPI.OnRemoveInventoryFolder
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RemoveInventoryItem IClientAPI.OnRemoveInventoryItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UDPAssetUploadRequest IClientAPI.OnAssetUploadRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event XferReceive IClientAPI.OnXferReceive
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestXfer IClientAPI.OnRequestXfer
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ConfirmXfer IClientAPI.OnConfirmXfer
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AbortXfer IClientAPI.OnAbortXfer
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RezScript IClientAPI.OnRezScript
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateTaskInventory IClientAPI.OnUpdateTaskInventory
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoveTaskInventory IClientAPI.OnMoveTaskItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RemoveTaskInventory IClientAPI.OnRemoveTaskItem
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UUIDNameRequest IClientAPI.OnNameFromUUIDRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelAccessListRequest IClientAPI.OnParcelAccessListRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelAccessListUpdateRequest IClientAPI.OnParcelAccessListUpdateRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelPropertiesRequest IClientAPI.OnParcelPropertiesRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelDivideRequest IClientAPI.OnParcelDivideRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelJoinRequest IClientAPI.OnParcelJoinRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelPropertiesUpdateRequest IClientAPI.OnParcelPropertiesUpdateRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelSelectObjects IClientAPI.OnParcelSelectObjects
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelObjectOwnerRequest IClientAPI.OnParcelObjectOwnerRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelAbandonRequest IClientAPI.OnParcelAbandonRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelGodForceOwner IClientAPI.OnParcelGodForceOwner
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelReclaim IClientAPI.OnParcelReclaim
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelReturnObjectsRequest IClientAPI.OnParcelReturnObjectsRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelDeedToGroup IClientAPI.OnParcelDeedToGroup
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RegionInfoRequest IClientAPI.OnRegionInfoRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateCovenantRequest IClientAPI.OnEstateCovenantRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FriendActionDelegate IClientAPI.OnApproveFriendRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FriendActionDelegate IClientAPI.OnDenyFriendRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FriendshipTermination IClientAPI.OnTerminateFriendship
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoneyTransferRequest IClientAPI.OnMoneyTransferRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EconomyDataRequest IClientAPI.OnEconomyDataRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MoneyBalanceRequest IClientAPI.OnMoneyBalanceRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateAvatarProperties IClientAPI.OnUpdateAvatarProperties
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelBuy IClientAPI.OnParcelBuy
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestPayPrice IClientAPI.OnRequestPayPrice
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectSaleInfo IClientAPI.OnObjectSaleInfo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectBuy IClientAPI.OnObjectBuy
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event BuyObjectInventory IClientAPI.OnBuyObjectInventory
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestTerrain IClientAPI.OnRequestTerrain
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestTerrain IClientAPI.OnUploadTerrain
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectIncludeInSearch IClientAPI.OnObjectIncludeInSearch
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UUIDNameRequest IClientAPI.OnTeleportHomeRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ScriptAnswer IClientAPI.OnScriptAnswer
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AgentSit IClientAPI.OnUndo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AgentSit IClientAPI.OnRedo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event LandUndo IClientAPI.OnLandUndo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ForceReleaseControls IClientAPI.OnForceReleaseControls
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GodLandStatRequest IClientAPI.OnLandStatRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DetailedEstateDataRequest IClientAPI.OnDetailedEstateDataRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetEstateFlagsRequest IClientAPI.OnSetEstateFlagsRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetEstateTerrainBaseTexture IClientAPI.OnSetEstateTerrainBaseTexture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetEstateTerrainDetailTexture IClientAPI.OnSetEstateTerrainDetailTexture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetEstateTerrainTextureHeights IClientAPI.OnSetEstateTerrainTextureHeights
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event CommitEstateTerrainTextureRequest IClientAPI.OnCommitEstateTerrainTextureRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetRegionTerrainSettings IClientAPI.OnSetRegionTerrainSettings
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateRestartSimRequest IClientAPI.OnEstateRestartSimRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateChangeCovenantRequest IClientAPI.OnEstateChangeCovenantRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateEstateAccessDeltaRequest IClientAPI.OnUpdateEstateAccessDeltaRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SimulatorBlueBoxMessageRequest IClientAPI.OnSimulatorBlueBoxMessageRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateBlueBoxMessageRequest IClientAPI.OnEstateBlueBoxMessageRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateDebugRegionRequest IClientAPI.OnEstateDebugRegionRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateTeleportOneUserHomeRequest IClientAPI.OnEstateTeleportOneUserHomeRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EstateTeleportAllUsersHomeRequest IClientAPI.OnEstateTeleportAllUsersHomeRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UUIDNameRequest IClientAPI.OnUUIDGroupNameRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RegionHandleRequest IClientAPI.OnRegionHandleRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelInfoRequest IClientAPI.OnParcelInfoRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RequestObjectPropertiesFamily IClientAPI.OnObjectGroupRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ScriptReset IClientAPI.OnScriptReset
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GetScriptRunning IClientAPI.OnGetScriptRunning
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SetScriptRunning IClientAPI.OnSetScriptRunning
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateVector IClientAPI.OnAutoPilotGo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TerrainUnacked IClientAPI.OnUnackedTerrain
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ActivateGesture IClientAPI.OnActivateGesture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DeactivateGesture IClientAPI.OnDeactivateGesture
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ObjectOwner IClientAPI.OnObjectOwner
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DirPlacesQuery IClientAPI.OnDirPlacesQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DirFindQuery IClientAPI.OnDirFindQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DirLandQuery IClientAPI.OnDirLandQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DirPopularQuery IClientAPI.OnDirPopularQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DirClassifiedQuery IClientAPI.OnDirClassifiedQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EventInfoRequest IClientAPI.OnEventInfoRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelSetOtherCleanTime IClientAPI.OnParcelSetOtherCleanTime
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MapItemRequest IClientAPI.OnMapItemRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event OfferCallingCard IClientAPI.OnOfferCallingCard
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AcceptCallingCard IClientAPI.OnAcceptCallingCard
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event DeclineCallingCard IClientAPI.OnDeclineCallingCard
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SoundTrigger IClientAPI.OnSoundTrigger
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event StartLure IClientAPI.OnStartLure
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TeleportLureRequest IClientAPI.OnTeleportLureRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event NetworkStats IClientAPI.OnNetworkStatsUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ClassifiedInfoRequest IClientAPI.OnClassifiedInfoRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ClassifiedInfoUpdate IClientAPI.OnClassifiedInfoUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ClassifiedDelete IClientAPI.OnClassifiedDelete
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ClassifiedDelete IClientAPI.OnClassifiedGodDelete
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EventNotificationAddRequest IClientAPI.OnEventNotificationAddRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EventNotificationRemoveRequest IClientAPI.OnEventNotificationRemoveRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EventGodDelete IClientAPI.OnEventGodDelete
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelDwellRequest IClientAPI.OnParcelDwellRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UserInfoRequest IClientAPI.OnUserInfoRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event UpdateUserInfo IClientAPI.OnUpdateUserInfo
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event RetrieveInstantMessages IClientAPI.OnRetrieveInstantMessages
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event PickDelete IClientAPI.OnPickDelete
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event PickGodDelete IClientAPI.OnPickGodDelete
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event PickInfoUpdate IClientAPI.OnPickInfoUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AvatarNotesUpdate IClientAPI.OnAvatarNotesUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event AvatarInterestUpdate IClientAPI.OnAvatarInterestUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GrantUserFriendRights IClientAPI.OnGrantUserRights
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MuteListRequest IClientAPI.OnMuteListRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event PlacesQuery IClientAPI.OnPlacesQuery
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FindAgentUpdate IClientAPI.OnFindAgent
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TrackAgentUpdate IClientAPI.OnTrackAgent
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event NewUserReport IClientAPI.OnUserReport
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SaveStateHandler IClientAPI.OnSaveState
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GroupAccountSummaryRequest IClientAPI.OnGroupAccountSummaryRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GroupAccountDetailsRequest IClientAPI.OnGroupAccountDetailsRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GroupAccountTransactionsRequest IClientAPI.OnGroupAccountTransactionsRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event FreezeUserUpdate IClientAPI.OnParcelFreezeUser
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event EjectUserUpdate IClientAPI.OnParcelEjectUser
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelBuyPass IClientAPI.OnParcelBuyPass
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ParcelGodMark IClientAPI.OnParcelGodMark
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GroupActiveProposalsRequest IClientAPI.OnGroupActiveProposalsRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GroupVoteHistoryRequest IClientAPI.OnGroupVoteHistoryRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SimWideDeletesDelegate IClientAPI.OnSimWideDeletes
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event SendPostcard IClientAPI.OnSendPostcard
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MuteListEntryUpdate IClientAPI.OnUpdateMuteListEntry
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event MuteListEntryRemove IClientAPI.OnRemoveMuteListEntry
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GodlikeMessage IClientAPI.OnGodlikeMessage
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GodUpdateRegionInfoUpdate IClientAPI.OnGodUpdateRegionInfoUpdate
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ChangeInventoryItemFlags IClientAPI.OnChangeInventoryItemFlags
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event TeleportCancel IClientAPI.OnTeleportCancel
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event GodlikeMessage IClientAPI.OnEstateTelehubRequest
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event ViewerStartAuction IClientAPI.OnViewerStartAuction
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         void IClientAPI.SetDebugPacketLevel(int newDebug)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.InPacket(object NewPack)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.ProcessInPacket(OpenMetaverse.Packets.Packet NewPack)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.Close()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.Kick(string message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.Start()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.Stop()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendWearables(AvatarWearable[] wearables, int serial)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendStartPingCheck(byte seq)
@@ -2227,715 +2227,717 @@ namespace Aurora.BotManager
 
         void IClientAPI.SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendChatMessage(string message, byte type, Vector3 fromPos, string fromName, UUID fromAgentID, byte source, byte audible)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendInstantMessage(GridInstantMessage im)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGenericMessage(string method, List<string> message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGenericMessage(string method, List<byte[]> message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLayerData(float[] map)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLayerData(int px, int py, float[] map)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLayerPacket(float[] map, int x, int y)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendWindData(Vector2[] windSpeeds)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendCloudData(float[] cloudCover)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
         {
-            throw new NotImplementedException();
+            
         }
 
         AgentCircuitData IClientAPI.RequestClientInfo()
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         void IClientAPI.CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt, IPEndPoint newRegionExternalEndPoint, string capsURL)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendMapBlock(List<MapBlockData> mapBlocks, uint flag)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLocalTeleport(Vector3 position, Vector3 lookAt, uint flags)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendRegionTeleport(ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint, uint locationID, uint flags, string capsURL)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTeleportFailed(string reason)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendMoneyBalance(UUID transaction, bool success, byte[] description, int balance)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPayPrice(UUID objectID, int[] payPrice)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SetChildAgentThrottle(byte[] throttle)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarDataImmediate(ISceneEntity avatar)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
         {
-            throw new NotImplementedException();
+        }
+
+        void IClientAPI.SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
+        {
         }
 
         void IClientAPI.ReprioritizeUpdates()
         {
-            throw new NotImplementedException();
         }
 
         void IClientAPI.FlushPrimUpdates()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items, List<InventoryFolderBase> folders, int version, bool fetchFolders, bool fetchItems)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendInventoryItemDetails(UUID ownerID, InventoryItemBase item)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackId)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendRemoveInventoryItem(UUID itemID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTakeControls(int controls, bool passToAgent, bool TakeControls)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTaskInventory(UUID taskID, short serial, byte[] fileName)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendBulkUpdateInventory(InventoryNodeBase node)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendXferPacket(ulong xferID, uint packet, byte[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendEconomyData(float EnergyEfficiency, int ObjectCapacity, int ObjectCount, int PriceEnergyUnit, int PriceGroupCreate, int PriceObjectClaim, float PriceObjectRent, float PriceObjectScaleFactor, int PriceParcelClaim, float PriceParcelClaimFactor, int PriceParcelRent, int PricePublicObjectDecay, int PricePublicObjectDelete, int PriceRentLight, int PriceUpload, int TeleportMinPrice, float TeleportPriceExponent)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAgentDataUpdate(UUID agentid, UUID activegroupid, string firstname, string lastname, ulong grouppowers, string groupname, string grouptitle)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPreLoadSound(UUID objectID, UUID ownerID, UUID soundID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPlayAttachedSound(UUID soundID, UUID objectID, UUID ownerID, float gain, byte flags)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTriggeredSound(UUID soundID, UUID ownerID, UUID objectID, UUID parentID, ulong handle, Vector3 position, float gain)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAttachedSoundGainChange(UUID objectID, float gain)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendNameReply(UUID profileId, string firstname, string lastname)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAlertMessage(string message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAgentAlertMessage(string message, bool modal)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDialog(string objectname, UUID objectID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch, string[] buttonlabels)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle, uint SecondsPerYear, float OrbitalPosition)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendViewerEffect(OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlocks)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendViewerTime(int phase)
         {
-            throw new NotImplementedException();
+            
         }
 
         UUID IClientAPI.GetDefaultAnimation(string name)
         {
-            throw new NotImplementedException();
+            return UUID.Zero;
         }
 
         void IClientAPI.SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, byte[] charterMember, string flAbout, uint flags, UUID flImageID, UUID imageID, string profileURL, UUID partnerID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendScriptQuestion(UUID taskID, string taskName, string ownerName, UUID itemID, int question)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendHealth(float health)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendEstateList(UUID invoice, int code, UUID[] Data, uint estateID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendBannedUserList(UUID invoice, EstateBan[] banlist, uint estateID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendRegionInfoToEstateMenu(RegionInfoForEstateMenuArgs args)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags, uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData, float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity, uint regionFlags)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLandAccessListData(List<UUID> avatars, uint accessFlag, int localLandID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendForceClientSelectObjects(List<uint> objectIDs)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendCameraConstraint(Vector4 ConstraintPlane)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLandParcelOverlay(byte[] data, int sequence_id)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendParcelMediaCommand(uint flags, ParcelMediaCommandEnum command, float time)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendParcelMediaUpdate(string mediaUrl, UUID mediaTextureID, byte autoScale, string mediaType, string mediaDesc, int mediaWidth, int mediaHeight, byte mediaLoop)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendConfirmXfer(ulong xferID, uint PacketID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendXferRequest(ulong XferID, short AssetType, UUID vFileID, byte FilePath, byte[] FileName)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendInitiateDownload(string simFileName, string clientFileName)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendImageNotFound(UUID imageid)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendShutdownConnectionNotice()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendSimStats(SimStats stats)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID, uint BaseMask, uint OwnerMask, uint GroupMask, uint EveryoneMask, uint NextOwnerMask, int OwnershipCost, byte SaleType, int SalePrice, uint Category, UUID LastOwnerID, string ObjectName, string Description)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendObjectPropertiesReply(List<ISceneEntity> part)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAgentOffline(UUID[] agentIDs)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAgentOnline(UUID[] agentIDs)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendSitResponse(UUID TargetID, Vector3 OffsetPos, Quaternion SitOrientation, bool autopilot, Vector3 CameraAtOffset, Vector3 CameraEyeOffset, bool ForceMouseLook)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAdminResponse(UUID Token, uint AdminLevel)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupMembership(GroupMembershipData[] GroupMembership)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupNameReply(UUID groupLLUID, string GroupName)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendJoinGroupReply(UUID groupID, bool success)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendEjectGroupMemberReply(UUID agentID, UUID groupID, bool success)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLeaveGroupReply(UUID groupID, bool success)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendCreateGroupReply(UUID groupID, bool success, string message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLandStatReply(uint reportType, uint requestFlags, uint resultCount, LandStatReportItem[] lsrpia)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendScriptRunningReply(UUID objectID, UUID itemID, bool running)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAsset(AssetRequestToClient req)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTexture(AssetBase TextureAsset)
         {
-            throw new NotImplementedException();
+            
         }
 
         byte[] IClientAPI.GetThrottlesPacked(float multiplier)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         event ViewerEffectEventHandler IClientAPI.OnViewerEffect
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event Action<IClientAPI> IClientAPI.OnLogout
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         event Action<IClientAPI> IClientAPI.OnConnectionClosed
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         void IClientAPI.SendBlueBoxMessage(UUID FromAvatarID, string FromAvatarName, string Message)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendLogoutPacket()
         {
-            throw new NotImplementedException();
+            
         }
 
         EndPoint IClientAPI.GetClientEP()
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         void IClientAPI.SendSetFollowCamProperties(UUID objectID, SortedDictionary<int, float> parameters)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendClearFollowCamProperties(UUID objectID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendRegionHandle(UUID regoinID, ulong handle)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendParcelInfo(LandData land, UUID parcelID, uint x, uint y, string SimName)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendScriptTeleportRequest(string objName, string simName, Vector3 pos, Vector3 lookAt)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirPeopleReply(UUID queryID, DirPeopleReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirEventsReply(UUID queryID, DirEventsReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirGroupsReply(UUID queryID, DirGroupsReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirClassifiedReply(UUID queryID, DirClassifiedReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirLandReply(UUID queryID, DirLandReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDirPopularReply(UUID queryID, DirPopularReplyData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendEventInfoReply(EventData info)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendMapItemReply(mapItemReply[] replies, uint mapitemtype, uint flags)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarGroupsReply(UUID avatarID, GroupMembershipData[] data)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendOfferCallingCard(UUID srcID, UUID transactionID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAcceptCallingCard(UUID transactionID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendDeclineCallingCard(UUID transactionID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTerminateFriend(UUID exFriendID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarClassifiedReply(UUID targetID, UUID[] classifiedID, string[] name)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendClassifiedInfoReply(UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, string simName, Vector3 globalPos, string parcelName, byte classifiedFlags, int price)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAgentDropGroup(UUID groupID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarNotesReply(UUID targetID, string text)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarPicksReply(UUID targetID, Dictionary<UUID, string> picks)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPickInfoReply(UUID pickID, UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarClassifiedReply(UUID targetID, Dictionary<UUID, string> classifieds)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendParcelDwellReply(int localID, UUID parcelID, float dwell)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendUserInfoReply(bool imViaEmail, bool visible, string email)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendUseCachedMuteList()
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendMuteListUpdate(string filename)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupActiveProposals(UUID groupID, UUID transactionID, GroupActiveProposals[] Proposals)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupVoteHistory(UUID groupID, UUID transactionID, GroupVoteHistory Vote, GroupVoteHistoryItem[] Items)
         {
-            throw new NotImplementedException();
+            
         }
 
         bool IClientAPI.AddGenericPacketHandler(string MethodName, GenericMessage handler)
         {
-            throw new NotImplementedException();
+            return false;   
         }
 
         void IClientAPI.SendRebakeAvatarTextures(UUID textureID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendChangeUserRights(UUID agentID, UUID friendID, int rights)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendPlacesQuery(ExtendedLandData[] LandData, UUID queryID, UUID transactionID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.FireUpdateParcel(LandUpdateArgs args, int LocalID)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name)
         {
-            throw new NotImplementedException();
+            
         }
 
         void IClientAPI.StopFlying(ISceneEntity presence)
         {
-            throw new NotImplementedException();
+            
         }
 
         #endregion

@@ -187,7 +187,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private AuroraODEPrim cp2;
 
         public IntPtr space;
-        private float StartFPS = 0;
 
         // split static geometry collision handling into spaces of 30 meters
         public IntPtr[,] staticPrimspace;

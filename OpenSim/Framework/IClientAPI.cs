@@ -1156,6 +1156,7 @@ namespace OpenSim.Framework
 
         void SendAvatarDataImmediate(ISceneEntity avatar);
         void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags);
+        void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority);
         void ReprioritizeUpdates();
         void FlushPrimUpdates();
 
