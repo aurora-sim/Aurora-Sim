@@ -3405,7 +3405,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void PhysicsOutOfBounds(Vector3 pos)
         {
             m_log.Error("[PHYSICS]: Physical Object went out of bounds.");
-            ScriptSetPhantomStatus(true);
+            //ScriptSetPhantomStatus(true);
             if(!ParentGroup.Scene.PhysicsReturns.Contains(ParentGroup))
                 ParentGroup.Scene.PhysicsReturns.Add(ParentGroup);
         }

@@ -2101,8 +2101,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if a child part with the local ID was not found</returns>
         public SceneObjectPart GetChildPart(uint localID)
         {
-            lock (m_partsLock)
-            {
+            //lock (m_partsLock)
+            //{
                 foreach (SceneObjectPart part in m_partsList)
                 {
                     //m_log.DebugFormat("Found {0}", part.LocalId);
@@ -2111,7 +2111,7 @@ namespace OpenSim.Region.Framework.Scenes
                         return part;
                     }
                 }
-            }
+            //}
 
             return null;
         }
