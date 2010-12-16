@@ -803,15 +803,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// necessarily send updates for all the parts on the queue, e.g. if an updates with a more recent
         /// timestamp has already been sent.
         /// </summary>
-        public void SendPrimUpdates()
+        public void SendPrimUpdates(object state)
         {
-            m_perfMonMS = Util.EnvironmentTickCount();
-
             m_sceneViewer.SendPrimUpdates();
-
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
 
         #region Status Methods
@@ -2386,7 +2380,7 @@ namespace OpenSim.Region.Framework.Scenes
             const float POSITION_TOLERANCE = 0.05f;
             //const int TIME_MS_TOLERANCE = 3000;
 
-            SendPrimUpdates();
+            Util.FireAndForget(SendPrimUpdates);
 
             if (!m_isChildAgent)
             {

@@ -45,6 +45,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
         protected List<UUID> m_removeNextUpdateOf = new List<UUID>();
         protected bool m_SentInitialObjects = false;
+        protected volatile bool m_inUse = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
         protected Prioritizer m_prioritizer;
 
@@ -170,6 +171,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendPrimUpdates()
         {
+            if (m_inUse)
+                return;
+            m_inUse = true;
+            //This is for stats
+            int AgentMS = Util.EnvironmentTickCount();
+
             #region New client entering the Scene, requires all objects in the Scene
 
             ///If we havn't started processing this client yet, we need to send them ALL the prims that we have in this Scene (and deal with culling as well...)
@@ -262,6 +269,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             #endregion
+
+            //Add the time to the stats tracker
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_presence.Scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            if (reporter != null)
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
+
+            m_inUse = false;
         }
 
         #endregion
@@ -309,6 +323,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.ControllingClient.SendPrimUpdate(part, changedFlags);
         }
 
+        /// <summary>
+        /// This sends updates for all the prims in the group
+        /// </summary>
+        /// <param name="UpdateFlags"></param>
+        /// <param name="grp"></param>
         protected internal void SendUpdate(PrimUpdateFlags UpdateFlags, SceneObjectGroup grp)
         {
             SendUpdate(
