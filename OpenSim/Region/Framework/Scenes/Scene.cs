@@ -117,7 +117,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected IConfigSource m_config;
 
-
         protected AgentCircuitManager m_authenticateHandler;
 
         public bool LoginsDisabled = true;
@@ -755,9 +754,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.Error("[REGION]: Firing Region Restart Message");
 
-            restart handlerPhysicsCrash = OnRestart;
-            if (handlerPhysicsCrash != null)
-                handlerPhysicsCrash(RegionInfo);
+            m_sceneManager.HandleRestart(RegionInfo);
         }
 
         /// <summary>
@@ -1425,7 +1422,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Load Terrain
+        #region Register region with grid
 
         /// <summary>
         /// Register this region with a grid service
@@ -2057,198 +2054,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!m_needsDeleted.Contains(uuid))
                     m_needsDeleted.Add(uuid);
             }
-        }
-
-        public void ObjectSaleInfo(IClientAPI client, UUID agentID, UUID sessionID, uint localID, byte saleType, int salePrice)
-        {
-            SceneObjectPart part = GetSceneObjectPart(localID);
-            if (part == null || part.ParentGroup == null)
-                return;
-
-            if (part.ParentGroup.IsDeleted)
-                return;
-
-            if (!Permissions.CanEditObject(part.UUID, agentID))
-            {
-                m_log.Warn("[Scene]: " + agentID + " attempted to set an object for sale without having the correct permissions.");
-                return;
-            }
-
-            part = part.ParentGroup.RootPart;
-
-            part.ObjectSaleType = saleType;
-            part.SalePrice = salePrice;
-
-            part.ParentGroup.HasGroupChanged = true;
-
-            part.GetProperties(client);
-        }
-
-        public bool PerformObjectBuy(IClientAPI remoteClient, UUID categoryID,
-                uint localID, byte saleType)
-        {
-            SceneObjectPart part = GetSceneObjectPart(localID);
-
-            if (part == null)
-                return false;
-
-            if (part.ParentGroup == null)
-                return false;
-
-            SceneObjectGroup group = part.ParentGroup;
-
-            switch (part.ObjectSaleType)
-            {
-                case 1: // Sell as original (in-place sale)
-                    uint effectivePerms = group.GetEffectivePermissions();
-
-                    if ((effectivePerms & (uint)PermissionMask.Transfer) == 0)
-                    {
-                        IDialogModule module = RequestModuleInterface<IDialogModule>();
-                        if (module != null)
-                            module.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
-                        return false;
-                    }
-
-                    group.SetOwnerId(remoteClient.AgentId);
-                    group.SetRootPartOwner(part, remoteClient.AgentId,
-                            remoteClient.ActiveGroupId);
-
-                    List<SceneObjectPart> partList =
-                        new List<SceneObjectPart>(group.ChildrenList);
-
-                    if (Permissions.PropagatePermissions())
-                    {
-                        foreach (SceneObjectPart child in partList)
-                        {
-                            child.Inventory.ChangeInventoryOwner(remoteClient.AgentId);
-                            child.TriggerScriptChangedEvent(Changed.OWNER);
-                            child.ApplyNextOwnerPermissions();
-                        }
-                    }
-
-                    part.ObjectSaleType = 0;
-                    part.SalePrice = 10;
-
-                    group.HasGroupChanged = true;
-                    part.GetProperties(remoteClient);
-                    part.TriggerScriptChangedEvent(Changed.OWNER);
-                    group.ResumeScripts();
-                    part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
-
-                    break;
-
-                case 2: // Sell a copy
-
-
-                    Vector3 inventoryStoredPosition = new Vector3
-                           (((group.AbsolutePosition.X > (int)Constants.RegionSize)
-                                 ? 250
-                                 : group.AbsolutePosition.X)
-                            ,
-                            (group.AbsolutePosition.X > (int)Constants.RegionSize)
-                                ? 250
-                                : group.AbsolutePosition.X,
-                            group.AbsolutePosition.Z);
-
-                    Vector3 originalPosition = group.AbsolutePosition;
-
-                    group.AbsolutePosition = inventoryStoredPosition;
-
-                    string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat(group);
-                    group.AbsolutePosition = originalPosition;
-
-                    uint perms = group.GetEffectivePermissions();
-
-                    if ((perms & (uint)PermissionMask.Transfer) == 0)
-                    {
-                        IDialogModule module = RequestModuleInterface<IDialogModule>();
-                        if (module != null)
-                            module.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
-                        return false;
-                    }
-
-                    AssetBase asset = CreateAsset(
-                        group.GetPartName(localID),
-                        group.GetPartDescription(localID),
-                        (sbyte)AssetType.Object,
-                        Utils.StringToBytes(sceneObjectXml),
-                        group.OwnerID);
-                    AssetService.Store(asset);
-
-                    InventoryItemBase item = new InventoryItemBase();
-                    item.CreatorId = part.CreatorID.ToString();
-
-                    item.ID = UUID.Random();
-                    item.Owner = remoteClient.AgentId;
-                    item.AssetID = asset.FullID;
-                    item.Description = asset.Description;
-                    item.Name = asset.Name;
-                    item.AssetType = asset.Type;
-                    item.InvType = (int)InventoryType.Object;
-                    item.Folder = categoryID;
-
-                    uint nextPerms = (perms & 7) << 13;
-                    if ((nextPerms & (uint)PermissionMask.Copy) == 0)
-                        perms &= ~(uint)PermissionMask.Copy;
-                    if ((nextPerms & (uint)PermissionMask.Transfer) == 0)
-                        perms &= ~(uint)PermissionMask.Transfer;
-                    if ((nextPerms & (uint)PermissionMask.Modify) == 0)
-                        perms &= ~(uint)PermissionMask.Modify;
-
-                    item.BasePermissions = perms & part.NextOwnerMask;
-                    item.CurrentPermissions = perms & part.NextOwnerMask;
-                    item.NextPermissions = part.NextOwnerMask;
-                    item.EveryOnePermissions = part.EveryoneMask &
-                                               part.NextOwnerMask;
-                    item.GroupPermissions = part.GroupMask &
-                                               part.NextOwnerMask;
-                    item.CurrentPermissions |= 8; // Slam!
-                    item.CreationDate = Util.UnixTimeSinceEpoch();
-
-                    if (InventoryService.AddItem(item))
-                        remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                    else
-                    {
-                        IDialogModule module = RequestModuleInterface<IDialogModule>();
-                        if (module != null)
-                            module.SendAlertToUser(remoteClient, "Cannot buy now. Your inventory is unavailable");
-                        return false;
-                    }
-                    break;
-
-                case 3: // Sell contents
-                    List<UUID> invList = part.Inventory.GetInventoryList();
-
-                    bool okToSell = true;
-
-                    foreach (UUID invID in invList)
-                    {
-                        TaskInventoryItem item1 = part.Inventory.GetInventoryItem(invID);
-                        if ((item1.CurrentPermissions &
-                                (uint)PermissionMask.Transfer) == 0)
-                        {
-                            okToSell = false;
-                            break;
-                        }
-                    }
-
-                    if (!okToSell)
-                    {
-                        IDialogModule module = RequestModuleInterface<IDialogModule>();
-                        if (module != null)
-                            module.SendAlertToUser(
-                                remoteClient, "This item's inventory doesn't appear to be for sale");
-                        return false;
-                    }
-
-                    if (invList.Count > 0)
-                        MoveTaskInventoryItems(remoteClient.AgentId, part.Name,
-                                part, invList);
-                    break;
-            }
-
-            return true;
         }
 
         public void DeleteGroups(List<SceneObjectGroup> objectGroups)
@@ -4425,6 +4230,10 @@ namespace OpenSim.Region.Framework.Scenes
         private Dictionary<UUID, SceneObjectGroup> m_secondaryBackupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
         private DateTime runSecondaryBackup = DateTime.Now;
 
+        /// <summary>
+        /// Add a backup taint to the prim
+        /// </summary>
+        /// <param name="sceneObjectGroup"></param>
         public void AddPrimBackupTaint(SceneObjectGroup sceneObjectGroup)
         {
             lock (m_backupTaintedPrims)
@@ -4613,6 +4422,10 @@ namespace OpenSim.Region.Framework.Scenes
         private List<string> StartupCallbacks = new List<string>();
         private List<string> StartupData = new List<string>();
 
+        /// <summary>
+        /// Add a module to the startup queue
+        /// </summary>
+        /// <param name="name"></param>
         public void AddToStartupQueue(string name)
         {
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -4624,6 +4437,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// This module finished startup and is giving a list of data about its startup
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="data"></param>
         public void FinishedStartup(string name, List<string> data)
         {
             if (StartupCallbacks.Contains(name))
@@ -4645,6 +4463,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Startup is complete, trigger the modules and allow logins
+        /// </summary>
+        /// <param name="data"></param>
         public void StartupComplete(List<string> data)
         {
             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
@@ -4661,8 +4483,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Tell the SceneManager about it
-            if (OnStartupComplete != null)
-                OnStartupComplete(this, data);
+            m_sceneManager.HandleStartupComplete(this, data);
         }
 
         #endregion
@@ -4935,13 +4756,6 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.Commands.AddCommand(
                 modulename, shared, command, shorthelp, longhelp, descriptivehelp, callback);
         }
-
-        #endregion
-
-        #region Events
-
-        public event restart OnRestart;
-        public event startupComplete OnStartupComplete;
 
         #endregion
     }

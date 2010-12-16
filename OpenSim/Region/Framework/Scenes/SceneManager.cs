@@ -485,8 +485,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Add(Scene scene)
         {
-            scene.OnRestart += HandleRestart;
-            scene.OnStartupComplete += HandleStartupComplete;
             m_localScenes.Add(scene);
         }
 

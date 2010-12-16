@@ -69,7 +69,9 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class ScenePresence : EntityBase, IScenePresence
     {
-//        ~ScenePresence()
+        #region Declares
+
+        //        ~ScenePresence()
 //        {
 //            m_log.Debug("[ScenePresence] Destructor called");
 //        }
@@ -188,10 +190,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         private readonly Vector3[] Dir_Vectors = new Vector3[11];
 
-        // Position of agent's camera in world (region cordinates)
+        /// <summary>
+        /// Position of agent's camera in world (region cordinates)
+        /// </summary>
         protected Vector3 m_CameraCenter;
-
-        protected bool m_reprioritizing;
 
         // Use these three vectors to figure out what the agent is looking at
         // Convert it to a Matrix and/or Quaternion
@@ -260,6 +262,8 @@ namespace OpenSim.Region.Framework.Scenes
         private SceneObjectPart m_SelectedUUID = null;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
         private UUID CollisionSoundID = UUID.Zero;
+
+        #endregion
 
         #region Properties
 
@@ -3281,6 +3285,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion Child Agent Updates
 
+        #region Physics
+
         /// <summary>
         /// Handles part of the PID controller function for moving an avatar.
         /// </summary>
@@ -3508,6 +3514,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         private readonly List<uint> m_lastColliders = new List<uint>();
 
+        public void PushForce(Vector3 impulse)
+        {
+            if (PhysicsActor != null)
+            {
+                PhysicsActor.AddForce(impulse, true);
+            }
+        }
+
+        #endregion
+
         public void Close()
         {
             lock (m_attachments)
@@ -3523,10 +3539,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_attachments.Clear();
             }
-            
-            // I don't get it but mono crashes when you try to dispose of this timer,
-            // unsetting the elapsed callback should be enough to allow for cleanup however.
-            // m_reprioritizationTimer.Dispose(); 
 
             m_sceneViewer.Close();
 
@@ -3536,6 +3548,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_animator.Close();
             m_animator = null;
         }
+
+        #region Attachments
 
         public void AddAttachment(SceneObjectGroup gobj)
         {
@@ -3645,37 +3659,53 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
-
-        public void initializeScenePresence(IClientAPI client, RegionInfo region, Scene scene)
+        
+        /// <summary>
+        /// RezAttachments. This should only be called upon login on the first region.
+        /// Attachment rezzings on crossings and TPs are done in a different way.
+        /// </summary>
+        public void RezAttachments()
         {
-            m_controllingClient = client;
-            m_regionInfo = region;
-            m_scene = scene;
-
-            RegisterToEvents();
-
-            /*
-            AbsolutePosition = client.StartPos;
-
-            Animations = new AvatarAnimations();
-            Animations.LoadAnims();
-
-            m_animations = new List<UUID>();
-            m_animations.Add(Animations.AnimsUUID["STAND"]);
-            m_animationSeqs.Add(m_controllingClient.NextAnimationSequenceNumber);
-
-            SetDirectionVectors();
-            */
-        }
-
-        public void PushForce(Vector3 impulse)
-        {
-            if (PhysicsActor != null)
+            if (null == m_appearance)
             {
-                PhysicsActor.AddForce(impulse,true);
+                m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", UUID);
+                return;
+            }
+
+            List<AvatarAttachment> attachments = m_appearance.GetAttachments();
+            foreach (AvatarAttachment attach in attachments)
+            {
+                if (m_isDeleted)
+                    return;
+
+                int p = attach.AttachPoint;
+                UUID itemID = attach.ItemID;
+
+                //UUID assetID = attach.AssetID;
+                // For some reason assetIDs are being written as Zero's in the DB -- need to track tat down
+                // But they're not used anyway, the item is being looked up for now, so let's proceed.
+                //if (UUID.Zero == assetID) 
+                //{
+                //    m_log.DebugFormat("[ATTACHMENT]: Cannot rez attachment in point {0} with itemID {1}", p, itemID);
+                //    continue;
+                //}
+
+                try
+                {
+                    IAttachmentsModule attachModule = m_scene.RequestModuleInterface<IAttachmentsModule>();
+                    if (attachModule != null)
+                        attachModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
+                }
             }
         }
+
+        #endregion
+
+        #region Script Controls
 
         public ScriptControllers GetScriptControler(UUID itemID)
         {
@@ -3773,7 +3803,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        internal void SendControlToScripts(uint flags)
+        protected internal void SendControlToScripts(uint flags)
         {
             ScriptControlled allflags = ScriptControlled.CONTROL_ZERO;
 
@@ -3856,7 +3886,7 @@ namespace OpenSim.Region.Framework.Scenes
             LastCommands = allflags;
         }
 
-        internal static AgentManager.ControlFlags RemoveIgnoredControls(AgentManager.ControlFlags flags, ScriptControlled ignored)
+        protected internal static AgentManager.ControlFlags RemoveIgnoredControls(AgentManager.ControlFlags flags, ScriptControlled ignored)
         {
             if (ignored == ScriptControlled.CONTROL_ZERO)
                 return flags;
@@ -3893,48 +3923,9 @@ namespace OpenSim.Region.Framework.Scenes
             return flags;
         }
 
-        /// <summary>
-        /// RezAttachments. This should only be called upon login on the first region.
-        /// Attachment rezzings on crossings and TPs are done in a different way.
-        /// </summary>
-        public void RezAttachments()
-        {
-            if (null == m_appearance)
-            {
-                m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", UUID);
-                return;
-            }
+        #endregion
 
-            List<AvatarAttachment> attachments = m_appearance.GetAttachments();
-            foreach (AvatarAttachment attach in attachments)
-            {
-                if (m_isDeleted)
-                    return;
-
-                int p = attach.AttachPoint;
-                UUID itemID = attach.ItemID;
-
-                //UUID assetID = attach.AssetID;
-                // For some reason assetIDs are being written as Zero's in the DB -- need to track tat down
-                // But they're not used anyway, the item is being looked up for now, so let's proceed.
-                //if (UUID.Zero == assetID) 
-                //{
-                //    m_log.DebugFormat("[ATTACHMENT]: Cannot rez attachment in point {0} with itemID {1}", p, itemID);
-                //    continue;
-                //}
-
-                try
-                {
-                    IAttachmentsModule attachModule = m_scene.RequestModuleInterface<IAttachmentsModule>();
-                    if(attachModule != null)
-                        attachModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
-                }
-            }
-        }
+        #region Module Interfaces
 
         /// <summary>
         /// For the given interface, retrieve the region module which implements it.
@@ -3986,5 +3977,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ModuleInterfaces[typeof(M)] = l;
             }
         }
+
+        #endregion
     }
 }

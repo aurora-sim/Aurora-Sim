@@ -32,20 +32,6 @@ using Nini.Config;
 
 namespace OpenSim.Framework
 {
-    public delegate void restart(RegionInfo thisRegion);
-    public delegate void startupComplete(IScene scene, List<string> data);
-
-    //public delegate void regionup (RegionInfo thisRegion);
-
-    public enum RegionStatus : int
-    {
-        Down = 0,
-        Up = 1,
-        Crashed = 2,
-        Starting = 3,
-        SlaveScene = 4
-    };
-            
     /// <value>
     /// Indicate what action to take on an object derez request
     /// </value>
@@ -64,8 +50,6 @@ namespace OpenSim.Framework
         RegionInfo RegionInfo { get; }
         
         IConfigSource Config { get; }
-
-        event restart OnRestart;
 
         void AddNewClient(IClientAPI client);
         void RemoveClient(UUID agentID);
