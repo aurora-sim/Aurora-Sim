@@ -175,6 +175,41 @@ namespace OpenSim.Region.Physics.Manager
 
         public abstract bool UseUnderWaterPhysics { get; }
 
+        public virtual int StatPhysicsTaintTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatPhysicsMoveTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatCollisionOptimizedTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatSendCollisionsTime
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatAvatarUpdatePosAndVelocity
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatPrimUpdatePosAndVelocity
+        {
+            get { return 0; }
+        }
+
+        public virtual int StatUnlockedArea
+        {
+            get { return 0; }
+        }
+
         /// <summary>
         /// True if the physics plugin supports raycasting against the physics scene
         /// </summary>

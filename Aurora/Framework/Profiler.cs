@@ -45,14 +45,31 @@ namespace Aurora.Framework
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
             ProfilerValueInfo[] Stats = new ProfilerValueInfo[10];
-            int i = 0;
+            int count = 0;
             foreach (ProfilerValueInfo info in statManager.GetInfos())
             {
-                Stats[i] = info;
-                i++;
+                if (info != null)
+                {
+                    Stats[count] = info;
+                    count++;
+                }
+            }
+            if (count != Stats.Length)
+            {
+                ProfilerValueInfo[] newStats = new ProfilerValueInfo[count];
+                count = 0;
+                foreach (ProfilerValueInfo info in Stats)
+                {
+                    if (info != null)
+                    {
+                        newStats[count] = info;
+                        count++;
+                    }
+                }
+                Stats = newStats;
             }
 
-            for (i = 0; i < Stats.Length; i++)
+            for (int i = 0; i < Stats.Length; i++)
             {
                 //Update the scales
                 Stats[i].Value = Stats[i].Value * ScaleFactor;
@@ -91,17 +108,28 @@ namespace Aurora.Framework
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
             ProfilerValueInfo[] Stats = new ProfilerValueInfo[10];
-            int i = 0;
+            int count = 0;
             foreach (ProfilerValueInfo info in statManager.GetInfos())
             {
-                Stats[i] = info;
-                i++;
+                if (info != null)
+                {
+                    Stats[count] = info;
+                    count++;
+                }
             }
-
-            for (i = 0; i < Stats.Length; i++)
+            if (count != Stats.Length)
             {
-                //Update the scales
-                Stats[i].Value = Stats[i].Value * ScaleFactor;
+                ProfilerValueInfo[] newStats = new ProfilerValueInfo[count];
+                count = 0;
+                foreach (ProfilerValueInfo info in Stats)
+                {
+                    if (info != null)
+                    {
+                        newStats[count] = info;
+                        count++;
+                    }
+                }
+                Stats = newStats;
             }
 
             for (int x = 200; x > 0; x--)
@@ -133,7 +161,7 @@ namespace Aurora.Framework
 
         private bool IsInGraphBar(int x, int y, ProfilerValueInfo[] Stats)
         {
-            for (int i = GraphBarsStart.Length - 1; i >= 0; i--)
+            for (int i = Math.Min(GraphBarsStart.Length - 1, Stats.Length - 1); i >= 0; i--)
             {
                 //Check whether it is between both the start and end
                 if (x > GraphBarsStart[i] && x < GraphBarsEnd[i])
@@ -206,13 +234,10 @@ namespace Aurora.Framework
     public class ProfilerManager
     {
         private static Profiler profiler = null;
-        public ProfilerManager()
-        {
-            profiler = new Profiler();
-        }
-
         public static Profiler GetProfiler()
         {
+            if (profiler == null)
+                profiler = new Profiler();
             return profiler;
         }
     }

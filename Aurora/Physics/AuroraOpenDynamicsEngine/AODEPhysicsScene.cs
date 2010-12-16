@@ -251,6 +251,53 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return AllowUnderwaterPhysics; }
         }
 
+        #region Stats
+
+        private int m_StatPhysicsTaintTime;
+        public override int StatPhysicsTaintTime
+        {
+            get { return m_StatPhysicsTaintTime; }
+        }
+
+        private int m_StatPhysicsMoveTime;
+        public override int StatPhysicsMoveTime
+        {
+            get { return m_StatPhysicsMoveTime; }
+        }
+
+        private int m_StatCollisionOptimizedTime;
+        public override int StatCollisionOptimizedTime
+        {
+            get { return m_StatCollisionOptimizedTime; }
+        }
+
+        private int m_StatSendCollisionsTime;
+        public override int StatSendCollisionsTime
+        {
+            get { return m_StatSendCollisionsTime; }
+        }
+
+        private int m_StatAvatarUpdatePosAndVelocity;
+        public override int StatAvatarUpdatePosAndVelocity
+        {
+            get { return m_StatAvatarUpdatePosAndVelocity; }
+        }
+
+        private int m_StatPrimUpdatePosAndVelocity;
+        public override int StatPrimUpdatePosAndVelocity
+        {
+            get { return m_StatPrimUpdatePosAndVelocity; }
+        }
+
+        private int m_StatUnlockedArea;
+        public override int StatUnlockedArea
+        {
+            get { return m_StatUnlockedArea; }
+        }
+
+        
+        #endregion
+
         /// <summary>
         /// Initiailizes the scene
         /// Sets many properties that ODE requires to be stable
@@ -2508,6 +2555,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // ode.dlock(world);
                     try
                     {
+                        int PhysicsTaintTime = Util.EnvironmentTickCount();
+
                         // Insert, remove Characters
                         bool processedtaints = false;
 
@@ -2739,6 +2788,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _taintedPrimL.Clear();
                         }
 
+                        m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
+
+                        int PhysicsMoveTime = Util.EnvironmentTickCount();
+
                         if (!DisableCollisions)
                         {
                             // Move characters
@@ -2781,7 +2834,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
+                        m_StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(PhysicsMoveTime);
+
+                        int CollisionOptimizedTime = Util.EnvironmentTickCount();
+
                         collision_optimized(timeStep);
+
+                        m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
+
+                        int SendCollisionsTime = Util.EnvironmentTickCount();
 
                         if (!DisableCollisions)
                         {
@@ -2810,6 +2871,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
+                        m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
+
                         //if (m_global_contactcount > 5)
                         //{
                         //    m_log.DebugFormat("[PHYSICS]: Contacts:{0}", m_global_contactcount);
@@ -2828,13 +2891,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     step_time -= ODE_STEPSIZE;
                     i++;
-                    //}
-                    //else
-                    //{
-                    //    fps = 0;
-                    //}
-                    //}
                 }
+                int AvatarUpdatePosAndVelocity = Util.EnvironmentTickCount();
+
                 if (!DisableCollisions)
                 {
                     lock (_characters)
@@ -2851,7 +2910,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
                 }
-
                 lock (_badCharacter)
                 {
                     if (_badCharacter.Count > 0)
@@ -2863,6 +2921,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _badCharacter.Clear();
                     }
                 }
+
+                m_StatAvatarUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(AvatarUpdatePosAndVelocity);
+
+                int PrimUpdatePosAndVelocity = Util.EnvironmentTickCount();
 
                 if (!DisableCollisions)
                 {
@@ -2906,6 +2968,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
 
+                m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
+
                 //DumpJointInfo();
 
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
@@ -2925,6 +2989,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.WorldExportDIF(world, fname, physics_logging_append_existing_logfile, prefix);
                 }
             }
+
+            int UnlockedArea = Util.EnvironmentTickCount();
+
             IsLocked = false;
             if (RemoveQueue.Count > 0)
             {
@@ -2959,6 +3026,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 ActiveCollisionQueue.Clear();
             }
+
+            m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
 
             if (m_timeDilation < 0.5f)
             {

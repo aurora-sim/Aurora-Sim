@@ -1152,6 +1152,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                         physicsFrameMonitor.AddFPS(1);
                         physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
+
+                        IPhysicsMonitor monitor = m_scene.RequestModuleInterface<IPhysicsMonitor>();
+                        if(monitor != null)
+                            monitor.AddPhysicsStats(m_scene.RegionInfo.RegionID, m_scene.m_sceneGraph.PhysicsScene);
                         
                         CheckExit();
                     }
