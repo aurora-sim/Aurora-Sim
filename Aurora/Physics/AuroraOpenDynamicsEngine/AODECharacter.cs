@@ -45,6 +45,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // private d.Matrix3 m_StandUpRotation;
         private bool _zeroFlag = false;
         private bool m_lastUpdateSent = false;
+        /*private Vector3 __velocity; //For testing to see when Vector3.Zero is set for the velocity
+        private Vector3 _velocity
+        {
+            get { return __velocity; }
+            set 
+            {
+                if (value == Vector3.Zero)
+                {
+                    m_log.Warn("VECTOR3 ZERO! zero flag: " + _zeroFlag + ", flying: " + flying);
+                }
+                __velocity = value;
+            }
+        }*/
         private Vector3 _velocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
@@ -68,8 +81,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_wascollidingGround = false;
         private bool m_iscollidingObj = false;
         private bool m_alwaysRun = false;
-        private bool m_hackSentFall = false;
-        private bool m_hackSentFly = false;
         private int m_requestedUpdateFrequency = 0;
         private Vector3 m_taintPosition = Vector3.Zero;
         public uint m_localID = 0;
@@ -769,9 +780,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get {
                 // There's a problem with Vector3.Zero! Don't Use it Here!
-                if (_zeroFlag)
-                    return Vector3.Zero;
-                m_lastUpdateSent = false;
+                //if (_zeroFlag)
+                //    return Vector3.Zero;
+                //m_lastUpdateSent = false;
                 return _velocity;
             }
             set
@@ -976,7 +987,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 movementdivisor = runDivisor * _parent_scene.TimeDilation; //Dynamically adjust it for slower sims
             
             //  if velocity is zero, use position control; otherwise, velocity control
-            if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f && m_iscolliding &&
+            if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&
                 Math.Abs(vel.X) < 0.5 && Math.Abs(vel.Y) < 0.5 && Math.Abs(vel.Z) < 0.5) //This is so that if we get moved by something else, it will update us in the client
             {
                 //  keep track of where we stopped.  No more slippin' & slidin'
@@ -1087,12 +1098,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
 
-                    vec.Z = (_target_velocity.Z - oldVelZ) * (PID_D);
+                    #endregion
+
+                    vec.Z = (_target_velocity.Z - oldVelZ) * (PID_P);
                     if (_parent_scene.AllowAvGravity && tempPos.Z > _parent_scene.AvGravityHeight)
                         //Add extra gravity
                         vec.Z += ((25 * _parent_scene.gravityz) * Mass);
-
-                    #endregion
                 }
             }
             if (flying)
@@ -1231,8 +1242,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.09)
+                    if (Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03 && !flying)
                     {
+                        //m_log.Warn("Nulling Velo: " + vec.ToString());
                         vec = new Vector3(0, 0, 0);
                         d.BodySetLinearVel(Body, 0, 0, 0);
                     }
@@ -1346,9 +1358,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 CollisionEventsThisFrame = new CollisionEventUpdate();
                 m_eventsubscription = 0;*/
-                _velocity.X = 0.0f;
-                _velocity.Y = 0.0f;
-                _velocity.Z = 0.0f;
+                _velocity = Vector3.Zero;
 
                 // Did we send out the 'stopped' message?
                 if (!m_lastUpdateSent)
@@ -1370,26 +1380,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Y = _velocity.Y;
                     vec.Z = _velocity.Z;
                 }
-                _velocity.X = (float)(vec.X);
-                _velocity.Y = (float)(vec.Y);
-
-                _velocity.Z = (float)(vec.Z);
-
-                if (_velocity.Z < -6 && !m_hackSentFall)
+                if (vec.X == 0 && vec.Y == 0 && vec.Z == 0)
                 {
-                    //m_hackSentFall = true;
-                    //m_pidControllerActive = false;
-                }
-                else if (flying && !m_hackSentFly)
-                {
-                    //m_hackSentFly = true;
-                    //base.SendCollisionUpdate(new CollisionEventUpdate());
+                    m_log.Warn("[AODECharacter]: We have a malformed Velocity, ignoring...");
                 }
                 else
-                {
-                    m_hackSentFly = false;
-                    m_hackSentFall = false;
-                }
+                    _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
+
+                //base.RequestPhysicsterseUpdate();
             }
         }
 

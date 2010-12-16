@@ -1092,8 +1092,6 @@ namespace OpenSim.Region.Framework.Scenes
                     SendAppearanceToAllOtherAgents();
                 }
             }
-            else
-                AddToPhysicalScene(false, false);
             m_avHeight = height;
         }
 
@@ -2501,18 +2499,16 @@ namespace OpenSim.Region.Framework.Scenes
             // server.
             if (remoteClient.IsActive)
             {
-                m_perfMonMS = Util.EnvironmentTickCount();
                 //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
 
                 remoteClient.SendPrimUpdate(
                     this,
                     PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
-                    | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity);
+                    | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity, 0);
 
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
                 if (reporter != null)
                 {
-                    reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
                     reporter.AddAgentUpdates(1);
                 }
             }
@@ -3370,7 +3366,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                  new Vector3(0f, 0f, m_appearance.AvatarHeight), isFlying);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
-            //m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
+            m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);

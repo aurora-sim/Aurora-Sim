@@ -135,7 +135,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnParcelPrimCountAdd += EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnParcelPrimCountUpdate += EventManagerOnParcelPrimCountUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
-            m_scene.EventManager.OnClientMovement += EventManagerOnClientMovement;
             m_scene.EventManager.OnValidateLandBuy += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy += EventManagerOnLandBuy;
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
@@ -148,7 +147,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnParcelPrimCountTainted += EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             m_scene.EventManager.OnLandObjectAdded += AddLandObject;
-            m_scene.EventManager.OnClientMovement += EventManager_OnClientMovement;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
 
             lock (m_scene)
@@ -177,7 +175,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnParcelPrimCountAdd -= EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnParcelPrimCountUpdate -= EventManagerOnParcelPrimCountUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= EventManagerOnAvatarEnteringNewParcel;
-            m_scene.EventManager.OnClientMovement -= EventManagerOnClientMovement;
             m_scene.EventManager.OnValidateLandBuy -= EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy -= EventManagerOnLandBuy;
             m_scene.EventManager.OnNewClient -= EventManagerOnNewClient;
@@ -190,7 +187,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnParcelPrimCountTainted -= EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps -= EventManagerOnRegisterCaps;
             m_scene.EventManager.OnLandObjectAdded -= AddLandObject;
-            m_scene.EventManager.OnClientMovement -= EventManager_OnClientMovement;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
@@ -564,6 +560,22 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             if (clientAvatar != null)
             {
+                ILandObject over = GetLandObject((int)clientAvatar.AbsolutePosition.X, (int)clientAvatar.AbsolutePosition.Y);
+                if (over != null)
+                {
+                    if (!over.IsRestrictedFromLand(clientAvatar.UUID) && (!over.IsBannedFromLand(clientAvatar.UUID) || clientAvatar.AbsolutePosition.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT))
+                    {
+                        clientAvatar.lastKnownAllowedPosition =
+                            new Vector3(clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y, clientAvatar.AbsolutePosition.Z);
+                    }
+                    else
+                    {
+                        //Kick them out
+                        Vector3? pos = landChannel.GetNearestAllowedPosition(clientAvatar);
+                        if (pos.HasValue)
+                            clientAvatar.Teleport(pos.Value);
+                    }
+                }
                 SendLandUpdate(clientAvatar);
                 SendOutNearestBanLine(remote_client);
             }
@@ -600,28 +612,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
         }
-
-        public void EventManagerOnClientMovement(ScenePresence avatar)
-        //Like handleEventManagerOnSignificantClientMovement, but called with an AgentUpdate regardless of distance.
-        {
-            ILandObject over = GetLandObject((int)avatar.AbsolutePosition.X, (int)avatar.AbsolutePosition.Y);
-            if (over != null)
-            {
-                if (!over.IsRestrictedFromLand(avatar.UUID) && (!over.IsBannedFromLand(avatar.UUID) || avatar.AbsolutePosition.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT))
-                {
-                    avatar.lastKnownAllowedPosition =
-                        new Vector3(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z);
-                }
-                else
-                {
-                    //Kick them out
-                    Vector3? pos = landChannel.GetNearestAllowedPosition(avatar);
-                    if (pos.HasValue)
-                        avatar.Teleport(pos.Value);
-                }
-            }
-        }
-
 
         public void ClientOnParcelAccessListRequest(UUID agentID, UUID sessionID, uint flags, int sequenceID,
                                                     int landLocalID, IClientAPI remote_client)
