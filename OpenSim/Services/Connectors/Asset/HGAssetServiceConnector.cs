@@ -60,23 +60,6 @@ namespace OpenSim.Services.Connectors
                 return; 
             m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
 
-            IConfig assetConfig = config.Configs["AssetService"];
-            if (assetConfig == null)
-            {
-                m_log.Error("[ASSET CONNECTOR]: AssetService missing from OpenSim.ini");
-                throw new Exception("Asset connector init error");
-            }
-
-            string serviceURI = assetConfig.GetString("AssetServerURI",
-                    String.Empty);
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[ASSET CONNECTOR]: No Server URI named in section AssetService");
-                throw new Exception("Asset connector init error");
-            }
-            m_ServerURI = serviceURI;
-
             MainConsole.Instance.Commands.AddCommand("asset", false, "dump asset",
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);

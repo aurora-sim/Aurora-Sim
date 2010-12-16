@@ -1311,6 +1311,7 @@ namespace AvatarArchives
             OSDMap assets = new OSDMap();
             OSDMap items = new OSDMap();
             body = appearance.Pack();
+            body.Add("FolderName", OSD.FromString(cmdparams[6]));
 
             foreach (AvatarWearable wear in appearance.Wearables)
             {
