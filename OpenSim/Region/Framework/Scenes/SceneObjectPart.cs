@@ -3689,29 +3689,35 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!ParentGroup.IsSelected)
                     UpdateLookAt();
 
-                /*const float ROTATION_TOLERANCE = 0.01f;
-                const float VELOCITY_TOLERANCE = 0.001f;
-                const float POSITION_TOLERANCE = 0.05f;
+                if (IsTerse(UpdateFlags))
+                {
+                    const float ROTATION_TOLERANCE = 0.01f;
+                    const float VELOCITY_TOLERANCE = 0.001f;
+                    const float POSITION_TOLERANCE = 0.01f;
 
-                // Throw away duplicate or insignificant updates
-                if (RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
-                    Acceleration.Equals(m_lastAcceleration) ||
-                    Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
-                    AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
-                    OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
-                {
-                    return false;
+                    // Throw away duplicate or insignificant updates
+                    if (!RotationOffset.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
+                        !Acceleration.Equals(m_lastAcceleration) ||
+                        !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                        !Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
+                        !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
+                        !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
+                    {
+                        // Update the "last" values
+                        m_lastPosition = OffsetPosition;
+                        m_lastRotation = RotationOffset;
+                        m_lastVelocity = Velocity;
+                        m_lastAcceleration = Acceleration;
+                        m_lastAngularVelocity = AngularVelocity;
+                    }
+                    else
+                    {
+                        IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule>();
+                        if (m != null)
+                            ((IObjectUpdateMonitor)m.GetMonitor(ParentGroup.Scene.RegionInfo.RegionID.ToString(), "PrimUpdates")).AddLimitedPrims(1);
+                        return false;
+                    }
                 }
-                else
-                {
-                    // Update the "last" values
-                    m_lastPosition = OffsetPosition;
-                    m_lastRotation = RotationOffset;
-                    m_lastVelocity = Velocity;
-                    m_lastAcceleration = Acceleration;
-                    m_lastAngularVelocity = AngularVelocity;
-                }*/
                 return true;
             }
             return false;

@@ -275,6 +275,25 @@ namespace OpenSim.Framework
         void ResetStats();
     }
 
+    public interface IObjectUpdateMonitor
+    {
+        /// <summary>
+        /// The current number of prims that were not sent to the client
+        /// </summary>
+        float PrimsLimited { get; }
+
+        /// <summary>
+        /// Add X prims updates that were limited to the stats
+        /// </summary>
+        /// <param name="frames"></param>
+        void AddLimitedPrims(int prims);
+
+        /// <summary>
+        /// Reset the stats
+        /// </summary>
+        void ResetStats();
+    }
+
     public interface IAgentUpdateMonitor
     {
         /// <summary>

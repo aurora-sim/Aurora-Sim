@@ -25,79 +25,64 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Permissions;
-using OpenMetaverse;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.Framework.Scenes.Types
+namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    public class UpdateQueue
+    public class ObjectUpdateMonitor : IMonitor, IObjectUpdateMonitor
     {
-        private PriorityQueue m_queue;
+        #region Declares
 
-        private Dictionary<UUID, bool> m_ids;
+        private readonly Scene m_scene;
+        private volatile float primsLimited;
+        private float LastPrimsLimited = 0;
 
-        private object m_syncObject = new object();
+        public float PrimsLimited { get { return LastPrimsLimited; } }
 
-        public int Count
+        #endregion
+
+        #region Constructor
+
+        public ObjectUpdateMonitor(Scene scene)
         {
-            get { return m_queue.Count; }
+            m_scene = scene;
         }
 
-        public UpdateQueue()
+        #endregion
+
+        #region Implementation of IMonitor
+
+        public double GetValue()
         {
-            m_queue = new PriorityQueue();
-            m_ids = new Dictionary<UUID, bool>();
+            return LastPrimsLimited / 10;
         }
 
-        public void Clear()
+        public string GetName()
         {
-            lock (m_syncObject)
-            {
-                m_ids.Clear();
-            }
+            return "PrimUpdates";
         }
 
-        public void Enqueue(double priority, EntityUpdate part, uint LocalID)
+        public string GetFriendlyValue()
         {
-            lock (m_syncObject)
-            {
-                if (!m_ids.ContainsKey(part.Entity.UUID))
-                {
-                    m_ids.Add(part.Entity.UUID, true);
-                    m_queue.Enqueue(priority, part, LocalID);
-                }
-            }
+            return GetValue() + " prim updates limited/second";
         }
 
-        public bool TryDequeue(out EntityUpdate part)
-        {
-            bool RetVal = false;
-            part = null;
-            lock (m_syncObject)
-            {
-                if (m_queue.Count > 0)
-                {
-                    RetVal = m_queue.TryDequeue(out part);
-                    m_ids.Remove(part.Entity.UUID);
-                }
-            }
+        #endregion
 
-            return RetVal;
+        #region Other Methods
+
+        public void AddLimitedPrims(int prims)
+        {
+            primsLimited += prims;
         }
 
-        public void Reprioritize(PriorityQueue.UpdatePriorityHandler handler)
+        public void ResetStats()
         {
-            m_queue.Reprioritize(handler);
+            LastPrimsLimited = primsLimited;
+            primsLimited = 0;
         }
 
-        public object SyncRoot
-        {
-            get { return m_queue.SyncRoot; }
-        }
+        #endregion
     }
 }

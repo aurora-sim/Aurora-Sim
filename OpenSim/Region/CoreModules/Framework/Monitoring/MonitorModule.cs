@@ -210,6 +210,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 AddMonitor(new SleepFrameMonitor(scene));
                 AddMonitor(new TimeDilationMonitor(scene));
                 AddMonitor(new TotalFrameMonitor(scene));
+                AddMonitor(new ObjectUpdateMonitor(scene));
 
                 AddAlert(new DeadlockAlert(GetMonitor("Last Completed Frame At") as LastFrameTimeMonitor));
             }
@@ -585,6 +586,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 physMonitor.ResetStats();
                 AgentUpdateMonitor agentUpdateMonitor = (AgentUpdateMonitor)GetMonitor("Agent Update Count");
                 agentUpdateMonitor.ResetStats();
+                ObjectUpdateMonitor objectUpdateMonitor = (ObjectUpdateMonitor)GetMonitor("PrimUpdates");
+                objectUpdateMonitor.ResetStats();
             }
 
             /// <summary>

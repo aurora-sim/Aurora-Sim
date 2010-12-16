@@ -75,10 +75,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags UpdateFlags)
         {
+            double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
+            EntityUpdate update = new EntityUpdate(part, UpdateFlags);
             lock (m_partsUpdateQueue)
             {
-                double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
-                EntityUpdate update = new EntityUpdate(part, UpdateFlags);
                 m_partsUpdateQueue.Enqueue(priority, update, update.Entity.LocalId);
 
                 //Make it check when the user comes around to it again

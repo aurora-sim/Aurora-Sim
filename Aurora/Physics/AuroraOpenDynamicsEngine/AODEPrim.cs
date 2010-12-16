@@ -2854,6 +2854,9 @@ Console.WriteLine(" JointCreateFixed");
                         m_rotationalVelocity.Y = 0;
                         m_rotationalVelocity.Z = 0;
 
+                        d.BodySetLinearVel(Body, 0, 0, 0);
+                        d.BodySetForce(Body, 0, 0, 0);
+
                         if (m_lastUpdateSent > 0)
                         {
                             if (throttleCounter > 200 || m_lastUpdateSent >= 5)
