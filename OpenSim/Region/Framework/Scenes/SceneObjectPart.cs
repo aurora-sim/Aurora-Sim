@@ -3689,7 +3689,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!ParentGroup.IsSelected)
                     UpdateLookAt();
 
-                const float ROTATION_TOLERANCE = 0.01f;
+                /*const float ROTATION_TOLERANCE = 0.01f;
                 const float VELOCITY_TOLERANCE = 0.001f;
                 const float POSITION_TOLERANCE = 0.05f;
 
@@ -3711,7 +3711,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_lastVelocity = Velocity;
                     m_lastAcceleration = Acceleration;
                     m_lastAngularVelocity = AngularVelocity;
-                }
+                }*/
                 return true;
             }
             return false;

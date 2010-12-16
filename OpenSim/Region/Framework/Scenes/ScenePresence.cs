@@ -260,11 +260,6 @@ namespace OpenSim.Region.Framework.Scenes
         private SceneObjectPart m_SelectedUUID = null;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
         private UUID CollisionSoundID = UUID.Zero;
-        
-        /// <value>
-        /// Script engines present in the scene
-        /// </value>
-        public IScriptModule[] m_scriptEngines;
 
         #region Properties
 
@@ -714,8 +709,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (account != null)
                 m_userLevel = account.UserLevel;
 
-            m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
-            
             AbsolutePosition = posLastSignificantMove = m_CameraCenter = m_controllingClient.StartPos;
 
             AdjustKnownSeeds();
@@ -3637,19 +3630,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="args">The arguments for the event</param>
         public void SendScriptEventToAttachments(string eventName, Object[] args)
         {
-            if (m_scriptEngines != null)
+            lock (m_attachments)
             {
-                lock (m_attachments)
+                IScriptModule[] scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (SceneObjectGroup grp in m_attachments)
                 {
-                    foreach (SceneObjectGroup grp in m_attachments)
+                    foreach (IScriptModule m in scriptEngines)
                     {
-                        foreach (IScriptModule m in m_scriptEngines)
-                        {
-                            if (m == null) // No script engine loaded
-                                continue;
+                        if (m == null) // No script engine loaded
+                            continue;
 
-                            m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
-                        }
+                        m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
                     }
                 }
             }

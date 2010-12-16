@@ -64,6 +64,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             lastReportedPhysicsFPS = value;
             //Now fix time dilation
             m_scene.TimeDilation = lastReportedPhysicsFPS / basePhysicsFPS;
+            if (m_scene.TimeDilation < 0.01)
+                m_scene.TimeDilation = 0.01f;
         }
 
         #endregion
