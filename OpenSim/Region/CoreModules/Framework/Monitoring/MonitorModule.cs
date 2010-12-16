@@ -203,6 +203,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 AddMonitor(new LastFrameTimeMonitor(scene));
                 AddMonitor(new NetworkMonitor(scene));
                 AddMonitor(new ObjectCountMonitor(scene));
+                AddMonitor(new ScriptCountMonitor(scene));
                 AddMonitor(new OtherFrameMonitor(scene));
                 AddMonitor(new PhysicsFrameMonitor(scene));
                 AddMonitor(new PhysicsUpdateFrameMonitor(scene));
