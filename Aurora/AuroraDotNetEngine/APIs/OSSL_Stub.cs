@@ -149,7 +149,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_OSSL_Functions.osParcelSetDetails(pos, rules);
             }
 
-        public double osList2Double(LSL_Types.list src, int index)
+        public double osList2Double(LSL_List src, int index)
         {
             return m_OSSL_Functions.osList2Double(src, index);
         }
