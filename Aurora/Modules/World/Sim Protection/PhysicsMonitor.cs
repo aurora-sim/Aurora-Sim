@@ -109,6 +109,8 @@ namespace Aurora.Modules
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);
                 }
+                if (scenesToRun.Count == 0)
+                    scenesToRun = m_scenes;
             }
             else
                 scenesToRun.AddRange(m_scenes);
@@ -134,6 +136,8 @@ namespace Aurora.Modules
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);
                 }
+                if (scenesToRun.Count == 0)
+                    scenesToRun = m_scenes;
             }
             else
                 scenesToRun.AddRange(m_scenes);
@@ -143,8 +147,15 @@ namespace Aurora.Modules
 
         private void StartThread(object scenes)
         {
-            List<Scene> scenesToRun = (List<Scene>)scenes;
-            System.Windows.Forms.Application.Run(new PhysicsProfilerForm(scenesToRun));
+            try
+            {
+                List<Scene> scenesToRun = (List<Scene>)scenes;
+                System.Windows.Forms.Application.Run(new PhysicsProfilerForm(scenesToRun));
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("There was an error opening the form: " + ex.ToString());
+            }
         }
 
         protected virtual void CurrentPhysicsStatsCommand(string module, string[] cmd)
@@ -157,6 +168,8 @@ namespace Aurora.Modules
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);
                 }
+                if (scenesToRun.Count == 0)
+                    scenesToRun = m_scenes;
             }
             else
                 scenesToRun.AddRange(m_scenes);
