@@ -21,15 +21,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     {
         private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private CSCodeGenerator LSL_Converter;
-
+        private Compiler m_compiler;
         public void Initialise(Compiler compiler)
         {
-            LSL_Converter = new CSCodeGenerator(null, compiler);
+        m_compiler = compiler;
+//            LSL_Converter = new CSCodeGenerator(null, compiler);
         }
 
         public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
+            LSL_Converter = new CSCodeGenerator(null, m_compiler);
             CompiledScript = LSL_Converter.Convert(Script);
             PositionMap = LSL_Converter.PositionMap;
 

@@ -83,14 +83,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public double osSunGetParam(string param)
-        {
+            {
             return m_OSSL_Functions.osSunGetParam(param);
-        }
+            }
+
+        public double osGetSunParam(string param)
+            {
+            return m_OSSL_Functions.osSunGetParam(param);
+            }
+
 
         public void osSunSetParam(string param, double value)
-        {
+            {
             m_OSSL_Functions.osSunSetParam(param, value);
-        }
+            }
+
+        public void osSetSunParam(string param, double value)
+            {
+            m_OSSL_Functions.osSunSetParam(param, value);
+            }
 
         public string osWindActiveModelPluginName()
         {
@@ -98,15 +109,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
 // Not yet plugged in as available OSSL functions, so commented out
-//        void osWindParamSet(string plugin, string param, float value)
-//        {
-//            m_OSSL_Functions.osWindParamSet(plugin, param, value);
-//        }
-//
-//        float osWindParamGet(string plugin, string param)
-//        {
-//            return m_OSSL_Functions.osWindParamGet(plugin, param);
-//        }
+        //        void osWindParamSet(string plugin, string param, float value)
+        //        {
+        //            m_OSSL_Functions.osWindParamSet(plugin, param, value);
+        //        }
+        //
+        //        float osWindParamGet(string plugin, string param)
+        //        {
+        //            return m_OSSL_Functions.osWindParamGet(plugin, param);
+        //        }
+        // also alias to older format ??
+        //        void osSetWindParam(string plugin, string param, float value)
+        //        {
+        //            m_OSSL_Functions.osWindParamSet(plugin, param, value);
+        //        }
+        //
+        //        float osGetWindParam(string plugin, string param)
+        //        {
+        //            return m_OSSL_Functions.osWindParamGet(plugin, param);
+        //        }
 
         public void osParcelJoin(vector pos1, vector pos2)
         {
@@ -117,13 +138,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             m_OSSL_Functions.osParcelSubdivide(pos1, pos2);
         }
-        
-        public void osParcelSetDetails(vector pos, LSL_List rules)
-        {
-            m_OSSL_Functions.osParcelSetDetails(pos,rules);
-        }
 
-        public double osList2Double(LSL_Types.list src, int index)
+        public void osParcelSetDetails(vector pos, LSL_List rules)
+            {
+            m_OSSL_Functions.osParcelSetDetails(pos, rules);
+            }
+
+        public void osSetParcelDetails(vector pos, LSL_List rules)
+            {
+            m_OSSL_Functions.osParcelSetDetails(pos, rules);
+            }
+
+        public double osList2Double(LSL_List src, int index)
         {
             return m_OSSL_Functions.osList2Double(src, index);
         }
@@ -167,14 +193,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public LSL_Float osTerrainGetHeight(int x, int y)
-        {
+            {
             return m_OSSL_Functions.osTerrainGetHeight(x, y);
-        }
+            }
+
+        public LSL_Float osGetTerrainHeight(int x, int y)
+            {
+            return m_OSSL_Functions.osTerrainGetHeight(x, y);
+            }
+
+
+        public LSL_Integer osSetTerrainHeight(int x, int y, double val)
+            {
+            return m_OSSL_Functions.osTerrainSetHeight(x, y, val);
+            }
 
         public LSL_Integer osTerrainSetHeight(int x, int y, double val)
-        {
+            {
             return m_OSSL_Functions.osTerrainSetHeight(x, y, val);
-        }
+            }
 
         public void osTerrainFlush()
         {

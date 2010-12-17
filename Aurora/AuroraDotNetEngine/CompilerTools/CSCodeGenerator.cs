@@ -130,6 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string OriginalScript = "";
         private Parser p = null;
         private Random random = new Random();
+        private bool IsaGlobalVar = false;
         private class GlobalVar
         {
             public string Type;
@@ -245,7 +246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             #endregion
 
             //m_SLCompatabilityMode = compatMode;
-            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
+//            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             m_compiler = compiler;
             //m_Apis = Apis;
@@ -278,17 +279,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             MethodVariables.Clear();
             VariablesToRename.Clear();
+            GlobalVariables.Clear();
             m_braceCount = 0;
             m_CSharpLine = 15;
             m_CSharpCol = 1;
             m_positionMap = new Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>();
-            LocalMethods.Clear();
-            GlobalVariables.Clear();
+            LocalMethods.Clear();          
             m_astRoot = null;
             IsParentEnumerable = false;
             OriginalScript = "";
             FuncCalls.Clear();
             FuncCntr = false;
+            IsaGlobalVar = false;
         }
 
         private string CreateCompilerScript(string ScriptClass)
@@ -331,10 +333,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             LSL2CSCodeTransformer codeTransformer;
             try
             {
-                lock (p)
+ //               lock (p)
                 {
                     codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
-                    p.m_lexer.Reset();
+//                    p.m_lexer.Reset();
                 }
             }
             catch (CSToolsException e)
@@ -362,7 +364,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         e.slInfo.charPosition - 1, emessage, e.slInfo.sourceLine);
 
                 m_compiler.AddError(message);
-                p.m_lexer.Reset();
+//                p.m_lexer.Reset();
                 ResetCounters();
                 return "Error parsing the script. " + message;
             }
@@ -1515,11 +1517,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateGlobalFunctionDefinition(GlobalFunctionDefinition gf)
         {
             MethodVariables.Clear();
+            VariablesToRename.Clear();
             StringBuilder retstr = new StringBuilder();
 
             // we need to separate the argument declaration list from other kids
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
             List<SYMBOL> remainingKids = new List<SYMBOL>();
+
 
             foreach (SYMBOL kid in gf.kids)
                 if (kid is ArgumentDeclarationList)
@@ -1539,6 +1543,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             retstr.Append(GenerateLine(")"));
+
+          
+
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
 
@@ -1581,8 +1588,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                     checkForMultipleAssignments(identifiers, a);
 
+                    IsaGlobalVar = true;
                     string VarName = GenerateNode((SYMBOL)a.kids.Pop());
                     innerretstr += VarName;
+                    IsaGlobalVar = false;
 
                     #region Find the var name and type
 
@@ -1708,6 +1717,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
             List<SYMBOL> remainingKids = new List<SYMBOL>();
 
+            MethodVariables.Clear();
+            VariablesToRename.Clear();
+            
             foreach (SYMBOL kid in se.kids)
                 if (kid is ArgumentDeclarationList)
                     argumentDeclarationListKids.Add(kid);
@@ -1725,12 +1737,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             retstr.Append(GenerateLine(")"));
 
+
+
             foreach (SYMBOL kid in remainingKids)
                 retstr.Append(GenerateNode(kid));
 
+
             if (retstr[retstr.Length - 2] == '}')
                 retstr.Insert(retstr.Length - 2,GenerateLine("    yield break;"));
-
 
             return retstr.ToString();
         }
@@ -1749,6 +1763,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (Declaration d in adl.kids)
             {
                 retstr += GenerateDeclaration(d);
+//                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
                 if (0 < comma--)
                     retstr += Generate(", ");
             }
@@ -1810,30 +1825,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for Declaration d.</returns>
         private string GenerateDeclaration(Declaration d)
         {
-            GlobalVar var = null;
-            if(MethodVariables.TryGetValue(d.Id, out var))
+
+//        return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+
+        GlobalVar var;
+        if(IsaGlobalVar)
+            return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+
+        if (GlobalVariables.TryGetValue(d.Id, out var))
+            return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+
+        if (MethodVariables.TryGetValue(d.Id, out var))
             {
-                if (var.Type != d.Datatype)
+            if (var.Type != d.Datatype)
                 {
-                    Console.WriteLine("[CSCodeGenerator]: found var needing renamed!");
-                    string NewVariableName = RandomString(10, true);
-                    VarRename r = new VarRename();
-                    r.OldVarName = d.Id;
-                    r.HasBeenAssigned = false;
-                    r.NewVarName = NewVariableName;
-                    VariablesToRename.Add(d.Id, r);
-                    d.Id = NewVariableName;
-                    MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
-                    return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
-                }
-                else
-                    return Generate(String.Format("{0}", CheckName(d.Id)), d);
-            }
-            else
-            {
+                Console.WriteLine("[CSCodeGenerator]: found var needing renamed!");
+                string NewVariableName = RandomString(10, true);
+                VarRename r = new VarRename();
+                r.OldVarName = d.Id;
+                r.HasBeenAssigned = false;
+                r.NewVarName = NewVariableName;
+                VariablesToRename.Add(d.Id, r);
+                d.Id = NewVariableName;
                 MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
                 return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+                }
+            else
+                return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
             }
+        else
+            {
+            MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
+            return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+            }              
         }
 
         /// <summary>

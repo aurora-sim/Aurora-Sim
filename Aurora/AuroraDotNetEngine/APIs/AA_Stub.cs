@@ -59,119 +59,119 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_AA_Functions = (IAA_Api)api;
         }
 
-        public void AASetCloudDensity(LSL_Float density)
+        public void aaSetCloudDensity(LSL_Float density)
         {
-            m_AA_Functions.AASetCloudDensity(density);
+            m_AA_Functions.aaSetCloudDensity(density);
         }
 
-        public void AAUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
+        public void aaUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
         {
-            m_AA_Functions.AAUpdateDatabase(key, value, token);
+            m_AA_Functions.aaUpdateDatabase(key, value, token);
         }
 
-        public LSL_List AAQueryDatabase(LSL_String key, LSL_String token)
+        public LSL_List aaQueryDatabase(LSL_String key, LSL_String token)
         {
-            return m_AA_Functions.AAQueryDatabase(key, token);
+            return m_AA_Functions.aaQueryDatabase(key, token);
         }
 
-        public LSL_String AASerializeXML(LSL_List keys, LSL_List values)
+        public LSL_String aaSerializeXML(LSL_List keys, LSL_List values)
         {
-            return m_AA_Functions.AASerializeXML(keys, values);
+            return m_AA_Functions.aaSerializeXML(keys, values);
         }
 
-        public LSL_List AADeserializeXMLKeys(LSL_String xmlFile)
+        public LSL_List aaDeserializeXMLKeys(LSL_String xmlFile)
         {
-            return m_AA_Functions.AADeserializeXMLKeys(xmlFile);
+            return m_AA_Functions.aaDeserializeXMLKeys(xmlFile);
         }
 
-        public LSL_List AADeserializeXMLValues(LSL_String xmlFile)
+        public LSL_List aaDeserializeXMLValues(LSL_String xmlFile)
         {
-            return m_AA_Functions.AADeserializeXMLValues(xmlFile);
+            return m_AA_Functions.aaDeserializeXMLValues(xmlFile);
         }
 
-        public void AASetConeOfSilence(LSL_Float radius)
+        public void aaSetConeOfSilence(LSL_Float radius)
         {
-            m_AA_Functions.AASetConeOfSilence(radius);
+            m_AA_Functions.aaSetConeOfSilence(radius);
         }
 
-        public void AAJoinCombatTeam(LSL_String team)
+        public void aaJoinCombatTeam(LSL_String team)
         {
-            m_AA_Functions.AAJoinCombatTeam(team);
+            m_AA_Functions.aaJoinCombatTeam(team);
         }
 
-        public void AAJoinCombat()
+        public void aaJoinCombat()
         {
-            m_AA_Functions.AAJoinCombat();
+            m_AA_Functions.aaJoinCombat();
         }
 
-        public void AALeaveCombat()
+        public void aaLeaveCombat()
         {
-            m_AA_Functions.AALeaveCombat();
+            m_AA_Functions.aaLeaveCombat();
         }
 
-        public LSL_Float AAGetHealth()
+        public LSL_Float aaGetHealth()
         {
-            return m_AA_Functions.AAGetHealth();
+            return m_AA_Functions.aaGetHealth();
         }
 
-        public LSL_String AAGetTeam()
+        public LSL_String aaGetTeam()
         {
-            return m_AA_Functions.AAGetTeam();
+            return m_AA_Functions.aaGetTeam();
         }
 
-        public LSL_List AAGetTeamMembers()
+        public LSL_List aaGetTeamMembers()
         {
-            return m_AA_Functions.AAGetTeamMembers();
+            return m_AA_Functions.aaGetTeamMembers();
         }
 
-        public LSL_String AAGetLastOwner()
+        public LSL_String aaGetLastOwner()
         {
-            return m_AA_Functions.AAGetLastOwner();
+            return m_AA_Functions.aaGetLastOwner();
         }
 
-        public LSL_String AAGetLastOwner(LSL_String PrimID)
+        public LSL_String aaGetLastOwner(LSL_String PrimID)
         {
-            return m_AA_Functions.AAGetLastOwner(PrimID);
+            return m_AA_Functions.aaGetLastOwner(PrimID);
         }
 
-        public void AASayDistance(int channelID, float Distance, string text)
+        public void aaSayDistance(int channelID, float Distance, string text)
         {
-            m_AA_Functions.AASayDistance(channelID, Distance, text);
+            m_AA_Functions.aaSayDistance(channelID, Distance, text);
         }
 
-        public void AASayTo(string userID, string text)
+        public void aaSayTo(string userID, string text)
         {
-            m_AA_Functions.AASayTo(userID, text);
+            m_AA_Functions.aaSayTo(userID, text);
         }
 
-        public bool AAGetWalkDisabled(string userID)
+        public bool aaGetWalkDisabled(string userID)
         {
-            return m_AA_Functions.AAGetWalkDisabled(userID);
+            return m_AA_Functions.aaGetWalkDisabled(userID);
         }
 
-        public void AASetWalkDisabled(string userID, bool Value)
+        public void aaSetWalkDisabled(string userID, bool Value)
         {
-            m_AA_Functions.AASetWalkDisabled(userID, Value);
+            m_AA_Functions.aaSetWalkDisabled(userID, Value);
         }
 
-        public bool AAGetFlyDisabled(string userID)
+        public bool aaGetFlyDisabled(string userID)
         {
-            return m_AA_Functions.AAGetFlyDisabled(userID);
+            return m_AA_Functions.aaGetFlyDisabled(userID);
         }
 
-        public void AARaiseError(string message)
+        public void aaRaiseError(string message)
         {
-            m_AA_Functions.AARaiseError(message);
+            m_AA_Functions.aaRaiseError(message);
         }
 
-        public void AASetFlyDisabled(string userID, bool Value)
+        public void aaSetFlyDisabled(string userID, bool Value)
         {
-            m_AA_Functions.AASetFlyDisabled(userID, Value);
+            m_AA_Functions.aaSetFlyDisabled(userID, Value);
         }
 
-        public string AAAvatarFullName2Key(string username)
+        public string aaAvatarFullName2Key(string username)
         {
-            return m_AA_Functions.AAAvatarFullName2Key(username);
+            return m_AA_Functions.aaAvatarFullName2Key(username);
         }
 
         public void osCauseDamage(string avatar, double damage)
@@ -189,9 +189,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_AA_Functions.osCauseHealing(avatar, healing);
         }
 
-        public void AASetCenterOfGravity(LSL_Types.Vector3 position)
+        public void aaSetCenterOfGravity(LSL_Types.Vector3 position)
         {
-            m_AA_Functions.AASetCenterOfGravity(position);
+            m_AA_Functions.aaSetCenterOfGravity(position);
         }
     }
 }
