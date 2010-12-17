@@ -237,7 +237,7 @@ namespace Aurora.Modules
             AvatarAppearance appearance = AvatarService.GetAppearance(SP.UUID);
             if (appearance == null)
                 appearance = SP.Appearance;
-            StreamWriter writer = new StreamWriter(cmdparams[5]);
+            StreamWriter writer = new StreamWriter(cmdparams[5], false);
             OSDMap map = new OSDMap();
             OSDMap body = new OSDMap();
             OSDMap assets = new OSDMap();

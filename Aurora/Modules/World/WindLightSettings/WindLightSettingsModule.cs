@@ -459,7 +459,7 @@ namespace Aurora.Modules
         {
             if (presence == null)
                 return;
-            ILandObject land = presence.Scene.LandChannel.GetLandObject(presence.currentLocalParcelID);
+            ILandObject land = presence.Scene.LandChannel.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
             OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
             if (map.ContainsKey("WindLight"))
             {
