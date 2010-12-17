@@ -17,6 +17,7 @@
     ;Include-NoHG = AuroraServerConfiguration/HGMain.ini
 	
 	;;Other .ini files to add...
+	Include-AssetService = AuroraServerConfiguration/AssetService.ini
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
@@ -62,8 +63,3 @@
     ;; Disable the checking of session ID's in the Grid Service
     ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
     DisableSessionID = false;
-	
-[AssetService]
-    DefaultAssetLoader = "OpenSim.Services.AssetService.dll"
-    AssetLoaderArgs = "assets/AssetSets.xml"
-    AllowRemoteDelete = "false"
