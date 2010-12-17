@@ -217,6 +217,18 @@ namespace OpenSim.Framework
             return m_items[itemID];
         }
 
+        public UUID GetItem(UUID assetID)
+        {
+            if (!m_items.ContainsValue(assetID))
+                return UUID.Zero;
+            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
+            {
+                if (kvp.Value == assetID)
+                    return kvp.Key;
+            }
+            return UUID.Zero;
+        }
+
         public static AvatarWearable[] DefaultWearables
         {
             get

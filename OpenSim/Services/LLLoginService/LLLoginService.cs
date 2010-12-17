@@ -1220,15 +1220,14 @@ namespace AvatarArchives
 
             try
             {
-                LoadAssets(assetsMap);
-                LoadItems(itemsMap, account.PrincipalID, folderForAppearance, out items);
+                LoadAssets(assetsMap, appearance);
+                LoadItems(itemsMap, account.PrincipalID, folderForAppearance, appearance, out items);
             }
             catch (Exception ex)
             {
                 m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex.ToString());
             }
 
-            appearance.Owner = account.PrincipalID;
             AvatarData adata = new AvatarData(appearance);
             AvatarService.SetAvatar(account.PrincipalID, adata);
 
@@ -1445,7 +1444,7 @@ namespace AvatarArchives
             SaveAsset(saveItem.AssetID, assets);
         }
 
-        private void LoadAssets(OSDMap assets)
+        private void LoadAssets(OSDMap assets, AvatarAppearance appearance)
         {
             foreach (KeyValuePair<string, OSD> kvp in assets)
             {
@@ -1456,12 +1455,32 @@ namespace AvatarArchives
                 if (asset == null) //Don't overwrite
                 {
                     asset = LoadAssetBase(assetMap);
-                    AssetService.Store(asset);
+                    UUID oldassetID = UUID.Parse(asset.ID);
+                    UUID newAssetID = UUID.Parse(AssetService.Store(asset));
+                    //Fix the IDs
+                    AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
+                    appearance.Wearables.CopyTo(wearables, 0);
+                    for (int a = 0; a < wearables.Length; a++)
+                    {
+                        for (int i = 0; i < wearables[a].Count; i++)
+                        {
+                            if (wearables[a][i].AssetID == oldassetID)
+                            {
+                                //Fix the ItemID
+                                AvatarWearable w = wearables[a];
+                                UUID itemID = w.GetItem(oldassetID);
+                                w.RemoveItem(oldassetID);
+                                w.Add(itemID, newAssetID);
+                                appearance.SetWearable(a, w);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance, out List<InventoryItemBase> litems)
+        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance, AvatarAppearance appearance, out List<InventoryItemBase> litems)
         {
             litems = new List<InventoryItemBase>();
             foreach (KeyValuePair<string, OSD> kvp in items)
@@ -1469,8 +1488,34 @@ namespace AvatarArchives
                 string serialization = kvp.Value.AsString();
                 InventoryItemBase item = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
                 m_log.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
+                UUID oldID = item.ID;
                 item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
                 litems.Add(item);
+                FixItemIDs(oldID, item, appearance);
+            }
+        }
+
+        private void FixItemIDs(UUID oldID, InventoryItemBase item, AvatarAppearance appearance)
+        {
+            //Fix the IDs
+            AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
+            appearance.Wearables.CopyTo(wearables, 0);
+            for (int a = 0; a < wearables.Length; a++)
+            {
+                for (int i = 0; i < wearables[a].Count; i++)
+                {
+                    if (wearables[a][i].ItemID == oldID)
+                    {
+                        //Fix the ItemID
+                        AvatarWearable w = new AvatarWearable();
+                        w = w.Unpack((OSDArray)wearables[a].Pack());
+                        UUID assetID = w.GetAsset(oldID);
+                        w.RemoveItem(oldID);
+                        w.Add(item.ID, assetID);
+                        appearance.SetWearable(a, w);
+                        return;
+                    }
+                }
             }
         }
     }

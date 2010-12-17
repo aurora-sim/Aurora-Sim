@@ -1001,8 +1001,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "restart", "restart", "Restart the current sim selected (all if root)", RunCommand);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
@@ -1242,10 +1240,6 @@ namespace OpenSim.Region.Framework.Scenes
                         RemoveRegion(killScene, true);
                     else
                         MainConsole.Instance.Output("no region with that name");
-                    break;
-
-                case "restart":
-                    ForEachCurrentScene(delegate(Scene scene) { scene.Restart(); });
                     break;
                 case "restart-instance":
                     //This kills the instance and restarts it
