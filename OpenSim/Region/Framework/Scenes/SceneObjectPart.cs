@@ -3589,7 +3589,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool IsTerse(PrimUpdateFlags flags)
         {
-            return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
+            return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity)) && flags != PrimUpdateFlags.FullUpdate;
         }
 
         /// <summary>
@@ -3681,13 +3681,6 @@ namespace OpenSim.Region.Framework.Scenes
                 // the race conditions.
                 if (ParentGroup.IsDeleted)
                     return false;
-
-                //We don't check for significant movement when the scene is loading 
-                if (!ParentGroup.Scene.LoadingPrims)
-                    ParentGroup.CheckForSignificantMovement();
-
-                if (!ParentGroup.IsSelected)
-                    UpdateLookAt();
 
                 if (IsTerse(UpdateFlags))
                 {

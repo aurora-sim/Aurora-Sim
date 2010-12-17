@@ -136,6 +136,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 presence.Update();
             });
+            ForEachSOG(delegate(SceneObjectGroup grp)
+            {
+                grp.Update();
+            });
         }
 
         protected internal float UpdatePhysics(double elapsed)

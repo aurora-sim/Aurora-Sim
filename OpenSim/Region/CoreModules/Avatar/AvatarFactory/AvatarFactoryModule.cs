@@ -424,6 +424,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
             sp.Appearance = avatAppearance;
+            QueueAppearanceSend(client.AgentId);
             QueueAppearanceSave(client.AgentId);
         }
 

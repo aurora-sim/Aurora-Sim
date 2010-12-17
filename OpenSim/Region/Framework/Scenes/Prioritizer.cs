@@ -310,7 +310,6 @@ namespace OpenSim.Region.Framework.Scenes
                             priority /= 2; //Emphasize physical objs
 
                         //Factor in the size of objects as well, big ones are MUCH more important than small ones
-                        rootPart.Scale = new Vector3(10, 10, 10);
                         float size = rootPart.ParentGroup.GroupScale().Length();
                         //Cap size at 200 so that it doesn't completely overwhelm other objects
                         if (size > 200)

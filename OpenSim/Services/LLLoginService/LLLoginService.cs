@@ -1297,6 +1297,7 @@ namespace AvatarArchives
             if (cmdparams.Length != 7)
             {
                 m_log.Info("[AvatarArchive] Not enough parameters!");
+                return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
@@ -1322,8 +1323,7 @@ namespace AvatarArchives
                         WearableItem w = wear[i];
                         if (w.AssetID != UUID.Zero)
                         {
-                            SaveAsset(w.AssetID, assets);
-                            SaveItem(w.ItemID, items);
+                            SaveItem(w.ItemID, items, assets);
                         }
                     }
                 }
@@ -1337,8 +1337,10 @@ namespace AvatarArchives
                 List<AvatarAttachment> attachments = appearance.GetAttachments();
                 foreach (AvatarAttachment a in attachments)
                 {
-                    SaveAsset(a.AssetID, assets);
-                    SaveItem(a.ItemID, items);
+                    if (a.AssetID != UUID.Zero)
+                    {
+                        SaveItem(a.ItemID, items, assets); 
+                    }
                 }
             }
             catch(Exception ex)
@@ -1379,13 +1381,13 @@ namespace AvatarArchives
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
         {
             AssetBase asset = AssetService.Get(AssetID.ToString());
-            if (asset != null)
+            if (asset != null && AssetID != UUID.Zero)
             {
                 OSDMap assetData = new OSDMap();
                 m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
                 CreateMetaDataMap(asset.Metadata, assetData);
                 assetData.Add("AssetData", OSD.FromBinary(asset.Data));
-                assetMap.Add(asset.ID, assetData);
+                assetMap[asset.ID] = assetData;
             }
             else
             {
@@ -1428,7 +1430,7 @@ namespace AvatarArchives
             return asset;
         }
 
-        private void SaveItem(UUID ItemID, OSDMap itemMap)
+        private void SaveItem(UUID ItemID, OSDMap itemMap, OSDMap assets)
         {
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
             if (saveItem == null)
@@ -1439,6 +1441,8 @@ namespace AvatarArchives
             m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
             string serialization = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);
+
+            SaveAsset(saveItem.AssetID, assets);
         }
 
         private void LoadAssets(OSDMap assets)
@@ -1469,7 +1473,6 @@ namespace AvatarArchives
                 litems.Add(item);
             }
         }
-    
     }
 
     public class GridAvatarProfileArchiver

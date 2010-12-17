@@ -1873,6 +1873,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
+            //We don't check for significant movement when the scene is loading 
+            if (!Scene.LoadingPrims)
+                CheckForSignificantMovement();
+
+            if (!IsSelected)
+            {
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    part.UpdateLookAt();
+                }
+            }
         }
 
         /// <summary>
