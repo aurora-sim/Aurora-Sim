@@ -1313,23 +1313,37 @@ namespace AvatarArchives
             body = appearance.Pack();
             body.Add("FolderName", OSD.FromString(cmdparams[6]));
 
-            foreach (AvatarWearable wear in appearance.Wearables)
+            try
             {
-                for (int i = 0; i < wear.Count; i++)
+                foreach (AvatarWearable wear in appearance.Wearables)
                 {
-                    WearableItem w = wear[i];
-                    if (w.AssetID != UUID.Zero)
+                    for (int i = 0; i < wear.Count; i++)
                     {
-                        SaveAsset(w.AssetID, assets);
-                        SaveItem(w.ItemID, items);
+                        WearableItem w = wear[i];
+                        if (w.AssetID != UUID.Zero)
+                        {
+                            SaveAsset(w.AssetID, assets);
+                            SaveItem(w.ItemID, items);
+                        }
                     }
                 }
             }
-            List<AvatarAttachment> attachments = appearance.GetAttachments();
-            foreach (AvatarAttachment a in attachments)
+            catch (Exception ex)
             {
-                SaveAsset(a.AssetID, assets);
-                SaveItem(a.ItemID, items);
+                m_log.Warn("Excpetion: " + ex.ToString());
+            }
+            try
+            {
+                List<AvatarAttachment> attachments = appearance.GetAttachments();
+                foreach (AvatarAttachment a in attachments)
+                {
+                    SaveAsset(a.AssetID, assets);
+                    SaveItem(a.ItemID, items);
+                }
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("Excpetion: " + ex.ToString());
             }
 
             map.Add("Body", body);
@@ -1353,7 +1367,8 @@ namespace AvatarArchives
             }
             else
             {
-                StreamWriter writer = new StreamWriter(cmdparams[5]);
+                m_log.Info("[AvatarArchive] Saving archive to " + cmdparams[5]);
+                StreamWriter writer = new StreamWriter(cmdparams[5], false);
                 writer.Write(OSDParser.SerializeLLSDXmlString(map));
                 writer.Close();
                 writer.Dispose();

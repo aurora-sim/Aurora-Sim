@@ -77,7 +77,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-//        private static readonly byte[] DEFAULT_TEXTURE = AvatarAppearance.GetDefaultTexture().GetBytes();
         private static readonly Array DIR_CONTROL_FLAGS = Enum.GetValues(typeof(Dir_ControlFlags));
         private static readonly Vector3 HEAD_ADJUSTMENT = new Vector3(0f, 0f, 0.3f);
         
@@ -92,7 +91,6 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly Vector3 SIT_TARGET_ADJUSTMENT = new Vector3(0.1f, 0.0f, 0.3f);
 
         public UUID currentParcelUUID = UUID.Zero;
-        public int currentLocalParcelID = 0;
 
         private ISceneViewer m_sceneViewer;
 
@@ -138,11 +136,6 @@ namespace OpenSim.Region.Framework.Scenes
         public bool m_velocityIsDecaying = false;
         public bool m_overrideUserInput = false;
         public double m_endForceTime = 0;
-        private uint m_requestedSitTargetID;
-        public uint SittingOnID
-        {
-            get { return m_requestedSitTargetID; }
-        }
         private UUID m_requestedSitTargetUUID;
         public UUID SittingOnUUID
         {
@@ -1708,7 +1701,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 m_parentID = UUID.Zero;
                 SendAvatarDataToAllAgents();
-                m_requestedSitTargetID = 0;
+                m_requestedSitTargetUUID = UUID.Zero;
                 if ((m_physicsActor != null) && (m_avHeight > 0))
                 {
                     SetHeight(m_avHeight);
@@ -1773,7 +1766,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_nextSitAnimation = part.SitAnimation;
             }
-            m_requestedSitTargetID = part.LocalId;
             m_requestedSitOffset = Vector3.Zero;
             m_requestedSitTargetUUID = targetID;
 
@@ -1825,12 +1817,10 @@ namespace OpenSim.Region.Framework.Scenes
                        ));
 
                 m_requestedSitTargetUUID = part.UUID;
-                m_requestedSitTargetID = part.LocalId;
                 part.SetAvatarOnSitTarget(UUID);
 
                 if (SitTargetisSet && SitTargetUnOccupied)
                 {
-                    m_requestedSitTargetID = part.LocalId;
                     m_requestedSitTargetUUID = part.UUID;
                     offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
                     sitOrientation = avSitOrientation;
@@ -1926,7 +1916,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_nextSitAnimation = part.SitAnimation;
                 }
-                m_requestedSitTargetID = part.LocalId;
                 m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
                 
@@ -1981,7 +1970,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 ControllingClient.SendAlertMessage("Sit position no longer exists");
                 m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitTargetID = 0;
                 m_requestedSitOffset = Vector3.Zero;
             }
 
@@ -2023,7 +2011,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 ControllingClient.SendAlertMessage("Sit position no longer exists");
                 m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitTargetID = 0;
                 m_requestedSitOffset = Vector3.Zero;
             }
 
@@ -2065,7 +2052,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 ControllingClient.SendAlertMessage("Sit position no longer exists");
                 m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitTargetID = 0;
                 m_requestedSitOffset = Vector3.Zero;
             }
 
@@ -2103,7 +2089,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ControllingClient.SendAlertMessage("Sit position not accessable.");
                         m_requestedSitTargetUUID = UUID.Zero;
-                        m_requestedSitTargetID = 0;
                         m_requestedSitOffset = Vector3.Zero;
                     }
                 }
@@ -2111,7 +2096,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ControllingClient.SendAlertMessage("Sit position not accessable.");
                     m_requestedSitTargetUUID = UUID.Zero;
-                    m_requestedSitTargetID = 0;
                     m_requestedSitOffset = Vector3.Zero;
                 }
             }
@@ -2119,7 +2103,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 ControllingClient.SendAlertMessage("Sit position no longer exists");
                 m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitTargetID = 0;
                 m_requestedSitOffset = Vector3.Zero;
             }
 
@@ -2153,7 +2136,6 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart part =  FindNextAvailableSitTarget(targetID);
             if (part != null)
             {
-                m_requestedSitTargetID = part.LocalId; 
                 m_requestedSitOffset = offset;
                 m_requestedSitTargetUUID = targetID;
 
@@ -2196,7 +2178,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID, string sitAnimation, bool UseSitTarget)
         {
-            SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetID);
+            SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
             if (part != null)
             {
                 if (m_sitAtAutoTarget || !m_autopilotMoving)

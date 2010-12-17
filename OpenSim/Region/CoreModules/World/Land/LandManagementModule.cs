@@ -535,7 +535,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                     {
                         over.SendLandUpdateToClient(avatar.ControllingClient);
                         avatar.currentParcelUUID = over.LandData.GlobalID;
-                        avatar.currentLocalParcelID = over.LandData.LocalID;
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, over.LandData.LocalID,
                                                                             m_scene.RegionInfo.RegionID);
                     }

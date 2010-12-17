@@ -297,8 +297,7 @@ namespace OpenSim.Region.Framework.Scenes
                         PhysicsActor physActor = rootPart.PhysActor;
 
                         // Objects avatars are sitting on should be prioritized more
-                        if (presence.SittingOnUUID == rootPart.UUID ||
-                                    presence.SittingOnID == rootPart.LocalId)
+                        if (presence.SittingOnUUID == rootPart.UUID)
                         {
                             //Objects that are physical get more priority.
                             if (physActor != null && physActor.IsPhysical)
