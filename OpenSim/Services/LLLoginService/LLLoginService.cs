@@ -1508,7 +1508,7 @@ namespace AvatarArchives
                     {
                         //Fix the ItemID
                         AvatarWearable w = new AvatarWearable();
-                        w = w.Unpack((OSDArray)wearables[a].Pack());
+                        w.Unpack((OSDArray)wearables[a].Pack());
                         UUID assetID = w.GetAsset(oldID);
                         w.RemoveItem(oldID);
                         w.Add(item.ID, assetID);

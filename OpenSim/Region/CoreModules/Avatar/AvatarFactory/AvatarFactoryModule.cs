@@ -458,6 +458,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                                 appearance.Wearables[i][j].ItemID, (WearableType)i);
 
                             appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
+                            appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
                         }
                     }
                 }
