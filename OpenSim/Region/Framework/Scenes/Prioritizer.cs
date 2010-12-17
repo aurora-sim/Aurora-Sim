@@ -310,12 +310,14 @@ namespace OpenSim.Region.Framework.Scenes
                             priority /= 2; //Emphasize physical objs
 
                         //Factor in the size of objects as well, big ones are MUCH more important than small ones
-                        float size = rootPart.ParentGroup.GroupScale().Length() * 0.5f;
-                        //Cap size at 10 so that we completely don't overwhelm other objects
-                        if (size > 10)
-                            size = 10;
+                        rootPart.Scale = new Vector3(10, 10, 10);
+                        float size = rootPart.ParentGroup.GroupScale().Length();
+                        //Cap size at 200 so that it doesn't completely overwhelm other objects
+                        if (size > 200)
+                            size = 200;
 
-                        priority *=  1 / size;
+                        //Do it dynamically as well so that larger prims get smaller quicker
+                        priority /= size > 40 ? (size / 35) : (size > 20 ? (size / 17) : 1);
 
                         if (rootPart.IsAttachment)
                         {
