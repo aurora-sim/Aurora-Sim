@@ -829,28 +829,24 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 maxScale = Vector3.Zero;
             Vector3 finalScale = new Vector3(0.5f, 0.5f, 0.5f);
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    Vector3 partscale = part.Scale;
-                    Vector3 partoffset = part.OffsetPosition;
+                Vector3 partscale = part.Scale;
+                Vector3 partoffset = part.OffsetPosition;
 
-                    minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
-                    minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
-                    minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
-                    
-                    maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
-                    maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
-                    maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
-                }
+                minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
+                minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
+                minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
+
+                maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
+                maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
+                maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
             }
 
             finalScale.X = (minScale.X > maxScale.X) ? minScale.X : maxScale.X;
             finalScale.Y = (minScale.Y > maxScale.Y) ? minScale.Y : maxScale.Y;
             finalScale.Z = (minScale.Z > maxScale.Z) ? minScale.Z : maxScale.Z;
             return finalScale;
-
         }
 
         public EntityIntersection TestIntersection(Ray hRay, bool frontFacesOnly, bool faceCenters)
@@ -862,23 +858,21 @@ namespace OpenSim.Region.Framework.Scenes
 
             EntityIntersection result = new EntityIntersection();
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    // Temporary commented to stop compiler warning
+                // Temporary commented to stop compiler warning
                 //Vector3 partPosition =
                 //    new Vector3(part.AbsolutePosition.X, part.AbsolutePosition.Y, part.AbsolutePosition.Z);
                 Quaternion parentrotation = GroupRotation;
-                    // Telling the prim to raytrace.
+                // Telling the prim to raytrace.
                 //EntityIntersection inter = part.TestIntersection(hRay, parentrotation);
-                    EntityIntersection inter = part.TestIntersectionOBB(hRay, parentrotation, frontFacesOnly, faceCenters);
+                EntityIntersection inter = part.TestIntersectionOBB(hRay, parentrotation, frontFacesOnly, faceCenters);
 
                 // This may need to be updated to the maximum draw distance possible..
                 // We might (and probably will) be checking for prim creation from other sims
                 // when the camera crosses the border.
                 float idist = Constants.RegionSize;
-                    if (inter.HitTF)
+                if (inter.HitTF)
                 {
                     // We need to find the closest prim to return to the testcaller along the ray
                     if (inter.distance < idist)
@@ -889,7 +883,6 @@ namespace OpenSim.Region.Framework.Scenes
                         result.normal = inter.normal;
                         result.distance = inter.distance;
                     }
-                }
                 }
             }
 
@@ -911,187 +904,184 @@ namespace OpenSim.Region.Framework.Scenes
             minY = 256f;
             minZ = 8192f;
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    Vector3 worldPos = part.GetWorldPosition();
-                    Vector3 offset = worldPos - AbsolutePosition;
-                    Quaternion worldRot;
-                    if (part.ParentID == 0)
-                        worldRot = part.RotationOffset;
-                    else
-                        worldRot = part.GetWorldRotation();
-                    Vector3 frontTopLeft;
-                    Vector3 frontTopRight;
-                    Vector3 frontBottomLeft;
-                    Vector3 frontBottomRight;
-                    Vector3 backTopLeft;
-                    Vector3 backTopRight;
-                    Vector3 backBottomLeft;
-                    Vector3 backBottomRight;
-                    Vector3 orig = Vector3.Zero;
+                Vector3 worldPos = part.GetWorldPosition();
+                Vector3 offset = worldPos - AbsolutePosition;
+                Quaternion worldRot;
+                if (part.ParentID == 0)
+                    worldRot = part.RotationOffset;
+                else
+                    worldRot = part.GetWorldRotation();
+                Vector3 frontTopLeft;
+                Vector3 frontTopRight;
+                Vector3 frontBottomLeft;
+                Vector3 frontBottomRight;
+                Vector3 backTopLeft;
+                Vector3 backTopRight;
+                Vector3 backBottomLeft;
+                Vector3 backBottomRight;
+                Vector3 orig = Vector3.Zero;
 
-                    frontTopLeft.X = orig.X - (part.Scale.X / 2);
-                    frontTopLeft.Y = orig.Y - (part.Scale.Y / 2);
-                    frontTopLeft.Z = orig.Z + (part.Scale.Z / 2);
+                frontTopLeft.X = orig.X - (part.Scale.X / 2);
+                frontTopLeft.Y = orig.Y - (part.Scale.Y / 2);
+                frontTopLeft.Z = orig.Z + (part.Scale.Z / 2);
 
-                    frontTopRight.X = orig.X - (part.Scale.X / 2);
-                    frontTopRight.Y = orig.Y + (part.Scale.Y / 2);
-                    frontTopRight.Z = orig.Z + (part.Scale.Z / 2);
+                frontTopRight.X = orig.X - (part.Scale.X / 2);
+                frontTopRight.Y = orig.Y + (part.Scale.Y / 2);
+                frontTopRight.Z = orig.Z + (part.Scale.Z / 2);
 
-                    frontBottomLeft.X = orig.X - (part.Scale.X / 2);
-                    frontBottomLeft.Y = orig.Y - (part.Scale.Y / 2);
-                    frontBottomLeft.Z = orig.Z - (part.Scale.Z / 2);
+                frontBottomLeft.X = orig.X - (part.Scale.X / 2);
+                frontBottomLeft.Y = orig.Y - (part.Scale.Y / 2);
+                frontBottomLeft.Z = orig.Z - (part.Scale.Z / 2);
 
-                    frontBottomRight.X = orig.X - (part.Scale.X / 2);
-                    frontBottomRight.Y = orig.Y + (part.Scale.Y / 2);
-                    frontBottomRight.Z = orig.Z - (part.Scale.Z / 2);
+                frontBottomRight.X = orig.X - (part.Scale.X / 2);
+                frontBottomRight.Y = orig.Y + (part.Scale.Y / 2);
+                frontBottomRight.Z = orig.Z - (part.Scale.Z / 2);
 
-                    backTopLeft.X = orig.X + (part.Scale.X / 2);
-                    backTopLeft.Y = orig.Y - (part.Scale.Y / 2);
-                    backTopLeft.Z = orig.Z + (part.Scale.Z / 2);
+                backTopLeft.X = orig.X + (part.Scale.X / 2);
+                backTopLeft.Y = orig.Y - (part.Scale.Y / 2);
+                backTopLeft.Z = orig.Z + (part.Scale.Z / 2);
 
-                    backTopRight.X = orig.X + (part.Scale.X / 2);
-                    backTopRight.Y = orig.Y + (part.Scale.Y / 2);
-                    backTopRight.Z = orig.Z + (part.Scale.Z / 2);
+                backTopRight.X = orig.X + (part.Scale.X / 2);
+                backTopRight.Y = orig.Y + (part.Scale.Y / 2);
+                backTopRight.Z = orig.Z + (part.Scale.Z / 2);
 
-                    backBottomLeft.X = orig.X + (part.Scale.X / 2);
-                    backBottomLeft.Y = orig.Y - (part.Scale.Y / 2);
-                    backBottomLeft.Z = orig.Z - (part.Scale.Z / 2);
+                backBottomLeft.X = orig.X + (part.Scale.X / 2);
+                backBottomLeft.Y = orig.Y - (part.Scale.Y / 2);
+                backBottomLeft.Z = orig.Z - (part.Scale.Z / 2);
 
-                    backBottomRight.X = orig.X + (part.Scale.X / 2);
-                    backBottomRight.Y = orig.Y + (part.Scale.Y / 2);
-                    backBottomRight.Z = orig.Z - (part.Scale.Z / 2);
+                backBottomRight.X = orig.X + (part.Scale.X / 2);
+                backBottomRight.Y = orig.Y + (part.Scale.Y / 2);
+                backBottomRight.Z = orig.Z - (part.Scale.Z / 2);
 
-                    frontTopLeft = frontTopLeft * worldRot;
-                    frontTopRight = frontTopRight * worldRot;
-                    frontBottomLeft = frontBottomLeft * worldRot;
-                    frontBottomRight = frontBottomRight * worldRot;
+                frontTopLeft = frontTopLeft * worldRot;
+                frontTopRight = frontTopRight * worldRot;
+                frontBottomLeft = frontBottomLeft * worldRot;
+                frontBottomRight = frontBottomRight * worldRot;
 
-                    backBottomLeft = backBottomLeft * worldRot;
-                    backBottomRight = backBottomRight * worldRot;
-                    backTopLeft = backTopLeft * worldRot;
-                    backTopRight = backTopRight * worldRot;
+                backBottomLeft = backBottomLeft * worldRot;
+                backBottomRight = backBottomRight * worldRot;
+                backTopLeft = backTopLeft * worldRot;
+                backTopRight = backTopRight * worldRot;
 
-                    frontTopLeft += offset;
-                    frontTopRight += offset;
-                    frontBottomLeft += offset;
-                    frontBottomRight += offset;
+                frontTopLeft += offset;
+                frontTopRight += offset;
+                frontBottomLeft += offset;
+                frontBottomRight += offset;
 
-                    backBottomLeft += offset;
-                    backBottomRight += offset;
-                    backTopLeft += offset;
-                    backTopRight += offset;
+                backBottomLeft += offset;
+                backBottomRight += offset;
+                backTopLeft += offset;
+                backTopRight += offset;
 
-                    if (frontTopRight.X > maxX)
-                        maxX = frontTopRight.X;
-                    if (frontTopLeft.X > maxX)
-                        maxX = frontTopLeft.X;
-                    if (frontBottomRight.X > maxX)
-                        maxX = frontBottomRight.X;
-                    if (frontBottomLeft.X > maxX)
-                        maxX = frontBottomLeft.X;
+                if (frontTopRight.X > maxX)
+                    maxX = frontTopRight.X;
+                if (frontTopLeft.X > maxX)
+                    maxX = frontTopLeft.X;
+                if (frontBottomRight.X > maxX)
+                    maxX = frontBottomRight.X;
+                if (frontBottomLeft.X > maxX)
+                    maxX = frontBottomLeft.X;
 
-                    if (backTopRight.X > maxX)
-                        maxX = backTopRight.X;
-                    if (backTopLeft.X > maxX)
-                        maxX = backTopLeft.X;
-                    if (backBottomRight.X > maxX)
-                        maxX = backBottomRight.X;
-                    if (backBottomLeft.X > maxX)
-                        maxX = backBottomLeft.X;
+                if (backTopRight.X > maxX)
+                    maxX = backTopRight.X;
+                if (backTopLeft.X > maxX)
+                    maxX = backTopLeft.X;
+                if (backBottomRight.X > maxX)
+                    maxX = backBottomRight.X;
+                if (backBottomLeft.X > maxX)
+                    maxX = backBottomLeft.X;
 
-                    if (frontTopRight.X < minX)
-                        minX = frontTopRight.X;
-                    if (frontTopLeft.X < minX)
-                        minX = frontTopLeft.X;
-                    if (frontBottomRight.X < minX)
-                        minX = frontBottomRight.X;
-                    if (frontBottomLeft.X < minX)
-                        minX = frontBottomLeft.X;
+                if (frontTopRight.X < minX)
+                    minX = frontTopRight.X;
+                if (frontTopLeft.X < minX)
+                    minX = frontTopLeft.X;
+                if (frontBottomRight.X < minX)
+                    minX = frontBottomRight.X;
+                if (frontBottomLeft.X < minX)
+                    minX = frontBottomLeft.X;
 
-                    if (backTopRight.X < minX)
-                        minX = backTopRight.X;
-                    if (backTopLeft.X < minX)
-                        minX = backTopLeft.X;
-                    if (backBottomRight.X < minX)
-                        minX = backBottomRight.X;
-                    if (backBottomLeft.X < minX)
-                        minX = backBottomLeft.X;
+                if (backTopRight.X < minX)
+                    minX = backTopRight.X;
+                if (backTopLeft.X < minX)
+                    minX = backTopLeft.X;
+                if (backBottomRight.X < minX)
+                    minX = backBottomRight.X;
+                if (backBottomLeft.X < minX)
+                    minX = backBottomLeft.X;
 
-                    if (frontTopRight.Y > maxY)
-                        maxY = frontTopRight.Y;
-                    if (frontTopLeft.Y > maxY)
-                        maxY = frontTopLeft.Y;
-                    if (frontBottomRight.Y > maxY)
-                        maxY = frontBottomRight.Y;
-                    if (frontBottomLeft.Y > maxY)
-                        maxY = frontBottomLeft.Y;
+                if (frontTopRight.Y > maxY)
+                    maxY = frontTopRight.Y;
+                if (frontTopLeft.Y > maxY)
+                    maxY = frontTopLeft.Y;
+                if (frontBottomRight.Y > maxY)
+                    maxY = frontBottomRight.Y;
+                if (frontBottomLeft.Y > maxY)
+                    maxY = frontBottomLeft.Y;
 
-                    if (backTopRight.Y > maxY)
-                        maxY = backTopRight.Y;
-                    if (backTopLeft.Y > maxY)
-                        maxY = backTopLeft.Y;
-                    if (backBottomRight.Y > maxY)
-                        maxY = backBottomRight.Y;
-                    if (backBottomLeft.Y > maxY)
-                        maxY = backBottomLeft.Y;
+                if (backTopRight.Y > maxY)
+                    maxY = backTopRight.Y;
+                if (backTopLeft.Y > maxY)
+                    maxY = backTopLeft.Y;
+                if (backBottomRight.Y > maxY)
+                    maxY = backBottomRight.Y;
+                if (backBottomLeft.Y > maxY)
+                    maxY = backBottomLeft.Y;
 
-                    if (backTopRight.Y < minY)
-                        minY = backTopRight.Y;
-                    if (backTopLeft.Y < minY)
-                        minY = backTopLeft.Y;
-                    if (backBottomRight.Y < minY)
-                        minY = backBottomRight.Y;
-                    if (backBottomLeft.Y < minY)
-                        minY = backBottomLeft.Y;
+                if (backTopRight.Y < minY)
+                    minY = backTopRight.Y;
+                if (backTopLeft.Y < minY)
+                    minY = backTopLeft.Y;
+                if (backBottomRight.Y < minY)
+                    minY = backBottomRight.Y;
+                if (backBottomLeft.Y < minY)
+                    minY = backBottomLeft.Y;
 
-                    if (backTopRight.Y < minY)
-                        minY = backTopRight.Y;
-                    if (backTopLeft.Y < minY)
-                        minY = backTopLeft.Y;
-                    if (backBottomRight.Y < minY)
-                        minY = backBottomRight.Y;
-                    if (backBottomLeft.Y < minY)
-                        minY = backBottomLeft.Y;
+                if (backTopRight.Y < minY)
+                    minY = backTopRight.Y;
+                if (backTopLeft.Y < minY)
+                    minY = backTopLeft.Y;
+                if (backBottomRight.Y < minY)
+                    minY = backBottomRight.Y;
+                if (backBottomLeft.Y < minY)
+                    minY = backBottomLeft.Y;
 
-                    if (frontTopRight.Z > maxZ)
-                        maxZ = frontTopRight.Z;
-                    if (frontTopLeft.Z > maxZ)
-                        maxZ = frontTopLeft.Z;
-                    if (frontBottomRight.Z > maxZ)
-                        maxZ = frontBottomRight.Z;
-                    if (frontBottomLeft.Z > maxZ)
-                        maxZ = frontBottomLeft.Z;
+                if (frontTopRight.Z > maxZ)
+                    maxZ = frontTopRight.Z;
+                if (frontTopLeft.Z > maxZ)
+                    maxZ = frontTopLeft.Z;
+                if (frontBottomRight.Z > maxZ)
+                    maxZ = frontBottomRight.Z;
+                if (frontBottomLeft.Z > maxZ)
+                    maxZ = frontBottomLeft.Z;
 
-                    if (backTopRight.Z > maxZ)
-                        maxZ = backTopRight.Z;
-                    if (backTopLeft.Z > maxZ)
-                        maxZ = backTopLeft.Z;
-                    if (backBottomRight.Z > maxZ)
-                        maxZ = backBottomRight.Z;
-                    if (backBottomLeft.Z > maxZ)
-                        maxZ = backBottomLeft.Z;
+                if (backTopRight.Z > maxZ)
+                    maxZ = backTopRight.Z;
+                if (backTopLeft.Z > maxZ)
+                    maxZ = backTopLeft.Z;
+                if (backBottomRight.Z > maxZ)
+                    maxZ = backBottomRight.Z;
+                if (backBottomLeft.Z > maxZ)
+                    maxZ = backBottomLeft.Z;
 
-                    if (frontTopRight.Z < minZ)
-                        minZ = frontTopRight.Z;
-                    if (frontTopLeft.Z < minZ)
-                        minZ = frontTopLeft.Z;
-                    if (frontBottomRight.Z < minZ)
-                        minZ = frontBottomRight.Z;
-                    if (frontBottomLeft.Z < minZ)
-                        minZ = frontBottomLeft.Z;
+                if (frontTopRight.Z < minZ)
+                    minZ = frontTopRight.Z;
+                if (frontTopLeft.Z < minZ)
+                    minZ = frontTopLeft.Z;
+                if (frontBottomRight.Z < minZ)
+                    minZ = frontBottomRight.Z;
+                if (frontBottomLeft.Z < minZ)
+                    minZ = frontBottomLeft.Z;
 
-                    if (backTopRight.Z < minZ)
-                        minZ = backTopRight.Z;
-                    if (backTopLeft.Z < minZ)
-                        minZ = backTopLeft.Z;
-                    if (backBottomRight.Z < minZ)
-                        minZ = backBottomRight.Z;
-                    if (backBottomLeft.Z < minZ)
-                        minZ = backBottomLeft.Z;
-                }
+                if (backTopRight.Z < minZ)
+                    minZ = backTopRight.Z;
+                if (backTopLeft.Z < minZ)
+                    minZ = backTopLeft.Z;
+                if (backBottomRight.Z < minZ)
+                    minZ = backBottomRight.Z;
+                if (backBottomLeft.Z < minZ)
+                    minZ = backBottomLeft.Z;
             }
         }
 
@@ -1376,16 +1366,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             scriptEvents aggregateScriptEvents = 0;
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    if (part == null)
-                        continue;
-                    if (part != RootPart)
-                        part.Flags = objectflagupdate;
-                    aggregateScriptEvents |= part.AggregateScriptEvents;
-                }
+                if (part == null)
+                    continue;
+                if (part != RootPart)
+                    part.Flags = objectflagupdate;
+                aggregateScriptEvents |= part.AggregateScriptEvents;
             }
 
             m_scriptListens_atTarget = ((aggregateScriptEvents & scriptEvents.at_target) != 0);
@@ -1428,20 +1415,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="m_physicalPrim"></param>
         public void ApplyPhysics(bool m_physicalPrim)
         {
-            lock (m_partsLock)
+            m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
+            foreach (SceneObjectPart part in m_partsList)
             {
-                m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
-                foreach (SceneObjectPart part in m_partsList)
+                if (part.LocalId != m_rootPart.LocalId)
                 {
-                    if (part.LocalId != m_rootPart.LocalId)
-                    {
-                        part.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), part.VolumeDetectActive, m_physicalPrim);
-                    }
+                    part.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), part.VolumeDetectActive, m_physicalPrim);
                 }
-
-                // Hack to get the physics scene geometries in the right spot
-                ResetChildPrimPhysicsPositions();
             }
+
+            // Hack to get the physics scene geometries in the right spot
+            ResetChildPrimPhysicsPositions();
         }
 
         public void SetOwnerId(UUID userId)
@@ -1964,14 +1948,11 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
+                if (part != RootPart)
                 {
-                    if (part != RootPart)
-                    {
-                        part.ScheduleUpdateToAvatar(UpdateFlags, presence);
-                    }
+                    part.ScheduleUpdateToAvatar(UpdateFlags, presence);
                 }
             }
         }
@@ -1985,14 +1966,11 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdate(UpdateFlags);
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
+                if (part != RootPart)
                 {
-                    if (part != RootPart)
-                    {
-                        part.ScheduleUpdate(UpdateFlags);
-                    }
+                    part.ScheduleUpdate(UpdateFlags);
                 }
             }
         }
@@ -2005,14 +1983,11 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleTerseUpdate();
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
+                if (part != RootPart)
                 {
-                    if (part != RootPart)
-                    {
-                        part.ScheduleTerseUpdate();
-                    }
+                    part.ScheduleTerseUpdate();
                 }
             }
         }
@@ -2548,12 +2523,9 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
 
-                    lock (m_partsLock)
+                    foreach (SceneObjectPart part in m_partsList)
                     {
-                        foreach (SceneObjectPart part in m_partsList)
-                        {
-                            part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect);
-                        }
+                        part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect);
                     }
                 }
             }
@@ -2733,12 +2705,9 @@ namespace OpenSim.Region.Framework.Scenes
                 float y = (scale.Y / part.Scale.Y);
                 float z = (scale.Z / part.Scale.Z);
 
-                lock (m_partsLock)
+                foreach (SceneObjectPart obPart in m_partsList)
                 {
-                    foreach (SceneObjectPart obPart in m_partsList)
-                    {
-                        obPart.StoreUndoState();
-                    }
+                    obPart.StoreUndoState();
                 }
                 Vector3 prevScale = part.Scale;
                 prevScale.X *= x;
@@ -2746,25 +2715,22 @@ namespace OpenSim.Region.Framework.Scenes
                 prevScale.Z *= z;
                 part.Resize(prevScale);
 
-                lock (m_partsLock)
+                foreach (SceneObjectPart obPart in m_partsList)
                 {
-                    foreach (SceneObjectPart obPart in m_partsList)
+                    if (obPart.UUID != m_rootPart.UUID)
                     {
-                        if (obPart.UUID != m_rootPart.UUID)
-                        {
-                            obPart.IgnoreUndoUpdate = true;
-                            Vector3 currentpos = new Vector3(obPart.OffsetPosition);
-                            currentpos.X *= x;
-                            currentpos.Y *= y;
-                            currentpos.Z *= z;
-                            Vector3 newSize = new Vector3(obPart.Scale);
-                            newSize.X *= x;
-                            newSize.Y *= y;
-                            newSize.Z *= z;
-                            obPart.Resize(newSize);
-                            obPart.UpdateOffSet(currentpos);
-                            obPart.IgnoreUndoUpdate = false;
-                        }
+                        obPart.IgnoreUndoUpdate = true;
+                        Vector3 currentpos = new Vector3(obPart.OffsetPosition);
+                        currentpos.X *= x;
+                        currentpos.Y *= y;
+                        currentpos.Z *= z;
+                        Vector3 newSize = new Vector3(obPart.Scale);
+                        newSize.X *= x;
+                        newSize.Y *= y;
+                        newSize.Z *= z;
+                        obPart.Resize(newSize);
+                        obPart.UpdateOffSet(currentpos);
+                        obPart.IgnoreUndoUpdate = false;
                     }
                 }
 
@@ -2884,14 +2850,11 @@ namespace OpenSim.Region.Framework.Scenes
             axDiff *= Quaternion.Inverse(partRotation);
             diff = axDiff;
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart obPart in m_partsList)
             {
-                foreach (SceneObjectPart obPart in m_partsList)
+                if (obPart.UUID != m_rootPart.UUID)
                 {
-                    if (obPart.UUID != m_rootPart.UUID)
-                    {
-                        obPart.OffsetPosition = obPart.OffsetPosition + diff;
-                    }
+                    obPart.OffsetPosition = obPart.OffsetPosition + diff;
                 }
             }
 
@@ -3025,25 +2988,22 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
-            lock (m_partsLock)
+            foreach (SceneObjectPart prim in m_partsList)
             {
-                foreach (SceneObjectPart prim in m_partsList)
+                if (prim.UUID != m_rootPart.UUID)
                 {
-                    if (prim.UUID != m_rootPart.UUID)
-                    {
-                        prim.StoreUndoState();
-                        prim.IgnoreUndoUpdate = true;
-                        Vector3 axPos = prim.OffsetPosition;
-                        axPos *= oldParentRot;
-                        axPos *= Quaternion.Inverse(axRot);
-                        prim.OffsetPosition = axPos;
-                        Quaternion primsRot = prim.RotationOffset;
-                        Quaternion newRot = primsRot * oldParentRot;
-                        newRot *= Quaternion.Inverse(axRot);
-                        prim.RotationOffset = newRot;
-                        prim.ScheduleTerseUpdate();
-                        prim.IgnoreUndoUpdate = false;
-                    }
+                    prim.StoreUndoState();
+                    prim.IgnoreUndoUpdate = true;
+                    Vector3 axPos = prim.OffsetPosition;
+                    axPos *= oldParentRot;
+                    axPos *= Quaternion.Inverse(axRot);
+                    prim.OffsetPosition = axPos;
+                    Quaternion primsRot = prim.RotationOffset;
+                    Quaternion newRot = primsRot * oldParentRot;
+                    newRot *= Quaternion.Inverse(axRot);
+                    prim.RotationOffset = newRot;
+                    prim.ScheduleTerseUpdate();
+                    prim.IgnoreUndoUpdate = false;
                 }
             }
 
@@ -3298,12 +3258,9 @@ namespace OpenSim.Region.Framework.Scenes
         public float GetMass()
         {
             float retmass = 0f;
-            lock (m_partsLock)
+            foreach (SceneObjectPart part in m_partsList)
             {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    retmass += part.GetMass();
-                }
+                retmass += part.GetMass();
             }
             return retmass;
         }

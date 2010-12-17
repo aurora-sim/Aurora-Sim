@@ -34,7 +34,6 @@ using log4net;
 using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Types;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -45,7 +44,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected ScenePresence m_presence;
-        protected UpdateQueue m_partsUpdateQueue = new UpdateQueue();
+        protected PriorityQueue m_partsUpdateQueue = new PriorityQueue();
         protected List<uint> m_removeNextUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
@@ -77,14 +76,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
             EntityUpdate update = new EntityUpdate(part, UpdateFlags);
-            lock (m_partsUpdateQueue)
-            {
-                m_partsUpdateQueue.Enqueue(priority, update, update.Entity.LocalId);
+            m_partsUpdateQueue.Enqueue(priority, update, update.Entity.LocalId);
 
-                //Make it check when the user comes around to it again
-                if (m_objectsInView.Contains(part.UUID))
-                    m_objectsInView.Remove(part.UUID);
-            }
+            //Make it check when the user comes around to it again
+            if (m_objectsInView.Contains(part.UUID))
+                m_objectsInView.Remove(part.UUID);
         }
 
         /// <summary>
@@ -392,20 +388,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Reset()
         {
+            m_inUse = false;
+            m_updatesNeedReprioritization = false;
             m_SentInitialObjects = false;
+            m_removeNextUpdateOf.Clear();
             m_objectsInView.Clear();
-        }
-
-        /// <summary>
-        /// Destroy all lists, prepare to close the 
-        /// </summary>
-        public void Close()
-        {
-            lock (m_partsUpdateQueue)
-            {
-                m_partsUpdateQueue.Clear();
-            }
-            Reset();
         }
 
         #endregion

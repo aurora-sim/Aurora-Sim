@@ -35,7 +35,6 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Animation;
-using OpenSim.Region.Framework.Scenes.Types;
 using OpenSim.Region.Physics.Manager;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Services.Interfaces;
@@ -3543,7 +3542,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_attachments.Clear();
             }
 
-            m_sceneViewer.Close();
+            m_sceneViewer.Reset();
 
             RemoveFromPhysicalScene();
             if (m_animator == null)

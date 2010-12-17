@@ -62,10 +62,5 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Reset all lists that have to deal with what updates the viewer has
         /// </summary>
         void Reset();
-
-        /// <summary>
-        /// Destroy all lists, prepare to close the 
-        /// </summary>
-        void Close();
     }
 }

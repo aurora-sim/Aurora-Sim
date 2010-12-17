@@ -43,7 +43,6 @@ using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Types;
 using OpenSim.Services.Interfaces;
 using Timer = System.Timers.Timer;
 using AssetLandmark = OpenSim.Framework.AssetLandmark;
@@ -320,7 +319,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly IGroupsModule m_GroupsModule;
 
         private int m_cachedTextureSerial;
-        private UpdateQueue m_entityUpdates;
+        private PriorityQueue m_entityUpdates;
         private Prioritizer m_prioritizer;
         private bool m_disableFacelights = false;
 
@@ -434,7 +433,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             m_scene = scene;
 
-            m_entityUpdates = new UpdateQueue();
+            m_entityUpdates = new PriorityQueue();
             m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 
