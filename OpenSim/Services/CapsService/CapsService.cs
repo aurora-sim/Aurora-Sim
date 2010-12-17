@@ -92,6 +92,7 @@ namespace OpenSim.Services.CapsService
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterInterface<ICapsService>(this);
         }
 
         #endregion
