@@ -2121,7 +2121,7 @@ namespace OpenSim.Region.Framework.Scenes
             //    objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
             //Clear the update schedule so that we don't send wrong updates later about how this group is set up
-            objectGroup.RootPart.ClearUpdateSchedule();
+            objectGroup.RootPart.ClearUpdateScheduleOnce();
             
             SceneObjectPart linkPart = objectGroup.m_rootPart;
 

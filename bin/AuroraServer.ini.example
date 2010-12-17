@@ -27,7 +27,8 @@
     ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
 
     ;; For more info, see AuroraDocs/CAPSService.txt
-    Password = TestPass
+	;; This allows applications to add CAPS to the CAPSService remotely, and should NOT be enabled unless you know what you are doing
+    ;Password =
     ;; 127.0.0.1 should be your IP address or DNS
     HostName = http://127.0.0.1
     Port = 8007

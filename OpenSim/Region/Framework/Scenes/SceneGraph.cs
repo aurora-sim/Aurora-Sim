@@ -1430,7 +1430,7 @@ namespace OpenSim.Region.Framework.Scenes
                             newSet.RemoveAt(0);
 
                             foreach (SceneObjectPart newChild in newSet)
-                                newChild.ClearUpdateSchedule();
+                                newChild.ClearUpdateScheduleOnce();
 
                             LinkObjects(newRoot, newSet);
                             if (!affectedGroups.Contains(newRoot.ParentGroup))

@@ -3553,12 +3553,25 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// Clear all pending updates of parts to clients
+        /// NOTE: Do NOT use this for things that reuse the LocalID, as it will break the object
         /// </summary>
         public void ClearUpdateSchedule()
         {
             foreach (ScenePresence SP in ParentGroup.Scene.ScenePresences)
             {
                 SP.SceneViewer.ClearUpdatesForPart(this);
+            }
+        }
+
+        /// <summary>
+        /// Clear all pending updates of parts to clients once.
+        /// NOTE: Use this for linking and other things that are going to be reusing the same LocalID
+        /// </summary>
+        public void ClearUpdateScheduleOnce()
+        {
+            foreach (ScenePresence SP in ParentGroup.Scene.ScenePresences)
+            {
+                SP.SceneViewer.ClearUpdatesForOneLoopForPart(this);
             }
         }
 

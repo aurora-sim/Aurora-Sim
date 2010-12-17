@@ -65,7 +65,8 @@ namespace OpenSim.Services.Connectors
             sendData["LastName"] = lastName.ToString();
 
             account = SendAndGetReply(sendData);
-            m_cache.Cache(account.PrincipalID, account);
+            if(account != null)
+                m_cache.Cache(account.PrincipalID, account);
             return account;
         }
 
@@ -176,8 +177,15 @@ namespace OpenSim.Services.Connectors
 
             Dictionary<string, object> structData = data.ToKeyValuePairs();
 
-            foreach (KeyValuePair<string,object> kvp in structData)
-                sendData[kvp.Key] = kvp.Value.ToString();
+            foreach (KeyValuePair<string, object> kvp in structData)
+            {
+                if (kvp.Value == null)
+                {
+                    sendData[kvp.Key] = "";
+                }
+                else
+                    sendData[kvp.Key] = kvp.Value.ToString();
+            }
 
             return SendAndGetBoolReply(sendData);
         }

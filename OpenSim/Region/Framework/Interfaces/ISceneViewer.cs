@@ -53,6 +53,12 @@ namespace OpenSim.Region.Framework.Interfaces
         void ClearUpdatesForPart(SceneObjectPart sceneObjectPart);
 
         /// <summary>
+        /// Clear the updates for this part in the next update loop only
+        /// </summary>
+        /// <param name="part"></param>
+        void ClearUpdatesForOneLoopForPart(SceneObjectPart sceneObjectPart);
+
+        /// <summary>
         /// Run through all of the updates we have and re-assign their priority depending
         ///  on what is now going on in the Scene
         /// </summary>

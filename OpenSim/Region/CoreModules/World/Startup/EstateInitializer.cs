@@ -168,6 +168,7 @@ namespace OpenSim.Region.CoreModules
                             account.ServiceURLs["InventoryServerURI"] = string.Empty;
                             account.ServiceURLs["AssetServerURI"] = string.Empty;
                         }
+                        account.UserTitle = "";
 
                         if (scene.UserAccountService.StoreUserAccount(account))
                         {

@@ -46,6 +46,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected ScenePresence m_presence;
         protected PriorityQueue m_partsUpdateQueue = new PriorityQueue();
         protected List<uint> m_removeNextUpdateOf = new List<uint>();
+        protected List<uint> m_removeUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
         protected volatile bool m_updatesNeedReprioritization = false;
@@ -88,6 +89,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="part"></param>
         public void ClearUpdatesForPart(SceneObjectPart part)
+        {
+            lock (m_removeUpdateOf)
+            {
+                //Add it to the list to check and make sure that we do not send updates for this object
+                m_removeUpdateOf.Add(part.LocalId);
+                //Make it check when the user comes around to it again
+                if (m_objectsInView.Contains(part.UUID))
+                    m_objectsInView.Remove(part.UUID);
+            }
+        }
+
+        /// <summary>
+        /// Clear the updates for this part in the next update loop
+        /// </summary>
+        /// <param name="part"></param>
+        public void ClearUpdatesForOneLoopForPart(SceneObjectPart part)
         {
             lock (m_removeNextUpdateOf)
             {
@@ -264,8 +281,13 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_removeNextUpdateOf.Contains(update.Entity.LocalId))
                             continue;
 
+                        //Make sure we are not supposed to remove it
+                        if (m_removeUpdateOf.Contains(update.Entity.LocalId))
+                            continue;
+
                         updates.Add(update);
                     }
+                    m_removeNextUpdateOf.Clear();
                 }
             }
 
@@ -392,6 +414,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_updatesNeedReprioritization = false;
             m_SentInitialObjects = false;
             m_removeNextUpdateOf.Clear();
+            m_removeUpdateOf.Clear();
             m_objectsInView.Clear();
         }
 
