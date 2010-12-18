@@ -465,6 +465,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
             else
             {
+                appearance.Wearables = AvatarWearable.DefaultWearables;
                 m_log.WarnFormat("[AVFACTORY]: user {0} has no inventory, appearance isn't going to work", userID);
             }
         }

@@ -58,10 +58,10 @@ namespace OpenSim.Services.CapsService
         {
             uint x, y;
             Utils.LongToUInts(m_handler.RegionHandle, out x, out y);
-            int bottom = (int)y - 100;
-            int top = (int)y + 100;
-            int left = (int)x - 100;
-            int right = (int)x + 100;
+            int bottom = (int)(y / Constants.RegionSize) - 100;
+            int top = (int)(y / Constants.RegionSize) + 100;
+            int left = (int)(x / Constants.RegionSize) - 100;
+            int right = (int)(x / Constants.RegionSize) + 100;
 
 
             OSDArray layerData = new OSDArray();
