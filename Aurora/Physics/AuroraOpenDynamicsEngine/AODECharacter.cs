@@ -1012,8 +1012,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //{
                         vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
                         vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
-                        if(!Flying)
-                            vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
+                        //if(!Flying)
+                        //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
                         //if (flying)
                         //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                     //}
@@ -1029,6 +1029,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D);
                     vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D);
                     //Stop pushing down if we are just standing
+                    //if (_target_velocity.Z < -0.3)
+                    //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
                     //if (_target_velocity.Z < 0)
                     //    _target_velocity.Z = 0;
                 }
@@ -1242,7 +1244,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03 && !flying)
+                    if (((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03) && !flying && vec.Z != 0))
                     {
                         //m_log.Warn("Nulling Velo: " + vec.ToString());
                         vec = new Vector3(0, 0, 0);
@@ -1250,13 +1252,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     //Reduce insanely small values to 0 if the velocity isn't going up
-                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.5)
+                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.6)
                     {
-                        if (-veloc.Z > 0)
-                            vec.Z = 0;
-                        else
-                            vec.Z = -veloc.Z * 5;
-                        d.BodySetLinearVel(Body, veloc.X, veloc.Y, vec.Z);
+                        if (veloc.Z != 0)
+                        {
+                            if (-veloc.Z > 0)
+                                vec.Z = 0;
+                            else
+                                vec.Z = -veloc.Z * 5;
+                            d.BodySetLinearVel(Body, veloc.X, veloc.Y, vec.Z);
+                        }
                     }
 
                     d.Vector3 posi = d.BodyGetPosition(Body);
