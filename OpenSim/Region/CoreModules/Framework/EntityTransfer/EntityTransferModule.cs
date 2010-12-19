@@ -467,6 +467,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     else if (SP == null)
                     {
                         //Err.. this happens somehow.
+
+                        //If they canceled too late, remove them so the next tp does not fail.
+                        if (m_cancelingAgents.Contains(sp.UUID))
+                            m_cancelingAgents.Remove(sp.UUID);
                         return;
                     }
                 }
@@ -481,6 +485,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 else */if (newSP == null)
                 {
                     //Err.. this happens somehow.
+
+                    //If they canceled too late, remove them so the next tp does not fail.
+                    if (m_cancelingAgents.Contains(sp.UUID))
+                        m_cancelingAgents.Remove(sp.UUID);
                     return;
                 }
 
@@ -548,6 +556,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ResetFromTransit(sp.UUID);
 
             EnableChildAgents(sp);
+
+            //If they canceled too late, remove them so the next tp does not fail.
+            if (m_cancelingAgents.Contains(sp.UUID))
+                m_cancelingAgents.Remove(sp.UUID);
 
             // Finally, kill the agent we just created at the destination.
 

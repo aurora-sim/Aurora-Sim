@@ -3425,7 +3425,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
-            //SendTerseUpdateToAllClients();
         }
 
         public void PreloadSound(string sound)

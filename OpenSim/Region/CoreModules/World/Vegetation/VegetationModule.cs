@@ -105,8 +105,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
             rootPart.AddFlag(PrimFlags.Phantom);
             if (rootPart.Shape.PCode != (byte)PCode.Grass)
                 AdaptTree(ref shape);
-            
-            m_scene.AddPrimToScene(sceneObject);
+
+            m_scene.SceneGraph.AddPrimToScene(sceneObject);
             sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
             sceneObject.SetGroup(groupID, null);
             

@@ -69,12 +69,28 @@ namespace OpenSim.Region.Framework.Scenes
         /// double.MinValue or double.MaxValue.
         /// </summary>
         private double m_childPrimAdjustmentFactor = 0.05;
+        public UpdatePrioritizationSchemes UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
 
         private Scene m_scene;
 
         public Prioritizer(Scene scene)
         {
             m_scene = scene;
+            IConfig interestConfig = scene.Config.Configs["InterestManagement"];
+            if (interestConfig != null)
+            {
+                string update_prioritization_scheme = interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
+
+                try
+                {
+                    UpdatePrioritizationScheme = (UpdatePrioritizationSchemes)Enum.Parse(typeof(UpdatePrioritizationSchemes), update_prioritization_scheme, true);
+                }
+                catch (Exception)
+                {
+                    m_log.Warn("[PRIORITIZER]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
+                    UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
+                }
+            }
         }
 
         public double GetUpdatePriority(IClientAPI client, ISceneEntity entity)
@@ -86,7 +102,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                switch (m_scene.UpdatePrioritizationScheme)
+                switch (UpdatePrioritizationScheme)
                 {
                     case UpdatePrioritizationSchemes.Time:
                         priority = GetPriorityByTime();

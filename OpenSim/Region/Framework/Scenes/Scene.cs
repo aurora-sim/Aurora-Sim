@@ -159,9 +159,6 @@ namespace OpenSim.Region.Framework.Scenes
         // the maximum time that must elapse before a changed object will be considered for persisted
         public long m_persistAfter = 600;
 
-        private UpdatePrioritizationSchemes m_priorityScheme = UpdatePrioritizationSchemes.Time;
-        private bool m_reprioritizationEnabled = true;
-        private double m_reprioritizationInterval = 5000.0;
         private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
 
@@ -182,12 +179,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
-        public UpdatePrioritizationSchemes UpdatePrioritizationScheme { get { return m_priorityScheme; } }
-        public bool IsReprioritizationEnabled { get { return m_reprioritizationEnabled; } }
-        public double ReprioritizationInterval { get { return m_reprioritizationInterval; } }
         public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
         public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
-        protected Timer m_restartWaitTimer = new Timer();
         protected static int m_timeToSlowTheHeartbeat = 3;
         protected static int m_timeToSlowThePhysHeartbeat = 2;
 
@@ -524,7 +517,8 @@ namespace OpenSim.Region.Framework.Scenes
                     Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
                     m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                     CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
-                    SetObjectCapacity(aurorastartupConfig.GetInt("ObjectCapacity", 80000));
+                    //Region specific is still honored here, the RegionInfo checks for it
+                    RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
                 }
 
                 IConfig regionConfig = m_config.Configs[this.RegionInfo.RegionName];
@@ -603,20 +597,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig interestConfig = m_config.Configs["InterestManagement"];
                 if (interestConfig != null)
                 {
-                    string update_prioritization_scheme = interestConfig.GetString("UpdatePrioritizationScheme", "Time").Trim().ToLower();
-
-                    try
-                    {
-                        m_priorityScheme = (UpdatePrioritizationSchemes)Enum.Parse(typeof(UpdatePrioritizationSchemes), update_prioritization_scheme, true);
-                    }
-                    catch (Exception)
-                    {
-                        m_log.Warn("[PRIORITIZER]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer Time");
-                        m_priorityScheme = UpdatePrioritizationSchemes.Time;
-                    }
-
-                    m_reprioritizationEnabled = interestConfig.GetBoolean("ReprioritizationEnabled", true);
-                    m_reprioritizationInterval = interestConfig.GetDouble("ReprioritizationInterval", 5000.0);
                     m_rootReprioritizationDistance = interestConfig.GetDouble("RootReprioritizationDistance", 10.0);
                     m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
                 }
@@ -1582,7 +1562,7 @@ namespace OpenSim.Region.Framework.Scenes
                                       group.ChildrenList.Count);
                     continue;
                 }
-                RestorePrimToScene(group);
+                SceneGraph.RestorePrimToScene(group);
                 SceneObjectPart rootPart = group.GetChildPart(group.UUID);
                 rootPart.Flags &= ~PrimFlags.Scripted;
                 rootPart.TrimPermissions();
@@ -1697,7 +1677,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-
         /// <summary>
         /// Create a New SceneObjectGroup/Part by raycasting
         /// </summary>
@@ -1747,28 +1726,13 @@ namespace OpenSim.Region.Framework.Scenes
                 //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
                 sceneObject.m_lastSignificantPosition = pos;
 
-                AddPrimToScene(sceneObject);
+                SceneGraph.AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 sceneObject.SetGroup(groupID, null);
             }
 
 
             return sceneObject;
-        }
-
-        public bool AddPrimToScene(SceneObjectGroup sceneObject)
-        {
-            return m_sceneGraph.AddPrimToScene(sceneObject);
-        }
-
-        public bool RestorePrimToScene(SceneObjectGroup sceneObject)
-        {
-            return m_sceneGraph.RestorePrimToScene(sceneObject);
-        }
-
-        public void PrepPrimForAdditionToScene(SceneObjectGroup sceneObject)
-        {
-            m_sceneGraph.PrepPrimForAdditionToScene(sceneObject);
         }
 
         /// <summary>
@@ -1921,7 +1885,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (SceneObjectGroup grp in objectsToDelete)
             {
-                m_log.InfoFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
+                m_log.WarnFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
                 DeleteSceneObject(grp, true, true);
             }
         }
@@ -2416,7 +2380,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
                 sceneObject.RootPart.AddFlag(PrimFlags.Phantom);
-                AddPrimToScene(sceneObject);
+                SceneGraph.AddPrimToScene(sceneObject);
 
                 // Fix up attachment Parent Local ID
                 ScenePresence sp = GetScenePresence(sceneObject.OwnerID);
@@ -2454,7 +2418,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     return false;
                 }
-                AddPrimToScene(sceneObject);
+                SceneGraph.AddPrimToScene(sceneObject);
             }
             sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
@@ -2622,6 +2586,8 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        #region Subscribing and Unsubscribing to client events
+
         /// <summary>
         /// Register for events from the client
         /// </summary>
@@ -2719,7 +2685,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnTeleportLocationRequest += RequestTeleportLocation;
             client.OnTeleportLandmarkRequest += RequestTeleportLandmark;
-            client.OnTeleportCancel += new TeleportCancel(client_OnTeleportCancel);
+            client.OnTeleportCancel += RequestTeleportCancel;
         }
 
         public virtual void SubscribeToClientScriptEvents(IClientAPI client)
@@ -2877,6 +2843,8 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnViewerEffect -= ProcessViewerEffect;
         }
 
+        #endregion
+
         /// <summary>
         /// Teleport an avatar to their home region
         /// </summary>
@@ -2994,8 +2962,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-
-
         /// <summary>
         /// Sets the Home Point.   The LoginService uses this to know where to put a user when they log-in
         /// </summary>
@@ -3058,7 +3024,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (aCircuit == null)
             {
-                m_log.DebugFormat("[APPEARANCE] Client did not supply a circuit. Non-Linden? Creating default appearance.");
+                m_log.ErrorFormat("[APPEARANCE] Client did not supply a circuit. Non-Linden? Creating default appearance.");
                 appearance = new AvatarAppearance(client.AgentId);
                 return;
             }
@@ -3066,7 +3032,7 @@ namespace OpenSim.Region.Framework.Scenes
             appearance = aCircuit.Appearance;
             if (appearance == null)
             {
-                m_log.DebugFormat("[APPEARANCE]: Appearance not found in {0}, returning default", RegionInfo.RegionName);
+                m_log.ErrorFormat("[APPEARANCE]: Appearance not found in {0}, returning default", RegionInfo.RegionName);
                 appearance = new AvatarAppearance(client.AgentId);
             }
         }
@@ -3623,7 +3589,7 @@ namespace OpenSim.Region.Framework.Scenes
             RequestTeleportLocation(remoteClient, info.RegionHandle, position, Vector3.Zero, (uint)(TPFlags.SetLastToTarget | TPFlags.ViaLandmark));
         }
 
-        public void client_OnTeleportCancel(IClientAPI client)
+        public void RequestTeleportCancel(IClientAPI client)
         {
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
@@ -3662,18 +3628,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (handle != 0)
                 client.SendRegionHandle(regionID, handle);
-        }
-
-        #endregion
-
-        #region Other Methods
-
-        public void SetObjectCapacity(int objects)
-        {
-            // Region specific config overrides global
-            //
-            if (RegionInfo.ObjectCapacity == 0)
-                RegionInfo.ObjectCapacity = objects;
         }
 
         #endregion

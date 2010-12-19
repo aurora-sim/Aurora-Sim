@@ -237,7 +237,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             }
                         }
 
-                        if (m_scene.AddPrimToScene(sceneObject))
+                        if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
                         {
                             groupsToBackup.Add(sceneObject);
                             sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
