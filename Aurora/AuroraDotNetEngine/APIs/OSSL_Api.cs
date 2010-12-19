@@ -2183,7 +2183,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (avatar != null && avatar.UUID != m_host.OwnerID)
                 {
-                    if (avatar.IsChildAgent == false)
+                    if (!avatar.IsChildAgent)
                     {
                         result.Add(avatar.UUID);
                         result.Add(avatar.AbsolutePosition);

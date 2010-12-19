@@ -885,7 +885,7 @@ namespace OpenSim.Region.Framework.Scenes
             //
             m_sceneViewer.Reset();
 
-            m_isChildAgent = false;
+            IsChildAgent = false;
 
             // send the animations of the other presences to me
             m_scene.ForEachScenePresence(delegate(ScenePresence presence)
@@ -960,8 +960,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't zero out the velocity since this can cause problems when an avatar is making a region crossing,
             // depending on the exact timing.  This shouldn't matter anyway since child agent positions are not updated.
             //Velocity = new Vector3(0, 0, 0);
-            
-            m_isChildAgent = true;
+
+            IsChildAgent = true;
             m_scene.SwapRootAgentCount(true);
             RemoveFromPhysicalScene();
 
@@ -1113,7 +1113,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_callbackURI = null;
             }
 
-            m_isChildAgent = false;
+            IsChildAgent = false;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
@@ -2248,7 +2248,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="rotation">The direction in which this avatar should now face.</param>
         public void AddNewMovement(Vector3 vec, Quaternion rotation)
         {
-            if (m_isChildAgent)
+            if (IsChildAgent)
             {
                 // WHAT??? we can't make them a root agent though... what if they shouldn't be here?
                 //  Or even worse, what if they are spoofing the client???
@@ -2360,7 +2360,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Util.FireAndForget(SendPrimUpdates);
 
-            if (!m_isChildAgent)
+            if (!IsChildAgent)
             {
                 //                PhysicsActor actor = m_physicsActor;
 

@@ -3005,6 +3005,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_incomingChildAgentData.ContainsKey(avatar.UUID))
             {
                 avatar.ChildAgentDataUpdate(m_incomingChildAgentData[avatar.UUID]);
+                m_incomingChildAgentData.Remove(avatar.UUID);
             }
             //avatar.KnownRegions = GetChildrenSeeds(avatar.UUID);
 
@@ -3394,8 +3395,12 @@ namespace OpenSim.Region.Framework.Scenes
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
 
-            m_incomingChildAgentData[cAgentData.AgentID] = cAgentData;
-            return false;
+            ScenePresence SP = GetScenePresence(cAgentData.AgentID);
+            if (SP != null)
+                SP.ChildAgentDataUpdate(cAgentData);
+            else
+                m_incomingChildAgentData[cAgentData.AgentID] = cAgentData;
+            return true;
         }
 
         /// <summary>
