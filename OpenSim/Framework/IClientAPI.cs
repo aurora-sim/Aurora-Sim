@@ -706,6 +706,7 @@ namespace OpenSim.Framework
     {
         public ISceneEntity Entity;
         public PrimUpdateFlags Flags;
+        public int Version = 0;
 
         public EntityUpdate(ISceneEntity entity, PrimUpdateFlags flags)
         {

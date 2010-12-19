@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using OpenMetaverse;
 using log4net;
 using OpenSim.Framework;
@@ -45,13 +46,18 @@ namespace OpenSim.Region.Framework.Scenes
         
         protected ScenePresence m_presence;
         protected PriorityQueue m_partsUpdateQueue;
-        protected List<uint> m_removeNextUpdateOf = new List<uint>();
+        /// <summary>
+        /// Param 1 - LocalID of the object, Param 2 - The last version when this was added to the list
+        /// </summary>
+        protected Dictionary<uint, int> m_removeNextUpdateOf = new Dictionary<uint, int>();
         protected List<uint> m_removeUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
         protected volatile bool m_inUse = false;
         protected volatile bool m_updatesNeedReprioritization = false;
         protected volatile List<UUID> m_objectsInView = new List<UUID>();
         protected Prioritizer m_prioritizer;
+        private readonly Mutex _versionAllocateMutex = new Mutex(false);
+        protected int m_lastVersion = 0;
 
         #endregion
 
@@ -78,11 +84,40 @@ namespace OpenSim.Region.Framework.Scenes
         {
             double priority = m_prioritizer.GetUpdatePriority(m_presence.ControllingClient, part.ParentGroup);
             EntityUpdate update = new EntityUpdate(part, UpdateFlags);
+            //Fix the version with the newest locked m_version
+            FixVersion(update);
             m_partsUpdateQueue.Enqueue(priority, update, update.Entity.LocalId);
 
             //Make it check when the user comes around to it again
             if (m_objectsInView.Contains(part.UUID))
                 m_objectsInView.Remove(part.UUID);
+        }
+
+        /// <summary>
+        /// Updates the last version securely and set the update's version correctly
+        /// </summary>
+        /// <param name="update"></param>
+        private void FixVersion(EntityUpdate update)
+        {
+            _versionAllocateMutex.WaitOne();
+            m_lastVersion++;
+            update.Version = m_lastVersion;
+            _versionAllocateMutex.ReleaseMutex();
+        }
+
+        /// <summary>
+        /// Get the current version securely as we lock the mutex for it
+        /// </summary>
+        /// <returns></returns>
+        private int GetVersion()
+        {
+            int version;
+
+            _versionAllocateMutex.WaitOne();
+            version = m_lastVersion;
+            _versionAllocateMutex.ReleaseMutex();
+
+            return version;
         }
 
         /// <summary>
@@ -110,7 +145,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_removeNextUpdateOf)
             {
                 //Add it to the list to check and make sure that we do not send updates for this object
-                m_removeNextUpdateOf.Add(part.LocalId);
+                m_removeNextUpdateOf.Add(part.LocalId, GetVersion());
                 //Make it check when the user comes around to it again
                 if (m_objectsInView.Contains(part.UUID))
                     m_objectsInView.Remove(part.UUID);
@@ -279,8 +314,15 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
 
                         //Make sure we are not supposed to remove it
-                        if (m_removeNextUpdateOf.Contains(update.Entity.LocalId))
-                            continue;
+                        if (m_removeNextUpdateOf.ContainsKey(update.Entity.LocalId))
+                        {
+                            if(update.Version > m_removeNextUpdateOf[update.Entity.LocalId])
+                            {
+                                //This update is newer, let it go on by
+                            }
+                            else //Not newer, should be removed Note: if this is the same version, its the update we were supposed to remove... so we do NOT do >= above
+                                continue;
+                        }
 
                         //Make sure we are not supposed to remove it
                         if (m_removeUpdateOf.Contains(update.Entity.LocalId))
