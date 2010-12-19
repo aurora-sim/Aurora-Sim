@@ -101,6 +101,7 @@ namespace OpenSim.Services.AssetService
                 string assetRootPath = "";
                 try
                 {
+                    DateTime start = DateTime.Now;
                     XmlConfigSource source = new XmlConfigSource(assetSetFilename);
                     assetRootPath = Path.GetFullPath(source.SavePath);
                     assetRootPath = Path.GetDirectoryName(assetRootPath);
@@ -111,6 +112,7 @@ namespace OpenSim.Services.AssetService
 
                         LoadXmlAssetSet(Path.Combine(assetRootPath, assetSetPath), assets);
                     }
+                    m_log.Warn((DateTime.Now - start).Milliseconds);
                 }
                 catch (XmlException e)
                 {
@@ -122,7 +124,9 @@ namespace OpenSim.Services.AssetService
                 m_log.ErrorFormat("[ASSETS]: Asset set control file {0} does not exist!  No assets loaded.", assetSetFilename);
             }
 
+            DateTime start2 = DateTime.Now;
             assets.ForEach(action);
+            m_log.Warn((DateTime.Now - start2).Milliseconds);
         }
 
         /// <summary>

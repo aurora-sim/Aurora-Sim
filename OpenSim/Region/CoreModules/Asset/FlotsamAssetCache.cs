@@ -414,6 +414,11 @@ namespace Flotsam.RegionModules.AssetCache
             return Get(id);
         }
 
+        public bool GetExists(string id)
+        {
+            return Get(id) != null;
+        }
+
         public void Expire(string id)
         {
             if (m_LogLevel >= 2)

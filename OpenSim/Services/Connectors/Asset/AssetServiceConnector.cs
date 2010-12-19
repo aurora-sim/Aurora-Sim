@@ -63,6 +63,23 @@ namespace OpenSim.Services.Connectors
             m_Cache = cache;
         }
 
+        public virtual bool GetExists(string id)
+        {
+            AssetBase asset = null;
+            if (m_Cache != null)
+                asset = m_Cache.Get(id);
+
+            if (asset != null)
+                return true;
+
+            string uri = m_ServerURI + "/assets/" + id + "/exists";
+
+            bool exists = SynchronousRestObjectRequester.
+                    MakeRequest<int, bool>("GET", uri, 0);
+
+            return exists;
+        }
+
         public virtual AssetBase Get(string id)
         {
             string uri = m_ServerURI + "/assets/" + id;

@@ -150,6 +150,49 @@ namespace OpenSim.Data.MySQL
         }
 
         /// <summary>
+        /// Get whether the asset exists
+        /// </summary>
+        /// <param name="assetID"></param>
+        /// <returns></returns>
+        override public bool GetExists(UUID assetID)
+        {
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                {
+                    dbcon.Open();
+
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT id FROM assets WHERE id=?id",
+                        dbcon))
+                    {
+                        cmd.Parameters.AddWithValue("?id", assetID.ToString());
+
+                        try
+                        {
+                            using (MySqlDataReader dbReader = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                            {
+                                if (dbReader.FieldCount == 0)
+                                    return false;
+                                if (dbReader.FieldCount == 1)
+                                    return true;
+                                if (dbReader.Read())
+                                {
+                                    
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.Error("[ASSETS DB]: MySql failure fetching asset " + assetID + ": " + e.Message);
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Create an asset in database, or update it if existing.
         /// </summary>
         /// <param name="asset">Asset UUID to create</param>

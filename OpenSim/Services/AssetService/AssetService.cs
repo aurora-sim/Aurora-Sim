@@ -109,10 +109,10 @@ namespace OpenSim.Services.AssetService
                     m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
                             delegate(AssetBase a)
                             {
+                                if (!assetLoaderEnabled && GetExists(a.ID))
+                                    return;
                                 Store(a);
                             });
-                    assetConfig.Set("AssetLoaderEnabled", false);
-                    assetConfig.ConfigSource.Save();
                 }
                 registry.RegisterInterface<IAssetService>(this);
 
@@ -187,6 +187,16 @@ namespace OpenSim.Services.AssetService
 
             AssetBase asset = m_Database.GetAsset(assetID);
             return asset.Data;
+        }
+
+        public bool GetExists(string id)
+        {
+            UUID assetID;
+
+            if (!UUID.TryParse(id, out assetID))
+                return false;
+
+            return m_Database.GetExists(assetID);
         }
 
         public bool Get(string id, Object sender, AssetRetrieved handler)

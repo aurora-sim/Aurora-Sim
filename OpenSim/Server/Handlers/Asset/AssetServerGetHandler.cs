@@ -44,7 +44,7 @@ namespace OpenSim.Server.Handlers.Asset
 {
     public class AssetServerGetHandler : BaseStreamHandler
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IAssetService m_AssetService;
 
@@ -77,6 +77,33 @@ namespace OpenSim.Server.Handlers.Asset
                 {
                     httpResponse.StatusCode = (int)HttpStatusCode.OK;
                     httpResponse.ContentType = "application/octet-stream";
+                }
+            }
+            else if (p.Length > 1 && p[1] == "exists")
+            {
+                try
+                {
+                    bool RetVal = m_AssetService.GetExists(p[0]);
+                    XmlSerializer xs =
+                                   new XmlSerializer(typeof(AssetMetadata));
+                    result = WebUtils.SerializeResult(xs, RetVal);
+
+                    if (result == null)
+                    {
+                        httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
+                        httpResponse.ContentType = "text/plain";
+                        result = new byte[0];
+                    }
+                    else
+                    {
+                        httpResponse.StatusCode = (int)HttpStatusCode.OK;
+                        httpResponse.ContentType = "application/octet-stream";
+                    }
+                }
+                catch(Exception ex)
+                {
+                    result = new byte[0];
+                    m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] + ", " + ex.ToString());
                 }
             }
             else if (p.Length > 1 && p[1] == "metadata")
