@@ -52,7 +52,7 @@ namespace OpenSim.Services.AvatarService
         {
             string dllName = String.Empty;
             string connString = String.Empty;
-            string realm = "Avatars";
+            string realm = "avatars";
 
             //
             // Try reading the [DatabaseService] section, if it exists

@@ -2311,7 +2311,10 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             direc.X *= direc.X < 0 ? 2.5f : 2f;
                             direc.Y *= 2f;
-                            direc.Z *= 8.0f;
+                            if (direc.X == 0 && direc.Y == 0)
+                                direc.Z *= 4f;
+                            else
+                                direc.Z *= 5.5f;
 
                             if(!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");

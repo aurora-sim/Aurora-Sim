@@ -76,7 +76,7 @@ namespace OpenSim.Services.Friends
             if (String.Empty.Equals(dllName))
                 throw new Exception("No StorageProvider configured");
 
-            string realm = "Friends";
+            string realm = "friends";
             if (friendsConfig != null)
                 realm = friendsConfig.GetString("Realm", realm);
 
