@@ -115,8 +115,21 @@ namespace OpenSim.Server.Handlers.Login
                         id0 = requestData["id0"].ToString();
                     
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient, requestData);
+                    UUID secureSessionID;
 
+                    bool tosExists = false;
+                    string tosAccepted = "";
+                    if (requestData.ContainsKey("agree_to_tos"))
+                    {
+                        tosExists = true;
+                        tosAccepted = requestData["agree_to_tos"].ToString();
+                    }
+                    reply = m_LocalService.VerifyClient(first, last, passwd, scopeID,
+                        tosExists, tosAccepted, out secureSessionID);
+                    if (reply == null)
+                    {
+                        reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient, requestData, secureSessionID);
+                    }
                     XmlRpcResponse response = new XmlRpcResponse();
                     response.Value = reply.ToHashtable();
                     return response;
@@ -186,10 +199,22 @@ namespace OpenSim.Server.Handlers.Login
                     m_log.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" + map["last"].AsString() + "' / " + startLocation);
 
                     LoginResponse reply = null;
-                    reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID,
-                        map["version"].AsString(), map["channel"].AsString(), map["mac"].AsString(), map["id0"].AsString(), remoteClient, new Hashtable());
+                    UUID secureSessionID;
+                    bool tosExists = false;
+                    string tosAccepted = "";
+                    if (map.ContainsKey("agree_to_tos"))
+                    {
+                        tosExists = true;
+                        tosAccepted = map["agree_to_tos"].ToString();
+                    }
+                    reply = m_LocalService.VerifyClient(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), scopeID,
+                        tosExists, tosAccepted, out secureSessionID);
+                    if (reply == null)
+                    {
+                        reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID,
+                            map["version"].AsString(), map["channel"].AsString(), map["mac"].AsString(), map["id0"].AsString(), remoteClient, new Hashtable(), secureSessionID);
+                    }
                     return reply.ToOSDMap();
-
                 }
             }
 

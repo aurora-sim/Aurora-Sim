@@ -273,8 +273,98 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
+        public LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists, string tosAccepted, out UUID secureSession)
+        {
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1} from {2}",
+                firstName, lastName);
+
+            //
+            // Get the account and check that it exists
+            //
+            UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+            if (!passwd.StartsWith("$1$"))
+                passwd = "$1$" + Util.Md5Hash(passwd);
+            passwd = passwd.Remove(0, 3); //remove $1$
+
+            secureSession = UUID.Zero;
+            if (account == null)
+            {
+                if (!m_AllowAnonymousLogin)
+                {
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
+                    return LLFailedLoginResponse.UserProblem;
+                }
+                else
+                {
+                    m_UserAccountService.CreateUser(firstName, lastName, passwd, "");
+                    account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                }
+            }
+
+            //Set the scopeID for the user
+            scopeID = account.ScopeID;
+            //
+            // Authenticate this user
+            //
+            string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
+            if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
+            {
+                m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                return LLFailedLoginResponse.UserProblem;
+            }
+
+            IAgentInfo agent = null;
+
+            IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
+            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
+            //Already tried to find it before this, so its not there at all.
+            if (agentData != null)
+            {
+                agent = agentData.GetAgent(account.PrincipalID);
+                if (agent == null)
+                {
+                    agentData.CreateNewAgent(account.PrincipalID);
+                    agent = agentData.GetAgent(account.PrincipalID);
+                }
+                bool AcceptedNewTOS = false;
+                //This gets if the viewer has accepted the new TOS
+                if (tosExists)
+                {
+                    if (tosAccepted == "0")
+                        AcceptedNewTOS = false;
+                    else if (tosAccepted == "1")
+                        AcceptedNewTOS = true;
+                    else
+                        AcceptedNewTOS = bool.Parse(tosAccepted);
+
+                    agent.AcceptTOS = AcceptedNewTOS;
+                    agentData.UpdateAgent(agent);
+                }
+                if (!AcceptedNewTOS && !agent.AcceptTOS && m_UseTOS)
+                {
+                    StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
+                    string TOS = reader.ReadToEnd();
+                    reader.Close();
+                    reader.Dispose();
+                    return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, TOS, "false");
+                }
+                if ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan)
+                {
+                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
+                    return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "You are blocked from connecting to this service.", "false");
+                }
+
+                if (account.UserLevel < m_MinLoginLevel)
+                {
+                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
+                    return LLFailedLoginResponse.LoginBlockedProblem;
+                }
+            }
+            return null;
+        }
+
         public LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
-            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData)
+            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession)
         {
             bool success = false;
             UUID session = UUID.Random();
@@ -283,86 +373,23 @@ namespace OpenSim.Services.LLLoginService
                 firstName, lastName, clientIP.Address.ToString(), clientVersion, startLocation);
             try
             {
-                //
-                // Get the account and check that it exists
-                //
                 UserAccount account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
-                if (!passwd.StartsWith("$1$"))
-                    passwd = "$1$" + Util.Md5Hash(passwd);
-                passwd = passwd.Remove(0, 3); //remove $1$
-                if (account == null)
-                {
-                    if (!m_AllowAnonymousLogin)
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
-                        return LLFailedLoginResponse.UserProblem;
-                    }
-                    else
-                    {
-                        m_UserAccountService.CreateUser(firstName, lastName, passwd, "");
-                        account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
-                    }
-                }
-
-                //Set the scopeID for the user
-                scopeID = account.ScopeID;
-
-                UUID secureSession = UUID.Zero;
-                //
-                // Authenticate this user
-                //
-                string token = m_AuthenticationService.Authenticate(account.PrincipalID, passwd, 30);
-                if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
-                {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
-                    return LLFailedLoginResponse.UserProblem;
-                }
-
                 IAgentInfo agent = null;
 
                 IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
                 IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
-                //Already tried to find it before this, so its not there at all.
                 if (agentData != null)
-                {
                     agent = agentData.GetAgent(account.PrincipalID);
-                    if (agent == null)
-                    {
-                        agentData.CreateNewAgent(account.PrincipalID);
-                        agent = agentData.GetAgent(account.PrincipalID);
-                    }
-                    bool AcceptedNewTOS = false;
-                    //This gets if the viewer has accepted the new TOS
-                    if (requestData.ContainsKey("agree_to_tos"))
-                    {
-                        if (requestData["agree_to_tos"].ToString() == "0")
-                            AcceptedNewTOS = false;
-                        else if (requestData["agree_to_tos"].ToString() == "1")
-                            AcceptedNewTOS = true;
-                        else
-                            AcceptedNewTOS = bool.Parse(requestData["agree_to_tos"].ToString());
 
-                        agent.AcceptTOS = AcceptedNewTOS;
-                        agentData.UpdateAgent(agent);
-                    }
-                    if (!AcceptedNewTOS && !agent.AcceptTOS && m_UseTOS)
+                requestData["ip"] = clientIP.ToString();
+                foreach (ILoginModule module in LoginModules)
+                {
+                    string message;
+                    if (module.Login(requestData, account.PrincipalID, out message) == false)
                     {
-                        StreamReader reader = new StreamReader(Path.Combine(Environment.CurrentDirectory, m_TOSLocation));
-                        string TOS = reader.ReadToEnd();
-                        reader.Close();
-                        reader.Dispose();
-                        return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, TOS, "false");
-                    }
-                    if ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan)
-                    {
-                        m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
-                        return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "You are blocked from connecting to this service.", "false");
-                    }
-
-                    if (account.UserLevel < m_MinLoginLevel)
-                    {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
-                        return LLFailedLoginResponse.LoginBlockedProblem;
+                        LLFailedLoginResponse resp = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                            message, "false");
+                        return resp;
                     }
                 }
                 if (profileData != null)
@@ -387,17 +414,6 @@ namespace OpenSim.Services.LLLoginService
                     {
                         UPI.IsNewUser = false;
                         profileData.UpdateUserProfile(UPI);
-                    }
-                }
-                requestData["ip"] = clientIP.ToString();
-                foreach (ILoginModule module in LoginModules)
-                {
-                    string message;
-                    if (module.Login(requestData, account.PrincipalID, out message) == false)
-                    {
-                        LLFailedLoginResponse resp = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
-                            message, "false");
-                        return resp;
                     }
                 }
 
