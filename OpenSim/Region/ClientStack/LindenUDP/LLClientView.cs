@@ -3792,9 +3792,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // after the root prim has been deleted.
                         if (m_killRecord.Contains(update.Entity.LocalId))
                         {
-        //                        m_log.WarnFormat(
-        //                            "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted",
-        //                            part.LocalId, Name);
+                                m_log.ErrorFormat(
+                                    "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. JIRA this at http://jira.openmetaverse.org/secure/CreateIssue!default.jspa !",
+                                    part.LocalId, Name);
                             continue;
                         }
 
