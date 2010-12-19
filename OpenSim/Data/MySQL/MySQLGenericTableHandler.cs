@@ -111,8 +111,8 @@ namespace OpenSim.Data.MySQL
             {
                 for (int i = 0 ; i < fields.Length ; i++)
                 {
-                    cmd.Parameters.AddWithValue(fields[i], keys[i]);
-                    terms.Add("`" + fields[i] + "` = ?" + fields[i]);
+                    //cmd.Parameters.AddWithValue(fields[i], keys[i]);
+                    terms.Add("`" + fields[i] + "` = '" + keys[i] + "'");
                 }
 
                 string where = String.Join(" and ", terms.ToArray());
