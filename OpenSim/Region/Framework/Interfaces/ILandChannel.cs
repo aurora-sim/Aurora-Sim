@@ -82,7 +82,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         Vector3 GetNearestRegionEdgePosition(ScenePresence avatar);
         ILandObject GetNearestAllowedParcel(UUID avatarId, float x, float y);
-        Vector3? GetNearestAllowedPosition(ScenePresence avatar);
+        Vector3 GetNearestAllowedPosition(ScenePresence avatar);
         Vector3 GetParcelCenterAtGround(ILandObject parcel);
     }
 }

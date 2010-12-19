@@ -485,7 +485,8 @@ namespace OpenSim.Services.LLLoginService
                     else if (guinfo.HomeRegionID == UUID.Zero)
                         guinfo.HomeRegionID = guinfo.LastRegionID = DefaultRegion.RegionID;
 
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 128);
+                    //Z = 0 so that it fixes it on the region server and puts it on the ground
+                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 0);
 
                     guinfo.HomeLookAt = guinfo.LastLookAt = new Vector3(0, 0, 0);
 

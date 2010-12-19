@@ -1102,16 +1102,8 @@ namespace OpenSim.Region.Framework.Scenes
                 look = new Vector3(0.99f, 0.042f, 0);
             }
 
-            // Prevent teleporting to an underground location
-            // (may crash client otherwise)
-            //
-            Vector3 pos = AbsolutePosition;
-            float ground = m_scene.GetNormalizedGroundHeight(pos.X, pos.Y);
-            if (pos.Z < ground + 1.5f)
-            {
-                pos.Z = ground + 1.5f;
-                AbsolutePosition = pos;
-            }
+            //Put the agent in an allowed area and above the terrain.
+            AbsolutePosition = Scene.LandChannel.GetNearestAllowedPosition(this);
 
             //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))

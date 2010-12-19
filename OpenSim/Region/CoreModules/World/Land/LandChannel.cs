@@ -198,7 +198,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public Vector3? GetNearestAllowedPosition(ScenePresence avatar)
+        public Vector3 GetNearestAllowedPosition(ScenePresence avatar)
         {
             ILandObject nearestParcel = GetNearestAllowedParcel(avatar.UUID, avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
 
@@ -252,7 +252,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 Vector3 testPos = Vector3.Add(pos, Vector3.Multiply(unitDirection, distance));
                 if (parcel.ContainsPoint((int)testPos.X, (int)testPos.Y))
                 {
-                    return testPos;
+                    return GetPositionAtGround(testPos.X, testPos.Y);
                 }
             }
             return null;
