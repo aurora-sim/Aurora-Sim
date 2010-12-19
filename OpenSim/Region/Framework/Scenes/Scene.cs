@@ -176,6 +176,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool m_UseNewStyleMovement = true;
         public bool m_useSplatAnimation = true;
         public float MaxLowValue = -1000;
+        private Dictionary<UUID, AgentData> m_incomingChildAgentData = new Dictionary<UUID, AgentData>();
 
         #endregion
 
@@ -3035,6 +3036,10 @@ namespace OpenSim.Region.Framework.Scenes
             GetAvatarAppearance(client, out appearance);
 
             ScenePresence avatar = m_sceneGraph.CreateAndAddChildScenePresence(client, appearance);
+            if (m_incomingChildAgentData.ContainsKey(avatar.UUID))
+            {
+                avatar.ChildAgentDataUpdate(m_incomingChildAgentData[avatar.UUID]);
+            }
             //avatar.KnownRegions = GetChildrenSeeds(avatar.UUID);
 
             m_eventManager.TriggerOnNewPresence(avatar);
@@ -3148,33 +3153,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
                 //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
             }
-        }
-
-        #endregion
-
-        #region Entities
-
-        public void SendKillObject(uint localID)
-        {
-            ISceneEntity entity = null;
-            SceneObjectPart part = GetSceneObjectPart(localID);
-            if (part != null) // It is a prim
-            {
-                if (part.ParentGroup != null && !part.ParentGroup.IsDeleted) // Valid
-                {
-                    if (part.ParentGroup.RootPart != part) // Child part
-                        return;
-                }
-                entity = part;
-            }
-            else
-            {
-                ScenePresence SP = GetScenePresence(localID);
-                if (SP == null)
-                    return;
-                entity = SP;
-            }
-            ForEachClient(delegate(IClientAPI client) { client.SendKillObject(m_regInfo.RegionHandle, new ISceneEntity[] { entity }); });
         }
 
         #endregion
@@ -3448,15 +3426,9 @@ namespace OpenSim.Region.Framework.Scenes
             // XPTO: if this agent is not allowed here as root, always return false
 
             // We have to wait until the viewer contacts this region after receiving EAC.
-            // That calls AddNewClient, which finally creates the ScenePresence
+            // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
 
-            ScenePresence childAgentUpdate = WaitGetScenePresence(cAgentData.AgentID);
-            if (childAgentUpdate != null)
-            {
-                childAgentUpdate.ChildAgentDataUpdate(cAgentData);
-                return true;
-            }
-
+            m_incomingChildAgentData[cAgentData.AgentID] = cAgentData;
             return false;
         }
 
@@ -3488,16 +3460,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             return false;
-        }
-
-        protected virtual ScenePresence WaitGetScenePresence(UUID agentID)
-        {
-            int ntimes = 10;
-            ScenePresence childAgentUpdate = null;
-            while ((childAgentUpdate = GetScenePresence(agentID)) == null && (ntimes-- > 0))
-                Thread.Sleep(1000);
-            return childAgentUpdate;
-
         }
 
         public virtual bool IncomingRetrieveRootAgent(UUID id, out IAgentData agent)

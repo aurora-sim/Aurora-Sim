@@ -490,7 +490,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 // Well, this is it. The agent is over there.
 
-                KillEntity(sp.Scene, sp.LocalId);
+                KillEntity(sp.Scene, sp);
 
                 // May need to logout or other cleanup
                 AgentHasMovedAway(sp.ControllingClient.SessionId, logout);
@@ -578,9 +578,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        protected void KillEntity(Scene scene, uint localID)
+        protected void KillEntity(Scene scene, ISceneEntity entity)
         {
-            scene.SendKillObject(localID);
+            scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(scene.RegionInfo.RegionHandle, new ISceneEntity[] { entity });
+            });
         }
 
         protected virtual GridRegion GetFinalDestination(GridRegion region)

@@ -634,7 +634,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //
             if (so.IsSelected)
             {
-                m_scene.SendKillObject(so.RootPart.LocalId);
+                m_scene.ForEachClient(delegate(IClientAPI client)
+                {
+                    client.SendKillObject(m_scene.RegionInfo.RegionHandle, new ISceneEntity[] { so.RootPart }); 
+                });
                 foreach (SceneObjectPart part in so.ChildrenList)
                 {
                     part.CreateSelected = true;
