@@ -1787,26 +1787,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (group.IsAttachment)
                             continue;
 
-                        group.RemoveScriptInstances(true);
-
-                        foreach (SceneObjectPart part in group.ChildrenList)
-                        {
-                            if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
-                            {
-                                PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
-                            }
-                            else if (part.PhysActor != null)
-                            {
-                                PhysicsScene.RemovePrim(part.PhysActor);
-                                part.PhysActor = null;
-                            }
-                        }
-
-                        m_sceneGraph.DeleteEntity(group);
-                        EventManager.TriggerObjectBeingRemovedFromScene(group);
-
-                        //Silent true so taht we don't send needless killObjects
-                        group.DeleteGroup(true);
+                        DeleteSceneObject(group, true, true);
                         ObjectsToDelete.Add(group.RootPart);
                     }
                 }
@@ -1827,8 +1808,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void DeleteSceneObject(SceneObjectGroup group, bool silent, bool DeleteScripts)
         {
             //            m_log.DebugFormat("[SCENE]: Deleting scene object {0} {1}", group.Name, group.UUID);
-
-            //SceneObjectPart rootPart = group.GetChildPart(group.UUID);
 
             // Serialise calls to RemoveScriptInstances to avoid
             // deadlocking on m_parts inside SceneObjectGroup
@@ -1867,8 +1846,6 @@ namespace OpenSim.Region.Framework.Scenes
                 EventManager.TriggerObjectBeingRemovedFromScene(group);
             }
 
-            group.DeleteGroup(silent);
-
             //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
         }
 
@@ -1879,16 +1856,34 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="so">The scene object.</param>
         /// <param name="softDelete">If true, only deletes from scene, but keeps the object in the database.</param>
         /// <returns>true if the object was in the scene, false if it was not</returns>
-        public bool UnlinkSceneObject(SceneObjectGroup so, bool softDelete)
+        protected bool UnlinkSceneObject(SceneObjectGroup so, bool softDelete)
         {
             if (m_sceneGraph.DeleteEntity(so))
             {
                 if (!softDelete)
                 {
                     DeleteFromStorage(so.UUID);
-                    // We need to keep track of this state in case this group is still queued for further backup.
+                    // We need to keep track of this state in case this group is still queued for backup.
                     so.IsDeleted = true;
+                    //Clear the update schedule HERE so that IsDeleted will not have to fire as well
+                    lock (so.ChildrenListLock)
+                    {
+                        foreach (SceneObjectPart part in so.ChildrenList)
+                        {
+                            //Make sure it isn't going to be updated again
+                            part.ClearUpdateSchedule();
+                            //If it is the root part, kill the object in the client
+                            if (part == so.RootPart)
+                            {
+                                ForEachScenePresence(delegate(ScenePresence avatar)
+                                {
+                                    avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, new ISceneEntity[] { part });
+                                });
+                            }
+                        }
+                    }
                 }
+                EventManager.TriggerParcelPrimCountTainted();
                 return true;
             }
 
@@ -2083,7 +2078,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (SceneObjectGroup g in objectGroups)
             {
                 DeleteGroups.Add(g.RootPart);
-                g.DeleteGroup(true); //WE do the deleting of the prims on the client
+                UnlinkSceneObject(g, true); //WE do the deleting of the prims on the client
             }
             ForEachScenePresence(delegate(ScenePresence avatar)
             {

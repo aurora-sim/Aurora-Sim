@@ -234,6 +234,11 @@ namespace OpenSim.Region.Framework.Scenes
         //This is the lock for m_parts and m_partsList
         protected object m_partsLock = new object();
 
+        public object ChildrenListLock
+        {
+            get { return m_partsLock; }
+        }
+
         protected ulong m_regionHandle;
         protected SceneObjectPart m_rootPart;
         // private Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
@@ -1315,37 +1320,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.EventManager.TriggerGroupGrab(UUID, offsetPos, remoteClient.AgentId);
         }
 
-        /// <summary>
-        /// Delete this group from its scene and tell all the scene presences about that deletion.
-        /// </summary>
-        /// <param name="silent">Broadcast deletions to all clients.</param>
-        public void DeleteGroup(bool silent)
-        {
-            // We need to keep track of this state in case this group is still queued for backup.
-            m_isDeleted = true;
-
-            if (!silent)
-            {
-                lock (m_partsLock)
-                {
-                    foreach (SceneObjectPart part in m_partsList)
-                    {
-                        //Make sure it isn't going to be updated again
-                        part.ClearUpdateSchedule();
-                        //If it is the root part, kill the object in the client
-                        if (part == m_rootPart)
-                        {
-                            Scene.ForEachScenePresence(delegate(ScenePresence avatar)
-                            {
-                                avatar.ControllingClient.SendKillObject(Scene.RegionInfo.RegionHandle, new ISceneEntity[]{part});
-                            });
-                        }
-                    }
-                }
-            }
-            m_scene.EventManager.TriggerParcelPrimCountTainted();
-        }
-
         public void AddScriptEPS(int count)
         {
             if (scriptScore + count >= float.MaxValue - count)
@@ -2144,12 +2118,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_rootPart.LinkNum == 0)
                 m_rootPart.LinkNum = 1;
 
-            //Destroy the old group
-            m_scene.UnlinkSceneObject(objectGroup, true);
-            m_scene.SceneGraph.DeleteEntity(objectGroup);
             SceneObjectPart[] objectGroupChildren = new SceneObjectPart[objectGroup.ChildrenList.Count];
             objectGroup.ChildrenList.CopyTo(objectGroupChildren, 0);
-            objectGroup.m_isDeleted = true;
+
+            //Destroy the old group
+            m_scene.DeleteSceneObject(objectGroup, true, false);
             objectGroup.ClearChildren();
 
 
