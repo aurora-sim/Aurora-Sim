@@ -2966,6 +2966,19 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Reset()
         {
+            lock (m_attachments)
+            {
+                // Delete attachments from scene
+                // Don't try to save, as this thread won't live long
+                // enough to complete the save. This would cause no copy
+                // attachments to poof!
+                //
+                foreach (SceneObjectGroup grp in m_attachments)
+                {
+                    m_scene.DeleteSceneObject(grp, false, true);
+                }
+                m_attachments.Clear();
+            }
             // Put the child agent back at the center
             AbsolutePosition 
                 = new Vector3(((float)Constants.RegionSize * 0.5f), ((float)Constants.RegionSize * 0.5f), 70);
