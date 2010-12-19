@@ -449,7 +449,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             m_scene = scene;
 
-            m_entityUpdates = new PriorityQueue();
+            m_entityUpdates = new PriorityQueue(m_scene.Entities.Count > 1000 ? m_scene.Entities.Count : 1000);
             m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 

@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected ScenePresence m_presence;
-        protected PriorityQueue m_partsUpdateQueue = new PriorityQueue();
+        protected PriorityQueue m_partsUpdateQueue;
         protected List<uint> m_removeNextUpdateOf = new List<uint>();
         protected List<uint> m_removeUpdateOf = new List<uint>();
         protected bool m_SentInitialObjects = false;
@@ -63,6 +63,7 @@ namespace OpenSim.Region.Framework.Scenes
             if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
                 presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_prioritizer = new Prioritizer(presence.Scene);
+            m_partsUpdateQueue = new PriorityQueue(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count : 1000);
         }
 
         #endregion
