@@ -172,14 +172,8 @@ namespace OpenSim.Data.MySQL
                         {
                             using (MySqlDataReader dbReader = cmd.ExecuteReader(CommandBehavior.SingleRow))
                             {
-                                if (dbReader.FieldCount == 0)
-                                    return false;
-                                if (dbReader.FieldCount == 1)
-                                    return true;
                                 if (dbReader.Read())
-                                {
-                                    
-                                }
+                                    return true;
                             }
                         }
                         catch (Exception e)

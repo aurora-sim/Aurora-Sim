@@ -55,7 +55,8 @@ namespace OpenSim.Services.UserAccountService
         {
             string dllName = String.Empty;
             string connString = String.Empty;
-            string realm = "useraccounts";
+            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
+            string realm = "UserAccounts";
 
             IConfig dbConfig = config.Configs["DatabaseService"];
             if (dbConfig != null)

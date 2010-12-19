@@ -52,7 +52,8 @@ namespace OpenSim.Services.AvatarService
         {
             string dllName = String.Empty;
             string connString = String.Empty;
-            string realm = "avatars";
+            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
+            string realm = "Avatars";
 
             //
             // Try reading the [DatabaseService] section, if it exists

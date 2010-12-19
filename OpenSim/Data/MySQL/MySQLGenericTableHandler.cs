@@ -109,10 +109,10 @@ namespace OpenSim.Data.MySQL
 
             using (MySqlCommand cmd = new MySqlCommand())
             {
-                for (int i = 0 ; i < fields.Length ; i++)
+                for (int i = 0; i < fields.Length; i++)
                 {
-                    //cmd.Parameters.AddWithValue(fields[i], keys[i]);
-                    terms.Add("`" + fields[i] + "` = '" + keys[i] + "'");
+                    cmd.Parameters.AddWithValue(fields[i], keys[i]);
+                    terms.Add("`" + fields[i] + "` = ?" + fields[i]);
                 }
 
                 string where = String.Join(" and ", terms.ToArray());

@@ -154,12 +154,7 @@ namespace OpenSim.Data.MSSQL
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
-                    {
-                        if (reader.FieldCount == 0)
-                            return false;
-                        else
-                            return true;
-                    }
+                        return false;
                     return false;
                 }
             }

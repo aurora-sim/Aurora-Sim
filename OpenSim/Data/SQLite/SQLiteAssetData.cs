@@ -101,13 +101,7 @@ namespace OpenSim.Data.SQLite
                     using (IDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
-                        {
-
-                            if (reader.FieldCount == 0)
-                                return false;
-                            if (reader.FieldCount == 1)
-                                return true;
-                        }
+                            return false;
                     }
                 }
             }

@@ -275,7 +275,7 @@ namespace OpenSim.Services.LLLoginService
 
         public LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists, string tosAccepted, out UUID secureSession)
         {
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1} from {2}",
+            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1}",
                 firstName, lastName);
 
             //
