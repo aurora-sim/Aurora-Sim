@@ -2986,6 +2986,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.ResetAnimations();
             m_parentID = UUID.Zero;
             m_parentPosition = Vector3.Zero;
+            ControllingClient.Reset();
         }
 
         #endregion

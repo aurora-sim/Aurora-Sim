@@ -280,6 +280,10 @@ namespace Aurora.BotManager
             OnChatFromClient(sender, e);
         }
 
+        public void Reset()
+        {
+        }
+
         protected virtual void OnBotAgentUpdate(uint controlFlag, Quaternion bodyRotation)
         {
             if (OnAgentUpdate != null)

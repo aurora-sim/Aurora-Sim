@@ -921,9 +921,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AgentCircuitData sessionInfo)
         {
-            // Create the LLUDPClient
-            LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
-            //IClientAPI existingClient;
             //Check to make sure we arn't handling two or more circuit codes from the client if we are lagging badly.
             // The block below this (TryGetClient) works as well, but if it gets locked up before the client is added to the scene, it will break
             //  So we do this check here as well.
@@ -934,8 +931,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_handlingCircuitCodes.Add(agentID);
             }
             ScenePresence SP;
-            if (!m_scene.TryGetScenePresence(agentID, out SP) && (SP == null || (SP != null && SP.IsChildAgent)))
+            if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
+                // Create the LLUDPClient
+                LLUDPClient udpClient = new LLUDPClient(this, m_throttleRates, m_throttle, circuitCode, agentID, remoteEndPoint, m_defaultRTO, m_maxRTO);
                 // Create the LLClientView
                 LLClientView client = new LLClientView(remoteEndPoint, m_scene, this, udpClient, sessionInfo, agentID, sessionID, circuitCode);
                 client.OnLogout += LogoutHandler;
@@ -951,7 +950,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
-                    udpClient.AgentID, remoteEndPoint, circuitCode);
+                    agentID, remoteEndPoint, circuitCode);
             }
             //Remove it from the check
             m_handlingCircuitCodes.Remove(agentID);

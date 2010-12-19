@@ -1426,5 +1426,7 @@ namespace OpenSim.Framework
         void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name);
 
         void StopFlying(ISceneEntity presence);
+
+        void Reset();
     }
 }
