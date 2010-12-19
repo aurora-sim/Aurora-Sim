@@ -3593,7 +3593,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (attachmentsModule != null)
                     attachmentsModule.AttachObject(
                         presence.ControllingClient, grp,
-                        attachment, false);
+                        attachment);
             }
         }
 

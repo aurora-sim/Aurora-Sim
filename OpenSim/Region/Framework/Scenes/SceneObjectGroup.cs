@@ -2122,7 +2122,8 @@ namespace OpenSim.Region.Framework.Scenes
             objectGroup.ChildrenList.CopyTo(objectGroupChildren, 0);
 
             //Destroy the old group
-            m_scene.DeleteSceneObject(objectGroup, true, false);
+            m_scene.SceneGraph.DeleteEntity(objectGroup);
+            objectGroup.IsDeleted = true;
             objectGroup.ClearChildren();
 
 

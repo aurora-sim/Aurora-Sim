@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 AttachmentPt &= 0x7f;
 
                 // Calls attach with a Zero position
-                if (AttachObject(remoteClient, part.ParentGroup, AttachmentPt, false))
+                if (AttachObject(remoteClient, part.ParentGroup, AttachmentPt))
                 {
                     m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
 
@@ -143,7 +143,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        public bool AttachObject(IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt, bool silent)
+        public bool AttachObject(IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
         {
             Vector3 attachPos = group.AbsolutePosition;
 
@@ -215,7 +215,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
 
-                AttachToAgent(sp, group, AttachmentPt, attachPos, silent);
+                AttachToAgent(sp, group, AttachmentPt, attachPos);
             }
             else
             {
@@ -298,7 +298,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // This will throw if the attachment fails
                     try
                     {
-                        AttachObject(remoteClient, objatt, AttachmentPt, false);
+                        AttachObject(remoteClient, objatt, AttachmentPt);
                     }
                     catch
                     {
@@ -596,7 +596,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <param name="attachmentpoint"></param>
         /// <param name="AttachOffset"></param>
         /// <param name="silent"></param>
-        protected void AttachToAgent(ScenePresence avatar, SceneObjectGroup so, int attachmentpoint, Vector3 AttachOffset, bool silent)
+        protected void AttachToAgent(ScenePresence avatar, SceneObjectGroup so, int attachmentpoint, Vector3 AttachOffset)
         {
             // don't attach attachments to child agents
             if (avatar.IsChildAgent) return;
@@ -628,20 +628,24 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             avatar.AddAttachment(so);
 
-            if (!silent)
+            // Killing it here will cause the client to deselect it
+            // It then reappears on the avatar, deselected
+            // through the full update below
+            //
+            if (so.IsSelected)
             {
-                // Killing it here will cause the client to deselect it
-                // It then reappears on the avatar, deselected
-                // through the full update below
-                //
-                if (so.IsSelected)
+                m_scene.SendKillObject(so.RootPart.LocalId);
+                foreach (SceneObjectPart part in so.ChildrenList)
                 {
-                    m_scene.SendKillObject(so.RootPart.LocalId);
+                    part.CreateSelected = true;
                 }
-
-                so.IsSelected = false; // fudge....
-                so.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
             }
+
+            //NOTE: This MUST be here, otherwise we limit full updates during attachments when they are selected and it will block the first update.
+            // So until that is changed, this MUST stay. The client will instantly reselect it, so this value doesn't stay borked for long.
+            so.IsSelected = false;
+
+            so.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
             // In case it is later dropped again, don't let
             // it get cleaned up
