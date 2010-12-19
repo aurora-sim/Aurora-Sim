@@ -30,42 +30,45 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class TimeDilationMonitor : ITimeDilationMonitor
+    public class PhysicsSyncFrameMonitor : ITimeMonitor
     {
         private readonly Scene m_scene;
-        private float lastReportedPhysicsFPS;
-        private float basePhysicsFPS = 45;
+        private float physicsSyncTime;
 
-        public TimeDilationMonitor(Scene scene)
+        public PhysicsSyncFrameMonitor(Scene scene)
         {
             m_scene = scene;
-            basePhysicsFPS = scene.Config.Configs["Physics"].GetFloat("BasePhysicsFPS", basePhysicsFPS);
         }
 
         #region Implementation of IMonitor
 
         public double GetValue()
         {
-            return m_scene.TimeDilation;
+            return (double)physicsSyncTime;
         }
 
         public string GetName()
         {
-            return "Time Dilation";
+            return "Physics Sync Frame Time";
         }
 
         public string GetFriendlyValue()
         {
-            return (100 * GetValue()) + "%";
+            return (int)GetValue() + "ms";
         }
 
-        public void SetPhysicsFPS(float value)
+        #endregion
+
+        #region Other Methods
+
+        public void AddTime(int time)
         {
-            lastReportedPhysicsFPS = value;
-            //Now fix time dilation
-            m_scene.TimeDilation = lastReportedPhysicsFPS / basePhysicsFPS;
-            if (m_scene.TimeDilation < 0.01)
-                m_scene.TimeDilation = 0.01f;
+            physicsSyncTime += time;
+        }
+
+        public void ResetStats()
+        {
+            physicsSyncTime = 0;
         }
 
         #endregion

@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         private object m_setAppearanceLock = new object();
 
-        #region RegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -112,11 +112,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         public string Name
         {
             get { return "Default Avatar Factory"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
         }
 
         public void NewClient(IClientAPI client)
@@ -193,19 +188,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
                     // m_log.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
 
-                    for (int i = 0; i < AvatarAppearance.BAKE_INDICES.Length; i++)
-                    {
-                        int idx = AvatarAppearance.BAKE_INDICES[i];
-                        Primitive.TextureEntryFace face = sp.Appearance.Texture.FaceTextures[idx];
-                        if (face != null && face.TextureID != AppearanceManager.DEFAULT_AVATAR_TEXTURE)
-                        {
-                            object[] o = new object[3];
-                            o[0] = client;
-                            o[1] = face;
-                            o[2] = idx;
-                            Util.FireAndForget(CheckBakedTextures, o);
-                        }
-                    }
+                    object[] o = new object[2];
+                    o[0] = client;
+                    o[1] = sp.Appearance.Texture;
+                    Util.FireAndForget(CheckBakedTextures, o);
 
                     if (changed)
                     {
@@ -253,10 +239,17 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             object[] o = (object[])obj;
             IClientAPI client = (IClientAPI)o[0];
-            Primitive.TextureEntryFace face = (Primitive.TextureEntryFace)o[1];
-            int idx = (int)o[2];
-            if (!CheckBakedTextureAsset(client, face.TextureID, idx))
-                client.SendRebakeAvatarTextures(face.TextureID);
+            Primitive.TextureEntry texture = (Primitive.TextureEntry)o[1];
+            for (int i = 0; i < AvatarAppearance.BAKE_INDICES.Length; i++)
+            {
+                int idx = AvatarAppearance.BAKE_INDICES[i];
+                Primitive.TextureEntryFace face = texture.FaceTextures[idx];
+                if (face != null && face.TextureID != AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                {
+                    if (!CheckBakedTextureAsset(client, face.TextureID, idx))
+                        client.SendRebakeAvatarTextures(face.TextureID);
+                }
+            }
         }
 
         /// <summary>

@@ -178,6 +178,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     asset.Type = (sbyte)item.Type;
                     item.AssetID = asset.FullID;
 
+                    IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
+                    if (monitorModule != null)
+                    {
+                        INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                        networkMonitor.AddPendingUploads(-1);
+                    }
+
                     Manager.MyScene.AssetService.Store(asset);
 
                     if (part.Inventory.UpdateInventoryItem(item))
@@ -221,6 +228,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                     Manager.MyScene.AssetService.Store(asset);
                 }
+
+                IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
+                if (monitorModule != null)
+                {
+                    INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                    networkMonitor.AddPendingUploads(-1);
+                } 
 
                 IInventoryService invService = Manager.MyScene.InventoryService;
                 invService.UpdateItem(item);

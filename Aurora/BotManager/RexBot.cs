@@ -2673,11 +2673,6 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.SendTexture(AssetBase TextureAsset)
-        {
-            
-        }
-
         byte[] IClientAPI.GetThrottlesPacked(float multiplier)
         {
             return null;

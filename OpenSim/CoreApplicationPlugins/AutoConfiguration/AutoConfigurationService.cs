@@ -56,6 +56,10 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
             m_autoConfig = (OSDMap)OSDParser.DeserializeJson(resp);
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+        }
+
         public void PostInitialise()
         {
         }

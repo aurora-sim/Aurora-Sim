@@ -365,15 +365,22 @@ namespace OpenSim.Framework
 
             if (current.ContainsKey(String.Empty))
             {
-                CommandInfo ci = (CommandInfo)current[String.Empty];
-                if (ci.fn.Count == 0)
-                    return new string[0];
-                foreach (CommandDelegate fn in ci.fn)
+                try
                 {
-                    if (fn != null)
-                        fn(ci.module, result);
-                    else
+                    CommandInfo ci = (CommandInfo)current[String.Empty];
+                    if (ci.fn.Count == 0)
                         return new string[0];
+                    foreach (CommandDelegate fn in ci.fn)
+                    {
+                        if (fn != null)
+                            fn(ci.module, result);
+                        else
+                            return new string[0];
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.MainConsole.Instance.Output("Issue executing command: " + ex.ToString());
                 }
                 return result;
             }

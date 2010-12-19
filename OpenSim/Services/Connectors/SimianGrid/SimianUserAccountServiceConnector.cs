@@ -246,6 +246,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
+        public void CreateUser(string firstName, string lastName, string password, string email)
+        {
+        }
+
         /// <summary>
         /// Helper method for the various ways of retrieving a user account
         /// </summary>

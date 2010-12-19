@@ -3485,10 +3485,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                             if (lowest.Position != new Vector3(float.MaxValue, float.MaxValue, float.MaxValue))
                             {
-                                CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
+                                Vector4 newPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
+                                if (lowest.SurfaceNormal != Vector3.Zero)
+                                    CollisionPlane = newPlane;
                             }
                             //No Zero vectors, as it causes bent knee in the client!
-                            if (CollisionPlane == Vector4.UnitW)
+                            if (CollisionPlane == new Vector4(0,0,0,0))
                                 CollisionPlane = new Vector4(0, 0, 0, 1);
                         }
                         break;

@@ -499,6 +499,10 @@ namespace Aurora.Simulation.Base
             //Rebuild the configs
             ConfigurationLoader loader = new ConfigurationLoader();
             m_config = loader.LoadConfigSettings(m_original_config);
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
+            {
+                plugin.ReloadConfiguration(m_config);
+            }
             MainConsole.Instance.Output("Finished reloading configuration.");
         }
 

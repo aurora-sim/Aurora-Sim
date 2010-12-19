@@ -46,14 +46,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             //sceneIdentifier = _sceneIdentifier;
         }
 
-        public override void Initialise(IMesher meshmerizer, IConfigSource config)
+        public override void Initialise(IMesher meshmerizer)
+        {
+        }
+
+        public override void PostInitialise(IConfigSource config)
         {
         }
 
         public override void Dispose()
         {
-
         }
+
         public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
         {
             BasicActor act = new BasicActor();

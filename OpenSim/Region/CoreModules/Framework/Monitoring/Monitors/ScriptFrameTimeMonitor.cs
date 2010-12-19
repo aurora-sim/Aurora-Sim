@@ -30,44 +30,43 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class TimeDilationMonitor : ITimeDilationMonitor
+    public class ScriptFrameTimeMonitor : ITimeMonitor
     {
         private readonly Scene m_scene;
-        private float lastReportedPhysicsFPS;
-        private float basePhysicsFPS = 45;
+        private int MonitorScriptFrameTime;
 
-        public TimeDilationMonitor(Scene scene)
+        public ScriptFrameTimeMonitor(Scene scene)
         {
             m_scene = scene;
-            basePhysicsFPS = scene.Config.Configs["Physics"].GetFloat("BasePhysicsFPS", basePhysicsFPS);
         }
 
         #region Implementation of IMonitor
 
         public double GetValue()
         {
-            return m_scene.TimeDilation;
+            return MonitorScriptFrameTime;
         }
 
         public string GetName()
         {
-            return "Time Dilation";
+            return "Script Frame Time";
         }
 
         public string GetFriendlyValue()
         {
-            return (100 * GetValue()) + "%";
-        }
-
-        public void SetPhysicsFPS(float value)
-        {
-            lastReportedPhysicsFPS = value;
-            //Now fix time dilation
-            m_scene.TimeDilation = lastReportedPhysicsFPS / basePhysicsFPS;
-            if (m_scene.TimeDilation < 0.01)
-                m_scene.TimeDilation = 0.01f;
+            return (int)GetValue() + "ms";
         }
 
         #endregion
+
+        public void AddTime(int time)
+        {
+            MonitorScriptFrameTime += time;
+        }
+
+        public void ResetStats()
+        {
+            MonitorScriptFrameTime = 0;
+        }
     }
 }

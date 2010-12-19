@@ -136,7 +136,8 @@ namespace OpenSim.Region.Framework.Scenes
         // Central Update Loop
 
         protected uint m_frame;
-        protected float m_timespan = 0.089f;
+        protected float m_updatetimespan = 0.069f;
+        protected float m_physicstimespan = 0.049f;
         protected DateTime m_lastupdate = DateTime.UtcNow;
 
         private int m_update_physics = 1; //Trigger the physics update
@@ -266,6 +267,7 @@ namespace OpenSim.Region.Framework.Scenes
         public IConfigSource Config
         {
             get { return m_config; }
+            set { m_config = value; }
         }
 
         public string DefaultObjectName
@@ -754,7 +756,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.Error("[REGION]: Firing Region Restart Message");
 
-            m_sceneManager.HandleRestart(RegionInfo);
+            m_sceneManager.HandleRestart(this);
         }
 
         /// <summary>
@@ -970,10 +972,10 @@ namespace OpenSim.Region.Framework.Scenes
             public void Update(bool shouldSleep)
             {
                 ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                ISetMonitor totalFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
+                ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
                 ISetMonitor lastFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Last Completed Frame At");
-                ISetMonitor otherFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
-                ISetMonitor sleepFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame");
+                ITimeMonitor otherFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
+                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
                 int maintc;
 
                 while (!ShouldExit)
@@ -1007,10 +1009,10 @@ namespace OpenSim.Region.Framework.Scenes
                             List<UUID> avatarUUIDs;
                             m_scene.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
                             // Send coarse locations to clients 
-                            m_scene.ForEachScenePresence(delegate(ScenePresence presence)
+                            foreach(ScenePresence presence in m_scene.ScenePresences)
                             {
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                            });
+                            }
                         }
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
@@ -1030,19 +1032,14 @@ namespace OpenSim.Region.Framework.Scenes
                         int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
 
                         maintc = Util.EnvironmentTickCountSubtract(maintc);
-                        maintc = ((int)(m_scene.m_timespan * 1000) - maintc) / Scene.m_timeToSlowTheHeartbeat;
-
-                        int MonitorSleepFrameTime = maintc;
+                        maintc = ((int)(m_scene.m_updatetimespan * 1000) - maintc) / Scene.m_timeToSlowTheHeartbeat;
 
                         int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
-                        int MonitorFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
-
+                        
                         //Now fix the stats
                         simFrameMonitor.AddFPS(1);
-                        totalFrameMonitor.SetValue(1);
                         lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
-                        sleepFrameMonitor.SetValue(MonitorSleepFrameTime);
-                        otherFrameMonitor.SetValue(MonitorOtherFrameTime);
+                        otherFrameMonitor.AddTime(MonitorOtherFrameTime);
 
                         CheckExit();
                     }
@@ -1053,8 +1050,15 @@ namespace OpenSim.Region.Framework.Scenes
                         break;
                     }
 
+                    int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
+
                     if (maintc > 0 && shouldSleep)
                         Thread.Sleep(maintc);
+
+                    int MonitorSleepFrameTime = maintc;
+                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
+                    
+                    totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
             }
 
@@ -1114,7 +1118,10 @@ namespace OpenSim.Region.Framework.Scenes
             public void Update(bool shouldSleep)
             {
                 IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
-                ISetMonitor physicsSyncFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
+                ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
+                ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
+                ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
+                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
                 int maintc;
 
                 while (!ShouldExit)
@@ -1122,6 +1129,7 @@ namespace OpenSim.Region.Framework.Scenes
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
 
                     maintc = Util.EnvironmentTickCount();
+                    int BeginningFrameTime = maintc;
                     
                     try
                     {
@@ -1145,13 +1153,14 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_scene.m_frame % m_scene.m_update_physics == 0)
                         {
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_timespan));
+                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_physicstimespan));
                         }
 
                         int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
 
+                        physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
                         physicsFrameMonitor.AddFPS(1);
-                        physicsSyncFrameMonitor.SetValue(MonitorPhysicsSyncTime);
+                        physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
 
                         IPhysicsMonitor monitor = m_scene.RequestModuleInterface<IPhysicsMonitor>();
                         if(monitor != null)
@@ -1171,9 +1180,17 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)((m_scene.m_timespan * 1000) - maintc) / Scene.m_timeToSlowThePhysHeartbeat;
+                    maintc = (int)((m_scene.m_physicstimespan * 1000) - maintc) / Scene.m_timeToSlowThePhysHeartbeat;
+
+                    int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
+
                     if (maintc > 0 && shouldSleep)
                         Thread.Sleep(maintc);
+
+                    int MonitorSleepFrameTime = maintc;
+                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
+                    
+                    totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
             }
 
@@ -1245,7 +1262,7 @@ namespace OpenSim.Region.Framework.Scenes
                     physH.Update(false);
                     updateH.Update(false);
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(m_scene.m_timespan * 1000) - maintc;
+                    maintc = (int)(0.086 * 1000) - maintc;
 
                     if (maintc > 0)
                         Thread.Sleep(maintc);
@@ -4478,7 +4495,7 @@ namespace OpenSim.Region.Framework.Scenes
             // allocations, and there is no more work to be done until someone logs in
             GC.Collect();
 
-            m_log.Info("[REGION] - Startup Complete in region " + RegionInfo.RegionName);
+            m_log.Info("[REGION]: Startup Complete in region " + RegionInfo.RegionName);
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig == null || !startupConfig.GetBoolean("StartDisabled", false))
             {

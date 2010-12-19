@@ -165,6 +165,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public bool ProcessImageQueue(int packetsToSend)
         {
+            int StartTime = Util.EnvironmentTickCount();
+
             int packetsSent = 0;
 
             while (packetsSent < packetsToSend)
@@ -193,6 +195,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // pipeline for a client
                     return true;
                 }
+            }
+
+            int EndTime = Util.EnvironmentTickCountSubtract(StartTime);
+            IMonitorModule module = m_client.Scene.RequestModuleInterface<IMonitorModule>();
+            if (module != null)
+            {
+                IImageFrameTimeMonitor monitor = (IImageFrameTimeMonitor)module.GetMonitor(m_client.Scene.RegionInfo.RegionID.ToString(), "Images Frame Time");
+                monitor.AddImageTime(EndTime);
             }
 
             return m_priorityQueue.Count > 0;

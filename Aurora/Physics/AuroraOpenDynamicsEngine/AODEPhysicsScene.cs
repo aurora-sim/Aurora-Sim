@@ -176,7 +176,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override float StepTime
         {
-            get { return step_time; }
+            get { return ODE_STEPSIZE; }
         }
 
         public IntPtr world;
@@ -364,11 +364,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
 
         // Initialize the mesh plugin
-        public override void Initialise(IMesher meshmerizer, IConfigSource config)
+        public override void Initialise(IMesher meshmerizer)
+        {
+            mesher = meshmerizer;
+        }
+
+        public override void PostInitialise(IConfigSource config)
         {
             m_rayCastManager = new AuroraODERayCastRequestManager(this);
             RemoveQueue = new List<PhysicsActor>();
-            mesher = meshmerizer;
             m_config = config;
             // Defaults
 
@@ -392,7 +396,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
-                    gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f);
+                    gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f) / 5;
 
                     AllowUnderwaterPhysics = physicsconfig.GetBoolean("useUnderWaterPhysics", false);
                     AllowAvGravity = physicsconfig.GetBoolean("useAvGravity", true);

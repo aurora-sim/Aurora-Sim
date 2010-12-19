@@ -182,6 +182,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+            //Update this
+            m_config = config;
+            foreach (Scene scene in m_localScenes)
+            {
+                scene.Config = config;
+                scene.SceneGraph.PhysicsScene.PostInitialise(config);
+            }
+        }
+
         public void PostInitialise()
         {
         }
@@ -791,14 +802,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Restart a region
 
-        public void HandleRestart(RegionInfo rdata)
+        public void HandleRestart(Scene scene)
         {
-            m_log.Error("[SCENEMANAGER]: Got Restart message for region : " + rdata.RegionName + ".");
             RegionInfo info = null;
             int RegionSceneElement = -1;
             for (int i = 0; i < m_localScenes.Count; i++)
             {
-                if (rdata.RegionName == m_localScenes[i].RegionInfo.RegionName)
+                if (scene.RegionInfo.RegionName == m_localScenes[i].RegionInfo.RegionName)
                 {
                     RegionSceneElement = i;
                 }
@@ -812,10 +822,10 @@ namespace OpenSim.Region.Framework.Scenes
                 m_localScenes.RemoveAt(RegionSceneElement);
             }
 
-
+            CloseModules(scene);
             ShutdownClientServer(info);
-            IScene scene;
-            CreateRegion(info, true, out scene);
+            IScene iscene;
+            CreateRegion(info, true, out iscene);
         }
 
         #endregion

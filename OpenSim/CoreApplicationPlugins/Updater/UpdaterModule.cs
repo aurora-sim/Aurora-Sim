@@ -84,6 +84,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+        }
+
         public void PostInitialise()
         {
         }

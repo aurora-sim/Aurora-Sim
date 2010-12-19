@@ -132,6 +132,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool StateSaveQueue()
         {
+            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            int StartTime = Util.EnvironmentTickCount();
+
             if (!Started) //Break early
                 return true;
 
@@ -158,6 +161,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
                 RemoveState(item.ID);
 
+            if (module != null)
+            {
+                foreach (Scene scene in m_ScriptEngine.Worlds)
+                {
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
+                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                }
+            }
+
             return false;
         }
 
@@ -167,6 +179,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public bool ScriptChangeQueue()
         {
+            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            int StartTime = Util.EnvironmentTickCount();
+
             if (!Started) //Break early
                 return true;
 
@@ -236,11 +251,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             ScriptChangeIsRunning = false;
             Thread.Sleep(20);
+
+            if (module != null)
+            {
+                foreach (Scene scene in m_ScriptEngine.Worlds)
+                {
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
+                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                }
+            }
+
             return false;
         }
 
         public bool CmdHandlerQueue()
         {
+            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            int StartTime = Util.EnvironmentTickCount();
+
             if (!Started) //Break early
                 return true;
 
@@ -257,6 +285,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
             Thread.Sleep(10); // don't burn cpu
+
+            if (module != null)
+            {
+                foreach (Scene scene in m_ScriptEngine.Worlds)
+                {
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
+                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                }
+            }
+
             threadpool.QueueEvent(CmdHandlerQueue, 2);
             return false;
         }

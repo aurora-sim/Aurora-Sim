@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
 using log4net;
+using Nini.Config;
 using Aurora.Services.DataService;
 
 namespace OpenSim.CoreApplicationPlugins
@@ -16,6 +17,10 @@ namespace OpenSim.CoreApplicationPlugins
         public void Initialize(ISimulationBase openSim)
         {
             OpenSimBase = openSim;
+        }
+
+        public void ReloadConfiguration(IConfigSource config)
+        {
         }
 
         public void PostInitialise()

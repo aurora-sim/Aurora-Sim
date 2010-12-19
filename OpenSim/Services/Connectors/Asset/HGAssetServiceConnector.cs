@@ -55,8 +55,8 @@ namespace OpenSim.Services.Connectors
 
         public override void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            //if (handlerConfig.GetString("AssetHandler", "") != Name)
+            /*IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return; 
             m_log.Info("[HG ASSET SERVICE]: HG asset service enabled");
 
@@ -64,13 +64,13 @@ namespace OpenSim.Services.Connectors
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 
-            registry.RegisterInterface<IAssetService>(this);
+            registry.RegisterInterface<IAssetService>(this);*/
         }
 
         public override void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            //if (handlerConfig.GetString("AssetHandler", "") != Name)
+            /*IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
             string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AssetServerURI",
@@ -83,16 +83,16 @@ namespace OpenSim.Services.Connectors
             }
             m_ServerURI = serviceURI;
 
-            SetCache(registry.Get<IImprovedAssetCache>());
+            SetCache(registry.Get<IImprovedAssetCache>());*/
         }
 
         public override void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            //if (handlerConfig.GetString("AssetHandler", "") != Name)
+            /*IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAssetService>(this);
+            registry.RegisterInterface<IAssetService>(this);*/
         }
 
         private bool IsHG(string id)

@@ -204,6 +204,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
+            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(1);
+            }
+
             transactions.RequestCreateInventoryItem(
                 remoteClient, transactionID, folderID, callbackID, description,
                 name, invType, type, wearableType, nextOwnerMask);
@@ -227,6 +234,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
+            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(1);
+            }
+
             transactions.RequestUpdateInventoryItem(remoteClient, transactionID, item);
         }
 
@@ -248,6 +262,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             //                item.Name);
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
+
+            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(1);
+            }
 
             transactions.RequestUpdateTaskInventoryItem(remoteClient, part, transactionID, item);
         }
@@ -287,6 +308,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
+            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(1);
+            }
+
             AssetXferUploader uploader = transactions.RequestXferUploader(transaction);
             if (uploader != null)
             {
@@ -306,6 +334,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
             //m_log.Debug("xferID: " + xferID + "  packetID: " + packetID + "  data!");
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
+
+            IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(1);
+            }
 
             transactions.HandleXfer(remoteClient, xferID, packetID, data);
         }

@@ -827,10 +827,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendTexture(AssetBase TextureAsset)
-        {
-        }
-
         public void SetDebugPacketLevel(int newDebug)
         {
         }

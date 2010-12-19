@@ -167,6 +167,10 @@ namespace OpenSim.Services.Connectors
             return accounts;
         }
 
+        public virtual void CreateUser(string firstName, string lastName, string password, string email)
+        {
+        }
+
         public virtual bool StoreUserAccount(UserAccount data)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

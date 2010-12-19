@@ -83,6 +83,15 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+            //Update all modules that we have here
+            foreach (IRegionModuleBase module in AllModules)
+            {
+                module.Initialise(config);
+            }
+        }
+
         public void PostInitialise()
         {
         }

@@ -384,7 +384,7 @@ namespace OpenSim.Services.UserAccountService
         /// <param name="lastName"></param>
         /// <param name="password"></param>
         /// <param name="email"></param>
-        private void CreateUser(string firstName, string lastName, string password, string email)
+        public void CreateUser(string firstName, string lastName, string password, string email)
         {
             UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
             if (null == account)

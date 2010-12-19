@@ -115,6 +115,12 @@ namespace OpenSim.Framework
         event Alert OnTriggerAlert;
     }
 
+    public interface ITimeMonitor : IMonitor
+    {
+        void AddTime(int time);
+        void ResetStats();
+    }
+
     public interface IAssetMonitor
     {
         /// <summary>
@@ -268,6 +274,34 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="frames"></param>
         void AddFPS(int frames);
+
+        /// <summary>
+        /// Reset the stats
+        /// </summary>
+        void ResetStats();
+    }
+
+    public interface IImageFrameTimeMonitor
+    {
+        /// <summary>
+        /// Add the time it took to process sending of images to the client
+        /// </summary>
+        /// <param name="time">time in milliseconds</param>
+        void AddImageTime(int time);
+
+        /// <summary>
+        /// Reset the stats
+        /// </summary>
+        void ResetStats();
+    }
+
+    public interface ITotalFrameTimeMonitor : IMonitor
+    {
+        /// <summary>
+        /// Add the time it took to process sending of images to the client
+        /// </summary>
+        /// <param name="time">time in milliseconds</param>
+        void AddFrameTime(int time);
 
         /// <summary>
         /// Reset the stats

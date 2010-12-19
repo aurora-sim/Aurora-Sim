@@ -297,6 +297,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Events
 
+        #region Enums
+
+
+        public enum AssetErrors : int
+        {
+            MorePacketsToCome = 1,
+            NoError = 0,
+            AssetRequestFailed = -1,
+            //AssetRequestInvalid = -2,
+            AssetRequestNonExistantFile = -3,
+            AssetRequestNotInDatabase = -4,
+            InsufficientPermissions = -5
+        }
+
+        #endregion
+
         #region Class Members
 
         // LLClientView Only
@@ -2715,19 +2731,45 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(scriptRunningReply, ThrottleOutPacketType.Task);
         }
 
+        private void SendFailedAsset(AssetRequestToClient req, AssetErrors assetErrors)
+        {
+            TransferInfoPacket Transfer = new TransferInfoPacket();
+            Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
+            Transfer.TransferInfo.Status = (int)assetErrors;
+            Transfer.TransferInfo.TargetType =0 ;
+            if (req.AssetRequestSource == 2)
+            {
+                Transfer.TransferInfo.Params = new byte[20];
+                Array.Copy(req.RequestAssetID.GetBytes(), 0, Transfer.TransferInfo.Params, 0, 16);
+                int assType = req.AssetInf.Type;
+                Array.Copy(Utils.IntToBytes(assType), 0, Transfer.TransferInfo.Params, 16, 4);
+            }
+            else if (req.AssetRequestSource == 3)
+            {
+                Transfer.TransferInfo.Params = req.Params;
+                // Transfer.TransferInfo.Params = new byte[100];
+                //Array.Copy(req.RequestUser.AgentId.GetBytes(), 0, Transfer.TransferInfo.Params, 0, 16);
+                //Array.Copy(req.RequestUser.SessionId.GetBytes(), 0, Transfer.TransferInfo.Params, 16, 16);
+            }
+            Transfer.TransferInfo.Size = req.AssetInf.Data.Length;
+            Transfer.TransferInfo.TransferID = req.TransferRequestID;
+            Transfer.Header.Zerocoded = true;
+            OutPacket(Transfer, ThrottleOutPacketType.Asset);
+        }
+
         public void SendAsset(AssetRequestToClient req)
         {
             if (req.AssetInf.Data == null)
             {
-                m_log.ErrorFormat("Cannot send asset {0} ({1}), asset data is null",
+                m_log.ErrorFormat("[LLClientView]: Cannot send asset {0} ({1}), asset data is null",
                     req.AssetInf.ID, req.AssetInf.Metadata.ContentType);
                 return;
             }
-
+            
             //m_log.Debug("sending asset " + req.RequestAssetID);
             TransferInfoPacket Transfer = new TransferInfoPacket();
-            Transfer.TransferInfo.ChannelType = 2;
-            Transfer.TransferInfo.Status = 0;
+            Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
+            Transfer.TransferInfo.Status = (int)AssetErrors.NoError;
             Transfer.TransferInfo.TargetType = 0;
             if (req.AssetRequestSource == 2)
             {
@@ -2752,10 +2794,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 TransferPacketPacket TransferPacket = new TransferPacketPacket();
                 TransferPacket.TransferData.Packet = 0;
-                TransferPacket.TransferData.ChannelType = 2;
+                TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                 TransferPacket.TransferData.TransferID = req.TransferRequestID;
                 TransferPacket.TransferData.Data = req.AssetInf.Data;
-                TransferPacket.TransferData.Status = 1;
+                TransferPacket.TransferData.Status = (int)AssetErrors.NoError;
                 TransferPacket.Header.Zerocoded = true;
                 OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
             }
@@ -2769,7 +2811,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     TransferPacketPacket TransferPacket = new TransferPacketPacket();
                     TransferPacket.TransferData.Packet = packetNumber;
-                    TransferPacket.TransferData.ChannelType = 2;
+                    TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                     TransferPacket.TransferData.TransferID = req.TransferRequestID;
 
                     int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, maxChunkSize);
@@ -2781,11 +2823,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // 0 indicates more packets to come, 1 indicates last packet
                     if (req.AssetInf.Data.Length - processedLength > maxChunkSize)
                     {
-                        TransferPacket.TransferData.Status = 0;
+                        TransferPacket.TransferData.Status = (int)AssetErrors.NoError;
                     }
                     else
                     {
-                        TransferPacket.TransferData.Status = 1;
+                        TransferPacket.TransferData.Status = (int)AssetErrors.MorePacketsToCome;
                     }
                     TransferPacket.Header.Zerocoded = true;
                     OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
@@ -2794,11 +2836,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     packetNumber++;
                 }
             }
-        }
-
-        public void SendTexture(AssetBase TextureAsset)
-        {
-
         }
 
         public void SendRegionHandle(UUID regionID, ulong handle)
@@ -4622,7 +4659,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 acceleration = Vector3.Zero;
                 angularVelocity = Vector3.Zero;
                 rotation = presence.Rotation;
-
                 if (sendTexture)
                     textureEntry = presence.Appearance.Texture.GetBytes();
                 else
@@ -4716,7 +4752,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 block.TextureEntry = Utils.EmptyBytes;
             }
-
             return block;
         }
 
@@ -12432,10 +12467,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //m_log.Debug("asset request " + requestID);
             }
 
-            // Scripts cannot be retrieved by direct request
-            if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset && asset.Type == 10)
-                return;
-
             // The asset is known to exist and is in our cache, so add it to the AssetRequests list
             AssetRequestToClient req = new AssetRequestToClient();
             req.AssetInf = asset;
@@ -12445,6 +12476,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             req.Params = transferRequest.TransferInfo.Params;
             req.RequestAssetID = requestID;
             req.TransferRequestID = transferRequest.TransferInfo.TransferID;
+
+            // Scripts cannot be retrieved by direct request
+            if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset && asset.Type == 10)
+            {
+                SendFailedAsset(req, AssetErrors.InsufficientPermissions);
+            }
 
             SendAsset(req);
         }

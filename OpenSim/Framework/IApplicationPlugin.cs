@@ -62,6 +62,12 @@ namespace OpenSim.Framework
         /// Close out the module
         /// </summary>
         void Close();
+
+        /// <summary>
+        /// The configuration has changed, make sure that everything is updated with the new info
+        /// </summary>
+        /// <param name="m_config"></param>
+        void ReloadConfiguration(IConfigSource m_config);
     }
 }
 namespace Aurora.Framework

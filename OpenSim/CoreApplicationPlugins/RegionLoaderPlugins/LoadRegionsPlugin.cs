@@ -70,6 +70,10 @@ namespace OpenSim.CoreApplicationPlugins
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+        }
+
         public void PostInitialise()
         {
         }

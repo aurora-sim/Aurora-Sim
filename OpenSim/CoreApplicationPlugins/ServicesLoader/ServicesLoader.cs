@@ -16,6 +16,10 @@ namespace OpenSim.CoreApplicationPlugins
             m_openSim = openSim;
         }
 
+        public void ReloadConfiguration(IConfigSource config)
+        {
+        }
+
         public void PostInitialise()
         {
         }

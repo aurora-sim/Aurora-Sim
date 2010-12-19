@@ -299,12 +299,8 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        account = new UserAccount(UUID.Zero, firstName, lastName, "");
-                        account.UserTitle = "";
-                        m_UserAccountService.StoreUserAccount(account);
+                        m_UserAccountService.CreateUser(firstName, lastName, passwd, "");
                         account = m_UserAccountService.GetUserAccount(scopeID, firstName, lastName);
-                        m_AuthenticationService.SetPasswordHashed(account.PrincipalID, passwd);
-                        m_InventoryService.CreateUserInventory(account.PrincipalID);
                     }
                 }
 

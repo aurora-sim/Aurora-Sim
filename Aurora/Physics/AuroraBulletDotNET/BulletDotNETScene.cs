@@ -146,9 +146,13 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             _origheightmap = new float[(int)Constants.RegionSize * (int)Constants.RegionSize];
         }
 
-        public override void Initialise(IMesher meshmerizer, IConfigSource config)
+        public override void Initialise(IMesher meshmerizer)
         {
             mesher = meshmerizer;
+        }
+
+        public override void PostInitialise(IConfigSource config)
+        {
             //m_config = config;
             if (config != null)
             {

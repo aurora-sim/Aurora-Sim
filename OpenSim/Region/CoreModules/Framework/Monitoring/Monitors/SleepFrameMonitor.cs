@@ -30,7 +30,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    public class SleepFrameMonitor : IMonitor, ISetMonitor
+    public class SleepFrameMonitor : ITimeMonitor
     {
         private readonly Scene m_scene;
         private int SleepFrame;
@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetName()
         {
-            return "Sleep Frame";
+            return "Sleep Frame Time";
         }
 
         public string GetFriendlyValue()
@@ -59,9 +59,14 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #endregion
 
-        public void SetValue(int value)
+        public void AddTime(int value)
         {
-            SleepFrame = value;
+            SleepFrame += value;
+        }
+
+        public void ResetStats()
+        {
+            SleepFrame = 0;
         }
     }
 }

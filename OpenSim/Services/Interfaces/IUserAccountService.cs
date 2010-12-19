@@ -158,5 +158,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="data"></param>
         /// <returns></returns>
         bool StoreUserAccount(UserAccount data);
+
+        /// <summary>
+        /// Create the user with the given info
+        /// </summary>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="password"></param>
+        /// <param name="email"></param>
+        void CreateUser(string firstName, string lastName, string password, string email);
     }
 }

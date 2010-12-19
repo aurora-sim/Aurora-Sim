@@ -385,19 +385,23 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_lookupTable.TryGetValue(local_id, out item))
             {
-                // Combine flags
-                value.Flags |= item.Heap[item.Handle].Value.Flags;
+                if (item.Heap != null)
+                {
+                    // Combine flags
+                    value.Flags |= item.Heap[item.Handle].Value.Flags;
 
-                item.Heap[item.Handle] = new MinHeapItem(priority, value, local_id, this.m_comparison);
-                return false;
+                    item.Heap[item.Handle] = new MinHeapItem(priority, value, local_id, this.m_comparison);
+                    return false;
+                }
+                else
+                {
+                    m_lookupTable.Remove(local_id);
+                }
             }
-            else
-            {
-                item.Heap = m_heaps[0];
-                item.Heap.Add(new MinHeapItem(priority, value, local_id, this.m_comparison), ref item.Handle);
-                m_lookupTable.Add(local_id, item);
-                return true;
-            }
+            item.Heap = m_heaps[0];
+            item.Heap.Add(new MinHeapItem(priority, value, local_id, this.m_comparison), ref item.Handle);
+            m_lookupTable.Add(local_id, item);
+            return true;
         }
 
         public EntityUpdate Peek()

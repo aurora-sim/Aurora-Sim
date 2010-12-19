@@ -319,6 +319,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.EventManager.OnStopScript -= OnStopScript;
 
             scene.UnregisterModuleInterface<IScriptModule>(this);
+            m_Scenes.Remove(scene);
             UpdateLeasesTimer.Enabled = false;
             UpdateLeasesTimer.Elapsed -= UpdateAllLeases;
             UpdateLeasesTimer.Stop();

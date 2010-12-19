@@ -152,8 +152,15 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
 
-            //m_log.DebugFormat(
-            //    "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.FullID, TransactionID);
+            IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(-1);
+            }
+
+            m_log.DebugFormat(
+                "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.FullID, TransactionID);
 
             if (m_dumpAssetToFile)
             {
@@ -211,6 +218,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private void DoCreateItem(uint callbackID, IClientAPI remoteClient)
         {
             m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+
+            IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                networkMonitor.AddPendingUploads(-1);
+            }
 
             InventoryItemBase item = new InventoryItemBase();
             item.Owner = remoteClient.AgentId;
