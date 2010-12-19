@@ -103,17 +103,14 @@ namespace OpenSim.Services.AssetService
                         String.Empty);
                 bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", true);
 
-                if (assetLoaderEnabled)
-                {
-                    m_log.InfoFormat("[ASSET]: Loading default asset set from {0}", loaderArgs);
-                    m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
-                            delegate(AssetBase a)
-                            {
-                                if (!assetLoaderEnabled && GetExists(a.ID))
-                                    return;
-                                Store(a);
-                            });
-                }
+                m_log.InfoFormat("[ASSET]: Loading default asset set from {0}", loaderArgs);
+                m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
+                        delegate(AssetBase a)
+                        {
+                            if (!assetLoaderEnabled && GetExists(a.ID))
+                                return;
+                            Store(a);
+                        });
                 registry.RegisterInterface<IAssetService>(this);
 
                 MainConsole.Instance.Commands.AddCommand("kfs", false,
