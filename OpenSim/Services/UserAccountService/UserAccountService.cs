@@ -340,7 +340,7 @@ namespace OpenSim.Services.UserAccountService
                 email = MainConsole.Instance.CmdPrompt("Email", "");
             else email = cmdparams[5];
 
-            CreateUser(firstName, lastName, password, email);
+            CreateUser(firstName, lastName, Util.Md5Hash(password), email);
         }
 
         protected void HandleResetUserPassword(string module, string[] cmdparams)
@@ -404,7 +404,7 @@ namespace OpenSim.Services.UserAccountService
                     bool success;
                     if (m_AuthenticationService != null)
                     {
-                        success = m_AuthenticationService.SetPassword(account.PrincipalID, password);
+                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, password);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
                                 firstName, lastName);
