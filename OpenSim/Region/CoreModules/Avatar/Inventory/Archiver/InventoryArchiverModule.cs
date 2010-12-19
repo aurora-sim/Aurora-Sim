@@ -54,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <value>
         /// Enable or disable checking whether the iar user is actually logged in 
         /// </value>
-        public bool DisablePresenceChecks { get { return true; } set; }
+        public bool DisablePresenceChecks { get { return true; } set { ; } }
         
         public event InventoryArchiveSaved OnInventoryArchiveSaved;
         
