@@ -199,6 +199,8 @@ namespace OpenSim.Services.CapsService
                     OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(reply));
                     foreach (string key in hash.Keys)
                     {
+                        if (key == null || hash[key] == null)
+                            continue;
                         if (!registeredCAPS.ContainsKey(key))
                             registeredCAPS[key] = hash[key].AsString();
                         //else
@@ -228,6 +230,8 @@ namespace OpenSim.Services.CapsService
 
         public void AddCAPS(string method, string caps)
         {
+            if (method == null || caps == null)
+                return;
             string CAPSPath = this.PublicHandler.HostURI + caps;
             registeredCAPS[method] = CAPSPath;
             registeredCAPSPath[CAPSPath] = method;
