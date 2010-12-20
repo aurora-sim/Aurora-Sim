@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenSim.Framework;
 using Nini.Config;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -65,5 +66,11 @@ namespace OpenSim.Region.Framework.Interfaces
         List<string> GetAllFunctionNames();
 
         bool Disabled { get; set; }
+
+        int GetActiveScripts(ISceneEntity obj);
+        int GetTotalScripts(ISceneEntity obj);
+        int GetActiveScripts();
+        int GetScriptEPS();
+        Dictionary<uint, float> GetTopScripts(UUID RegionID);
     }
 }

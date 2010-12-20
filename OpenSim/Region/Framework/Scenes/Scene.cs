@@ -3669,21 +3669,6 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGraph.GetTotalObjectsCount();
         }
 
-        public Dictionary<uint, float> GetTopScripts()
-        {
-            return m_sceneGraph.GetTopScripts();
-        }
-
-        public void AddToScriptEPS(int count)
-        {
-            m_sceneGraph.AddToScriptEPS(count);
-        }
-
-        public void AddActiveScripts(int count)
-        {
-            m_sceneGraph.AddActiveScripts(count);
-        }
-
         /// <summary>
         /// Request a scene presence by UUID. Fast, indexed lookup.
         /// </summary>

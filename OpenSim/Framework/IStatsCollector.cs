@@ -215,6 +215,19 @@ namespace OpenSim.Framework
         void AddPendingUploads(int count);
     }
 
+    public interface IScriptCountMonitor : IMonitor
+    {
+        /// <summary>
+        /// The number of active scripts in the region
+        /// </summary>
+        int ActiveScripts { get; }
+
+        /// <summary>
+        /// The number of events firing per second in the script engine
+        /// </summary>
+        int ScriptEPS { get; }
+    }
+
     public interface ISetMonitor : IMonitor
     {
         /// <summary>

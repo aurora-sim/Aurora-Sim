@@ -107,6 +107,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool m_disabled = false;
 
         /// <summary>
+        /// Script events per second, used by stats
+        /// </summary>
+        public int ScriptEPS = 0;
+
+        /// <summary>
         /// Disabled from the command line, takes presidence over normal Disabled
         /// </summary>
         public bool ConsoleDisabled
@@ -1356,6 +1361,74 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return ScriptDanger(parent, position);
             else
                 return ScriptDanger(part, position);
+        }
+
+        #endregion
+
+        #region Stats
+
+        /// <summary>
+        /// Get the current number of events being fired per second
+        /// </summary>
+        /// <returns></returns>
+        public int GetScriptEPS()
+        {
+            int EPS = ScriptEPS;
+            //Return it to 0 now that we've sent it.
+            ScriptEPS = 0;
+            return EPS;
+        }
+
+        /// <summary>
+        /// Get the number of active scripts in this instance
+        /// </summary>
+        /// <returns></returns>
+        public int GetActiveScripts()
+        {
+            //Get all the scripts
+            ScriptData[] data = ScriptProtection.GetAllScripts();
+            int activeScripts = 0;
+            foreach(ScriptData script in data)
+            {
+                //Only if the script is running do we include it
+                if (script.Running) activeScripts++;
+            }
+            return activeScripts;
+        }
+
+        /// <summary>
+        /// Get the top scripts in this instance
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<uint, float> GetTopScripts(UUID RegionID)
+        {
+            List<ScriptData> data = new List<ScriptData>(ScriptProtection.GetAllScripts());
+            data.RemoveAll(delegate(ScriptData script)
+            {
+                //Remove the scripts that are in a different region
+                if (script.World.RegionInfo.RegionID != RegionID)
+                    return true;
+                else
+                    return false;
+            });
+            //Now sort and put the top scripts in the correct order
+            data.Sort(ScriptScoreSorter);
+            if (data.Count > 100)
+            {
+                //We only take the top 100
+                data.RemoveRange(100, data.Count - 100);
+            }
+            Dictionary<uint, float> topScripts = new Dictionary<uint, float>();
+            foreach (ScriptData script in data)
+            {
+                topScripts.Add(script.part.ParentGroup.LocalId, script.ScriptScore);
+            }
+            return topScripts;
+        }
+
+        private int ScriptScoreSorter(ScriptData scriptA, ScriptData scriptB)
+        {
+            return scriptA.ScriptScore.CompareTo(scriptB.ScriptScore);
         }
 
         #endregion

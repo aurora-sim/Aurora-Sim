@@ -896,7 +896,14 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             else if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopScripts)
             {
-                SceneData = m_scene.GetTopScripts();
+                IScriptModule[] scriptModules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (IScriptModule module in scriptModules)
+                {
+                    if (module.Name == m_scene.DefaultScriptEngine)
+                    {
+                        SceneData = module.GetTopScripts(m_scene.RegionInfo.RegionID);
+                    }
+                }
             }
 
             List<LandStatReportItem> SceneReport = new List<LandStatReportItem>();

@@ -105,6 +105,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public UUID ItemID;
         public SceneObjectPart part;
 
+        public int ScriptScore = 0;
         private ScriptEngine m_ScriptEngine;
         public Scene World;
         public IScript Script;
@@ -744,7 +745,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     break;
             }
             //Add the event to the stats
-            part.ParentGroup.AddScriptEPS(1);
+            ScriptScore++;
+            m_ScriptEngine.ScriptEPS++;
             return true;
         }
 

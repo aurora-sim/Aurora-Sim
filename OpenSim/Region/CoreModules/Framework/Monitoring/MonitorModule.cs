@@ -433,6 +433,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor("Network Monitor");
                     IMonitor imagesMonitor = GetMonitor("Images Frame Time");
                     ITimeMonitor scriptMonitor = (ITimeMonitor)GetMonitor("Script Frame Time");
+                    IScriptCountMonitor totalScriptMonitor = (IScriptCountMonitor)GetMonitor("Total Script Count");
                     
                     #region various statistic googly moogly
 
@@ -506,7 +507,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[14].StatValue = m_currentScene.SceneGraph.GetChildAgentCount();
 
                     sb[15].StatID = (uint)Stats.NumScriptActive;
-                    sb[15].StatValue = m_currentScene.SceneGraph.GetActiveScriptsCount();
+                    sb[15].StatValue = totalScriptMonitor.ActiveScripts;
 
                     sb[16].StatID = (uint)Stats.LSLIPS;
                     sb[16].StatValue = 0; //This isn't used anymore, and has been superseeded by LSLEPS
@@ -554,7 +555,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[30].StatValue = 0;
 
                     sb[31].StatID = (uint)Stats.ScriptEPS;
-                    sb[31].StatValue = m_currentScene.SceneGraph.GetScriptEPS() / statsUpdateFactor;
+                    sb[31].StatValue = totalScriptMonitor.ScriptEPS / statsUpdateFactor;
 
                     sb[32].StatID = (uint)Stats.SimSpareTime;
                     //Spare time is the total time minus the stats that are in the same category in the client

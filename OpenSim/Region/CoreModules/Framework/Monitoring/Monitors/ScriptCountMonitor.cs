@@ -26,13 +26,42 @@
  */
 
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class ScriptCountMonitor : IMonitor
+    class ScriptCountMonitor : IScriptCountMonitor
     {
         private readonly Scene m_scene;
+
+        public int ActiveScripts
+        {
+            get
+            {
+                int ActiveScripts = 0;
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (IScriptModule module in modules)
+                {
+                    ActiveScripts += module.GetActiveScripts();
+                }
+                return ActiveScripts;
+            }
+        }
+
+        public int ScriptEPS
+        {
+            get
+            {
+                int ScriptEPS = 0;
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (IScriptModule module in modules)
+                {
+                    ScriptEPS += module.GetScriptEPS();
+                }
+                return ScriptEPS;
+            }
+        }
 
         public ScriptCountMonitor(Scene scene)
         {
@@ -43,7 +72,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.SceneGraph.GetActiveScriptsCount();
+            return 0;
         }
 
         public string GetName()
@@ -53,7 +82,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + " active script(s), " + m_scene.SceneGraph.GetScriptEPS() + " event(s) per second";
+            return ActiveScripts + " active script(s), " + ScriptEPS + " event(s) per second";
         }
 
         #endregion
