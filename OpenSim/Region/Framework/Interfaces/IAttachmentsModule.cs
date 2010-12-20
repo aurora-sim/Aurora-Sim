@@ -54,10 +54,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="attachPoint"></param>
         /// <param name="rot"></param>
         /// <param name="attachPos"></param>
-        /// <param name="silent"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObject(
-            IClientAPI remoteClient, SceneObjectGroup grp, int AttachmentPt, bool silent);
+            IClientAPI remoteClient, SceneObjectGroup grp, int AttachmentPt);
 
         /// <summary>
         /// Rez an attachment from user inventory and change inventory status to match.

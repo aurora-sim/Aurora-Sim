@@ -467,6 +467,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     else if (SP == null)
                     {
                         //Err.. this happens somehow.
+
+                        //If they canceled too late, remove them so the next tp does not fail.
+                        if (m_cancelingAgents.Contains(sp.UUID))
+                            m_cancelingAgents.Remove(sp.UUID);
                         return;
                     }
                 }
@@ -478,19 +482,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //They are root again, don't cross them!
                     return;
                 }
-                else */if (newSP == null)
+                else if (newSP == null)
                 {
                     //Err.. this happens somehow.
-                    return;
-                }
 
+                    //If they canceled too late, remove them so the next tp does not fail.
+                    if (m_cancelingAgents.Contains(sp.UUID))
+                        m_cancelingAgents.Remove(sp.UUID);
+                    return;
+                }*/
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
                 CrossAttachmentsIntoNewRegion(finalDestination, sp, true);
 
                 // Well, this is it. The agent is over there.
 
-                KillEntity(sp.Scene, sp.LocalId);
+                KillEntity(sp.Scene, sp);
 
                 // May need to logout or other cleanup
                 AgentHasMovedAway(sp.ControllingClient.SessionId, logout);
@@ -549,6 +556,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             EnableChildAgents(sp);
 
+            //If they canceled too late, remove them so the next tp does not fail.
+            if (m_cancelingAgents.Contains(sp.UUID))
+                m_cancelingAgents.Remove(sp.UUID);
+
             // Finally, kill the agent we just created at the destination.
 
             //Don't do this right now since we are killing way too many legitimate agents whose callbacks failed
@@ -578,9 +589,20 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        protected void KillEntity(Scene scene, uint localID)
+        protected void KillEntity(Scene scene, ISceneEntity entity)
         {
-            scene.SendKillObject(localID);
+            scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(scene.RegionInfo.RegionHandle, new ISceneEntity[] { entity });
+            });
+        }
+
+        protected void KillEntities(Scene scene, ISceneEntity[] grp)
+        {
+            scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(scene.RegionInfo.RegionHandle, grp);
+            });
         }
 
         protected virtual GridRegion GetFinalDestination(GridRegion region)
@@ -990,6 +1012,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //Scene.DumpChildrenSeeds(UUID);
             //DumpKnownRegions();
             return agent;
+        }
+
+        private void KillAttachments(ScenePresence agent)
+        {
+            foreach (SceneObjectGroup grp in agent.Attachments)
+            {
+                //Kill in all clients as it will be readded in the other region
+                KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());
+                //Now remove it from the Scene so that it will not come back
+                agent.Scene.SceneGraph.DeleteEntity(grp);
+                //And from storage as well
+                agent.Scene.DeleteFromStorage(grp.UUID);
+            }
         }
 
         /// <summary>
@@ -1746,12 +1781,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             List<SceneObjectGroup> m_attachments = sp.Attachments;
             lock (m_attachments)
             {
-                // Validate
-                foreach (SceneObjectGroup gobj in m_attachments)
-                {
-                    if (gobj == null || gobj.IsDeleted)
-                        return false;
-                }
+                //Kill the groups here, otherwise they will become ghost attachments 
+                //  and stay in the sim, they'll get readded below into the new sim
+                KillAttachments(sp);
 
                 foreach (SceneObjectGroup gobj in m_attachments)
                 {

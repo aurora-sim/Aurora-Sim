@@ -706,6 +706,7 @@ namespace OpenSim.Framework
     {
         public ISceneEntity Entity;
         public PrimUpdateFlags Flags;
+        public int Version = 0;
 
         public EntityUpdate(ISceneEntity entity, PrimUpdateFlags flags)
         {
@@ -1425,5 +1426,7 @@ namespace OpenSim.Framework
         void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name);
 
         void StopFlying(ISceneEntity presence);
+
+        void Reset();
     }
 }

@@ -134,6 +134,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return GetRemote(id);
         }
 
+        public virtual bool GetExists(string id)
+        {
+            return Get(id) != null;
+        }
+
         public AssetBase GetCached(string id)
         {
             if (m_cache != null)

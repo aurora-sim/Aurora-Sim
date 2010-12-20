@@ -69,7 +69,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     {
                         part.IsLoading = false;
                     }
-                    scene.AddPrimToScene(group);
+                    scene.SceneGraph.AddPrimToScene(group);
                 }
             }
             else
@@ -197,8 +197,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             foreach (SceneObjectGroup sceneObject in sceneObjects)
             {
-                 sceneObject.CreateScriptInstances(0, true, scene.DefaultScriptEngine, 0, UUID.Zero);
-                 sceneObject.ResumeScripts();
+                if (scene.SceneGraph.AddPrimToScene(sceneObject))
+                {
+                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    sceneObject.CreateScriptInstances(0, false, scene.DefaultScriptEngine, 0, UUID.Zero);
+                    sceneObject.ResumeScripts();
+                }
             }
         }
 

@@ -76,7 +76,8 @@ namespace OpenSim.Services.Friends
             if (String.Empty.Equals(dllName))
                 throw new Exception("No StorageProvider configured");
 
-            string realm = "friends";
+            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
+            string realm = "Friends";
             if (friendsConfig != null)
                 realm = friendsConfig.GetString("Realm", realm);
 

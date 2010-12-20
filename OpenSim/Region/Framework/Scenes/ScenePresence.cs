@@ -885,7 +885,7 @@ namespace OpenSim.Region.Framework.Scenes
             //
             m_sceneViewer.Reset();
 
-            m_isChildAgent = false;
+            IsChildAgent = false;
 
             // send the animations of the other presences to me
             m_scene.ForEachScenePresence(delegate(ScenePresence presence)
@@ -960,8 +960,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't zero out the velocity since this can cause problems when an avatar is making a region crossing,
             // depending on the exact timing.  This shouldn't matter anyway since child agent positions are not updated.
             //Velocity = new Vector3(0, 0, 0);
-            
-            m_isChildAgent = true;
+
+            IsChildAgent = true;
             m_scene.SwapRootAgentCount(true);
             RemoveFromPhysicalScene();
 
@@ -1102,16 +1102,8 @@ namespace OpenSim.Region.Framework.Scenes
                 look = new Vector3(0.99f, 0.042f, 0);
             }
 
-            // Prevent teleporting to an underground location
-            // (may crash client otherwise)
-            //
-            Vector3 pos = AbsolutePosition;
-            float ground = m_scene.GetNormalizedGroundHeight(pos.X, pos.Y);
-            if (pos.Z < ground + 1.5f)
-            {
-                pos.Z = ground + 1.5f;
-                AbsolutePosition = pos;
-            }
+            //Put the agent in an allowed area and above the terrain.
+            AbsolutePosition = Scene.LandChannel.GetNearestAllowedPosition(this);
 
             //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
@@ -1121,7 +1113,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_callbackURI = null;
             }
 
-            m_isChildAgent = false;
+            IsChildAgent = false;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
@@ -2256,7 +2248,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="rotation">The direction in which this avatar should now face.</param>
         public void AddNewMovement(Vector3 vec, Quaternion rotation)
         {
-            if (m_isChildAgent)
+            if (IsChildAgent)
             {
                 // WHAT??? we can't make them a root agent though... what if they shouldn't be here?
                 //  Or even worse, what if they are spoofing the client???
@@ -2368,7 +2360,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Util.FireAndForget(SendPrimUpdates);
 
-            if (!m_isChildAgent)
+            if (!IsChildAgent)
             {
                 //                PhysicsActor actor = m_physicsActor;
 
@@ -2974,6 +2966,19 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Reset()
         {
+            lock (m_attachments)
+            {
+                // Delete attachments from scene
+                // Don't try to save, as this thread won't live long
+                // enough to complete the save. This would cause no copy
+                // attachments to poof!
+                //
+                foreach (SceneObjectGroup grp in m_attachments)
+                {
+                    m_scene.DeleteSceneObject(grp, false, true);
+                }
+                m_attachments.Clear();
+            }
             // Put the child agent back at the center
             AbsolutePosition 
                 = new Vector3(((float)Constants.RegionSize * 0.5f), ((float)Constants.RegionSize * 0.5f), 70);
@@ -2981,6 +2986,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.ResetAnimations();
             m_parentID = UUID.Zero;
             m_parentPosition = Vector3.Zero;
+            ControllingClient.Reset();
         }
 
         #endregion

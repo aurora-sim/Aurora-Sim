@@ -382,6 +382,10 @@ namespace OpenSim.Services.Connectors
         {
             RetVal = false;
             List<GridRegion> regionsNotified = new List<GridRegion>();
+
+            if (!m_KnownNeighbors.ContainsKey(region.RegionID))
+                return regionsNotified;
+
             foreach (GridRegion neighbor in m_KnownNeighbors[region.RegionID])
             {
                 if (neighbor.RegionID == region.RegionID)

@@ -52,6 +52,10 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             m_scene = scene;
         }
 
+        public void Reset()
+        {
+        }
+
         public IScene Scene
         {
             get { return m_scene; }

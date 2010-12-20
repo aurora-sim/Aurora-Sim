@@ -763,7 +763,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.IsLoading = false;
             }
             //Reset IDs, etc
-            m_part.ParentGroup.Scene.PrepPrimForAdditionToScene(group);
+            m_part.ParentGroup.Scene.SceneGraph.PrepPrimForAdditionToScene(group);
 
             SceneObjectPart rootPart = group.GetChildPart(group.UUID);
 

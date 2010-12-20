@@ -473,16 +473,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                             if (parcelAvatarIsEntering.IsBannedFromLand(avatar.UUID))
                             {
                                 SendYouAreBannedNotice(avatar);
-                                Vector3? pos = landChannel.GetNearestAllowedPosition(avatar);
-                                if (pos.HasValue)
-                                    avatar.Teleport(pos.Value);
+                                Vector3 pos = landChannel.GetNearestAllowedPosition(avatar);
+                                avatar.Teleport(pos);
                             }
                             else if (parcelAvatarIsEntering.IsRestrictedFromLand(avatar.UUID))
                             {
                                 SendYouAreRestrictedNotice(avatar);
-                                Vector3? pos = landChannel.GetNearestAllowedPosition(avatar);
-                                if (pos.HasValue)
-                                    avatar.Teleport(pos.Value);
+                                Vector3 pos = landChannel.GetNearestAllowedPosition(avatar);
+                                avatar.Teleport(pos);
                             }
                         }
                     }
@@ -570,9 +568,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     else
                     {
                         //Kick them out
-                        Vector3? pos = landChannel.GetNearestAllowedPosition(clientAvatar);
-                        if (pos.HasValue)
-                            clientAvatar.Teleport(pos.Value);
+                        Vector3 pos = landChannel.GetNearestAllowedPosition(clientAvatar);
+                        clientAvatar.Teleport(pos);
                     }
                 }
                 SendLandUpdate(clientAvatar);
@@ -1674,7 +1671,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             land.LandData.Flags |= (uint)ParcelFlags.UseBanList;
 
-            Vector3? Pos = landChannel.GetNearestAllowedPosition(targetAvatar);
+            Vector3 Pos = landChannel.GetNearestAllowedPosition(targetAvatar);
 
             if (flags == 0)
             {
@@ -1687,14 +1684,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 });
             }
 
-            if (Pos.HasValue)
-                targetAvatar.Teleport(Pos.Value);
-            else
-            {
-                m_log.Warn("Unable to eject, no value found for pos!");
-                parcelOwner.ControllingClient.SendAlertMessage("Unable to eject, no value found for pos!");
-                return;
-            }
+            targetAvatar.Teleport(Pos);
 			
             targetAvatar.ControllingClient.SendAlertMessage("You have been ejected by " + parcelOwner.Name);
 			parcelOwner.ControllingClient.SendAlertMessage("Avatar Ejected.");

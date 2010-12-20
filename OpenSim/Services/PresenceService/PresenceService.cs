@@ -57,7 +57,8 @@ namespace OpenSim.Services.PresenceService
         {
             string dllName = String.Empty;
             string connString = String.Empty;
-            string realm = "presence";
+            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
+            string realm = "Presence";
 
             //
             // Try reading the [DatabaseService] section, if it exists

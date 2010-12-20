@@ -170,7 +170,7 @@ public class RegionCombinerLargeLandChannel : ILandChannel
             return RootRegionLandChannel.GetNearestAllowedParcel(avatarId, x, y);
         }
 
-        public Vector3? GetNearestAllowedPosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
+        public Vector3 GetNearestAllowedPosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
         {
             return RootRegionLandChannel.GetNearestAllowedPosition(avatar);
         }

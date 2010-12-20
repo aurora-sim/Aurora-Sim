@@ -982,9 +982,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float movementdivisor = 1f;
 
             if (!m_alwaysRun)
-                movementdivisor = walkDivisor * _parent_scene.TimeDilation; //Dynamically adjust it for slower sims
+                movementdivisor = walkDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f :_parent_scene.TimeDilation); //Dynamically adjust it for slower sims
             else
-                movementdivisor = runDivisor * _parent_scene.TimeDilation; //Dynamically adjust it for slower sims
+                movementdivisor = runDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
             
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&

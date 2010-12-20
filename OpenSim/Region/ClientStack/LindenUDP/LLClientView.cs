@@ -299,7 +299,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #region Enums
 
-
         public enum AssetErrors : int
         {
             MorePacketsToCome = 1,
@@ -449,7 +448,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             m_scene = scene;
 
-            m_entityUpdates = new PriorityQueue();
+            m_entityUpdates = new PriorityQueue(m_scene.Entities.Count > 1000 ? m_scene.Entities.Count : 1000);
             m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 
@@ -477,6 +476,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_prioritizer = new Prioritizer(m_scene);
 
             RegisterLocalPacketHandlers();
+        }
+
+        public void Reset()
+        {
+            //Reset the killObjectUpdate packet stats
+            m_killRecord = new HashSet<uint>();
         }
 
         public void SetDebugPacketLevel(int newDebug)
@@ -1629,15 +1634,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendKillObject(ulong regionHandle, ISceneEntity[] entities)
         {
+            if (entities.Length == 0)
+                return; //........... why!
+
 //            m_log.DebugFormat("[CLIENT]: Sending KillObjectPacket to {0} for {1} in {2}", Name, localID, regionHandle);
 
             KillObjectPacket kill = (KillObjectPacket)PacketPool.Instance.GetPacket(PacketType.KillObject);
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[entities.Length];
             int i = 0;
             bool brokenUpdate = false;
-
-            if (entities.Length == 0)
-                return; //........... why!
             
             foreach (ISceneEntity entity in entities)
             {
@@ -1659,6 +1664,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 kill.ObjectData[i] = block;
                 i++;
             }
+            //If the # of entities is not correct, we have to rebuild the entire packet
             if (brokenUpdate)
             {
                 int count = 0;
@@ -3792,9 +3798,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // after the root prim has been deleted.
                         if (m_killRecord.Contains(update.Entity.LocalId))
                         {
-        //                        m_log.WarnFormat(
-        //                            "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted",
-        //                            part.LocalId, Name);
+                                m_log.ErrorFormat(
+                                    "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. JIRA this at http://jira.openmetaverse.org/secure/CreateIssue!default.jspa !",
+                                    update.Entity.LocalId, Name);
                             continue;
                         }
 
