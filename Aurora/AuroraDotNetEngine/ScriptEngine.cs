@@ -687,6 +687,54 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 id.Running = state;
         }
 
+        /// <summary>
+        /// Get the total number of active (running) scripts on the object or avatar
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public int GetActiveScripts(ISceneEntity obj)
+        {
+            int activeScripts = 0;
+            if (obj is ScenePresence)
+            {
+                //Get all the scripts in the attachments and run through the loop
+                foreach (SceneObjectGroup grp in ((ScenePresence)obj).Attachments)
+                {
+                    activeScripts += GetActiveScripts(grp);
+                }
+            }
+            else //Ask the protection module how many Scripts there are
+            {
+                ScriptData[] scripts = ScriptProtection.GetScripts(obj.UUID);
+                foreach (ScriptData script in scripts)
+                {
+                    if (script.Running) activeScripts++;
+                }
+            }
+            return activeScripts;
+        }
+
+        /// <summary>
+        /// Get the total (running and non-running) scripts on the object or avatar
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public int GetTotalScripts(ISceneEntity obj)
+        {
+            int totalScripts = 0;
+            if (obj is ScenePresence)
+            {
+                //Get all the scripts in the attachments
+                foreach (SceneObjectGroup grp in ((ScenePresence)obj).Attachments)
+                {
+                    totalScripts += GetTotalScripts(grp);
+                }
+            }
+            else //Ask the protection module how many Scripts there are
+                totalScripts += ScriptProtection.GetScripts(obj.UUID).Length;
+            return totalScripts;
+        }
+
         #endregion
 
         #region Reset

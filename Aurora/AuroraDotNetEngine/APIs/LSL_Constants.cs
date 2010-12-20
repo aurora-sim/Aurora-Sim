@@ -512,8 +512,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger OBJECT_OWNER = 6;
         public static readonly LSLInteger OBJECT_GROUP = 7;
         public static readonly LSLInteger OBJECT_CREATOR = 8;
+        public static readonly LSLInteger OBJECT_RUNNING_SCRIPT_COUNT = 9;
+        public static readonly LSLInteger OBJECT_TOTAL_SCRIPT_COUNT = 10;
+        public static readonly LSLInteger OBJECT_SCRIPT_MEMORY = 11;
 
-        // Can not be public const?
         public static readonly vector ZERO_VECTOR = new vector(0.0, 0.0, 0.0);
         public static readonly rotation ZERO_ROTATION = new rotation(0.0, 0.0, 0.0, 1.0);
 

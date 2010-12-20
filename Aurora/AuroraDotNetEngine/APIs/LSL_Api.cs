@@ -11055,32 +11055,61 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     foreach (object o in args.Data)
                     {
-                        switch (o.ToString())
+                        if ((int)o == ScriptBaseClass.OBJECT_NAME)
                         {
-                            case "1":
-                                ret.Add(av.Firstname + " " + av.Lastname);
-                                break;
-                            case "2":
-                                ret.Add("");
-                                break;
-                            case "3":
-                                ret.Add(new LSL_Vector((double)av.AbsolutePosition.X, (double)av.AbsolutePosition.Y, (double)av.AbsolutePosition.Z));
-                                break;
-                            case "4":
-                                ret.Add(new LSL_Rotation((double)av.Rotation.X, (double)av.Rotation.Y, (double)av.Rotation.Z, (double)av.Rotation.W));
-                                break;
-                            case "5":
-                                ret.Add(new LSL_Vector(av.Velocity.X, av.Velocity.Y, av.Velocity.Z));
-                                break;
-                            case "6":
-                                ret.Add(id);
-                                break;
-                            case "7":
-                                ret.Add(UUID.Zero.ToString());
-                                break;
-                            case "8":
-                                ret.Add(UUID.Zero.ToString());
-                                break;
+                            ret.Add(av.Firstname + " " + av.Lastname);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_DESC)
+                        {
+                            ret.Add("");
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_POS)
+                        {
+                            ret.Add(new LSL_Vector((double)av.AbsolutePosition.X, (double)av.AbsolutePosition.Y, (double)av.AbsolutePosition.Z));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_ROT)
+                        {
+                            ret.Add(new LSL_Rotation((double)av.Rotation.X, (double)av.Rotation.Y, (double)av.Rotation.Z, (double)av.Rotation.W));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
+                        {
+                            ret.Add(new LSL_Vector(av.Velocity.X, av.Velocity.Y, av.Velocity.Z));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
+                        {
+                            ret.Add(id);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_GROUP)
+                        {
+                            ret.Add(UUID.Zero.ToString());
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_CREATOR)
+                        {
+                            ret.Add(UUID.Zero.ToString());
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
+                        {
+                            IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+                            int activeScripts = 0;
+                            foreach (IScriptModule module in modules)
+                            {
+                                activeScripts += module.GetActiveScripts(av);
+                            }
+                            ret.Add(activeScripts);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
+                        {
+                            IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+                            int totalScripts = 0;
+                            foreach (IScriptModule module in modules)
+                            {
+                                totalScripts += module.GetTotalScripts(av);
+                            }
+                            ret.Add(totalScripts);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
+                        {
+                            ret.Add(0);
                         }
                     }
                     return ret;
@@ -11090,32 +11119,61 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     foreach (object o in args.Data)
                     {
-                        switch (o.ToString())
+                        if ((int)o == ScriptBaseClass.OBJECT_NAME)
                         {
-                            case "1":
-                                ret.Add(obj.Name);
-                                break;
-                            case "2":
-                                ret.Add(obj.Description);
-                                break;
-                            case "3":
-                                ret.Add(new LSL_Vector(obj.AbsolutePosition.X, obj.AbsolutePosition.Y, obj.AbsolutePosition.Z));
-                                break;
-                            case "4":
-                                ret.Add(new LSL_Rotation(obj.RotationOffset.X, obj.RotationOffset.Y, obj.RotationOffset.Z, obj.RotationOffset.W));
-                                break;
-                            case "5":
-                                ret.Add(new LSL_Vector(obj.Velocity.X, obj.Velocity.Y, obj.Velocity.Z));
-                                break;
-                            case "6":
-                                ret.Add(obj.OwnerID.ToString());
-                                break;
-                            case "7":
-                                ret.Add(obj.GroupID.ToString());
-                                break;
-                            case "8":
-                                ret.Add(obj.CreatorID.ToString());
-                                break;
+                            ret.Add(obj.Name);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_DESC)
+                        {
+                            ret.Add(obj.Description);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_POS)
+                        {
+                            ret.Add(new LSL_Vector(obj.AbsolutePosition.X, obj.AbsolutePosition.Y, obj.AbsolutePosition.Z));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_ROT)
+                        {
+                            ret.Add(new LSL_Rotation(obj.RotationOffset.X, obj.RotationOffset.Y, obj.RotationOffset.Z, obj.RotationOffset.W));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
+                        {
+                            ret.Add(new LSL_Vector(obj.Velocity.X, obj.Velocity.Y, obj.Velocity.Z));
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
+                        {
+                            ret.Add(obj.OwnerID.ToString());
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_GROUP)
+                        {
+                            ret.Add(obj.GroupID.ToString());
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_CREATOR)
+                        {
+                            ret.Add(obj.CreatorID.ToString());
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
+                        {
+                            IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+                            int activeScripts = 0;
+                            foreach(IScriptModule module in modules)
+                            {
+                                activeScripts += module.GetActiveScripts(obj);
+                            }
+                            ret.Add(activeScripts);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
+                        {
+                            IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+                            int totalScripts = 0;
+                            foreach (IScriptModule module in modules)
+                            {
+                                totalScripts += module.GetTotalScripts(obj);
+                            }
+                            ret.Add(totalScripts);
+                        }
+                        else if ((int)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
+                        {
+                            ret.Add(0);
                         }
                     }
                     return ret;
