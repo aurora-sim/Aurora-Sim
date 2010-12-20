@@ -8,6 +8,7 @@
 *.mds
 *.pdb
 *.pidb
+*.sln.cache
 *.dll.build
 *.dll
 *.VisualState.xml
