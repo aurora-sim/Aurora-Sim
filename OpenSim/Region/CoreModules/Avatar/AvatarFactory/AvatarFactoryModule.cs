@@ -196,10 +196,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     if (changed)
                     {
                         //Delete the old baked textures
-                        foreach (UUID texture in ChangedTextures)
-                        {
-                            m_scene.AssetService.Delete(texture.ToString());
-                        }
+                        //foreach (UUID texture in ChangedTextures)
+                        //{
+                        //    m_scene.AssetService.Delete(texture.ToString());
+                        //}
                     }
                     // m_log.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
