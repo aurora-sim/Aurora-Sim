@@ -2778,7 +2778,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
             Transfer.TransferInfo.Status = (int)TransferPacketStatus.MorePacketsToCome;
             Transfer.TransferInfo.TargetType = 0;
-            string asset = Utils.BytesToString(req.AssetInf.Data);
+
             if (req.AssetRequestSource == 2)
             {
                 Transfer.TransferInfo.Params = new byte[20];
@@ -2812,9 +2812,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 int processedLength = 0;
-                int maxChunkSize = 1024;
+                int maxChunkSize = 2048;
                 int packetNumber = 0;
-                int firstPacketSize = 600;
 
                 while (processedLength < req.AssetInf.Data.Length)
                 {
@@ -2823,7 +2822,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                     TransferPacket.TransferData.TransferID = req.TransferRequestID;
 
-                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, packetNumber == 0 ? firstPacketSize : maxChunkSize);
+                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, maxChunkSize);
 
                     byte[] chunk = new byte[chunkSize];
                     Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
@@ -12508,13 +12507,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         private static int CalculateNumPackets(byte[] data)
         {
-            const uint m_firstPacketSize = 600;
-            const uint m_otherPacketSize = 1024;
+            const uint m_maxPacketSize = 2048;
+
+            int numPackets = 1;
 
             if (data == null)
                 return 0;
 
-            return (int)((data.LongLength - m_firstPacketSize + m_otherPacketSize - 1) / m_otherPacketSize + 1);
+            if (data.LongLength > m_maxPacketSize)
+            {
+                // over max number of bytes so split up file
+                long restData = data.LongLength - m_maxPacketSize;
+                int restPackets = (int)((restData + m_maxPacketSize - 1) / m_maxPacketSize);
+                numPackets += restPackets;
+            }
+
+            return numPackets;
         }
 
         #region IClientIPEndpoint Members
