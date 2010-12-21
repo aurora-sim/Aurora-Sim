@@ -186,6 +186,7 @@ namespace Aurora.BotManager
 
         public event GodLandStatRequest OnLandStatRequest;
         public event RequestObjectPropertiesFamily OnObjectGroupRequest;
+        public event AgentCachedTextureRequest OnAgentCachedTextureRequest;
 
         public event DetailedEstateDataRequest OnDetailedEstateDataRequest;
         public event SetEstateFlagsRequest OnSetEstateFlagsRequest;
@@ -443,7 +444,10 @@ namespace Aurora.BotManager
 
         public void SendInstantMessage(UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog, uint timeStamp)
         {
-            
+
+        }
+        public void SendAgentCachedTexture(List<CachedAgentArgs> args)
+        {
         }
 
         public void SendInstantMessage(UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog, uint timeStamp, UUID transactionID, bool fromGroup, byte[] binaryBucket)
@@ -762,10 +766,6 @@ namespace Aurora.BotManager
         }
 
         public void SetDebugPacketLevel(int newDebug)
-        {
-        }
-
-        public void InPacket(object NewPack)
         {
         }
 

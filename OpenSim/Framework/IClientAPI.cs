@@ -503,9 +503,10 @@ namespace OpenSim.Framework
     public delegate void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID, UUID ProposalID, string vote);
 
     public delegate void SimWideDeletesDelegate(IClientAPI client, int flags, UUID targetID);
-    
+
     public delegate void SendPostcard(IClientAPI client);
     public delegate void TeleportCancel(IClientAPI client);
+    public delegate void AgentCachedTextureRequest(IClientAPI client, List<CachedAgentArgs> args);
 
     #endregion
 
@@ -1066,13 +1067,13 @@ namespace OpenSim.Framework
         event TeleportCancel OnTeleportCancel;
         event GodlikeMessage OnEstateTelehubRequest;
         event ViewerStartAuction OnViewerStartAuction;
+        event AgentCachedTextureRequest OnAgentCachedTextureRequest;
         
         /// <summary>
         /// Set the debug level at which packet output should be printed to console.
         /// </summary>
         void SetDebugPacketLevel(int newDebug);
 
-        void InPacket(object NewPack);
         void ProcessInPacket(Packet NewPack);
         void Close();
         void Kick(string message);
@@ -1090,6 +1091,8 @@ namespace OpenSim.Framework
         /// Tell this client what items it should be wearing now
         /// </summary>
         void SendWearables(AvatarWearable[] wearables, int serial);
+
+        void SendAgentCachedTexture(List<CachedAgentArgs> args);
 
         /// <summary>
         /// Send information about the given agent's appearance to another client.

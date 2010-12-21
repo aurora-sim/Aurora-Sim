@@ -2173,11 +2173,6 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.InPacket(object NewPack)
-        {
-            
-        }
-
         void IClientAPI.ProcessInPacket(OpenMetaverse.Packets.Packet NewPack)
         {
             

@@ -749,6 +749,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnStopAnim += HandleStopAnim;
             m_controllingClient.OnForceReleaseControls += HandleForceReleaseControls;
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
+            m_controllingClient.OnAgentCachedTextureRequest += AgentCachedTexturesRequest;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
         }
 
@@ -1068,6 +1069,17 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Event Handlers
+
+        public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
+        {
+            //List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
+
+            //foreach (CachedAgentArgs arg in args)
+            //{
+            //}
+
+            client.SendAgentCachedTexture(args);
+        }
 
         /// <summary>
         /// Sets avatar height in the phyiscs plugin
