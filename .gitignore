@@ -8,7 +8,6 @@
 *.mds
 *.pdb
 *.pidb
-*.sln.cache
 *.dll.build
 *.dll
 *.VisualState.xml
@@ -58,17 +57,12 @@ bin/OpenSim.log
 bin/*.manifest
 bin/crashes/
 Examples/*.dll
-OpenSim.build
-OpenSim.sln
-OpenSim.suo
+Aurora.build
 Aurora.sln
 Aurora.suo
 Prebuild/Prebuild.build
 Prebuild/Prebuild.sln
 TestResult.xml
-cov/*
-OpenSim/OpenSim.userprefs
-OpenSim/OpenSim.usertasks
 TAGS
 *~
 Makefile.local
