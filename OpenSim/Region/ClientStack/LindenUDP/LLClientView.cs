@@ -2776,7 +2776,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //m_log.Debug("sending asset " + req.RequestAssetID);
             TransferInfoPacket Transfer = new TransferInfoPacket();
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
-            Transfer.TransferInfo.Status = (int)TransferPacketStatus.Done;
+            Transfer.TransferInfo.Status = (int)TransferPacketStatus.MorePacketsToCome;
             Transfer.TransferInfo.TargetType = 0;
             string asset = Utils.BytesToString(req.AssetInf.Data);
             if (req.AssetRequestSource == 2)
@@ -2816,35 +2816,28 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int packetNumber = 0;
                 int firstPacketSize = 600;
 
-                TransferPacketPacket TransferPacket = new TransferPacketPacket();
-                TransferPacket.TransferData.Packet = packetNumber;
-                TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
-                TransferPacket.TransferData.TransferID = req.TransferRequestID;
-                byte[] chunk = new byte[firstPacketSize];
-                Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
-                TransferPacket.TransferData.Data = chunk;
-                TransferPacket.TransferData.Status = (int)TransferPacketStatus.MorePacketsToCome;
-                TransferPacket.Header.Zerocoded = true;
-                OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
-                processedLength += firstPacketSize;
-                packetNumber++;
-
                 while (processedLength < req.AssetInf.Data.Length)
                 {
-                    TransferPacket = new TransferPacketPacket();
+                    TransferPacketPacket TransferPacket = new TransferPacketPacket();
                     TransferPacket.TransferData.Packet = packetNumber;
                     TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                     TransferPacket.TransferData.TransferID = req.TransferRequestID;
 
-                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, maxChunkSize);
-                    
-                    chunk = new byte[chunkSize];
-                    Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
+                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, packetNumber == 0 ? firstPacketSize : maxChunkSize);
 
+                    byte[] chunk = new byte[chunkSize];
+                    try
+                    {
+                        Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
+                    }
+                    catch(Exception ex)
+                    {
+                    }
                     TransferPacket.TransferData.Data = chunk;
 
+                    processedLength += chunkSize;
                     // 0 indicates more packets to come, 1 indicates last packet
-                    if (req.AssetInf.Data.Length - processedLength > maxChunkSize)
+                    if (req.AssetInf.Data.Length - processedLength == 0)
                     {
                         TransferPacket.TransferData.Status = (int)TransferPacketStatus.Done;
                     }
@@ -2855,7 +2848,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     TransferPacket.Header.Zerocoded = true;
                     OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
 
-                    processedLength += chunkSize;
                     packetNumber++;
                 }
             }
