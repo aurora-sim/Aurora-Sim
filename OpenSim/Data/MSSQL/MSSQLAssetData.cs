@@ -139,28 +139,6 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Fetch Asset from m_database
-        /// </summary>
-        /// <param name="assetID">the asset UUID</param>
-        /// <returns></returns>
-        override public bool GetExists(UUID assetID)
-        {
-            string sql = "SELECT id FROM assets WHERE id = @id";
-            using (SqlConnection conn = new SqlConnection(m_connectionString))
-            using (SqlCommand cmd = new SqlCommand(sql, conn))
-            {
-                cmd.Parameters.Add(m_database.CreateParameter("id", assetID));
-                conn.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                        return false;
-                    return false;
-                }
-            }
-        }
-
-        /// <summary>
         /// Create asset in m_database
         /// </summary>
         /// <param name="asset">the asset</param>

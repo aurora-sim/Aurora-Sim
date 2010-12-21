@@ -101,13 +101,14 @@ namespace OpenSim.Services.AssetService
             {
                 string loaderArgs = assetConfig.GetString("AssetLoaderArgs",
                         String.Empty);
-                bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", true);
+                bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", false);
+                bool forceAssetLoading = assetConfig.GetBoolean("ForceAssetLoading", false);
 
                 m_log.InfoFormat("[ASSET]: Loading default asset set from {0}", loaderArgs);
                 m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
                         delegate(AssetBase a)
                         {
-                            if (!assetLoaderEnabled && GetExists(a.ID))
+                            if (!assetLoaderEnabled && GetExists(a.ID) && !forceAssetLoading)
                                 return;
                             Store(a);
                         });
@@ -193,7 +194,7 @@ namespace OpenSim.Services.AssetService
             if (!UUID.TryParse(id, out assetID))
                 return false;
 
-            return m_Database.GetExists(assetID);
+            return m_Database.ExistsAsset(assetID);
         }
 
         public bool Get(string id, Object sender, AssetRetrieved handler)

@@ -87,28 +87,6 @@ namespace OpenSim.Data.SQLite
         }
 
         /// <summary>
-        /// Get whether the asset exists
-        /// </summary>
-        /// <param name="assetID"></param>
-        /// <returns></returns>
-        override public bool GetExists(UUID uuid)
-        {
-            lock (this)
-            {
-                using (SqliteCommand cmd = new SqliteCommand(ExistsAssetSQL, m_conn))
-                {
-                    cmd.Parameters.Add(new SqliteParameter(":UUID", uuid.ToString()));
-                    using (IDataReader reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                            return false;
-                    }
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Fetch Asset
         /// </summary>
         /// <param name="uuid">UUID of ... ?</param>

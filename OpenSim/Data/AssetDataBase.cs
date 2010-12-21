@@ -36,7 +36,6 @@ namespace OpenSim.Data
 {
     public abstract class AssetDataBase : IAssetDataPlugin
     {
-        public abstract bool GetExists(UUID uuid);
         public abstract AssetBase GetAsset(UUID uuid);
         
         public abstract void StoreAsset(AssetBase asset);
