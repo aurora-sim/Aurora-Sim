@@ -43,14 +43,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
     /// <summary>
     /// This module loads and saves OpenSimulator inventory archives
     /// </summary>
-    public class InventoryArchiverModule : INonSharedRegionModule, IInventoryArchiverModule
+    public class InventoryArchiverModule : ISharedRegionModule, IInventoryArchiverModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         public string Name { get { return "Inventory Archiver Module"; } }
         
-        public bool IsSharedModule { get { return true; } }
-
         /// <value>
         /// Enable or disable checking whether the iar user is actually logged in 
         /// </value>
