@@ -130,7 +130,18 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         #endregion
 
+        /// <summary>
+        /// Check for the existence of the baked texture assets. Request a rebake
+        /// unless checkonly is true.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="checkonly"></param>
         public bool ValidateBakedTextureCache(IClientAPI client)
+        {
+            return ValidateBakedTextureCache(client, true);
+        }
+
+        private bool ValidateBakedTextureCache(IClientAPI client, bool checkonly)
         {
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
@@ -146,14 +157,32 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             {
                 int idx = AvatarAppearance.BAKE_INDICES[i];
                 Primitive.TextureEntryFace face = sp.Appearance.Texture.FaceTextures[idx];
-                if (face == null || face.TextureID != AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+
+                // if there is no texture entry, skip it
+                if (face == null)
+                    continue;
+
+                // if the texture is one of the "defaults" then skip it
+                // this should probably be more intelligent (skirt texture doesnt matter
+                // if the avatar isnt wearing a skirt) but if any of the main baked 
+                // textures is default then the rest should be as well
+                if (face.TextureID == UUID.Zero || face.TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                     continue;
 
                 defonly = false; // found a non-default texture reference
 
                 if (!CheckBakedTextureAsset(client, face.TextureID, idx))
-                    return false;
+                {
+                    // the asset didn't exist if we are only checking, then we found a bad
+                    // one and we're done otherwise, ask for a rebake
+                    if (checkonly) return false;
+
+                    m_log.InfoFormat("[AVFACTORY] missing baked texture {0}, request rebake", face.TextureID);
+                    client.SendRebakeAvatarTextures(face.TextureID);
+                }
             }
+
+            m_log.InfoFormat("[AVFACTORY]: complete texture check for {0}", client.AgentId);
 
             // If we only found default textures, then the appearance is not cached
             return (defonly ? false : true);
@@ -173,8 +202,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            // m_log.WarnFormat("[AVFACTORY]: Start SetAppearance for {0}",client.AgentId);
+            m_log.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
+            // TODO: This is probably not necessary any longer, just assume the
+            // textureEntry set implies that the appearance transaction is complete
             bool changed = false;
 
             // Process the texture entry transactionally, this doesn't guarantee that Appearance is
@@ -188,68 +219,53 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
                     // m_log.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
 
-                    object[] o = new object[2];
-                    o[0] = client;
-                    o[1] = sp.Appearance.Texture;
-                    Util.FireAndForget(CheckBakedTextures, o);
+                    //object[] o = new object[2];
+                    //o[0] = client;
+                    //o[1] = sp.Appearance.Texture;
+                    //Util.FireAndForget(CheckBakedTextures, o);
 
                     if (changed)
                     {
                         //Delete the old baked textures
-                        //foreach (UUID texture in ChangedTextures)
-                        //{
-                        //    m_scene.AssetService.Delete(texture.ToString());
-                        //}
+                        foreach (UUID texture in ChangedTextures)
+                        {
+                            m_scene.AssetService.Delete(texture.ToString());
+                        }
                     }
                     // m_log.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
-
                 // Process the visual params, this may change height as well
                 if (visualParams != null)
                 {
-                    if (changed)
-                        sp.Appearance.SetVisualParams(visualParams);
-                    else
-                        changed = sp.Appearance.SetVisualParams(visualParams);
+                    changed = sp.Appearance.SetVisualParams(visualParams);
                     if (sp.Appearance.AvatarHeight > 0)
                         sp.SetHeight(sp.Appearance.AvatarHeight);
                 }
-            }
 
-            if (textureEntry != null)
-            {
-                //Check for banned clients here
-                Aurora.Framework.IBanViewersModule module = client.Scene.RequestModuleInterface<Aurora.Framework.IBanViewersModule>();
-                if (module != null)
-                    if (textureEntry != null)
+                // Process the baked texture array
+                if (textureEntry != null)
+                {
+                    //Check for banned clients here
+                    Aurora.Framework.IBanViewersModule module = client.Scene.RequestModuleInterface<Aurora.Framework.IBanViewersModule>();
+                    if (module != null)
                         module.CheckForBannedViewer(client, textureEntry);
-            }
-            
-            // If something changed in the appearance then queue an appearance save
-            if (changed)
-                QueueAppearanceSave(client.AgentId);
+                }
 
+
+                // If something changed in the appearance then queue an appearance save
+                if (changed)
+                    QueueAppearanceSave(client.AgentId);
+
+
+            }
             // And always queue up an appearance update to send out
             QueueAppearanceSend(client.AgentId);
 
-            // m_log.WarnFormat("[AVFACTORY]: Complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
-        }
 
-        private void CheckBakedTextures(object obj)
-        {
-            object[] o = (object[])obj;
-            IClientAPI client = (IClientAPI)o[0];
-            Primitive.TextureEntry texture = (Primitive.TextureEntry)o[1];
-            for (int i = 0; i < AvatarAppearance.BAKE_INDICES.Length; i++)
-            {
-                int idx = AvatarAppearance.BAKE_INDICES[i];
-                Primitive.TextureEntryFace face = texture.FaceTextures[idx];
-                if (face != null && face.TextureID != AppearanceManager.DEFAULT_AVATAR_TEXTURE)
-                {
-                    if (!CheckBakedTextureAsset(client, face.TextureID, idx))
-                        client.SendRebakeAvatarTextures(face.TextureID);
-                }
-            }
+
+
+
+            // m_log.WarnFormat("[AVFACTORY]: complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
         }
 
         /// <summary>
@@ -272,6 +288,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         #region UpdateAppearanceTimer
 
+        /// <summary>
+        /// Queue up a request to send appearance, makes it possible to
+        /// accumulate changes without sending out each one separately.
+        /// </summary>
         public void QueueAppearanceSend(UUID agentid)
         {
             // m_log.WarnFormat("[AVFACTORY]: Queue appearance send for {0}", agentid);
@@ -311,6 +331,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             // Send the appearance to everyone in the scene
             sp.SendAppearanceToAllOtherAgents();
+
+            // Send animations back to the avatar as well
+            sp.Animator.SendAnimPack();
         }
 
         private void HandleAppearanceSave(UUID agentid)
@@ -397,6 +420,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
 
             // m_log.WarnFormat("[AVFACTORY]: AvatarIsWearing called for {0}", client.AgentId);
+
+            // we need to clean out the existing textures
+            //sp.Appearance.ResetAppearance(); 
 
             // operate on a copy of the appearance so we don't have to lock anything
             AvatarAppearance avatAppearance = new AvatarAppearance(sp.Appearance, false);
