@@ -2827,6 +2827,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 TransferPacket.Header.Zerocoded = true;
                 OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
                 processedLength += firstPacketSize;
+                packetNumber++;
 
                 while (processedLength < req.AssetInf.Data.Length)
                 {
