@@ -93,6 +93,16 @@ namespace OpenSim.Framework
         protected Dictionary<UUID, UUID> m_items = new Dictionary<UUID, UUID>();
         protected List<UUID> m_ids = new List<UUID>();
 
+        public Dictionary<UUID, UUID> GetItems()
+        {
+            Dictionary<UUID, UUID> items = new Dictionary<UUID, UUID>();
+            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
+            {
+                items.Add(kvp.Key, kvp.Value);
+            }
+            return items;
+        }
+
         public AvatarWearable()
         {
         }

@@ -214,7 +214,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns>The scene object created.  null if the scene object already existed</returns>
         protected static SceneObjectGroup CreatePrimFromXml2(Scene scene, string xmlData)
         {
-            SceneObjectGroup obj = SceneObjectSerializer.FromXml2Format(xmlData, scene);
+            SceneObjectGroup obj = SceneXmlLoader.DeserializeGroupFromXml2(xmlData, scene);
             /*using (XmlTextReader reader = new XmlTextReader(new StringReader(xmlData)))
             {
                 SceneObjectGroup obj = new SceneObjectGroup();

@@ -61,9 +61,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected int m_numChildAgents = 0;
         protected int m_physicalPrim = 0;
 
-        protected int m_activeScripts = 0;
-        protected int m_scriptEPS = 0;
-
         /// <summary>
         /// The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
         /// dispensed.
@@ -227,16 +224,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void RemovePhysicalPrim(int number)
         {
             m_physicalPrim--;
-        }
-
-        protected internal void AddToScriptEPS(int number)
-        {
-            m_scriptEPS += number;
-        }
-
-        protected internal void AddActiveScripts(int number)
-        {
-            m_activeScripts += number;
         }
 
         public void DropObject(uint LocalID, IClientAPI remoteClient)
@@ -479,18 +466,6 @@ namespace OpenSim.Region.Framework.Scenes
             return m_physicalPrim;
         }
 
-        public int GetActiveScriptsCount()
-        {
-            return m_activeScripts;
-        }
-
-        public int GetScriptEPS()
-        {
-            int returnval = m_scriptEPS;
-            m_scriptEPS = 0;
-            return returnval;
-        }
-
         #endregion
 
         #region Get Methods
@@ -645,36 +620,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal EntityBase[] GetEntities()
         {
             return Entities.GetEntities();
-        }
-
-        public Dictionary<uint, float> GetTopScripts()
-        {
-            Dictionary<uint, float> topScripts = new Dictionary<uint, float>();
-
-            EntityBase[] EntityList = GetEntities();
-            int limit = 0;
-            foreach (EntityBase ent in EntityList)
-            {
-                if (ent is SceneObjectGroup)
-                {
-                    SceneObjectGroup grp = (SceneObjectGroup)ent;
-                    if ((grp.RootPart.GetEffectiveObjectFlags() & (uint)PrimFlags.Scripted) != 0)
-                    {
-                        if (grp.scriptScore >= 0.01)
-                        {
-                            topScripts.Add(grp.LocalId, grp.scriptScore);
-                            limit++;
-                            if (limit >= 100)
-                            {
-                                break;
-                            }
-                        }
-                        //grp.scriptScore = 0;
-                    }
-                }
-            }
-
-            return topScripts;
         }
 
         #endregion

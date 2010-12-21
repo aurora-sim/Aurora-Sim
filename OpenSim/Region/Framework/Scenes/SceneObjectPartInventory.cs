@@ -270,7 +270,6 @@ namespace OpenSim.Region.Framework.Scenes
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
                                     m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
-            m_part.ParentGroup.AddActiveScriptCount(LSLItems.Count);
             if(SendUpdate)
                 m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
         }
@@ -372,7 +371,6 @@ namespace OpenSim.Region.Framework.Scenes
                     bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
                         m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
-                    m_part.ParentGroup.AddActiveScriptCount(1);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
                     if (SendUpdate)
@@ -404,7 +402,6 @@ namespace OpenSim.Region.Framework.Scenes
                     string script = Utils.BytesToString(asset.Data);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
                         m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
-                    m_part.ParentGroup.AddActiveScriptCount(1);
                     if (SendUpdate)
                         m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                 }
@@ -454,7 +451,6 @@ namespace OpenSim.Region.Framework.Scenes
                             module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
                         }
                     }
-                    m_part.ParentGroup.AddActiveScriptCount(1);
                 }
             }
             HasInventoryChanged = true;
@@ -559,7 +555,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.RemoveScriptEvents(itemId);
                 
                 m_part.ParentGroup.Scene.EventManager.TriggerRemoveScript(m_part.LocalId, itemId);
-                m_part.ParentGroup.AddActiveScriptCount(-1);
             }
             else
             {

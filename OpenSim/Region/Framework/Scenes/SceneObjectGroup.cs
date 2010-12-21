@@ -224,8 +224,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public float scriptScore;
-
         //private bool m_isBackedUp = false;
 
         protected Dictionary<UUID, SceneObjectPart> m_parts = new Dictionary<UUID, SceneObjectPart>();
@@ -1318,20 +1316,6 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void OnGrabGroup(Vector3 offsetPos, IClientAPI remoteClient)
         {
             m_scene.EventManager.TriggerGroupGrab(UUID, offsetPos, remoteClient.AgentId);
-        }
-
-        public void AddScriptEPS(int count)
-        {
-            if (scriptScore + count >= float.MaxValue - count)
-                scriptScore = 0;
-
-            scriptScore += (float)count;
-            m_scene.AddToScriptEPS(count);
-        }
-
-        public void AddActiveScriptCount(int count)
-        {
-            m_scene.AddActiveScripts(count);
         }
 
         public void aggregateScriptEvents()
