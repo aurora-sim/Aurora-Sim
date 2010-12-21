@@ -2826,13 +2826,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, packetNumber == 0 ? firstPacketSize : maxChunkSize);
 
                     byte[] chunk = new byte[chunkSize];
-                    try
-                    {
-                        Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
-                    }
-                    catch(Exception ex)
-                    {
-                    }
+                    Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
                     TransferPacket.TransferData.Data = chunk;
 
                     processedLength += chunkSize;

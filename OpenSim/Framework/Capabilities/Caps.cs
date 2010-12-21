@@ -186,8 +186,6 @@ namespace OpenSim.Framework.Capabilities
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
                 m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
-                m_capsHandlers["UploadBakedTexture"] =
-                    new RestStreamHandler("POST", capsBase + m_uploadBakedTexturePath, UploadBakedTexture);
 
             }
             catch (Exception e)
