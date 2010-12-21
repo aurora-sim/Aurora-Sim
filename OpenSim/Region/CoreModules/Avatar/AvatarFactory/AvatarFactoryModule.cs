@@ -131,16 +131,20 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         #endregion
 
         /// <summary>
-        /// Check for the existence of the baked texture assets. Request a rebake
-        /// unless checkonly is true.
+        /// Check for the existence of the baked texture assets.
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="checkonly"></param>
         public bool ValidateBakedTextureCache(IClientAPI client)
         {
             return ValidateBakedTextureCache(client, true);
         }
 
+        /// <summary>
+        /// Check for the existence of the baked texture assets. Request a rebake
+        /// unless checkonly is true.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="checkonly"></param>
         private bool ValidateBakedTextureCache(IClientAPI client, bool checkonly)
         {
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
@@ -182,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 }
             }
 
-            m_log.InfoFormat("[AVFACTORY]: complete texture check for {0}", client.AgentId);
+            m_log.DebugFormat("[AVFACTORY]: complete texture check for {0}", client.AgentId);
 
             // If we only found default textures, then the appearance is not cached
             return (defonly ? false : true);
@@ -204,41 +208,43 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             m_log.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
-            // TODO: This is probably not necessary any longer, just assume the
-            // textureEntry set implies that the appearance transaction is complete
-            bool changed = false;
-
             // Process the texture entry transactionally, this doesn't guarantee that Appearance is
             // going to be handled correctly but it does serialize the updates to the appearance
             lock (m_setAppearanceLock)
             {
+                bool texturesChanged = false;
+                bool visualParamsChanged = false;
+
                 if (textureEntry != null)
                 {
                     List<UUID> ChangedTextures = new List<UUID>();
-                    changed = sp.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
+                    texturesChanged = sp.Appearance.SetTextureEntries(textureEntry, out ChangedTextures);
 
                     // m_log.WarnFormat("[AVFACTORY]: Prepare to check textures for {0}",client.AgentId);
 
-                    //object[] o = new object[2];
-                    //o[0] = client;
-                    //o[1] = sp.Appearance.Texture;
-                    //Util.FireAndForget(CheckBakedTextures, o);
-
-                    if (changed)
+                    //Do this async as it accesses the asset service (could be remote) multiple times
+                    Util.FireAndForget(delegate(object o) 
                     {
-                        //Delete the old baked textures
+                        //Delete the old baked textures from the DB that have changed
                         foreach (UUID texture in ChangedTextures)
                         {
                             m_scene.AssetService.Delete(texture.ToString());
                         }
-                    }
+
+                        //Validate all the textures now that we've updated
+                        ValidateBakedTextureCache(client, false);
+                    });
+
                     // m_log.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
                 }
                 // Process the visual params, this may change height as well
                 if (visualParams != null)
                 {
-                    changed = sp.Appearance.SetVisualParams(visualParams);
-                    if (sp.Appearance.AvatarHeight > 0)
+                    //Now update the visual params and see if they have changed
+                    visualParamsChanged = sp.Appearance.SetVisualParams(visualParams);
+
+                    //Fix the height only if the parameters have changed
+                    if (visualParamsChanged && sp.Appearance.AvatarHeight > 0)
                         sp.SetHeight(sp.Appearance.AvatarHeight);
                 }
 
@@ -251,19 +257,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         module.CheckForBannedViewer(client, textureEntry);
                 }
 
-
                 // If something changed in the appearance then queue an appearance save
-                if (changed)
+                if (texturesChanged || visualParamsChanged)
                     QueueAppearanceSave(client.AgentId);
-
-
             }
             // And always queue up an appearance update to send out
             QueueAppearanceSend(client.AgentId);
-
-
-
-
 
             // m_log.WarnFormat("[AVFACTORY]: complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
         }
@@ -398,8 +397,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            // m_log.WarnFormat("[AVFACTORY]: Received request for wearables of {0}", client.AgentId);
-
+            //Make sure that the timer doesn't go off in the ScenePresence that this avatar hasn't requested its wearables yet
             sp.m_InitialHasWearablesBeenSent = true;
             m_log.DebugFormat("[AVFACTORY]: Received request for wearables of {0}", sp.Name);
             client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
@@ -419,10 +417,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            // m_log.WarnFormat("[AVFACTORY]: AvatarIsWearing called for {0}", client.AgentId);
-
-            // we need to clean out the existing textures
-            //sp.Appearance.ResetAppearance(); 
+            m_log.DebugFormat("[AVFACTORY]: AvatarIsWearing called for {0}", client.AgentId);
 
             // operate on a copy of the appearance so we don't have to lock anything
             AvatarAppearance avatAppearance = new AvatarAppearance(sp.Appearance, false);
@@ -443,8 +438,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
             sp.Appearance = avatAppearance;
-            QueueAppearanceSend(client.AgentId);
-            QueueAppearanceSave(client.AgentId);
+            //Do not save or send! The client loops back and sends a bunch of SetAppearance (handled above) and that takes care of it
         }
 
         private void SetAppearanceAssets(UUID userID, ref AvatarAppearance appearance)

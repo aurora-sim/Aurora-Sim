@@ -12643,10 +12643,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 Vector3 pos = presence.AbsolutePosition;
 
-                if (presence.Appearance.AvatarHeight != 127.0f)
-                    pos += new Vector3(0f, 0f, (presence.Appearance.AvatarHeight/6f));
-                else
-                    pos += new Vector3(0f, 0f, (1.56f/6f));
+                pos += new Vector3(0f, 0f, (presence.Appearance.AvatarHeight/6f));
 
                 presence.AbsolutePosition = pos;
 
@@ -12656,10 +12653,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // certain amount..   because the LLClient wouldn't land in that situation anyway.
 
                 // why are we still testing for this really old height value default???
-                if (presence.Appearance.AvatarHeight != 127.0f)
-                    presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
-                else
-                    presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - (1.56f/6f));
+                presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
 
 
                 ImprovedTerseObjectUpdatePacket.ObjectDataBlock block =
