@@ -73,8 +73,8 @@ namespace OpenSim.Services.CapsService
             List<IRequestHandler> handlers = new List<IRequestHandler>();
             handlers.Add(new StreamHandler("GET", handler.CreateCAPS("GetTexture"),
                                                       ProcessGetTexture));
-            m_capsObjectPath = "/CAPS/" + handler.CapsObjectPath + "/";
-            handlers.Add(new RestStreamHandler("GET", handler.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+            m_capsObjectPath = "/CAPS/" + handler.CapsObjectPath;
+            handlers.Add(new RestStreamHandler("POST", handler.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
                                                       UploadBakedTexture));
             return handlers;
         }
@@ -390,12 +390,7 @@ namespace OpenSim.Services.CapsService
                         new BinaryStreamHandler("POST", m_capsObjectPath + uploaderPath,
                         uploader.uploaderCaps));
 
-                string protocol = "http://";
-
-                if (m_server.UseSSL)
-                    protocol = "https://";
-
-                string uploaderURL = protocol + m_hostName + m_capsObjectPath + uploaderPath;
+                string uploaderURL = m_hostName + m_capsObjectPath + uploaderPath + "/";
                 OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";

@@ -443,15 +443,10 @@ namespace OpenSim.Services.CapsService
                 new OpenSim.Framework.Capabilities.Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
                                   asset_type, "/CAPS/" + m_handler.CapsObjectPath + "/" + uploaderPath, m_server);
             m_server.AddStreamHandler(
-                new BinaryStreamHandler("POST", "/CAPS/" + m_handler.CapsObjectPath + "/" + uploaderPath, uploader.uploaderCaps));
+                new BinaryStreamHandler("POST", "/CAPS/" + m_handler.CapsObjectPath + uploaderPath + "/", uploader.uploaderCaps));
 
-            string protocol = "http://";
-
-            if (m_server.UseSSL)
-                protocol = "https://";
-
-            string uploaderURL = protocol + m_handler.PublicHandler.HostURI + "/CAPS/" + 
-                m_handler.CapsObjectPath + "/" + uploaderPath;
+            string uploaderURL = m_handler.PublicHandler.HostURI + "/CAPS/" + 
+                m_handler.CapsObjectPath + uploaderPath + "/";
             uploader.OnUpLoad += UploadCompleteHandler;
             map = new OSDMap();
             map["uploader"] = uploaderURL;
