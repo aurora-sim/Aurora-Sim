@@ -51,21 +51,35 @@ namespace OpenSim.Services.CapsService
         #endregion Stream Handler
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly string m_uploadBakedTexturePath = "0010";
         protected IPrivateCapsService m_handler;
         protected IAssetService m_assetService;
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
         protected string REDIRECT_URL = null;
+        protected string m_capsObjectPath = "";
+        protected IHttpServer m_server;
+        protected string m_hostName;
+        protected UUID m_agentID;
 
         public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
             m_assetService = handler.AssetService;
             m_handler = handler;
+            m_server = server;
+            m_hostName = handler.PublicHandler.HostURI;
+            m_agentID = agentID;
+
             List<IRequestHandler> handlers = new List<IRequestHandler>();
             handlers.Add(new StreamHandler("GET", handler.CreateCAPS("GetTexture"),
                                                       ProcessGetTexture));
+            m_capsObjectPath = handler.CapsBase;
+            handlers.Add(new RestStreamHandler("GET", handler.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+                                                      UploadBakedTexture));
             return handlers;
         }
+
+        #region Get Texture
 
         private byte[] ProcessGetTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
@@ -351,5 +365,105 @@ namespace OpenSim.Services.CapsService
             }
             return null;
         }
+
+        #endregion
+
+        #region Baked Textures
+
+        public string UploadBakedTexture(string request, string path,
+                string param, OSHttpRequest httpRequest,
+                OSHttpResponse httpResponse)
+        {
+            try
+            {
+                //m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
+                //        m_regionName);
+
+                string uploaderPath = Util.RandomClass.Next(1000, 8000).ToString("0000");
+
+                BakedTextureUploader uploader =
+                    new BakedTextureUploader(m_capsObjectPath + uploaderPath,
+                        m_server);
+                uploader.OnUpLoad += BakedTextureUploaded;
+
+                m_server.AddStreamHandler(
+                        new BinaryStreamHandler("POST", m_capsObjectPath + uploaderPath,
+                        uploader.uploaderCaps));
+
+                string protocol = "http://";
+
+                if (m_server.UseSSL)
+                    protocol = "https://";
+
+                string uploaderURL = protocol + m_hostName + m_capsObjectPath + uploaderPath;
+                OSDMap map = new OSDMap();
+                map["uploader"] = uploaderURL;
+                map["state"] = "upload";
+                return OSDParser.SerializeLLSDXmlString(map);
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[CAPS]: " + e.ToString());
+            }
+
+            return null;
+        }
+
+        public class BakedTextureUploader
+        {
+            public event UploadedBakedTexture OnUpLoad;
+            private UploadedBakedTexture handlerUpLoad = null;
+
+            private string uploaderPath = String.Empty;
+            private UUID newAssetID;
+            private IHttpServer httpListener;
+
+            public BakedTextureUploader(string path, IHttpServer httpServer)
+            {
+                newAssetID = UUID.Random();
+                uploaderPath = path;
+                httpListener = httpServer;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                string res = String.Empty;
+                OSDMap map = new OSDMap();
+                map["new_asset"] = newAssetID.ToString();
+                map["new_inventory_item"] = UUID.Zero;
+                map["state"] = "complete";
+                res = OSDParser.SerializeLLSDXmlString(map);
+                httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    handlerUpLoad(newAssetID, data);
+                }
+
+                return res;
+            }
+        }
+
+        public void BakedTextureUploaded(UUID assetID, byte[] data)
+        {
+            m_log.InfoFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
+            AssetBase asset;
+            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
+            asset.Data = data;
+            asset.Temporary = false;
+            asset.Flags = AssetFlags.Deletable;
+            asset.Local = false; // Local assets aren't persisted, non-local are
+            m_assetService.Store(asset);
+        }
+
+        #endregion
     }
 }

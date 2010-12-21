@@ -93,7 +93,7 @@ namespace OpenSim.Framework.Capabilities
         // private static readonly string m_provisionVoiceAccountRequestPath = "0008/";// This is in a module.
 
         // private static readonly string m_remoteParcelRequestPath = "0009/";// This is in the LandManagementModule.
-        private static readonly string m_uploadBakedTexturePath = "0010/";
+        //private static readonly string m_uploadBakedTexturePath = "0010/";
 
         //private string eventQueue = "0100/";
         private IScene m_Scene;
@@ -179,9 +179,6 @@ namespace OpenSim.Framework.Capabilities
             {
                 // the root of all evil
                 m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
-
-                m_capsHandlers["UploadBakedTexture"] =
-                    new RestStreamHandler("POST", capsBase + m_uploadBakedTexturePath, UploadBakedTexture);
 
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
@@ -383,47 +380,6 @@ namespace OpenSim.Framework.Capabilities
             return null;
         }
 
-        public string UploadBakedTexture(string request, string path,
-                string param, OSHttpRequest httpRequest,
-                OSHttpResponse httpResponse)
-        {
-            try
-            {
-                //m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
-                //        m_regionName);
-
-                string capsBase = "/CAPS/" + m_capsObjectPath;
-                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
-
-                BakedTextureUploader uploader =
-                    new BakedTextureUploader(capsBase + uploaderPath,
-                        m_httpListener);
-                uploader.OnUpLoad += BakedTextureUploaded;
-
-                m_httpListener.AddStreamHandler(
-                        new BinaryStreamHandler("POST", capsBase + uploaderPath,
-                        uploader.uploaderCaps));
-
-                string protocol = "http://";
-
-                if (m_httpListener.UseSSL)
-                    protocol = "https://";
-
-                string uploaderURL = protocol + m_httpListenerHostName + ":" +
-                        m_httpListenPort.ToString() + capsBase + uploaderPath;
-                OSDMap map = new OSDMap();
-                map["uploader"] = uploaderURL;
-                map["state"] = "upload";
-                return OSDParser.SerializeLLSDXmlString(map);
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: " + e.ToString());
-            }
-
-            return null;
-        }
-
         /// <summary>
         /// Called by the notecard update handler.  Provides a URL to which the client can upload a new asset.
         /// </summary>
@@ -603,33 +559,6 @@ namespace OpenSim.Framework.Capabilities
             {
                 AddNewInventoryItem(m_agentID, item);
             }
-        }
-
-        public void BakedTextureUploaded(UUID assetID, byte[] data)
-        {
-            m_log.InfoFormat("[CAPS]: Received baked texture {0}", assetID.ToString());
-            IScenePresence sp = null;
-            if(m_Scene.TryGetScenePresence(m_agentID, out sp))
-            {
-                IJ2KDecoder j2kDecoder = sp.ControllingClient.Scene.RequestModuleInterface<IJ2KDecoder>();
-                if (j2kDecoder != null)
-                {
-                    if (!j2kDecoder.Decode(assetID, data))
-                    {
-                        //Uhoh, bad upload, rerequest them from the client
-                        m_log.DebugFormat("[CAPS]: Received corrupted baked texture {0}", assetID.ToString());
-                        sp.ControllingClient.SendRebakeAvatarTextures(assetID);
-                        return;
-                    }
-                }
-            }
-            AssetBase asset;
-            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
-            asset.Data = data;
-            asset.Temporary = false;
-            asset.Flags = AssetFlags.Deletable;
-            asset.Local = !m_persistBakedTextures; // Local assets aren't persisted, non-local are
-            m_assetCache.Store(asset);
         }
 
         /// <summary>
@@ -914,49 +843,6 @@ namespace OpenSim.Framework.Capabilities
                 bw.Write(data);
                 bw.Close();
                 fs.Close();
-            }
-        }
-
-        public class BakedTextureUploader
-        {
-            public event UploadedBakedTexture OnUpLoad;
-            private UploadedBakedTexture handlerUpLoad = null;
-
-            private string uploaderPath = String.Empty;
-            private UUID newAssetID;
-            private IHttpServer httpListener;
-
-            public BakedTextureUploader(string path, IHttpServer httpServer)
-            {
-                newAssetID = UUID.Random();
-                uploaderPath = path;
-                httpListener = httpServer;
-            }
-
-            /// <summary>
-            ///
-            /// </summary>
-            /// <param name="data"></param>
-            /// <param name="path"></param>
-            /// <param name="param"></param>
-            /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
-            {
-                string res = String.Empty;
-                OSDMap map = new OSDMap();
-                map["new_asset"] = newAssetID.ToString();
-                map["new_inventory_item"] = UUID.Zero;
-                map["state"] = "complete";
-                res = OSDParser.SerializeLLSDXmlString(map);
-                httpListener.RemoveStreamHandler("POST", uploaderPath);
-
-                handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    handlerUpLoad(newAssetID, data);
-                }
-
-                return res;
             }
         }
     }
