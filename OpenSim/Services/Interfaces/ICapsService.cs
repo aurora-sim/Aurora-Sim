@@ -38,7 +38,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="CAPS">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
         /// <param name="regionHandle">The region handle of the region the user is being added to</param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle);
+        string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, string CAPSPath, ulong regionHandle);
 
         /// <summary>
         /// Add the given user's CAPS to the general service if it does not already exist
@@ -131,6 +131,11 @@ namespace OpenSim.Services.Interfaces
         /// Looks like '/CAPS/(UUID)0000/'
         /// </summary>
         string CapsBase { get; }
+
+        /// <summary>
+        /// The UUID of the CapsBase
+        /// </summary>
+        string CapsObjectPath { get; }
 
         /// <summary>
         /// The agent we are serving

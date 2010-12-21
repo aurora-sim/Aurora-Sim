@@ -44,24 +44,15 @@ namespace OpenSim.Framework.Capabilities
         string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
         byte[] data, string inventoryType, string assetType);
 
-    public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
-
     public delegate string UpdateItem(UUID itemID, byte[] data);
 
     public delegate void UpdateTaskScript(UUID itemID, UUID primID, bool isScriptRunning, byte[] data, ref ArrayList errors);
-
-    public delegate void NewInventoryItem(UUID userID, InventoryItemBase item);
-
-    public delegate void NewAsset(AssetBase asset);
 
     public delegate string ItemUpdatedCallback(UUID userID, UUID itemID, byte[] data);
 
     public delegate ArrayList TaskScriptUpdatedCallback(UUID userID, UUID itemID, UUID primID,
                                                     bool isScriptRunning, byte[] data);
 
-    public delegate InventoryCollection FetchInventoryDescendentsCAPS(UUID agentID, UUID folderID, UUID ownerID,
-                                                    bool fetchFolders, bool fetchItems, int sortOrder, out int version);
-    
     public class Caps
     {
         private static readonly ILog m_log =
@@ -80,7 +71,7 @@ namespace OpenSim.Framework.Capabilities
 
         private static readonly string m_requestPath = "0000/";
         // private static readonly string m_mapLayerPath = "0001/";
-        private static readonly string m_newInventory = "0002/";
+        //private static readonly string m_newInventory = "0002/";
         //private static readonly string m_requestTexture = "0003/";
         private static readonly string m_notecardUpdatePath = "0004/";
         private static readonly string m_notecardTaskUpdatePath = "0005/";
@@ -122,8 +113,6 @@ namespace OpenSim.Framework.Capabilities
 
         // These are callbacks which will be setup by the scene so that we can update scene data when we
         // receive capability calls
-        public NewInventoryItem AddNewInventoryItem = null;
-        public NewAsset AddNewAsset = null;
         public ItemUpdatedCallback ItemUpdatedCall = null;
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
         public OSDMap RequestMap = new OSDMap();
@@ -169,8 +158,6 @@ namespace OpenSim.Framework.Capabilities
             string capsBase = "/CAPS/" + m_capsObjectPath;
 
             RegisterRegionServiceHandlers(capsBase);
-            RegisterInventoryServiceHandlers(capsBase);
-
         }
 
         public void RegisterRegionServiceHandlers(string capsBase)
@@ -180,63 +167,17 @@ namespace OpenSim.Framework.Capabilities
                 // the root of all evil
                 m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
 
+                //Region Server bound
                 m_capsHandlers["UpdateScriptTaskInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
                 m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
 
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: " + e.ToString());
-            }
-        }
-
-        public void RegisterInventoryServiceHandlers(string capsBase)
-        {
-            try
-            {
-                // I don't think this one works...
-                m_capsHandlers["NewFileAgentInventory"] =
-                    new RestStreamHandler("POST", capsBase + m_newInventory, NewAgentInventoryRequest);
+                //Unless the script engine goes, region server bound
                 m_capsHandlers["UpdateNotecardAgentInventory"] =
                     new RestStreamHandler("POST", capsBase + m_notecardUpdatePath, NoteCardAgentInventory);
-                
                 m_capsHandlers["UpdateScriptAgentInventory"] = m_capsHandlers["UpdateNotecardAgentInventory"];
-                m_capsHandlers["UpdateScriptAgent"] = m_capsHandlers["UpdateScriptAgentInventory"];
-                
-                //
-                //START: MOVED TO THE CAPS SERVICE
-                //
+                m_capsHandlers["UpdateScriptAgent"] = m_capsHandlers["UpdateNotecardAgentInventory"];
 
-                // As of RC 1.22.9 of the Linden client this is
-                // supported
-
-                //m_capsHandlers["WebFetchInventoryDescendents"] =
-                //    new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryDescendentsRequest);
-
-                // justincc: I've disabled the CAPS service for now to fix problems with selecting textures, and
-                // subsequent inventory breakage, in the edit object pane (such as mantis 1085).  This requires
-                // enhancements (probably filling out the folder part of the LLSD reply) to our CAPS service,
-                // but when I went on the Linden grid, the
-                // simulators I visited (version 1.21) were, surprisingly, no longer supplying this capability.  Instead,
-                // the 1.19.1.4 client appeared to be happily flowing inventory data over UDP
-                //
-                // This is very probably just a temporary measure - once the CAPS service appears again on the Linden grid
-                // we will be
-                // able to get the data we need to implement the necessary part of the protocol to fix the issue above.
-
-                //Reenabled
-                //m_capsHandlers["FetchInventoryDescendents"] =
-                //       new RestStreamHandler("POST", capsBase + m_fetchInventoryPath, FetchInventoryRequest);
-
-                 //m_capsHandlers["RequestTextureDownload"] = new RestStreamHandler("POST",
-                 //                                                                 capsBase + m_requestTexture,
-                 //                                                                 RequestTexture);
-
-
-                //
-                //END: MOVED TO THE CAPS SERVICE
-                //
             }
             catch (Exception e)
             {
@@ -308,20 +249,6 @@ namespace OpenSim.Framework.Capabilities
             //m_log.DebugFormat("[CAPS] CapsRequest {0}", result);
 
             return result;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        public string RequestTexture(string request, string path, string param)
-        {
-            m_log.Debug("texture request " + request);
-            // Needs implementing (added to remove compiler warning)
-            return String.Empty;
         }
 
         /// <summary>
@@ -417,148 +344,6 @@ namespace OpenSim.Framework.Capabilities
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
             return OSDParser.SerializeLLSDXmlString(map);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="llsdRequest"></param>
-        /// <returns></returns>
-        public string NewAgentInventoryRequest(string request, string path, string param,
-                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
-            string asset_type = map["asset_type"].AsString();
-            //m_log.Debug("[CAPS]: NewAgentInventoryRequest Request is: " + llsdRequest.ToString());
-            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
-
-            if (asset_type == "texture" ||
-                asset_type == "animation" ||
-                asset_type == "sound")
-            {
-                IClientAPI client = null;
-                IScenePresence sp = null;
-                if(m_Scene.TryGetScenePresence(m_agentID, out sp))
-                {
-                    client = sp.ControllingClient;
-                    IScene scene = client.Scene;
-
-                    IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
-
-                    if (mm != null)
-                    {
-                        if (!mm.UploadCovered(client, mm.UploadCharge))
-                        {
-                            if (client != null)
-                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
-                            
-                            map = new OSDMap();
-                            map["uploader"] = "";
-                            map["state"] = "error";
-                            return OSDParser.SerializeLLSDXmlString(map);
-                        }
-                        else
-                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
-                    }
-                }
-            }
-
-
-            string assetName = map["name"].AsString();
-            string assetDes = map["description"].AsString();
-            UUID parentFolder = map["folder_id"].AsUUID();
-            string inventory_type = map["inventory_type"].AsString();
-            
-            string capsBase = "/CAPS/" + m_capsObjectPath;
-            UUID newAsset = UUID.Random();
-            UUID newInvItem = UUID.Random();
-            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
-
-            AssetUploader uploader =
-                new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, capsBase + uploaderPath, m_httpListener);
-            m_httpListener.AddStreamHandler(
-                new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
-
-            string protocol = "http://";
-
-            if (m_httpListener.UseSSL)
-                protocol = "https://";
-
-            string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
-                                 uploaderPath;
-            uploader.OnUpLoad += UploadCompleteHandler;
-            map = new OSDMap();
-            map["uploader"] = uploaderURL;
-            map["state"] = "upload";
-            return OSDParser.SerializeLLSDXmlString(map);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="assetID"></param>
-        /// <param name="inventoryItem"></param>
-        /// <param name="data"></param>
-        public void UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
-                                          UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
-                                          string assetType)
-        {
-            sbyte assType = 0;
-            sbyte inType = 0;
-
-            if (inventoryType == "sound")
-            {
-                inType = 1;
-                assType = 1;
-            }
-            else if (inventoryType == "animation")
-            {
-                inType = 19;
-                assType = 20;
-            }
-            else if (inventoryType == "wearable")
-            {
-                inType = 18;
-                switch (assetType)
-                {
-                    case "bodypart":
-                        assType = 13;
-                        break;
-                    case "clothing":
-                        assType = 5;
-                        break;
-                }
-            }
-
-            AssetBase asset;
-            asset = new AssetBase(assetID, assetName, assType, m_agentID.ToString());
-            asset.Data = data;
-            if (AddNewAsset != null)
-                AddNewAsset(asset);
-            else if (m_assetCache != null)
-                m_assetCache.Store(asset);
-
-            InventoryItemBase item = new InventoryItemBase();
-            item.Owner = m_agentID;
-            item.CreatorId = m_agentID.ToString();
-            item.ID = inventoryItem;
-            item.AssetID = asset.FullID;
-            item.Description = assetDescription;
-            item.Name = assetName;
-            item.AssetType = assType;
-            item.InvType = inType;
-            item.Folder = parentFolder;
-            item.CurrentPermissions = (uint)PermissionMask.All;
-            item.BasePermissions = (uint)PermissionMask.All;
-            item.EveryOnePermissions = 0;
-            item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
-            item.CreationDate = Util.UnixTimeSinceEpoch();
-
-            if (AddNewInventoryItem != null)
-            {
-                AddNewInventoryItem(m_agentID, item);
-            }
         }
 
         /// <summary>

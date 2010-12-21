@@ -144,13 +144,15 @@ namespace OpenSim.Services.CapsService
         /// <param name="CAPS"></param>
         /// <param name="regionHandle"></param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, ulong regionHandle)
+        public string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, string CAPSPath, ulong regionHandle)
         {
             //Add the HostURI so that it ends up here
             string CAPSBase = CAPS;
             CAPS = HostURI + CAPS;
             //This makes the new SEED url on the CAPS server
-            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, m_GridUserService, m_GridService, m_PresenceService, m_AssetService, SimCAPS, AgentID, regionHandle, this, CAPS, CAPSBase));
+            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, 
+                m_GridUserService, m_GridService, m_PresenceService, m_AssetService, SimCAPS,
+                AgentID, regionHandle, this, CAPS, CAPSBase, CAPSPath));
             //Now make sure we didn't use an old one or something
             IPrivateCapsService service = GetCapsService(regionHandle, AgentID);
             return service.CapsURL;

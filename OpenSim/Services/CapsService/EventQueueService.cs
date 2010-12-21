@@ -223,9 +223,10 @@ namespace OpenSim.Services.CapsService
         public string CreateNewCAPSClient(string SeedCap, ulong regionHandle, UUID avatarID)
         {
             //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-            string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+            string pathBase = CapsUtil.GetRandomCapsObjectPath();
+            string newSeedCap = CapsUtil.GetCapsSeedPath(pathBase);
             IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService, m_handlers[avatarID].AssetService,
-                SeedCap, avatarID, regionHandle, m_handlers[avatarID].PublicHandler, m_handlers[avatarID].PublicHandler.HostURI + newSeedCap, newSeedCap);
+                SeedCap, avatarID, regionHandle, m_handlers[avatarID].PublicHandler, m_handlers[avatarID].PublicHandler.HostURI + newSeedCap, newSeedCap, pathBase);
 
             handler.PublicHandler.AddCapsService(handler);
             //Now make sure we have the right one, as there could have already been a CAP in that region

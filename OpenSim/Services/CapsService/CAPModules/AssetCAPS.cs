@@ -73,7 +73,7 @@ namespace OpenSim.Services.CapsService
             List<IRequestHandler> handlers = new List<IRequestHandler>();
             handlers.Add(new StreamHandler("GET", handler.CreateCAPS("GetTexture"),
                                                       ProcessGetTexture));
-            m_capsObjectPath = handler.CapsBase;
+            m_capsObjectPath = "/CAPS/" + handler.CapsObjectPath + "/";
             handlers.Add(new RestStreamHandler("GET", handler.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
                                                       UploadBakedTexture));
             return handlers;
@@ -409,6 +409,7 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
+        public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
         public class BakedTextureUploader
         {
             public event UploadedBakedTexture OnUpLoad;

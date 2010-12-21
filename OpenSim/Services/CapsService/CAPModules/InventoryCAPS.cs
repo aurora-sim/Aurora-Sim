@@ -24,8 +24,10 @@ namespace OpenSim.Services.CapsService
     public class InventoryCAPS : ICapsServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly string m_newInventory = "0002";
         private object m_fetchLock = new Object();
         private IPrivateCapsService m_handler;
+        private IHttpServer m_server;
         
         #region Inventory
 
@@ -343,6 +345,8 @@ namespace OpenSim.Services.CapsService
         public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
         {
             m_handler = handler;
+            m_server = server;
+
             List<IRequestHandler> handlers = new List<IRequestHandler>();
 
             RestMethod method = delegate(string request, string path, string param,
@@ -377,7 +381,142 @@ namespace OpenSim.Services.CapsService
             handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchLib"),
                                                       method));
 
+            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("NewFileAgentInventory", m_newInventory),
+                                                      NewAgentInventoryRequest));
+
             return handlers;
+        }
+
+        #endregion
+
+        #region Inventory upload
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="llsdRequest"></param>
+        /// <returns></returns>
+        public string NewAgentInventoryRequest(string request, string path, string param,
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            string asset_type = map["asset_type"].AsString();
+            m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
+
+            if (asset_type == "texture" ||
+                asset_type == "animation" ||
+                asset_type == "sound")
+            {
+                /* Disabled until we have a money module that can hook up to this
+                 * IMoneyModule mm = .RequestModuleInterface<IMoneyModule>();
+
+                    if (mm != null)
+                    {
+                        if (!mm.UploadCovered(client, mm.UploadCharge))
+                        {
+                            if (client != null)
+                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
+
+                            map = new OSDMap();
+                            map["uploader"] = "";
+                            map["state"] = "error";
+                            return OSDParser.SerializeLLSDXmlString(map);
+                        }
+                        else
+                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
+                    }
+                 */
+            }
+
+
+            string assetName = map["name"].AsString();
+            string assetDes = map["description"].AsString();
+            UUID parentFolder = map["folder_id"].AsUUID();
+            string inventory_type = map["inventory_type"].AsString();
+
+            UUID newAsset = UUID.Random();
+            UUID newInvItem = UUID.Random();
+            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+            OpenSim.Framework.Capabilities.Caps.AssetUploader uploader =
+                new OpenSim.Framework.Capabilities.Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
+                                  asset_type, "/CAPS/" + m_handler.CapsObjectPath + "/" + uploaderPath, m_server);
+            m_server.AddStreamHandler(
+                new BinaryStreamHandler("POST", "/CAPS/" + m_handler.CapsObjectPath + "/" + uploaderPath, uploader.uploaderCaps));
+
+            string protocol = "http://";
+
+            if (m_server.UseSSL)
+                protocol = "https://";
+
+            string uploaderURL = protocol + m_handler.PublicHandler.HostURI + "/CAPS/" + 
+                m_handler.CapsObjectPath + "/" + uploaderPath;
+            uploader.OnUpLoad += UploadCompleteHandler;
+            map = new OSDMap();
+            map["uploader"] = uploaderURL;
+            map["state"] = "upload";
+            return OSDParser.SerializeLLSDXmlString(map);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="assetID"></param>
+        /// <param name="inventoryItem"></param>
+        /// <param name="data"></param>
+        public void UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
+                                          UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
+                                          string assetType)
+        {
+            sbyte assType = 0;
+            sbyte inType = 0;
+
+            if (inventoryType == "sound")
+            {
+                inType = 1;
+                assType = 1;
+            }
+            else if (inventoryType == "animation")
+            {
+                inType = 19;
+                assType = 20;
+            }
+            else if (inventoryType == "wearable")
+            {
+                inType = 18;
+                switch (assetType)
+                {
+                    case "bodypart":
+                        assType = 13;
+                        break;
+                    case "clothing":
+                        assType = 5;
+                        break;
+                }
+            }
+
+            AssetBase asset;
+            asset = new AssetBase(assetID, assetName, assType, m_handler.AgentID.ToString());
+            asset.Data = data;
+            m_handler.AssetService.Store(asset);
+
+            InventoryItemBase item = new InventoryItemBase();
+            item.Owner = m_handler.AgentID;
+            item.CreatorId = m_handler.AgentID.ToString();
+            item.ID = inventoryItem;
+            item.AssetID = asset.FullID;
+            item.Description = assetDescription;
+            item.Name = assetName;
+            item.AssetType = assType;
+            item.InvType = inType;
+            item.Folder = parentFolder;
+            item.CurrentPermissions = (uint)PermissionMask.All;
+            item.BasePermissions = (uint)PermissionMask.All;
+            item.EveryOnePermissions = 0;
+            item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
+            item.CreationDate = Util.UnixTimeSinceEpoch();
+            m_handler.InventoryService.AddItem(item);
         }
 
         #endregion
