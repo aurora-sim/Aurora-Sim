@@ -630,9 +630,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Fail-safe check
             if (packet == null)
             {
-                m_log.ErrorFormat("[LLUDPSERVER]: Malformed data, cannot parse {0} byte packet from {1}:",
+                m_log.DebugFormat("[LLUDPSERVER]: Malformed data, cannot parse {0} byte packet from {1}:",
                     buffer.DataLength, buffer.RemoteEndPoint);
-                m_log.Error(Utils.BytesToHexString(buffer.Data, buffer.DataLength, null));
+                m_log.Debug(Utils.BytesToHexString(buffer.Data, buffer.DataLength, null));
                 return;
             }
 
