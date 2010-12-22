@@ -192,7 +192,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual string Store(AssetBase asset)
         {
-            if (asset.Temporary || asset.Local)
+            if (asset.Local)
             {
                 if (m_Cache != null)
                     m_Cache.Cache(asset);

@@ -3602,7 +3602,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool IsTerse(PrimUpdateFlags flags)
         {
-            return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity)) && flags != PrimUpdateFlags.FullUpdate;
+            return flags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation
+                | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity))
+                && !flags.HasFlag((PrimUpdateFlags.AttachmentPoint | PrimUpdateFlags.ClickAction |
+                PrimUpdateFlags.CollisionPlane | PrimUpdateFlags.ExtraData | PrimUpdateFlags.FindBest | PrimUpdateFlags.FullUpdate |
+                PrimUpdateFlags.Joint | PrimUpdateFlags.Material | PrimUpdateFlags.MediaURL | PrimUpdateFlags.NameValue |
+                PrimUpdateFlags.ParentID | PrimUpdateFlags.Particles | PrimUpdateFlags.PrimData | PrimUpdateFlags.PrimFlags |
+                PrimUpdateFlags.ScratchPad | PrimUpdateFlags.Shape | PrimUpdateFlags.Sound | PrimUpdateFlags.Text |
+                PrimUpdateFlags.TextureAnim | PrimUpdateFlags.Textures));
         }
 
         /// <summary>
@@ -3611,11 +3618,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-            if (ShouldScheduleUpdate(UpdateFlags))
+            PrimUpdateFlags PostUpdateFlags;
+            if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
             {
                 m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
                 {
-                    AddUpdateToAvatar(avatar, UpdateFlags);
+                    AddUpdateToAvatar(avatar, PostUpdateFlags);
                 });
             }
         }
@@ -3627,9 +3635,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="avatar"></param>
         public void ScheduleUpdateToAvatar(PrimUpdateFlags UpdateFlags, ScenePresence avatar)
         {
-            if (ShouldScheduleUpdate(UpdateFlags))
+            PrimUpdateFlags PostUpdateFlags;
+            if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
             {
-                AddUpdateToAvatar(avatar, UpdateFlags);
+                AddUpdateToAvatar(avatar, PostUpdateFlags);
             }
         }
 
@@ -3638,8 +3647,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="UpdateFlags"></param>
         /// <returns></returns>
-        protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags)
+        protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags, out PrimUpdateFlags PostUpdateFlags)
         {
+            PostUpdateFlags = UpdateFlags;
             //If its not a terse update, we need to make sure to add the text, media, etc pieces on, otherwise the client will forget about them
             if (!IsTerse(UpdateFlags))
             {
@@ -3726,6 +3736,8 @@ namespace OpenSim.Region.Framework.Scenes
                         return false;
                     }
                 }
+                //Reupdate so they get sent properly
+                PostUpdateFlags = UpdateFlags;
                 return true;
             }
             return false;

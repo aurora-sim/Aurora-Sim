@@ -454,9 +454,9 @@ namespace OpenSim.Services.CapsService
             AssetBase asset;
             asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
             asset.Data = data;
-            asset.Temporary = false;
+            asset.Temporary = true;
             asset.Flags = AssetFlags.Deletable;
-            asset.Local = false; // Local assets aren't persisted, non-local are
+            asset.Local = false;
             m_assetService.Store(asset);
         }
 

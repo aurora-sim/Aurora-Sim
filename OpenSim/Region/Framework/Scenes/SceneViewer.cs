@@ -298,7 +298,7 @@ namespace OpenSim.Region.Framework.Scenes
             #region Update loop that sends objects that have been recently added to the queue
 
             //Pull the parts out into a list first so that we don't lock the queue for too long
-            List<EntityUpdate> updates = new List<EntityUpdate>();
+            Dictionary<UUID, List<EntityUpdate>> m_parentUpdates = new Dictionary<UUID, List<EntityUpdate>>();
             lock (m_partsUpdateQueue)
             {
                 lock (m_removeNextUpdateOf)
@@ -328,32 +328,40 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_removeUpdateOf.Contains(update.Entity.LocalId))
                             continue;
 
-                        updates.Add(update);
+                        if (!m_parentUpdates.ContainsKey(((SceneObjectPart)update.Entity).ParentGroup.UUID))
+                            m_parentUpdates.Add(((SceneObjectPart)update.Entity).ParentGroup.UUID, new List<EntityUpdate>());
+
+                        m_parentUpdates[((SceneObjectPart)update.Entity).ParentGroup.UUID].Add(update);
                     }
                     m_removeNextUpdateOf.Clear();
                 }
             }
 
             //Now loop through the list and send the updates
-            foreach (EntityUpdate update in updates)
+            foreach (UUID ParentID in m_parentUpdates.Keys)
             {
-                SceneObjectPart part = ((SceneObjectPart)update.Entity);
-                //Check for culling here!
-                if (!CheckForCulling(part.ParentGroup))
-                    continue;
-
-                // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
-                if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                //Sort by LinkID
+                m_parentUpdates[ParentID].Sort(linkSetSorter);
+                foreach (EntityUpdate update in m_parentUpdates[ParentID])
                 {
-                    if (part != part.ParentGroup.RootPart)
+                    SceneObjectPart part = ((SceneObjectPart)update.Entity);
+                    //Check for culling here!
+                    if (!CheckForCulling(part.ParentGroup))
                         continue;
 
-                    SendUpdate(update.Flags, part.ParentGroup);
-                    continue;
-                }
+                    // Attachment handling. Attachments are 'special' and we have to send the full group update when we send updates
+                    if (part.ParentGroup.RootPart.Shape.PCode == 9 && part.ParentGroup.RootPart.Shape.State != 0)
+                    {
+                        if (part != part.ParentGroup.RootPart)
+                            continue;
 
-                SendUpdate(part,
-                        m_presence.GenerateClientFlags(part), update.Flags);
+                        SendUpdate(update.Flags, part.ParentGroup);
+                        continue;
+                    }
+
+                    SendUpdate(part,
+                            m_presence.GenerateClientFlags(part), update.Flags);
+                }
             }
 
             #endregion
@@ -364,6 +372,17 @@ namespace OpenSim.Region.Framework.Scenes
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 
             m_inUse = false;
+        }
+        
+        /// <summary>
+        /// Sorts a list of Parts by Link Number so they end up in the correct order
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public int linkSetSorter(EntityUpdate a, EntityUpdate b)
+        {
+            return a.Entity.LinkNum.CompareTo(b.Entity.LinkNum);
         }
 
         /// <summary>
