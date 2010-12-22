@@ -2812,8 +2812,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 int processedLength = 0;
-                int maxChunkSize = 2048;
+                int maxChunkSize = 1024;
                 int packetNumber = 0;
+                int firstPacketSize = 600;
 
                 while (processedLength < req.AssetInf.Data.Length)
                 {
@@ -2822,7 +2823,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                     TransferPacket.TransferData.TransferID = req.TransferRequestID;
 
-                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, maxChunkSize);
+                    int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, packetNumber == 0 ? firstPacketSize : maxChunkSize);
 
                     byte[] chunk = new byte[chunkSize];
                     Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
