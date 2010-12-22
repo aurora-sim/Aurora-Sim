@@ -192,6 +192,7 @@ namespace Flotsam.RegionModules.AssetCache
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache clear", "fcache clear [file] [memory]", "Remove all assets in the file and/or memory cache", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache assets", "fcache assets", "Attempt a deep scan and cache of all assets in all scenes", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache expire", "fcache expire <datetime>", "Purge cached assets older then the specified date/time", HandleConsoleCommand);
+                    registry.RegisterInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -223,7 +224,17 @@ namespace Flotsam.RegionModules.AssetCache
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<IImprovedAssetCache>(this);
+            IConfig moduleConfig = config.Configs["Modules"];
+
+            if (moduleConfig != null)
+            {
+                string name = moduleConfig.GetString("AssetCaching", String.Empty);
+
+                if (name == Name)
+                {
+                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                }
+            }
         }
 
         #endregion

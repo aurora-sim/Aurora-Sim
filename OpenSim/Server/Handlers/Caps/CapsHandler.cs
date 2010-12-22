@@ -122,11 +122,12 @@ namespace OpenSim.Server.Handlers.Caps
             {
                 string CAPS = (string)m_dhttpMethod["CAPSSEEDPATH"];
                 string simCAPS = m_dhttpMethod["SIMCAPS"].ToString();
+                string CAPSPath = m_dhttpMethod["CAPSPATH"].ToString();
                 UUID AgentID = UUID.Parse((string)m_dhttpMethod["AGENTID"]);
                 ulong regionHandle = ulong.Parse((string)m_dhttpMethod["REGIONHANDLE"]);
 
                 m_capsService.RemoveCAPS(AgentID);
-                m_capsService.CreateCAPS(AgentID, simCAPS, CAPS, regionHandle);
+                m_capsService.CreateCAPS(AgentID, simCAPS, CAPS, CAPSPath, regionHandle);
 
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "true");

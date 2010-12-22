@@ -63,6 +63,9 @@ namespace OpenSim.Services.CapsService
             int left = (int)(x / Constants.RegionSize) - 100;
             int right = (int)(x / Constants.RegionSize) + 100;
 
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+
+            int flags = map["Flags"].AsInteger();
 
             OSDArray layerData = new OSDArray();
             layerData.Add(GetOSDMapLayerResponse(bottom, left, right, top, new UUID("00000000-0000-1111-9999-000000000006")));
@@ -82,7 +85,10 @@ namespace OpenSim.Services.CapsService
                         top * (int)Constants.RegionSize);
                 foreach (GridRegion r in regions)
                 {
-                    mapBlocks.Add(MapBlockFromGridRegion(r));
+                    if (flags == 0) //Map
+                        mapBlocks.Add(MapBlockFromGridRegion(r));
+                    else
+                        mapBlocks.Add(TerrainBlockFromGridRegion(r));
                 }
                 m_mapLayer = mapBlocks;
             }
@@ -91,7 +97,7 @@ namespace OpenSim.Services.CapsService
                 //Add to the array
                 mapBlocksData.Add(block.ToOSD());
             }
-            OSDMap response = MapLayerResponce(layerData, mapBlocksData);
+            OSDMap response = MapLayerResponce(layerData, mapBlocksData, flags);
             string resp = OSDParser.SerializeLLSDXmlString(response);
             return resp;
         }
@@ -113,11 +119,28 @@ namespace OpenSim.Services.CapsService
             return block;
         }
 
-        protected static OSDMap MapLayerResponce(OSDArray layerData, OSDArray mapBlocksData)
+        protected MapBlockData TerrainBlockFromGridRegion(GridRegion r)
+        {
+            MapBlockData block = new MapBlockData();
+            if (r == null)
+            {
+                block.Access = (byte)SimAccess.Down;
+                block.MapImageID = UUID.Zero;
+                return block;
+            }
+            block.Access = r.Access;
+            block.MapImageID = r.TerrainMapImage;
+            block.Name = r.RegionName;
+            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
+            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            return block;
+        }
+
+        protected static OSDMap MapLayerResponce(OSDArray layerData, OSDArray mapBlocksData, int flags)
         {
             OSDMap map = new OSDMap();
             OSDMap agentMap = new OSDMap();
-            agentMap["Flags"] = 0;
+            agentMap["Flags"] = flags;
             map["AgentData"] = agentMap;
             map["LayerData"] = layerData;
             map["MapBlocks"] = mapBlocksData;

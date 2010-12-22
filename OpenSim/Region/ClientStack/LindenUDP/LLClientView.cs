@@ -293,21 +293,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event GodlikeMessage OnEstateTelehubRequest;
         public event ViewerStartAuction OnViewerStartAuction;
         public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
+        public event AgentCachedTextureRequest OnAgentCachedTextureRequest;
         
 
         #endregion Events
 
         #region Enums
 
-        public enum AssetErrors : int
+        public enum TransferPacketStatus : int
         {
-            MorePacketsToCome = 1,
-            NoError = 0,
+            MorePacketsToCome = 0,
+            Done = 1,
+            AssetSkip = 2,
+            AssetAbort = 3,
             AssetRequestFailed = -1,
-            //AssetRequestInvalid = -2,
-            AssetRequestNonExistantFile = -3,
-            AssetRequestNotInDatabase = -4,
-            InsufficientPermissions = -5
+            AssetUnknownSource = -2, // Equivalent of a 404
+            InsufficientPermissions = -3
         }
 
         #endregion
@@ -2737,12 +2738,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(scriptRunningReply, ThrottleOutPacketType.Task);
         }
 
-        private void SendFailedAsset(AssetRequestToClient req, AssetErrors assetErrors)
+        private void SendFailedAsset(AssetRequestToClient req, TransferPacketStatus assetErrors)
         {
             TransferInfoPacket Transfer = new TransferInfoPacket();
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
             Transfer.TransferInfo.Status = (int)assetErrors;
-            Transfer.TransferInfo.TargetType =0 ;
+            Transfer.TransferInfo.TargetType = 0;
             if (req.AssetRequestSource == 2)
             {
                 Transfer.TransferInfo.Params = new byte[20];
@@ -2775,8 +2776,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //m_log.Debug("sending asset " + req.RequestAssetID);
             TransferInfoPacket Transfer = new TransferInfoPacket();
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
-            Transfer.TransferInfo.Status = (int)AssetErrors.NoError;
+            Transfer.TransferInfo.Status = (int)TransferPacketStatus.MorePacketsToCome;
             Transfer.TransferInfo.TargetType = 0;
+
             if (req.AssetRequestSource == 2)
             {
                 Transfer.TransferInfo.Params = new byte[20];
@@ -2803,14 +2805,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 TransferPacket.TransferData.ChannelType = (int)ChannelType.Asset;
                 TransferPacket.TransferData.TransferID = req.TransferRequestID;
                 TransferPacket.TransferData.Data = req.AssetInf.Data;
-                TransferPacket.TransferData.Status = (int)AssetErrors.NoError;
+                TransferPacket.TransferData.Status = (int)TransferPacketStatus.Done;
                 TransferPacket.Header.Zerocoded = true;
                 OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
             }
             else
             {
                 int processedLength = 0;
-                int maxChunkSize = Settings.MAX_PACKET_SIZE - 100;
+                int maxChunkSize = 2048;
                 int packetNumber = 0;
 
                 while (processedLength < req.AssetInf.Data.Length)
@@ -2821,24 +2823,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     TransferPacket.TransferData.TransferID = req.TransferRequestID;
 
                     int chunkSize = Math.Min(req.AssetInf.Data.Length - processedLength, maxChunkSize);
+
                     byte[] chunk = new byte[chunkSize];
                     Array.Copy(req.AssetInf.Data, processedLength, chunk, 0, chunk.Length);
-
                     TransferPacket.TransferData.Data = chunk;
 
+                    processedLength += chunkSize;
                     // 0 indicates more packets to come, 1 indicates last packet
-                    if (req.AssetInf.Data.Length - processedLength > maxChunkSize)
+                    if (req.AssetInf.Data.Length - processedLength == 0)
                     {
-                        TransferPacket.TransferData.Status = (int)AssetErrors.NoError;
+                        TransferPacket.TransferData.Status = (int)TransferPacketStatus.Done;
                     }
                     else
                     {
-                        TransferPacket.TransferData.Status = (int)AssetErrors.MorePacketsToCome;
+                        TransferPacket.TransferData.Status = (int)TransferPacketStatus.MorePacketsToCome;
                     }
                     TransferPacket.Header.Zerocoded = true;
                     OutPacket(TransferPacket, ThrottleOutPacketType.Asset);
 
-                    processedLength += chunkSize;
                     packetNumber++;
                 }
             }
@@ -11843,30 +11845,42 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             //m_log.Debug("texture cached: " + packet.ToString());
             AgentCachedTexturePacket cachedtex = (AgentCachedTexturePacket)packet;
-            AgentCachedTextureResponsePacket cachedresp = (AgentCachedTextureResponsePacket)PacketPool.Instance.GetPacket(PacketType.AgentCachedTextureResponse);
-
+            
             if (cachedtex.AgentData.SessionID != SessionId) return false;
 
-            // TODO: don't create new blocks if recycling an old packet
+            List<CachedAgentArgs> args = new List<CachedAgentArgs>();
+
+            for (int i = 0; i < cachedtex.WearableData.Length; i++)
+            {
+                args.Add(new CachedAgentArgs() { ID = cachedtex.WearableData[i].ID, TextureIndex = cachedtex.WearableData[i].TextureIndex });
+            }
+
+            AgentCachedTextureRequest actr = OnAgentCachedTextureRequest;
+            if (actr != null)
+                actr(this, args);
+
+            return true;
+        }
+
+        public void SendAgentCachedTexture(List<CachedAgentArgs> args)
+        {
+            AgentCachedTextureResponsePacket cachedresp = (AgentCachedTextureResponsePacket)PacketPool.Instance.GetPacket(PacketType.AgentCachedTextureResponse);
             cachedresp.AgentData.AgentID = AgentId;
             cachedresp.AgentData.SessionID = m_sessionId;
             cachedresp.AgentData.SerialNum = m_cachedTextureSerial;
             m_cachedTextureSerial++;
             cachedresp.WearableData =
-                new AgentCachedTextureResponsePacket.WearableDataBlock[cachedtex.WearableData.Length];
-
-            for (int i = 0; i < cachedtex.WearableData.Length; i++)
+                new AgentCachedTextureResponsePacket.WearableDataBlock[args.Count];
+            for (int i = 0; i < args.Count; i++)
             {
                 cachedresp.WearableData[i] = new AgentCachedTextureResponsePacket.WearableDataBlock();
-                cachedresp.WearableData[i].TextureIndex = cachedtex.WearableData[i].TextureIndex;
-                cachedresp.WearableData[i].TextureID = UUID.Zero;
+                cachedresp.WearableData[i].TextureIndex = args[i].TextureIndex;
+                cachedresp.WearableData[i].TextureID = args[i].ID;
                 cachedresp.WearableData[i].HostName = new byte[0];
             }
 
             cachedresp.Header.Zerocoded = true;
             OutPacket(cachedresp, ThrottleOutPacketType.Task);
-
-            return true;
         }
 
         protected bool HandleMultipleObjUpdate(IClientAPI simClient, Packet packet)
@@ -12133,14 +12147,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public byte[] GetThrottlesPacked(float multiplier)
         {
             return m_udpClient.GetThrottlesPacked();
-        }
-
-        /// <summary>
-        /// Cruft?
-        /// </summary>
-        public virtual void InPacket(object NewPack)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -12441,7 +12447,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 requestID = new UUID(transferRequest.TransferInfo.Params, 80);
             }
 
-//            m_log.DebugFormat("[CLIENT]: {0} requesting asset {1}", Name, requestID);
+            m_log.InfoFormat("[CLIENT]: {0} requesting asset {1}", Name, requestID);
 
             m_assetService.Get(requestID.ToString(), transferRequest, AssetReceived);
         }
@@ -12456,6 +12462,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if (asset == null)
                 return;
+
+            m_log.InfoFormat("[CLIENT]: {0} found requested asset", Name);
 
             TransferRequestPacket transferRequest = (TransferRequestPacket)sender;
 
@@ -12486,7 +12494,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Scripts cannot be retrieved by direct request
             if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset && asset.Type == 10)
             {
-                SendFailedAsset(req, AssetErrors.InsufficientPermissions);
+                SendFailedAsset(req, TransferPacketStatus.InsufficientPermissions);
             }
 
             SendAsset(req);
@@ -12499,7 +12507,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         private static int CalculateNumPackets(byte[] data)
         {
-            const uint m_maxPacketSize = 600;
+            const uint m_maxPacketSize = 2048;
+
             int numPackets = 1;
 
             if (data == null)
@@ -12642,10 +12651,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 Vector3 pos = presence.AbsolutePosition;
 
-                if (presence.Appearance.AvatarHeight != 127.0f)
-                    pos += new Vector3(0f, 0f, (presence.Appearance.AvatarHeight/6f));
-                else
-                    pos += new Vector3(0f, 0f, (1.56f/6f));
+                pos += new Vector3(0f, 0f, (presence.Appearance.AvatarHeight/6f));
 
                 presence.AbsolutePosition = pos;
 
@@ -12655,10 +12661,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // certain amount..   because the LLClient wouldn't land in that situation anyway.
 
                 // why are we still testing for this really old height value default???
-                if (presence.Appearance.AvatarHeight != 127.0f)
-                    presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
-                else
-                    presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - (1.56f/6f));
+                presence.CollisionPlane = new Vector4(0, 0, 0, pos.Z - presence.Appearance.AvatarHeight/6f);
 
 
                 ImprovedTerseObjectUpdatePacket.ObjectDataBlock block =

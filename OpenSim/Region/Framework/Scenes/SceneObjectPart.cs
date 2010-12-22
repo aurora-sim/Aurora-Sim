@@ -566,6 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_velocity;
 
         protected Vector3 m_lastPosition;
+        protected Vector3 m_lastGroupPosition;
         protected Quaternion m_lastRotation;
         protected Vector3 m_lastVelocity;
         protected Vector3 m_lastAcceleration;
@@ -3706,10 +3707,12 @@ namespace OpenSim.Region.Framework.Scenes
                         !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                         !Velocity.ApproxEquals(Vector3.Zero, VELOCITY_TOLERANCE) ||
                         !AngularVelocity.ApproxEquals(m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
-                        !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
+                        !OffsetPosition.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
+                        !GroupPosition.ApproxEquals(m_lastGroupPosition, POSITION_TOLERANCE))
                     {
                         // Update the "last" values
                         m_lastPosition = OffsetPosition;
+                        m_lastGroupPosition = GroupPosition;
                         m_lastRotation = RotationOffset;
                         m_lastVelocity = Velocity;
                         m_lastAcceleration = Acceleration;

@@ -105,6 +105,7 @@ namespace OpenSim.Services.CapsService
         }
         private string m_capsURL;
         private string m_CapsBase;
+        private string m_CapsObjectPath;
         public string CapsURL
         {
             get { return m_capsURL; }
@@ -113,13 +114,22 @@ namespace OpenSim.Services.CapsService
         {
             get { return m_CapsBase; }
         }
+        public string CapsObjectPath
+        {
+            get { return m_CapsObjectPath; }
+        }
         private List<IRequestHandler> m_CAPSAdded = new List<IRequestHandler>();
 
         #endregion
 
         #region Constructor
 
-        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService, ILibraryService libraryService, IGridUserService guService, IGridService gService, IPresenceService presenceService, IAssetService assetService, string URL, UUID agentID, ulong regionHandle, ICapsService handler, string capsURL, string capsBase)
+        public PrivateCapsService(IHttpServer server, IInventoryService inventoryService,
+            ILibraryService libraryService, IGridUserService guService, 
+            IGridService gService, IPresenceService presenceService, 
+            IAssetService assetService, string URL, UUID agentID,
+            ulong regionHandle, ICapsService handler,
+            string capsURL, string capsBase, string pathBase)
         {
             m_server = server;
             m_InventoryService = inventoryService;
@@ -134,6 +144,7 @@ namespace OpenSim.Services.CapsService
             m_publicHandler = handler;
             m_capsURL = capsURL;
             m_CapsBase = capsBase;
+            m_CapsObjectPath = pathBase;
         }
 
         #endregion

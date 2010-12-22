@@ -116,7 +116,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
             m_scene.EventManager.TriggerOnRegisterCaps(agentId, caps);
 
-            caps.AddNewInventoryItem = m_scene.AddUploadedInventoryItem;
             caps.ItemUpdatedCall = m_scene.CapsUpdateInventoryItemAsset;
             caps.TaskScriptUpdatedCall = m_scene.CapsUpdateTaskInventoryScriptAsset;
             

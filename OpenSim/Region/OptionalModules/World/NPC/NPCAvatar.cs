@@ -408,6 +408,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public event ChangeInventoryItemFlags OnChangeInventoryItemFlags;
         public event TeleportCancel OnTeleportCancel;
         public event ViewerStartAuction OnViewerStartAuction;
+        public event AgentCachedTextureRequest OnAgentCachedTextureRequest;
 
 #pragma warning restore 67
 
@@ -568,6 +569,9 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
         public virtual void SendLayerData(int px, int py, float[] map, bool track)
+        {
+        }
+        public void SendAgentCachedTexture(List<CachedAgentArgs> args)
         {
         }
 

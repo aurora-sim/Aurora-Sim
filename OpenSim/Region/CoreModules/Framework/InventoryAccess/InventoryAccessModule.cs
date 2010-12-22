@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     if (!m_Scene.Permissions.CanEditNotecard(itemID, UUID.Zero, remoteClient.AgentId))
                     {
                         remoteClient.SendAlertMessage("Insufficient permissions to edit notecard");
-                        return FailedPermissionsNotecardCAPSUpdate(item.AssetID, itemID);
+                        return FailedPermissionsNotecardCAPSUpdate(UUID.Zero, itemID);
                     }
 
                     AssetBase asset =
@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 else if ((InventoryType)item.InvType == InventoryType.LSL)
                 {
                     if (!m_Scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
-                        return FailedPermissionsScriptCAPSUpdate(item.AssetID, itemID);
+                        return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
                     IScriptModule ScriptEngine = m_Scene.RequestModuleInterface<IScriptModule>();
 

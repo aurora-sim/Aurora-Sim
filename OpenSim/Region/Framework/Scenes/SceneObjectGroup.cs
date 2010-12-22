@@ -2765,7 +2765,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ScenePresence SP;
                     if (m_scene.TryGetScenePresence(clientID, out SP))
                     {
-                        SP.SendAvatarDataToAllAgents();
+                        SP.SendTerseUpdateToAllClients();
                     }
                 }
             }
