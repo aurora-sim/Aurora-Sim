@@ -1051,8 +1051,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string script = OpenMetaverse.Utils.BytesToString(asset.Data);
                 try
                 {
-                    string assembly;
-                    Compiler.PerformScriptCompile(script, itemID, UUID.Zero, 0, out assembly);
+                    Compiler.PerformInMemoryScriptCompile(script, itemID);
                 }
                 catch (Exception e)
                 {

@@ -403,8 +403,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (item.Heap != null)
                 {
-                    // Combine flags
-                    value.Flags |= item.Heap[item.Handle].Value.Flags;
+                    try
+                    {
+                        // Combine flags
+                        value.Flags |= item.Heap[item.Handle].Value.Flags;
+                    }
+                    catch
+                    {
+                    }
 
                     item.Heap[item.Handle] = new MinHeapItem(priority, value, local_id, this.m_comparison);
                     return false;

@@ -171,11 +171,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
-        public string PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, int VersionID, out string assembly)
+        public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, int VersionID, out string assembly)
         {
             assembly = "";
             if (Script == String.Empty)
-                return "No script text present";
+            {
+                AddError("No script text present");
+                return;
+            }
 
             m_warnings.Clear();
             m_errors.Clear();
@@ -184,17 +187,50 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             IScriptConverter converter;
             string compileScript;
-            string retval = CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
-            if (retval != string.Empty)
-                return retval;
+            CheckLanguageAndConvert(Script, ownerUUID, out converter, out compileScript);
+            if (GetErrors().Length != 0)
+                return;
             if (converter == null)
-                return "No Compiler found for this type of script.";
+            {
+                AddError("No Compiler found for this type of script.");
+                return;
+            }
 
-            retval = CompileFromDotNetText(compileScript, converter, assembly, Script);
-            return retval;
+            CompileFromDotNetText(compileScript, converter, assembly, Script, false);
         }
 
-        private string CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
+        /// <summary>
+        /// Converts script (if needed) and compiles into memory
+        /// </summary>
+        /// <param name="Script"></param>
+        /// <param name="itemID"></param>
+        /// <returns></returns>
+        public void PerformInMemoryScriptCompile(string Script, UUID itemID)
+        {
+            if (Script == String.Empty)
+            {
+                AddError("No script text present");
+                return;
+            } 
+
+            m_warnings.Clear();
+            m_errors.Clear();
+
+            IScriptConverter converter;
+            string compileScript;
+            CheckLanguageAndConvert(Script, UUID.Zero, out converter, out compileScript);
+            if (GetErrors().Length != 0)
+                return;
+            if (converter == null)
+            {
+                AddError("No Compiler found for this type of script.");
+                return;
+            } 
+
+            CompileFromDotNetText(compileScript, converter, "", Script, true);
+        }
+
+        private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
         {
             compileScript = Script;
             converter = null;
@@ -209,25 +245,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!
-                string errtext = String.Empty;
-                errtext += "The compiler for language \"" + language.ToString() + "\" is not in list of allowed compilers. Script will not be executed!";
-                return errtext;
+                AddError("The compiler for language \"" + language.ToString() + "\" is not in list of allowed compilers. Script will not be executed!");
+
+                return;
             }
 
             if (m_scriptEngine.Worlds[0].Permissions.CanCompileScript(ownerID, language) == false)
             {
                 // Not allowed to compile to this language!
-                string errtext = String.Empty;
-                errtext += ownerID + " is not in list of allowed users for this scripting language. Script will not be executed!";
-                return errtext;
+                AddError(ownerID + " is not in list of allowed users for this scripting language. Script will not be executed!");
+                return;
             }
 
             AllowedCompilers.TryGetValue(language, out converter);
 
             converter.Convert(Script, out compileScript, out PositionMap);
-            if (GetErrors().Length != 0) //Check for parsing errors
-                return compileScript;
-            return "";
         }
 
         public void RecreateDirectory()
@@ -333,38 +365,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// </summary>
         /// <param name="Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal string CompileFromDotNetText(string Script, IScriptConverter converter, string assembly, string originalScript)
+        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly, string originalScript, bool inMemory)
         {
             string ext = "." + converter.Name;
 
-            // Output assembly name
-            scriptCompileCounter++;
-            try
+            if (!inMemory)
             {
-                File.Delete(assembly);
-            }
-            catch (Exception e) // NOTLEGIT - Should be just FileIOException
-            {
-                return "Unable to delete old existing " +
-                        "script-file before writing new. Compile aborted: " +
-                        e.ToString();
-            }
-
-            // DEBUG - write source to disk
-            if (WriteScriptSourceToDebugFile)
-            {
-                string srcFileName = FilePrefix + "_source_" +
-                        Path.GetFileNameWithoutExtension(assembly) + ext;
+                // Output assembly name
+                scriptCompileCounter++;
                 try
                 {
-                    File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
-                        srcFileName), Script);
+                    File.Delete(assembly);
                 }
-                catch (Exception ex) //NOTLEGIT - Should be just FileIOException
+                catch (Exception e) // NOTLEGIT - Should be just FileIOException
                 {
-                    m_log.Error("[Compiler]: Exception while " +
-                                "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex.Message.ToString());
+                    AddError("Unable to delete old existing " +
+                            "script-file before writing new. Compile aborted: " +
+                            e.ToString());
+                    return;
+                }
+
+                // DEBUG - write source to disk
+                if (WriteScriptSourceToDebugFile)
+                {
+                    string srcFileName = FilePrefix + "_source_" +
+                            Path.GetFileNameWithoutExtension(assembly) + ext;
+                    try
+                    {
+                        File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
+                            srcFileName), Script);
+                    }
+                    catch (Exception ex) //NOTLEGIT - Should be just FileIOException
+                    {
+                        m_log.Error("[Compiler]: Exception while " +
+                                    "trying to write script source to file \"" +
+                                    srcFileName + "\": " + ex.Message.ToString());
+                    }
                 }
             }
 
@@ -388,7 +424,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             parameters.GenerateExecutable = false;
-            parameters.GenerateInMemory = false;
+            parameters.GenerateInMemory = inMemory;
             parameters.OutputAssembly = assembly;
             parameters.IncludeDebugInformation = CompileWithDebugInformation;
             //parameters.WarningLevel = 1; // Should be 4?
@@ -533,21 +569,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             results = null;
             if (m_errors.Count != 0) // Quit early then
-                return "Error";
+                return;
 
             //  On today's highly asynchronous systems, the result of
             //  the compile may not be immediately apparent. Wait a 
             //  reasonable amount of time before giving up on it.
 
-            if (!File.Exists(assembly))
+            if (!inMemory)
             {
-                for (int i = 0; i < 500 && !File.Exists(assembly); i++)
+                if (!File.Exists(assembly))
                 {
-                    System.Threading.Thread.Sleep(10);
+                    for (int i = 0; i < 500 && !File.Exists(assembly); i++)
+                    {
+                        System.Threading.Thread.Sleep(10);
+                    }
+                    AddError("No compile error. But not able to locate compiled file.");
                 }
-                return "No compile error. But not able to locate compiled file.";
             }
-            return "";
         }
 
         private class kvpSorter : IComparer<KeyValuePair<int, int>>
