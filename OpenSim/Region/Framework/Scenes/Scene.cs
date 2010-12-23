@@ -142,7 +142,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int m_update_physics = 1; //Trigger the physics update
         private int m_update_entitymovement = 1; //Update the movement of scene presences
-        private int m_update_presences = 1; // Update scene presences which have scheduled updates
+        private int m_update_presences = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
         private int m_update_backup = 50; //Trigger backup
         private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
@@ -995,6 +995,10 @@ namespace OpenSim.Region.Framework.Scenes
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                             }
                         }
+
+                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
+                            m_scene.m_sceneGraph.UpdatePresences();
+
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
 
@@ -1115,11 +1119,6 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         int PhysicsSyncTime = Util.EnvironmentTickCount();
-
-                        // Run through all ScenePresences looking for updates
-                        // Presence updates and queued object updates for each presence are sent to clients
-                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
-                            m_scene.m_sceneGraph.UpdatePresences();
 
                         if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
                             m_scene.m_sceneGraph.UpdatePreparePhysics();

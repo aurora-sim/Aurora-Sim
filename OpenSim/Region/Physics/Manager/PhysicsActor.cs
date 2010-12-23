@@ -123,10 +123,8 @@ namespace OpenSim.Region.Physics.Manager
 
 // disable warning: public events
 #pragma warning disable 67
-        public event PositionUpdate OnPositionUpdate;
-        public event VelocityUpdate OnVelocityUpdate;
-        public event OrientationUpdate OnOrientationUpdate;
         public event RequestTerseUpdate OnRequestTerseUpdate;
+        public event RequestTerseUpdate OnSignificantMovement;
         public event CollisionUpdate OnCollisionUpdate;
         public event OutOfBounds OnOutOfBounds;
 #pragma warning restore 67
@@ -193,6 +191,13 @@ namespace OpenSim.Region.Physics.Manager
             {
                 handler(e);
             }
+        }
+
+        public virtual void TriggerSignificantMovement()
+        {
+            //Call significant movement
+            if (OnSignificantMovement != null)
+                OnSignificantMovement();
         }
 
         public virtual void SetMaterial (int material)

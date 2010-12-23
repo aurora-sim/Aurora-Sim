@@ -298,7 +298,7 @@ namespace OpenSim.Services.LLLoginService
                 if (!m_AllowAnonymousLogin)
                 {
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
-                    return LLFailedLoginResponse.UserProblem;
+                    return LLFailedLoginResponse.AccountProblem;
                 }
                 else
                 {
@@ -316,7 +316,7 @@ namespace OpenSim.Services.LLLoginService
             if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
             {
                 m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
-                return LLFailedLoginResponse.UserProblem;
+                return LLFailedLoginResponse.AuthenticationProblem;
             }
 
             IAgentInfo agent = null;
@@ -352,18 +352,44 @@ namespace OpenSim.Services.LLLoginService
                     string TOS = reader.ReadToEnd();
                     reader.Close();
                     reader.Dispose();
-                    return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, TOS, "false");
-                }
-                if ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan)
-                {
-                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is banned.");
-                    return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "You are blocked from connecting to this service.", "false");
+                    return new LLFailedLoginResponse(LoginResponseEnum.ToSNeedsSent, TOS, false);
                 }
 
                 if (account.UserLevel < m_MinLoginLevel)
                 {
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
                     return LLFailedLoginResponse.LoginBlockedProblem;
+                }
+
+                if ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
+                {
+                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is permanently banned.");
+                    return LLFailedLoginResponse.PermanentBannedProblem;
+                }
+
+                if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan)
+                {
+                    bool IsBanned = true;
+                    string until = "";
+
+                    if (agent.OtherAgentInformation.ContainsKey("TemperaryBanInfo"))
+                    {
+                        DateTime bannedTime = agent.OtherAgentInformation["TemperaryBanInfo"].AsDate();
+                        until = string.Format(" until {0}", bannedTime.ToLongTimeString());
+
+                        //Check to make sure the time hasn't expired
+                        if (bannedTime.Ticks < DateTime.Now.Ticks)
+                        {
+                            //The banned time is less than now, let the user in.
+                            IsBanned = false;
+                        }
+                    }
+
+                    if (IsBanned)
+                    {
+                        m_log.Info(string.Format("[LLOGIN SERVICE]: Login failed, reason: user is temporarily banned {0}.", until));
+                        return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, string.Format("You are blocked from connecting to this service{0}.", until), false);
+                    }
                 }
             }
             return null;
@@ -394,7 +420,7 @@ namespace OpenSim.Services.LLLoginService
                     if (module.Login(requestData, account.PrincipalID, out message) == false)
                     {
                         LLFailedLoginResponse resp = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
-                            message, "false");
+                            message, false);
                         return resp;
                     }
                 }
@@ -571,7 +597,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     m_PresenceService.LogoutAgent(session);
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
-                    return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, reason, "false");
+                    return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, reason, false);
                 }
 
                 // Get Friends list 

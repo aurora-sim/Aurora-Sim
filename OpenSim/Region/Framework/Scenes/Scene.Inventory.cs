@@ -938,8 +938,18 @@ namespace OpenSim.Region.Framework.Scenes
             if (group != null)
             {
                 IXfer xfer = RequestModuleInterface<IXfer>();
-                if (xfer != null)
-                    group.RequestInventoryFile(remoteClient, primLocalID, xfer);
+                SceneObjectPart part = group.GetChildPart(primLocalID);
+                if (part != null)
+                {
+                    part.Inventory.RequestInventoryFile(remoteClient, xfer);
+                }
+                else
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Couldn't find part {0} in object group {1}, {2} to request inventory data",
+                        primLocalID, group.Name, group.UUID);
+                }
             }
             else
             {

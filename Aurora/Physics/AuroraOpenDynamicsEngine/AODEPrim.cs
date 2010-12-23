@@ -64,6 +64,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _torque;
         private Vector3 m_lastVelocity;
         private Vector3 m_lastposition;
+        private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();
         private Vector3 m_rotationalVelocity;
         private Vector3 _size;
@@ -1596,13 +1597,13 @@ Console.WriteLine(" JointCreateFixed");
                         {
                             fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
                             fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = _parent_scene.gravityz * (1.0f - m_buoyancy) * m_mass;
+                            fz = (_parent_scene.gravityz * 3) * (1.0f - m_buoyancy) * m_mass;
                         }
                         else
                         {
-                            fx = _parent_scene.gravityx * -1 * (m_buoyancy);
-                            fy = _parent_scene.gravityy * -1 * (m_buoyancy);
-                            fz = _parent_scene.gravityz * -1 * (m_buoyancy);
+                            fx = _parent_scene.gravityx * -1 * (1.0f - m_buoyancy);
+                            fy = _parent_scene.gravityy * -1 * (1.0f - m_buoyancy);
+                            fz = _parent_scene.gravityz * -1 * (1.0f - m_buoyancy);
                         }
                     }
                     else
@@ -1870,8 +1871,8 @@ Console.WriteLine(" JointCreateFixed");
                                 // A physical body at rest on a surface will auto-disable after a while,
                                 // this appears to re-enable it incase the surface it is upon vanishes,
                                 // and the body should fall again. 
-                                d.BodySetLinearVel(Body, 0f, 0f, m_mass);
-                                d.BodySetForce(Body, 0, 0, 100 * m_mass);
+                                //d.BodySetLinearVel(Body, 0f, 0f, m_mass);
+                                //d.BodySetForce(Body, 0, 0, 100 * m_mass);
                                 enableBodySoft();
                                 vel = d.BodyGetLinearVel(Body);
                             }
@@ -2912,12 +2913,12 @@ Console.WriteLine(" JointCreateFixed");
                                 _zeroFlag = true;
                                 m_lastUpdateSent = 5;
                             }
-                            d.BodySetLinearVel(Body, _velocity.X,
-                                _velocity.Y,
-                                _velocity.Z);
-                            d.BodySetAngularVel(Body, m_rotationalVelocity.X,
-                                m_rotationalVelocity.Y,
-                                m_rotationalVelocity.Z);
+                            //d.BodySetLinearVel(Body, _velocity.X,
+                            //    _velocity.Y,
+                            //    _velocity.Z);
+                            //d.BodySetAngularVel(Body, m_rotationalVelocity.X,
+                            //    m_rotationalVelocity.Y,
+                            //    m_rotationalVelocity.Z);
 
                             //m_log.Debug("ODE: " + m_rotationalVelocity.ToString());
                         }
@@ -2935,6 +2936,13 @@ Console.WriteLine(" JointCreateFixed");
                             throttleCounter++;
                     }
                     m_lastposition = l_position;
+
+                    const float SIGNIFICANT_UPDATE_CHANGE = 1.0f;
+                    if (!m_lastposition.ApproxEquals(m_lastSignificantPosition, SIGNIFICANT_UPDATE_CHANGE))
+                    {
+                        base.TriggerSignificantMovement();
+                        m_lastSignificantPosition = m_lastposition;
+                    }
                 }
                 else
                 {

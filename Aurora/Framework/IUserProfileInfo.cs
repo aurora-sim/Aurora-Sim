@@ -58,6 +58,12 @@ namespace Aurora.Framework
         /// </summary>
         public bool LanguageIsPublic = true;
 
+        /// <summary>
+        /// Other information can be stored in here.
+        /// For ex, temperary ban info for this user
+        /// </summary>
+        public OSDMap OtherAgentInformation = new OSDMap();
+
         public override Dictionary<string, object> ToKeyValuePairs()
         {
             return Util.OSDToDictionary(ToOSD());
@@ -74,6 +80,7 @@ namespace Aurora.Framework
             map.Add("Language", OSD.FromString(Language));
             map.Add("AcceptTOS", OSD.FromBoolean(AcceptTOS));
             map.Add("LanguageIsPublic", OSD.FromBoolean(LanguageIsPublic));
+            map.Add("OtherAgentInformation", OSD.FromString(OSDParser.SerializeLLSDXmlString(OtherAgentInformation)));
             
             return map;
         }
@@ -87,6 +94,8 @@ namespace Aurora.Framework
             Language = map["Language"].AsString();
             AcceptTOS = map["AcceptTOS"].AsBoolean();
             LanguageIsPublic = map["LanguageIsPublic"].AsBoolean();
+            if(map.ContainsKey("OtherAgentInformation"))
+                OtherAgentInformation = (OSDMap)OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
         }
 
         public override void FromKVP(Dictionary<string, object> RetVal)

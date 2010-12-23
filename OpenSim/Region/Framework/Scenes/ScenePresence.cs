@@ -121,15 +121,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 lastKnownAllowedPosition;
         public Vector4 CollisionPlane = Vector4.UnitW;
 
-        private Vector3 m_lastPosition;
-        private Quaternion m_lastRotation;
-        private Vector3 m_lastVelocity;
-
-        public Vector3 LastVelocity
-        {
-            get { return m_lastVelocity; }
-        }
-
         private bool m_updateflag;
         private byte m_movementflag;
         public Vector3? m_forceToApply;
@@ -985,8 +976,10 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
-                    if (m_physicsActor != null) 
+                    if (m_physicsActor != null)
                         m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
+                    if (m_physicsActor != null)
+                        m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
@@ -1067,13 +1060,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
         {
-            //List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
+            List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
 
-            //foreach (CachedAgentArgs arg in args)
-            //{
-            //}
+            //Send all with UUID zero for now so that we don't confuse the client about baked textures...
+            foreach (CachedAgentArgs arg in args)
+            {
+                CachedAgentArgs respArgs = new CachedAgentArgs();
+                respArgs.ID = UUID.Zero;
+                respArgs.TextureIndex = arg.TextureIndex;
+                resp.Add(respArgs);
+            }
 
-            client.SendAgentCachedTexture(args);
+            client.SendAgentCachedTexture(resp);
         }
 
         /// <summary>
@@ -1152,31 +1150,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="distance"></param>
         public void RayCastCameraCallback(bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 pNormal)
         {
-            const float POSITION_TOLERANCE = 0.02f;
-            const float VELOCITY_TOLERANCE = 0.02f;
-            const float ROTATION_TOLERANCE = 0.02f;
-
             if (m_followCamAuto)
             {
                 if (hitYN)
                 {
                     CameraConstraintActive = true;
                     //m_log.DebugFormat("[RAYCASTRESULT]: {0}, {1}, {2}, {3}", hitYN, collisionPoint, localid, distance);
-                    
+
                     Vector3 normal = Vector3.Normalize(new Vector3(0f, 0f, collisionPoint.Z) - collisionPoint);
-                    ControllingClient.SendCameraConstraint(new Vector4(normal.X, normal.Y, normal.Z, -1 * Vector3.Distance(new Vector3(0,0,collisionPoint.Z),collisionPoint)));
+                    ControllingClient.SendCameraConstraint(new Vector4(normal.X, normal.Y, normal.Z, -1 * Vector3.Distance(new Vector3(0, 0, collisionPoint.Z), collisionPoint)));
                 }
                 else
                 {
-                    if (!m_pos.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                        !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                        !m_bodyRot.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE))
+                    if (CameraConstraintActive)
                     {
-                        if (CameraConstraintActive)
-                        {
-                            ControllingClient.SendCameraConstraint(new Vector4(0f, 0.5f, 0.9f, -3000f));
-                            CameraConstraintActive = false;
-                        }
+                        ControllingClient.SendCameraConstraint(new Vector4(0f, 0.5f, 0.9f, -3000f));
+                        CameraConstraintActive = false;
                     }
                 }
             }
@@ -2308,8 +2297,8 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else if(PreJumpForce.Equals(Vector3.Zero))
                         {
-                            direc.X *= direc.X < 0 ? 2.5f : 2f;
-                            direc.Y *= 2f;
+                            direc.X *= 4;
+                            direc.Y *= 4;
                             if (direc.X == 0 && direc.Y == 0)
                                 direc.Z *= 4f;
                             else
@@ -2335,6 +2324,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_forceToApply = direc * (.95f);
                     //More decay on the Z, otherwise flying up and down is a bit hard
                     m_forceToApply = new Vector3(m_forceToApply.Value.X, m_forceToApply.Value.Y, m_forceToApply.Value.Z * 0.5f);
+
                     m_velocityIsDecaying = true;
                 }
                 else
@@ -2360,70 +2350,23 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
-            const float ROTATION_TOLERANCE = 0.01f;
-            const float VELOCITY_TOLERANCE = 0.001f;
-            const float POSITION_TOLERANCE = 0.05f;
-            //const int TIME_MS_TOLERANCE = 3000;
-
-            Util.FireAndForget(SendPrimUpdates);
-
-            if (!IsChildAgent)
-            {
-                //                PhysicsActor actor = m_physicsActor;
-
-                // NOTE: Velocity is not the same as m_velocity. Velocity will attempt to
-                // grab the latest PhysicsActor velocity, whereas m_velocity is often
-                // storing a requested force instead of an actual traveling velocity
-                // Throw away duplicate or insignificant updates
-                if (!m_bodyRot.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
-                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !m_pos.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
-                {
-                    SendTerseUpdateToAllClients();
-
-                    // Update the "last" values
-                    m_lastPosition = m_pos;
-                    m_lastRotation = m_bodyRot;
-                    m_lastVelocity = Velocity;
-
-                    //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
-                    // followed suggestion from mic bowman. reversed the two lines below.
-                    if (((m_parentID == UUID.Zero && m_physicsActor != null) ||
-                        m_parentID != UUID.Zero) &&
-                        (m_physicsActor != null &&
-                        m_physicsActor.Position.IsFinite())) // Check that we have a physics actor or we're sitting on something
-                        CheckForBorderCrossing();
-
-                    CheckForSignificantMovement(); // sends update to the modules.
-
-                    //Moving collision sound ID inside this loop so that we don't trigger it too much
-                    if (CollisionSoundID != UUID.Zero)
-                    {
-                        ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
-                        module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
-                        CollisionSoundID = UUID.Zero;
-                    }
-                }
-
-                if (Scene.UseSelectionParticles && SendEffectPackets > 7)
-                {
-                    SendViewerEffects();
-                    SendEffectPackets = -1;
-                }
-                SendEffectPackets++;
-
-                /*if (m_parentID != UUID.Zero)
-                {
-                    SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
-                    if (part != null)
-                    {
-                        if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
-                            part.SetPhysActorCameraPos(Lookat);
-                        else
-                            part.SetPhysActorCameraPos(Vector3.Zero);
-                    }
-                }*/
-            }
+            //Util.FireAndForget(SendPrimUpdates);
+            //We 'could' do this async... but we don't do anything else here, so why?
+            SendPrimUpdates(0);
+            //if (!IsChildAgent)
+            //{
+            //    if (m_parentID != UUID.Zero)
+            //    {
+            //        SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
+            //        if (part != null)
+            //        {
+            //            if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
+            //                part.SetPhysActorCameraPos(Lookat);
+            //            else
+            //                part.SetPhysActorCameraPos(Vector3.Zero);
+            //        }
+            //    }
+            //}
         }
 
         private int SendEffectPackets = -1;
@@ -2771,6 +2714,28 @@ namespace OpenSim.Region.Framework.Scenes
 
                 m_scene.SendOutChildAgentUpdates(agentpos, this);
             }
+
+            //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
+            // followed suggestion from mic bowman. reversed the two lines below.
+            if (((m_parentID == UUID.Zero && m_physicsActor != null) ||
+                m_parentID != UUID.Zero) &&
+                (m_physicsActor != null &&
+                m_physicsActor.Position.IsFinite())) // Check that we have a physics actor or we're sitting on something
+                CheckForBorderCrossing();
+
+            //Moving collision sound ID inside this loop so that we don't trigger it too much
+            if (CollisionSoundID != UUID.Zero)
+            {
+                ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
+                module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
+                CollisionSoundID = UUID.Zero;
+            }
+            if (Scene.UseSelectionParticles && SendEffectPackets > 7)
+            {
+                SendViewerEffects();
+                SendEffectPackets = -1;
+            }
+            SendEffectPackets++;
         }
 
         #endregion
@@ -3364,6 +3329,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
+            m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);

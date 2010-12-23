@@ -38,9 +38,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     public class AuroraODECharacter : PhysicsActor
     {
+        #region Declare
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Vector3 _position;
+        private Vector3 m_lastPosition;
         private d.Vector3 _zeroPosition;
         // private d.Matrix3 m_StandUpRotation;
         private bool _zeroFlag = false;
@@ -59,9 +62,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }*/
         private Vector3 _velocity;
+        private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
         private Vector3 m_rotationalVelocity;
+        private Vector3 m_lastRotationalVelocity;
         private float m_mass = 80f;
         public float m_density = 60f;
         private bool m_pidControllerActive = true;
@@ -132,6 +137,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool bad = false;
         private int m_WaitGroundCheck = 0;
 
+        #endregion
+
+        #region Constructor
+
         public AuroraODECharacter(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, CollisionLocker dode, Vector3 size, float pid_d, float pid_p, float capsule_radius, float tensor, float density, float height_fudge_factor, float walk_divisor, float rundivisor)
         {
             m_uuid = UUID.Random();
@@ -190,6 +199,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             
             m_name = avName;
         }
+
+        #endregion
+
+        #region Properties
 
         public override int PhysicsActorType
         {
@@ -291,7 +304,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // Equal truecounts and false counts means we're colliding with something.
 
-                if (falsecount > 1.2*truecount)
+                if (falsecount >= 1.2*truecount)
                 {
                     m_iscolliding = false;
                 }
@@ -474,91 +487,140 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        //
+        /// <summary>
+        /// Uses the capped cyllinder volume formula to calculate the avatar's mass.
+        /// This may be used in calculations in the scene/scenepresence
+        /// </summary>
+        public override float Mass
+        {
+            get
+            {
+                return m_mass;
+            }
+            set { }
+        }
+
+        public override Vector3 Force
+        {
+            get { return _target_velocity; }
+            set { return; }
+        }
+
+        public override int VehicleType
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        public override Vector3 CenterOfMass
+        {
+            get { return Vector3.Zero; }
+        }
+
+        public override Vector3 GeometricCenter
+        {
+            get { return Vector3.Zero; }
+        }
+
+        public override PrimitiveBaseShape Shape
+        {
+            set { return; }
+        }
+
+        public override Vector3 Velocity
+        {
+            get
+            {
+                // There's a problem with Vector3.Zero! Don't Use it Here!
+                //if (_zeroFlag)
+                //    return Vector3.Zero;
+                //m_lastUpdateSent = false;
+                return _velocity;
+            }
+            set
+            {
+                if (value.IsFinite())
+                {
+                    m_pidControllerActive = true;
+                    _target_velocity = value;
+                }
+                else
+                {
+                    m_log.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
+                }
+            }
+        }
+
+        public override Vector3 Torque
+        {
+            get { return Vector3.Zero; }
+            set { return; }
+        }
+
+        public override float CollisionScore
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override bool Kinematic
+        {
+            get { return false; }
+            set { }
+        }
+
+        public override Quaternion Orientation
+        {
+            get { return Quaternion.Identity; }
+            set
+            {
+                //Matrix3 or = Orientation.ToRotationMatrix();
+                //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
+                //d.BodySetRotation(Body, ref ord);
+            }
+        }
+
+        public override Vector3 Acceleration
+        {
+            get { return _acceleration; }
+        }
+
+        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
+        public override bool PIDActive { get { return false; } set { return; } }
+        public override float PIDTau { get { return 0; } set { return; } }
+
+        public override float PIDHoverHeight { set { return; } }
+        public override bool PIDHoverActive { set { return; } }
+        public override PIDHoverType PIDHoverType { set { return; } }
+        public override float PIDHoverTau { set { return; } }
+
+        public override Quaternion APIDTarget { set { return; } }
+        public override bool APIDActive { set { return; } }
+        public override float APIDStrength { set { return; } }
+        public override float APIDDamping { set { return; } }
+
+        #endregion
+
+        #region Methods
+
+        #region Rebuild the avatar representation
+
         private float FindNewAvatarMass()
         {
             float volume = Size.X * Size.Y * Size.Z;
-            return volume * 50; //Aluminum g/cm3 aprox * 5
-        }
-
-        private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
-        {
-            movementVector.Z = 0f;
-            float magnitude = (float)Math.Sqrt((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
-            if (magnitude < 0.1f) return;
-
-            // normalize the velocity vector
-            float invMagnitude = 1.0f / magnitude;
-            movementVector.X *= invMagnitude;
-            movementVector.Y *= invMagnitude;
-
-            // if we change the capsule heading too often, the capsule can fall down
-            // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
-            // meaning only 4 possible capsule tilt orientations
-
-            if (movementVector == Vector3.Zero)
-            {
-                return;
-            }
-            else if (movementVector.X > 0)
-            {
-                // east
-                if (movementVector.Y > 0)
-                {
-                    // northeast
-                    movementVector.X = (float)Math.Sqrt(4);
-                    movementVector.Y = (float)Math.Sqrt(4);
-                }
-                else
-                {
-                    // southeast
-                    movementVector.X = (float)Math.Sqrt(4);
-                    movementVector.Y = -(float)Math.Sqrt(4);
-                }
-            }
-            else
-            {
-                // west
-                if (movementVector.Y > 0)
-                {
-                    // northwest
-                    movementVector.X = -(float)Math.Sqrt(4);
-                    movementVector.Y = (float)Math.Sqrt(4);
-                }
-                else
-                {
-                    // southwest
-                    movementVector.X = -(float)Math.Sqrt(4);
-                    movementVector.Y = -(float)Math.Sqrt(4);
-                }
-            }
-
-
-            // movementVector.Z is zero
-
-            // calculate tilt components based on desired amount of tilt and current (snapped) heading.
-            // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
-            float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            //m_log.Debug(movementVector.X + " " + movementVector.Y);
-            //m_log.Debug("[PHYSICS] changing avatar tilt");
-            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
+            return volume * 200; //Aluminum g/cm3 aprox * 5
         }
 
         /// <summary>
         /// This creates the Avatar's physical Surrogate at the position supplied
+        /// WARNING: This MUST NOT be called outside of ProcessTaints, else we can have unsynchronized access
+        /// to ODE internals. ProcessTaints is called from within thread-locked Simulate(), so it is the only 
+        /// place that is safe to call this routine AvatarGeomAndBodyCreation.
         /// </summary>
         /// <param name="npositionX"></param>
         /// <param name="npositionY"></param>
         /// <param name="npositionZ"></param>
-
-        // WARNING: This MUST NOT be called outside of ProcessTaints, else we can have unsynchronized access
-        // to ODE internals. ProcessTaints is called from within thread-locked Simulate(), so it is the only 
-        // place that is safe to call this routine AvatarGeomAndBodyCreation.
         private void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ, float tensor)
         {
             int dAMotorEuler = 1;
@@ -673,232 +735,78 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //standupStraight();
         }
 
-        //
-        /// <summary>
-        /// Uses the capped cyllinder volume formula to calculate the avatar's mass.
-        /// This may be used in calculations in the scene/scenepresence
-        /// </summary>
-        public override float Mass
+        #endregion
+
+        #region Move
+
+        private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
         {
-            get
+            movementVector.Z = 0f;
+            float magnitude = (float)Math.Sqrt((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
+            if (magnitude < 0.1f) return;
+
+            // normalize the velocity vector
+            float invMagnitude = 1.0f / magnitude;
+            movementVector.X *= invMagnitude;
+            movementVector.Y *= invMagnitude;
+
+            // if we change the capsule heading too often, the capsule can fall down
+            // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
+            // meaning only 4 possible capsule tilt orientations
+
+            if (movementVector == Vector3.Zero)
             {
-                return m_mass;
+                return;
             }
-            set { }
-        }
-        public override void link(PhysicsActor obj)
-        {
-
-        }
-
-        public override void delink()
-        {
-
-        }
-
-        public override void LockAngularMotion(Vector3 axis)
-        {
-
-        }
-
-//      This code is very useful. Written by DanX0r. We're just not using it right now.
-//      Commented out to prevent a warning.
-//
-//         private void standupStraight()
-//         {
-//             // The purpose of this routine here is to quickly stabilize the Body while it's popped up in the air.
-//             // The amotor needs a few seconds to stabilize so without it, the avatar shoots up sky high when you
-//             // change appearance and when you enter the simulator
-//             // After this routine is done, the amotor stabilizes much quicker
-//             d.Vector3 feet;
-//             d.Vector3 head;
-//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, -1.0f, out feet);
-//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, 1.0f, out head);
-//             float posture = head.Z - feet.Z;
-
-//             // restoring force proportional to lack of posture:
-//             float servo = (2.5f - posture) * POSTURE_SERVO;
-//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, servo, 0.0f, 0.0f, 1.0f);
-//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, -servo, 0.0f, 0.0f, -1.0f);
-//             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
-//             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
-//         }
-
-        public override Vector3 Force
-        {
-            get { return _target_velocity; }
-            set { return; }
-        }
-
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-
-        }
-
-        public override void VehicleVectorParam(int param, Vector3 value)
-        {
-
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-
-        }
-
-        public override void VehicleFlags(int param, bool remove)
-        {
-
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-
-        }
-
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
-        public override Vector3 GeometricCenter
-        {
-            get { return Vector3.Zero; }
-        }
-
-        public override PrimitiveBaseShape Shape
-        {
-            set { return; }
-        }
-
-        public override Vector3 Velocity
-        {
-            get {
-                // There's a problem with Vector3.Zero! Don't Use it Here!
-                //if (_zeroFlag)
-                //    return Vector3.Zero;
-                //m_lastUpdateSent = false;
-                return _velocity;
-            }
-            set
+            else if (movementVector.X > 0)
             {
-                if (value.IsFinite())
+                // east
+                if (movementVector.Y > 0)
                 {
-                    m_pidControllerActive = true;
-                    _target_velocity = value;
+                    // northeast
+                    movementVector.X = (float)Math.Sqrt(4);
+                    movementVector.Y = (float)Math.Sqrt(4);
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
-                }
-            }
-        }
-
-        public override Vector3 Torque
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override float CollisionScore
-        {
-            get { return 0f; }
-            set { }
-        }
-
-        public override bool Kinematic
-        {
-            get { return false; }
-            set { }
-        }
-
-        public override Quaternion Orientation
-        {
-            get { return Quaternion.Identity; }
-            set {
-                //Matrix3 or = Orientation.ToRotationMatrix();
-                //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
-                //d.BodySetRotation(Body, ref ord);
-            }
-        }
-
-        public override Vector3 Acceleration
-        {
-            get { return _acceleration; }
-        }
-
-        public void SetAcceleration(Vector3 accel)
-        {
-            m_pidControllerActive = true;
-            _acceleration = accel;
-        }
-
-        /// <summary>
-        /// Adds the force supplied to the Target Velocity
-        /// The PID controller takes this target velocity and tries to make it a reality
-        /// </summary>
-        /// <param name="force"></param>
-        public override void AddForce(Vector3 force, bool pushforce)
-        {
-            if (force.IsFinite())
-            {
-                if (pushforce)
-                {
-                    m_pidControllerActive = false;
-                    force *= 100f;
-                    doForce(force);
-                    // If uncommented, things get pushed off world
-                    //
-                    // m_log.Debug("Push!");
-                    // _target_velocity.X += force.X;
-                    // _target_velocity.Y += force.Y;
-                    // _target_velocity.Z += force.Z;
-                }
-                else
-                {
-                    m_pidControllerActive = true;
-                    _target_velocity.X += force.X;
-                    _target_velocity.Y += force.Y;
-                    _target_velocity.Z += force.Z;
+                    // southeast
+                    movementVector.X = (float)Math.Sqrt(4);
+                    movementVector.Y = -(float)Math.Sqrt(4);
                 }
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got a NaN force applied to a Character");
+                // west
+                if (movementVector.Y > 0)
+                {
+                    // northwest
+                    movementVector.X = -(float)Math.Sqrt(4);
+                    movementVector.Y = (float)Math.Sqrt(4);
+                }
+                else
+                {
+                    // southwest
+                    movementVector.X = -(float)Math.Sqrt(4);
+                    movementVector.Y = -(float)Math.Sqrt(4);
+                }
             }
-            //m_lastUpdateSent = false;
+
+
+            // movementVector.Z is zero
+
+            // calculate tilt components based on desired amount of tilt and current (snapped) heading.
+            // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
+            float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
+            float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
+            //m_log.Debug(movementVector.X + " " + movementVector.Y);
+            //m_log.Debug("[PHYSICS] changing avatar tilt");
+            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, xTiltComponent);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, yTiltComponent);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
         }
-
-        public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-
-        }
-
-        /// <summary>
-        /// After all of the forces add up with 'add force' we apply them with doForce
-        /// </summary>
-        /// <param name="force"></param>
-        public void doForce(Vector3 force)
-        {
-            if (!collidelock && force != Vector3.Zero)
-            {
-                //force /= m_mass;
-                d.BodyAddForce(Body, force.X, force.Y, force.Z);
-                //d.BodySetRotation(Body, ref m_StandUpRotation);
-                //standupStraight();
-
-            }
-        }
-
-        public override void SetMomentum(Vector3 momentum)
-        {
-        }
-
 
         /// <summary>
         /// Called from Simulate
@@ -941,7 +849,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.Vector3 localpos = d.BodyGetPosition(Body);
             Vector3 localPos = new Vector3((float)localpos.X, (float)localpos.Y, (float)localpos.Z);
-            
+
             if (!localPos.IsFinite())
             {
                 m_log.Warn("[PHYSICS]: Avatar Position is non-finite!");
@@ -982,10 +890,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float movementdivisor = 1f;
 
             if (!m_alwaysRun)
-                movementdivisor = walkDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f :_parent_scene.TimeDilation); //Dynamically adjust it for slower sims
+                movementdivisor = walkDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
             else
                 movementdivisor = runDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
-            
+
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&
                 Math.Abs(vel.X) < 0.5 && Math.Abs(vel.Y) < 0.5 && Math.Abs(vel.Z) < 0.5) //This is so that if we get moved by something else, it will update us in the client
@@ -1010,12 +918,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //NOTE: THIS WILL CAUSE BENDING KNEE
                     //if (!velocity.ApproxEquals(Vector3.Zero, 0.2f))
                     //{
-                        vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
-                        vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
-                        //if(!Flying)
-                        //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
-                        //if (flying)
-                        //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
+                    vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
+                    vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
+                    //if(!Flying)
+                    //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
+                    //if (flying)
+                    //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
                     //}
                 }
             }
@@ -1074,7 +982,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     #region Av gravity
 
                     float oldVelZ = (float)vel.Z;
-                    if (_parent_scene.AllowAvGravity && 
+                    if (_parent_scene.AllowAvGravity &&
                         tempPos.Z > _parent_scene.AvGravityHeight) //Should be stop avies from flying upwards
                     {
                         //Decay going up 
@@ -1151,7 +1059,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if ((_position.Z - CAPSULE_LENGTH) < target_altitude + 1)
                         {
-                            vec.Z += ((target_altitude+4) - (_position.Z - CAPSULE_LENGTH)) * PID_D;
+                            vec.Z += ((target_altitude + 4) - (_position.Z - CAPSULE_LENGTH)) * PID_D;
                         }
                         else
                             vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (_position.Z - CAPSULE_LENGTH)) * PID_D / 2;
@@ -1340,7 +1248,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
                 m_log.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
             }
-            
+
 
             //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
             if (vec.X < 0.0f) vec.X = 0.0f;
@@ -1369,7 +1277,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!m_lastUpdateSent)
                 {
                     m_lastUpdateSent = true;
-                    //base.RequestPhysicsterseUpdate();
+                    base.RequestPhysicsterseUpdate();
                 }
             }
             else
@@ -1392,9 +1300,177 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
 
-                //base.RequestPhysicsterseUpdate();
+                const float VELOCITY_TOLERANCE = 0.001f;
+                const float POSITION_TOLERANCE = 0.05f;
+
+                //Check to see whether we need to trigger the significant movement method in the presence
+                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
+                {
+                    // Update the "last" values
+                    m_lastPosition = Position;
+                    m_lastRotationalVelocity = RotationalVelocity;
+                    m_lastVelocity = Velocity;
+                    base.RequestPhysicsterseUpdate();
+                    base.TriggerSignificantMovement();
+                }
             }
         }
+
+        #endregion
+
+        #region Unused code (for prims)
+
+        public override void link(PhysicsActor obj)
+        {
+
+        }
+
+        public override void delink()
+        {
+
+        }
+
+        public override void LockAngularMotion(Vector3 axis)
+        {
+
+        }
+
+//      This code is very useful. Written by DanX0r. We're just not using it right now.
+//      Commented out to prevent a warning.
+//
+//         private void standupStraight()
+//         {
+//             // The purpose of this routine here is to quickly stabilize the Body while it's popped up in the air.
+//             // The amotor needs a few seconds to stabilize so without it, the avatar shoots up sky high when you
+//             // change appearance and when you enter the simulator
+//             // After this routine is done, the amotor stabilizes much quicker
+//             d.Vector3 feet;
+//             d.Vector3 head;
+//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, -1.0f, out feet);
+//             d.BodyGetRelPointPos(Body, 0.0f, 0.0f, 1.0f, out head);
+//             float posture = head.Z - feet.Z;
+
+//             // restoring force proportional to lack of posture:
+//             float servo = (2.5f - posture) * POSTURE_SERVO;
+//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, servo, 0.0f, 0.0f, 1.0f);
+//             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, -servo, 0.0f, 0.0f, -1.0f);
+//             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
+//             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
+        //         }
+
+        #region Vehicle (not used)
+
+        public override void VehicleFloatParam(int param, float value)
+        {
+
+        }
+
+        public override void VehicleVectorParam(int param, Vector3 value)
+        {
+
+        }
+
+        public override void VehicleRotationParam(int param, Quaternion rotation)
+        {
+
+        }
+
+        public override void VehicleFlags(int param, bool remove)
+        {
+
+        }
+
+        #endregion
+
+        public override void SetVolumeDetect(int param)
+        {
+
+        }
+
+        public void SetAcceleration(Vector3 accel)
+        {
+            m_pidControllerActive = true;
+            _acceleration = accel;
+        }
+
+        public override void AddAngularForce(Vector3 force, bool pushforce)
+        {
+
+        }
+
+        public override void SetMomentum(Vector3 momentum)
+        {
+        }
+
+        public override void CrossingFailure()
+        {
+        }
+
+        public override void SetCameraPos(Vector3 CameraRotation)
+        {
+        }
+
+        #endregion
+
+        #region Forces
+
+        /// <summary>
+        /// Adds the force supplied to the Target Velocity
+        /// The PID controller takes this target velocity and tries to make it a reality
+        /// </summary>
+        /// <param name="force"></param>
+        public override void AddForce(Vector3 force, bool pushforce)
+        {
+            if (force.IsFinite())
+            {
+                if (pushforce)
+                {
+                    m_pidControllerActive = false;
+                    force *= 100f;
+                    doForce(force);
+                    // If uncommented, things get pushed off world
+                    //
+                    // m_log.Debug("Push!");
+                    // _target_velocity.X += force.X;
+                    // _target_velocity.Y += force.Y;
+                    // _target_velocity.Z += force.Z;
+                }
+                else
+                {
+                    m_pidControllerActive = true;
+                    _target_velocity.X += force.X;
+                    _target_velocity.Y += force.Y;
+                    _target_velocity.Z += force.Z;
+                }
+            }
+            else
+            {
+                m_log.Warn("[PHYSICS]: Got a NaN force applied to a Character");
+            }
+            //m_lastUpdateSent = false;
+        }
+
+        /// <summary>
+        /// After all of the forces add up with 'add force' we apply them with doForce
+        /// </summary>
+        /// <param name="force"></param>
+        public void doForce(Vector3 force)
+        {
+            if (!collidelock && force != Vector3.Zero)
+            {
+                //force /= m_mass;
+                d.BodyAddForce(Body, force.X, force.Y, force.Z);
+                //d.BodySetRotation(Body, ref m_StandUpRotation);
+                //standupStraight();
+
+            }
+        }
+
+        #endregion
+
+        #region Destroy
 
         /// <summary>
         /// Cleanup the things we use in the scene.
@@ -1405,30 +1481,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_scene.AddPhysicsActorTaint(this);
         }
 
-        public override void CrossingFailure()
-        {
-        }
+        #endregion
 
-        public override Vector3 PIDTarget { get { return Vector3.Zero; } set { return; } }
-        public override bool PIDActive { get { return false; } set { return; } }
-        public override float PIDTau { get { return 0; } set { return; } }
+        #endregion
 
-        public override float PIDHoverHeight { set { return; } }
-        public override bool PIDHoverActive { set { return; } }
-        public override PIDHoverType PIDHoverType { set { return; } }
-        public override float PIDHoverTau { set { return; } }
-        
-        public override Quaternion APIDTarget{ set { return; } }
-
-        public override bool APIDActive{ set { return; } }
-
-        public override float APIDStrength{ set { return; } }
-
-        public override float APIDDamping{ set { return; } }
-
-        public override void SetCameraPos(Vector3 CameraRotation)
-        {
-        }
+        #region Collision events
 
         public override void SubscribeEvents(int ms)
         {
@@ -1436,12 +1493,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_eventsubscription = ms;
             _parent_scene.addCollisionEventReporting(this);
         }
+
         public override void UnSubscribeEvents()
         {
             _parent_scene.remCollisionEventReporting(this);
             m_requestedUpdateFrequency = 0;
             m_eventsubscription = 0;
         }
+
         public void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
             if (m_eventsubscription > 0)
@@ -1462,6 +1521,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_eventsubscription = 0;
             }
         }
+
         public override bool SubscribedEvents()
         {
             if (m_eventsubscription > 0)
@@ -1573,5 +1633,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_eventsubscription = 0;
             m_eventsubscription += p;
         }
+
+        #endregion
     }
 }
