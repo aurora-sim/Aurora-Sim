@@ -41,6 +41,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Vector3 _position;
+        private Vector3 m_lastPosition;
         private d.Vector3 _zeroPosition;
         // private d.Matrix3 m_StandUpRotation;
         private bool _zeroFlag = false;
@@ -59,9 +60,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }*/
         private Vector3 _velocity;
+        private Vector3 m_lastVelocity;
         private Vector3 _target_velocity;
         private Vector3 _acceleration;
         private Vector3 m_rotationalVelocity;
+        private Vector3 m_lastRotationalVelocity;
         private float m_mass = 80f;
         public float m_density = 60f;
         private bool m_pidControllerActive = true;
@@ -477,7 +480,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float FindNewAvatarMass()
         {
             float volume = Size.X * Size.Y * Size.Z;
-            return volume * 50; //Aluminum g/cm3 aprox * 5
+            return volume * 200; //Aluminum g/cm3 aprox * 5
         }
 
         private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
@@ -1369,7 +1372,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!m_lastUpdateSent)
                 {
                     m_lastUpdateSent = true;
-                    //base.RequestPhysicsterseUpdate();
+                    base.RequestPhysicsterseUpdate();
                 }
             }
             else
@@ -1392,7 +1395,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     _velocity = new Vector3((float)(vec.X), (float)(vec.Y), (float)(vec.Z));
 
-                //base.RequestPhysicsterseUpdate();
+                const float VELOCITY_TOLERANCE = 0.001f;
+                const float POSITION_TOLERANCE = 0.05f;
+
+                //Check to see whether we need to trigger the significant movement method in the presence
+                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
+                {
+                    // Update the "last" values
+                    m_lastPosition = Position;
+                    m_lastRotationalVelocity = RotationalVelocity;
+                    m_lastVelocity = Velocity;
+                    base.RequestPhysicsterseUpdate();
+                    base.TriggerSignificantMovement();
+                }
             }
         }
 

@@ -401,11 +401,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_lookupTable.TryGetValue(local_id, out item))
             {
-                if (item.Heap != null)
+                if (item.Heap != null && item.Heap.ContainsHandle(item.Handle))
                 {
                     try
                     {
                         // Combine flags
+                        MinHeapItem heapitem = item.Heap[item.Handle];
                         value.Flags |= item.Heap[item.Handle].Value.Flags;
                     }
                     catch
@@ -514,7 +515,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             public int CompareTo(MinHeapItem other)
             {
-                return this.comparison(this.priority, other.priority);
+                if (this.comparison != null)
+                    return this.comparison(this.priority, other.priority);
+                else
+                    return Comparer<double>.Default.Compare(this.priority, other.priority);
             }
         }
         #endregion

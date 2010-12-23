@@ -985,8 +985,10 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
-                    if (m_physicsActor != null) 
+                    if (m_physicsActor != null)
                         m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
+                    if (m_physicsActor != null)
+                        m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
@@ -2308,8 +2310,8 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else if(PreJumpForce.Equals(Vector3.Zero))
                         {
-                            direc.X *= direc.X < 0 ? 2.5f : 2f;
-                            direc.Y *= 2f;
+                            direc.X *= 4;
+                            direc.Y *= 4;
                             if (direc.X == 0 && direc.Y == 0)
                                 direc.Z *= 4f;
                             else
@@ -2360,58 +2362,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
-            const float ROTATION_TOLERANCE = 0.01f;
-            const float VELOCITY_TOLERANCE = 0.001f;
-            const float POSITION_TOLERANCE = 0.05f;
-            //const int TIME_MS_TOLERANCE = 3000;
-
             Util.FireAndForget(SendPrimUpdates);
 
             if (!IsChildAgent)
             {
-                //                PhysicsActor actor = m_physicsActor;
-
-                // NOTE: Velocity is not the same as m_velocity. Velocity will attempt to
-                // grab the latest PhysicsActor velocity, whereas m_velocity is often
-                // storing a requested force instead of an actual traveling velocity
-                // Throw away duplicate or insignificant updates
-                if (!m_bodyRot.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE) ||
-                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !m_pos.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
-                {
-                    SendTerseUpdateToAllClients();
-
-                    // Update the "last" values
-                    m_lastPosition = m_pos;
-                    m_lastRotation = m_bodyRot;
-                    m_lastVelocity = Velocity;
-
-                    //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
-                    // followed suggestion from mic bowman. reversed the two lines below.
-                    if (((m_parentID == UUID.Zero && m_physicsActor != null) ||
-                        m_parentID != UUID.Zero) &&
-                        (m_physicsActor != null &&
-                        m_physicsActor.Position.IsFinite())) // Check that we have a physics actor or we're sitting on something
-                        CheckForBorderCrossing();
-
-                    CheckForSignificantMovement(); // sends update to the modules.
-
-                    //Moving collision sound ID inside this loop so that we don't trigger it too much
-                    if (CollisionSoundID != UUID.Zero)
-                    {
-                        ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
-                        module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
-                        CollisionSoundID = UUID.Zero;
-                    }
-                }
-
-                if (Scene.UseSelectionParticles && SendEffectPackets > 7)
-                {
-                    SendViewerEffects();
-                    SendEffectPackets = -1;
-                }
-                SendEffectPackets++;
-
                 /*if (m_parentID != UUID.Zero)
                 {
                     SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
@@ -2771,6 +2725,28 @@ namespace OpenSim.Region.Framework.Scenes
 
                 m_scene.SendOutChildAgentUpdates(agentpos, this);
             }
+
+            //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.
+            // followed suggestion from mic bowman. reversed the two lines below.
+            if (((m_parentID == UUID.Zero && m_physicsActor != null) ||
+                m_parentID != UUID.Zero) &&
+                (m_physicsActor != null &&
+                m_physicsActor.Position.IsFinite())) // Check that we have a physics actor or we're sitting on something
+                CheckForBorderCrossing();
+
+            //Moving collision sound ID inside this loop so that we don't trigger it too much
+            if (CollisionSoundID != UUID.Zero)
+            {
+                ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
+                module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
+                CollisionSoundID = UUID.Zero;
+            }
+            if (Scene.UseSelectionParticles && SendEffectPackets > 7)
+            {
+                SendViewerEffects();
+                SendEffectPackets = -1;
+            }
+            SendEffectPackets++;
         }
 
         #endregion
@@ -3364,6 +3340,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
+            m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);
