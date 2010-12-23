@@ -108,7 +108,7 @@ namespace OpenSim.Services.AssetService
                 m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
                         delegate(AssetBase a)
                         {
-                            if (!assetLoaderEnabled && GetExists(a.ID) && !forceAssetLoading)
+                            if ((!assetLoaderEnabled && GetExists(a.ID)) || !forceAssetLoading)
                                 return;
                             Store(a);
                         });
