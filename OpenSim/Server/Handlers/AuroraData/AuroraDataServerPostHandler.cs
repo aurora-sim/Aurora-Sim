@@ -24,6 +24,7 @@ namespace OpenSim.Server.Handlers.AuroraData
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private AgentInfoHandler AgentHandler = new AgentInfoHandler();
+        private AssetHandler AssetHandler = new AssetHandler();
         private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
         private TelehubInfoHandler TelehubHandler = new TelehubInfoHandler();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
@@ -73,6 +74,12 @@ namespace OpenSim.Server.Handlers.AuroraData
                     #region Agents
                     case "getagent":
                         return AgentHandler.GetAgent(request);
+                    #endregion
+                    #region Assets
+                    case "updatelsldata":
+                        return AssetHandler.UpdateLSLData(request);
+                    case "findlsldata":
+                        return AssetHandler.FindLSLData(request);
                     #endregion
                     #region Estates
                     case "loadestatesettings":
@@ -277,6 +284,113 @@ namespace OpenSim.Server.Handlers.AuroraData
             return encoding.GetBytes(xmlString);
         }
     }
+
+    public class AssetHandler
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        IAssetConnector AssetConnector;
+        public AssetHandler()
+        {
+            AssetConnector = DataManager.RequestPlugin<IAssetConnector>();
+        }
+
+        public byte[] FindLSLData(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string token = request["token"].ToString();
+            string key = request["key"].ToString();
+            List<string> data = AssetConnector.FindLSLData(token, key);
+
+            int i = 0;
+            foreach (string d in data)
+            {
+                result.Add(ConvertDecString(i), d);
+                i++;
+            }
+
+            string xmlString = WebUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] UpdateLSLData(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string token = request["token"].ToString();
+            string key = request["key"].ToString();
+            string value = request["value"].ToString();
+
+            AssetConnector.UpdateLSLData(token, key, value);
+
+            return SuccessResult();
+        }
+
+        private byte[] SuccessResult()
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                    "", "");
+
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                    "");
+
+            doc.AppendChild(rootElement);
+
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Success"));
+
+            rootElement.AppendChild(result);
+
+            return DocToBytes(doc);
+        }
+
+        private byte[] DocToBytes(XmlDocument doc)
+        {
+            MemoryStream ms = new MemoryStream();
+            XmlTextWriter xw = new XmlTextWriter(ms, null);
+            xw.Formatting = Formatting.Indented;
+            doc.WriteTo(xw);
+            xw.Flush();
+
+            return ms.ToArray();
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public string ConvertDecString(int dvalue)
+        {
+
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble(dvalue);
+
+            do
+            {
+
+                double remainder = value - (26 * Math.Truncate(value / 26));
+
+                retVal = retVal + CHARS.Substring((int)remainder, 1);
+
+                value = Math.Truncate(value / 26);
+
+            }
+            while (value > 0);
+
+
+
+            return retVal;
+
+        }
+    }
+
     public class GroupsServiceHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
