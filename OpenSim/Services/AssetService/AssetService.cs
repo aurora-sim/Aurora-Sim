@@ -235,6 +235,9 @@ namespace OpenSim.Services.AssetService
             if (!UUID.TryParse(id, out assetID))
                 return false;
 
+            if (assetID == UUID.Zero)
+                return false;
+
             AssetBase asset = m_Database.GetAsset(assetID);
             if (asset == null)
                 return false;

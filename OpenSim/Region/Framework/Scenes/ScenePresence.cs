@@ -1060,13 +1060,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
         {
-            //List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
+            List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
 
-            //foreach (CachedAgentArgs arg in args)
-            //{
-            //}
+            //Send all with UUID zero for now so that we don't confuse the client about baked textures...
+            foreach (CachedAgentArgs arg in args)
+            {
+                CachedAgentArgs respArgs = new CachedAgentArgs();
+                respArgs.ID = UUID.Zero;
+                respArgs.TextureIndex = arg.TextureIndex;
+                resp.Add(respArgs);
+            }
 
-            client.SendAgentCachedTexture(args);
+            client.SendAgentCachedTexture(resp);
         }
 
         /// <summary>
@@ -2319,6 +2324,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_forceToApply = direc * (.95f);
                     //More decay on the Z, otherwise flying up and down is a bit hard
                     m_forceToApply = new Vector3(m_forceToApply.Value.X, m_forceToApply.Value.Y, m_forceToApply.Value.Z * 0.5f);
+
                     m_velocityIsDecaying = true;
                 }
                 else
