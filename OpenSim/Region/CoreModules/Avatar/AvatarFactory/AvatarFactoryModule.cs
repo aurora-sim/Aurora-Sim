@@ -206,7 +206,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            m_log.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
+            //m_log.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
             // Process the texture entry transactionally, this doesn't guarantee that Appearance is
             // going to be handled correctly but it does serialize the updates to the appearance

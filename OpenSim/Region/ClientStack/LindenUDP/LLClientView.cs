@@ -12455,7 +12455,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 requestID = new UUID(transferRequest.TransferInfo.Params, 80);
             }
 
-            m_log.InfoFormat("[CLIENT]: {0} requesting asset {1}", Name, requestID);
+            //m_log.InfoFormat("[CLIENT]: {0} requesting asset {1}", Name, requestID);
 
             m_assetService.Get(requestID.ToString(), transferRequest, AssetReceived);
         }
@@ -12468,10 +12468,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="asset"></param>
         protected void AssetReceived(string id, Object sender, AssetBase asset)
         {
-            if (asset == null)
-                return;
-
-            m_log.InfoFormat("[CLIENT]: {0} found requested asset", Name);
+            //m_log.InfoFormat("[CLIENT]: {0} found requested asset", Name);
 
             TransferRequestPacket transferRequest = (TransferRequestPacket)sender;
 
@@ -12494,15 +12491,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             req.AssetInf = asset;
             req.AssetRequestSource = source;
             req.IsTextureRequest = false;
-            req.NumPackets = CalculateNumPackets(asset.Data);
+            req.NumPackets = asset == null ? 0 : CalculateNumPackets(asset.Data);
             req.Params = transferRequest.TransferInfo.Params;
             req.RequestAssetID = requestID;
             req.TransferRequestID = transferRequest.TransferInfo.TransferID;
 
+            if (asset == null)
+            {
+                SendFailedAsset(req, TransferPacketStatus.AssetRequestFailed);
+                return;
+            }
             // Scripts cannot be retrieved by direct request
-            if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset && asset.Type == 10)
+            else if (transferRequest.TransferInfo.SourceType == (int)SourceType.Asset && asset.Type == 10)
             {
                 SendFailedAsset(req, TransferPacketStatus.InsufficientPermissions);
+                return;
             }
 
             SendAsset(req);
