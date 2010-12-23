@@ -262,11 +262,14 @@ namespace OpenSim.Services.Connectors
             bool RetVal = false;
             List<GridRegion> NotifiedRegions = m_LocalService.SendChatMessageToNeighbors(message, type, region, out RetVal);
 
-            int RegionsNotInformed = m_KnownNeighbors[region.RegionID].Count - NotifiedRegions.Count;
+            if (m_KnownNeighbors.ContainsKey(region.RegionID))
+            {
+                int RegionsNotInformed = m_KnownNeighbors[region.RegionID].Count - NotifiedRegions.Count;
 
-            //We informed all of them locally, so quit early
-            if (RegionsNotInformed == 0)
-                return RetVal;
+                //We informed all of them locally, so quit early
+                if (RegionsNotInformed == 0)
+                    return RetVal;
+            }
 
             //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
             InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
