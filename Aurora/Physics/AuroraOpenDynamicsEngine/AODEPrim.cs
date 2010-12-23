@@ -64,6 +64,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _torque;
         private Vector3 m_lastVelocity;
         private Vector3 m_lastposition;
+        private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();
         private Vector3 m_rotationalVelocity;
         private Vector3 _size;
@@ -2935,6 +2936,12 @@ Console.WriteLine(" JointCreateFixed");
                             throttleCounter++;
                     }
                     m_lastposition = l_position;
+
+                    const float SIGNIFICANT_UPDATE_CHANGE = 1.0f;
+                    if (!m_lastposition.ApproxEquals(m_lastSignificantPosition, SIGNIFICANT_UPDATE_CHANGE))
+                    {
+                        base.TriggerSignificantMovement();
+                    }
                 }
                 else
                 {
