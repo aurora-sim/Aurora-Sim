@@ -1831,10 +1831,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
-            //We don't check for significant movement when the scene is loading 
-            if (!Scene.LoadingPrims)
-                CheckForSignificantMovement();
-
             if (!IsSelected)
             {
                 foreach (SceneObjectPart part in m_partsList)
@@ -1861,17 +1857,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected internal void CheckForSignificantMovement()
         {
-            //How far the object can move before it triggers an update
-            const float SIGNIFICANT_MOVEMENT = 1.0f;
-
-            if (Util.GetDistanceTo(AbsolutePosition, m_lastSignificantPosition) > SIGNIFICANT_MOVEMENT)
-            {
-                m_scene.EventManager.TriggerSignificantObjectMovement(this);
-                //Do this second! This is important, otherwise 
-                // if the object isn't allowed, we will not be able
-                // to reset its position to the last known good pos
-                m_lastSignificantPosition = AbsolutePosition;
-            }
+            m_scene.EventManager.TriggerSignificantObjectMovement(this);
+            //Do this second! This is important, otherwise 
+            // if the object isn't allowed, we will not be able
+            // to reset its position to the last known good pos
+            m_lastSignificantPosition = AbsolutePosition;
         }
 
         /// <summary>

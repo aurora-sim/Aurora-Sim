@@ -121,15 +121,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 lastKnownAllowedPosition;
         public Vector4 CollisionPlane = Vector4.UnitW;
 
-        private Vector3 m_lastPosition;
-        private Quaternion m_lastRotation;
-        private Vector3 m_lastVelocity;
-
-        public Vector3 LastVelocity
-        {
-            get { return m_lastVelocity; }
-        }
-
         private bool m_updateflag;
         private byte m_movementflag;
         public Vector3? m_forceToApply;
@@ -1154,31 +1145,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="distance"></param>
         public void RayCastCameraCallback(bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 pNormal)
         {
-            const float POSITION_TOLERANCE = 0.02f;
-            const float VELOCITY_TOLERANCE = 0.02f;
-            const float ROTATION_TOLERANCE = 0.02f;
-
             if (m_followCamAuto)
             {
                 if (hitYN)
                 {
                     CameraConstraintActive = true;
                     //m_log.DebugFormat("[RAYCASTRESULT]: {0}, {1}, {2}, {3}", hitYN, collisionPoint, localid, distance);
-                    
+
                     Vector3 normal = Vector3.Normalize(new Vector3(0f, 0f, collisionPoint.Z) - collisionPoint);
-                    ControllingClient.SendCameraConstraint(new Vector4(normal.X, normal.Y, normal.Z, -1 * Vector3.Distance(new Vector3(0,0,collisionPoint.Z),collisionPoint)));
+                    ControllingClient.SendCameraConstraint(new Vector4(normal.X, normal.Y, normal.Z, -1 * Vector3.Distance(new Vector3(0, 0, collisionPoint.Z), collisionPoint)));
                 }
                 else
                 {
-                    if (!m_pos.ApproxEquals(m_lastPosition, POSITION_TOLERANCE) ||
-                        !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
-                        !m_bodyRot.ApproxEquals(m_lastRotation, ROTATION_TOLERANCE))
+                    if (CameraConstraintActive)
                     {
-                        if (CameraConstraintActive)
-                        {
-                            ControllingClient.SendCameraConstraint(new Vector4(0f, 0.5f, 0.9f, -3000f));
-                            CameraConstraintActive = false;
-                        }
+                        ControllingClient.SendCameraConstraint(new Vector4(0f, 0.5f, 0.9f, -3000f));
+                        CameraConstraintActive = false;
                     }
                 }
             }

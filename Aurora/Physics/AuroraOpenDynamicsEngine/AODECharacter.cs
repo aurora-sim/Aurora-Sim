@@ -294,7 +294,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // Equal truecounts and false counts means we're colliding with something.
 
-                if (falsecount > 1.2*truecount)
+                if (falsecount >= 1.2*truecount)
                 {
                     m_iscolliding = false;
                 }

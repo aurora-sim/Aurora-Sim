@@ -345,7 +345,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     else
                     {
 
-                        float Z = Math.Abs(m_SP.LastVelocity.Z);
+                        float Z = Math.Abs(m_SP.Velocity.Z);
                         if (coldata[localid].PenetrationDepth >= 0.05f)
                             Health -= coldata[localid].PenetrationDepth * Z;
                     }

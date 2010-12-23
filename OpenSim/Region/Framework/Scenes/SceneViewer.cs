@@ -300,6 +300,8 @@ namespace OpenSim.Region.Framework.Scenes
                     PriorityQueueItem<EntityUpdate, double> update;
                     while (m_partsUpdateQueue.TryDequeue(out update))
                     {
+                        if (update.Value == null)
+                            continue;
                         //Make sure not to send deleted or null objects
                         if (((SceneObjectPart)update.Value.Entity).ParentGroup == null || ((SceneObjectPart)update.Value.Entity).ParentGroup.IsDeleted)
                             continue;

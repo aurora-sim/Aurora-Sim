@@ -2355,6 +2355,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 ParentGroup.Scene.RemovePhysicalPrim(1);
 
                             PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
+                            PhysActor.OnSignificantMovement -= ParentGroup.CheckForSignificantMovement;
                             PhysActor.OnOutOfBounds -= PhysicsOutOfBounds;
                             PhysActor.delink();
 
@@ -2398,6 +2399,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 ParentGroup.Scene.AddPhysicalPrim(1);
 
                                 PhysActor.OnRequestTerseUpdate += PhysicsRequestingTerseUpdate;
+                                PhysActor.OnSignificantMovement += ParentGroup.CheckForSignificantMovement;
                                 PhysActor.OnOutOfBounds += PhysicsOutOfBounds;
                                 if (_parentID != 0 && _parentID != LocalId)
                                 {
