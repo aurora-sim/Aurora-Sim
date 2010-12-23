@@ -81,13 +81,7 @@ namespace Aurora.Services.DataService
 
             OSDMap agentInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
-            agent.PrincipalID = agentID;
-            agent.AcceptTOS = agentInfo["AcceptTOS"].AsInteger() == 1;
-            agent.Flags = (IAgentFlags)agentInfo["AcceptTOS"].AsUInteger();
-            agent.MaturityRating = agentInfo["MaturityRating"].AsInteger();
-            agent.MaxMaturity = agentInfo["MaxMaturity"].AsInteger();
-            agent.Language = agentInfo["Language"].AsString();
-            agent.LanguageIsPublic = agentInfo["LanguageIsPublic"].AsInteger() == 1;
+            agent.FromOSD(agentInfo);
 			return agent;
 		}
 
@@ -98,21 +92,10 @@ namespace Aurora.Services.DataService
         /// <param name="agent"></param>
         public void UpdateAgent(IAgentInfo agent)
 		{
-            Dictionary<string, object> Values = new Dictionary<string, object>();
-            Values.Add("AcceptTOS", agent.AcceptTOS ? 1 : 0);
-            //Values.Add("Flags", agent.Flags); Don't allow regions to set this
-            Values.Add("MaturityRating", agent.MaturityRating);
-            Values.Add("MaxMaturity", agent.MaxMaturity);
-            Values.Add("Language", agent.Language);
-            Values.Add("LanguageIsPublic", agent.LanguageIsPublic ? 1 : 0);
-            
-            
             List<object> SetValues = new List<object>();
             List<string> SetRows = new List<string>();
             SetRows.Add("Value");
-
-            OSDMap map = Util.DictionaryToOSD(Values);
-            SetValues.Add(OSDParser.SerializeLLSDXmlString(map));
+            SetValues.Add(OSDParser.SerializeLLSDXmlString(agent.ToOSD()));
             
             
             List<object> KeyValue = new List<object>();
@@ -136,7 +119,7 @@ namespace Aurora.Services.DataService
             values.Add("AgentInfo");
             IAgentInfo info = new IAgentInfo();
             info.PrincipalID = agentID;
-            values.Add(OSDParser.SerializeLLSDXmlString(Util.DictionaryToOSD(info.ToKeyValuePairs()))); //Value which is a default Profile
+            values.Add(OSDParser.SerializeLLSDXmlString(info.ToOSD())); //Value which is a default Profile
             GD.Insert("userdata", values.ToArray());
 		}
 

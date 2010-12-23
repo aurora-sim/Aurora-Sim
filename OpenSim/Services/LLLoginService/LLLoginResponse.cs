@@ -64,43 +64,51 @@ namespace OpenSim.Services.LLLoginService
     {
         protected string m_key;
         protected string m_value;
-        protected string m_login;
+        protected bool m_login;
 
-        public static LLFailedLoginResponse UserProblem;
+        public static LLFailedLoginResponse AuthenticationProblem;
+        public static LLFailedLoginResponse AccountProblem;
         public static LLFailedLoginResponse GridProblem;
         public static LLFailedLoginResponse InventoryProblem;
         public static LLFailedLoginResponse DeadRegionProblem;
         public static LLFailedLoginResponse LoginBlockedProblem;
         public static LLFailedLoginResponse AlreadyLoggedInProblem;
         public static LLFailedLoginResponse InternalError;
+        public static LLFailedLoginResponse PermanentBannedProblem;
 
         static LLFailedLoginResponse()
         {
-            UserProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect, 
+            AuthenticationProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
                 "Could not authenticate your avatar. Please check your username and password, and check the grid if problems persist.",
-                "false");
+                false);
+            AccountProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                "Could not find an account for your avatar. Please check that your username is correct or make a new account.",
+                false);
+            PermanentBannedProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                "You have been blocked from using this service.",
+                false);
             GridProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "Error connecting to the desired location. Try connecting to another region.",
-                "false");
+                false);
             InventoryProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "The inventory service is not responding.  Please notify your login region operator.",
-                "false");
+                false);
             DeadRegionProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "The region you are attempting to log into is not responding. Please select another region and try again.",
-                "false");
+                false);
             LoginBlockedProblem = new LLFailedLoginResponse(LoginResponseEnum.InternalError,
                 "Logins are currently restricted. Please try again later.",
-                "false");
+                false);
             AlreadyLoggedInProblem = new LLFailedLoginResponse(LoginResponseEnum.PresenceIssue,
                 "You appear to be already logged in. " +
                 "If this is not the case please wait for your session to timeout. " +
                 "If this takes longer than a few minutes please contact the grid owner. " +
                 "Please wait 5 minutes if you are going to connect to a region nearby to the region you were at previously.",
-                "false");
-            InternalError = new LLFailedLoginResponse(LoginResponseEnum.InternalError, "Error generating Login Response", "false");
+                false);
+            InternalError = new LLFailedLoginResponse(LoginResponseEnum.InternalError, "Error generating Login Response", false);
         }
 
-        public LLFailedLoginResponse(string key, string value, string login)
+        public LLFailedLoginResponse(string key, string value, bool login)
         {
             m_key = key;
             m_value = value;
@@ -112,7 +120,7 @@ namespace OpenSim.Services.LLLoginService
             Hashtable loginError = new Hashtable();
             loginError["reason"] = m_key;
             loginError["message"] = m_value;
-            loginError["login"] = m_login;
+            loginError["login"] = m_login.ToString().ToLower();
             return loginError;
         }
 
@@ -122,7 +130,7 @@ namespace OpenSim.Services.LLLoginService
 
             map["reason"] = OSD.FromString(m_key);
             map["message"] = OSD.FromString(m_value);
-            map["login"] = OSD.FromString(m_login);
+            map["login"] = OSD.FromString(m_login.ToString().ToLower());
 
             return map;
         }
