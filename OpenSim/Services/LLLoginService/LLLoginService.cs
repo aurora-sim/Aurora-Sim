@@ -129,6 +129,12 @@ namespace OpenSim.Services.LLLoginService
             m_GatekeeperURL = m_LoginServerConfig.GetString("GatekeeperURI", string.Empty);
             m_MapTileURL = m_LoginServerConfig.GetString("MapTileURL", string.Empty);
             m_SearchURL = m_LoginServerConfig.GetString("SearchURL", string.Empty);
+            // if [LoginService] doesn't have the Search URL, try to get it from [GridInfoService]
+            if (m_SearchURL == string.Empty)
+            {
+                IConfig gridInfo = config.Configs["GridInfoService"];
+                m_SearchURL = gridInfo.GetString("search", string.Empty);
+            }
             registry.RegisterInterface<ILoginService>(this);
         }
 
