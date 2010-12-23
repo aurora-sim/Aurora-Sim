@@ -2036,20 +2036,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void DeleteGroups(List<SceneObjectGroup> objectGroups)
-        {
-            List<ISceneEntity> DeleteGroups = new List<ISceneEntity>();
-            foreach (SceneObjectGroup g in objectGroups)
-            {
-                DeleteGroups.Add(g.RootPart);
-                UnlinkSceneObject(g, true); //WE do the deleting of the prims on the client
-            }
-            ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, DeleteGroups.ToArray());
-            });
-        }
-
         public Border GetCrossedBorder(Vector3 position, Cardinals gridline)
         {
             if (BordersLocked)

@@ -63,6 +63,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _velocity;
         private Vector3 _torque;
         private Vector3 m_lastVelocity;
+        private Vector3 m_lastRotationalVelocity;
         private Vector3 m_lastposition;
         private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();
@@ -2667,7 +2668,6 @@ Console.WriteLine(" JointCreateFixed");
             {
                 if (_zeroFlag)
                     return Vector3.Zero;
-                m_lastUpdateSent = 5;
 
                 if (m_rotationalVelocity.ApproxEquals(Vector3.Zero, 0.2f))
                     return Vector3.Zero;
@@ -2822,14 +2822,17 @@ Console.WriteLine(" JointCreateFixed");
                         m_frozen = true;
                     }
                     #endregion
-                    
+
                     if ((Math.Abs(m_lastposition.X - l_position.X) < 0.005)
                         && (Math.Abs(m_lastposition.Y - l_position.Y) < 0.005)
                         && (Math.Abs(m_lastposition.Z - l_position.Z) < 0.005)
                         && (Math.Abs(_velocity.X - m_lastVelocity.X) < 0.005)
                         && (Math.Abs(_velocity.Y - m_lastVelocity.Y) < 0.005)
                         && (Math.Abs(_velocity.Z - m_lastVelocity.Z) < 0.005) //Accel
-                        && (1.0 - Math.Abs(Quaternion.Dot(m_lastorientation, l_orientation)) < 0.001) // KF 0.01 is far to large
+                        && (Math.Abs(m_rotationalVelocity.X - m_lastRotationalVelocity.X) < 0.005)
+                        && (Math.Abs(m_rotationalVelocity.Y - m_lastRotationalVelocity.Y) < 0.005)
+                        && (Math.Abs(m_rotationalVelocity.Z - m_lastRotationalVelocity.Z) < 0.005) 
+                        //&& (1.0 - Math.Abs(Quaternion.Dot(m_lastorientation, l_orientation)) < 0.01) // KF 0.01 is far to large
                         && m_vehicle.Type == Vehicle.TYPE_NONE) 
                     {
                         _zeroFlag = true;
@@ -2838,7 +2841,7 @@ Console.WriteLine(" JointCreateFixed");
                     else
                     {
                         _zeroFlag = false;
-                        m_lastUpdateSent = 5;
+                        m_lastUpdateSent = 1;
                     }
 
                     if (_zeroFlag)
@@ -2860,7 +2863,7 @@ Console.WriteLine(" JointCreateFixed");
 
                         if (m_lastUpdateSent > 0)
                         {
-                            if (throttleCounter > 200 || m_lastUpdateSent >= 5)
+                            if (throttleCounter > 200 || m_lastUpdateSent >= 3)
                             {
                                 if (_parent == null)
                                 {
@@ -2888,10 +2891,9 @@ Console.WriteLine(" JointCreateFixed");
                             _acceleration = ((_velocity - m_lastVelocity) / 0.1f);
                             //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
-                            if (_velocity.ApproxEquals(pv, 0.5f))
-                                m_rotationalVelocity = pv;
-                            else
-                                m_rotationalVelocity = new Vector3((float)rotvel.X, (float)rotvel.Y, (float)rotvel.Z);
+                            m_lastRotationalVelocity = m_rotationalVelocity;
+
+                            m_rotationalVelocity = new Vector3((float)rotvel.X, (float)rotvel.Y, (float)rotvel.Z);
 
                             if (_velocity.ApproxEquals(pv, 0.1f))
                             {
@@ -2899,19 +2901,24 @@ Console.WriteLine(" JointCreateFixed");
                                 {
                                     _velocity = Vector3.Zero;
                                     _zeroFlag = true;
-                                    m_lastUpdateSent = 5;
-                                    d.BodySetLinearDamping(Body, 100);
+                                    m_lastUpdateSent = 1;
+                                    d.BodySetLinearDamping(Body, 10000);
+                                    d.BodySetAngularDamping(Body, 10000);
+                                    d.BodySetForce(Body, 0, 0, 0);
                                 }
                                 else
                                     d.BodySetForce(Body, 0, 0, 0);
                             }
                             else
+                            {
                                 d.BodySetLinearDamping(Body, 1);
+                                d.BodySetAngularDamping(Body, 1);
+                            }
                             if (m_rotationalVelocity != Vector3.Zero && m_rotationalVelocity.ApproxEquals(pv, 0.1f))
                             {
                                 m_rotationalVelocity = Vector3.Zero;
                                 _zeroFlag = true;
-                                m_lastUpdateSent = 5;
+                                m_lastUpdateSent = 1;
                             }
                             //d.BodySetLinearVel(Body, _velocity.X,
                             //    _velocity.Y,
@@ -2926,14 +2933,11 @@ Console.WriteLine(" JointCreateFixed");
                         _orientation.Y = (float)ori.Y;
                         _orientation.Z = (float)ori.Z;
                         _orientation.W = (float)ori.W;
-                        if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
+                        if (CheckSignficantUpdateMovement())
                         {
                             if (_parent == null)
                                 base.RequestPhysicsterseUpdate();
-                            throttleCounter = 0;
                         }
-                        else
-                            throttleCounter++;
                     }
                     m_lastposition = l_position;
 
@@ -2962,6 +2966,27 @@ Console.WriteLine(" JointCreateFixed");
                     m_frozen = true;
                 }
             }
+        }
+
+        private Vector3 m_lastSignficantUpdateAngularVelocity;
+        private Vector3 m_lastSignficantUpdateVelocity;
+        private bool CheckSignficantUpdateMovement()
+        {
+            float significant_update_change = !m_throttleUpdates ? 0.45f : 0.65f;
+            if (!RotationalVelocity.ApproxEquals(m_lastSignficantUpdateAngularVelocity, significant_update_change) ||
+                !Velocity.ApproxEquals(m_lastSignficantUpdateVelocity, significant_update_change))
+            {
+                m_lastSignficantUpdateVelocity = Velocity;
+                m_lastSignficantUpdateAngularVelocity = RotationalVelocity;
+                return true;
+            }
+            else if (throttleCounter <= 0)
+            {
+                throttleCounter = _parent_scene.geomUpdatesPerThrottledUpdate;
+                return true;
+            }
+            throttleCounter--;
+            return false;
         }
 
         public override bool FloatOnWater

@@ -186,6 +186,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Update this
             m_config = config;
+            if (m_localScenes != null)
+                return;
             foreach (Scene scene in m_localScenes)
             {
                 scene.Config = config;

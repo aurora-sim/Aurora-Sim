@@ -123,7 +123,7 @@ namespace OpenSim.Region.CoreModules
             //Do this before the locking so that the objects 'appear' gone and the client doesn't think things have gone wrong
             if (permissionToDelete)
             {
-                m_scene.DeleteGroups(objectGroups);
+                DeleteGroups(objectGroups);
             }
 
             lock (m_sendToInventoryQueue)
@@ -148,6 +148,19 @@ namespace OpenSim.Region.CoreModules
                 //m_log.Debug("[SCENE]: Starting send to inventory loop");
                 Util.FireAndForget(DoSendToInventory, new Object[] { 0 });
             }
+        }
+
+        private void DeleteGroups(List<SceneObjectGroup> objectGroups)
+        {
+            List<ISceneEntity> DeleteGroups = new List<ISceneEntity>();
+            foreach (SceneObjectGroup g in objectGroups)
+            {
+                DeleteGroups.Add(g.RootPart);
+            }
+            m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
+            {
+                avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, DeleteGroups.ToArray());
+            });
         }
 
         public void DoDeleteObject(object o)
@@ -203,7 +216,8 @@ namespace OpenSim.Region.CoreModules
                             // Force a database backup/update on this SceneObjectGroup
                             // So that we know the database is upto date,
                             // for when deleting the object from it
-                            m_scene.ForceSceneObjectBackup(g);
+                            // Why????? If there is a good reason, put this back
+                            //m_scene.ForceSceneObjectBackup(g);
                             m_scene.DeleteSceneObject(g, false, true);
                         }
                     }

@@ -734,8 +734,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //Colliding a space or a geom with a space or a geom. so drill down
 
                 //Collide all geoms in each space..
-                //if (d.GeomIsSpace(g1)) d.SpaceCollide(g1, IntPtr.Zero, nearCallback);
-                //if (d.GeomIsSpace(g2)) d.SpaceCollide(g2, IntPtr.Zero, nearCallback);
+                //if (d.GeomIsSpace(g1)) 
+                //    d.SpaceCollide(g1, IntPtr.Zero, nearCallback);
+                //if (d.GeomIsSpace(g2))
+                //    d.SpaceCollide(g2, IntPtr.Zero, nearCallback);
                 return;
             }
             IntPtr b1 = d.GeomGetBody(g1);

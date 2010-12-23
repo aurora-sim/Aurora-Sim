@@ -1595,8 +1595,6 @@ namespace OpenSim.Region.Framework.Scenes
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
-            //Update our prim count
-            m_numPrim += entity.ChildrenEntities().Count;
             //Now save the entity that we have 
             return AddEntity(entity, false);
         }
@@ -1626,8 +1624,6 @@ namespace OpenSim.Region.Framework.Scenes
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
-            //Update our prim count
-            m_numPrim += entity.ChildrenEntities().Count;
             //Now save the entity that we have 
             return AddEntity(entity, false);
         }
@@ -1643,8 +1639,6 @@ namespace OpenSim.Region.Framework.Scenes
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
-            //Update our prim count
-            m_numPrim += entity.ChildrenEntities().Count;
             //Now save the entity that we have 
             AddEntity(entity, false);
         }
@@ -1656,7 +1650,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool DeleteEntity(EntityBase entity)
         {
-            m_numPrim -= entity.ChildrenEntities().Count;
             if (entity.IsPhysical())
                 RemovePhysicalPrim(entity.ChildrenEntities().Count);
             return RemoveEntity(entity);
@@ -1677,6 +1670,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool RemoveEntity(EntityBase entity)
         {
+            m_numPrim -= entity.ChildrenEntities().Count;
             Entities.Remove(entity.UUID);
             Entities.Remove(entity.LocalId);
             return true;
@@ -1690,6 +1684,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool AddEntity(EntityBase entity, bool AllowUpdate)
         {
+            //Update our prim count
+            m_numPrim += entity.ChildrenEntities().Count;
             Entities.Add(entity);
             return true;
         }

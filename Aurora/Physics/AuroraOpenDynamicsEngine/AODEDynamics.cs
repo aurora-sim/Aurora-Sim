@@ -946,7 +946,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                               requested speed            -  last motor speed
                 m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
                 m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
-                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * pTimestep * 10));
+                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * pTimestep * 10));
 
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
