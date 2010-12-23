@@ -47,6 +47,7 @@ using OpenSim.Services.Interfaces;
 using Timer = System.Timers.Timer;
 using AssetLandmark = OpenSim.Framework.AssetLandmark;
 using Nini.Config;
+using Mischel.Collections;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -335,7 +336,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly IGroupsModule m_GroupsModule;
 
         private int m_cachedTextureSerial;
-        private PriorityQueue m_entityUpdates;
+        private PriorityQueue<EntityUpdate, double> m_entityUpdates;
         private Prioritizer m_prioritizer;
         private bool m_disableFacelights = false;
 
@@ -449,7 +450,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             m_scene = scene;
 
-            m_entityUpdates = new PriorityQueue(m_scene.Entities.Count > 1000 ? m_scene.Entities.Count : 1000);
+            m_entityUpdates = new PriorityQueue<EntityUpdate, double>(m_scene.Entities.Count > 1000 ? m_scene.Entities.Count : 1000);
             m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
 
@@ -3732,14 +3733,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags)
         {
             double priority = m_prioritizer.GetUpdatePriority(this, entity);
+            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate,double>();
+            item.Priority = priority;
+            item.Value = new EntityUpdate(entity, updateFlags);
             lock (m_entityUpdates.SyncRoot)
-                m_entityUpdates.Enqueue(priority, new EntityUpdate(entity, updateFlags), entity.LocalId);
+                m_entityUpdates.Enqueue(item);
         }
 
         public void SendPrimUpdate(ISceneEntity entity, PrimUpdateFlags updateFlags, double priority)
         {
+            PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double>();
+            item.Priority = priority;
+            item.Value = new EntityUpdate(entity, updateFlags);
             lock (m_entityUpdates.SyncRoot)
-                m_entityUpdates.Enqueue(priority, new EntityUpdate(entity, updateFlags), entity.LocalId);
+                m_entityUpdates.Enqueue(item);
         }
 
         private void ProcessEntityUpdates(int maxUpdates)
@@ -3754,12 +3761,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             lock (m_entityUpdates.SyncRoot)
             {
-                EntityUpdate update;
+                PriorityQueueItem<EntityUpdate, double> update;
                 while (updatesThisCall < maxUpdates && m_entityUpdates.TryDequeue(out update))
                 {
-                    if (update.Entity is SceneObjectPart)
+                    if (update.Value.Entity is SceneObjectPart)
                     {
-                        SceneObjectPart part = (SceneObjectPart)update.Entity;
+                        SceneObjectPart part = (SceneObjectPart)update.Value.Entity;
 
                         if (part.ParentGroup.IsAttachment && m_disableFacelights)
                         {
@@ -3775,19 +3782,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     #region UpdateFlags to packet type conversion
 
-                    PrimUpdateFlags updateFlags = update.Flags;
+                    PrimUpdateFlags updateFlags = update.Value.Flags;
 
                     bool canUseCompressed = true;
                     bool canUseImproved = true;
                     bool canUseCached = true;
 
                     // Compressed and cached object updates only make sense for LL primitives
-                    if (!(update.Entity is SceneObjectPart))
+                    if (!(update.Value.Entity is SceneObjectPart))
                     {
                         canUseCompressed = false;
                         canUseCached = false;
                     }
-                    if (update.Entity is SceneObjectPart)
+                    if (update.Value.Entity is SceneObjectPart)
                     {
                         // Please do not remove this unless you can demonstrate on the OpenSim mailing list that a client
                         // will never receive an update after a prim kill.  Even then, keeping the kill record may be a good
@@ -3799,18 +3806,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         //
                         // This doesn't appear to apply to child prims - a client will happily ignore these updates
                         // after the root prim has been deleted.
-                        if (m_killRecord.Contains(update.Entity.LocalId))
+                        if (m_killRecord.Contains(update.Value.Entity.LocalId))
                         {
                                 m_log.ErrorFormat(
                                     "[CLIENT]: Preventing update for prim with local id {0} after client for user {1} told it was deleted. JIRA this at http://jira.openmetaverse.org/secure/CreateIssue!default.jspa !",
-                                    update.Entity.LocalId, Name);
+                                    update.Value.Entity.LocalId, Name);
                             continue;
                         }
 
                         IObjectCache module = Scene.RequestModuleInterface<IObjectCache>();
                         if (module != null)
                         {
-                            canUseCached = module.UseCachedObject(AgentId, update.Entity.LocalId, ((SceneObjectPart)update.Entity).CRC);
+                            canUseCached = module.UseCachedObject(AgentId, update.Value.Entity.LocalId, ((SceneObjectPart)update.Value.Entity).CRC);
                         }
                         else
                         {
@@ -3874,17 +3881,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         bool isTerse = updateFlags.HasFlag((PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity));
                         if (canUseCached && !isTerse)
                         {
-                            cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
+                            cachedUpdateBlocks.Value.Add(CreatePrimCachedUpdateBlock((SceneObjectPart)update.Value.Entity, this.m_agentId));
                         }
                         else if (!canUseImproved && !canUseCompressed)
                         {
-                            if (update.Entity is ScenePresence)
+                            if (update.Value.Entity is ScenePresence)
                             {
-                                objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)update.Entity));
+                                objectUpdateBlocks.Value.Add(CreateAvatarUpdateBlock((ScenePresence)update.Value.Entity));
                             }
                             else
                             {
-                                objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart)update.Entity, this.m_agentId));
+                                objectUpdateBlocks.Value.Add(CreatePrimUpdateBlock((SceneObjectPart)update.Value.Entity, this.m_agentId));
                             }
                         }
                         else if (!canUseImproved)
@@ -3904,14 +3911,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 Flags |= CompressedFlags.HasText;
                             if (updateFlags.HasFlag(PrimUpdateFlags.TextureAnim))
                                 Flags |= CompressedFlags.TextureAnimation;
-                            if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Entity).IsAttachment)
+                            if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Value.Entity).IsAttachment)
                                 Flags |= CompressedFlags.HasNameValues;
 
-                            compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Entity, Flags, updateFlags));
+                            compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Value.Entity, Flags, updateFlags));
                         }
                         else
                         {
-                            terseUpdateBlocks.Value.Add(CreateImprovedTerseBlock(update.Entity, updateFlags.HasFlag(PrimUpdateFlags.Textures)));
+                            terseUpdateBlocks.Value.Add(CreateImprovedTerseBlock(update.Value.Entity, updateFlags.HasFlag(PrimUpdateFlags.Textures)));
                         }
                     }
                     catch (Exception ex)

@@ -2362,22 +2362,23 @@ namespace OpenSim.Region.Framework.Scenes
 
         public override void Update()
         {
-            Util.FireAndForget(SendPrimUpdates);
-
-            if (!IsChildAgent)
-            {
-                /*if (m_parentID != UUID.Zero)
-                {
-                    SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
-                    if (part != null)
-                    {
-                        if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
-                            part.SetPhysActorCameraPos(Lookat);
-                        else
-                            part.SetPhysActorCameraPos(Vector3.Zero);
-                    }
-                }*/
-            }
+            //Util.FireAndForget(SendPrimUpdates);
+            //We 'could' do this async... but we don't do anything else here, so why?
+            SendPrimUpdates(0);
+            //if (!IsChildAgent)
+            //{
+            //    if (m_parentID != UUID.Zero)
+            //    {
+            //        SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID);
+            //        if (part != null)
+            //        {
+            //            if ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) == AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK)
+            //                part.SetPhysActorCameraPos(Lookat);
+            //            else
+            //                part.SetPhysActorCameraPos(Vector3.Zero);
+            //        }
+            //    }
+            //}
         }
 
         private int SendEffectPackets = -1;
