@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace Aurora.Framework
@@ -98,14 +99,14 @@ namespace Aurora.Framework
         /// Add classifieds to the search database
         /// LOCAL Only, called by the profile service
         /// </summary>
-        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        void AddClassifieds(Dictionary<string, object> dictionary);
+        /// <param name="dictionary">OSDMaps made from Classified</param>
+        void AddClassifieds(OSDMap map);
 
         /// <summary>
         /// Remove classifieds from the search database
         /// LOCAL Only, called by the profile service
         /// </summary>
-        /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        void RemoveClassifieds(Dictionary<string, object> dictionary);
+        /// <param name="dictionary">OSDMaps made from Classified</param>
+        void RemoveClassifieds(OSDMap map);
     }
 }

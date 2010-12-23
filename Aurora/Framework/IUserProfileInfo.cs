@@ -208,16 +208,16 @@ namespace Aurora.Framework
         /// </summary>
         /// UUID - target agent
         /// string - notes
-        public Dictionary<string, object> Notes = new Dictionary<string, object>();
+        public OSDMap Notes = new OSDMap();
         /// <summary>
         /// The picks of the user
         /// </summary>
-        public Dictionary<string, object> Picks = new Dictionary<string,object>();
+        public OSDMap Picks = new OSDMap();
 
         /// <summary>
         /// All the classifieds of the user
         /// </summary>
-        public Dictionary<string, object> Classifieds = new Dictionary<string,object>();
+        public OSDMap Classifieds = new OSDMap();
 
         public override Dictionary<string, object> ToKeyValuePairs()
         {
@@ -250,9 +250,9 @@ namespace Aurora.Framework
             map.Add("IsNewUser", OSD.FromBoolean(IsNewUser));
             map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
 
-            map.Add("Classifieds", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Classifieds))));
-            map.Add("Picks", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Picks))));
-            map.Add("Notes", OSD.FromString(OSDParser.SerializeJsonString(Util.DictionaryToOSD(Notes))));
+            map.Add("Classifieds", OSD.FromString(OSDParser.SerializeJsonString(Classifieds)));
+            map.Add("Picks", OSD.FromString(OSDParser.SerializeJsonString(Picks)));
+            map.Add("Notes", OSD.FromString(OSDParser.SerializeJsonString(Notes)));
             
             return map;
         }
@@ -272,14 +272,32 @@ namespace Aurora.Framework
             Interests.Languages = map["Languages"].AsString();
             //End interests
 
-            if (map.ContainsKey("Classifieds"))
-                Classifieds = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Classifieds"].AsString()));
+            try
+            {
+                if (map.ContainsKey("Classifieds"))
+                    Classifieds = (OSDMap)OSDParser.DeserializeJson(map["Classifieds"].AsString());
+            }
+            catch
+            {
+            }
 
-            if (map.ContainsKey("Picks"))
-                Picks = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Picks"].AsString()));
+            try
+            {
+                if (map.ContainsKey("Picks"))
+                Picks = (OSDMap)OSDParser.DeserializeJson(map["Picks"].AsString());
+            }
+            catch
+            {
+            }
 
-            if (map.ContainsKey("Notes"))
-                Notes = Util.OSDToDictionary((OSDMap)OSDParser.DeserializeJson(map["Notes"].AsString()));
+            try
+            {
+                if (map.ContainsKey("Notes"))
+                Notes = (OSDMap)OSDParser.DeserializeJson(map["Notes"].AsString());
+            }
+            catch
+            {
+            }
 
             AboutText = map["AboutText"].AsString();
             FirstLifeImage = map["FirstLifeImage"].AsUUID();

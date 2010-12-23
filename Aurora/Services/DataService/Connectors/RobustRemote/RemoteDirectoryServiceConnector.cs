@@ -442,12 +442,12 @@ namespace Aurora.Services.DataService
             return Classifieds.ToArray();
         }
 
-        public void AddClassifieds(Dictionary<string, object> dictionary)
+        public void AddClassifieds(OSDMap map)
         {
             //Not able to be done remotely
         }
 
-        public void RemoveClassifieds(Dictionary<string, object> dictionary)
+        public void RemoveClassifieds(OSDMap map)
         {
             //Not able to be done remotely
         }

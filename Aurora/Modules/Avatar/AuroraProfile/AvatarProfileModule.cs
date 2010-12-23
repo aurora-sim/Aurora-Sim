@@ -240,9 +240,8 @@ namespace Aurora.Modules
                 return;
             if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
             {
-                OSDMap classifieds = Util.DictionaryToOSD(info.Classifieds);
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap)classifieds[queryClassifiedID.ToString()]);
+                classified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
                 remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate, classified.ExpirationDate, classified.Category, classified.Name, classified.Description, classified.ParcelUUID, classified.ParentEstate, classified.SnapshotUUID, classified.SimName, classified.GlobalPos, classified.ParcelName, classified.ClassifiedFlags, classified.PriceForListing);
             }
         }
@@ -276,9 +275,8 @@ namespace Aurora.Modules
 
             if (info.Classifieds.ContainsKey(queryclassifiedID.ToString()))
             {
-                OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
                 Classified oldClassified = new Classified();
-                oldClassified.FromOSD((OSDMap)Classifieds[queryclassifiedID.ToString()]);
+                oldClassified.FromOSD((OSDMap)info.Classifieds[queryclassifiedID.ToString()]);
                 if (oldClassified.CreatorUUID != remoteClient.AgentId)
                     return;
 
@@ -328,7 +326,7 @@ namespace Aurora.Modules
             classified.ClassifiedFlags = classifiedFlags;
             classified.PriceForListing = classifiedPrice;
 
-            info.Classifieds.Add(classified.ClassifiedUUID.ToString(), Util.DictionaryToOSD(classified.ToKeyValuePairs()));
+            info.Classifieds.Add(classified.ClassifiedUUID.ToString(), classified.ToOSD());
             ProfileFrontend.UpdateUserProfile(info);
         }
         
@@ -341,9 +339,8 @@ namespace Aurora.Modules
                 return;
             if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
             {
-                OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
                 Classified oldClassified = new Classified();
-                oldClassified.FromOSD((OSDMap)Classifieds[queryClassifiedID.ToString()]);
+                oldClassified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
                 if (oldClassified.CreatorUUID != remoteClient.AgentId)
                     return;
 
@@ -362,11 +359,8 @@ namespace Aurora.Modules
                     return;
                 if (info.Classifieds.ContainsKey(queryClassifiedID.ToString()))
                 {
-                    OSDMap Classifieds = Util.DictionaryToOSD(info.Classifieds);
                     Classified oldClassified = new Classified();
-                    oldClassified.FromOSD((OSDMap)Classifieds[queryClassifiedID.ToString()]);
-                    if (oldClassified.CreatorUUID != remoteClient.AgentId)
-                        return;
+                    oldClassified.FromOSD((OSDMap)info.Classifieds[queryClassifiedID.ToString()]);
 
                     info.Classifieds.Remove(queryClassifiedID.ToString());
                     ProfileFrontend.UpdateUserProfile(info);
@@ -394,11 +388,11 @@ namespace Aurora.Modules
 
                 if (profile == null)
                     return;
-                foreach (object pick in profile.Picks.Values)
+                foreach (OSD pick in profile.Picks.Values)
                 {
                     ProfilePickInfo Pick = new ProfilePickInfo();
                     Pick.FromOSD((OSDMap)pick);
-                    picks.Add(new UUID(Pick.PickUUID), Pick.Name);
+                    picks.Add(Pick.PickUUID, Pick.Name);
                 }
             }
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
@@ -418,9 +412,8 @@ namespace Aurora.Modules
                 return;
             if (info.Picks.ContainsKey(PickUUID.ToString()))
             {
-                OSDMap picks = Util.DictionaryToOSD(info.Picks);
                 ProfilePickInfo pick = new ProfilePickInfo();
-                pick.FromOSD((OSDMap)picks[PickUUID.ToString()]);
+                pick.FromOSD((OSDMap)info.Picks[PickUUID.ToString()]);
                 remoteClient.SendPickInfoReply(pick.PickUUID, pick.CreatorUUID, pick.TopPick == 1 ? true : false, pick.ParcelUUID, pick.Name, pick.Description, pick.SnapshotUUID, pick.User, pick.OriginalName, pick.SimName, pick.GlobalPos, pick.SortOrder, pick.Enabled == 1 ? true : false);
             }
         }
@@ -439,7 +432,7 @@ namespace Aurora.Modules
 
             Vector3 pos_global = new Vector3(globalPos);
 
-            ILandObject targetlandObj = GetRegionUserIsIn(remoteClient.AgentId).LandChannel.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
+            ILandObject targetlandObj = GetRegionUserIsIn(remoteClient.AgentId).LandChannel.GetLandObject(pos_global.X / Constants.RegionSize, pos_global.Y / Constants.RegionSize);
 
             if (targetlandObj != null)
             {
@@ -452,8 +445,7 @@ namespace Aurora.Modules
                 OrigionalName = targetlandObj.LandData.Name;
             }
 
-            OSDMap picks = Util.DictionaryToOSD(info.Picks);
-            if (!picks.ContainsKey(pickID.ToString()))
+            if (!info.Picks.ContainsKey(pickID.ToString()))
             {
                 ProfilePickInfo values = new ProfilePickInfo();
                 values.PickUUID = pickID;
@@ -469,12 +461,12 @@ namespace Aurora.Modules
                 values.GlobalPos = pos_global;
                 values.SortOrder = sortOrder;
                 values.Enabled = enabled ? 1 : 0;
-                picks.Add(pickID.ToString(), values.ToOSD());
+                info.Picks.Add(pickID.ToString(), values.ToOSD());
             }
             else
             {
                 ProfilePickInfo oldpick = new ProfilePickInfo();
-                oldpick.FromOSD((OSDMap)picks[pickID.ToString()]);
+                oldpick.FromOSD((OSDMap)info.Picks[pickID.ToString()]);
                 //Security check
                 if (oldpick.CreatorUUID != remoteClient.AgentId)
                     return;
@@ -490,10 +482,9 @@ namespace Aurora.Modules
                 oldpick.GlobalPos = pos_global;
                 oldpick.SortOrder = sortOrder;
                 oldpick.Enabled = enabled ? 1 : 0;
-                picks.Remove(pickID.ToString());
-                picks.Add(pickID.ToString(), Util.DictionaryToOSD(oldpick.ToKeyValuePairs()));
+                info.Picks.Remove(pickID.ToString());
+                info.Picks.Add(pickID.ToString(), oldpick.ToOSD());
             }
-            info.Picks = Util.OSDToDictionary(picks);
             ProfileFrontend.UpdateUserProfile(info);
         }
 
@@ -507,11 +498,8 @@ namespace Aurora.Modules
                     return;
                 if (info.Picks.ContainsKey(queryPickID.ToString()))
                 {
-                    OSDMap picks = Util.DictionaryToOSD(info.Picks);
                     ProfilePickInfo oldpick = new ProfilePickInfo();
-                    oldpick.FromOSD((OSDMap)picks[queryPickID.ToString()]);
-                    if (oldpick.CreatorUUID != remoteClient.AgentId)
-                        return;
+                    oldpick.FromOSD((OSDMap)info.Picks[queryPickID.ToString()]);
 
                     info.Picks.Remove(queryPickID.ToString());
                     ProfileFrontend.UpdateUserProfile(info);
@@ -527,9 +515,8 @@ namespace Aurora.Modules
                 return;
             if (info.Picks.ContainsKey(queryPickID.ToString()))
             {
-                OSDMap picks = Util.DictionaryToOSD(info.Picks);
                 ProfilePickInfo oldpick = new ProfilePickInfo();
-                oldpick.FromOSD((OSDMap)picks[queryPickID.ToString()]);
+                oldpick.FromOSD((OSDMap)info.Picks[queryPickID.ToString()]);
                 if (oldpick.CreatorUUID != remoteClient.AgentId)
                     return;
 
@@ -555,13 +542,13 @@ namespace Aurora.Modules
             if (UPI == null)
                 return;
             
-            object notes = "";
+            OSD notes = "";
             string targetNotesUUID = args[0];
 
             if(!UPI.Notes.TryGetValue(targetNotesUUID, out notes))
                 notes = "";
 
-            remoteClient.SendAvatarNotesReply(new UUID(targetNotesUUID), notes.ToString());
+            remoteClient.SendAvatarNotesReply(new UUID(targetNotesUUID), notes.AsString());
         }
         
         public void AvatarNotesUpdate(IClientAPI remoteClient, UUID queryTargetID, string queryNotes)
@@ -571,7 +558,7 @@ namespace Aurora.Modules
                 return;
             String notes = queryNotes;
             
-            UPI.Notes[queryTargetID.ToString()] = notes;
+            UPI.Notes[queryTargetID.ToString()] = OSD.FromString(notes);
 
             ProfileFrontend.UpdateUserProfile(UPI);
         }

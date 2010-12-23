@@ -546,15 +546,15 @@ namespace Aurora.Services.DataService
         /// LOCAL Only, called by the profile service
         /// </summary>
         /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        public void AddClassifieds(Dictionary<string, object> dictionary)
+        public void AddClassifieds(OSDMap map)
         {
             //Add a dictionary of classifieds
-            foreach (object o in dictionary.Values)
+            foreach (OSD o in map.Values)
             {
                 //Pull out the OSD map and make it into a classified
-                OSDMap map = (OSDMap)o;
+                OSDMap classifiedmap = (OSDMap)o;
                 Classified c = new Classified();
-                c.FromOSD(map);
+                c.FromOSD(classifiedmap);
                 List<object> Values = new List<object>();
                 Values.Add(c.Name);
                 Values.Add(c.Category);
@@ -570,15 +570,15 @@ namespace Aurora.Services.DataService
         /// LOCAL Only, called by the profile service
         /// </summary>
         /// <param name="dictionary">objects of the dictionary are OSDMaps made from Classified</param>
-        public void RemoveClassifieds(Dictionary<string, object> dictionary)
+        public void RemoveClassifieds(OSDMap map)
         {
             //Remove all the UUIDs in the given dictionary from search
-            foreach (object o in dictionary.Values)
+            foreach (OSD o in map.Values)
             {
                 //Pull out the OSDMaps
-                OSDMap map = (OSDMap)o;
+                OSDMap classifiedmap = (OSDMap)o;
                 Classified c = new Classified();
-                c.FromOSD(map);
+                c.FromOSD(classifiedmap);
                 List<string> Keys = new List<string>();
                 Keys.Add("ClassifiedUUID");
                 List<object> Values = new List<object>();
