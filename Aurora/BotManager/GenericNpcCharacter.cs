@@ -53,7 +53,6 @@ namespace Aurora.BotManager
 
         public event ImprovedInstantMessage OnInstantMessage;
         public event ChatMessage OnChatFromClient;
-        public event TextureRequest OnRequestTexture;
         public event RezObject OnRezObject;
         public event ModifyTerrain OnModifyTerrain;
         public event BakeTerrain OnBakeTerrain;

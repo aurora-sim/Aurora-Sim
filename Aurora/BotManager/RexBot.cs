@@ -896,12 +896,6 @@ namespace Aurora.BotManager
             remove {  }
         }
 
-        event TextureRequest IClientAPI.OnRequestTexture
-        {
-            add {  }
-            remove {  }
-        }
-
         event RezObject IClientAPI.OnRezObject
         {
             add {  }
