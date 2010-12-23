@@ -94,7 +94,8 @@ namespace Aurora.Framework
             Language = map["Language"].AsString();
             AcceptTOS = map["AcceptTOS"].AsBoolean();
             LanguageIsPublic = map["LanguageIsPublic"].AsBoolean();
-            OtherAgentInformation = (OSDMap)OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
+            if(map.ContainsKey("OtherAgentInformation"))
+                OtherAgentInformation = (OSDMap)OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
         }
 
         public override void FromKVP(Dictionary<string, object> RetVal)

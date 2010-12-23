@@ -12483,7 +12483,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 requestID = new UUID(transferRequest.TransferInfo.Params, 80);
                 source = (byte)SourceType.SimInventoryItem;
-                //m_log.Debug("asset request " + requestID);
             }
 
             // The asset is known to exist and is in our cache, so add it to the AssetRequests list

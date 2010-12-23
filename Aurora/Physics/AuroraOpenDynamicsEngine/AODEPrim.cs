@@ -2941,6 +2941,7 @@ Console.WriteLine(" JointCreateFixed");
                     if (!m_lastposition.ApproxEquals(m_lastSignificantPosition, SIGNIFICANT_UPDATE_CHANGE))
                     {
                         base.TriggerSignificantMovement();
+                        m_lastSignificantPosition = m_lastposition;
                     }
                 }
                 else
