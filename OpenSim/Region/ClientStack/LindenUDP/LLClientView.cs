@@ -2744,21 +2744,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
             Transfer.TransferInfo.Status = (int)assetErrors;
             Transfer.TransferInfo.TargetType = 0;
-            if (req.AssetRequestSource == 2)
-            {
-                Transfer.TransferInfo.Params = new byte[20];
-                Array.Copy(req.RequestAssetID.GetBytes(), 0, Transfer.TransferInfo.Params, 0, 16);
-                int assType = req.AssetInf.Type;
-                Array.Copy(Utils.IntToBytes(assType), 0, Transfer.TransferInfo.Params, 16, 4);
-            }
-            else if (req.AssetRequestSource == 3)
-            {
-                Transfer.TransferInfo.Params = req.Params;
-                // Transfer.TransferInfo.Params = new byte[100];
-                //Array.Copy(req.RequestUser.AgentId.GetBytes(), 0, Transfer.TransferInfo.Params, 0, 16);
-                //Array.Copy(req.RequestUser.SessionId.GetBytes(), 0, Transfer.TransferInfo.Params, 16, 16);
-            }
-            Transfer.TransferInfo.Size = req.AssetInf.Data.Length;
+            Transfer.TransferInfo.Params = req.Params;
+            Transfer.TransferInfo.Size = 0;
             Transfer.TransferInfo.TransferID = req.TransferRequestID;
             Transfer.Header.Zerocoded = true;
             OutPacket(Transfer, ThrottleOutPacketType.Asset);
