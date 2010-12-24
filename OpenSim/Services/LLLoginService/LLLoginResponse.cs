@@ -499,31 +499,43 @@ namespace OpenSim.Services.LLLoginService
                     // the ones expected by known viewers.
                     // hippo, imprudence, phoenix are known to work
                     IConfig gridInfo = m_source.Configs["GridInfoService"];
-                    string tmp;
-                    tmp = gridInfo.GetString("gridname", String.Empty);
-                    if (tmp != String.Empty) responseData["gridname"] = tmp;
-                    tmp = gridInfo.GetString("login", String.Empty);
-                    if (tmp != String.Empty) responseData["loginuri"] = tmp;
-                    tmp = gridInfo.GetString("welcome", String.Empty);
-                    if (tmp != String.Empty) responseData["loginpage"] = tmp;
-                    tmp = gridInfo.GetString("economy", String.Empty);
-                    if (tmp != String.Empty) responseData["economy"] = tmp;
-                    tmp = gridInfo.GetString("about", String.Empty);
-                    if (tmp != String.Empty) responseData["about"] = tmp;
-                    tmp = gridInfo.GetString("help", String.Empty);
-                    if (tmp != String.Empty) responseData["help"] = tmp;
-                    tmp = gridInfo.GetString("register", String.Empty);
-                    if (tmp != String.Empty) responseData["register"] = tmp;
-                    tmp = gridInfo.GetString("password", String.Empty);
-                    if (tmp != String.Empty) responseData["password"] = tmp;
-                    tmp = gridInfo.GetString("currencysymbol", String.Empty);
-                    if (tmp != String.Empty) responseData["currency"] = tmp;
-                    tmp = gridInfo.GetString("realcurrencysymbol", String.Empty);
-                    if (tmp != String.Empty) responseData["real_currency"] = tmp;
-                    tmp = gridInfo.GetString("directoryfee", String.Empty);
-                    if (tmp != String.Empty) responseData["directory_fee"] = tmp;
-                    tmp = gridInfo.GetString("maxgroups", String.Empty);
-                    if (tmp != String.Empty) responseData["max_groups"] = tmp;
+                    if (gridInfo.GetBoolean("SendGridInfoToViewerOnLogin",false))
+                    {
+                        string tmp;
+                        tmp = gridInfo.GetString("gridname", String.Empty);
+                        if (tmp != String.Empty) responseData["gridname"] = tmp;
+                        tmp = gridInfo.GetString("login", String.Empty);
+                        if (tmp != String.Empty) responseData["loginuri"] = tmp;
+
+                        // alternate keys of the same thing. (note careful not to overwrite responsdata["welcome"]
+                        tmp = gridInfo.GetString("loginpage", String.Empty);
+                        if (tmp != String.Empty) responseData["loginpage"] = tmp;
+                        tmp = gridInfo.GetString("welcome", String.Empty);
+                        if (tmp != String.Empty) responseData["loginpage"] = tmp;
+
+                        // alternate keys of the same thing.
+                        tmp = gridInfo.GetString("economy", String.Empty);
+                        if (tmp != String.Empty) responseData["economy"] = tmp;
+                        tmp = gridInfo.GetString("helperuri", String.Empty);
+                        if (tmp != String.Empty) responseData["helperuri"] = tmp;
+
+                        tmp = gridInfo.GetString("about", String.Empty);
+                        if (tmp != String.Empty) responseData["about"] = tmp;
+                        tmp = gridInfo.GetString("help", String.Empty);
+                        if (tmp != String.Empty) responseData["help"] = tmp;
+                        tmp = gridInfo.GetString("register", String.Empty);
+                        if (tmp != String.Empty) responseData["register"] = tmp;
+                        tmp = gridInfo.GetString("password", String.Empty);
+                        if (tmp != String.Empty) responseData["password"] = tmp;
+                        tmp = gridInfo.GetString("CurrencySymbol", String.Empty);
+                        if (tmp != String.Empty) responseData["currency"] = tmp;
+                        tmp = gridInfo.GetString("RealCurrencySymbol", String.Empty);
+                        if (tmp != String.Empty) responseData["real_currency"] = tmp;
+                        tmp = gridInfo.GetString("DirectoryFee", String.Empty);
+                        if (tmp != String.Empty) responseData["directory_fee"] = tmp;
+                        tmp = gridInfo.GetString("MaxGroups", String.Empty);
+                        if (tmp != String.Empty) responseData["max_groups"] = tmp;
+                    }
                 }
 
                 responseData["login"] = "true";
