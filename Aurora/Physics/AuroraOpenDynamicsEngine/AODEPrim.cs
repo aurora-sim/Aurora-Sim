@@ -387,7 +387,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 d.BodySetAutoDisableFlag(Body, true);
                 d.BodySetAutoDisableSteps(Body, body_autodisable_frames);
-                d.BodySetDamping(Body, 1, 1);
+                d.BodySetDamping(Body, 1, 0.5f);
+                //d.BodySetAngularDampingThreshold(Body, 0.5f);
                 
                 // disconnect from world gravity so we can apply buoyancy
                 if(!testRealGravity)
@@ -1878,17 +1879,14 @@ Console.WriteLine(" JointCreateFixed");
                                 enableBodySoft();
                                 vel = d.BodyGetLinearVel(Body);
                             }
-
-                            float Drag = Mass / 2;
-
-                            if (fx != 0)
-                                fx -= Drag;
-                            if (fy != 0)
-                                fy -= Drag;
-                            if (fz < 0)
-                                fz += Drag;
-                            else
-                                fz -= Drag;
+                            Vector3 linearDamping = new Vector3(vel.X, vel.Y, vel.Z);
+                            linearDamping *= Mass / 2;
+                            linearDamping *= -0.75f;
+                            d.BodyAddForce(Body, linearDamping.X, linearDamping.Y, linearDamping.Z);
+                            Vector3 angularDamping = new Vector3(angvel.X, angvel.Y, angvel.Z);
+                            angularDamping *= Mass / 2;
+                            angularDamping *= -0.75f;
+                            d.BodyAddRelForce(Body, angularDamping.X, angularDamping.Y, angularDamping.Z);
 
                             #region Force List
 
@@ -2973,7 +2971,7 @@ Console.WriteLine(" JointCreateFixed");
         private Vector3 m_lastSignficantUpdateVelocity;
         private bool CheckSignficantUpdateMovement()
         {
-            float significant_update_change = !m_throttleUpdates ? 0.45f : 0.65f;
+            float significant_update_change = !m_throttleUpdates ? 0.25f : 0.55f;
             if (!RotationalVelocity.ApproxEquals(m_lastSignficantUpdateAngularVelocity, significant_update_change) ||
                 !Velocity.ApproxEquals(m_lastSignficantUpdateVelocity, significant_update_change))
             {
