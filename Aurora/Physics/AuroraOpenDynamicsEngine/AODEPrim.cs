@@ -164,6 +164,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_throttleUpdates;
         private int throttleCounter;
+        private int _updatesPerThrottledUpdate;
         public int m_interpenetrationcount;
         public float m_collisionscore;
         private int m_crossingfailures;
@@ -2980,12 +2981,12 @@ Console.WriteLine(" JointCreateFixed");
                 m_lastSignficantUpdateAngularVelocity = RotationalVelocity;
                 return true;
             }
-            else if (throttleCounter <= 0)
+            else if (_updatesPerThrottledUpdate <= 0)
             {
-                throttleCounter = _parent_scene.geomUpdatesPerThrottledUpdate;
+                _updatesPerThrottledUpdate = _parent_scene.geomUpdatesPerThrottledUpdate;
                 return true;
             }
-            throttleCounter--;
+            _updatesPerThrottledUpdate--;
             return false;
         }
 
