@@ -143,6 +143,7 @@ namespace Aurora.Modules
                 oldUUID = m_WindlightSettings[wl.minEffectiveAltitude].UUID;
 
             m_WindlightSettings[wl.minEffectiveAltitude] = wl;
+            wl.UUID = oldUUID;
             IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (RegionInfoConnector != null)
             {

@@ -171,15 +171,7 @@ namespace Aurora.Modules
 
         	string [] detailssplit = details.Split('\n');
 
-            string AbuseDetails = detailssplit[4];
-            if (detailssplit.Length != 4)
-            {
-                AbuseDetails = "";
-                for(int i = 4; i < detailssplit.Length; i++)
-                {
-                    AbuseDetails+= detailssplit[i] + "\n";
-                }
-            }
+            string AbuseDetails = detailssplit[detailssplit.Length - 1];
 
             report.AbuseDetails = AbuseDetails;
 
@@ -203,13 +195,9 @@ namespace Aurora.Modules
             string[] findSummary = summery.Split('\"');
 
             string abuseSummary = findSummary[1];
-            if (findSummary.Length != 2)
+            if (findSummary.Length != 0)
             {
-                abuseSummary = "";
-                for (int i = 2; i < detailssplit.Length; i++)
-                {
-                    abuseSummary += findSummary[i] + "\n";
-                }
+                abuseSummary = findSummary[1];
             }
 
             report.AbuseSummary = abuseSummary;
