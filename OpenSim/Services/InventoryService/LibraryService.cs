@@ -112,7 +112,7 @@ namespace OpenSim.Services.InventoryService
 
             libraryFolders.Add(m_LibraryRootFolder.ID, m_LibraryRootFolder);
 
-            LoadLibraries();
+            LoadLibraries(registry);
             registry.RegisterInterface<ILibraryService>(this);
         }
 
@@ -132,7 +132,7 @@ namespace OpenSim.Services.InventoryService
         {
         }
 
-        public void LoadLibraries()
+        public void LoadLibraries(IRegistryCore registry)
         {
             List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
             try
@@ -142,7 +142,7 @@ namespace OpenSim.Services.InventoryService
                 {
                     foreach (IDefaultLibraryLoader loader in Loaders)
                     {
-                        loader.LoadLibrary(this, iniSource);
+                        loader.LoadLibrary(this, iniSource, registry);
                     }
                 }
             }

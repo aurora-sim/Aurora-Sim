@@ -46,7 +46,6 @@ namespace OpenSim.Services.AssetService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IAssetDataPlugin m_Database = null;
-        protected List<IAssetLoader> m_AssetLoaders = null;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
