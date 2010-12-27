@@ -696,6 +696,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnLandUndo += client_OnLandUndo;
 			client.OnGodlikeMessage += client_onGodlikeMessage;
             client.OnUnackedTerrain += client_OnUnackedTerrain;
+            client.OnRegionHandShakeReply += SendLayerData;
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -705,6 +706,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnLandUndo -= client_OnLandUndo;
             client.OnGodlikeMessage -= client_onGodlikeMessage;
             client.OnUnackedTerrain -= client_OnUnackedTerrain;
+            client.OnRegionHandShakeReply -= SendLayerData;
+        }
+
+        /// <summary>
+        /// Send the region heightmap to the client
+        /// </summary>
+        /// <param name="RemoteClient">Client to send to</param>
+        public void SendLayerData(IClientAPI RemoteClient)
+        {
+            Scene scene = (Scene)RemoteClient.Scene;
+            RemoteClient.SendLayerData(scene.Heightmap.GetFloatsSerialised(scene));
         }
         
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)

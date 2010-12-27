@@ -440,19 +440,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.SendAvatarPickerReply(agent_data, data_args);
         }
 
-        public void ProcessScriptReset(IClientAPI remoteClient, UUID objectID,
-                UUID itemID)
-        {
-            SceneObjectPart part=GetSceneObjectPart(objectID);
-            if (part == null)
-                return;
-
-            if (Permissions.CanResetScript(objectID, itemID, remoteClient.AgentId))
-            {
-                EventManager.TriggerScriptReset(part.LocalId, itemID);
-            }
-        }
-
         void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)
         {
             // TODO: don't create new blocks if recycling an old packet

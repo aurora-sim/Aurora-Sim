@@ -118,8 +118,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             }
 
             scene.RegisterModuleInterface<IUrlModule>(this);
-
-            scene.EventManager.OnScriptReset += OnScriptReset;
         }
 
         public void RegionLoaded(Scene scene)

@@ -300,11 +300,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
             EventManager.HookUpRegionEvents(scene);
 
+            //Hook up to client events
+            scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
+
             scene.EventManager.OnRemoveScript += StopScript;
-            scene.EventManager.OnScriptReset += OnScriptReset;
-            scene.EventManager.OnGetScriptRunning += OnGetScriptRunning;
-            scene.EventManager.OnStartScript += OnStartScript;
-            scene.EventManager.OnStopScript += OnStopScript;
 
             UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
             UpdateLeasesTimer.Enabled = true;
@@ -318,10 +318,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             scene.EventManager.OnRemoveScript -= StopScript;
-            scene.EventManager.OnScriptReset -= OnScriptReset;
-            scene.EventManager.OnGetScriptRunning -= OnGetScriptRunning;
-            scene.EventManager.OnStartScript -= OnStartScript;
-            scene.EventManager.OnStopScript -= OnStopScript;
 
             scene.UnregisterModuleInterface<IScriptModule>(this);
             m_Scenes.Remove(scene);
@@ -356,6 +352,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //All done!
                 MaintenanceThread.Started = true;
             }
+        }
+
+        #endregion
+
+        #region Client Events
+
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnScriptReset += ProcessScriptReset;
+            client.OnGetScriptRunning += OnGetScriptRunning;
+            client.OnSetScriptRunning += SetScriptRunning;
+        }
+
+        void EventManager_OnClosingClient(IClientAPI client)
+        {
+            client.OnScriptReset -= ProcessScriptReset;
+            client.OnGetScriptRunning -= OnGetScriptRunning;
+            client.OnSetScriptRunning -= SetScriptRunning;
         }
 
         #endregion
@@ -692,6 +706,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 id.Running = state;
         }
 
+        public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
+        {
+            SceneObjectPart part = findPrim(objectID);
+            if (part == null)
+                return;
+            
+            if (running)
+                OnStartScript(part.LocalId, itemID);
+            else
+                OnStopScript(part.LocalId, itemID);
+        }
+
         /// <summary>
         /// Get the total number of active (running) scripts on the object or avatar
         /// </summary>
@@ -756,13 +782,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 throw new EventAbortException();
         }
 
-        public void OnScriptReset(uint localID, UUID itemID)
+        public void ProcessScriptReset(IClientAPI remoteClient, UUID objectID,
+                UUID itemID)
         {
-            ScriptData ID = ScriptProtection.GetScript(itemID);
-            if (ID == null)
+            SceneObjectPart part = findPrim(objectID);
+            if (part == null)
                 return;
 
-            ID.Reset();
+            if (part.ParentGroup.Scene.Permissions.CanResetScript(objectID, itemID, remoteClient.AgentId))
+            {
+                ScriptData ID = ScriptProtection.GetScript(itemID);
+                if (ID == null)
+                    return;
+
+                ID.Reset();
+            }
         }
         #endregion
 

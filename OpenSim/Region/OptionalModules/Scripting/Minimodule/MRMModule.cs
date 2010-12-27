@@ -95,12 +95,33 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             if (!m_config.GetBoolean("Hidden", false))
             {
                 scene.EventManager.OnRezScript += EventManager_OnRezScript;
-                scene.EventManager.OnStopScript += EventManager_OnStopScript;
+                scene.EventManager.OnNewClient += EventManager_OnNewClient;
+                scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
             }
 
             scene.EventManager.OnFrame += EventManager_OnFrame;
 
             scene.RegisterModuleInterface<IMRMModule>(this);
+        }
+
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnSetScriptRunning += SetScriptRunning;
+        }
+
+        void EventManager_OnClosingClient(IClientAPI client)
+        {
+            client.OnSetScriptRunning -= SetScriptRunning;
+        }
+
+        public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
+        {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
+            if (part == null)
+                return;
+
+            if (!running)
+                EventManager_OnStopScript(part.LocalId, itemID);
         }
 
         public void RemoveRegion(Scene scene)

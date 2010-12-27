@@ -612,9 +612,6 @@ namespace OpenSim.Region.Framework.Scenes
             AddToStartupQueue("Startup");
 
             #endregion
-
-            //Add stats handlers
-            MainServer.Instance.AddStreamHandler(new RegionStatsHandler(RegionInfo));
         }
 
         #endregion Constructors
@@ -2578,20 +2575,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client">The IClientAPI of the connected client</param>
         public virtual void SubscribeToClientEvents(IClientAPI client)
         {
-            SubscribeToClientTerrainEvents(client);
             SubscribeToClientPrimEvents(client);
             SubscribeToClientPrimRezEvents(client);
             SubscribeToClientInventoryEvents(client);
             SubscribeToClientTeleportEvents(client);
-            SubscribeToClientScriptEvents(client);
             SubscribeToClientParcelEvents(client);
             SubscribeToClientGridEvents(client);
             SubscribeToClientNetworkEvents(client);
-        }
-
-        public virtual void SubscribeToClientTerrainEvents(IClientAPI client)
-        {
-            client.OnRegionHandShakeReply += SendLayerData;
         }
 
         public virtual void SubscribeToClientPrimEvents(IClientAPI client)
@@ -2672,13 +2662,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnTeleportCancel += RequestTeleportCancel;
         }
 
-        public virtual void SubscribeToClientScriptEvents(IClientAPI client)
-        {
-            client.OnScriptReset += ProcessScriptReset;
-            client.OnGetScriptRunning += GetScriptRunning;
-            client.OnSetScriptRunning += SetScriptRunning;
-        }
-
         public virtual void SubscribeToClientParcelEvents(IClientAPI client)
         {
             client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
@@ -2708,20 +2691,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client">The IClientAPI of the client</param>
         public virtual void UnSubscribeToClientEvents(IClientAPI client)
         {
-            UnSubscribeToClientTerrainEvents(client);
             UnSubscribeToClientPrimEvents(client);
             UnSubscribeToClientPrimRezEvents(client);
             UnSubscribeToClientInventoryEvents(client);
             UnSubscribeToClientTeleportEvents(client);
-            UnSubscribeToClientScriptEvents(client);
             UnSubscribeToClientParcelEvents(client);
             UnSubscribeToClientGridEvents(client);
             UnSubscribeToClientNetworkEvents(client);
-        }
-
-        public virtual void UnSubscribeToClientTerrainEvents(IClientAPI client)
-        {
-            client.OnRegionHandShakeReply -= SendLayerData;
         }
 
         public virtual void UnSubscribeToClientPrimEvents(IClientAPI client)
@@ -2797,13 +2773,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnTeleportLandmarkRequest -= RequestTeleportLandmark;
         }
 
-        public virtual void UnSubscribeToClientScriptEvents(IClientAPI client)
-        {
-            client.OnScriptReset -= ProcessScriptReset;
-            client.OnGetScriptRunning -= GetScriptRunning;
-            client.OnSetScriptRunning -= SetScriptRunning;
-        }
-
         public virtual void UnSubscribeToClientParcelEvents(IClientAPI client)
         {
             client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
@@ -2844,15 +2813,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.DebugFormat("[SCENE]: Unable to teleport user home: no AgentTransferModule is active");
                 client.SendTeleportFailed("Unable to perform teleports on this simulator.");
             }
-        }
-
-        /// <summary>
-        /// Send the region heightmap to the client
-        /// </summary>
-        /// <param name="RemoteClient">Client to send to</param>
-        public void SendLayerData(IClientAPI RemoteClient)
-        {
-            RemoteClient.SendLayerData(Heightmap.GetFloatsSerialised(this));
         }
 
         /// <summary>

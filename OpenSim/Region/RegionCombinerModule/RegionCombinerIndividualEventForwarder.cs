@@ -51,8 +51,6 @@ namespace OpenSim.Region.RegionCombinerModule
             m_virtScene.UnSubscribeToClientPrimEvents(client);
             m_virtScene.UnSubscribeToClientPrimRezEvents(client);
             m_virtScene.UnSubscribeToClientInventoryEvents(client);
-            //m_virtScene.UnSubscribeToClientTeleportEvents(client);
-            m_virtScene.UnSubscribeToClientScriptEvents(client);
             
             m_virtScene.UnSubscribeToClientNetworkEvents(client);
 
@@ -63,8 +61,6 @@ namespace OpenSim.Region.RegionCombinerModule
             client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
             
             m_rootScene.SubscribeToClientInventoryEvents(client);
-            //m_rootScene.SubscribeToClientTeleportEvents(client);
-            m_rootScene.SubscribeToClientScriptEvents(client);
             
             m_rootScene.SubscribeToClientNetworkEvents(client);
         }

@@ -101,8 +101,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnShutdownDelegate OnShutdown;
 
-        public delegate void ScriptResetDelegate(uint localID, UUID itemID);
-
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
 
         public event ParcelPropertiesUpdateRequest OnParcelPropertiesUpdateRequest;
@@ -117,8 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
         public event ObjectGrabDelegate OnObjectGrabbing;
         public event ObjectDeGrabDelegate OnObjectDeGrab;
         public delegate void ObjectDeGrabDelegate(SceneObjectPart part, SceneObjectPart child, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs);
-        public event ScriptResetDelegate OnScriptReset;
-
+        
         public event OnPermissionErrorDelegate OnPermissionError;
 
         /// <summary>
@@ -132,12 +129,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
-
-        public delegate void StartScript(uint localID, UUID itemID);
-        public event StartScript OnStartScript;
-
-        public delegate void StopScript(uint localID, UUID itemID);
-        public event StopScript OnStopScript;
 
         public delegate bool SceneGroupMoved(UUID groupID, Vector3 delta);
         public event SceneGroupMoved OnSceneGroupMove;
@@ -246,8 +237,7 @@ namespace OpenSim.Region.Framework.Scenes
 //        public event ScriptTimerEvent OnScriptTimerEvent;
 
         public delegate void EstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool EstateSun, float LindenHour);
-        public delegate void GetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID);
-
+        
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
         public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
@@ -264,7 +254,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void ParcelPrimCountTainted();
         public event ParcelPrimCountTainted OnParcelPrimCountTainted;
-        public event GetScriptRunning OnGetScriptRunning;
 
         /// <summary>
         /// RegisterCapsEvent is called by Scene after the Caps object
@@ -450,27 +439,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnAttach failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerGetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID)
-        {
-            GetScriptRunning handlerGetScriptRunning = OnGetScriptRunning;
-            if (handlerGetScriptRunning != null)
-            {
-                foreach (GetScriptRunning d in handlerGetScriptRunning.GetInvocationList())
-                {
-                    try
-                    {
-                        d(controllingClient, objectID, itemID);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerGetScriptRunning failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }
@@ -961,27 +929,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerScriptReset(uint localID, UUID itemID)
-        {
-            ScriptResetDelegate handlerScriptReset = OnScriptReset;
-            if (handlerScriptReset != null)
-            {
-                foreach (ScriptResetDelegate d in handlerScriptReset.GetInvocationList())
-                {
-                    try
-                    {
-                        d(localID, itemID);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerScriptReset failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
         public void TriggerRezScript(SceneObjectPart part, UUID itemID, string script, int startParam, bool postOnRez, string engine, int stateSource)
         {
             NewRezScript handlerRezScript = OnRezScript;
@@ -1018,48 +965,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerRezScript failed - continuing.  {0} {1}",
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerStartScript(uint localID, UUID itemID)
-        {
-            StartScript handlerStartScript = OnStartScript;
-            if (handlerStartScript != null)
-            {
-                foreach (StartScript d in handlerStartScript.GetInvocationList())
-                {
-                    try
-                    {
-                        d(localID, itemID);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerStartScript failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerStopScript(uint localID, UUID itemID)
-        {
-            StopScript handlerStopScript = OnStopScript;
-            if (handlerStopScript != null)
-            {
-                foreach (StopScript d in handlerStopScript.GetInvocationList())
-                {
-                    try
-                    {
-                        d(localID, itemID);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerStopScript failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

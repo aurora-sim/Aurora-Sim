@@ -2090,23 +2090,6 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
-        {
-            SceneObjectPart part = GetSceneObjectPart(objectID);
-            if (part == null)
-                return;
-
-            if (running)
-                EventManager.TriggerStartScript(part.LocalId, itemID);
-            else
-                EventManager.TriggerStopScript(part.LocalId, itemID);
-        }
-
-        public void GetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID)
-        {
-            EventManager.TriggerGetScriptRunning(controllingClient, objectID, itemID);
-        }
-
         protected void ObjectOwner(IClientAPI remoteClient, UUID ownerID, UUID groupID, List<uint> localIDs)
         {
             if (!Permissions.IsGod(remoteClient.AgentId))
