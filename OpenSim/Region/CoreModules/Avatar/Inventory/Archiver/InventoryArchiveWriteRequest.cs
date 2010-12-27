@@ -82,6 +82,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         private Stream m_saveStream;
 
+        protected InventoryFolderBase m_defaultFolderToSave = null;
+
         private bool m_saveAssets;
 
         /// <summary>
@@ -96,7 +98,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 scene,
                 userInfo,
                 invPath,
-                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress), UseAssets)
+                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress), UseAssets, null)
         {
         }
 
@@ -105,7 +107,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, Scene scene, 
-            UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets)
+            UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets, InventoryFolderBase folderBase)
         {
             m_id = id;
             m_module = module;
@@ -115,6 +117,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             m_saveStream = saveStream;
             m_assetGatherer = new UuidGatherer(m_scene.AssetService);
             m_saveAssets = UseAssets;
+            m_defaultFolderToSave = folderBase;
         }
 
         protected void ReceivedAllAssets(ICollection<UUID> assetsFoundUuids, ICollection<UUID> assetsNotFoundUuids)
@@ -139,8 +142,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 m_saveStream.Close();
             }
 
-            m_module.TriggerInventoryArchiveSaved(
-                m_id, succeeded, m_userInfo, m_invPath, m_saveStream, reportedException);
+            if(m_module != null)
+                m_module.TriggerInventoryArchiveSaved(
+                    m_id, succeeded, m_userInfo, m_invPath, m_saveStream, reportedException);
         }
 
         protected void SaveInvItem(InventoryItemBase inventoryItem, string path)
@@ -221,7 +225,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 InventoryFolderBase inventoryFolder = null;
                 InventoryItemBase inventoryItem = null;
                 InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(m_userInfo.PrincipalID);
-    
+
+                if (m_defaultFolderToSave != null)
+                    rootFolder = m_defaultFolderToSave;
+
                 bool saveFolderContentsOnly = false;
     
                 // Eliminate double slashes and any leading / on the path.
@@ -272,7 +279,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     // We couldn't find the path indicated 
                     string errorMessage = string.Format("Aborted save.  Could not find inventory path {0}", m_invPath);
                     Exception e = new InventoryArchiverException(errorMessage);
-                    m_module.TriggerInventoryArchiveSaved(m_id, false, m_userInfo, m_invPath, m_saveStream, e);
+                    if (m_module != null)
+                        m_module.TriggerInventoryArchiveSaved(m_id, false, m_userInfo, m_invPath, m_saveStream, e);
                     throw e;
                 }
             
@@ -329,7 +337,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             foreach (UUID creatorId in m_userUuids.Keys)
             {
                 // Record the creator of this item
-                UserAccount creator = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, creatorId);
+                UserAccount creator = m_scene.UserAccountService.GetUserAccount(UUID.Zero, creatorId);
 
                 if (creator != null)
                 {

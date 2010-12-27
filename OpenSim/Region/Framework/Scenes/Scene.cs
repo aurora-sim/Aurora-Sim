@@ -430,19 +430,23 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
-        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager)
+        public Scene(RegionInfo regInfo)
+        {
+            m_regInfo = regInfo;
+
+            //Register to regInfo events
+            m_regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
+        }
+
+        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager) : this(regInfo)
         {
             //THIS NEEDS RESET TO FIX RESTARTS
             shuttingdown = false;
 
             m_sceneManager = manager;
 
-            //Register to regInfo events
-            regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
-
             m_config = manager.ConfigSource;
             m_authenticateHandler = authen;
-            m_regInfo = regInfo;
 
 
             BordersLocked = true;
@@ -4182,7 +4186,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public Dictionary<Type, object> GetInterfaces()
         {
-            return new Dictionary<Type, object>();
+            //Flatten the array
+            Dictionary<Type, object> interfaces = new Dictionary<Type, object>();
+            foreach (KeyValuePair<Type, List<object>> kvp in ModuleInterfaces)
+            {
+                interfaces.Add(kvp.Key, kvp.Value[0]);
+            }
+            return interfaces;
         }
 
         #endregion

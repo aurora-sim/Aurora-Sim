@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Xml;
 
@@ -38,6 +39,9 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Simulation.Base;
+
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.CoreModules.Avatar.Inventory.Archiver;
 
 namespace OpenSim.Services.InventoryService
 {
@@ -79,14 +83,12 @@ namespace OpenSim.Services.InventoryService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string pLibrariesLocation = Path.Combine("inventory", "Libraries.xml");
             string pLibName = "OpenSim Library";
             string pLibOwnerName = "Library Owner";
 
             IConfig libConfig = config.Configs["LibraryService"];
             if (libConfig != null)
             {
-                pLibrariesLocation = libConfig.GetString("DefaultLibrary", pLibrariesLocation);
                 pLibName = libConfig.GetString("LibraryName", pLibName);
                 pLibOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
             }
@@ -110,7 +112,7 @@ namespace OpenSim.Services.InventoryService
 
             libraryFolders.Add(m_LibraryRootFolder.ID, m_LibraryRootFolder);
 
-            LoadLibraries(pLibrariesLocation);
+            LoadLibraries();
             registry.RegisterInterface<ILibraryService>(this);
         }
 
@@ -130,161 +132,22 @@ namespace OpenSim.Services.InventoryService
         {
         }
 
-        public InventoryItemBase CreateItem(UUID inventoryID, UUID assetID, string name, string description,
-                                            int assetType, int invType, UUID parentFolderID)
+        public void LoadLibraries()
         {
-            InventoryItemBase item = new InventoryItemBase();
-            item.Owner = libOwner;
-            item.CreatorId = libOwner.ToString();
-            item.ID = inventoryID;
-            item.AssetID = assetID;
-            item.Description = description;
-            item.Name = name;
-            item.AssetType = assetType;
-            item.InvType = invType;
-            item.Folder = parentFolderID;
-            item.BasePermissions = 0x7FFFFFFF;
-            item.EveryOnePermissions = 0x7FFFFFFF;
-            item.CurrentPermissions = 0x7FFFFFFF;
-            item.NextPermissions = 0x7FFFFFFF;
-            return item;
-        }
-
-        /// <summary>
-        /// Use the asset set information at path to load assets
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="assets"></param>
-        protected void LoadLibraries(string librariesControlPath)
-        {
-            m_log.InfoFormat("[LIBRARY INVENTORY]: Loading library control file {0}", librariesControlPath);
-            LoadFromFile(librariesControlPath, "Libraries control", ReadLibraryFromConfig);
-        }
-
-        /// <summary>
-        /// Read a library set from config
-        /// </summary>
-        /// <param name="config"></param>
-        protected void ReadLibraryFromConfig(IConfig config, string path)
-        {
-            string basePath = Path.GetDirectoryName(path);
-            string foldersPath
-                = Path.Combine(
-                    basePath, config.GetString("foldersFile", String.Empty));
-
-            LoadFromFile(foldersPath, "Library folders", ReadFolderFromConfig);
-
-            string itemsPath
-                = Path.Combine(
-                    basePath, config.GetString("itemsFile", String.Empty));
-
-            LoadFromFile(itemsPath, "Library items", ReadItemFromConfig);
-        }
-
-        /// <summary>
-        /// Read a library inventory folder from a loaded configuration
-        /// </summary>
-        /// <param name="source"></param>
-        private void ReadFolderFromConfig(IConfig config, string path)
-        {
-            InventoryFolderImpl folderInfo = new InventoryFolderImpl();
-
-            folderInfo.ID = new UUID(config.GetString("folderID", m_LibraryRootFolder.ID.ToString()));
-            folderInfo.Name = config.GetString("name", "unknown");
-            folderInfo.ParentID = new UUID(config.GetString("parentFolderID", m_LibraryRootFolder.ID.ToString()));
-            folderInfo.Type = (short)config.GetInt("type", 8);
-
-            folderInfo.Owner = libOwner;
-            folderInfo.Version = 1;
-
-            if (libraryFolders.ContainsKey(folderInfo.ParentID))
+            List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
+            try
             {
-                InventoryFolderImpl parentFolder = libraryFolders[folderInfo.ParentID];
-
-                libraryFolders.Add(folderInfo.ID, folderInfo);
-                parentFolder.AddChildFolder(folderInfo);
-
-//                 m_log.InfoFormat("[LIBRARY INVENTORY]: Adding folder {0} ({1})", folderInfo.name, folderInfo.folderID);
-            }
-            else
-            {
-                m_log.WarnFormat(
-                    "[LIBRARY INVENTORY]: Couldn't add folder {0} ({1}) since parent folder with ID {2} does not exist!",
-                    folderInfo.Name, folderInfo.ID, folderInfo.ParentID);
-            }
-        }
-
-        /// <summary>
-        /// Read a library inventory item metadata from a loaded configuration
-        /// </summary>
-        /// <param name="source"></param>
-        private void ReadItemFromConfig(IConfig config, string path)
-        {
-            InventoryItemBase item = new InventoryItemBase();
-            item.Owner = libOwner;
-            item.CreatorId = libOwner.ToString();
-            item.ID = new UUID(config.GetString("inventoryID", m_LibraryRootFolder.ID.ToString()));
-            item.AssetID = new UUID(config.GetString("assetID", item.ID.ToString()));
-            item.Folder = new UUID(config.GetString("folderID", m_LibraryRootFolder.ID.ToString()));
-            item.Name = config.GetString("name", String.Empty);
-            item.Description = config.GetString("description", item.Name);
-            item.InvType = config.GetInt("inventoryType", 0);
-            item.AssetType = config.GetInt("assetType", item.InvType);
-            item.CurrentPermissions = (uint)config.GetLong("currentPermissions", 0x7FFFFFFF);
-            item.NextPermissions = (uint)config.GetLong("nextPermissions", 0x7FFFFFFF);
-            item.EveryOnePermissions = (uint)config.GetLong("everyonePermissions", 0x7FFFFFFF);
-            item.BasePermissions = (uint)config.GetLong("basePermissions", 0x7FFFFFFF);
-            item.Flags = (uint)config.GetInt("flags", 0);
-
-            if (libraryFolders.ContainsKey(item.Folder))
-            {
-                InventoryFolderImpl parentFolder = libraryFolders[item.Folder];
-                try
+                IniConfigSource iniSource = new IniConfigSource("DefaultInventory/Inventory.ini", Nini.Ini.IniFileType.AuroraStyle);
+                if (iniSource != null)
                 {
-                    parentFolder.Items.Add(item.ID, item);
-                }
-                catch (Exception)
-                {
-                    m_log.WarnFormat("[LIBRARY INVENTORY] Item {1} [{0}] not added, duplicate item", item.ID, item.Name);
-                }
-            }
-            else
-            {
-                m_log.WarnFormat(
-                    "[LIBRARY INVENTORY]: Couldn't add item {0} ({1}) since parent folder with ID {2} does not exist!",
-                    item.Name, item.ID, item.Folder);
-            }
-        }
-
-        private delegate void ConfigAction(IConfig config, string path);
-
-        /// <summary>
-        /// Load the given configuration at a path and perform an action on each Config contained within it
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileDescription"></param>
-        /// <param name="action"></param>
-        private static void LoadFromFile(string path, string fileDescription, ConfigAction action)
-        {
-            if (File.Exists(path))
-            {
-                try
-                {
-                    XmlConfigSource source = new XmlConfigSource(path);
-
-                    for (int i = 0; i < source.Configs.Count; i++)
+                    foreach (IDefaultLibraryLoader loader in Loaders)
                     {
-                        action(source.Configs[i], path);
+                        loader.LoadLibrary(this, iniSource);
                     }
                 }
-                catch (XmlException e)
-                {
-                    m_log.ErrorFormat("[LIBRARY INVENTORY]: Error loading {0} : {1}", path, e);
-                }
             }
-            else
+            catch
             {
-                m_log.ErrorFormat("[LIBRARY INVENTORY]: {0} file {1} does not exist!", fileDescription, path);
             }
         }
 
@@ -296,8 +159,8 @@ namespace OpenSim.Services.InventoryService
         public Dictionary<UUID, InventoryFolderImpl> GetAllFolders()
         {
             Dictionary<UUID, InventoryFolderImpl> fs = new Dictionary<UUID, InventoryFolderImpl>();
-            fs.Add(m_LibraryRootFolder.ID, m_LibraryRootFolder);
-            List<InventoryFolderImpl> fis = TraverseFolder(m_LibraryRootFolder);
+            fs.Add(LibraryRootFolder.ID, LibraryRootFolder);
+            List<InventoryFolderImpl> fis = TraverseFolder(LibraryRootFolder);
             foreach (InventoryFolderImpl f in fis)
             {
                 fs.Add(f.ID, f);

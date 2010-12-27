@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Nini.Config;
 using log4net;
@@ -45,7 +46,7 @@ namespace OpenSim.Services.AssetService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IAssetDataPlugin m_Database = null;
-        protected IAssetLoader m_AssetLoader = null;
+        protected List<IAssetLoader> m_AssetLoaders = null;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -86,45 +87,19 @@ namespace OpenSim.Services.AssetService
 
             m_Database.Initialise(connString);
 
-            string loaderName = assetConfig.GetString("DefaultAssetLoader",
-                    String.Empty);
+            registry.RegisterInterface<IAssetService>(this);
 
-            if (loaderName != String.Empty)
-            {
-                m_AssetLoader = AuroraModuleLoader.LoadPlugin<IAssetLoader>(loaderName);
+            MainConsole.Instance.Commands.AddCommand("kfs", false,
+                "show digest",
+                "show digest <ID>",
+                "Show asset digest", HandleShowDigest);
 
-                if (m_AssetLoader == null)
-                    throw new Exception("Asset loader could not be loaded");
-            }
+            MainConsole.Instance.Commands.AddCommand("kfs", false,
+                    "delete asset",
+                    "delete asset <ID>",
+                    "Delete asset from database", HandleDeleteAsset);
 
-            if (m_AssetLoader != null)
-            {
-                string loaderArgs = assetConfig.GetString("AssetLoaderArgs",
-                        String.Empty);
-                bool assetLoaderEnabled = assetConfig.GetBoolean("AssetLoaderEnabled", false);
-
-                m_log.InfoFormat("[ASSET]: Loading default asset set from {0}", loaderArgs);
-                m_AssetLoader.ForEachDefaultXmlAsset(loaderArgs,
-                        delegate(AssetBase a)
-                        {
-                            if (!assetLoaderEnabled && GetExists(a.ID))
-                                return;
-                            Store(a);
-                        });
-                registry.RegisterInterface<IAssetService>(this);
-
-                MainConsole.Instance.Commands.AddCommand("kfs", false,
-                    "show digest",
-                    "show digest <ID>",
-                    "Show asset digest", HandleShowDigest);
-
-                MainConsole.Instance.Commands.AddCommand("kfs", false,
-                        "delete asset",
-                        "delete asset <ID>",
-                        "Delete asset from database", HandleDeleteAsset);
-
-                m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
-            }
+            m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)

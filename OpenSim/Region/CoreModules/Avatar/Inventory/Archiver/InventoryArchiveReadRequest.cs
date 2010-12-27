@@ -105,8 +105,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 int failedAssetRestores = 0;
                 int successfulItemRestores = 0;
 
-                ScenePresence SP = m_scene.GetScenePresence(m_userInfo.PrincipalID);
-                
                 HashSet<InventoryNodeBase> loadedNodes = new HashSet<InventoryNodeBase>();
                
                 List<InventoryFolderBase> folderCandidates
@@ -169,12 +167,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 // viewer separately for that item.
                                 if (!loadedNodes.Contains(foundFolder))
                                 {
-                                    if (!loadAll)
-                                    {
-                                        if (SP != null)
-                                            SP.ControllingClient.SendBulkUpdateInventory(item);
-                                    }
-                                    else
+                                    if (loadAll)
                                         loadedNodes.Add(item);
                                 }
                             }
@@ -414,9 +407,60 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             // Reset folder ID to the one in which we want to load it
             item.Folder = loadFolder.ID;
 
-            m_scene.AddInventoryItem(item);
+            AddInventoryItem(item);
         
             return item;
+        }
+
+        public bool AddInventoryItem(InventoryItemBase item)
+        {
+            if (UUID.Zero == item.Folder)
+            {
+                InventoryFolderBase f = m_scene.InventoryService.GetFolderForType(item.Owner, (AssetType)item.AssetType);
+                if (f != null)
+                {
+                    //                    m_log.DebugFormat(
+                    //                        "[LOCAL INVENTORY SERVICES CONNECTOR]: Found folder {0} type {1} for item {2}", 
+                    //                        f.Name, (AssetType)f.Type, item.Name);
+
+                    item.Folder = f.ID;
+                }
+                else
+                {
+                    f = m_scene.InventoryService.GetRootFolder(item.Owner);
+                    if (f != null)
+                    {
+                        item.Folder = f.ID;
+                    }
+                    else
+                    {
+                        m_log.WarnFormat(
+                            "[AGENT INVENTORY]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
+                            item.Owner, item.Name);
+                        return false;
+                    }
+                }
+            }
+
+            if (m_scene.InventoryService.AddItem(item))
+            {
+                int userlevel = 0;
+                if (m_scene.Permissions.IsGod(item.Owner))
+                {
+                    userlevel = 1;
+                }
+                m_scene.EventManager.TriggerOnNewInventoryItemUploadComplete(item.Owner, item.AssetID, item.Name, userlevel);
+
+                return true;
+            }
+            else
+            {
+                m_log.WarnFormat(
+                    "[AGENT INVENTORY]: Agent {0} could not add item {1} {2}",
+                    item.Owner, item.Name, item.ID);
+
+                return false;
+            }
         }
 
         /// <summary>

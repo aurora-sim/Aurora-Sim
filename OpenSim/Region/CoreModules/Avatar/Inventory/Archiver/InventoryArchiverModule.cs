@@ -185,7 +185,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 options.TryGetValue("assets", out Assets);
                                 bool.TryParse(Assets.ToString(), out UseAssets);
                             }
-                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, saveStream, UseAssets).Execute();
+                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, saveStream, UseAssets, null).Execute();
                         }
                         catch (EntryPointNotFoundException e)
                         {
@@ -437,30 +437,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         protected void HandleSaveInvConsoleCommand(string module, string[] cmdparams)
         {
             try
-			{
-            m_log.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
+            {
+                m_log.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
-            string firstName = cmdparams[2];
-            string lastName = cmdparams[3];
-            string invPath = cmdparams[4];
-            string pass = cmdparams[5];
-            string savePath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
+                string firstName = cmdparams[2];
+                string lastName = cmdparams[3];
+                string invPath = cmdparams[4];
+                string pass = cmdparams[5];
+                string savePath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
 
-            m_log.InfoFormat(
-                "[INVENTORY ARCHIVER]: Saving archive {0} using inventory path {1} for {2} {3}",
-                savePath, invPath, firstName, lastName);
+                m_log.InfoFormat(
+                    "[INVENTORY ARCHIVER]: Saving archive {0} using inventory path {1} for {2} {3}",
+                    savePath, invPath, firstName, lastName);
 
-            Guid id = Guid.NewGuid();
+                Guid id = Guid.NewGuid();
 
-            Dictionary<string, object> options = new Dictionary<string, object>();
-            options.Add("Assets", true);
-            ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
+                Dictionary<string, object> options = new Dictionary<string, object>();
+                options.Add("Assets", true);
+                ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
 
-            lock (m_pendingConsoleSaves)
-                m_pendingConsoleSaves.Add(id);
-			}
-			catch (InventoryArchiverException e)
-
+                lock (m_pendingConsoleSaves)
+                    m_pendingConsoleSaves.Add(id);
+            }
+            catch (InventoryArchiverException e)
             {
                 m_log.ErrorFormat("[INVENTORY ARCHIVER]: {0}", e.Message);
             }
