@@ -1007,8 +1007,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("region", false, "kick user", "kick user <first> <last> [message]", "Kick a user off the simulator", KickUserCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
@@ -1223,15 +1221,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_OpenSimBase.RunCommandScript(cmdparams[0]);
                     }
-                    break;
-
-                case "backup":
-                    ForEachCurrentScene(delegate(Scene scene)
-                    {
-                        scene.m_backingup = true; //Clear out all other threads
-                        scene.ProcessPrimBackupTaints(true, args.Count == 1);
-                        scene.m_backingup = false; //Clear out all other threads
-                    });
                     break;
 
                 case "remove-region":

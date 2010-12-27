@@ -604,7 +604,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //                m_log.DebugFormat("[ATTACHMENTS MODULE]: Adding attachment {0} to avatar {1}", Name, avatar.Name);
 
             // Remove from database and parcel prim count
-            m_scene.DeleteFromStorage(so.UUID);
+            IBackupModule backup = so.Scene.RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+                backup.DeleteFromStorage(so.UUID);
 
             so.RootPart.AttachedAvatar = avatar.UUID;
 

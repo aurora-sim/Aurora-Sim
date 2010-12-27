@@ -59,7 +59,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Fields
 
-        protected List<UUID> m_needsDeleted = new List<UUID>();
         public List<SceneObjectGroup> PhysicsReturns = new List<SceneObjectGroup>();
 
         private volatile int m_bordersLocked = 0;
@@ -109,9 +108,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_permissions; }
         }
 
-        public volatile bool m_backingup = false;
-        protected DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
-
         protected Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         protected Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
 
@@ -136,6 +132,10 @@ namespace OpenSim.Region.Framework.Scenes
         // Central Update Loop
 
         protected uint m_frame;
+        public uint Frame
+        {
+            get { return m_frame; }
+        }
         protected float m_updatetimespan = 0.069f;
         protected float m_physicstimespan = 0.049f;
         protected DateTime m_lastupdate = DateTime.UtcNow;
@@ -143,7 +143,6 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_physics = 1; //Trigger the physics update
         private int m_update_presences = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
-        private int m_update_backup = 50; //Trigger backup
         private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
         private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
         private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
@@ -152,11 +151,6 @@ namespace OpenSim.Region.Framework.Scenes
         private static volatile bool shuttingdown = false;
 
         private object m_cleaningAttachments = new object();
-
-        // the minimum time that must elapse before a changed object will be considered for persisted
-        public long m_dontPersistBefore = 60;
-        // the maximum time that must elapse before a changed object will be considered for persisted
-        public long m_persistAfter = 600;
 
         private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
@@ -559,16 +553,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
                     m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
                 }
-
-                IConfig persistanceConfig = m_config.Configs["Persistance"];
-                if (persistanceConfig != null)
-                {
-                    m_dontPersistBefore =
-                        persistanceConfig.GetLong("MinimumTimeBeforePersistenceConsidered", m_dontPersistBefore);
-
-                    m_persistAfter =
-                        persistanceConfig.GetLong("MaximumTimeBeforePersistenceConsidered", m_persistAfter);
-                }
                 IConfig scriptEngineConfig = m_config.Configs["ScriptEngines"];
                 if (scriptEngineConfig != null)
                     m_defaultScriptEngine = scriptEngineConfig.GetString("DefaultScriptEngine", "AuroraDotNetEngine");
@@ -829,8 +813,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info("[SCENE]: Persisting changed objects...");
 
             //Backup uses the new taints system
-            m_backingup = true; //Clear out all other threads
-            ProcessPrimBackupTaints(true, false);
+            IBackupModule backup = RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+                backup.ProcessPrimBackupTaints(true, false);
 
             m_sceneGraph.Close();
 
@@ -965,7 +950,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         int OtherFrameTime = Util.EnvironmentTickCount();
                         // Delete temp-on-rez stuff
-                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
+                        if (m_scene.m_frame % m_scene.m_update_land == 0)
                         {
                             m_scene.CleanTempObjects();
                             m_scene.CheckParcelReturns();
@@ -995,9 +980,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
-
-                        if (m_scene.m_frame % m_scene.m_update_backup == 0)
-                            m_scene.UpdateStorageBackup();
 
                         if (m_scene.m_frame % m_scene.m_update_terrain == 0)
                             m_scene.UpdateTerrain();
@@ -1294,64 +1276,11 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Back up queued up changes
-        /// </summary>
-        private void UpdateStorageBackup()
-        {
-            //Check every min persistant times as well except when it is set to 0
-            if (!m_backingup || (m_lastRanBackupInHeartbeat.Ticks > DateTime.Now.Ticks
-                && m_dontPersistBefore != 0))
-            {
-                //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
-                m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
-                m_backingup = true;
-                Util.FireAndForget(BackupWaitCallback);
-            }
-        }
-
-        /// <summary>
         /// Sends out the OnFrame event to the modules
         /// </summary>
         private void UpdateEvents()
         {
             m_eventManager.TriggerOnFrame();
-        }
-
-        /// <summary>
-        /// Wrapper for Backup() that can be called with Util.FireAndForget()
-        /// </summary>
-        private void BackupWaitCallback(object o)
-        {
-            Backup(false);
-        }
-
-        /// <summary>
-        /// Backup the scene.  This acts as the main method of the backup thread.
-        /// </summary>
-        /// <param name="forced">
-        /// If true, then any changes that have not yet been persisted are persisted.  If false,
-        /// then the persistence decision is left to the backup code (in some situations, such as object persistence,
-        /// it's much more efficient to backup multiple changes at once rather than every single one).
-        /// <returns></returns>
-        public void Backup(bool forced)
-        {
-            //EventManager.TriggerOnBackup(DataStore);
-            ProcessPrimBackupTaints(forced, false);
-            m_backingup = false;
-        }
-
-        /// <summary>
-        /// Synchronous force backup.  For deletes and links/unlinks
-        /// </summary>
-        /// <param name="group">Object to be backed up</param>
-        public void ForceSceneObjectBackup(SceneObjectGroup group)
-        {
-            if (group != null)
-            {
-                bool shouldReaddToLoop;
-                bool shouldReaddToLoopNow;
-                group.ProcessBackup(SimulationDataService, true, out shouldReaddToLoop, out shouldReaddToLoopNow);
-            }
         }
 
         /// <summary>
@@ -1427,9 +1356,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
         public string RegisterRegionWithGrid()
         {
-            // These two 'commands' *must be* next to each other or sim rebooting fails.
-            //m_sceneGridService.RegisterRegion(m_interregionCommsOut, RegionInfo);
-
             GridRegion region = new GridRegion(RegionInfo);
 
             IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
@@ -1821,7 +1747,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!softDelete)
                 {
-                    DeleteFromStorage(so.UUID);
+                    IBackupModule backup = RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                        backup.DeleteFromStorage(so.UUID);
+
                     // We need to keep track of this state in case this group is still queued for backup.
                     so.IsDeleted = true;
                     //Clear the update schedule HERE so that IsDeleted will not have to fire as well
@@ -2019,15 +1948,6 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-            }
-        }
-
-        public void DeleteFromStorage(UUID uuid)
-        {
-            lock (m_needsDeleted)
-            {
-                if (!m_needsDeleted.Contains(uuid))
-                    m_needsDeleted.Add(uuid);
             }
         }
 
@@ -3907,143 +3827,6 @@ namespace OpenSim.Region.Framework.Scenes
             float ydiff = y - (float)((int)y);
 
             return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
-        }
-
-        #endregion
-
-        #region Backup
-
-        private Dictionary<UUID, SceneObjectGroup> m_backupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
-        private Dictionary<UUID, SceneObjectGroup> m_secondaryBackupTaintedPrims = new Dictionary<UUID, SceneObjectGroup>();
-        private DateTime runSecondaryBackup = DateTime.Now;
-
-        /// <summary>
-        /// Add a backup taint to the prim
-        /// </summary>
-        /// <param name="sceneObjectGroup"></param>
-        public void AddPrimBackupTaint(SceneObjectGroup sceneObjectGroup)
-        {
-            lock (m_backupTaintedPrims)
-            {
-                if (!m_backupTaintedPrims.ContainsKey(sceneObjectGroup.UUID))
-                    m_backupTaintedPrims.Add(sceneObjectGroup.UUID, sceneObjectGroup);
-            }
-        }
-
-        /// <summary>
-        /// This is the new backup processor, it only deals with prims that 
-        /// have been 'tainted' so that it does not waste time
-        /// running through as large of a backup loop
-        /// </summary>
-        public void ProcessPrimBackupTaints(bool forced, bool backupAll)
-        {
-            HashSet<SceneObjectGroup> backupPrims = new HashSet<SceneObjectGroup>();
-            //Add all
-            if (backupAll)
-            {
-                EntityBase[] entities = Entities.GetEntities();
-                foreach (EntityBase entity in entities)
-                {
-                    if (entity is SceneObjectGroup)
-                        backupPrims.Add(entity as SceneObjectGroup);
-                }
-            }
-            else if (forced)
-            {
-                lock (m_backupTaintedPrims)
-                {
-                    //Add all these to the backup
-                    backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
-                    m_backupTaintedPrims.Clear();
-                    //Reset the timer
-                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
-
-                    if (m_secondaryBackupTaintedPrims.Count != 0)
-                    {
-                        //Check this set
-                        foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
-                        {
-                            backupPrims.Add(grp);
-                        }
-                    }
-                    m_secondaryBackupTaintedPrims.Clear();
-                }
-            }
-            else
-            {
-                lock (m_backupTaintedPrims)
-                {
-                    if (m_backupTaintedPrims.Count != 0)
-                    {
-                        backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
-                        m_backupTaintedPrims.Clear();
-                    }
-                }
-                //The seconary backup storage is so that we do not check every time and kill checking for updates that are not ready to persist yet
-                // So it runs every X minutes depending on how long the minimum persistance time is
-                if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
-                {
-                    //Add the min persistance time to now to get the new time
-                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
-                    lock (m_secondaryBackupTaintedPrims)
-                    {
-                        if (m_secondaryBackupTaintedPrims.Count != 0)
-                        {
-                            //Check this set
-                            foreach (SceneObjectGroup grp in m_secondaryBackupTaintedPrims.Values)
-                            {
-                                backupPrims.Add(grp);
-                            }
-                        }
-                        m_secondaryBackupTaintedPrims.Clear();
-                    }
-                    //Add the min persistance time to now to get the new time
-                    runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
-                }
-            }
-            int PrimsBackedUp = 0;
-            foreach (SceneObjectGroup grp in backupPrims)
-            {
-                //Check this prim
-                bool shouldReaddToLoop;
-                bool shouldReaddToLoopNow;
-                if (!grp.ProcessBackup(SimulationDataService, forced, out shouldReaddToLoop, out shouldReaddToLoopNow))
-                {
-                    if (shouldReaddToLoop)
-                    {
-                        //Readd it into the seconary backup loop then as its not time for it to backup yet
-                        lock (m_secondaryBackupTaintedPrims)
-                            lock (m_backupTaintedPrims)
-                                //Make sure its not in either so that we don't duplicate checking
-                                if (!m_secondaryBackupTaintedPrims.ContainsKey(grp.UUID) &&
-                                    !m_backupTaintedPrims.ContainsKey(grp.UUID))
-                                    m_secondaryBackupTaintedPrims.Add(grp.UUID, grp);
-                    }
-                    if (shouldReaddToLoopNow)
-                    {
-                        //Readd it into the seconary backup loop then as its not time for it to backup yet
-                        lock (m_backupTaintedPrims)
-                            //Make sure its not in either so that we don't duplicate checking
-                            if (!m_backupTaintedPrims.ContainsKey(grp.UUID))
-                                m_backupTaintedPrims.Add(grp.UUID, grp);
-                    }
-                }
-                else
-                    PrimsBackedUp++;
-            }
-            if (PrimsBackedUp != 0)
-                m_log.Info("[Scene]: Processed backup of " + PrimsBackedUp + " prims");
-            //Now make sure that we delete any prims sitting around
-            // Bit ironic that backup deals with deleting of objects too eh? 
-            lock (m_needsDeleted)
-            {
-                if (m_needsDeleted.Count != 0)
-                {
-                    //Removes all objects in one call
-                    SimulationDataService.RemoveObjects(m_needsDeleted);
-                    m_needsDeleted.Clear();
-                }
-            }
         }
 
         #endregion

@@ -101,8 +101,8 @@ namespace OpenSim.Region.Framework.Scenes
     /// </summary>
     public partial class SceneObjectGroup : EntityBase, ISceneObject
     {
-        private DateTime timeFirstChanged;
-        private DateTime timeLastChanged;
+        public DateTime timeFirstChanged;
+        public DateTime timeLastChanged;
         public bool m_forceBackupNow = false;
         public bool m_isLoaded = false;
         public Vector3 m_lastSignificantPosition = Vector3.Zero;
@@ -120,7 +120,11 @@ namespace OpenSim.Region.Framework.Scenes
                         timeFirstChanged = DateTime.Now;
 
                     if (m_scene != null && m_isLoaded && !m_scene.LoadingPrims) //Do NOT add to backup while still loading prims
-                        m_scene.AddPrimBackupTaint(this);
+                    {
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.AddPrimBackupTaint(this);
+                    }
                     else if (m_scene == null)
                         m_log.Warn("[SOG]: Scene is null in HasGroupChanged!");
                     //else if (!m_isLoaded)
@@ -151,57 +155,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 child.ClearUndoState();
             }
-        }
-
-        /// <summary>
-        /// Returns whether it is time to backup or not
-        /// </summary>
-        /// <param name="shouldReaddToLoop">Should this prim even be checked again for backup in the secondary loop?</param>
-        /// <param name="shouldReaddToLoopNow">Should this prim be added to the immediate loop for next backup?</param>
-        /// <returns></returns>
-        private bool isTimeToPersist(out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
-        {
-            shouldReaddToLoop = true;
-            shouldReaddToLoopNow = false;
-
-            if (IsDeleted || IsAttachment || RootPart.Shape.State != 0)
-            {
-                //Do not readd under these circumstances as we don't deal with backing up either of those into sim storage
-                shouldReaddToLoop = false;
-                return false;
-            }
-
-            //Forced to backup NOW
-            if (m_forceBackupNow)
-            {
-                //Revert it
-                m_forceBackupNow = false;
-                return true;
-            }
-            //If we are shutting down, no more additions should occur
-            // NOTE: When we call backup on shutdown, we do a force backup, which ignores this switch, which is why we can safely block this
-            if (m_scene.ShuttingDown)
-            {
-                //Do not readd now
-                shouldReaddToLoop = false;
-                return false;
-            }
-
-            DateTime currentTime = DateTime.Now;
-            //If it selected, we want to back it up... but not immediately
-            if (IsSelected)
-            {
-                //Check the max time for backup as well as it should override IsSelected
-                if ((currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
-                    return true;
-                //Selected prims are probably being changed, add them back for tte next backup
-                shouldReaddToLoopNow = true;
-                return false;
-            }
-            //Check whether it is between the Min Time and Max Time to backup
-            if ((currentTime - timeLastChanged).TotalMinutes > m_scene.m_dontPersistBefore || (currentTime - timeFirstChanged).TotalMinutes > m_scene.m_persistAfter)
-                return true;
-            return false;
         }
         
         /// <value>
@@ -1391,68 +1344,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Events
-
-        /// <summary>
-        /// Deal with backing up this prim
-        /// </summary>
-        /// <param name="datastore">Place to save the prim into</param>
-        /// <param name="forcedBackup">Is this backup forced?</param>
-        /// <param name="shouldReaddToLoop">Should we even check this prim again until it is changed again?</param>
-        /// <param name="shouldReaddToLoopNow">Should this prim be readded to the backup loop for immediate checking next loop?</param>
-        /// <returns></returns>
-        public virtual bool ProcessBackup(ISimulationDataStore datastore, bool forcedBackup, out bool shouldReaddToLoop, out bool shouldReaddToLoopNow)
-        {
-            shouldReaddToLoop = true;
-            shouldReaddToLoopNow = false;
-            //if (!m_isBackedUp)
-            //    return true;
-
-            // Since this is the top of the section of call stack for backing up a particular scene object, don't let
-            // any exception propogate upwards.
-
-            if (IsDeleted || UUID == UUID.Zero)
-                return true;
-
-            try
-            {
-                if (isTimeToPersist(out shouldReaddToLoop, out shouldReaddToLoopNow) || (forcedBackup && !IsAttachment)) // forced means FORCED, you don't get a choice!
-                {
-                    // don't backup while it's selected or you're asking for changes mid stream.
-                    DateTime startTime = DateTime.Now;
-
-                    SceneObjectGroup backup_group = (SceneObjectGroup)base.Copy();
-                    //Do this we don't try to re-persist to the DB
-                    backup_group.m_isLoaded = false;
-                    datastore.StoreObject(backup_group, m_scene.RegionInfo.RegionID);
-
-                    //Backup inventory, no lock as this isn't added ANYWHERE but here
-                    foreach (SceneObjectPart part in backup_group.ChildrenList)
-                    {
-                        part.Inventory.ProcessInventoryBackup(datastore);
-                    }
-
-                    m_log.DebugFormat(
-                            "[SCENE]: Stored {0}, {1} in {2} at {3} in {4} seconds",
-                            Name, UUID, m_scene.RegionInfo.RegionName, AbsolutePosition.ToString(), (DateTime.Now -startTime).TotalSeconds);
-
-
-                    HasGroupChanged = false;
-                    backup_group = null;
-                    return true;
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.ErrorFormat(
-                    "[SCENE]: Storing of {0}, {1} in {2} failed with exception {3}\n\t{4}",
-                    Name, UUID, m_scene.RegionInfo.RegionName, e, e.StackTrace);
-            }
-            return false;
-        }
-
-        #endregion
-
         #region Copying
 
         /// <summary>
@@ -2445,7 +2336,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Remove from database and parcel prim count
                 //
-                m_scene.DeleteFromStorage(UUID);
+                IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
+                if (backup != null)
+                    backup.DeleteFromStorage(UUID);
                 m_scene.EventManager.TriggerParcelPrimCountTainted();
             }
 
