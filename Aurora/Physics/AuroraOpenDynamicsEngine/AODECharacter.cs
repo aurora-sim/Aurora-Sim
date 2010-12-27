@@ -552,7 +552,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        /// <summary>
+        /// This adds to the force that will be used for moving the avatar in the next physics heartbeat iteration.
+        /// </summary>
+        /// <param name="force"></param>
         public override void AddMovementForce(Vector3 force)
+        {
+            _target_velocity += force;
+        }
+
+        /// <summary>
+        /// This sets the force that will be used for moving the avatar in the next physics heartbeat iteration.
+        /// Note: we do accept Vector3.Zero here as that is an overriding stop for the physics engine.
+        /// </summary>
+        /// <param name="force"></param>
+        public override void SetMovementForce(Vector3 force)
         {
             _target_velocity = force;
         }
@@ -1193,7 +1207,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //Decay out the target velocity
                     const float DECAY_RATE = 0.985f;
                     _target_velocity *= DECAY_RATE;
-                    if (_target_velocity.ApproxEquals(Vector3.Zero, 1f))
+                    if (!_zeroFlag && _target_velocity.ApproxEquals(Vector3.Zero, 0.75f))
                         _target_velocity = Vector3.Zero;
 
                     //Check if the capsule is tilted before changing it

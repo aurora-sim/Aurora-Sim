@@ -2304,7 +2304,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if(!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
 
-                            PhysicsActor.AddMovementForce(direc);
+                            PhysicsActor.SetMovementForce(direc);
                         }
                     }
                 }
@@ -2315,11 +2315,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (!m_overrideUserInput)
             {
                 //This is where you start to decay the velocity
-                direc *= 0.95f;
+                //direc *= 0.95f;
                 //More decay on the Z, otherwise flying up and down is a bit hard
                 direc.Z = direc.Z * 0.5f;
 
-                PhysicsActor.AddMovementForce(direc);
+                //It'll stop the physics engine from decaying, which makes it look bad
+                if(direc != Vector3.Zero)
+                    PhysicsActor.SetMovementForce(direc);
             }
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
