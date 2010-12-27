@@ -563,7 +563,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected Quaternion m_rotationOffset = Quaternion.Identity;
         protected PrimitiveBaseShape m_shape;
         protected UUID m_uuid;
-        protected Vector3 m_velocity;
 
         protected Vector3 m_lastPosition;
         protected Vector3 m_lastGroupPosition;
@@ -1328,17 +1327,15 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (actor.IsPhysical)
                     {
-                        m_velocity = actor.Velocity;
+                        return actor.Velocity;
                     }
                 }
 
-                return m_velocity;
+                return Vector3.Zero;
             }
 
             set
             {
-                m_velocity = value;
-
                 PhysicsActor actor = PhysActor;
                 if (actor != null)
                 {

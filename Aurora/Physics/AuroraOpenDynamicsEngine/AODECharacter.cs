@@ -583,12 +583,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { }
         }
 
-        public override bool Kinematic
-        {
-            get { return false; }
-            set { }
-        }
-
         public override Quaternion Orientation
         {
             get { return Quaternion.Identity; }
@@ -1304,6 +1298,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_lastUpdateSent = true;
                     base.RequestPhysicsterseUpdate();
                 }
+
+                //Tell any listeners that we've stopped
+                base.TriggerMovementUpdate();
             }
             else
             {
@@ -1340,6 +1337,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     base.RequestPhysicsterseUpdate();
                     base.TriggerSignificantMovement();
                 }
+                //Tell any listeners about the new info
+                base.TriggerMovementUpdate();
             }
         }
 

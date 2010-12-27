@@ -164,8 +164,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         private string GetMovementAnimation()
         {
-            const float SLOWFLY_DELAY = 25f;
-            const float FALL_DELAY = 0.33f;
+            const float SLOWFLY_DELAY = 15f;
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
 
@@ -174,6 +173,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             const float PREJUMP_DELAY = 0.35f;
 
             #region Inputs
+
             if (m_scenePresence.SitGround)
             {
                 return "SIT_GROUND_CONSTRAINED";
@@ -341,22 +341,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             if (actor == null && !jumping && move.Z == 0 || (actor != null && (!actor.CollidingObj || !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
             {
-                /*float fallElapsed = (float)(Util.EnvironmentTickCount() - m_animTickFall) / 1000f;
-                if (m_animTickFall == 0 || (fallElapsed > FALL_DELAY && fallVelocity >= 0.0f))
-                {
-                    // Just started falling
-                    m_animTickFall = Util.EnvironmentTickCount();*/
+                //Always return falldown immediately as there shouldn't be a waiting period
                 if(m_animTickFall == 0)
                     m_animTickFall = Util.EnvironmentTickCount();
                 return "FALLDOWN";
-                /*}
-                else if (!jumping && fallElapsed > FALL_DELAY)
-                {
-                    // Falling long enough to trigger the animation
-                    return "FALLDOWN";
-                }
-
-                return m_movementAnimation;*/
             }
 
             #endregion Falling/Floating/Landing
@@ -574,10 +562,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             }
             else if (m_movementAnimation == "LAND")
             {
-                float landElapsed = (float)(Util.EnvironmentTickCount() - m_animTickFall) / 1000f;
-                if ((m_animTickFall != 0) && (landElapsed <= FALL_DELAY))
+                if (actor.Velocity.Z != 0)
                 {
-                    //See note above about soft landings
                     if (actor.Velocity.Z < SOFTLAND_FORCE)
                         return "LAND";
                     return "SOFT_LAND";

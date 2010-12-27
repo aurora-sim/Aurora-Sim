@@ -562,12 +562,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             set { m_rotationalVelocity = value; }
         }
 
-        public override bool Kinematic
-        {
-            get { return false; }
-            set { }
-        }
-
         public override float Buoyancy
         {
             get { return m_buoyancy; }

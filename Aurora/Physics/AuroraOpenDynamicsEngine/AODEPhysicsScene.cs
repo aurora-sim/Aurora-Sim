@@ -1591,6 +1591,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _characters.Remove(chr);
             }
         }
+
         public void BadCharacter(AuroraODECharacter chr)
         {
             lock (_badCharacter)

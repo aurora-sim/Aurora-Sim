@@ -125,6 +125,7 @@ namespace OpenSim.Region.Physics.Manager
 #pragma warning disable 67
         public event RequestTerseUpdate OnRequestTerseUpdate;
         public event RequestTerseUpdate OnSignificantMovement;
+        public event RequestTerseUpdate OnPositionAndVelocityUpdate;
         public event CollisionUpdate OnCollisionUpdate;
         public event OutOfBounds OnOutOfBounds;
 #pragma warning restore 67
@@ -202,6 +203,15 @@ namespace OpenSim.Region.Physics.Manager
                 significantMovement();
         }
 
+        public virtual void TriggerMovementUpdate()
+        {
+            //Call significant movement
+            RequestTerseUpdate movementUpdate = OnPositionAndVelocityUpdate;
+
+            if (movementUpdate != null)
+                movementUpdate();
+        }
+
         public virtual void SetMaterial (int material)
         {
             
@@ -239,7 +249,6 @@ namespace OpenSim.Region.Physics.Manager
         public abstract bool CollidingObj { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
-        public abstract bool Kinematic { get; set; }
         public abstract float Buoyancy { get; set; }
 
         // Used for MoveTo
@@ -467,12 +476,6 @@ namespace OpenSim.Region.Physics.Manager
         {
             get { return type; }
             set { type = value; }
-        }
-
-        public override bool Kinematic
-        {
-            get { return true; }
-            set { return; }
         }
 
         public override void link(PhysicsActor obj)

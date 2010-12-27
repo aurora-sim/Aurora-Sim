@@ -235,12 +235,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return _acceleration; }
         }
 
-        public override bool Kinematic
-        {
-            get { return true; }
-            set { }
-        }
-
         public override void link(PhysicsActor obj)
         {
         }

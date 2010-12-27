@@ -118,16 +118,13 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_pos = value; }
         }
 
-        protected Vector3 m_velocity;
-        protected Vector3 m_rotationalvelocity;
-
         /// <summary>
         /// Current velocity of the entity.
         /// </summary>
         public virtual Vector3 Velocity
         {
-            get { return m_velocity; }
-            set { m_velocity = value; }
+            get { return Vector3.Zero; }
+            set { }
         }
 
         protected uint m_localId;

@@ -2587,12 +2587,6 @@ Console.WriteLine(" JointCreateFixed");
             set { m_collisionscore = value; }
         }
 
-        public override bool Kinematic
-        {
-            get { return false; }
-            set { }
-        }
-
         public override Quaternion Orientation
         {
             get { return _orientation; }

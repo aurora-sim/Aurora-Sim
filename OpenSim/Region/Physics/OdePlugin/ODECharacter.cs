@@ -795,12 +795,6 @@ namespace OpenSim.Region.Physics.OdePlugin
             set { }
         }
 
-        public override bool Kinematic
-        {
-            get { return false; }
-            set { }
-        }
-
         public override Quaternion Orientation
         {
             get { return Quaternion.Identity; }

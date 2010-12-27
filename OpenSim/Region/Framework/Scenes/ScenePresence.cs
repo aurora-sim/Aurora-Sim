@@ -542,9 +542,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 PhysicsActor actor = m_physicsActor;
                 if (actor != null)
-                    m_velocity = actor.Velocity;
+                    return actor.Velocity;
 
-                return m_velocity;
+                return Vector3.Zero;
             }
             set
             {
@@ -561,8 +561,6 @@ namespace OpenSim.Region.Framework.Scenes
                         m_log.Error("[SCENEPRESENCE]: VELOCITY " + e.Message);
                     }
                 }
-
-                m_velocity = value;
             }
         }
 
@@ -979,6 +977,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
                     if (m_physicsActor != null)
                         m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
+                    if (m_physicsActor != null)
+                        m_physicsActor.OnPositionAndVelocityUpdate -= PhysicsUpdatePosAndVelocity;
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
@@ -3000,7 +3000,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.RegionID = Scene.RegionInfo.RegionID;
 
             cAgent.Position = AbsolutePosition;
-            cAgent.Velocity = m_velocity;
+            cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;
             // Don't copy the size; it is inferred from apearance parameters
             //cAgent.Size = new Vector3(0, 0, m_avHeight);
@@ -3120,7 +3120,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_callbackURI = cAgent.CallbackURI;
 
             m_pos = cAgent.Position;
-            m_velocity = cAgent.Velocity;
+            Velocity = cAgent.Velocity;
             m_CameraCenter = cAgent.Center;
             //m_avHeight = cAgent.Size.Z;
             m_CameraAtAxis = cAgent.AtAxis;
@@ -3271,6 +3271,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
+            m_physicsActor.OnPositionAndVelocityUpdate += PhysicsUpdatePosAndVelocity;
+
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.SubscribeEvents(500);
             m_physicsActor.LocalID = LocalId;
@@ -3293,17 +3295,18 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SendAgentAlertMessage("Physics is having a problem with your avatar.  You may not be able to move until you relog.", true);
         }
 
+        private void PhysicsUpdatePosAndVelocity()
+        {
+            //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
+            if (Animator != null && m_parentID == UUID.Zero)
+                Animator.UpdateMovementAnimations();
+        }
+
         // Event called by the physics plugin to tell the avatar about a collision.
         private void PhysicsCollisionUpdate(EventArgs e)
         {
             if (e == null)
                 return;
-
-            //if ((Math.Abs(Velocity.X) > 0.1e-9f) || (Math.Abs(Velocity.Y) > 0.1e-9f))
-            // The Physics Scene will send updates every 500 ms grep: m_physicsActor.SubscribeEvents(
-            // as of this comment the interval is set in AddToPhysicalScene
-            if (Animator != null && m_parentID == UUID.Zero)
-                Animator.UpdateMovementAnimations();
 
             CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
             Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
@@ -3360,6 +3363,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (coldata.Count != 0 && Animator != null)
             {
+                //If we are on the ground, we need to fix the collision plane for the avie (fixes their feet in the viewer)
                 switch (Animator.CurrentMovementAnimation)
                 {
                     case "STAND":
@@ -3368,33 +3372,12 @@ namespace OpenSim.Region.Framework.Scenes
                     case "CROUCH":
                     case "CROUCHWALK":
                         {
-                            /*ContactPoint lowest;
-                            lowest.SurfaceNormal = Vector3.Zero;
-                            lowest.Position = Vector3.Zero;
-                            lowest.Position.Z = Single.NaN;
-
-                            foreach (ContactPoint contact in coldata.Values)
-                            {
-                                if (Single.IsNaN(lowest.Position.Z) || contact.Position.Z < lowest.Position.Z)
-                                {
-                                    lowest = contact;
-                                }
-                            }
-                            if (lowest.Position.Z == 0)
-                            {
-                                if (m_forceToApply.HasValue && m_forceToApply.Value.Z < 0)
-                                {
-                                    lowest.SurfaceNormal.Z = ((int)AbsolutePosition.Z) - (PhysicsActor.Size.Z * 1.65f) - (int)Scene.GetGroundHeight(AbsolutePosition.X, AbsolutePosition.Y);
-                                }
-                                else
-                                    lowest.SurfaceNormal.Z = ((int)AbsolutePosition.Z) - (PhysicsActor.Size.Z * 1.75f) - (int)Scene.GetGroundHeight(AbsolutePosition.X, AbsolutePosition.Y);
-                            }
-                            CollisionPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));*/
                             ContactPoint lowest;
                             lowest.SurfaceNormal = Vector3.Zero;
                             lowest.Position = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
                             lowest.Position.Z = Single.NaN;
 
+                            //Find the lowest contact to use first
                             foreach (ContactPoint contact in coldata.Values)
                             {
                                 if (Single.IsNaN(lowest.Position.Z) || contact.Position.Z != 0 && contact.Position.Z < lowest.Position.Z)
@@ -3403,14 +3386,16 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                             }
 
+                            //Then if the normal isn't zero, set it (if its zero, it tends to do odd things in the client)
                             if (lowest.Position != new Vector3(float.MaxValue, float.MaxValue, float.MaxValue))
                             {
                                 Vector4 newPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
                                 if (lowest.SurfaceNormal != Vector3.Zero)
                                     CollisionPlane = newPlane;
                             }
-                            //No Zero vectors, as it causes bent knee in the client!
-                            if (CollisionPlane == new Vector4(0,0,0,0))
+
+                            //No Zero vectors, as it causes bent knee in the client! Replace with <0, 0, 0, 1>
+                            if (CollisionPlane == new Vector4(0, 0, 0, 0))
                                 CollisionPlane = new Vector4(0, 0, 0, 1);
                         }
                         break;
