@@ -2894,10 +2894,17 @@ namespace OpenSim.Region.Framework.Scenes
         protected void CrossToNewRegion()
         {
             InTransit();
+            bool isFlying = false;
             if (m_physicsActor != null)
-                m_scene.CrossAgentToNewRegion(this, m_physicsActor.Flying);
+                isFlying = m_physicsActor.Flying;
+
+            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+            if (transferModule != null)
+                transferModule.Cross(this, isFlying);
             else
-                m_scene.CrossAgentToNewRegion(this, false);
+            {
+                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+            }
         }
 
         public void InTransit()

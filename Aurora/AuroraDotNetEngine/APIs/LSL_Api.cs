@@ -4853,7 +4853,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
                     {
                         presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
-                        World.TeleportClientHome(agentId, presence.ControllingClient);
+                        IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.TeleportHome(agentId, presence.ControllingClient);
+                        else
+                            presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                     }
                 }
             }
@@ -6410,7 +6414,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // agent must be over the owners land
                     if (m_host.OwnerID == World.LandChannel.GetLandObject(
                             presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
-                        World.TeleportClientHome(agentId, presence.ControllingClient);
+                    {
+                        IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.TeleportHome(agentId, presence.ControllingClient);
+                        else
+                            presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
+                    }
                 }
             }
             return PScriptSleep(5000);

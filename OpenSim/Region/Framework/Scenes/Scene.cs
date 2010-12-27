@@ -1567,7 +1567,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
         }
 
-
         /// <summary>
         /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.
         /// </summary>
@@ -2422,7 +2421,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Trigger CHANGED_TELEPORT
                     foreach (SceneObjectPart part in sog.ChildrenList)
                     {
-                        sp.Scene.EventManager.TriggerOnScriptChangedEvent(part, (uint)Changed.TELEPORT);
+                        EventManager.TriggerOnScriptChangedEvent(part, (uint)Changed.TELEPORT);
                     }
                 }
 
@@ -2578,7 +2577,6 @@ namespace OpenSim.Region.Framework.Scenes
             SubscribeToClientPrimEvents(client);
             SubscribeToClientPrimRezEvents(client);
             SubscribeToClientInventoryEvents(client);
-            SubscribeToClientParcelEvents(client);
             SubscribeToClientGridEvents(client);
             SubscribeToClientNetworkEvents(client);
         }
@@ -2622,6 +2620,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnObjectDrop += m_sceneGraph.DropObject;
             client.OnObjectIncludeInSearch += m_sceneGraph.MakeObjectSearchable;
             client.OnObjectOwner += ObjectOwner;
+            client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
         }
 
         public virtual void SubscribeToClientPrimRezEvents(IClientAPI client)
@@ -2654,11 +2653,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoveTaskItem += ClientMoveTaskInventoryItem;
         }
 
-        public virtual void SubscribeToClientParcelEvents(IClientAPI client)
-        {
-            client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
-        }
-
         public virtual void SubscribeToClientGridEvents(IClientAPI client)
         {
             client.OnNameFromUUIDRequest += HandleUUIDNameRequest;
@@ -2682,7 +2676,6 @@ namespace OpenSim.Region.Framework.Scenes
             UnSubscribeToClientPrimEvents(client);
             UnSubscribeToClientPrimRezEvents(client);
             UnSubscribeToClientInventoryEvents(client);
-            UnSubscribeToClientParcelEvents(client);
             UnSubscribeToClientGridEvents(client);
             UnSubscribeToClientNetworkEvents(client);
         }
@@ -2724,6 +2717,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnObjectDrop -= m_sceneGraph.DropObject;
             client.OnObjectIncludeInSearch -= m_sceneGraph.MakeObjectSearchable;
             client.OnObjectOwner -= ObjectOwner;
+            client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
         }
 
         public virtual void UnSubscribeToClientPrimRezEvents(IClientAPI client)
@@ -2754,11 +2748,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoveTaskItem -= ClientMoveTaskInventoryItem;
         }
 
-        public virtual void UnSubscribeToClientParcelEvents(IClientAPI client)
-        {
-            client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
-        }
-
         public virtual void UnSubscribeToClientGridEvents(IClientAPI client)
         {
             client.OnNameFromUUIDRequest -= HandleUUIDNameRequest;
@@ -2774,23 +2763,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        /// <summary>
-        /// Teleport an avatar to their home region
-        /// </summary>
-        /// <param name="agentId">The avatar's Unique ID</param>
-        /// <param name="client">The IClientAPI for the client</param>
-        public virtual void TeleportClientHome(UUID agentId, IClientAPI client)
-        {
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
-                transferModule.TeleportHome(agentId, client);
-            else
-            {
-                m_log.DebugFormat("[SCENE]: Unable to teleport user home: no AgentTransferModule is active");
-                client.SendTeleportFailed("Unable to perform teleports on this simulator.");
-            }
-        }
 
         /// <summary>
         /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
@@ -3410,17 +3382,6 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public void CrossAgentToNewRegion(ScenePresence agent, bool isFlying)
-        {
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
-                transferModule.Cross(agent, isFlying);
-            else
-            {
-                m_log.DebugFormat("[SCENE]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
-            }
-        }
-
         public void SendOutChildAgentUpdates(AgentPosition cadu, ScenePresence presence)
         {
             INeighbourService service = RequestModuleInterface<INeighbourService>();
@@ -3623,11 +3584,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEachSOG(Action<SceneObjectGroup> action)
         {
             m_sceneGraph.ForEachSOG(action);
-        }
-
-        public void removeUserCount(bool typeRCTF)
-        {
-            m_sceneGraph.removeUserCount(typeRCTF);
         }
 
         public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)

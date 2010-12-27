@@ -194,10 +194,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                         }
                         else
                         {
-                            m_scene.removeUserCount(!sp.IsChildAgent);
-
                             sp.ControllingClient.Kick(Utils.BytesToString(reason));
-                            sp.ControllingClient.Close();
+                            m_scene.RemoveClient(sp.UUID);
                         }
                     }
                     

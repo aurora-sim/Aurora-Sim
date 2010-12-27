@@ -470,7 +470,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                         m_SP.Teleport(m_RespawnPosition);
                     }
                     else
-                        m_SP.Scene.TeleportClientHome(m_SP.UUID, m_SP.ControllingClient);
+                    {
+                        IEntityTransferModule transferModule = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.TeleportHome(m_SP.UUID, m_SP.ControllingClient);
+                    }
                 }
             }
 

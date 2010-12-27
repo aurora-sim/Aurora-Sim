@@ -516,7 +516,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         {
                             if (!SP.IsChildAgent)
                             {
-                                m_scene.TeleportClientHome(user, SP.ControllingClient);
+                                IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
+                                if (transferModule != null)
+                                    transferModule.TeleportHome(user, SP.ControllingClient);
                             }
                             else
                             {
@@ -667,7 +669,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 ScenePresence s = m_scene.GetScenePresence(prey);
                 if (s != null)
                 {
-                    m_scene.TeleportClientHome(prey, s.ControllingClient);
+                    IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.TeleportHome(prey, s.ControllingClient);
                 }
             }
         }
@@ -686,7 +690,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     // Also make sure they are actually in the region
                     if (p != null && !p.IsChildAgent)
                     {
-                        m_scene.TeleportClientHome(p.UUID, p.ControllingClient);
+                        IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.TeleportHome(p.UUID, p.ControllingClient);
                     }
                 }
             });
