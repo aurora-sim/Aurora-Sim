@@ -253,20 +253,6 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.TriggerMoneyTransfer(this, args);
         }
 
-        public virtual void ProcessParcelBuy(UUID agentId, UUID groupId, bool final, bool groupOwned,
-                bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice, bool authenticated)
-        {
-            EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned, 
-                                                                         removeContribution, parcelLocalID, parcelArea, 
-                                                                         parcelPrice, authenticated);
-
-            // First, allow all validators a stab at it
-            m_eventManager.TriggerValidateLandBuy(this, args);
-
-            // Then, check validation and transfer
-            m_eventManager.TriggerLandBuy(this, args);
-        }
-
         public virtual void ProcessObjectGrab(uint localID, Vector3 offsetPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SurfaceTouchEventArgs surfaceArg = null;

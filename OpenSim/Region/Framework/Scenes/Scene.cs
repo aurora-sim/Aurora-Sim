@@ -2578,7 +2578,6 @@ namespace OpenSim.Region.Framework.Scenes
             SubscribeToClientPrimEvents(client);
             SubscribeToClientPrimRezEvents(client);
             SubscribeToClientInventoryEvents(client);
-            SubscribeToClientTeleportEvents(client);
             SubscribeToClientParcelEvents(client);
             SubscribeToClientGridEvents(client);
             SubscribeToClientNetworkEvents(client);
@@ -2655,20 +2654,9 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoveTaskItem += ClientMoveTaskInventoryItem;
         }
 
-        public virtual void SubscribeToClientTeleportEvents(IClientAPI client)
-        {
-            client.OnTeleportLocationRequest += RequestTeleportLocation;
-            client.OnTeleportLandmarkRequest += RequestTeleportLandmark;
-            client.OnTeleportCancel += RequestTeleportCancel;
-        }
-
         public virtual void SubscribeToClientParcelEvents(IClientAPI client)
         {
             client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
-            client.OnParcelReturnObjectsRequest += LandChannel.ReturnObjectsInParcel;
-            client.OnParcelDisableObjectsRequest += LandChannel.DisableObjectsInParcel;
-            client.OnParcelSetOtherCleanTime += LandChannel.SetParcelOtherCleanTime;
-            client.OnParcelBuy += ProcessParcelBuy;
         }
 
         public virtual void SubscribeToClientGridEvents(IClientAPI client)
@@ -2694,7 +2682,6 @@ namespace OpenSim.Region.Framework.Scenes
             UnSubscribeToClientPrimEvents(client);
             UnSubscribeToClientPrimRezEvents(client);
             UnSubscribeToClientInventoryEvents(client);
-            UnSubscribeToClientTeleportEvents(client);
             UnSubscribeToClientParcelEvents(client);
             UnSubscribeToClientGridEvents(client);
             UnSubscribeToClientNetworkEvents(client);
@@ -2767,19 +2754,9 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoveTaskItem -= ClientMoveTaskInventoryItem;
         }
 
-        public virtual void UnSubscribeToClientTeleportEvents(IClientAPI client)
-        {
-            client.OnTeleportLocationRequest -= RequestTeleportLocation;
-            client.OnTeleportLandmarkRequest -= RequestTeleportLandmark;
-        }
-
         public virtual void UnSubscribeToClientParcelEvents(IClientAPI client)
         {
             client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
-            client.OnParcelReturnObjectsRequest -= LandChannel.ReturnObjectsInParcel;
-            client.OnParcelDisableObjectsRequest -= LandChannel.DisableObjectsInParcel;
-            client.OnParcelSetOtherCleanTime -= LandChannel.SetParcelOtherCleanTime;
-            client.OnParcelBuy -= ProcessParcelBuy;
         }
 
         public virtual void UnSubscribeToClientGridEvents(IClientAPI client)
@@ -3431,118 +3408,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Agent not here
             return false;
-        }
-
-        /// <summary>
-        /// Tries to teleport agent to other region.
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="regionName"></param>
-        /// <param name="position"></param>
-        /// <param name="lookAt"></param>
-        /// <param name="teleportFlags"></param>
-        public void RequestTeleportLocation(IClientAPI remoteClient, string regionName, Vector3 position,
-                                            Vector3 lookat, uint teleportFlags)
-        {
-            GridRegion regionInfo = GridService.GetRegionByName(UUID.Zero, regionName);
-            if (regionInfo == null)
-            {
-                // can't find the region: Tell viewer and abort
-                remoteClient.SendTeleportFailed("The region '" + regionName + "' could not be found.");
-                return;
-            }
-
-            RequestTeleportLocation(remoteClient, regionInfo.RegionHandle, position, lookat, teleportFlags);
-        }
-
-        /// <summary>
-        /// Tries to teleport agent to other region.
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="position"></param>
-        /// <param name="lookAt"></param>
-        /// <param name="teleportFlags"></param>
-        public void RequestTeleportLocation(IClientAPI remoteClient, ulong regionHandle, Vector3 position,
-                                            Vector3 lookAt, uint teleportFlags)
-        {
-            ScenePresence sp = GetScenePresence(remoteClient.AgentId);
-            if (sp != null)
-            {
-                uint regionX = m_regInfo.RegionLocX;
-                uint regionY = m_regInfo.RegionLocY;
-
-                Utils.LongToUInts(regionHandle, out regionX, out regionY);
-
-                int shiftx = (int)regionX - (int)m_regInfo.RegionLocX * (int)Constants.RegionSize;
-                int shifty = (int)regionY - (int)m_regInfo.RegionLocY * (int)Constants.RegionSize;
-
-                position.X += shiftx;
-                position.Y += shifty;
-
-                bool result = false;
-
-                if (TestBorderCross(position, Cardinals.N))
-                    result = true;
-
-                if (TestBorderCross(position, Cardinals.S))
-                    result = true;
-
-                if (TestBorderCross(position, Cardinals.E))
-                    result = true;
-
-                if (TestBorderCross(position, Cardinals.W))
-                    result = true;
-
-                // bordercross if position is outside of region
-
-                if (!result)
-                    regionHandle = m_regInfo.RegionHandle;
-                else
-                {
-                    // not in this region, undo the shift!
-                    position.X -= shiftx;
-                    position.Y -= shifty;
-                }
-
-                IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-                if (transferModule != null)
-                {
-                    transferModule.Teleport(sp, regionHandle, position, lookAt, teleportFlags);
-                }
-                else
-                {
-                    m_log.DebugFormat("[SCENE]: Unable to perform teleports: no AgentTransferModule is active");
-                    sp.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Tries to teleport agent to landmark.
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="position"></param>
-        public void RequestTeleportLandmark(IClientAPI remoteClient, UUID regionID, Vector3 position)
-        {
-            GridRegion info = GridService.GetRegionByUUID(UUID.Zero, regionID);
-
-            if (info == null)
-            {
-                // can't find the region: Tell viewer and abort
-                remoteClient.SendTeleportFailed("The teleport destination could not be found.");
-                return;
-            }
-
-            RequestTeleportLocation(remoteClient, info.RegionHandle, position, Vector3.Zero, (uint)(TPFlags.SetLastToTarget | TPFlags.ViaLandmark));
-        }
-
-        public void RequestTeleportCancel(IClientAPI client)
-        {
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
-                transferModule.CancelTeleport(client.AgentId);
         }
 
         public void CrossAgentToNewRegion(ScenePresence agent, bool isFlying)

@@ -295,6 +295,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelBuyPass += ParcelBuyPass;
             client.OnParcelFreezeUser += ClientOnParcelFreezeUser;
             client.OnParcelEjectUser += ClientOnParcelEjectUser;
+            client.OnParcelReturnObjectsRequest += ReturnObjectsInParcel;
+            client.OnParcelDisableObjectsRequest += DisableObjectsInParcel;
+            client.OnParcelSetOtherCleanTime += SetParcelOtherCleanTime;
+            client.OnParcelBuy += ProcessParcelBuy;
 
             EstateSettings ES = m_scene.RegionInfo.EstateSettings;
             if(UseDwell)
@@ -327,6 +331,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelBuyPass -= ParcelBuyPass;
             client.OnParcelFreezeUser -= ClientOnParcelFreezeUser;
             client.OnParcelEjectUser -= ClientOnParcelEjectUser;
+            client.OnParcelReturnObjectsRequest -= ReturnObjectsInParcel;
+            client.OnParcelDisableObjectsRequest -= DisableObjectsInParcel;
+            client.OnParcelSetOtherCleanTime -= SetParcelOtherCleanTime;
+            client.OnParcelBuy -= ProcessParcelBuy;
         }
 
         public void PostInitialise()
@@ -1288,6 +1296,20 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
         #endregion
 
+        public virtual void ProcessParcelBuy(UUID agentId, UUID groupId, bool final, bool groupOwned,
+                bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice, bool authenticated)
+        {
+            EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned,
+                                                                         removeContribution, parcelLocalID, parcelArea,
+                                                                         parcelPrice, authenticated);
+
+            // First, allow all validators a stab at it
+            m_scene.EventManager.TriggerValidateLandBuy(this, args);
+
+            // Then, check validation and transfer
+            m_scene.EventManager.TriggerLandBuy(this, args);
+        }
+
         // If the economy has been validated by the economy module,
         // and land has been validated as well, this method transfers
         // the land ownership
@@ -1617,7 +1639,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void setParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
+        public void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
         {
             ILandObject land = landChannel.GetLandObject(localID);
 

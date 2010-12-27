@@ -597,10 +597,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
 
-                    World.RequestTeleportLocation(presence.ControllingClient,
-                        regionHandle,
-                        position,
-                        lookAt, (uint)TeleportFlags.ViaLocation);
+                    IEntityTransferModule entityTransfer = World.RequestModuleInterface<IEntityTransferModule>();
+                    if (entityTransfer != null)
+                    {
+                        entityTransfer.RequestTeleportLocation(presence.ControllingClient,
+                            regionHandle,
+                            position,
+                            lookAt, (uint)TeleportFlags.ViaLocation);
+                    }
 
                     return PScriptSleep(5000);
                 }

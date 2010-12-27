@@ -185,32 +185,29 @@ namespace Aurora.Modules
 			}
 		}
 
-		public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)
-		{
-			if (!(client.Scene is Scene))
-				return;
-			Scene scene = (Scene)(client.Scene);
+        public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)
+        {
+            if (!(client.Scene is Scene))
+                return;
+            Scene scene = (Scene)(client.Scene);
 
-			ulong handle = 0;
-			uint x = 128;
-			uint y = 128;
-			uint z = 70;
+            ulong handle = 0;
+            uint x = 128;
+            uint y = 128;
+            uint z = 70;
 
-			Util.ParseFakeParcelID(lureID, out handle, out x, out y, out z);
+            Util.ParseFakeParcelID(lureID, out handle, out x, out y, out z);
 
-			Vector3 position = new Vector3();
-			position.X = (float)x;
-			position.Y = (float)y;
-			position.Z = (float)z;
-			try
-			{
-				scene.RequestTeleportLocation(client, handle, position,
-				                              Vector3.Zero, teleportFlags);
-			}
-			catch
-			{
-			}
-
+            Vector3 position = new Vector3();
+            position.X = (float)x;
+            position.Y = (float)y;
+            position.Z = (float)z;
+            IEntityTransferModule entityTransfer = scene.RequestModuleInterface<IEntityTransferModule>();
+            if (entityTransfer != null)
+            {
+                entityTransfer.RequestTeleportLocation(client, handle, position,
+                                      Vector3.Zero, teleportFlags);
+            }
         }
 
         #endregion

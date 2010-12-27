@@ -53,6 +53,10 @@ namespace OpenSim.Region.Framework.Interfaces
         void Cross(SceneObjectGroup sog, Vector3 position, bool silent);
 
         void CancelTeleport(UUID AgentID);
+
+        void RequestTeleportLocation(IClientAPI iClientAPI, ulong regionHandle, Vector3 position, Vector3 lookAt, uint p);
+
+        void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint p);
     }
 
     public interface IUserAgentVerificationModule

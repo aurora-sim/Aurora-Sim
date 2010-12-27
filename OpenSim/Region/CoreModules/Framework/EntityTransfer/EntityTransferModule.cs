@@ -100,22 +100,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        protected virtual void OnNewClient(IClientAPI client)
-        {
-            client.OnTeleportHomeRequest += TeleportHome;
-        }
-
-        protected virtual void OnClosingClient(IClientAPI client)
-        {
-            client.OnTeleportHomeRequest -= TeleportHome;
-        }
-
         public virtual void Close()
         {
             if (!m_Enabled)
                 return;
         }
-
 
         public virtual void RemoveRegion(Scene scene)
         {
@@ -643,6 +632,128 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #endregion
 
+        #region Client Events
+
+        protected virtual void OnNewClient(IClientAPI client)
+        {
+            client.OnTeleportHomeRequest += TeleportHome;
+            client.OnTeleportCancel += RequestTeleportCancel;
+            client.OnTeleportLocationRequest += RequestTeleportLocation;
+            client.OnTeleportLandmarkRequest += RequestTeleportLandmark;
+        }
+
+        protected virtual void OnClosingClient(IClientAPI client)
+        {
+            client.OnTeleportHomeRequest -= TeleportHome;
+            client.OnTeleportCancel -= RequestTeleportCancel;
+            client.OnTeleportLocationRequest -= RequestTeleportLocation;
+            client.OnTeleportLandmarkRequest -= RequestTeleportLandmark;
+        }
+
+        public void RequestTeleportCancel(IClientAPI client)
+        {
+            CancelTeleport(client.AgentId);
+        }
+
+        /// <summary>
+        /// Tries to teleport agent to other region.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionName"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="teleportFlags"></param>
+        public void RequestTeleportLocation(IClientAPI remoteClient, string regionName, Vector3 position,
+                                            Vector3 lookat, uint teleportFlags)
+        {
+            GridRegion regionInfo = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByName(UUID.Zero, regionName);
+            if (regionInfo == null)
+            {
+                // can't find the region: Tell viewer and abort
+                remoteClient.SendTeleportFailed("The region '" + regionName + "' could not be found.");
+                return;
+            }
+
+            RequestTeleportLocation(remoteClient, regionInfo.RegionHandle, position, lookat, teleportFlags);
+        }
+
+        /// <summary>
+        /// Tries to teleport agent to other region.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="teleportFlags"></param>
+        public void RequestTeleportLocation(IClientAPI remoteClient, ulong regionHandle, Vector3 position,
+                                            Vector3 lookAt, uint teleportFlags)
+        {
+            Scene scene = (Scene)remoteClient.Scene;
+            ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            if (sp != null)
+            {
+                uint regionX = scene.RegionInfo.RegionLocX;
+                uint regionY = scene.RegionInfo.RegionLocY;
+
+                Utils.LongToUInts(regionHandle, out regionX, out regionY);
+
+                int shiftx = (int)regionX - (int)scene.RegionInfo.RegionLocX * (int)Constants.RegionSize;
+                int shifty = (int)regionY - (int)scene.RegionInfo.RegionLocY * (int)Constants.RegionSize;
+
+                position.X += shiftx;
+                position.Y += shifty;
+
+                bool result = false;
+
+                if (scene.TestBorderCross(position, Cardinals.N))
+                    result = true;
+
+                if (scene.TestBorderCross(position, Cardinals.S))
+                    result = true;
+
+                if (scene.TestBorderCross(position, Cardinals.E))
+                    result = true;
+
+                if (scene.TestBorderCross(position, Cardinals.W))
+                    result = true;
+
+                // bordercross if position is outside of region
+
+                if (!result)
+                    regionHandle = scene.RegionInfo.RegionHandle;
+                else
+                {
+                    // not in this region, undo the shift!
+                    position.X -= shiftx;
+                    position.Y -= shifty;
+                }
+
+                Teleport(sp, regionHandle, position, lookAt, teleportFlags);
+            }
+        }
+
+        /// <summary>
+        /// Tries to teleport agent to landmark.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        public void RequestTeleportLandmark(IClientAPI remoteClient, UUID regionID, Vector3 position)
+        {
+            GridRegion info = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID);
+
+            if (info == null)
+            {
+                // can't find the region: Tell viewer and abort
+                remoteClient.SendTeleportFailed("The teleport destination could not be found.");
+                return;
+            }
+
+            RequestTeleportLocation(remoteClient, info.RegionHandle, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
+        }
+
+        #endregion
+
         #region Teleport Home
 
         public virtual void TeleportHome(UUID id, IClientAPI client)
@@ -664,8 +775,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
                     regionInfo.RegionName, regionInfo.RegionID, regionInfo.RegionLocX / Constants.RegionSize, regionInfo.RegionLocY / Constants.RegionSize);
 
-                // a little eekie that this goes back to Scene and with a forced cast, will fix that at some point...
-                ((Scene)(client.Scene)).RequestTeleportLocation(
+                RequestTeleportLocation(
                     client, regionInfo.RegionHandle, uinfo.HomePosition, uinfo.HomeLookAt,
                     (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
             }
@@ -679,8 +789,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
                         Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX / Constants.RegionSize, Regions[0].RegionLocY / Constants.RegionSize);
 
-                    // a little eekie that this goes back to Scene and with a forced cast, will fix that at some point...
-                    ((Scene)(client.Scene)).RequestTeleportLocation(
+                    RequestTeleportLocation(
                         client, Regions[0].RegionHandle, new Vector3(128, 128, 25), new Vector3(128, 128, 128),
                         (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
                 }
@@ -688,7 +797,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         }
 
         #endregion
-
 
         #region Agent Crossings
 
@@ -1476,8 +1584,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #endregion
 
-
         #region Agent Arrived
+
         public void AgentArrivedAtDestination(UUID id)
         {
             //m_log.Debug(" >>> ReleaseAgent called <<< ");
@@ -1853,6 +1961,5 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
 
         #endregion
-
     }
 }

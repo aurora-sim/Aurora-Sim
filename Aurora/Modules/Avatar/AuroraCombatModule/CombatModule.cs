@@ -557,7 +557,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     {
                         KillAvatar(localID, false);
                         m_SP.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
-                        m_SP.Scene.RequestTeleportLocation(m_SP.ControllingClient, RegionName, pos, lookat, (uint)TeleportFlags.ViaHome);
+                        IEntityTransferModule entityTransfer = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (entityTransfer != null)
+                        {
+                            entityTransfer.RequestTeleportLocation(m_SP.ControllingClient, RegionName, pos, lookat, (uint)TeleportFlags.ViaHome);
+                        }
                     }
                 }
             }

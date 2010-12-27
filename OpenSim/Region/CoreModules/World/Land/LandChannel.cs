@@ -194,7 +194,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (m_landManagementModule != null)
             {
-                m_landManagementModule.setParcelOtherCleanTime(remoteClient, localID, otherCleanTime);
+                m_landManagementModule.SetParcelOtherCleanTime(remoteClient, localID, otherCleanTime);
             }
         }
 

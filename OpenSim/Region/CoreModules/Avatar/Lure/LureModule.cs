@@ -195,8 +195,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             position.Y = (float)y;
             position.Z = (float)z;
 
-            scene.RequestTeleportLocation(client, handle, position,
+            IEntityTransferModule entityTransfer = scene.RequestModuleInterface<IEntityTransferModule>();
+            if (entityTransfer != null)
+            {
+                entityTransfer.RequestTeleportLocation(client, handle, position,
                     Vector3.Zero, teleportFlags);
+            }
         }
 
         private void OnGridInstantMessage(GridInstantMessage msg)
