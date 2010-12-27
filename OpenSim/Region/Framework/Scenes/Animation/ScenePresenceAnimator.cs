@@ -162,7 +162,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// <summary>
         /// This method determines the proper movement related animation
         /// </summary>
-        public string GetMovementAnimation()
+        private string GetMovementAnimation()
         {
             const float SLOWFLY_DELAY = 25f;
             const float FALL_DELAY = 0.33f;
@@ -591,7 +591,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 // Not jumping
                 m_animTickJump = 0;
 
-                if (move.X != 0f || move.Y != 0f)
+                if (move.X != 0f || move.Y != 0f ||
+                    actor.Velocity.X != 0 && actor.Velocity.Y != 0)
                 {
                     // Walking / crouchwalking / running
                     if (move.Z < 0f)
@@ -607,16 +608,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     if (move.Z < 0f)
                         return "CROUCH";
                     else
-                        if (m_scenePresence.Scene.m_UseNewStyleMovement &&
-                            actor.Velocity.X != 0 && actor.Velocity.Y != 0)
-                        {
-                            if (m_scenePresence.SetAlwaysRun)
-                                return "RUN";
-                            else
-                                return "WALK";
-                        }
-                        else
-                            return "STAND";
+                       return "STAND";
                 }
             }
 

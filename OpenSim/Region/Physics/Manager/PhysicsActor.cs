@@ -196,8 +196,10 @@ namespace OpenSim.Region.Physics.Manager
         public virtual void TriggerSignificantMovement()
         {
             //Call significant movement
-            if (OnSignificantMovement != null)
-                OnSignificantMovement();
+            RequestTerseUpdate significantMovement = OnSignificantMovement;
+
+            if (significantMovement != null)
+                significantMovement();
         }
 
         public virtual void SetMaterial (int material)
@@ -215,6 +217,7 @@ namespace OpenSim.Region.Physics.Manager
         public abstract void VehicleRotationParam(int param, Quaternion rotation);
         public abstract void VehicleFlags(int param, bool remove);
         public abstract void SetCameraPos(Vector3 CameraRotation);
+        public virtual void AddMovementForce(Vector3 force){}
 
         public abstract void SetVolumeDetect(int param);    // Allows the detection of collisions with inherently non-physical prims. see llVolumeDetect for more
 

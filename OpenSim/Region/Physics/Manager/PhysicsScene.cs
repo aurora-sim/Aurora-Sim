@@ -34,18 +34,11 @@ using OpenMetaverse;
 
 namespace OpenSim.Region.Physics.Manager
 {
-    public delegate void physicsCrash();
-
     public delegate void RaycastCallback(bool hitYN, Vector3 collisionPoint, uint localid, float distance, Vector3 normal);
 
     public abstract class PhysicsScene
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        // The only thing that should register for this event is the SceneGraph
-        // Anything else could cause problems.
-
-        public event physicsCrash OnPhysicsCrash;
 
         public static PhysicsScene Null
         {
@@ -57,16 +50,6 @@ namespace OpenSim.Region.Physics.Manager
             get;
             set;
         }
-
-        public virtual void TriggerPhysicsBasedRestart()
-        {
-            physicsCrash handler = OnPhysicsCrash;
-            if (handler != null)
-            {
-                OnPhysicsCrash();
-            }
-        }
-
 
         public abstract void Initialise(IMesher meshmerizer);
         public abstract void PostInitialise(IConfigSource config);

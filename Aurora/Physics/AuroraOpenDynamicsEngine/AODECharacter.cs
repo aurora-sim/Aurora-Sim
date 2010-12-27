@@ -552,6 +552,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void AddMovementForce(Vector3 force)
+        {
+            _target_velocity = force;
+        }
+
         public override Vector3 Torque
         {
             get { return Vector3.Zero; }
@@ -1184,6 +1189,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         vel.Z = -30;
                         d.BodySetLinearVel(Body, vel.X, vel.Y, vel.Z);
                     }
+
+                    //Decay out the target velocity
+                    const float DECAY_RATE = 0.985f;
+                    _target_velocity *= DECAY_RATE;
+                    if (_target_velocity.ApproxEquals(Vector3.Zero, 1f))
+                        _target_velocity = Vector3.Zero;
 
                     //Check if the capsule is tilted before changing it
                     if (!_zeroFlag && !_parent_scene.IsAvCapsuleTilted)

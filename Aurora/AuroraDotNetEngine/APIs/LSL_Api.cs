@@ -6238,7 +6238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 flags |= ScriptBaseClass.AGENT_BUSY;
             }
 
-            string agentMovementAnimation = agent.Animator.GetMovementAnimation();
+            string agentMovementAnimation = agent.Animator.CurrentMovementAnimation;
 
             if (agentMovementAnimation == "CROUCH")
             {

@@ -241,28 +241,25 @@ namespace OpenSim.Region.CoreModules.World.Sound
                         }
                     }
                 }
+                if (sp.IsChildAgent)
+                    return;
+
+                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                if (dis > 100.0) // Max audio distance
+                    return;
+
+                //Check to see if the person is local and the av is in the same parcel
+                if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
+                    return;
+
+                // Scale by distance
+                if (radius == 0)
+                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
                 else
-                {
-                    if (sp.IsChildAgent)
-                        return;
+                    gain = (float)((double)gain * ((radius - dis) / radius));
 
-                    double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                    if (dis > 100.0) // Max audio distance
-                        return;
-
-                    //Check to see if the person is local and the av is in the same parcel
-                    if (LocalOnly && sp.currentParcelUUID != ILO.LandData.GlobalID)
-                        return;
-
-                    // Scale by distance
-                    if (radius == 0)
-                        gain = (float)((double)gain * ((100.0 - dis) / 100.0));
-                    else
-                        gain = (float)((double)gain * ((radius - dis) / radius));
-
-                    sp.ControllingClient.SendTriggeredSound(
-                        soundId, ownerID, objectID, parentID, handle, position, (float)gain);
-                }
+                sp.ControllingClient.SendTriggeredSound(
+                    soundId, ownerID, objectID, parentID, handle, position, (float)gain);
             });
         }
     }

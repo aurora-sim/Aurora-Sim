@@ -854,7 +854,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.AbsolutePosition, m_part.ParentGroup.Scene.RegionInfo.RegionName);
             }
             return false;
-
         }
 
         /// <summary>

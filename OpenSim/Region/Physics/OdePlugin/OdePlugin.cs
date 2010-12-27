@@ -797,7 +797,6 @@ namespace OpenSim.Region.Physics.OdePlugin
             {
                 m_log.Error("[PHYSICS]: The Operating system shut down ODE because of corrupt memory.  This could be a result of really irregular terrain.  If this repeats continuously, restart using Basic Physics and terrain fill your terrain.  Restarting the sim.");
                 ode.drelease(world);
-                base.TriggerPhysicsBasedRestart();
             }
             catch (Exception e)
             {

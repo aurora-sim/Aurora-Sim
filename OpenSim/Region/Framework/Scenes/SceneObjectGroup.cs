@@ -1242,17 +1242,6 @@ namespace OpenSim.Region.Framework.Scenes
             //AttachToBackup();
             //m_rootPart.ScheduleFullUpdate();
         }
-
-        public override void UpdateMovement()
-        {
-            lock (m_partsLock)
-            {
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.UpdateMovement();
-                }
-            }
-        }
         
         /// <summary>
         /// Set a part to act as the root part for this scene object

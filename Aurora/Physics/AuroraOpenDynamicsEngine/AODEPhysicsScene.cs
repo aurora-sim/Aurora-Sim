@@ -784,7 +784,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_log.Error("[PHYSICS]: The Operating system shut down ODE because of corrupt memory.  This could be a result of really irregular terrain.  If this repeats continuously, restart using Basic Physics and terrain fill your terrain.  Restarting the sim.");
                 ode.drelease(world);
-                base.TriggerPhysicsBasedRestart();
             }
             catch (Exception e)
             {
@@ -2571,7 +2570,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_log.Error("[PHYSICS]: The operating system wasn't able to allocate enough memory for the simulation.  Restarting the sim.");
                     ode.drelease(world);
-                    base.TriggerPhysicsBasedRestart();
                 }
 
                 int i = 0;
@@ -2909,11 +2907,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
 
                         m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
-
-                        //if (m_global_contactcount > 5)
-                        //{
-                        //    m_log.DebugFormat("[PHYSICS]: Contacts:{0}", m_global_contactcount);
-                        //}
 
                         m_global_contactcount = 0;
                         d.WorldQuickStep(world, ODE_STEPSIZE);

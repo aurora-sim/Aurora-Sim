@@ -141,7 +141,6 @@ namespace OpenSim.Region.Framework.Scenes
         protected DateTime m_lastupdate = DateTime.UtcNow;
 
         private int m_update_physics = 1; //Trigger the physics update
-        private int m_update_entitymovement = 1; //Update the movement of scene presences
         private int m_update_presences = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
         private int m_update_backup = 50; //Trigger backup
@@ -170,7 +169,6 @@ namespace OpenSim.Region.Framework.Scenes
         private string m_DefaultObjectName = "Primitive";
         public bool RunScriptsInAttachments = false;
         public bool m_usePreJump = true;
-        public bool m_UseNewStyleMovement = true;
         public bool m_useSplatAnimation = true;
         public float MaxLowValue = -1000;
         private Dictionary<UUID, AgentData> m_incomingChildAgentData = new Dictionary<UUID, AgentData>();
@@ -558,7 +556,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig animationConfig = m_config.Configs["Animations"];
                 if (animationConfig != null)
                 {
-                    m_UseNewStyleMovement = animationConfig.GetBoolean("enableNewMovement", m_UseNewStyleMovement);
                     m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
                     m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
                 }
@@ -1041,7 +1038,8 @@ namespace OpenSim.Region.Framework.Scenes
                         Thread.Sleep(maintc);
 
                     int MonitorSleepFrameTime = maintc;
-                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
+                    if(shouldSleep)
+                        sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
                     
                     totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
@@ -1122,9 +1120,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
                             m_scene.m_sceneGraph.UpdatePreparePhysics();
-                        
-                        if (m_scene.m_frame % m_scene.m_update_entitymovement == 0)
-                            m_scene.m_sceneGraph.UpdateScenePresenceMovement();
 
                         int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
 
@@ -1168,7 +1163,8 @@ namespace OpenSim.Region.Framework.Scenes
                         Thread.Sleep(maintc);
 
                     int MonitorSleepFrameTime = maintc;
-                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
+                    if(shouldSleep)
+                        sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
                     
                     totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
@@ -1233,19 +1229,22 @@ namespace OpenSim.Region.Framework.Scenes
 
             public void Update()
             {
+                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
                 int maintc;
 
                 while (!ShouldExit)
                 {
                     maintc = Util.EnvironmentTickCount();
                     //Update all of the threads without sleeping, then sleep down at the bottom
-                    physH.Update(false);
                     updateH.Update(false);
+                    physH.Update(false);
                     maintc = Util.EnvironmentTickCountSubtract(maintc);
                     maintc = (int)(0.086 * 1000) - maintc;
 
                     if (maintc > 0)
                         Thread.Sleep(maintc);
+                    int MonitorSleepFrameTime = maintc;
+                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
                 }
             }
 

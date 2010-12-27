@@ -123,7 +123,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool m_updateflag;
         private byte m_movementflag;
-        public Vector3? m_forceToApply;
         public bool m_velocityIsDecaying = false;
         public bool m_overrideUserInput = false;
         public double m_endForceTime = 0;
@@ -1347,17 +1346,15 @@ namespace OpenSim.Region.Framework.Scenes
                     //Do these two like this to block out all others because it will slow it down
                     if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS)
                     {
-                        m_forceToApply = Vector3.Zero;
                         bResetMoveToPosition = true;
                         DCFlagKeyPressed = true;
-                        m_forceToApply = agent_control_v3 += dirVectors[9];
+                        agent_control_v3 += dirVectors[9];
                     }
                     else if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG)
                     {
-                        m_forceToApply = Vector3.Zero;
                         bResetMoveToPosition = true;
                         DCFlagKeyPressed = true;
-                        m_forceToApply = agent_control_v3 += dirVectors[10];
+                        agent_control_v3 += dirVectors[10];
                     }
                     else
                     {
@@ -1547,8 +1544,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
-                Animator.UpdateMovementAnimations();
+            //if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
+            //    Animator.UpdateMovementAnimations();
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
@@ -2307,8 +2304,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if(!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
 
-                            m_forceToApply = direc;
-                            m_velocityIsDecaying = false;
+                            PhysicsActor.AddMovementForce(direc);
                         }
                     }
                 }
@@ -2318,26 +2314,12 @@ namespace OpenSim.Region.Framework.Scenes
             // It fires multiple time and screws things up...
             if (!m_overrideUserInput)
             {
-                if (direc != Vector3.Zero && m_scene.m_UseNewStyleMovement)
-                {
-                    //This is where you start to decay the velocity
-                    m_forceToApply = direc * (.95f);
-                    //More decay on the Z, otherwise flying up and down is a bit hard
-                    m_forceToApply = new Vector3(m_forceToApply.Value.X, m_forceToApply.Value.Y, m_forceToApply.Value.Z * 0.5f);
+                //This is where you start to decay the velocity
+                direc *= 0.95f;
+                //More decay on the Z, otherwise flying up and down is a bit hard
+                direc.Z = direc.Z * 0.5f;
 
-                    m_velocityIsDecaying = true;
-                }
-                else
-                {
-                    if (direc == Vector3.Zero && m_scene.m_UseNewStyleMovement)
-                    {
-                    }
-                    else
-                    {
-                        m_forceToApply = direc;
-                        m_velocityIsDecaying = false;
-                    }
-                }
+                PhysicsActor.AddMovementForce(direc);
             }
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
@@ -3252,50 +3234,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Physics
 
-        /// <summary>
-        /// Handles part of the PID controller function for moving an avatar.
-        /// </summary>
-        public override void UpdateMovement()
-        {
-            if (m_forceToApply.HasValue)
-            {
-                Vector3 force = m_forceToApply.Value;
-                m_updateflag = true;
-                if (m_velocityIsDecaying)
-                {
-                    if (force == Vector3.Zero)
-                    {
-                        m_forceToApply = null;
-                        m_velocityIsDecaying = false;
-                        return;
-                    }
-                    force *= .9F;
-                    if (force.ApproxEquals(Vector3.Zero, 0.4f))
-                    {
-                        //Add a slight downward push so that we go down if we really need to in the physics engine
-                        if (force.Z == (-0.2f*0.9f))
-                        {
-                            //Stop it after one iteration
-                            m_velocityIsDecaying = false;
-                            force = Vector3.Zero;
-                        }
-                        else
-                            force = new Vector3(0,0, -0.2f);
-                    }
-                }
-                
-                Velocity = force;
-                if (m_velocityIsDecaying)
-                {
-                    if(force == Vector3.Zero)
-                        m_velocityIsDecaying = false;
-                    m_forceToApply = force;
-                }
-                else
-                    m_forceToApply = null;
-            }
-        }
-
         public delegate void AddPhysics();
         public event AddPhysics OnAddPhysics;
 
@@ -3408,12 +3346,10 @@ namespace OpenSim.Region.Framework.Scenes
                 //Play collision sounds
                 if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent)
                 {
-                    if (collissionswith[localID].PenetrationDepth < 0.17)
-                        CollisionSoundID = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
-                    else
-                        CollisionSoundID = Sounds.OBJECT_COLLISION;
+                    CollisionSoundID = Sounds.OBJECT_COLLISION;
                 }
             }
+
             // remove things that ended colliding from the last colliders list
             foreach (uint localID in endedColliders)
             {

@@ -166,14 +166,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected internal void UpdateScenePresenceMovement()
-        {
-            ForEachScenePresence(delegate(ScenePresence presence)
-            {
-                presence.UpdateMovement();
-            });
-        }
-
         public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
         {
             coarseLocations = new List<Vector3>();
