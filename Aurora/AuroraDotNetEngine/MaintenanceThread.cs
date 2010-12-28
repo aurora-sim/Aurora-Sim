@@ -266,6 +266,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool CmdHandlerQueue()
         {
+            if (m_ScriptEngine.Worlds.Count == 0)
+                return false;
             IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 

@@ -209,6 +209,36 @@ namespace MurmurVoice
             }
         }
 
+        public void Remove(string name)
+        {
+            int channelID = 0;
+            lock (chan_ids)
+            {
+                if (chan_ids.TryGetValue(name, out channelID))
+                    chan_ids.Remove(name);
+                else
+                    return;
+            }
+            m_server.removeChannel(channelID);
+        }
+
+        public void Close()
+        {
+            lock (chan_ids)
+            {
+                foreach(int channel in chan_ids.Values)
+                {
+                    try
+                    {
+                        m_server.removeChannel(channel);
+                    }
+                    catch
+                    {
+                    }
+                }
+                chan_ids.Clear();
+            }
+        }
     }
 
     public class Agent
@@ -271,6 +301,19 @@ namespace MurmurVoice
                     Agent a = Add(uuid);
                     return a;
                 }
+        }
+
+        public void RemoveAgent(UUID uuid)
+        {
+            string name = Agent.Name(uuid);
+            Agent user = Get(name);
+            if (user != null)
+            {
+                m_log.InfoFormat("[MurmurVoice] Removing registered user {0}", user.name);
+                m_server.unregisterUser(user.userid);
+                lock (name_to_agent)
+                    name_to_agent.Remove(user.name);
+            }
         }
 
         private Agent Add(UUID uuid)
@@ -459,6 +502,8 @@ namespace MurmurVoice
         {
             if (m_enabled)
             {
+                scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
                 scene.EventManager.OnRegisterCaps += delegate(UUID agentID, Caps caps)
                 {
                     OnRegisterCaps(scene, agentID, caps);
@@ -467,6 +512,24 @@ namespace MurmurVoice
                 IOpenRegionSettingsModule ORSM = scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                 if (ORSM != null)
                     ORSM.RegisterGenericValue("Voice", "Mumble.exe");
+            }
+        }
+
+        public void OnNewClient(IClientAPI client)
+        {
+            client.OnConnectionClosed += OnConnectionClose;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnConnectionClosed -= OnConnectionClose;
+        }
+
+        public void OnConnectionClose(IClientAPI client)
+        {
+            if (client.IsLoggingOut)
+            {
+                m_manager.Agent.RemoveAgent(client.AgentId);
             }
         }
 
@@ -482,6 +545,7 @@ namespace MurmurVoice
             if (m_enabled)
             {
                 m_keepalive.running = false;
+                m_manager.Channel.Close();
                 m_manager.Dispose();
             }
         }
