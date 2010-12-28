@@ -58,6 +58,7 @@ namespace OpenSim.Services.InventoryService
         private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
         private string[] libOwnerName = new string[2] { "Library", "Owner"};
+        private string pLibName = "Aurora Library";
 
         public InventoryFolderImpl LibraryRootFolder
         {
@@ -74,16 +75,13 @@ namespace OpenSim.Services.InventoryService
             get { return libOwnerName; }
         }
 
-        /// <summary>
-        /// Holds the root library folder and all its descendents.  This is really only used during inventory
-        /// setup so that we don't have to repeatedly search the tree of library folders.
-        /// </summary>
-        protected Dictionary<UUID, InventoryFolderImpl> libraryFolders
-            = new Dictionary<UUID, InventoryFolderImpl>();
+        public string LibraryName
+        {
+            get { return pLibName; }
+        }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string pLibName = "OpenSim Library";
             string pLibOwnerName = "Library Owner";
 
             IConfig libConfig = config.Configs["LibraryService"];
@@ -110,9 +108,6 @@ namespace OpenSim.Services.InventoryService
             m_LibraryRootFolder.Type = (short)8;
             m_LibraryRootFolder.Version = (ushort)1;
 
-            libraryFolders.Add(m_LibraryRootFolder.ID, m_LibraryRootFolder);
-
-            LoadLibraries(registry);
             registry.RegisterInterface<ILibraryService>(this);
         }
 
@@ -126,10 +121,20 @@ namespace OpenSim.Services.InventoryService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
+            LoadLibraries(registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterInterface<ILibraryService>(this);
+        }
+
+        public void AddToDefaultInventory(InventoryFolderImpl folder)
+        {
+            foreach (InventoryFolderImpl f in folder.RequestListOfFolderImpls())
+                m_LibraryRootFolder.AddChildFolder(f);
+            foreach (InventoryItemBase i in folder.RequestListOfItems())
+                m_LibraryRootFolder.Items.Add(i.ID, i);
         }
 
         public void LoadLibraries(IRegistryCore registry)

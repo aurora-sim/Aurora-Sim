@@ -50,11 +50,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
         protected void LoadLibraries(string iarFileName)
         {
             m_log.InfoFormat("[LIBRARY INVENTORY]: Loading iar file {0}", iarFileName);
-            string simpleName = Path.GetFileNameWithoutExtension(iarFileName);
-
-            m_log.InfoFormat("[LIBRARY MODULE]: Loading library archive {0} ({1})...", iarFileName, simpleName);
-            simpleName = GetInventoryPathFromName(simpleName);
-
+           
             RegionInfo regInfo = new RegionInfo();
             Scene m_MockScene = null;
             //Make the scene for the IAR loader
@@ -62,7 +58,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_MockScene = (Scene)m_registry;
             else
             {
-                new Scene(regInfo);
+                m_MockScene = new Scene(regInfo);
                 m_MockScene.AddModuleInterfaces(m_registry.GetInterfaces());
             }
 
@@ -82,22 +78,17 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
                 m_MockScene.InventoryService.CreateUserInventory(m_service.LibraryOwner);
             }
-            
-            InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, simpleName, iarFileName, false);
+
+            InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
 
             try
             {
-                HashSet<InventoryNodeBase> nodes = archread.Execute(true);
-                if (nodes != null && nodes.Count == 0)
-                {
-                    // didn't find the subfolder with the given name; place it on the top
-                    m_log.InfoFormat("[LIBRARY MODULE]: Didn't find {0} in library. Placing archive on the top level", simpleName);
-                    archread.Close();
-                    archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
-                    nodes = archread.Execute(true);
-                }
-                foreach (InventoryNodeBase node in nodes)
-                    FixPerms(node);
+                List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
+                InventoryFolderImpl f = new InventoryFolderImpl((InventoryFolderBase)nodes[0]);
+
+                TraverseFolders(f, nodes[0].ID, m_MockScene);
+                //This is our loaded folder
+                m_service.AddToDefaultInventory(f);
             }
             catch (Exception e)
             {
@@ -106,6 +97,21 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             finally
             {
                 archread.Close();
+            }
+        }
+
+        private void TraverseFolders(InventoryFolderImpl folderimp, UUID ID, Scene m_MockScene)
+        {
+            InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(m_service.LibraryOwner, ID);
+            foreach (InventoryItemBase item in col.Items)
+            {
+                folderimp.Items.Add(item.ID, item);
+            }
+            foreach (InventoryFolderBase folder in col.Folders)
+            {
+                InventoryFolderImpl childFolder = new InventoryFolderImpl(folder);
+                TraverseFolders(childFolder, folder.ID, m_MockScene);
+                folderimp.AddChildFolder(childFolder);
             }
         }
 
