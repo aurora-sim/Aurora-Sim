@@ -40,9 +40,6 @@ using Nini.Config;
 using OpenMetaverse;
 using Aurora.Simulation.Base;
 
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.CoreModules.Avatar.Inventory.Archiver;
-
 namespace OpenSim.Services.InventoryService
 {
     /// <summary>
