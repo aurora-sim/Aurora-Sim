@@ -469,8 +469,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 OSDMap map = new OSDMap();
                 map["region_name"] = scene.RegionInfo.RegionName;
                 map["parcel_local_id"] = land.LocalID;
-                map["region_name"] = new OSDMap();
-                ((OSDMap)map["region_name"])["channel_uri"] = channelUri;
+                map["voice_credentials"] = new OSDMap();
+                ((OSDMap)map["voice_credentials"])["channel_uri"] = channelUri;
                 string r = OSDParser.SerializeLLSDXmlString(map);
 
                 m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": {4}",
