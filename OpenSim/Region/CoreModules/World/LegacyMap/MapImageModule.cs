@@ -227,7 +227,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             double[,] hm = whichScene.Heightmap.GetDoubles(whichScene);
             tc = Environment.TickCount;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            EntityBase[] objs = whichScene.GetEntities();
+            EntityBase[] objs = whichScene.Entities.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
             List<float> z_sortheights = new List<float>();

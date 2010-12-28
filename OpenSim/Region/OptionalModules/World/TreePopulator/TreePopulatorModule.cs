@@ -618,7 +618,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
         {
             m_copse = new List<Copse>();
 
-            EntityBase[] objs = m_scene.GetEntities();
+            EntityBase[] objs = m_scene.Entities.GetEntities();
             foreach (EntityBase obj in objs)
             {
                 if (obj is SceneObjectGroup)

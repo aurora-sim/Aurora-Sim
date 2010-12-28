@@ -46,27 +46,6 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        /// <summary>
-        /// Start all the scripts in the scene which should be started.
-        /// </summary>
-        public void CreateScriptInstances()
-        {
-            m_log.Info("[PRIM INVENTORY]: Starting scripts in " + RegionInfo.RegionName);
-            //Set loading prims here to block backup
-            LoadingPrims = true;
-            EntityBase[] entities = Entities.GetEntities();
-            foreach (EntityBase group in entities)
-            {
-                if (group is SceneObjectGroup)
-                {
-                    ((SceneObjectGroup)group).CreateScriptInstances(0, false, DefaultScriptEngine, 0, UUID.Zero);
-                    ((SceneObjectGroup)group).ResumeScripts();
-                }
-            }
-            //Now reset it
-            LoadingPrims = false;
-        }
-
         public bool AddInventoryItemReturned(UUID AgentId, InventoryItemBase item)
         {
             if (AddInventoryItem(item))

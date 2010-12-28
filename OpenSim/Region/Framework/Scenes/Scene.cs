@@ -157,7 +157,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool EnableFakeRaycasting = false;
         private bool m_UseSelectionParticles = true;
-        public bool LoadingPrims = false;
         public bool CheckForObjectCulling = false;
         public bool[,] DirectionsToBlockChildAgents;
         private string m_DefaultObjectName = "Primitive";
@@ -1423,79 +1422,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Load Land
-
-        /// <summary>
-        /// Loads all Parcel data from the datastore for region identified by regionID
-        /// </summary>
-        /// <param name="regionID">Unique Identifier of the Region to load parcel data for</param>
-        public void loadAllLandObjectsFromStorage(UUID regionID)
-        {
-            m_log.Info("[SCENE]: Loading Land Objects from database... ");
-            IParcelServiceConnector conn = DataManager.RequestPlugin<IParcelServiceConnector>();
-            List<LandData> LandObjects = SimulationDataService.LoadLandObjects(regionID);
-            if (conn != null)
-            {
-                if (LandObjects.Count != 0)
-                {
-                    foreach (LandData land in LandObjects)
-                    {
-                        //Store it in the new database
-                        conn.StoreLandObject(land);
-                        //Remove it from the old
-                        SimulationDataService.RemoveLandObject(this.RegionInfo.RegionID, land.GlobalID);
-                    }
-                }
-                EventManager.TriggerIncomingLandDataFromStorage(conn.LoadLandObjects(regionID));
-            }
-            else
-                EventManager.TriggerIncomingLandDataFromStorage(LandObjects);
-        }
-
-        #endregion
-
         #region Primitives Methods
-
-        /// <summary>
-        /// Loads the World's objects
-        /// </summary>
-        public virtual void LoadPrimsFromStorage(UUID regionID)
-        {
-            LoadingPrims = true;
-            m_log.Info("[SCENE]: Loading objects from datastore");
-
-            List<SceneObjectGroup> PrimsFromDB = SimulationDataService.LoadObjects(regionID, this);
-            foreach (SceneObjectGroup group in PrimsFromDB)
-            {
-                SceneGraph.CheckAllocationOfLocalIds(group);
-                if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
-                    (group.RootPart.Shape.PCode == (byte)PCode.None ||
-                    group.RootPart.Shape.PCode == (byte)PCode.Prim ||
-                    group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
-                {
-                    m_log.Warn("[SCENE]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
-                    //WTF went wrong here? Remove it and then pass it by on loading
-                    SimulationDataService.RemoveObject(group.UUID, this.RegionInfo.RegionID);
-                    continue;
-                }
-                group.Scene = this;
-                EventManager.TriggerOnSceneObjectLoaded(group);
-
-                if (group.RootPart == null)
-                {
-                    m_log.ErrorFormat("[SCENE] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                      group.ChildrenList.Count);
-                    continue;
-                }
-                SceneGraph.RestorePrimToScene(group);
-                SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-                rootPart.Flags &= ~PrimFlags.Scripted;
-                rootPart.TrimPermissions();
-                group.CheckSculptAndLoad();
-            }
-            LoadingPrims = false;
-            m_log.Info("[SCENE]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
-        }
 
         /// <summary>
         /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.
@@ -1657,36 +1584,6 @@ namespace OpenSim.Region.Framework.Scenes
 
 
             return sceneObject;
-        }
-
-        /// <summary>
-        /// Delete every object from the scene.  This does not include attachments worn by avatars.
-        /// </summary>
-        public void DeleteAllSceneObjects()
-        {
-            lock (Entities)
-            {
-                EntityBase[] entities = Entities.GetEntities();
-                List<ISceneEntity> ObjectsToDelete = new List<ISceneEntity>();
-                foreach (EntityBase e in entities)
-                {
-                    if (e is SceneObjectGroup)
-                    {
-                        SceneObjectGroup group = (SceneObjectGroup)e;
-                        if (group.IsAttachment)
-                            continue;
-
-                        DeleteSceneObject(group, true, true);
-                        ObjectsToDelete.Add(group.RootPart);
-                    }
-                }
-                ForEachScenePresence(delegate(ScenePresence avatar)
-                {
-                    avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, ObjectsToDelete.ToArray());
-                });
-
-                SimulationDataService.RemoveRegion(m_regInfo.RegionID);
-            }
         }
 
         /// <summary>
@@ -1935,7 +1832,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CleanTempObjects()
         {
-            EntityBase[] objs = GetEntities();
+            EntityBase[] objs = Entities.GetEntities();
 
             foreach (EntityBase obj in objs)
             {
@@ -2816,35 +2713,12 @@ namespace OpenSim.Region.Framework.Scenes
         protected virtual ScenePresence CreateAndAddScenePresence(IClientAPI client)
         {
             AvatarAppearance appearance = null;
-            GetAvatarAppearance(client, out appearance);
-
-            ScenePresence avatar = m_sceneGraph.CreateAndAddChildScenePresence(client, appearance);
-            if (m_incomingChildAgentData.ContainsKey(avatar.UUID))
-            {
-                avatar.ChildAgentDataUpdate(m_incomingChildAgentData[avatar.UUID]);
-                m_incomingChildAgentData.Remove(avatar.UUID);
-            }
-            //avatar.KnownRegions = GetChildrenSeeds(avatar.UUID);
-
-            m_eventManager.TriggerOnNewPresence(avatar);
-
-            return avatar;
-        }
-
-        /// <summary>
-        /// Get the avatar apperance for the given client.
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="appearance"></param>
-        public void GetAvatarAppearance(IClientAPI client, out AvatarAppearance appearance)
-        {
             AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(client.CircuitCode);
 
             if (aCircuit == null)
             {
                 m_log.ErrorFormat("[APPEARANCE] Client did not supply a circuit. Non-Linden? Creating default appearance.");
                 appearance = new AvatarAppearance(client.AgentId);
-                return;
             }
 
             appearance = aCircuit.Appearance;
@@ -2853,6 +2727,17 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.ErrorFormat("[APPEARANCE]: Appearance not found in {0}, returning default", RegionInfo.RegionName);
                 appearance = new AvatarAppearance(client.AgentId);
             }
+
+            ScenePresence avatar = m_sceneGraph.CreateAndAddChildScenePresence(client, appearance);
+            if (m_incomingChildAgentData.ContainsKey(avatar.UUID))
+            {
+                avatar.ChildAgentDataUpdate(m_incomingChildAgentData[avatar.UUID]);
+                m_incomingChildAgentData.Remove(avatar.UUID);
+            }
+
+            m_eventManager.TriggerOnNewPresence(avatar);
+
+            return avatar;
         }
 
         /// <summary>
@@ -3353,16 +3238,6 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGraph.GetRootAgentCount();
         }
 
-        public int GetChildAgentCount()
-        {
-            return m_sceneGraph.GetChildAgentCount();
-        }
-
-        public int GetTotalObjectsCount()
-        {
-            return m_sceneGraph.GetTotalObjectsCount();
-        }
-
         /// <summary>
         /// Request a scene presence by UUID. Fast, indexed lookup.
         /// </summary>
@@ -3513,16 +3388,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
         {
             m_sceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, maxLocations);
-        }
-
-        /// <summary>
-        /// Returns a list of the entities in the scene.  This is a new list so operations perform on the list itself
-        /// will not affect the original list of objects in the scene.
-        /// </summary>
-        /// <returns></returns>
-        public EntityBase[] GetEntities()
-        {
-            return m_sceneGraph.GetEntities();
         }
 
         #endregion
@@ -3739,47 +3604,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (MainConsole.Instance.ConsoleScene is Scene)
                 return (Scene)MainConsole.Instance.ConsoleScene;
             return null;
-        }
-
-        /// <summary>
-        /// Causes all clients to get a full object update on all of the objects in the scene.
-        /// </summary>
-        public void ForceClientUpdate()
-        {
-            EntityBase[] EntityList = GetEntities();
-
-            foreach (EntityBase ent in EntityList)
-            {
-                if (ent is SceneObjectGroup)
-                {
-                    ((SceneObjectGroup)ent).ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                }
-            }
-        }
-
-        public void Show(string[] showParams)
-        {
-            switch (showParams[0])
-            {
-                case "users":
-                    m_log.Error("Current Region: " + RegionInfo.RegionName);
-                    m_log.ErrorFormat("{0,-16}{1,-16}{2,-25}{3,-25}{4,-16}{5,-16}{6,-16}", "Firstname", "Lastname",
-                                      "Agent ID", "Session ID", "Circuit", "IP", "World");
-
-                    ForEachScenePresence(delegate(ScenePresence sp)
-                    {
-                        m_log.ErrorFormat("{0,-16}{1,-16}{2,-25}{3,-25}{4,-16},{5,-16}{6,-16}",
-                                          sp.Firstname,
-                                          sp.Lastname,
-                                          sp.UUID,
-                                          sp.ControllingClient.AgentId,
-                                          "Unknown",
-                                          "Unknown",
-                                          RegionInfo.RegionName);
-                    });
-
-                    break;
-            }
         }
 
         #endregion

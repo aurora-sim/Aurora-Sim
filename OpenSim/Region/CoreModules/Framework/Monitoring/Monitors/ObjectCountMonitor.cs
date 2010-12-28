@@ -43,7 +43,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.GetTotalObjectsCount();
+            return m_scene.SceneGraph.GetTotalObjectsCount();
         }
 
         public string GetName()

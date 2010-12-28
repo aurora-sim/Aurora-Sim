@@ -468,8 +468,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     scene.ForEachScenePresence(delegate(ScenePresence scenePresence)
                     {
-                        //if (!scenePresence.IsChildAgent)
-                        avatars.Add(scenePresence);
+                        if (!scenePresence.IsChildAgent)
+                            avatars.Add(scenePresence);
                     });
                 }
             );
@@ -508,7 +508,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="portadd_flag"></param>
         /// <param name="do_post_init"></param>
         /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene mscene)
+        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene m_scene)
         {
             int port = regionInfo.InternalEndPoint.Port;
 
@@ -536,39 +536,29 @@ namespace OpenSim.Region.Framework.Scenes
             IClientNetworkServer clientServer = null;
             Scene scene = SetupScene(regionInfo, proxyOffset, m_config, out clientServer);
 
-            m_log.Info("[MODULES]: Loading region modules");
+            m_log.Info("[Modules]: Loading region modules");
             IRegionModulesController controller;
             if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
             {
                 controller.AddRegionToModules(scene);
             }
             else
-                m_log.Error("[MODULES]: The new RegionModulesController is missing...");
+                m_log.Error("[Modules]: The new RegionModulesController is missing...");
 
             //Post init the modules now
             PostInitModules(scene);
 
-            // Prims have to be loaded after module configuration since some modules may be invoked during the load
-            scene.LoadPrimsFromStorage(regionInfo.RegionID);
-
-            scene.loadAllLandObjectsFromStorage(regionInfo.RegionID);
-            scene.EventManager.TriggerParcelPrimCountUpdate();
-
             RegisterRegionWithGrid(scene);
-
-            // We need to do this after we've initialized the
-            // scripting engines.
-            scene.CreateScriptInstances();
 
             clientServer.Start();
             scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
-
-            mscene = scene;
 
             scene.StartTimer();
             //Tell the scene that the startup is complete 
             // Note: this event is added in the scene constructor
             scene.FinishedStartup("Startup", new List<string>());
+
+            m_scene = scene;
 
             return clientServer;
         }
@@ -792,7 +782,9 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("You must use this command on a region. Use 'change region' to change to the region you would like to change");
                 return;
             }
-            m_currentScene.DeleteAllSceneObjects();
+            IBackupModule backup = m_currentScene.RequestModuleInterface<IBackupModule>();
+            if(backup != null)
+                backup.DeleteAllSceneObjects();
             ITerrainModule module = m_currentScene.RequestModuleInterface<ITerrainModule>();
             if (module != null)
             {
@@ -878,7 +870,9 @@ namespace OpenSim.Region.Framework.Scenes
                 TrySetCurrentScene("..");
             }
 
-            ((Scene)scene).DeleteAllSceneObjects();
+            IBackupModule backup = ((Scene)scene).RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+                backup.DeleteAllSceneObjects();
             CloseScene((Scene)scene);
             ShutdownClientServer(scene.RegionInfo);
 
@@ -1042,7 +1036,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void KickUserCommand(string module, string[] cmdparams)
         {
             string alert = null;
-            IList agents = GetCurrentSceneAvatars();
+            IList agents = GetCurrentScenePresences();
 
             if (cmdparams.Length < 4)
             {
@@ -1105,7 +1099,18 @@ namespace OpenSim.Region.Framework.Scenes
         private void HandleForceUpdate(string module, string[] args)
         {
             MainConsole.Instance.Output("Updating all clients");
-            ForEachCurrentScene(delegate(Scene scene) { scene.ForceClientUpdate(); });
+            ForEachCurrentScene(delegate(Scene scene)
+            {
+                EntityBase[] EntityList = scene.Entities.GetEntities();
+
+                foreach (EntityBase ent in EntityList)
+                {
+                    if (ent is SceneObjectGroup)
+                    {
+                        ((SceneObjectGroup)ent).ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    }
+                }
+            });
         }
 
         /// <summary>

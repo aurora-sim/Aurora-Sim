@@ -85,7 +85,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             int primCount = 0;
             stream.WriteLine("<scene>\n");
 
-            EntityBase[] entityList = scene.GetEntities();
+            EntityBase[] entityList = scene.Entities.GetEntities();
             foreach (EntityBase ent in entityList)
             {
                 if (ent is SceneObjectGroup)
@@ -228,13 +228,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static void SavePrimsToXml2(Scene scene, string fileName)
         {
-            EntityBase[] entityList = scene.GetEntities();
+            EntityBase[] entityList = scene.Entities.GetEntities();
             SavePrimListToXml2(entityList, fileName);
         }
 
         public static void SavePrimsToXml2(Scene scene, TextWriter stream, Vector3 min, Vector3 max)
         {
-            EntityBase[] entityList = scene.GetEntities();
+            EntityBase[] entityList = scene.Entities.GetEntities();
             SavePrimListToXml2(entityList, stream, min, max);
         }
         
@@ -244,7 +244,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //    "[SERIALISER]: Saving prims with name {0} in xml2 format for region {1} to {2}", 
             //    primName, scene.RegionInfo.RegionName, fileName);
 
-            EntityBase[] entityList = scene.GetEntities();
+            EntityBase[] entityList = scene.Entities.GetEntities();
             List<EntityBase> primList = new List<EntityBase>();
 
             foreach (EntityBase ent in entityList)

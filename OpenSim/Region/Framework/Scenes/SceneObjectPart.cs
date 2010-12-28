@@ -4322,9 +4322,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!IgnoreUndoUpdate)
                 {
+                    IBackupModule backup = null;
+                    if(ParentGroup != null && 
+                        ParentGroup.Scene != null)
+                        backup = ParentGroup.Scene.RequestModuleInterface<IBackupModule>();
+
                     if (m_parentGroup != null && 
                         ParentGroup.Scene != null &&
-                        !ParentGroup.Scene.LoadingPrims)
+                        (backup == null || (backup != null && !backup.LoadingPrims)))
                     {
                         lock (m_undo)
                         {

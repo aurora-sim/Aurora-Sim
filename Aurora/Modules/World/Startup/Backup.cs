@@ -13,6 +13,8 @@ using System.Xml;
 using Nini.Config;
 using log4net;
 using OpenMetaverse;
+using Aurora.DataManager;
+using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
@@ -55,10 +57,12 @@ namespace Aurora.Modules.World.Startup
 
         public void PostInitialise(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
+            m_backup[scene].PostInitialise();
         }
 
         public void FinishStartup(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
+            m_backup[scene].FinishStartup();
         }
 
         public void Close(Scene scene)
@@ -114,6 +118,7 @@ namespace Aurora.Modules.World.Startup
             protected volatile bool m_backingup = false;
             protected int m_update_backup = 50; //Trigger backup
             protected DateTime m_lastRanBackupInHeartbeat = DateTime.MinValue;
+            protected bool m_LoadingPrims = false;
 
             #endregion
 
@@ -159,9 +164,126 @@ namespace Aurora.Modules.World.Startup
                 ProcessPrimBackupTaints(false, false);
             }
 
+            internal void PostInitialise()
+            {
+                //Load the prims from the database now that we are done loading
+                LoadPrimsFromStorage();
+                //Then load the land objects
+                LoadAllLandObjectsFromStorage();
+            }
+
+            /// <summary>
+            /// Loads the World's objects
+            /// </summary>
+            protected void LoadPrimsFromStorage()
+            {
+                LoadingPrims = true;
+                m_log.Info("[BackupModule]: Loading objects from datastore");
+
+                List<SceneObjectGroup> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
+                foreach (SceneObjectGroup group in PrimsFromDB)
+                {
+                    m_scene.SceneGraph.CheckAllocationOfLocalIds(group);
+                    if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
+                        (group.RootPart.Shape.PCode == (byte)PCode.None ||
+                        group.RootPart.Shape.PCode == (byte)PCode.Prim ||
+                        group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
+                    {
+                        m_log.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
+                        //WTF went wrong here? Remove it and then pass it by on loading
+                        m_scene.SimulationDataService.RemoveObject(group.UUID, m_scene.RegionInfo.RegionID);
+                        continue;
+                    }
+                    group.Scene = m_scene;
+                    m_scene.EventManager.TriggerOnSceneObjectLoaded(group);
+
+                    if (group.RootPart == null)
+                    {
+                        m_log.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
+                                          group.ChildrenList.Count);
+                        continue;
+                    }
+                    m_scene.SceneGraph.RestorePrimToScene(group);
+                    SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+                    rootPart.Flags &= ~PrimFlags.Scripted;
+                    rootPart.TrimPermissions();
+                    group.CheckSculptAndLoad();
+                }
+                LoadingPrims = false;
+                m_log.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
+            }
+
+            /// <summary>
+            /// Loads all Parcel data from the datastore for region identified by regionID
+            /// </summary>
+            protected void LoadAllLandObjectsFromStorage()
+            {
+                m_log.Info("[BackupModule]: Loading Land Objects from database... ");
+                IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+                List<LandData> LandObjects = m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID);
+                if (conn != null)
+                {
+                    if (LandObjects.Count != 0)
+                    {
+                        foreach (LandData land in LandObjects)
+                        {
+                            //Store it in the new database
+                            conn.StoreLandObject(land);
+                            //Remove it from the old
+                            m_scene.SimulationDataService.RemoveLandObject(m_scene.RegionInfo.RegionID, land.GlobalID);
+                        }
+                    }
+                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
+                }
+                else
+                    m_scene.EventManager.TriggerIncomingLandDataFromStorage(LandObjects);
+
+                m_scene.EventManager.TriggerParcelPrimCountUpdate();
+            }
+
+            internal void FinishStartup()
+            {
+                //Load the prims from the database now that we are done loading
+                CreateScriptInstances();
+            }
+
+            /// <summary>
+            /// Start all the scripts in the scene which should be started.
+            /// </summary>
+            protected void CreateScriptInstances()
+            {
+                m_log.Info("[BackupModule]: Starting scripts in " + m_scene.RegionInfo.RegionName);
+                //Set loading prims here to block backup
+                LoadingPrims = true;
+                EntityBase[] entities;
+                lock (m_scene.Entities)
+                {
+                    entities = m_scene.Entities.GetEntities();
+                }
+                foreach (EntityBase group in entities)
+                {
+                    if (group is SceneObjectGroup)
+                    {
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                        ((SceneObjectGroup)group).ResumeScripts();
+                    }
+                }
+                //Now reset it
+                LoadingPrims = false;
+            }
+
             #endregion
 
             #region Public members
+
+            /// <summary>
+            /// Are we currently loading prims?
+            /// </summary>
+            public bool LoadingPrims
+            {
+                get { return m_LoadingPrims; }
+                set { m_LoadingPrims = value; }
+            }
 
             /// <summary>
             /// Queue the prim to be deleted from the simulation service
@@ -174,6 +296,37 @@ namespace Aurora.Modules.World.Startup
                     if (!m_needsDeleted.Contains(uuid))
                         m_needsDeleted.Add(uuid);
                 }
+            }
+
+            /// <summary>
+            /// Delete every object from the scene.  This does not include attachments worn by avatars.
+            /// </summary>
+            public void DeleteAllSceneObjects()
+            {
+                EntityBase[] entities;
+                lock (m_scene.Entities)
+                {
+                    entities = m_scene.Entities.GetEntities();
+                }
+                List<ISceneEntity> ObjectsToDelete = new List<ISceneEntity>();
+                foreach (EntityBase e in entities)
+                {
+                    if (e is SceneObjectGroup)
+                    {
+                        SceneObjectGroup group = (SceneObjectGroup)e;
+                        if (group.IsAttachment)
+                            continue;
+
+                        m_scene.DeleteSceneObject(group, true, true);
+                        ObjectsToDelete.Add(group.RootPart);
+                    }
+                }
+                m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
+                {
+                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, ObjectsToDelete.ToArray());
+                });
+
+                m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
             }
 
             /// <summary>
@@ -303,7 +456,7 @@ namespace Aurora.Modules.World.Startup
                     }
                 }
                 if (PrimsBackedUp != 0)
-                    m_log.Info("[Scene]: Processed backup of " + PrimsBackedUp + " prims");
+                    m_log.Info("[BackupModule]: Processed backup of " + PrimsBackedUp + " prims");
                 //Now make sure that we delete any prims sitting around
                 // Bit ironic that backup deals with deleting of objects too eh? 
                 lock (m_needsDeleted)
@@ -402,7 +555,7 @@ namespace Aurora.Modules.World.Startup
                 }
 
                 m_log.DebugFormat(
-                        "[SCENE]: Stored {0}, {1} in {2} at {3} in {4} seconds",
+                        "[BackupModule]: Stored {0}, {1} in {2} at {3} in {4} seconds",
                         backup_group.Name, backup_group.UUID, m_scene.RegionInfo.RegionName, backup_group.AbsolutePosition.ToString(), (DateTime.Now - startTime).TotalSeconds);
 
 

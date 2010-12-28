@@ -140,12 +140,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         Threads = 1,
                         priority = System.Threading.ThreadPriority.BelowNormal
                     });
-
+            
+            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (!m_merge)
             {
                 DateTime before = DateTime.Now;
                 m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
-                m_scene.DeleteAllSceneObjects();
+                if (backup != null)
+                    backup.DeleteAllSceneObjects();
                 m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
             }
 
@@ -156,7 +158,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 module.Disabled = true;
             }
             //Disable backup for now as well
-            m_scene.LoadingPrims = true;
+            if (backup != null)
+                backup.LoadingPrims = true;
 
             IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
             int sceneObjectsLoadedCount = 0;
@@ -305,7 +308,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 module.Disabled = false;
             }
-            m_scene.LoadingPrims = false;
+            //Reset backup too
+            if (backup != null)
+                backup.LoadingPrims = false;
 
             //Now back up the prims
             foreach (SceneObjectGroup grp in groupsToBackup)

@@ -288,7 +288,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
             else
             {
-                Entities = new List<EntityBase>(ts.host.ParentGroup.Scene.GetEntities());
+                Entities = new List<EntityBase>(ts.host.ParentGroup.Scene.Entities.GetEntities());
             }
             SceneObjectPart SensePoint = ts.host;
 
