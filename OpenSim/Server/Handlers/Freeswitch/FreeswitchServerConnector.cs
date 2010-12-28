@@ -68,8 +68,8 @@ namespace OpenSim.Server.Handlers.Freeswitch
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeswitchInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
-            m_FreeswitchService = registry.Get<IFreeswitchService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FreeswitchInHandlerPort"));
+            m_FreeswitchService = registry.RequestModuleInterface<IFreeswitchService>();
 
             server.AddHTTPHandler(String.Format("{0}/freeswitch-config", m_freeSwitchAPIPrefix), FreeSwitchConfigHTTPHandler);
             server.AddHTTPHandler(String.Format("{0}/region-config", m_freeSwitchAPIPrefix), RegionConfigHTTPHandler);

@@ -42,7 +42,7 @@ namespace OpenSim.Services.CapsService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return; 
-            registry.RegisterInterface<IEventQueueService>(this);
+            registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -55,7 +55,7 @@ namespace OpenSim.Services.CapsService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_service = registry.Get<ICapsService>();
+            m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -63,7 +63,7 @@ namespace OpenSim.Services.CapsService
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
-            registry.RegisterInterface<IEventQueueService>(this);
+            registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
         #endregion

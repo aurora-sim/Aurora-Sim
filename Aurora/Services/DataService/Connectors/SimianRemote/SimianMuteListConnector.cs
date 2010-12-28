@@ -30,7 +30,7 @@ namespace Aurora.Services.DataService
         {
             if (simBase.ConfigSource.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }

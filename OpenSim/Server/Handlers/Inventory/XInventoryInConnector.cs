@@ -69,9 +69,9 @@ namespace OpenSim.Server.Handlers.Asset
             if (handlerConfig.GetString("InventoryInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
 
-            m_InventoryService = registry.Get<IInventoryService>();
+            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(m_InventoryService));
         }

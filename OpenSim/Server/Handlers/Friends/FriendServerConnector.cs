@@ -60,8 +60,8 @@ namespace OpenSim.Server.Handlers.Friends
             if (handlerConfig.GetString("FriendsInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
-            m_FriendsService = registry.Get<IFriendsService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
+            m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
 
             server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
         }

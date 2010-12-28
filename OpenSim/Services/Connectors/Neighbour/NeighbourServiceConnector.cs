@@ -425,7 +425,7 @@ namespace OpenSim.Services.Connectors
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighbourHandler", "") == Name)
             {
-                registry.RegisterInterface<INeighbourService>(this);
+                registry.RegisterModuleInterface<INeighbourService>(this);
                 m_LocalService = new LocalNeighborServiceConnector();
                 m_LocalService.ReadConfig(config);
             }
@@ -450,7 +450,7 @@ namespace OpenSim.Services.Connectors
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterInterface<INeighbourService>(this);
+                registry.RegisterModuleInterface<INeighbourService>(this);
         }
 
         #endregion

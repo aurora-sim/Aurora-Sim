@@ -192,7 +192,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -209,7 +209,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         #endregion

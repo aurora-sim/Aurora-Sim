@@ -46,8 +46,8 @@ namespace OpenSim.Server.Handlers.Caps
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CAPSHandler", "") != Name)
                 return;
-            m_server = registry.Get<ISimulationBase>().GetHttpServer(handlerConfig.GetUInt("CAPSHandlerPort"));
-            ICapsService m_capsService = registry.Get<ICapsService>();
+            m_server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(handlerConfig.GetUInt("CAPSHandlerPort"));
+            ICapsService m_capsService = registry.RequestModuleInterface<ICapsService>();
 
             string Password = handlerConfig.GetString("CAPSHandlerPassword", String.Empty);
             if (Password != "" & m_capsService != null)

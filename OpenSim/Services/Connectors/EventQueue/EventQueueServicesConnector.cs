@@ -75,7 +75,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IEventQueueService>(this);
+            registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -84,11 +84,11 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            string url = registry.Get<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
+            string url = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
             //Clean it up a bit
             url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
             m_serverURL = url + "/CAPS/EQMPOSTER";
-            m_capsModules.Add(registry.Get<ICapabilitiesModule>());
+            m_capsModules.Add(registry.RequestModuleInterface<ICapabilitiesModule>());
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -97,8 +97,8 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IEventQueueService>(this);
-            m_capsModules.Add(registry.Get<ICapabilitiesModule>());
+            registry.RegisterModuleInterface<IEventQueueService>(this);
+            m_capsModules.Add(registry.RequestModuleInterface<ICapabilitiesModule>());
         }
 
         #endregion

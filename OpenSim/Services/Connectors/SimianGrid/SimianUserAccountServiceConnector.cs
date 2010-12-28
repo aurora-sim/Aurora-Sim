@@ -71,7 +71,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -88,7 +88,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         #endregion

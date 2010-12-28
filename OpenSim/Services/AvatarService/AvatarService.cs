@@ -87,7 +87,7 @@ namespace OpenSim.Services.AvatarService
             m_Database = AuroraModuleLoader.LoadPlugin<IAvatarData>(dllName, new Object[] { connString, realm });
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module " + dllName);
-            registry.RegisterInterface<IAvatarService>(this);
+            registry.RegisterModuleInterface<IAvatarService>(this);
             m_log.Debug("[AVATAR SERVICE]: Starting avatar service");
         }
 

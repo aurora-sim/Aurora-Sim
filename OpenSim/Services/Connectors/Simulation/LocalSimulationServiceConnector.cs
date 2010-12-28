@@ -34,7 +34,7 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "LocalSimulationServiceConnector")
-                registry.RegisterInterface<ISimulationService>(this);
+                registry.RegisterModuleInterface<ISimulationService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -53,7 +53,7 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "LocalSimulationServiceConnector")
-                registry.RegisterInterface<ISimulationService>(this);
+                registry.RegisterModuleInterface<ISimulationService>(this);
         }
 
         #endregion

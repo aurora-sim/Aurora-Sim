@@ -65,7 +65,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IAuthenticationService>(this);
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -82,7 +82,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAuthenticationService>(this);
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
         #endregion

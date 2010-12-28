@@ -711,7 +711,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// <param name="args"></param>
         protected void DebugMonitorsInCurrentRegion(string module, string[] args)
         {
-            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
                 //Dump the all instance one first
@@ -825,7 +825,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 "Asset",
                 "State");
 
-            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
                 manager.ForEachScene(
@@ -973,7 +973,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             reg.AddScene(null);
             m_registry.Add("", reg);
 
-            m_simulationBase.ApplicationRegistry.RegisterInterface<IMonitorModule>(this);
+            m_simulationBase.ApplicationRegistry.RegisterModuleInterface<IMonitorModule>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -982,7 +982,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         public void PostInitialise()
         {
-            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
                 manager.OnAddedScene += OnAddedScene;
@@ -996,7 +996,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             MonitorRegistry reg = new MonitorRegistry(this);
             reg.AddScene(scene);
             m_registry.Add(scene.RegionInfo.RegionID.ToString(), reg);
-            scene.RegisterInterface<IMonitorModule>(this);
+            scene.RegisterModuleInterface<IMonitorModule>(this);
         }
 
         public void OnCloseScene(Scene scene)

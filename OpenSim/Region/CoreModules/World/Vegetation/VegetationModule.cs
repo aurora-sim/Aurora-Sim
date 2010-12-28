@@ -53,6 +53,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IVegetationModule>(this);
+            m_scene.RegisterEntityCreatorModule(this);
         }
 
         public void RemoveRegion(Scene scene)
@@ -88,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
             return m_scene.AddNewPrim(uuid, groupID, position, rotation, treeShape);
         }
         
-        public SceneObjectGroup CreateEntity(
+        public ISceneEntity CreateEntity(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
             if (Array.IndexOf(creationCapabilities, (PCode)shape.PCode) < 0)

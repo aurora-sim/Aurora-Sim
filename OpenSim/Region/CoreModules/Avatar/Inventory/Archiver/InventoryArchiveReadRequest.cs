@@ -109,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                
                 List<InventoryFolderBase> folderCandidates
                     = InventoryArchiveUtils.FindFolderByPath(
-                        m_registry.Get<IInventoryService>(), m_userInfo.PrincipalID, m_invPath);
+                        m_registry.RequestModuleInterface<IInventoryService>(), m_userInfo.PrincipalID, m_invPath);
     
                 if (folderCandidates.Count == 0)
                 {
@@ -279,7 +279,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                         string plainPath = ArchiveConstants.ExtractPlainPathFromIarPath(archivePath);
                         List<InventoryFolderBase> folderCandidates
                             = InventoryArchiveUtils.FindFolderByPath(
-                                m_registry.Get<IInventoryService>(), m_userInfo.PrincipalID, plainPath);
+                                m_registry.RequestModuleInterface<IInventoryService>(), m_userInfo.PrincipalID, plainPath);
             
                         if (folderCandidates.Count != 0)
                         {
@@ -362,7 +362,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     = new InventoryFolderBase(
                         newFolderId, newFolderName, m_userInfo.PrincipalID, 
                         (short)AssetType.Unknown, destFolder.ID, 1);
-                m_registry.Get<IInventoryService>().AddFolder(destFolder);
+                m_registry.RequestModuleInterface<IInventoryService>().AddFolder(destFolder);
 
                 // Record that we have now created this folder
                 iarPathExisting += rawDirsToCreate[i] + "/";
@@ -388,7 +388,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             // Don't use the item ID that's in the file
             item.ID = UUID.Random();
 
-            UUID ospResolvedId = OspResolver.ResolveOspa(item.CreatorId, m_registry.Get<IUserAccountService>()); 
+            UUID ospResolvedId = OspResolver.ResolveOspa(item.CreatorId, m_registry.RequestModuleInterface<IUserAccountService>()); 
             if (UUID.Zero != ospResolvedId)
             {
                 item.CreatorIdAsUuid = ospResolvedId;
@@ -416,7 +416,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         {
             if (UUID.Zero == item.Folder)
             {
-                InventoryFolderBase f = m_registry.Get<IInventoryService>().GetFolderForType(item.Owner, (AssetType)item.AssetType);
+                InventoryFolderBase f = m_registry.RequestModuleInterface<IInventoryService>().GetFolderForType(item.Owner, (AssetType)item.AssetType);
                 if (f != null)
                 {
                     //                    m_log.DebugFormat(
@@ -427,7 +427,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 }
                 else
                 {
-                    f = m_registry.Get<IInventoryService>().GetRootFolder(item.Owner);
+                    f = m_registry.RequestModuleInterface<IInventoryService>().GetRootFolder(item.Owner);
                     if (f != null)
                     {
                         item.Folder = f.ID;
@@ -442,7 +442,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 }
             }
 
-            if (m_registry.Get<IInventoryService>().AddItem(item))
+            if (m_registry.RequestModuleInterface<IInventoryService>().AddItem(item))
             {
                 int userlevel = 0;
                 if (m_registry is Scene)
@@ -503,7 +503,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 AssetBase asset = new AssetBase(new UUID(uuid), "RandomName", assetType, UUID.Zero.ToString());
                 asset.Data = data;
 
-                m_registry.Get<IAssetService>().Store(asset);
+                m_registry.RequestModuleInterface<IAssetService>().Store(asset);
 
                 return true;
             }

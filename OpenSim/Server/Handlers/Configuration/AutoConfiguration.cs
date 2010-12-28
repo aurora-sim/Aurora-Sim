@@ -37,7 +37,7 @@ namespace OpenSim.Server.Handlers
             IConfig autoConfConfig = config.Configs["AutoConfiguration"];
             if (autoConfConfig == null)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AutoConfigurationInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AutoConfigurationInHandlerPort"));
             OSDMap configMap = new OSDMap();
             configMap["GridServerURI"] = autoConfConfig.GetString("GridServerURI", "");
             configMap["GridUserServerURI"] = autoConfConfig.GetString("GridUserServerURI", "");

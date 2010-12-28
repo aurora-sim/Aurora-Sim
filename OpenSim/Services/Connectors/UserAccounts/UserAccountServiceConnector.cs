@@ -282,7 +282,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -295,7 +295,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("UserAccountServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("UserAccountServerURI",
                         "UserAccountService");
 
             if (serviceURI == String.Empty)
@@ -312,7 +312,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         #endregion

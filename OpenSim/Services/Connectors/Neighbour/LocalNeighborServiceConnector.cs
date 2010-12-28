@@ -43,7 +43,7 @@ namespace OpenSim.Services.Connectors
             ReadConfig(config);
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterInterface<INeighbourService>(this);
+                registry.RegisterModuleInterface<INeighbourService>(this);
         }
 
         public void ReadConfig(IConfigSource config)
@@ -67,15 +67,15 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_gridService = registry.Get<IGridService>();
-            m_simService = registry.Get<ISimulationService>();
+            m_gridService = registry.RequestModuleInterface<IGridService>();
+            m_simService = registry.RequestModuleInterface<ISimulationService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterInterface<INeighbourService>(this);
+                registry.RegisterModuleInterface<INeighbourService>(this);
         }
 
         #endregion

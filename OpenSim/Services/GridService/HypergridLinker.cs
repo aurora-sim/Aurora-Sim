@@ -132,7 +132,7 @@ namespace OpenSim.Services.GridService
 
         internal void PostInitialize(IRegistryCore registry)
         {
-            m_AssetService = registry.Get<IAssetService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_GatekeeperConnector = new GatekeeperServiceConnector(m_AssetService);
         }
 

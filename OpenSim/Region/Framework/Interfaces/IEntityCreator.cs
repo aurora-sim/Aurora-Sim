@@ -51,6 +51,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="rot"></param>
         /// <param name="shape"></param>
         /// <returns>The entity created, or null if the creation failed</returns>
-        SceneObjectGroup CreateEntity(UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
+        ISceneEntity CreateEntity(UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape);
     }
 }

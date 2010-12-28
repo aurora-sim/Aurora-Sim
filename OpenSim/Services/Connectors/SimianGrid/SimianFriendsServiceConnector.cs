@@ -67,7 +67,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -80,7 +80,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         #endregion

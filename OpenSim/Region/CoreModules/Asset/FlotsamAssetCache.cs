@@ -192,7 +192,7 @@ namespace Flotsam.RegionModules.AssetCache
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache clear", "fcache clear [file] [memory]", "Remove all assets in the file and/or memory cache", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache assets", "fcache assets", "Attempt a deep scan and cache of all assets in all scenes", HandleConsoleCommand);
                     MainConsole.Instance.Commands.AddCommand(this.Name, true, "fcache expire", "fcache expire <datetime>", "Purge cached assets older then the specified date/time", HandleConsoleCommand);
-                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -207,8 +207,8 @@ namespace Flotsam.RegionModules.AssetCache
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_AssetService = registry.Get<IAssetService>();
-            m_simulationBase = registry.Get<ISimulationBase>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+            m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
             IConfig moduleConfig = config.Configs["Modules"];
 
             if (moduleConfig != null)
@@ -217,7 +217,7 @@ namespace Flotsam.RegionModules.AssetCache
 
                 if (name == Name)
                 {
-                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -232,7 +232,7 @@ namespace Flotsam.RegionModules.AssetCache
 
                 if (name == Name)
                 {
-                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -412,7 +412,7 @@ namespace Flotsam.RegionModules.AssetCache
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.", m_RequestsForInprogress);
                 
             }
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.Get<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", "AssetMonitor");
             if (monitor != null)
             {
                 monitor.AddAsset(asset);
@@ -471,7 +471,7 @@ namespace Flotsam.RegionModules.AssetCache
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
 
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.Get<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", "AssetMonitor");
             if (monitor != null)
             {
                 monitor.ClearAssetCacheStatistics();
@@ -697,7 +697,7 @@ namespace Flotsam.RegionModules.AssetCache
                 return 0;
 
             Dictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
-            SceneManager manager = m_simulationBase.ApplicationRegistry.Get<SceneManager>();
+            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);

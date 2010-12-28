@@ -66,9 +66,9 @@ namespace OpenSim.Server.Handlers.Neighbour
             if (handlerConfig.GetString("NeighbourInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighbourInHandlerPort"));
-            m_NeighbourService = registry.Get<INeighbourService>();
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighbourInHandlerPort"));
+            m_NeighbourService = registry.RequestModuleInterface<INeighbourService>();
+            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             if (m_NeighbourService == null)
             {
                 m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");

@@ -86,7 +86,7 @@ namespace OpenSim.Services.AssetService
 
             m_Database.Initialise(connString);
 
-            registry.RegisterInterface<IAssetService>(this);
+            registry.RegisterModuleInterface<IAssetService>(this);
 
             MainConsole.Instance.Commands.AddCommand("kfs", false,
                 "show digest",

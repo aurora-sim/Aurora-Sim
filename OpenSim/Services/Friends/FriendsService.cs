@@ -88,7 +88,7 @@ namespace OpenSim.Services.Friends
                     string.Format(
                         "Could not find a storage interface {0} in the given StorageProvider {1}", "IFriendsData", dllName));
             }
-            registry.RegisterInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)

@@ -85,7 +85,7 @@ namespace OpenSim.Services.AuthorizationService
                 throw new Exception("Could not find a storage interface in the given module");
 
             m_Database.Initialise(connString);
-            registry.RegisterInterface<IAuthorizationService>(this);
+            registry.RegisterModuleInterface<IAuthorizationService>(this);
 
             m_log.Debug("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
         }

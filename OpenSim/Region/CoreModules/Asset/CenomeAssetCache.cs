@@ -185,7 +185,7 @@ namespace OpenSim.Region.CoreModules.Asset
             }
 
             Initialize(maxSize, maxCount, expirationTime);
-            registry.RegisterInterface<IImprovedAssetCache>(this);
+            registry.RegisterModuleInterface<IImprovedAssetCache>(this);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace OpenSim.Region.CoreModules.Asset
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<IImprovedAssetCache>(this);
+            registry.RegisterModuleInterface<IImprovedAssetCache>(this);
         }
 
         #endregion

@@ -67,7 +67,7 @@ namespace OpenSim.CoreApplicationPlugins
                 return;
 
             MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
-            m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
+            m_openSim.ApplicationRegistry.RegisterModuleInterface<IRegionCreator>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -90,7 +90,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
             List<RegionInfo[]> regions = new List<RegionInfo[]>();
-            SceneManager manager = m_openSim.ApplicationRegistry.Get<SceneManager>();
+            SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);

@@ -74,8 +74,8 @@ namespace OpenSim.Server.Handlers.Hypergrid
             if (handlerConfig.GetString("GatekeeperInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GatekeeperInHandlerPort"));
-            m_GatekeeperService = registry.Get<IGatekeeperService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GatekeeperInHandlerPort"));
+            m_GatekeeperService = registry.RequestModuleInterface<IGatekeeperService>();
             IConfig gridConfig = config.Configs["GatekeeperService"];
 
             m_Proxy = gridConfig.GetBoolean("HasProxy", false);

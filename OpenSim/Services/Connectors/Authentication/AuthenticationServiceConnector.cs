@@ -146,7 +146,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAuthenticationService>(this);
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -159,7 +159,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AuthenticationServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AuthenticationServerURI",
                         "AuthenticationService");
 
             if (serviceURI == String.Empty)
@@ -176,7 +176,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAuthenticationService>(this);
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
         #endregion

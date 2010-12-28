@@ -627,7 +627,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 string data = string.Empty;
                 //Get the Components from the ComponentManager
-                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
                 if (manager != null)
                     data = manager.SerializeComponents(this);
                 return data;
@@ -635,7 +635,7 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 //Set the Components for this object
-                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
                 if (manager != null)
                     manager.DeserializeComponents(this, value);
             }
@@ -648,7 +648,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public OSD GetComponentState(string Name)
         {
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
             if (manager != null)
                 return manager.GetComponentState(this, Name);
 
@@ -680,7 +680,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.HasGroupChanged = true;
 
             //Tell the ComponentManager about it
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
             if (manager != null)
             {
                 OSD state = (State is OSD) ? (OSD)State : OSD.FromObject(State);
@@ -694,7 +694,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             if (IsLoading)
                 return;
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
             if (manager != null)
             {
                 manager.ResetComponentIDsToNewObject(oldID, this);
@@ -2416,7 +2416,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="xmlReader"></param>
         /// <returns></returns>
-        public static SceneObjectPart FromXml(XmlTextReader xmlReader, Scene scene)
+        public static SceneObjectPart FromXml(XmlTextReader xmlReader, IRegistryCore scene)
         {
             return FromXml(UUID.Zero, xmlReader, scene);
         }

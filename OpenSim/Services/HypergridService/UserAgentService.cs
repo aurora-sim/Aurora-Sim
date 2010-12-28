@@ -89,7 +89,7 @@ namespace OpenSim.Services.HypergridService
                 }
                 m_log.DebugFormat("[HOME USERS SECURITY]: Starting...");
 
-                registry.RegisterInterface<IUserAgentService>(this);
+                registry.RegisterModuleInterface<IUserAgentService>(this);
             }
         }
 
@@ -103,10 +103,10 @@ namespace OpenSim.Services.HypergridService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_GridService = registry.Get<IGridService>();
-            m_GridUserService = registry.Get<IGridUserService>();
+            m_GridService = registry.RequestModuleInterface<IGridService>();
+            m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
             m_GatekeeperConnector = new GatekeeperServiceConnector();
-            m_GatekeeperService = registry.Get<IGatekeeperService>();
+            m_GatekeeperService = registry.RequestModuleInterface<IGatekeeperService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

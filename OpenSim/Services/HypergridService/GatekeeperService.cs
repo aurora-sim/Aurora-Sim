@@ -78,7 +78,7 @@ namespace OpenSim.Services.HypergridService
                 //m_WelcomeMessage = serverConfig.GetString("WelcomeMessage", "Welcome to OpenSim!");
                 m_AllowTeleportsToAnyRegion = serverConfig.GetBoolean("AllowTeleportsToAnyRegion", true);
                 m_ExternalName = serverConfig.GetString("ExternalName", string.Empty);
-                registry.RegisterInterface<IGatekeeperService>(this);
+                registry.RegisterModuleInterface<IGatekeeperService>(this);
             }
         }
 
@@ -92,13 +92,13 @@ namespace OpenSim.Services.HypergridService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_GridService = registry.Get<IGridService>();
-            m_PresenceService = registry.Get<IPresenceService>();
+            m_GridService = registry.RequestModuleInterface<IGridService>();
+            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
 
-            m_UserAccountService = registry.Get<IUserAccountService>();
-            m_UserAgentService = registry.Get<IUserAgentService>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            m_UserAgentService = registry.RequestModuleInterface<IUserAgentService>();
 
-            m_SimulationService = registry.Get<ISimulationService>();
+            m_SimulationService = registry.RequestModuleInterface<ISimulationService>();
 
             if (m_GridService == null || m_PresenceService == null || m_SimulationService == null)
                 throw new Exception("Unable to load a required plugin, Gatekeeper Service cannot function.");

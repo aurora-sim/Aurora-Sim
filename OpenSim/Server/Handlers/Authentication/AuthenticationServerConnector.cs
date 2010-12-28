@@ -60,9 +60,9 @@ namespace OpenSim.Server.Handlers.Authentication
             if (handlerConfig.GetString("AuthenticationInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuthenticationInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuthenticationInHandlerPort"));
 
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
+            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
 
             server.AddStreamHandler(new AuthenticationServerPostHandler(m_AuthenticationService));
         }

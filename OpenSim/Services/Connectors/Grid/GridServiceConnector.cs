@@ -853,7 +853,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IGridService>(this);
+            registry.RegisterModuleInterface<IGridService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -866,7 +866,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("GridServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("GridServerURI",
                     "GridService");
             if (serviceURI == String.Empty)
             {
@@ -882,7 +882,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IGridService>(this);
+            registry.RegisterModuleInterface<IGridService>(this);
         }
 
         #endregion

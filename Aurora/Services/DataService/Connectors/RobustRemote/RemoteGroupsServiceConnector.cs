@@ -31,7 +31,7 @@ namespace Aurora.Services.DataService
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 if (m_ServerURI != "")
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }

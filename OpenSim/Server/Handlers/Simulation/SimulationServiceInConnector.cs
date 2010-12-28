@@ -60,7 +60,7 @@ namespace OpenSim.Server.Handlers.Simulation
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
             //IConfig serverConfig = config.Configs["SimulationService"];
             //if (serverConfig == null)
@@ -73,7 +73,7 @@ namespace OpenSim.Server.Handlers.Simulation
             //    throw new Exception("No SimulationService in config file");
 
             //Object[] args = new Object[] { config };
-            m_LocalSimulationService = registry.Get<ISimulationService>();
+            m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
             if(m_LocalSimulationService.GetInnerService() != null)
                 m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
             //ServerUtils.LoadPlugin<ISimulationService>(simService, args);

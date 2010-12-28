@@ -179,7 +179,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_startupPlugins = AuroraModuleLoader.PickupModules<ISharedRegionStartupModule>();
 
             //Register us!
-            m_OpenSimBase.ApplicationRegistry.RegisterInterface<SceneManager>(this);
+            m_OpenSimBase.ApplicationRegistry.RegisterModuleInterface<SceneManager>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -538,7 +538,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_log.Info("[MODULES]: Loading region modules");
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryGet(out controller))
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
             {
                 controller.AddRegionToModules(scene);
             }
@@ -838,7 +838,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_log.DebugFormat("[SHUTDOWN]: Shutting down region {0}", scene.RegionInfo.RegionName);
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryGet<IRegionModulesController>(out controller))
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface<IRegionModulesController>(out controller))
             {
                 controller.RemoveRegionFromModules(scene);
             }
@@ -1134,7 +1134,7 @@ namespace OpenSim.Region.Framework.Scenes
             args.RemoveAt(0);
             string[] cmdparams = args.ToArray();
 
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.Get<IRegionModulesController>();
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
             if (cmdparams.Length > 0)
             {
                 switch (cmdparams[0].ToLower())

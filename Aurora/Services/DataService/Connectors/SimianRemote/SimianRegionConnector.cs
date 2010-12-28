@@ -29,7 +29,7 @@ namespace Aurora.Services.DataService
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 
                 //If blank, no connector
                 if (m_ServerURI != string.Empty)

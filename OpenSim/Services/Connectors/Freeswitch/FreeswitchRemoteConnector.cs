@@ -83,7 +83,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IFreeswitchService>(this);
+            registry.RegisterModuleInterface<IFreeswitchService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -92,7 +92,7 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
                     "FreeSwitchVoice");
             m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
         }
@@ -103,7 +103,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IFreeswitchService>(this);
+            registry.RegisterModuleInterface<IFreeswitchService>(this);
         }
 
         #endregion

@@ -198,6 +198,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             {
                 m_scene = scene;
                 m_scene.RegisterModuleInterface<IVegetationModule>(this);
+                m_scene.RegisterEntityCreatorModule(this);
                 m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
 
                 InstallCommands();
@@ -524,7 +525,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
         protected static readonly PCode[] creationCapabilities = new PCode[] { PCode.NewTree, PCode.Tree };
         public PCode[] CreationCapabilities { get { return creationCapabilities; } }
 
-        public SceneObjectGroup CreateEntity(
+        public ISceneEntity CreateEntity(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
             if (Array.IndexOf(creationCapabilities, (PCode)shape.PCode) < 0)

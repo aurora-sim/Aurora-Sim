@@ -69,7 +69,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IAvatarService>(this);
+            registry.RegisterModuleInterface<IAvatarService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -86,7 +86,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAvatarService>(this);
+            registry.RegisterModuleInterface<IAvatarService>(this);
         }
 
         #endregion

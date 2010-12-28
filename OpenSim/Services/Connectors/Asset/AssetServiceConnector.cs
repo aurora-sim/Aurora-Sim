@@ -331,7 +331,7 @@ namespace OpenSim.Services.Connectors
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 
-            registry.RegisterInterface<IAssetService>(this);
+            registry.RegisterModuleInterface<IAssetService>(this);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -344,7 +344,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AssetServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AssetServerURI",
                     "AssetService");
 
             if (serviceURI == String.Empty)
@@ -354,7 +354,7 @@ namespace OpenSim.Services.Connectors
             }
             m_ServerURI = serviceURI;
 
-            SetCache(registry.Get<IImprovedAssetCache>());
+            SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
         }
 
         public virtual void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -363,7 +363,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAssetService>(this);
+            registry.RegisterModuleInterface<IAssetService>(this);
         }
 
         #endregion

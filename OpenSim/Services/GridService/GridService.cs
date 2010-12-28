@@ -133,7 +133,7 @@ namespace OpenSim.Services.GridService
                 }
                 m_HypergridLinker = new HypergridLinker(m_config, this, m_Database);
             }
-            registry.RegisterInterface<IGridService>(this);
+            registry.RegisterModuleInterface<IGridService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -147,7 +147,7 @@ namespace OpenSim.Services.GridService
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
+            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_HypergridLinker.PostInitialize(registry);
         }
 

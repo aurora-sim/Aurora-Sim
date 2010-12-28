@@ -214,7 +214,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -227,7 +227,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("FriendsServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("FriendsServerURI",
                         "FriendsService");
 
             if (serviceURI == String.Empty)
@@ -244,7 +244,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         #endregion

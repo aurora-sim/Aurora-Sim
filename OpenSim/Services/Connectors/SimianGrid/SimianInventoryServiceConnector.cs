@@ -84,7 +84,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -101,7 +101,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         #endregion

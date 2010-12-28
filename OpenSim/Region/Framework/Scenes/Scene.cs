@@ -55,7 +55,7 @@ using OpenSim.Region.Framework.Scenes.Animation;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public partial class Scene : IScene, IRegistryCore
+    public partial class Scene : RegistryCore, IScene
     {
         #region Fields
 
@@ -1641,7 +1641,7 @@ namespace OpenSim.Region.Framework.Scenes
             // If an entity creator has been registered for this prim type then use that
             if (m_entityCreators.ContainsKey((PCode)shape.PCode))
             {
-                sceneObject = m_entityCreators[(PCode)shape.PCode].CreateEntity(ownerID, groupID, pos, rot, shape);
+                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity(ownerID, groupID, pos, rot, shape);
             }
             else
             {
@@ -3965,11 +3965,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Module Methods
 
         /// <value>
-        /// The module interfaces available from this scene.
-        /// </value>
-        protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
-
-        /// <value>
         /// The module commanders available from this scene
         /// </value>
         protected Dictionary<string, ICommander> m_moduleCommanders = new Dictionary<string, ICommander>();
@@ -3978,6 +3973,32 @@ namespace OpenSim.Region.Framework.Scenes
         /// Registered classes that are capable of creating entities.
         /// </value>
         protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
+
+        public void RegisterEntityCreatorModule(IEntityCreator entityCreator)
+        {
+            lock (m_entityCreators)
+            {
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = entityCreator;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unregister a module commander and all its commands
+        /// </summary>
+        /// <param name="name"></param>
+        public void UnregisterEntityCreatorCommander(IEntityCreator entityCreator)
+        {
+            lock (m_entityCreators)
+            {
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = null;
+                }
+            }
+        }
         
         /// <summary>
         /// Register a module commander.
@@ -4024,175 +4045,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Dictionary<string, ICommander> GetCommanders()
         {
             return m_moduleCommanders;
-        }
-
-        /// <summary>
-        /// Register an interface to a region module.  This allows module methods to be called directly as
-        /// well as via events.  If there is already a module registered for this interface, it is not replaced
-        /// (is this the best behaviour?)
-        /// </summary>
-        /// <param name="mod"></param>
-        public void RegisterModuleInterface<M>(M mod)
-        {
-            //            m_log.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
-
-            List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof(M), out l))
-            {
-                l = new List<Object>();
-                ModuleInterfaces.Add(typeof(M), l);
-            }
-
-            if (l.Count > 0)
-                l.Clear();
-
-            l.Add(mod);
-
-            if (mod is IEntityCreator)
-            {
-                IEntityCreator entityCreator = (IEntityCreator)mod;
-                foreach (PCode pcode in entityCreator.CreationCapabilities)
-                {
-                    m_entityCreators[pcode] = entityCreator;
-                }
-            }
-        }
-
-        public void AddModuleInterfaces(Dictionary<Type, object> dictionary)
-        {
-            foreach (KeyValuePair<Type, object> kvp in dictionary)
-            {
-                List<Object> l = null;
-                if (!ModuleInterfaces.TryGetValue(kvp.Key, out l))
-                {
-                    l = new List<Object>();
-                    ModuleInterfaces.Add(kvp.Key, l);
-                }
-
-                if (l.Count > 0)
-                    l.Clear();
-
-                l.Add(kvp.Value);
-            }
-        }
-
-        public void UnregisterModuleInterface<M>(M mod)
-        {
-            List<Object> l;
-            if (ModuleInterfaces.TryGetValue(typeof(M), out l))
-            {
-                if (l.Remove(mod))
-                {
-                    if (mod is IEntityCreator)
-                    {
-                        IEntityCreator entityCreator = (IEntityCreator)mod;
-                        foreach (PCode pcode in entityCreator.CreationCapabilities)
-                        {
-                            m_entityCreators[pcode] = null;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void RegisterInterface<M>(M mod)
-        {
-            RegisterModuleInterface<M>(mod);
-        }
-
-        public void StackModuleInterface<M>(M mod)
-        {
-            List<Object> l;
-            if (ModuleInterfaces.ContainsKey(typeof(M)))
-                l = ModuleInterfaces[typeof(M)];
-            else
-                l = new List<Object>();
-
-            if (l.Contains(mod))
-                return;
-
-            l.Add(mod);
-
-            if (mod is IEntityCreator)
-            {
-                IEntityCreator entityCreator = (IEntityCreator)mod;
-                foreach (PCode pcode in entityCreator.CreationCapabilities)
-                {
-                    m_entityCreators[pcode] = entityCreator;
-                }
-            }
-
-            ModuleInterfaces[typeof(M)] = l;
-        }
-
-        /// <summary>
-        /// For the given interface, retrieve the region module which implements it.
-        /// </summary>
-        /// <returns>null if there is no registered module implementing that interface</returns>
-        public T RequestModuleInterface<T>()
-        {
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
-                return (T)ModuleInterfaces[typeof(T)][0];
-            else
-                return default(T);
-        }
-
-        public T Get<T>()
-        {
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
-                return (T)ModuleInterfaces[typeof(T)][0];
-            else
-                return default(T);
-        }
-
-        public bool TryGet<T>(out T iface)
-        {
-            iface = default(T);
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
-            {
-                iface = (T)ModuleInterfaces[typeof(T)][0];
-                return true;
-            }
-            else
-                return false;
-        }
-
-        /// <summary>
-        /// For the given interface, retrieve an array of region modules that implement it.
-        /// </summary>
-        /// <returns>an empty array if there are no registered modules implementing that interface</returns>
-        public T[] RequestModuleInterfaces<T>()
-        {
-            if (ModuleInterfaces.ContainsKey(typeof(T)))
-            {
-                List<T> ret = new List<T>();
-
-                foreach (Object o in ModuleInterfaces[typeof(T)])
-                    ret.Add((T)o);
-                return ret.ToArray();
-            }
-            else
-            {
-                return new T[] { default(T) };
-            }
-        }
-
-        /// <summary>
-        /// We don't support this in the Scene...
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<Type, object> GetInterfaces()
-        {
-            //Flatten the array
-            Dictionary<Type, object> interfaces = new Dictionary<Type, object>();
-            foreach (KeyValuePair<Type, List<object>> kvp in ModuleInterfaces)
-            {
-                interfaces.Add(kvp.Key, kvp.Value[0]);
-            }
-            return interfaces;
         }
 
         #endregion

@@ -390,7 +390,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IPresenceService>(this);
+            registry.RegisterModuleInterface<IPresenceService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -403,7 +403,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
                         "PresenceService");
 
             if (serviceURI == String.Empty)
@@ -420,7 +420,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IPresenceService>(this);
+            registry.RegisterModuleInterface<IPresenceService>(this);
         }
 
         #endregion

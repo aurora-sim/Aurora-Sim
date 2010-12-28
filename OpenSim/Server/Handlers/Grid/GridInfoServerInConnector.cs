@@ -63,7 +63,7 @@ namespace OpenSim.Server.Handlers.Grid
             if (handlerConfig.GetString("GridInfoInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInfoInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInfoInHandlerPort"));
             GridInfoHandlers handlers = new GridInfoHandlers(config);
 
             server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",

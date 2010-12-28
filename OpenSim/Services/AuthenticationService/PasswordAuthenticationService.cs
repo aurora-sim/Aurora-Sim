@@ -93,7 +93,7 @@ namespace OpenSim.Services.AuthenticationService
                     new Object[] { connString, realm });
             if (m_Database == null)
                 throw new Exception(string.Format("Could not find a storage interface in module {0}", dllName));
-            registry.RegisterInterface<IAuthenticationService>(this);
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)

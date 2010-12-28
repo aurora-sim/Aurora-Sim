@@ -586,7 +586,7 @@ namespace OpenSim.Framework
             else
                 return;
 
-            baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             
             m_Commands.AddCommand("console", false, "help", "help [<command>]", 
                     "Get general command list or more detailed help on a specific command", Help);

@@ -34,7 +34,7 @@ namespace Aurora.Services.DataService
                 /*if (source.Configs["GridService"].GetString("GridServerURI", string.Empty) != string.Empty)
                     m_ServerURI = source.Configs["GridService"].GetString("GridServerURI", string.Empty);
                 else */
-                m_ServerURI = simBase.ApplicationRegistry.Get<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 
                 //If both are blank, no connector
                 if (m_ServerURI != string.Empty)

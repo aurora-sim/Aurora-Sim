@@ -46,7 +46,7 @@ namespace OpenSim.Server.Handlers.AuroraData
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuroraDataHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuroraDataHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuroraDataHandlerPort"));
 
             m_log.Debug("[AuroraDataConnectors]: Starting...");
 

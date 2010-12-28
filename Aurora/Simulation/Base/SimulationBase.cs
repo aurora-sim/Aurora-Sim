@@ -106,7 +106,7 @@ namespace Aurora.Simulation.Base
             if (System.Threading.Thread.CurrentThread.Name != "ConsoleThread")
                 System.Threading.Thread.CurrentThread.Name = "ConsoleThread";
             //Register the interface
-            ApplicationRegistry.RegisterInterface<ISimulationBase>(this);
+            ApplicationRegistry.RegisterModuleInterface<ISimulationBase>(this);
 
             Configuration(configSource);
 
@@ -206,7 +206,7 @@ namespace Aurora.Simulation.Base
                 plugin.Initialize("Region", ConfigSource, this);
             }
 
-            m_console = m_applicationRegistry.Get<ICommandConsole>();
+            m_console = m_applicationRegistry.RequestModuleInterface<ICommandConsole>();
             if (m_console == null)
                 m_console = new LocalConsole();
             ILoggerRepository repository = LogManager.GetRepository();

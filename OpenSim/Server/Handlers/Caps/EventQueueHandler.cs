@@ -44,8 +44,8 @@ namespace OpenSim.Server.Handlers
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            ICapsService service = registry.Get<ICapsService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
+            ICapsService service = registry.RequestModuleInterface<ICapsService>();
             server.AddStreamHandler(new EQMEventPoster(service));
         }
 
@@ -54,8 +54,8 @@ namespace OpenSim.Server.Handlers
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            ICapsService service = registry.Get<ICapsService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
+            ICapsService service = registry.RequestModuleInterface<ICapsService>();
             server.AddStreamHandler(new EQMEventPoster(service));
         }
 

@@ -3019,7 +3019,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Throttles 
             float multiplier = 1;
-            int innacurateNeighbors = m_scene.Get<INeighbourService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
+            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighbourService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
             if (innacurateNeighbors != 0)
             {
                 multiplier = 1f / innacurateNeighbors;

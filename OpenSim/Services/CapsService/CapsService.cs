@@ -66,7 +66,7 @@ namespace OpenSim.Services.CapsService
             m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
             
             m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
-            registry.RegisterInterface<ICapsService>(this);
+            registry.RegisterModuleInterface<ICapsService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -80,19 +80,19 @@ namespace OpenSim.Services.CapsService
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_CapsModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
-            m_InventoryService = registry.Get<IInventoryService>();
-            m_LibraryService = registry.Get<ILibraryService>();
-            m_GridUserService = registry.Get<IGridUserService>();
-            m_PresenceService = registry.Get<IPresenceService>();
-            m_GridService = registry.Get<IGridService>();
-            m_AssetService = registry.Get<IAssetService>();
-            ISimulationBase simBase = registry.Get<ISimulationBase>();
+            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
+            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
+            m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
+            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
+            m_GridService = registry.RequestModuleInterface<IGridService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+            ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<ICapsService>(this);
+            registry.RegisterModuleInterface<ICapsService>(this);
         }
 
         #endregion

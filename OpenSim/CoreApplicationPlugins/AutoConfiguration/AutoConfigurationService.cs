@@ -29,7 +29,7 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
         public void Initialize(ISimulationBase openSim)
         {
             //Register by default as this only gets used in remote grid mode
-            openSim.ApplicationRegistry.RegisterInterface<IAutoConfigurationService>(this);
+            openSim.ApplicationRegistry.RegisterModuleInterface<IAutoConfigurationService>(this);
 
             m_config = openSim.ConfigSource;
 

@@ -33,54 +33,125 @@ namespace OpenSim.Framework
 {
     public class RegistryCore : IRegistryCore
     {
-        protected Dictionary<Type, object> m_moduleInterfaces = new Dictionary<Type, object>();
-
-        public Dictionary<Type, object> GetInterfaces()
-        {
-            return m_moduleInterfaces;
-        }
-
+        /// <value>
+        /// The module interfaces available from this scene.
+        /// </value>
+        protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
 
         /// <summary>
-        /// Register an Module interface.
+        /// Register an interface to a region module.  This allows module methods to be called directly as
+        /// well as via events.  If there is already a module registered for this interface, it is not replaced
+        /// (is this the best behaviour?)
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="iface"></param>
-        public void RegisterInterface<T>(T iface)
+        /// <param name="mod"></param>
+        public void RegisterModuleInterface<T>(T mod)
         {
-            lock (m_moduleInterfaces)
+            //            m_log.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
+
+            List<Object> l = null;
+            if (!ModuleInterfaces.TryGetValue(typeof(T), out l))
             {
-                if (m_moduleInterfaces.ContainsKey(typeof(T)))
-                    m_moduleInterfaces.Remove(typeof(T));
-                m_moduleInterfaces.Add(typeof(T), iface);
+                l = new List<Object>();
+                ModuleInterfaces.Add(typeof(T), l);
+            }
+
+            if (l.Count > 0)
+                l.Clear();
+
+            l.Add(mod);
+        }
+
+        public void AddModuleInterfaces(Dictionary<Type, List<object>> dictionary)
+        {
+            foreach (KeyValuePair<Type, List<object>> kvp in dictionary)
+            {
+                if (!ModuleInterfaces.ContainsKey(kvp.Key))
+                    ModuleInterfaces.Add(kvp.Key, kvp.Value);
+                else
+                    ModuleInterfaces[kvp.Key].AddRange(kvp.Value);
             }
         }
 
-        public bool TryGet<T>(out T iface)
+        public void UnregisterModuleInterface<T>(T mod)
         {
-            if (m_moduleInterfaces.ContainsKey(typeof(T)))
+            List<Object> l;
+            if (ModuleInterfaces.TryGetValue(typeof(T), out l))
             {
-                iface = (T)m_moduleInterfaces[typeof(T)];
+                l.Remove(mod);
+            }
+        }
+
+        public void StackModuleInterface<T>(T mod)
+        {
+            List<Object> l;
+            if (ModuleInterfaces.ContainsKey(typeof(T)))
+                l = ModuleInterfaces[typeof(T)];
+            else
+                l = new List<Object>();
+
+            if (l.Contains(mod))
+                return;
+
+            l.Add(mod);
+
+            ModuleInterfaces[typeof(T)] = l;
+        }
+
+        /// <summary>
+        /// For the given interface, retrieve the region module which implements it.
+        /// </summary>
+        /// <returns>null if there is no registered module implementing that interface</returns>
+        public T RequestModuleInterface<T>()
+        {
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+                return (T)ModuleInterfaces[typeof(T)][0];
+            else
+                return default(T);
+        }
+
+        public bool TryRequestModuleInterface<T>(out T iface)
+        {
+            iface = default(T);
+            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
+                    (ModuleInterfaces[typeof(T)].Count > 0))
+            {
+                iface = (T)ModuleInterfaces[typeof(T)][0];
                 return true;
             }
-            iface = default(T);
-            return false;
+            else
+                return false;
         }
 
-        public T Get<T>()
-        {
-            if(m_moduleInterfaces.ContainsKey(typeof(T)))
-                return (T)m_moduleInterfaces[typeof(T)];
-            return default(T);
-        }
-
-        public void StackModuleInterface<M>(M mod)
-        {
-        }
-
+        /// <summary>
+        /// For the given interface, retrieve an array of region modules that implement it.
+        /// </summary>
+        /// <returns>an empty array if there are no registered modules implementing that interface</returns>
         public T[] RequestModuleInterfaces<T>()
         {
-            return new T[] { default(T) };
+            if (ModuleInterfaces.ContainsKey(typeof(T)))
+            {
+                List<T> ret = new List<T>();
+
+                foreach (Object o in ModuleInterfaces[typeof(T)])
+                    ret.Add((T)o);
+                return ret.ToArray();
+            }
+            else
+            {
+                return new T[] { default(T) };
+            }
+        }
+
+        public Dictionary<Type, List<object>> GetInterfaces()
+        {
+            //Flatten the array
+            Dictionary<Type, List<object>> interfaces = new Dictionary<Type, List<object>>();
+            foreach (KeyValuePair<Type, List<object>> kvp in ModuleInterfaces)
+            {
+                interfaces.Add(kvp.Key, kvp.Value);
+            }
+            return interfaces;
         }
     }
 }

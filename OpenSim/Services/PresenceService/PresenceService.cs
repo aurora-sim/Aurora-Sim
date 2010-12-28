@@ -102,7 +102,7 @@ namespace OpenSim.Services.PresenceService
                        presenceConfig.GetBoolean("CheckLastSeen",
                                                  m_checkLastSeen);
             }
-            registry.RegisterInterface<IPresenceService>(this);
+            registry.RegisterModuleInterface<IPresenceService>(this);
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
         }
 
@@ -116,7 +116,7 @@ namespace OpenSim.Services.PresenceService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_GridService = registry.Get<IGridService>();
+            m_GridService = registry.RequestModuleInterface<IGridService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

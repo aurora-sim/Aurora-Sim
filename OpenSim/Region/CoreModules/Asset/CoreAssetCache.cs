@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.Asset
                     m_log.Info("[ASSET CACHE]: Core asset cache enabled");
 
                     m_Cache.Size = assetConfig.GetInt("CacheBuckets", 32768);
-                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Asset
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<IImprovedAssetCache>(this);
+            registry.RegisterModuleInterface<IImprovedAssetCache>(this);
         }
 
         #endregion

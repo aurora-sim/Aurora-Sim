@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Asset
                     IConfig cacheConfig = config.Configs["AssetCache"];
                     if (cacheConfig != null)
                         m_DebugRate = (uint)cacheConfig.GetInt("DebugRate", 0);
-                    registry.RegisterInterface<IImprovedAssetCache>(this);
+                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Asset
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<IImprovedAssetCache>(this);
+            registry.RegisterModuleInterface<IImprovedAssetCache>(this);
         }
 
         #endregion

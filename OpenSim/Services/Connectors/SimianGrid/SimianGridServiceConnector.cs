@@ -75,7 +75,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return;
 
             CommonInit(config);
-            registry.RegisterInterface<IGridService>(this);
+            registry.RegisterModuleInterface<IGridService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -93,7 +93,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IGridService>(this);
+            registry.RegisterModuleInterface<IGridService>(this);
             CheckForScenes(registry);
         }
 

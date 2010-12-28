@@ -63,8 +63,8 @@ namespace OpenSim.Server.Handlers.Grid
             if (handlerConfig.GetString("GridInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
-            m_GridService = registry.Get<IGridService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
+            m_GridService = registry.RequestModuleInterface<IGridService>();
 
             GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
             server.AddStreamHandler(handler);

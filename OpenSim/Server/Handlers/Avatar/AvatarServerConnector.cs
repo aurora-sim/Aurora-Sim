@@ -63,9 +63,9 @@ namespace OpenSim.Server.Handlers.Avatar
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
 
-            m_AvatarService = registry.Get<IAvatarService>();
+            m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
 
             server.AddStreamHandler(new AvatarServerPostHandler(m_AvatarService));
         }

@@ -108,7 +108,7 @@ namespace OpenSim.Services.InventoryService
             m_LibraryRootFolder.Type = (short)8;
             m_LibraryRootFolder.Version = (ushort)1;
 
-            registry.RegisterInterface<ILibraryService>(this);
+            registry.RegisterModuleInterface<ILibraryService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -126,7 +126,7 @@ namespace OpenSim.Services.InventoryService
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterInterface<ILibraryService>(this);
+            registry.RegisterModuleInterface<ILibraryService>(this);
         }
 
         public void AddToDefaultInventory(InventoryFolderImpl folder)
@@ -159,7 +159,7 @@ namespace OpenSim.Services.InventoryService
 
         private void LoadPreviouslyLoadedArchives(IRegistryCore registry)
         {
-            IUserAccountService UserAccountService = registry.Get<IUserAccountService>();
+            IUserAccountService UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
             //Make the user account for the default IAR
             if (uinfo == null)
@@ -174,7 +174,7 @@ namespace OpenSim.Services.InventoryService
                 uinfo.UserTitle = "";
                 UserAccountService.StoreUserAccount(uinfo);
             }
-            IInventoryService InventoryService = registry.Get<IInventoryService>();
+            IInventoryService InventoryService = registry.RequestModuleInterface<IInventoryService>();
             InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, UUID.Zero);
             foreach (InventoryFolderBase folder in col.Folders)
             {

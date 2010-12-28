@@ -594,7 +594,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -607,7 +607,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("InventoryServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("InventoryServerURI",
                     "InventoryService");
 
             if (serviceURI == String.Empty)
@@ -624,7 +624,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         #endregion

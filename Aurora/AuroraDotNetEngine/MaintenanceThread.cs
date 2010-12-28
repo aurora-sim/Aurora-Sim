@@ -132,7 +132,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool StateSaveQueue()
         {
-            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
@@ -179,7 +179,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         public bool ScriptChangeQueue()
         {
-            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early
@@ -266,7 +266,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool CmdHandlerQueue()
         {
-            IMonitorModule module = m_ScriptEngine.Worlds[0].Get<IMonitorModule>();
+            IMonitorModule module = m_ScriptEngine.Worlds[0].RequestModuleInterface<IMonitorModule>();
             int StartTime = Util.EnvironmentTickCount();
 
             if (!Started) //Break early

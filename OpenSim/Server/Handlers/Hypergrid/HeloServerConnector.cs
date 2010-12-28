@@ -64,7 +64,7 @@ namespace OpenSim.Server.Handlers.Hypergrid
             if (handlerConfig.GetString("HeloInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("HeloInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("HeloInHandlerPort"));
             server.AddStreamHandler(new HeloServerGetHandler("opensim-robust"));
         }
 

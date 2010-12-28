@@ -74,10 +74,10 @@ namespace OpenSim.Server.Handlers.Hypergrid
             if (handlerConfig.GetString("UserAgentInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAgentInHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAgentInHandlerPort"));
             IConfig gridConfig = config.Configs["UserAgentService"];
 
-            m_HomeUsersService = registry.Get<IUserAgentService>();
+            m_HomeUsersService = registry.RequestModuleInterface<IUserAgentService>();
             string loginServerIP = gridConfig.GetString("LoginServerIP", "127.0.0.1");
             bool proxy = gridConfig.GetBoolean("HasProxy", false);
 

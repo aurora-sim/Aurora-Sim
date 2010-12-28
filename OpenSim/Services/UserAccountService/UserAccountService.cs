@@ -91,7 +91,7 @@ namespace OpenSim.Services.UserAccountService
                         "reset user password [<first> [<last> [<password>]]]",
                         "Reset a user password", HandleResetUserPassword);
             }
-            registry.RegisterInterface<IUserAccountService>(this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -105,13 +105,13 @@ namespace OpenSim.Services.UserAccountService
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             if (m_GridService == null)
-                m_GridService = registry.Get<IGridService>();
+                m_GridService = registry.RequestModuleInterface<IGridService>();
 
             if (m_AuthenticationService == null)
-                m_AuthenticationService = registry.Get<IAuthenticationService>();
+                m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
 
             if (m_InventoryService == null)
-                m_InventoryService = registry.Get<IInventoryService>();
+                m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

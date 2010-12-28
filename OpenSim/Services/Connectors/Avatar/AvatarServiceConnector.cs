@@ -308,7 +308,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAvatarService>(this);
+            registry.RegisterModuleInterface<IAvatarService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -321,7 +321,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.Get<IAutoConfigurationService>().FindValueOf("AvatarServerURI",
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AvatarServerURI",
                         "AvatarService");
 
             if (serviceURI == String.Empty)
@@ -338,7 +338,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAvatarService>(this);
+            registry.RegisterModuleInterface<IAvatarService>(this);
         }
 
         #endregion

@@ -85,7 +85,7 @@ namespace OpenSim.Framework
             else
                 return;
 
-            baseOpenSim.ApplicationRegistry.RegisterInterface<ICommandConsole>(this);
+            baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
 
             if (m_consolePort == 0)
                 SetServer(MainServer.Instance);

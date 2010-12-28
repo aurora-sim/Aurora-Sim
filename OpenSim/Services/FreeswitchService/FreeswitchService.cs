@@ -84,7 +84,7 @@ namespace OpenSim.Services.FreeswitchService
                 m_freeSwitchServerPass = freeswitchConfig.GetString("Password", m_freeSwitchServerPass);
 
                 m_Enabled = true;
-                registry.RegisterInterface<IFreeswitchService>(this);
+                registry.RegisterModuleInterface<IFreeswitchService>(this);
             }
         }
 

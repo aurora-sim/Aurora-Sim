@@ -715,7 +715,7 @@ namespace OpenSim.Services.Connectors.Simulation
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
             {
-                registry.RegisterInterface<ISimulationService>(this);
+                registry.RegisterModuleInterface<ISimulationService>(this);
                 m_localBackend = new LocalSimulationServiceConnector();
             }
         }
@@ -736,7 +736,7 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
-                registry.RegisterInterface<ISimulationService>(this);
+                registry.RegisterModuleInterface<ISimulationService>(this);
         }
     }
 }

@@ -120,7 +120,7 @@ namespace OpenSim.Services.Connectors
             bool responseOnFailure = authorizationConfig.GetBoolean("ResponseOnFailure", true);
 
             m_ResponseOnFailure = responseOnFailure;
-            registry.RegisterInterface<IAuthorizationService>(this);
+            registry.RegisterModuleInterface<IAuthorizationService>(this);
             m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService initialized");
         }
 
@@ -130,7 +130,7 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_userAccountService = registry.Get<IUserAccountService>();
+            m_userAccountService = registry.RequestModuleInterface<IUserAccountService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -139,7 +139,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthorizationHandler", "") != Name)
                 return;
 
-            registry.RegisterInterface<IAuthorizationService>(this);
+            registry.RegisterModuleInterface<IAuthorizationService>(this);
         }
 
         #endregion

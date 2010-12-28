@@ -89,7 +89,7 @@ namespace OpenSim.Services.InventoryService
                     new Object[] {connString, String.Empty});
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
-            registry.RegisterInterface<IInventoryService>(this);
+            registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -102,7 +102,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_UserAccountService = registry.Get<IUserAccountService>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

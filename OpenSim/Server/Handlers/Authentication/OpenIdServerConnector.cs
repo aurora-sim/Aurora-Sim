@@ -66,10 +66,10 @@ namespace OpenSim.Server.Handlers.Authentication
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("OpenIdHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
 
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
-            m_UserAccountService = registry.Get<IUserAccountService>();
+            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
 
             // Handler for OpenID user identity pages
             server.AddStreamHandler(new OpenIdStreamHandler("GET", "/users/", m_UserAccountService, m_AuthenticationService));

@@ -135,7 +135,7 @@ namespace OpenSim.Services.LLLoginService
                 IConfig gridInfo = config.Configs["GridInfoService"];
                 m_SearchURL = gridInfo.GetString("search", string.Empty);
             }
-            registry.RegisterInterface<ILoginService>(this);
+            registry.RegisterModuleInterface<ILoginService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -148,19 +148,19 @@ namespace OpenSim.Services.LLLoginService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_UserAccountService = registry.Get<IUserAccountService>();
-            m_GridUserService = registry.Get<IGridUserService>();
-            m_AuthenticationService = registry.Get<IAuthenticationService>();
-            m_InventoryService = registry.Get<IInventoryService>();
-            m_GridService = registry.Get<IGridService>();
-            m_PresenceService = registry.Get<IPresenceService>();
-            m_AvatarService = registry.Get<IAvatarService>();
-            m_FriendsService = registry.Get<IFriendsService>();
-            m_RemoteSimulationService = registry.Get<ISimulationService>();
-            m_UserAgentService = registry.Get<IUserAgentService>();
-            m_AssetService = registry.Get<IAssetService>();
-            m_LibraryService = registry.Get<ILibraryService>();
-            m_CapsService = registry.Get<ICapsService>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
+            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
+            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
+            m_GridService = registry.RequestModuleInterface<IGridService>();
+            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
+            m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
+            m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
+            m_RemoteSimulationService = registry.RequestModuleInterface<ISimulationService>();
+            m_UserAgentService = registry.RequestModuleInterface<IUserAgentService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
+            m_CapsService = registry.RequestModuleInterface<ICapsService>();
             
             m_GatekeeperConnector = new GatekeeperServiceConnector();
 

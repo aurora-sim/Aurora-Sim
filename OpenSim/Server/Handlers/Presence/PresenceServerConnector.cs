@@ -59,8 +59,8 @@ namespace OpenSim.Server.Handlers.Presence
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceInHandler", "") != Name)
                 return;
-            IHttpServer server = registry.Get<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
-            m_PresenceService = registry.Get<IPresenceService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
+            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
 
             server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
         }

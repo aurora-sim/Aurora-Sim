@@ -194,7 +194,7 @@ namespace OpenSim.CoreApplicationPlugins
         {
             if (m_enabled)
             {
-                manager = m_application.ApplicationRegistry.Get<SceneManager>();
+                manager = m_application.ApplicationRegistry.RequestModuleInterface<SceneManager>();
                 if (!CreateDefaultAvatars())
                 {
                     m_log.Info("[RADMIN]: Default avatars not loaded");

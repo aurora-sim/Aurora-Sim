@@ -33,13 +33,61 @@ namespace OpenSim.Framework
 {
     public interface IRegistryCore 
     {
-        T Get<T>();
-        void RegisterInterface<T>(T iface);
-        bool TryGet<T>(out T iface);
+        /// <summary>
+        /// Register a module into the registry.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
+        void RegisterModuleInterface<T>(T mod);
 
-        void StackModuleInterface<M>(M mod);
+        /// <summary>
+        /// Add more than one module interface.
+        /// This is usually used to copy the contents of one registry core into another
+        /// </summary>
+        /// <param name="dictionary"></param>
+        void AddModuleInterfaces(Dictionary<Type, List<object>> dictionary);
+
+        /// <summary>
+        /// Remove a module from the registry.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
+        void UnregisterModuleInterface<T>(T mod);
+
+        /// <summary>
+        /// Add more than one module to the same interface in the registry.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="mod"></param>
+        void StackModuleInterface<T>(T mod);
+
+        /// <summary>
+        /// Get a module from the interface by type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        T RequestModuleInterface<T>();
+
+        /// <summary>
+        /// Try to get a module from the interface by type.
+        /// Returns false if it could not find a module.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="iface"></param>
+        /// <returns></returns>
+        bool TryRequestModuleInterface<T>(out T iface);
+
+        /// <summary>
+        /// Get all the modules for the given interface.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         T[] RequestModuleInterfaces<T>();
 
-        Dictionary<Type, object> GetInterfaces();
+        /// <summary>
+        /// Get all the modules in the registry.
+        /// </summary>
+        /// <returns></returns>
+        Dictionary<Type, List<object>> GetInterfaces();
     }
 }
