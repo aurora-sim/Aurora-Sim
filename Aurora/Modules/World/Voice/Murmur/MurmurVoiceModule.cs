@@ -344,6 +344,7 @@ namespace MurmurVoice
         private static string m_murmurd_host;
         private static int m_murmurd_port;
         private static ServerManager m_manager;
+        private static string m_server_version = "";
         private static bool m_started = false;
         private static bool m_enabled = false;
 
@@ -371,6 +372,7 @@ namespace MurmurVoice
                 string meta_ice = "Meta:" + m_config.GetString("murmur_ice", String.Empty);
                 m_murmurd_host = m_config.GetString("murmur_host", String.Empty);
                 int server_id = m_config.GetInt("murmur_sid", 1);
+                m_server_version = m_config.GetString("server_version", String.Empty);
 
                 // Admin interface required values
                 if (String.IsNullOrEmpty(meta_ice) ||
@@ -561,6 +563,15 @@ namespace MurmurVoice
                                                            return ChatSessionRequest(scene, request, path, param,
                                                                                      agentID, caps);
                                                        }));
+
+            UUID capID = UUID.Random();
+            caps.RegisterHandler("mumble_server_info", 
+                                new RestStreamHandler("GET", "/CAPS/" + capID,
+                                                        delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return RestGetMumbleServerInfo(scene, request, path, param, httpRequest, httpResponse);
+                                                       }));
         }
 
         /// Callback for a client request for Voice Account Details.
@@ -590,6 +601,112 @@ namespace MurmurVoice
                 m_log.DebugFormat("[MurmurVoice] {0} failed", e.ToString());
                 return "<llsd><undef /></llsd>";
             }
+        }
+
+        /// <summary>
+        /// Returns information about a mumble server via a REST Request
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="param">A string representing the sim's UUID</param>
+        /// <param name="httpRequest">HTTP request header object</param>
+        /// <param name="httpResponse">HTTP response header object</param>
+        /// <returns>Information about the mumble server in http response headers</returns>
+        public string RestGetMumbleServerInfo(Scene scene, string request, string path, string param,
+                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            if (m_murmurd_host == null)
+            {
+                httpResponse.StatusCode = 404;
+                httpResponse.StatusDescription = "Not Found";
+
+                string message = "[MUMBLE VOIP]: Server info request from " + httpRequest.RemoteIPEndPoint.Address + ". Cannot send response, module is not configured properly.";
+                m_log.Warn(message);
+                return "Mumble server info is not available.";
+            }
+            if (httpRequest.Headers.GetValues("avatar_uuid") == null)
+            {
+                httpResponse.StatusCode = 400;
+                httpResponse.StatusDescription = "Bad Request";
+
+                string message = "[MUMBLE VOIP]: Invalid server info request from " + httpRequest.RemoteIPEndPoint.Address + "";
+                m_log.Warn(message);
+                return "avatar_uuid header is missing";
+            }
+                
+            string avatar_uuid = httpRequest.Headers.GetValues("avatar_uuid")[0];
+            string responseBody = String.Empty;
+            UUID avatarId;
+            if (UUID.TryParse(avatar_uuid, out avatarId))
+            {
+                if (scene == null) throw new Exception("[MurmurVoice] Invalid scene.");
+
+                Agent agent = m_manager.Agent.GetOrCreate(avatarId);
+
+                string channel_uri;
+
+                ScenePresence avatar = scene.GetScenePresence(avatarId);
+                
+                // get channel_uri: check first whether estate
+                // settings allow voice, then whether parcel allows
+                // voice, if all do retrieve or obtain the parcel
+                // voice channel
+                LandData land = scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y).LandData;
+
+                m_log.DebugFormat("[MurmurVoice] region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": request: {4}, path: {5}, param: {6}",
+                                  scene.RegionInfo.RegionName, land.Name, land.LocalID, avatar.Name, request, path, param);
+
+                if (((land.Flags & (uint)ParcelFlags.AllowVoiceChat) > 0) && scene.RegionInfo.EstateSettings.AllowVoice)
+                {
+                    agent.channel = m_manager.Channel.GetOrCreate(ChannelName(scene, land));
+
+                    // Host/port pair for voice server
+                    channel_uri = String.Format("{0}:{1}", m_murmurd_host, m_murmurd_port);
+
+                    if (agent.session > 0)
+                    {
+                        Murmur.User state = m_manager.Server.getState(agent.session);
+                        m_callback.AddUserToChan(state, agent.channel);
+                    }
+
+                    m_log.InfoFormat("[MurmurVoice] {0}", channel_uri);
+                }
+                else
+                {
+                    m_log.DebugFormat("[MurmurVoice] Voice not enabled.");
+                    channel_uri = "";
+                }
+                string m_context = "Mumble voice system";
+
+                httpResponse.AddHeader("Mumble-Server", m_murmurd_host);
+                httpResponse.AddHeader("Mumble-Version", m_server_version);
+                httpResponse.AddHeader("Mumble-Channel", channel_uri);
+                httpResponse.AddHeader("Mumble-User", avatar_uuid);
+                httpResponse.AddHeader("Mumble-Password", agent.pass);
+                httpResponse.AddHeader("Mumble-Avatar-Id", avatar_uuid);
+                httpResponse.AddHeader("Mumble-Context-Id", m_context);
+
+                responseBody += "Mumble-Server: " + m_murmurd_host + "\n";
+                responseBody += "Mumble-Version: " + m_server_version + "\n";
+                responseBody += "Mumble-Channel: " + channel_uri + "\n";
+                responseBody += "Mumble-User: " + avatar_uuid + "\n";
+                responseBody += "Mumble-Password: " + agent.pass + "\n";
+                responseBody += "Mumble-Avatar-Id: " + avatar_uuid + "\n";
+                responseBody += "Mumble-Context-Id: " + m_context + "\n";
+
+                string log_message = "[MUMBLE VOIP]: Server info request handled for " + httpRequest.RemoteIPEndPoint.Address + "";
+                m_log.Info(log_message);
+            }
+            else
+            {
+                httpResponse.StatusCode = 400;
+                httpResponse.StatusDescription = "Bad Request";
+
+                m_log.Warn("[MUMBLE VOIP]: Could not parse avatar uuid from request");
+                return "could not parse avatar_uuid header";
+            }
+
+            return responseBody;
         }
 
         /// Callback for a client request for ParcelVoiceInfo
