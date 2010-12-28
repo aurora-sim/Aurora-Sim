@@ -72,7 +72,7 @@ namespace OpenSim.Services.CapsService
             OSDArray mapBlocksData = new OSDArray();
 
             List<MapBlockData> mapBlocks = new List<MapBlockData>();
-            if (m_mapLayer != null)
+            if (m_mapLayer != null && m_mapLayer.Count != 0)
             {
                 mapBlocks = m_mapLayer;
             }
