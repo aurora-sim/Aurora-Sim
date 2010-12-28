@@ -117,11 +117,11 @@ namespace OpenSim.Services.InventoryService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            LoadLibraries(registry);
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            LoadLibraries(registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

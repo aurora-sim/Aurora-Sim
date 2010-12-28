@@ -75,6 +75,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 uinfo.UserFlags = 0;
                 uinfo.UserTitle = "";
                 m_MockScene.UserAccountService.StoreUserAccount(uinfo);
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
 
             InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
