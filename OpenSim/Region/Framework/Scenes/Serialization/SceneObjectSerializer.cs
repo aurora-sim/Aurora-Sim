@@ -1386,11 +1386,11 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             reader.ReadStartElement("SceneObjectPart");
 
             string nodeName = string.Empty;
-            while (reader.NodeType != XmlNodeType.EndElement)
+            while (reader.NodeType != XmlNodeType.None)
             {
                 nodeName = reader.Name;
                 SOPXmlProcessor p = null;
-                if (m_SOPXmlProcessors.TryGetValue(reader.Name, out p))
+                if (m_SOPXmlProcessors.TryGetValue(nodeName, out p))
                 {
                     //m_log.DebugFormat("[XXX] Processing: {0}", reader.Name);
                     try
@@ -1407,12 +1407,11 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 else
                 {
                     //                    m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element {0}", nodeName);
-                    reader.ReadOuterXml(); // ignore
+                    string value = reader.ReadOuterXml(); // ignore
                 }
-
             }
 
-            reader.ReadEndElement(); // SceneObjectPart
+            //reader.ReadEndElement(); // SceneObjectPart
             obj.IsLoading = false;
 
             //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
