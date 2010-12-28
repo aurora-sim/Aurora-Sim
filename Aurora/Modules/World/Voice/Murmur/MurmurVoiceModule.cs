@@ -570,6 +570,7 @@ namespace MurmurVoice
                                                                                      agentID, caps);
                                                        }));
 
+            //For naali
             UUID capID = UUID.Random();
             caps.RegisterHandler("mumble_server_info", 
                                 new RestStreamHandler("GET", "/CAPS/" + capID,
@@ -719,7 +720,7 @@ namespace MurmurVoice
         public string ParcelVoiceInfoRequest(Scene scene, string request, string path, string param,
                                              UUID agentID, Caps caps)
         {
-            m_log.Info("[MurmurVoice] Calling ParcelVoiceInfoRequest...");
+            m_log.Debug("[MurmurVoice] Calling ParcelVoiceInfoRequest...");
             try
             {
                 ScenePresence avatar = scene.GetScenePresence(agentID);

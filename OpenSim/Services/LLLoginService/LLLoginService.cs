@@ -549,19 +549,6 @@ namespace OpenSim.Services.LLLoginService
                 if (m_AvatarService != null)
                 {
                     avatar = m_AvatarService.GetAvatar(account.PrincipalID);
-                    //Verify that all assets exist now
-                    AvatarAppearance avappearance = avatar.ToAvatarAppearance(account.PrincipalID);
-                    for (int i = 0; i < avappearance.Wearables.Length; i++)
-                    {
-                        foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
-                        {
-                            AssetBase asset = m_AssetService.Get(item.Value.ToString());
-                            if (asset == null)
-                            {
-                                 m_log.Warn("Missing avatar appearance asset!");
-                            }
-                        }
-                    }
                     if (avatar == null)
                     {
                         m_log.Error("[LLLOGINSERVICE]: CANNOT FIND AVATAR APPEARANCE " + account.FirstName + " " + account.LastName + ", SETTING TO DEFAULT");
@@ -577,6 +564,24 @@ namespace OpenSim.Services.LLLoginService
                         }
                         avatar = m_AvatarService.GetAvatar(account.PrincipalID);
                     }
+                    //Verify that all assets exist now
+                    AvatarAppearance avappearance = avatar.ToAvatarAppearance(account.PrincipalID);
+                    for (int i = 0; i < avappearance.Wearables.Length; i++)
+                    {
+                        bool messedUp = false;
+                        foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
+                        {
+                            AssetBase asset = m_AssetService.Get(item.Value.ToString());
+                            if (asset == null)
+                            {
+                                m_log.Warn("Missing avatar appearance asset!");
+                                messedUp = true;
+                            }
+                        }
+                        if (messedUp)
+                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
+                    }
+                    avatar = new AvatarData(avappearance);
                 }
 
                 //

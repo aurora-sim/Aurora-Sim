@@ -109,6 +109,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             try
             {
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
+                if (nodes.Count == 0)
+                    return;
                 InventoryFolderImpl f = new InventoryFolderImpl((InventoryFolderBase)nodes[0]);
 
                 TraverseFolders(f, nodes[0].ID, m_MockScene);

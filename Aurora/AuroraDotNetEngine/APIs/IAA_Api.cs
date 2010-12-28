@@ -31,6 +31,7 @@ using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
@@ -53,15 +54,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_Types.LSLString aaSerializeXML(LSL_Types.list keys, LSL_Types.list values);
 
-        LSL_String aaGetTeam(LSL_Types.key id);
+        LSL_String aaGetTeam(LSL_Key id);
 
-        LSL_Float aaGetHealth(LSL_Types.key id);
+        LSL_Float aaGetHealth(LSL_Key id);
 
-        void aaJoinCombat(LSL_Types.key id);
+        void aaJoinCombat(LSL_Key id);
 
-        void aaLeaveCombat(LSL_Types.key id);
+        void aaLeaveCombat(LSL_Key id);
 
-        void aaJoinCombatTeam(LSL_Types.key id, LSL_String team);
+        void aaJoinCombatTeam(LSL_Key id, LSL_String team);
 
         LSL_List aaGetTeamMembers(LSL_String team);
 
