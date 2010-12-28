@@ -23,6 +23,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
         protected ILibraryService m_service;
         protected IRegistryCore m_registry;
+        protected Dictionary<string, AssetType> m_assetTypes = new Dictionary<string, AssetType>();
 
         public void LoadLibrary(ILibraryService service, IConfigSource source, IRegistryCore registry)
         {
@@ -31,6 +32,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             string pLibrariesLocation = "DefaultInventory/";
+            AddDefaultAssetTypes();
             if (libConfig != null)
             {
                 if (libConfig.GetBoolean("Loaded", false))
@@ -40,6 +42,30 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                     LoadLibraries(iarFileName);
                 }
             }
+        }
+
+        private void AddDefaultAssetTypes()
+        {
+            m_assetTypes.Add("Animation", AssetType.Animation);
+            m_assetTypes.Add("Bodypart", AssetType.Bodypart);
+            m_assetTypes.Add("Body part", AssetType.Bodypart);
+            m_assetTypes.Add("CallingCard", AssetType.CallingCard);
+            m_assetTypes.Add("Calling Card", AssetType.CallingCard);
+            m_assetTypes.Add("Clothing", AssetType.Clothing);
+            m_assetTypes.Add("CurrentOutfit", AssetType.CurrentOutfitFolder);
+            m_assetTypes.Add("Current Outfit", AssetType.CurrentOutfitFolder);
+            m_assetTypes.Add("Gesture", AssetType.Gesture);
+            m_assetTypes.Add("Landmark", AssetType.Landmark);
+            m_assetTypes.Add("Script", AssetType.LSLText);
+            m_assetTypes.Add("Scripts", AssetType.LSLText);
+            m_assetTypes.Add("Mesh", AssetType.Mesh);
+            m_assetTypes.Add("Notecard", AssetType.Notecard);
+            m_assetTypes.Add("Object", AssetType.Object);
+            m_assetTypes.Add("Photo", AssetType.SnapshotFolder);
+            m_assetTypes.Add("Snapshot", AssetType.SnapshotFolder);
+            m_assetTypes.Add("Sound", AssetType.Sound);
+            m_assetTypes.Add("Texture", AssetType.Texture);
+            m_assetTypes.Add("Images", AssetType.Texture);
         }
 
         /// <summary>
@@ -109,6 +135,13 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             foreach (InventoryFolderBase folder in col.Folders)
             {
                 InventoryFolderImpl childFolder = new InventoryFolderImpl(folder);
+                foreach (KeyValuePair<String, AssetType> type in m_assetTypes)
+                {
+                    if (childFolder.Name.ToLower().StartsWith(type.Key.ToLower()))
+                    {
+                        childFolder.Type = (short)type.Value;
+                    }
+                }
                 TraverseFolders(childFolder, folder.ID, m_MockScene);
                 folderimp.AddChildFolder(childFolder);
             }
