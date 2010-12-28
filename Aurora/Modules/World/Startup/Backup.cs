@@ -40,7 +40,6 @@ namespace Aurora.Modules.World.Startup
         public void Initialise(Scene scene, IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
             MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
-            m_manager = scene.RequestModuleInterface<SceneManager>();
             //Set up the backup for the scene
             m_backup[scene] = new InternalSceneBackup(scene);
 
@@ -62,6 +61,7 @@ namespace Aurora.Modules.World.Startup
 
         public void FinishStartup(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
+            m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();
         }
 

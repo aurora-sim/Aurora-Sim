@@ -185,7 +185,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 options.TryGetValue("assets", out Assets);
                                 bool.TryParse(Assets.ToString(), out UseAssets);
                             }
-                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, saveStream, UseAssets, null).Execute();
+                            new InventoryArchiveWriteRequest(id, this, m_aScene, userInfo, invPath, saveStream, UseAssets, null, new List<AssetBase>()).Execute();
                         }
                         catch (EntryPointNotFoundException e)
                         {

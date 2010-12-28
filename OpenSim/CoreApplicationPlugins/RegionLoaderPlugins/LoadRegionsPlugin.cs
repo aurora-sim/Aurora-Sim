@@ -94,7 +94,7 @@ namespace OpenSim.CoreApplicationPlugins
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
-                m_log.Info("[LOADREGIONSPLUGIN]: Checking for region configurations from " + loader.Name + " plugin...");
+                m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
 
                 RegionInfo[] regionsToLoad = loader.LoadRegions();
                 if (regionsToLoad == null)
@@ -102,7 +102,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (!CheckRegionsForSanity(regionsToLoad))
                 {
-                    m_log.Error("[LOADREGIONS]: Halting startup due to conflicts in region configurations");
+                    m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
                     throw new Exception();
                 }
                 manager.AllRegions += regionsToLoad.Length;
@@ -114,7 +114,7 @@ namespace OpenSim.CoreApplicationPlugins
                 for (int i = 0; i < regionsToLoad.Length; i++)
                 {
                     IScene scene = null;
-                    m_log.Info("[LOADREGIONS]: Creating Region: " + regionsToLoad[i].RegionName);
+                    m_log.Info("[LoadRegionsPlugin]: Creating Region: " + regionsToLoad[i].RegionName);
                     manager.CreateRegion(regionsToLoad[i], true, out scene);
                 }
             }

@@ -82,6 +82,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         private Stream m_saveStream;
 
+        protected List<AssetBase> m_assetsToAdd;
         protected InventoryFolderBase m_defaultFolderToSave = null;
 
         private bool m_saveAssets;
@@ -98,7 +99,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 registry,
                 userInfo,
                 invPath,
-                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress), UseAssets, null)
+                new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress),
+            UseAssets, null, new List<AssetBase>())
         {
         }
 
@@ -107,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </summary>
         public InventoryArchiveWriteRequest(
             Guid id, InventoryArchiverModule module, IRegistryCore registry, 
-            UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets, InventoryFolderBase folderBase)
+            UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets, InventoryFolderBase folderBase, List<AssetBase> assetsToAdd)
         {
             m_id = id;
             m_module = module;
@@ -118,6 +120,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             m_assetGatherer = new UuidGatherer(m_registry.RequestModuleInterface<IAssetService>());
             m_saveAssets = UseAssets;
             m_defaultFolderToSave = folderBase;
+            m_assetsToAdd = assetsToAdd;
         }
 
         protected void ReceivedAllAssets(ICollection<UUID> assetsFoundUuids, ICollection<UUID> assetsNotFoundUuids)
@@ -316,6 +319,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
             if (m_saveAssets)
             {
+                foreach (AssetBase asset in m_assetsToAdd)
+                {
+                    m_assetUuids[asset.FullID] = (AssetType)asset.Type;
+                }
                 new AssetsRequest(
                     new AssetsArchiver(m_archiveWriter), m_assetUuids,
                     m_registry.RequestModuleInterface<IAssetService>(), ReceivedAllAssets).Execute();
