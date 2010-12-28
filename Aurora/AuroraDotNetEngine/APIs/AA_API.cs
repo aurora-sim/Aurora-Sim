@@ -185,92 +185,108 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.SetConeOfSilence(radius.value);
         }
 
-        public void aaJoinCombatTeam(LSL_String team)
+        public void aaJoinCombatTeam(LSL_Key uuid, LSL_String team)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAJoinCombatTeam", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
-            if (SP != null)
+            UUID avID;
+            if (UUID.TryParse(uuid, out avID))
             {
-                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
-                if (CP != null)
+                ScenePresence SP = World.GetScenePresence(avID);
+                if (SP != null)
                 {
-                    if (team.m_string == "No Team")
+                    ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                    if (CP != null)
                     {
-                        SP.ControllingClient.SendAlertMessage("You cannot join this team.");
-                        return;
+                        if (team.m_string == "No Team")
+                        {
+                            SP.ControllingClient.SendAlertMessage("You cannot join this team.");
+                            return;
+                        }
+                        CP.Team = team.m_string;
                     }
-                    CP.Team = team.m_string;
                 }
             }
         }
 
-        public void aaLeaveCombat()
+        public void aaLeaveCombat(LSL_Key uuid)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AALeaveCombat", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
-            if (SP != null)
+            UUID avID;
+            if (UUID.TryParse(uuid, out avID))
             {
-                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
-                if (CP != null)
+                ScenePresence SP = World.GetScenePresence(avID);
+                if (SP != null)
                 {
-                    CP.LeaveCombat();
+                    ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                    if (CP != null)
+                    {
+                        CP.LeaveCombat();
+                    }
                 }
             }
         }
 
-        public void aaJoinCombat()
+        public void aaJoinCombat(LSL_Key uuid)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAJoinCombat", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
-            if (SP != null)
+            UUID avID;
+            if (UUID.TryParse(uuid, out avID))
             {
-                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
-                if (CP != null)
+                ScenePresence SP = World.GetScenePresence(avID);
+                if (SP != null)
                 {
-                    CP.JoinCombat();
+                    ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                    if (CP != null)
+                    {
+                        CP.JoinCombat();
+                    }
                 }
             }
         }
 
-        public LSL_Float aaGetHealth()
+        public LSL_Float aaGetHealth(LSL_Key uuid)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetHealth", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
-            if (SP != null)
+            UUID avID;
+            if (UUID.TryParse(uuid, out avID))
             {
-                ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
-                return new LSL_Float(cp.Health);
+                ScenePresence SP = World.GetScenePresence(avID);
+                if (SP != null)
+                {
+                    ICombatPresence cp = SP.RequestModuleInterface<ICombatPresence>();
+                    return new LSL_Float(cp.Health);
+                }
             }
             return new LSL_Float(-1);
         }
 
-        public LSL_String aaGetTeam()
+        public LSL_String aaGetTeam(LSL_Key uuid)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
-            if (SP != null)
+            UUID avID;
+            if (UUID.TryParse(uuid, out avID))
             {
-                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
-                if (CP != null)
+                ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA");
+                ScenePresence SP = World.GetScenePresence(avID);
+                if (SP != null)
                 {
-                    return CP.Team;
+                    ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
+                    if (CP != null)
+                    {
+                        return CP.Team;
+                    }
                 }
             }
             return "No Team";
         }
 
-        public LSL_List aaGetTeamMembers()
+        public LSL_List aaGetTeamMembers(LSL_String team)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeamMembers", m_host, "AA");
-            ScenePresence SP = World.GetScenePresence(m_host.OwnerID);
             List<UUID> Members = new List<UUID>();
-            if (SP != null)
+            ICombatModule module = World.RequestModuleInterface<ICombatModule>();
+            if (module != null)
             {
-                ICombatPresence CP = SP.RequestModuleInterface<ICombatPresence>();
-                if (CP != null)
-                {
-                    Members = CP.GetTeammates();
-                }
+                Members = module.GetTeammates(team);
             }
             LSL_List members = new LSL_Types.list(Members.ToArray());
             return members;
@@ -292,7 +308,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return ScriptBaseClass.NULL_KEY;
         }
 
-        public void aaSayDistance(int channelID, float Distance, string text)
+        public void aaSayDistance(int channelID, LSL_Float Distance, string text)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "AASayDistance", m_host, "AA");
             
@@ -301,11 +317,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 text = text.Substring(0, 1023);
 
             World.SimChat(text,
-                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, false, Distance, UUID.Zero);
+                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, false, (float)Distance.value, UUID.Zero);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
-                wComm.DeliverMessage(ChatTypeEnum.Custom, channelID, m_host.Name, m_host.UUID, text, Distance);
+                wComm.DeliverMessage(ChatTypeEnum.Custom, channelID, m_host.Name, m_host.UUID, text, (float)Distance.value);
         }
 
         public void aaSayTo(string userID, string text)

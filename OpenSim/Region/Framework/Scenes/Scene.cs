@@ -649,8 +649,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 if (transferModule != null)
                                     transferModule.EnableChildAgent(agent, otherRegion);
                             }
-                        }
-                            );
+                        });
                     }
                     catch (NullReferenceException)
                     {

@@ -53,23 +53,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_Types.LSLString aaSerializeXML(LSL_Types.list keys, LSL_Types.list values);
 
-        LSL_String aaGetTeam();
+        LSL_String aaGetTeam(LSL_Types.key id);
 
-        LSL_Float aaGetHealth();
+        LSL_Float aaGetHealth(LSL_Types.key id);
 
-        void aaJoinCombat();
+        void aaJoinCombat(LSL_Types.key id);
 
-        void aaLeaveCombat();
+        void aaLeaveCombat(LSL_Types.key id);
 
-        void aaJoinCombatTeam(LSL_String team);
+        void aaJoinCombatTeam(LSL_Types.key id, LSL_String team);
 
-        LSL_List aaGetTeamMembers();
+        LSL_List aaGetTeamMembers(LSL_String team);
 
         LSL_String aaGetLastOwner();
 
         LSL_String aaGetLastOwner(LSL_String PrimID);
 
-        void aaSayDistance(int channelID, float Distance, string text);
+        void aaSayDistance(int channelID, LSL_Float Distance, string text);
 
         void aaSayTo(string userID, string text);
 
@@ -92,5 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void aaSetCenterOfGravity(LSL_Types.Vector3 position);
 
         void aaRaiseError(string message);
+
+        LSL_Types.LSLString aaGetText();
     }
 }

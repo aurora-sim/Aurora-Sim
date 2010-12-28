@@ -94,34 +94,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_AA_Functions.aaSetConeOfSilence(radius);
         }
 
-        public void aaJoinCombatTeam(LSL_String team)
+        public void aaJoinCombatTeam(LSL_Types.key id, LSL_String team)
         {
-            m_AA_Functions.aaJoinCombatTeam(team);
+            m_AA_Functions.aaJoinCombatTeam(id, team);
         }
 
-        public void aaJoinCombat()
+        public LSL_String aaGetText()
         {
-            m_AA_Functions.aaJoinCombat();
+            return m_AA_Functions.aaGetText();
         }
 
-        public void aaLeaveCombat()
+        public void aaJoinCombat(LSL_Types.key id)
         {
-            m_AA_Functions.aaLeaveCombat();
+            m_AA_Functions.aaJoinCombat(id);
         }
 
-        public LSL_Float aaGetHealth()
+        public void aaLeaveCombat(LSL_Types.key id)
         {
-            return m_AA_Functions.aaGetHealth();
+            m_AA_Functions.aaLeaveCombat(id);
         }
 
-        public LSL_String aaGetTeam()
+        public LSL_Float aaGetHealth(LSL_Types.key id)
         {
-            return m_AA_Functions.aaGetTeam();
+            return m_AA_Functions.aaGetHealth(id);
         }
 
-        public LSL_List aaGetTeamMembers()
+        public LSL_String aaGetTeam(LSL_Types.key id)
         {
-            return m_AA_Functions.aaGetTeamMembers();
+            return m_AA_Functions.aaGetTeam(id);
+        }
+
+        public LSL_List aaGetTeamMembers(LSL_String team)
+        {
+            return m_AA_Functions.aaGetTeamMembers(team);
         }
 
         public LSL_String aaGetLastOwner()
@@ -134,7 +139,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return m_AA_Functions.aaGetLastOwner(PrimID);
         }
 
-        public void aaSayDistance(int channelID, float Distance, string text)
+        public void aaSayDistance(int channelID, LSL_Float Distance, string text)
         {
             m_AA_Functions.aaSayDistance(channelID, Distance, text);
         }

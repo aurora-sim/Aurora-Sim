@@ -873,7 +873,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
-            m_log.Info(LogDiagnostics());
+            m_log.Debug(LogDiagnostics());
         }
 
         public string LogDiagnostics()

@@ -30,5 +30,6 @@ namespace OpenSim.Region.Framework.Interfaces
         void RegisterToAvatarDeathEvents(UUID primID);
 
         void DeregisterFromAvatarDeathEvents(UUID primID);
+        List<UUID> GetTeammates(string Team);
     }
 }

@@ -739,6 +739,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * 100);
                     break;
                 default: //Default is 0.05 seconds for event limiting
+                    if (!NextEventDelay.ContainsKey(functionName))
+                        break; //If it doesn't exist, we don't limit it
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
                     NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * 100);
