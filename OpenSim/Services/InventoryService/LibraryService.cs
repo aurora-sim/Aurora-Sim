@@ -139,6 +139,7 @@ namespace OpenSim.Services.InventoryService
 
         public void LoadLibraries(IRegistryCore registry)
         {
+            LoadPreviouslyLoadedArchives(registry);
             List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
             try
             {
@@ -153,6 +154,51 @@ namespace OpenSim.Services.InventoryService
             }
             catch
             {
+            }
+        }
+
+        private void LoadPreviouslyLoadedArchives(IRegistryCore registry)
+        {
+            IUserAccountService UserAccountService = registry.Get<IUserAccountService>();
+            UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
+            //Make the user account for the default IAR
+            if (uinfo == null)
+            {
+                uinfo = new UserAccount(LibraryOwner);
+                uinfo.FirstName = LibraryOwnerName[0];
+                uinfo.LastName = LibraryOwnerName[1];
+                uinfo.ServiceURLs = new Dictionary<string, object>();
+                uinfo.Created = Util.EnvironmentTickCount();
+                uinfo.UserLevel = 0;
+                uinfo.UserFlags = 0;
+                uinfo.UserTitle = "";
+                UserAccountService.StoreUserAccount(uinfo);
+            }
+            IInventoryService InventoryService = registry.Get<IInventoryService>();
+            InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, UUID.Zero);
+            foreach (InventoryFolderBase folder in col.Folders)
+            {
+                if (folder.Name == "My Inventory") continue; //Pass My Inventory by
+                InventoryFolderImpl f = new InventoryFolderImpl(folder);
+
+                TraverseFolders(f, folder.ID, InventoryService);
+                //This is our loaded folder
+                AddToDefaultInventory(f);
+            }
+        }
+
+        private void TraverseFolders(InventoryFolderImpl folderimp, UUID ID, IInventoryService InventoryService)
+        {
+            InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, ID);
+            foreach (InventoryItemBase item in col.Items)
+            {
+                folderimp.Items.Add(item.ID, item);
+            }
+            foreach (InventoryFolderBase folder in col.Folders)
+            {
+                InventoryFolderImpl childFolder = new InventoryFolderImpl(folder);
+                TraverseFolders(childFolder, folder.ID, InventoryService);
+                folderimp.AddChildFolder(childFolder);
             }
         }
 
