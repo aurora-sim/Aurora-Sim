@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <value>
         /// We only use this to request modules
         /// </value>
-        protected Scene m_scene;
+        protected IRegistryCore m_registry;
 
         /// <value>
         /// ID of this request
@@ -90,12 +90,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// Constructor
         /// </summary>
         public InventoryArchiveWriteRequest(
-            Guid id, InventoryArchiverModule module, Scene scene, 
+            Guid id, InventoryArchiverModule module, IRegistryCore registry, 
             UserAccount userInfo, string invPath, string savePath, bool UseAssets)
             : this(
                 id,
                 module,
-                scene,
+                registry,
                 userInfo,
                 invPath,
                 new GZipStream(new FileStream(savePath, FileMode.Create), CompressionMode.Compress), UseAssets, null)
@@ -106,16 +106,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// Constructor
         /// </summary>
         public InventoryArchiveWriteRequest(
-            Guid id, InventoryArchiverModule module, Scene scene, 
+            Guid id, InventoryArchiverModule module, IRegistryCore registry, 
             UserAccount userInfo, string invPath, Stream saveStream, bool UseAssets, InventoryFolderBase folderBase)
         {
             m_id = id;
             m_module = module;
-            m_scene = scene;
+            m_registry = registry;
             m_userInfo = userInfo;
             m_invPath = invPath;
             m_saveStream = saveStream;
-            m_assetGatherer = new UuidGatherer(m_scene.AssetService);
+            m_assetGatherer = new UuidGatherer(m_registry.Get<IAssetService>());
             m_saveAssets = UseAssets;
             m_defaultFolderToSave = folderBase;
         }
@@ -155,12 +155,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             m_userUuids[inventoryItem.CreatorIdAsUuid] = 1;
 
             InventoryItemBase saveItem = (InventoryItemBase)inventoryItem.Clone();
-            saveItem.CreatorId = OspResolver.MakeOspa(saveItem.CreatorIdAsUuid, m_scene.UserAccountService);
+            saveItem.CreatorId = OspResolver.MakeOspa(saveItem.CreatorIdAsUuid, m_registry.Get<IUserAccountService>());
 
             string serialization = UserInventoryItemSerializer.Serialize(saveItem);
             m_archiveWriter.WriteFile(filename, serialization);
 
-            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType)saveItem.AssetType, m_assetUuids, m_scene);
+            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType)saveItem.AssetType, m_assetUuids, m_registry);
         }
 
         /// <summary>
@@ -179,8 +179,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 m_archiveWriter.WriteDir(path);
             }
 
-            InventoryCollection contents 
-                = m_scene.InventoryService.GetFolderContent(inventoryFolder.Owner, inventoryFolder.ID);
+            InventoryCollection contents
+                = m_registry.Get<IInventoryService>().GetFolderContent(inventoryFolder.Owner, inventoryFolder.ID);
             //List<InventoryFolderImpl> childFolders = inventoryFolder.RequestListOfFolderImpls();
             //List<InventoryItemBase> items = inventoryFolder.RequestListOfItems();
 
@@ -224,7 +224,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 InventoryFolderBase inventoryFolder = null;
                 InventoryItemBase inventoryItem = null;
-                InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(m_userInfo.PrincipalID);
+                InventoryFolderBase rootFolder = m_registry.Get<IInventoryService>().GetRootFolder(m_userInfo.PrincipalID);
 
                 if (m_defaultFolderToSave != null)
                     rootFolder = m_defaultFolderToSave;
@@ -261,8 +261,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 else
                 {
                     m_invPath = m_invPath.Remove(m_invPath.LastIndexOf(InventoryFolderImpl.PATH_DELIMITER));
-                    List<InventoryFolderBase> candidateFolders 
-                        = InventoryArchiveUtils.FindFolderByPath(m_scene.InventoryService, rootFolder, m_invPath);
+                    List<InventoryFolderBase> candidateFolders
+                        = InventoryArchiveUtils.FindFolderByPath(m_registry.Get<IInventoryService>(), rootFolder, m_invPath);
                     if (candidateFolders.Count > 0)
                         inventoryFolder = candidateFolders[0];
                 }
@@ -270,7 +270,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 // The path may point to an item instead
                 if (inventoryFolder == null)
                 {
-                    inventoryItem = InventoryArchiveUtils.FindItemByPath(m_scene.InventoryService, rootFolder, m_invPath);
+                    inventoryItem = InventoryArchiveUtils.FindItemByPath(m_registry.Get<IInventoryService>(), rootFolder, m_invPath);
                     //inventoryItem = m_userInfo.RootFolder.FindItemByPath(m_invPath);
                 }
     
@@ -318,7 +318,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 new AssetsRequest(
                     new AssetsArchiver(m_archiveWriter), m_assetUuids,
-                    m_scene.AssetService, ReceivedAllAssets).Execute();
+                    m_registry.Get<IAssetService>(), ReceivedAllAssets).Execute();
             }
             else
             {
@@ -337,7 +337,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             foreach (UUID creatorId in m_userUuids.Keys)
             {
                 // Record the creator of this item
-                UserAccount creator = m_scene.UserAccountService.GetUserAccount(UUID.Zero, creatorId);
+                UserAccount creator = m_registry.Get<IUserAccountService>().GetUserAccount(UUID.Zero, creatorId);
 
                 if (creator != null)
                 {

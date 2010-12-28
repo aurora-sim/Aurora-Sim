@@ -52,7 +52,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// </summary>
         /// <param name="serialization"></param>
         /// <returns></returns>
-        public static SceneObjectGroup FromOriginalXmlFormat(string serialization, Scene scene)
+        public static SceneObjectGroup FromOriginalXmlFormat(string serialization, IRegistryCore scene)
         {
             return FromOriginalXmlFormat(UUID.Zero, serialization, scene);
         }
@@ -62,7 +62,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// </summary>
         /// <param name="serialization"></param>
         /// <returns></returns>
-        public static SceneObjectGroup FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData, Scene scene)
+        public static SceneObjectGroup FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData, IRegistryCore scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
@@ -83,7 +83,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 sr = new StringReader(parts[0].InnerXml);
                 reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), scene, false);
+                Scene m_sceneForGroup = scene is Scene ? (Scene)scene : null;
+                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), m_sceneForGroup, false);
                 reader.Close();
                 sr.Close();
 
@@ -1378,7 +1379,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return true;
         }
 
-        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, Scene scene)
+        public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, IRegistryCore scene)
         {
             SceneObjectPart obj = new SceneObjectPart(scene);
             obj.IsLoading = true;

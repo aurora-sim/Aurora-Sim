@@ -573,7 +573,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// This scene is set from the constructor and will be right as long as the object does not leave the region, this is to be able to access the Scene while starting up
         /// </summary>
-        private Scene m_initialScene;
+        private IRegistryCore m_initialScene;
         
         /// <summary>
         /// Stores media texture data
@@ -627,7 +627,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 string data = string.Empty;
                 //Get the Components from the ComponentManager
-                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
                 if (manager != null)
                     data = manager.SerializeComponents(this);
                 return data;
@@ -635,7 +635,7 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 //Set the Components for this object
-                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+                IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
                 if (manager != null)
                     manager.DeserializeComponents(this, value);
             }
@@ -648,7 +648,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public OSD GetComponentState(string Name)
         {
-            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).RequestModuleInterface<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
             if (manager != null)
                 return manager.GetComponentState(this, Name);
 
@@ -680,8 +680,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.HasGroupChanged = true;
 
             //Tell the ComponentManager about it
-            Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
-            IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
             if (manager != null)
             {
                 OSD state = (State is OSD) ? (OSD)State : OSD.FromObject(State);
@@ -695,8 +694,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             if (IsLoading)
                 return;
-            Scene scene = (ParentGroup == null ? m_initialScene : ParentGroup.Scene);
-            IComponentManager manager = scene == null ? null : scene.RequestModuleInterface<IComponentManager>();
+            IComponentManager manager = (ParentGroup == null ? m_initialScene : ParentGroup.Scene) == null ? null : (ParentGroup == null ? m_initialScene : ParentGroup.Scene).Get<IComponentManager>();
             if (manager != null)
             {
                 manager.ResetComponentIDsToNewObject(oldID, this);
@@ -714,7 +712,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public SceneObjectPart(Scene scene)
+        public SceneObjectPart(IRegistryCore scene)
         {
             // It's not necessary to persist this
             m_initialScene = scene;
@@ -2429,7 +2427,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
         /// <param name="xmlReader"></param>
         /// <returns></returns>
-        public static SceneObjectPart FromXml(UUID fromUserInventoryItemId, XmlTextReader xmlReader, Scene scene)
+        public static SceneObjectPart FromXml(UUID fromUserInventoryItemId, XmlTextReader xmlReader, IRegistryCore scene)
         {
             SceneObjectPart part = SceneObjectSerializer.Xml2ToSOP(xmlReader, scene);
             part.m_fromUserInventoryItemID = fromUserInventoryItemId;
