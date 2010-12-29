@@ -340,7 +340,11 @@ namespace MurmurVoice
         public Agent Get(string name)
         {
             lock (name_to_agent)
+            {
+                if (!name_to_agent.ContainsKey(name))
+                    return null;
                 return name_to_agent[name];
+            }
         }
 
     }
