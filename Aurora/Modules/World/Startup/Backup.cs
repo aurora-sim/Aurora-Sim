@@ -148,7 +148,6 @@ namespace Aurora.Modules.World.Startup
                     {
                         //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
                         m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
-                        m_backingup = true;
                         Util.FireAndForget(Backup);
                     }
                 }
