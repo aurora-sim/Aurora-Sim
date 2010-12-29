@@ -290,11 +290,14 @@ namespace OpenSim.Services.Connectors
             if (!m_KnownNeighbors.ContainsKey(regionID))
                 return;
 
-            //Send the updates to all known neighbors
-            foreach (GridRegion region in m_KnownNeighbors[regionID])
+            Util.FireAndForget(delegate(object o)
             {
-                m_simService.UpdateAgent(region, childAgentUpdate);
-            }
+                //Send the updates to all known neighbors
+                foreach (GridRegion region in m_KnownNeighbors[regionID])
+                {
+                    m_simService.UpdateAgent(region, childAgentUpdate);
+                }
+            });
         }
 
         public void CloseAllNeighborAgents(UUID AgentID, UUID currentRegionID)
@@ -305,7 +308,10 @@ namespace OpenSim.Services.Connectors
             m_log.DebugFormat(
                 "[NeighborService]: Closing all child agents for " + AgentID + ". Checking {0} regions.",
                 NeighborsOfCurrentRegion.Count);
-            SendCloseChildAgent(AgentID, currentRegionID, NeighborsOfCurrentRegion);
+            Util.FireAndForget(delegate(object o)
+            {
+                SendCloseChildAgent(AgentID, currentRegionID, NeighborsOfCurrentRegion);
+            });
         }
 
         public bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
