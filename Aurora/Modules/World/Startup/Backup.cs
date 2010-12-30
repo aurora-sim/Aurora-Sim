@@ -146,7 +146,7 @@ namespace Aurora.Modules
                         && m_dontPersistBefore != 0))
                     {
                         //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
-                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                         Util.FireAndForget(Backup);
                     }
                 }
@@ -369,7 +369,7 @@ namespace Aurora.Modules
                         backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
                         m_backupTaintedPrims.Clear();
                         //Reset the timer
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
 
                         if (m_secondaryBackupTaintedPrims.Count != 0)
                         {
@@ -397,7 +397,7 @@ namespace Aurora.Modules
                     if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
                     {
                         //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                         lock (m_secondaryBackupTaintedPrims)
                         {
                             if (m_secondaryBackupTaintedPrims.Count != 0)
@@ -411,7 +411,7 @@ namespace Aurora.Modules
                             m_secondaryBackupTaintedPrims.Clear();
                         }
                         //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                     }
                 }
                 int PrimsBackedUp = 0;
