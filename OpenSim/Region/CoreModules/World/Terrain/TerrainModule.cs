@@ -34,7 +34,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
+using OpenSim.Framework.Console;
 using OpenSim.Region.CoreModules.World.Terrain.FileLoaders;
 using OpenSim.Region.CoreModules.World.Terrain.FloodBrushes;
 using OpenSim.Region.CoreModules.World.Terrain.PaintBrushes;
@@ -43,7 +43,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain
 {
-    public class TerrainModule : INonSharedRegionModule, ICommandableModule, ITerrainModule
+    public class TerrainModule : INonSharedRegionModule, ITerrainModule
     {
         #region StandardTerrainEffects enum
 
@@ -71,8 +71,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
-        private readonly Commander m_commander = new Commander("terrain");
-
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
             new Dictionary<StandardTerrainEffects, ITerrainFloodEffect>();
 
@@ -89,15 +87,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private const double MAX_HEIGHT = 250;
         private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
-
-        #region ICommandableModule Members
-
-        public ICommander CommandInterface
-        {
-            get { return m_commander; }
-        }
-
-        #endregion
 
         #region INonSharedRegionModule Members
 
@@ -136,7 +125,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            m_scene.EventManager.OnPluginConsole += EventManager_OnPluginConsole;
             m_scene.EventManager.OnTerrainTick += EventManager_OnTerrainTick;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             InstallInterfaces();
@@ -153,11 +141,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             lock (m_scene)
             {
-                // remove the commands
-                m_scene.UnregisterModuleCommander(m_commander.Name);
                 // remove the event-handlers
                 m_scene.EventManager.OnTerrainTick -= EventManager_OnTerrainTick;
-                m_scene.EventManager.OnPluginConsole -= EventManager_OnPluginConsole;
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 // remove the interface
@@ -663,29 +648,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
-        /// Processes commandline input. Do not call directly.
-        /// </summary>
-        /// <param name="args">Commandline arguments</param>
-        private void EventManager_OnPluginConsole(string[] args)
-        {
-            if (args[0] == "terrain")
-            {
-                if (args.Length == 1)
-                {
-                    m_commander.ProcessConsoleCommand("help", new string[0]);
-                    return;
-                }
-
-                string[] tmpArgs = new string[args.Length - 2];
-                int i;
-                for (i = 2; i < args.Length; i++)
-                    tmpArgs[i - 2] = args[i];
-
-                m_commander.ProcessConsoleCommand(args[1], tmpArgs);
-            }
-        }
-
-        /// <summary>
         /// Installs terrain brush hook to IClientAPI
         /// </summary>
         /// <param name="client"></param>
@@ -734,7 +696,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 if (parameter1 == "revert")
                 {
-                    InterfaceRevertTerrain(null);
+                    InterfaceRevertTerrain("", null);
                 }
                 if (parameter1 == "swap")
                 {
@@ -987,7 +949,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             if (m_scene.Permissions.CanIssueEstateCommand(remoteClient.AgentId, true))
             {
-                InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
+                InterfaceBakeTerrain("", null); //bake terrain does not use the passed in parameter
             }
         }
         
@@ -1018,34 +980,44 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         #region Console Commands
 
-        private void InterfaceLoadFile(Object[] args)
+        private void InterfaceLoadFile(string module, string[] cmd)
         {
-            LoadFromFile((string) args[0]);
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            LoadFromFile(cmd[2]);
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceLoadTileFile(Object[] args)
+        private void InterfaceLoadTileFile(string module, string[] cmd)
         {
-            LoadFromFile((string) args[0],
-                         (int) args[1],
-                         (int) args[2],
-                         (int) args[3],
-                         (int) args[4]);
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            LoadFromFile((string)cmd[2],
+                         int.Parse(cmd[3]),
+                         int.Parse(cmd[4]),
+                         int.Parse(cmd[5]),
+                         int.Parse(cmd[6]));
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceSaveFile(Object[] args)
+        private void InterfaceSaveFile(string module, string[] cmd)
         {
-            SaveToFile((string) args[0]);
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            SaveToFile((string)cmd[2]);
         }
 
-        private void InterfaceBakeTerrain(Object[] args)
+        private void InterfaceBakeTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             UpdateRevertMap();
         }
 
-        private void InterfaceRevertTerrain(Object[] args)
+        private void InterfaceRevertTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
                 for (y = 0; y < m_channel.Height; y++)
@@ -1054,9 +1026,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceFlipTerrain(Object[] args)
+        private void InterfaceFlipTerrain(string module, string[] cmd)
         {
-            String direction = (String)args[0];
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            String direction = cmd[2];
 
             if (direction.ToLower().StartsWith("y"))
             {
@@ -1095,10 +1069,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceRescaleTerrain(Object[] args)
+        private void InterfaceRescaleTerrain(string module, string[] cmd)
         {
-            double desiredMin = (double)args[0];
-            double desiredMax = (double)args[1];
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            double desiredMin = double.Parse(cmd[2]);
+            double desiredMax = double.Parse(cmd[3]);
 
             // determine desired scaling factor
             double desiredRange = desiredMax - desiredMin;
@@ -1107,7 +1083,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (desiredRange == 0d)
             {
                 // delta is zero so flatten at requested height
-                InterfaceFillTerrain(new Object[] { args[1] });
+                InterfaceFillTerrain("", cmd);
             }
             else
             {
@@ -1155,45 +1131,55 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         }
 
-        private void InterfaceElevateTerrain(Object[] args)
+        private void InterfaceElevateTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
                 for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] += (double) args[0];
+                    m_channel[x, y] += double.Parse(cmd[2]);
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceMultiplyTerrain(Object[] args)
+        private void InterfaceMultiplyTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
                 for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] *= (double) args[0];
+                    m_channel[x, y] *= double.Parse(cmd[0]);
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceLowerTerrain(Object[] args)
+        private void InterfaceLowerTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
                 for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] -= (double) args[0];
+                    m_channel[x, y] -= double.Parse(cmd[2]);
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceFillTerrain(Object[] args)
+        private void InterfaceFillTerrain(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             int x, y;
 
             for (x = 0; x < m_channel.Width; x++)
                 for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] = (double) args[0];
+                    m_channel[x, y] = double.Parse(cmd[2]);
             CheckForTerrainUpdates();
         }
 
-        private void InterfaceShowDebugStats(Object[] args)
+        private void InterfaceShowDebugStats(string module, string[] cmd)
         {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
             double max = Double.MinValue;
             double min = double.MaxValue;
             double sum = 0;
@@ -1218,9 +1204,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_log.Info("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);
         }
 
-        private void InterfaceEnableExperimentalBrushes(Object[] args)
+        private void InterfaceEnableExperimentalBrushes(string module, string[] cmd)
         {
-            if ((bool) args[0])
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            if (bool.Parse(cmd[2]))
             {
                 m_painteffects[StandardTerrainEffects.Revert] = new WeatherSphere();
                 m_painteffects[StandardTerrainEffects.Flatten] = new OlsenSphere();
@@ -1232,9 +1220,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        private void InterfaceRunPluginEffect(Object[] args)
+        private void InterfaceRunPluginEffect(string module, string[] cmd)
         {
-            if ((string) args[0] == "list")
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            if (cmd[2] == "list")
             {
                 m_log.Info("List of loaded plugins");
                 foreach (KeyValuePair<string, ITerrainEffect> kvp in m_plugineffects)
@@ -1243,20 +1233,59 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 return;
             }
-            if ((string) args[0] == "reload")
+            if (cmd[2] == "reload")
             {
                 LoadPlugins();
                 return;
             }
-            if (m_plugineffects.ContainsKey((string) args[0]))
+            if (m_plugineffects.ContainsKey(cmd[2]))
             {
-                m_plugineffects[(string) args[0]].RunEffect(m_channel);
+                m_plugineffects[cmd[2]].RunEffect(m_channel);
                 CheckForTerrainUpdates();
             }
             else
             {
                 m_log.Warn("No such plugin effect loaded.");
             }
+        }
+
+        private void InterfaceHelp(string module, string[] cmd)
+        {
+            if (m_scene.ConsoleScene() != m_scene)
+                return;
+            string supportedFileExtensions = "";
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                supportedFileExtensions += " " + loader.Key + " (" + loader.Value + ")";
+
+            m_log.Info("terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
+                                            supportedFileExtensions);
+            m_log.Info("terrain save <FileName> - Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
+                                          supportedFileExtensions);
+            m_log.Info("terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile> - Loads a terrain from a section of a larger file. " +
+                    "\n file width: The width of the file in tiles" +
+                    "\n file height: The height of the file in tiles" +
+                    "\n minimum X tile: The X region coordinate of the first section on the file" +
+                    "\n minimum Y tile: The Y region coordinate of the first section on the file");
+            m_log.Info("terrain fill <value> - Fills the current heightmap with a specified value." +
+                                            "\n value: The numeric value of the height you wish to set your region to.");
+            m_log.Info("terrain elevate <value> - Raises the current heightmap by the specified amount." +
+                                            "\n amount: The amount of height to remove from the terrain in meters.");
+            m_log.Info("terrain lower <value> - Lowers the current heightmap by the specified amount." +
+                                            "\n amount: The amount of height to remove from the terrain in meters.");
+            m_log.Info("terrain multiply <value> - Multiplies the heightmap by the value specified." +
+                                            "\n value: The value to multiply the heightmap by.");
+            m_log.Info("terrain bake - Saves the current terrain into the regions revert map.");
+            m_log.Info("terrain revert - Loads the revert map terrain into the regions heightmap.");
+            m_log.Info("terrain stats - Shows some information about the regions heightmap for debugging purposes.");
+            m_log.Info("terrain newbrushes <enabled> - Enables experimental brushes which replace the standard terrain brushes." +
+                                            "\n enabled: true / false - Enable new brushes");
+            m_log.Info("terrain effect <name> - Runs a specified plugin effect" +
+                                            "\n name: The plugin effect you wish to run, or 'list' to see all plugins");
+            m_log.Info("terrain flip <direction> - Flips the current terrain about the X or Y axis" +
+                                            "\n direction: [x|y] the direction to flip the terrain in");
+            m_log.Info("terrain rescale <min> <max> - Rescales the current terrain to fit between the given min and max heights" +
+                                            "\n Min: min terrain height after rescaling" +
+                                            "\n Max: max terrain height after rescaling");
         }
 
         private void InstallInterfaces()
@@ -1266,95 +1295,55 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
                 supportedFileExtensions += " " + loader.Key + " (" + loader.Value + ")";
 
-            Command loadFromFileCommand =
-                new Command("load", CommandIntentions.COMMAND_HAZARDOUS, InterfaceLoadFile, "Loads a terrain from a specified file.");
-            loadFromFileCommand.AddArgument("filename",
-                                            "The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
-                                            supportedFileExtensions, "String");
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain save",
+                "terrain save <FileName>", "Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
+                                          supportedFileExtensions, InterfaceSaveFile);
+            
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain load",
+                "terrain load <FileName>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
+                                            supportedFileExtensions, InterfaceLoadFile);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain load-tile",
+                "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile>",
+                "Loads a terrain from a section of a larger file. " + 
+            "\n file width: The width of the file in tiles" + 
+            "\n file height: The height of the file in tiles" + 
+            "\n minimum X tile: The X region coordinate of the first section on the file" + 
+            "\n minimum Y tile: The Y region coordinate of the first section on the file", InterfaceLoadTileFile);
 
-            Command saveToFileCommand =
-                new Command("save", CommandIntentions.COMMAND_NON_HAZARDOUS, InterfaceSaveFile, "Saves the current heightmap to a specified file.");
-            saveToFileCommand.AddArgument("filename",
-                                          "The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
-                                          supportedFileExtensions, "String");
-
-            Command loadFromTileCommand =
-                new Command("load-tile", CommandIntentions.COMMAND_HAZARDOUS, InterfaceLoadTileFile, "Loads a terrain from a section of a larger file.");
-            loadFromTileCommand.AddArgument("filename",
-                                            "The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
-                                            supportedFileExtensions, "String");
-            loadFromTileCommand.AddArgument("file width", "The width of the file in tiles", "Integer");
-            loadFromTileCommand.AddArgument("file height", "The height of the file in tiles", "Integer");
-            loadFromTileCommand.AddArgument("minimum X tile", "The X region coordinate of the first section on the file",
-                                            "Integer");
-            loadFromTileCommand.AddArgument("minimum Y tile", "The Y region coordinate of the first section on the file",
-                                            "Integer");
-
-            // Terrain adjustments
-            Command fillRegionCommand =
-                new Command("fill", CommandIntentions.COMMAND_HAZARDOUS, InterfaceFillTerrain, "Fills the current heightmap with a specified value.");
-            fillRegionCommand.AddArgument("value", "The numeric value of the height you wish to set your region to.",
-                                          "Double");
-
-            Command elevateCommand =
-                new Command("elevate", CommandIntentions.COMMAND_HAZARDOUS, InterfaceElevateTerrain, "Raises the current heightmap by the specified amount.");
-            elevateCommand.AddArgument("amount", "The amount of height to add to the terrain in meters.", "Double");
-
-            Command lowerCommand =
-                new Command("lower", CommandIntentions.COMMAND_HAZARDOUS, InterfaceLowerTerrain, "Lowers the current heightmap by the specified amount.");
-            lowerCommand.AddArgument("amount", "The amount of height to remove from the terrain in meters.", "Double");
-
-            Command multiplyCommand =
-                new Command("multiply", CommandIntentions.COMMAND_HAZARDOUS, InterfaceMultiplyTerrain, "Multiplies the heightmap by the value specified.");
-            multiplyCommand.AddArgument("value", "The value to multiply the heightmap by.", "Double");
-
-            Command bakeRegionCommand =
-                new Command("bake", CommandIntentions.COMMAND_HAZARDOUS, InterfaceBakeTerrain, "Saves the current terrain into the regions revert map.");
-            Command revertRegionCommand =
-                new Command("revert", CommandIntentions.COMMAND_HAZARDOUS, InterfaceRevertTerrain, "Loads the revert map terrain into the regions heightmap.");
-
-            Command flipCommand =
-                new Command("flip", CommandIntentions.COMMAND_HAZARDOUS, InterfaceFlipTerrain, "Flips the current terrain about the X or Y axis");
-            flipCommand.AddArgument("direction", "[x|y] the direction to flip the terrain in", "String");
-
-            Command rescaleCommand =
-                new Command("rescale", CommandIntentions.COMMAND_HAZARDOUS, InterfaceRescaleTerrain, "Rescales the current terrain to fit between the given min and max heights");
-            rescaleCommand.AddArgument("min", "min terrain height after rescaling", "Double");
-            rescaleCommand.AddArgument("max", "max terrain height after rescaling", "Double");
-
-
-            // Debug
-            Command showDebugStatsCommand =
-                new Command("stats", CommandIntentions.COMMAND_STATISTICAL, InterfaceShowDebugStats,
-                            "Shows some information about the regions heightmap for debugging purposes.");
-
-            Command experimentalBrushesCommand =
-                new Command("newbrushes", CommandIntentions.COMMAND_HAZARDOUS, InterfaceEnableExperimentalBrushes,
-                            "Enables experimental brushes which replace the standard terrain brushes. WARNING: This is a debug setting and may be removed at any time.");
-            experimentalBrushesCommand.AddArgument("Enabled?", "true / false - Enable new brushes", "Boolean");
-
-            //Plugins
-            Command pluginRunCommand =
-                new Command("effect", CommandIntentions.COMMAND_HAZARDOUS, InterfaceRunPluginEffect, "Runs a specified plugin effect");
-            pluginRunCommand.AddArgument("name", "The plugin effect you wish to run, or 'list' to see all plugins", "String");
-
-            m_commander.RegisterCommand("load", loadFromFileCommand);
-            m_commander.RegisterCommand("load-tile", loadFromTileCommand);
-            m_commander.RegisterCommand("save", saveToFileCommand);
-            m_commander.RegisterCommand("fill", fillRegionCommand);
-            m_commander.RegisterCommand("elevate", elevateCommand);
-            m_commander.RegisterCommand("lower", lowerCommand);
-            m_commander.RegisterCommand("multiply", multiplyCommand);
-            m_commander.RegisterCommand("bake", bakeRegionCommand);
-            m_commander.RegisterCommand("revert", revertRegionCommand);
-            m_commander.RegisterCommand("newbrushes", experimentalBrushesCommand);
-            m_commander.RegisterCommand("stats", showDebugStatsCommand);
-            m_commander.RegisterCommand("effect", pluginRunCommand);
-            m_commander.RegisterCommand("flip", flipCommand);
-            m_commander.RegisterCommand("rescale", rescaleCommand);
-
-            // Add this to our scene so scripts can call these functions
-            m_scene.RegisterModuleCommander(m_commander);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain fill",
+                "terrain fill <value> ", "Fills the current heightmap with a specified value." +
+                                            "\n value: The numeric value of the height you wish to set your region to.", InterfaceFillTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain elevate",
+                "terrain elevate <amount> ", "Raises the current heightmap by the specified amount." +
+                                            "\n amount: The amount of height to remove from the terrain in meters.", InterfaceElevateTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain lower",
+                "terrain lower <amount> ", "Lowers the current heightmap by the specified amount." +
+                                            "\n amount: The amount of height to remove from the terrain in meters.", InterfaceLowerTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain multiply",
+                "terrain multiply <value> ", "Multiplies the heightmap by the value specified." +
+                                            "\n value: The value to multiply the heightmap by.", InterfaceMultiplyTerrain);
+            
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain bake",
+                "terrain bake", "Saves the current terrain into the regions revert map.", InterfaceBakeTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain revert",
+                "terrain revert", "Loads the revert map terrain into the regions heightmap.", InterfaceRevertTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain stats",
+                "terrain stats", "Shows some information about the regions heightmap for debugging purposes.", InterfaceShowDebugStats);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain newbrushes",
+                "terrain newbrushes <enabled> ", "Enables experimental brushes which replace the standard terrain brushes." +
+                                            "\n enabled: true / false - Enable new brushes", InterfaceEnableExperimentalBrushes);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain effect",
+                "terrain effect <name> ", "Runs a specified plugin effect" +
+                                            "\n name: The plugin effect you wish to run, or 'list' to see all plugins", InterfaceRunPluginEffect);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain flip",
+                "terrain flip <direction> ", "Flips the current terrain about the X or Y axis" +
+                                            "\n direction: [x|y] the direction to flip the terrain in", InterfaceFlipTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain rescale",
+                "terrain rescale <min> <max>", "Rescales the current terrain to fit between the given min and max heights" +
+                                            "\n Min: min terrain height after rescaling" +
+                                            "\n Max: max terrain height after rescaling", InterfaceRescaleTerrain);
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", false, "terrain help",
+                "terrain help", "Gives help about the terrain module.", InterfaceHelp);
         }
 
 

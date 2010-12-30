@@ -5,7 +5,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
@@ -14,7 +13,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.OpenRegionSettingsModule
+namespace Aurora.Modules
 {
     /// <summary>
     /// This module sends Aurora-specific settings to the viewer to tell it about different settings for the region

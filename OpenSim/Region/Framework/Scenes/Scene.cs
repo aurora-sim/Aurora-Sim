@@ -3788,11 +3788,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Module Methods
 
         /// <value>
-        /// The module commanders available from this scene
-        /// </value>
-        protected Dictionary<string, ICommander> m_moduleCommanders = new Dictionary<string, ICommander>();
-
-        /// <value>
         /// Registered classes that are capable of creating entities.
         /// </value>
         protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
@@ -3821,53 +3816,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_entityCreators[pcode] = null;
                 }
             }
-        }
-        
-        /// <summary>
-        /// Register a module commander.
-        /// </summary>
-        /// <param name="commander"></param>
-        public void RegisterModuleCommander(ICommander commander)
-        {
-            lock (m_moduleCommanders)
-            {
-                m_moduleCommanders.Add(commander.Name, commander);
-            }
-        }
-
-        /// <summary>
-        /// Unregister a module commander and all its commands
-        /// </summary>
-        /// <param name="name"></param>
-        public void UnregisterModuleCommander(string name)
-        {
-            lock (m_moduleCommanders)
-            {
-                ICommander commander;
-                if (m_moduleCommanders.TryGetValue(name, out commander))
-                    m_moduleCommanders.Remove(name);
-            }
-        }
-
-        /// <summary>
-        /// Get a module commander
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns>The module commander, null if no module commander with that name was found</returns>
-        public ICommander GetCommander(string name)
-        {
-            lock (m_moduleCommanders)
-            {
-                if (m_moduleCommanders.ContainsKey(name))
-                    return m_moduleCommanders[name];
-            }
-
-            return null;
-        }
-
-        public Dictionary<string, ICommander> GetCommanders()
-        {
-            return m_moduleCommanders;
         }
 
         #endregion

@@ -51,12 +51,11 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     [Serializable]
-    public class ScriptEngine : ISharedRegionModule, IScriptModulePlugin, ICommandableModule
+    public class ScriptEngine : ISharedRegionModule, IScriptModulePlugin
     {
         #region Declares
 
@@ -66,8 +65,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             get { return m_Scenes; }
         }
-
-        private readonly Commander m_commander = new Commander("ADNE");
 
         private List<Scene> m_Scenes = new List<Scene>();
 
@@ -137,11 +134,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Poke the threads to make sure they run
                 MaintenanceThread.PokeThreads();
             }
-        }
-
-        public ICommander CommandInterface
-        {
-            get { return m_commander; }
         }
 
         private IXmlRpcRouter m_XmlRpcRouter;

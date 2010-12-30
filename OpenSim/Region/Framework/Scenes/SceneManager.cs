@@ -250,7 +250,6 @@ namespace OpenSim.Region.Framework.Scenes
         private void FinishStartUp()
         {
             m_OpenSimBase.RunStartupCommands();
-            AddPluginCommands();
 
             // For now, start at the 'root' level by default
             if (Scenes.Count == 1)
@@ -1018,16 +1017,6 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
         }
 
-        protected virtual List<string> GetHelpTopics()
-        {
-            List<string> topics = new List<string>();
-            Scene s = CurrentOrFirstScene;
-            if (s != null && s.GetCommanders() != null)
-                topics.AddRange(s.GetCommanders().Keys);
-
-            return topics;
-        }
-
         /// <summary>
         /// Kicks users off the region
         /// </summary>
@@ -1582,55 +1571,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 MainConsole.Instance.Output("[KillUUID]: Usage: kill uuid <UUID>");
             }
-        }
-
-        public void AddPluginCommands()
-        {
-            // If console exists add plugin commands.
-            if (MainConsole.Instance != null)
-            {
-                List<string> topics = GetHelpTopics();
-
-                foreach (string topic in topics)
-                {
-                    MainConsole.Instance.Commands.AddCommand("plugin", false, "help " + topic, "help " + topic, "Get help on plugin command '" + topic + "'", HandleCommanderHelp);
-
-                    MainConsole.Instance.Commands.AddCommand("plugin", false, topic, topic, "Execute subcommand for plugin '" + topic + "'", null);
-
-                    ICommander commander = null;
-
-                    Scene s = CurrentOrFirstScene;
-
-                    if (s != null && s.GetCommanders() != null)
-                    {
-                        if (s.GetCommanders().ContainsKey(topic))
-                            commander = s.GetCommanders()[topic];
-                    }
-
-                    if (commander == null)
-                        continue;
-
-                    foreach (string command in commander.Commands.Keys)
-                    {
-                        MainConsole.Instance.Commands.AddCommand(topic, false, topic + " " + command, topic + " " + commander.Commands[command].ShortHelp(), String.Empty, HandleCommanderCommand);
-                    }
-                }
-            }
-        }
-
-        private void HandleCommanderCommand(string module, string[] cmd)
-        {
-            SendCommandToPluginModules(cmd);
-        }
-
-        private void HandleCommanderHelp(string module, string[] cmd)
-        {
-            // Only safe for the interactive console, since it won't
-            // let us come here unless both scene and commander exist
-            //
-            ICommander moduleCommander = CurrentOrFirstScene.GetCommander(cmd[1]);
-            if (moduleCommander != null)
-                MainConsole.Instance.Output(moduleCommander.Help);
         }
 
         #endregion
