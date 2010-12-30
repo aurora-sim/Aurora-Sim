@@ -218,7 +218,7 @@ namespace OpenSim.Region.CoreModules
                             // for when deleting the object from it
                             // Why????? If there is a good reason, put this back
                             //m_scene.ForceSceneObjectBackup(g);
-                            m_scene.DeleteSceneObject(g, false, true);
+                            m_scene.DeleteSceneObject(g, true);
                         }
                     }
                     return true;

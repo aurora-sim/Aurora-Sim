@@ -964,7 +964,7 @@ public QueueItemStruct QIS;
                     {
                         if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
                             QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
-                                QIS.ID.part.ParentGroup, false, true);
+                                QIS.ID.part.ParentGroup, true);
                     }
                     else if (ex is ScriptDeleteException)
                     {

@@ -88,13 +88,12 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="sog"></param>
-        /// <param name="isLocalCall"></param>
         /// <returns></returns>
-        bool CreateObject(GridRegion destination, ISceneObject sog, bool isLocalCall);
+        bool CreateObject(GridRegion destination, ISceneObject sog);
 
         /// <summary>
         /// Create an object from the user's inventory in the destination region. 
-        /// This message is used primarily by clients.
+        /// This message is used primarily by clients for attachments.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="userID"></param>

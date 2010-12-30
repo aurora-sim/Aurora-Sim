@@ -311,7 +311,7 @@ namespace Aurora.Modules
                         if (group.IsAttachment)
                             continue;
 
-                        m_scene.DeleteSceneObject(group, true, true);
+                        m_scene.DeleteSceneObject(group, true);
                         ObjectsToDelete.Add(group.RootPart);
                     }
                 }

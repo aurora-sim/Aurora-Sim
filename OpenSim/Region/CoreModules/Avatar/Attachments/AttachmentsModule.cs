@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     catch
                     {
                         // Make sure the object doesn't stick around and bail
-                        m_scene.DeleteSceneObject(objatt, false, true);
+                        m_scene.DeleteSceneObject(objatt, true);
                         return null;
                     }
 
@@ -503,7 +503,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                         UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
                         
-                        m_scene.DeleteSceneObject(group, false, true);
+                        m_scene.DeleteSceneObject(group, true);
                         return;
                     }
                 }

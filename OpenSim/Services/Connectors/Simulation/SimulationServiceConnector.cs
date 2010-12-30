@@ -590,10 +590,10 @@ namespace OpenSim.Services.Connectors.Simulation
             return "/object/";
         }
 
-        public bool CreateObject(GridRegion destination, ISceneObject sog, bool isLocalCall)
+        public bool CreateObject(GridRegion destination, ISceneObject sog)
         {
             // Try local first
-            if (m_localBackend.CreateObject(destination, sog, isLocalCall))
+            if (m_localBackend.CreateObject(destination, sog))
             {
                 //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                 return true;
@@ -611,7 +611,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 ObjectCreateRequest.ContentType = "application/json";
                 ObjectCreateRequest.Timeout = 10000;
 
-                OSDMap args = new OSDMap(2);
+                OSDMap args = new OSDMap(7);
                 args["sog"] = OSD.FromString(sog.ToXml2());
                 args["extra"] = OSD.FromString(sog.ExtraToXmlString());
                 string state = sog.GetStateSnapshot();

@@ -1568,7 +1568,7 @@ namespace OpenSim.Region.Framework.Scenes
 //            {
             proxyObjectGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate); 
                 remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
-                m_scene.DeleteSceneObject(proxyObjectGroup, false, true);
+                m_scene.DeleteSceneObject(proxyObjectGroup, true);
 //            }
 //            else
 //            {
@@ -2938,7 +2938,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //
                 foreach (SceneObjectGroup grp in m_attachments)
                 {
-                    m_scene.DeleteSceneObject(grp, false, true);
+                    m_scene.DeleteSceneObject(grp, true);
                 }
                 m_attachments.Clear();
             }
@@ -3430,7 +3430,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //
                 foreach (SceneObjectGroup grp in m_attachments)
                 {
-                    m_scene.DeleteSceneObject(grp, false, true);
+                    m_scene.DeleteSceneObject(grp, true);
                 }
                 m_attachments.Clear();
             }

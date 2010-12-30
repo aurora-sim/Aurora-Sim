@@ -68,7 +68,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     return s;
             }
             // ? weird. should not happen
-            return m_sceneList[0];
+            return null;
         }
 
         public ISimulationService GetInnerService()
@@ -231,7 +231,7 @@ namespace OpenSim.Services.Connectors.Simulation
          * Object-related communications
          */
 
-        public bool CreateObject(GridRegion destination, ISceneObject sog, bool isLocalCall)
+        public bool CreateObject(GridRegion destination, ISceneObject sog)
         {
             if (destination == null)
                 return false;
@@ -241,18 +241,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
                     //m_log.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
-                    if (isLocalCall)
-                    {
-                        // We need to make a local copy of the object
-                        ISceneObject sogClone = sog.CloneForNewScene(s);
-                        sogClone.SetState(sog.GetStateSnapshot(), s);
-                        return s.IncomingCreateObject(sogClone);
-                    }
-                    else
-                    {
-                        // Use the object as it came through the wire
-                        return s.IncomingCreateObject(sog);
-                    }
+                    return s.IncomingCreateObject(sog);
                 }
             }
             return false;

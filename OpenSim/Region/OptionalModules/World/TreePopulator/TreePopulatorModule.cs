@@ -399,7 +399,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                         SceneObjectPart selectedTree = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
 
 
-                        m_scene.DeleteSceneObject(selectedTree.ParentGroup, false, true);
+                        m_scene.DeleteSceneObject(selectedTree.ParentGroup, true);
                         m_scene.ForEachClient(delegate(IClientAPI controller)
                         {
                             controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
@@ -753,7 +753,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                             if (Util.RandomClass.NextDouble() < killLikelyhood)
                             {
 
-                                m_scene.DeleteSceneObject(selectedTree.ParentGroup, false, true);
+                                m_scene.DeleteSceneObject(selectedTree.ParentGroup, true);
                                 copse.m_trees.Remove(selectedTree.ParentGroup.UUID);
 
                                 m_scene.ForEachClient(delegate(IClientAPI controller)

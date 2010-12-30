@@ -182,7 +182,7 @@ namespace OpenSim.Server.Handlers.Simulation
             try
             {
                 // This is the meaning of POST object
-                result = m_SimulationService.CreateObject(destination, sog, false);
+                result = m_SimulationService.CreateObject(destination, sog);
             }
             catch (Exception e)
             {

@@ -481,7 +481,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }*/
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
-                CrossAttachmentsIntoNewRegion(finalDestination, sp, true);
+                CrossAttachmentsIntoNewRegion(finalDestination, sp);
 
                 // Well, this is it. The agent is over there.
 
@@ -1112,7 +1112,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agent.SendOtherAgentsAvatarDataToMe();
                 agent.SendOtherAgentsAppearanceToMe();
 
-                CrossAttachmentsIntoNewRegion(neighbourRegion, agent, true);
+                CrossAttachmentsIntoNewRegion(neighbourRegion, agent);
             }
 
             //m_log.Debug("AFTER CROSS");
@@ -1204,7 +1204,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agent.SendOtherAgentsAvatarDataToMe();
                 agent.SendOtherAgentsAppearanceToMe();
 
-                CrossAttachmentsIntoNewRegion(neighbourRegion, agent, true);
+                CrossAttachmentsIntoNewRegion(neighbourRegion, agent);
             }
             return agent;
         }
@@ -1603,7 +1603,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
         /// <param name="grp">the scene object that we're crossing</param>
-        public void Cross(SceneObjectGroup grp, Vector3 attemptedPosition, bool silent)
+        public void Cross(SceneObjectGroup grp, Vector3 attemptedPosition)
         {
             if (grp == null)
                 return;
@@ -1618,7 +1618,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // We remove the object here
                 try
                 {
-                    scene.DeleteSceneObject(grp, false, true);
+                    scene.DeleteSceneObject(grp, true);
                 }
                 catch (Exception)
                 {
@@ -1804,7 +1804,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             uint x = 0, y = 0;
             Utils.LongToUInts(newRegionHandle, out x, out y);
             GridRegion destination = scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-            if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, silent))
+            if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
                 grp.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
@@ -1833,7 +1833,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // We remove the object here
                     try
                     {
-                        grp.Scene.DeleteSceneObject(grp, false, false);
+                        grp.Scene.DeleteSceneObject(grp, false);
                     }
                     catch (Exception e)
                     {
@@ -1870,9 +1870,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <param name="grp">Scene Object Group that we're crossing</param>
         /// <returns>
         /// true if the crossing itself was successful, false on failure
-        /// FIMXE: we still return true if the crossing object was not successfully deleted from the originating region
         /// </returns>
-        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, bool silent)
+        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp)
         {
             bool successYN = false;
             grp.RootPart.ClearUpdateScheduleOnce();
@@ -1891,7 +1890,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 if (m_aScene.SimulationService != null)
-                    successYN = m_aScene.SimulationService.CreateObject(destination, grp, true);
+                    successYN = m_aScene.SimulationService.CreateObject(destination, grp);
 
                 if (successYN)
                 {
@@ -1905,7 +1904,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 part.SitTargetAvatar.Clear();
                             }
                         }
-                        grp.Scene.DeleteSceneObject(grp, silent, false);
+                        return grp.Scene.DeleteSceneObject(grp, false);
                     }
                     catch (Exception e)
                     {
@@ -1935,7 +1934,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return successYN;
         }
 
-        protected bool CrossAttachmentsIntoNewRegion(GridRegion destination, ScenePresence sp, bool silent)
+        protected bool CrossAttachmentsIntoNewRegion(GridRegion destination, ScenePresence sp)
         {
             List<SceneObjectGroup> m_attachments = sp.Attachments;
             lock (m_attachments)
