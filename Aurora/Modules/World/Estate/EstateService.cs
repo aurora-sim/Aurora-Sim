@@ -346,6 +346,12 @@ namespace Aurora.Modules
                 return false; //NO!
             }
 
+            if (scene.LoginsDisabled)
+            {
+                reason = "Logins Disabled";
+                return false;
+            }
+
             //Check how long its been since the last TP
             if (m_enabledBlockTeleportSeconds && Sp != null && !Sp.IsChildAgent)
             {
@@ -382,6 +388,21 @@ namespace Aurora.Modules
                         reason = "You have been banned from this region.";
                         return false;
                     }
+                }
+                //Make sure they exist in the grid right now
+                IPresenceService presence = scene.RequestModuleInterface<IPresenceService>();
+                if (presence == null)
+                {
+                    reason = String.Format("Failed to verify user presence in the grid for {0} {1} in region {2}. Presence service does not exist.", ACD.firstname, ACD.lastname, scene.RegionInfo.RegionName);
+                    return false;
+                }
+
+                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(ACD.SessionID);
+
+                if (pinfo == null)
+                {
+                    reason = String.Format("Failed to verify user presence in the grid for {0} {1}, access denied to region {2}.", ACD.firstname, ACD.lastname, scene.RegionInfo.RegionName);
+                    return false;
                 }
             }
 

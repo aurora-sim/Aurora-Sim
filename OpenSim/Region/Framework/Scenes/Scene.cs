@@ -2717,9 +2717,14 @@ namespace OpenSim.Region.Framework.Scenes
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
                     agent.AgentID, agent.circuitcode, teleportFlags);
 
-            if (LoginsDisabled)
+            try
             {
-                reason = "Logins Disabled";
+                if (!AuthorizeUser(agent, out reason))
+                    return false;
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[CONNECTION BEGIN]: Exception authorizing user {0}", e.Message);
                 return false;
             }
 
@@ -2730,15 +2735,10 @@ namespace OpenSim.Region.Framework.Scenes
                 // We have a zombie from a crashed session. 
                 // Or the same user is trying to be root twice here, won't work.
                 // Kill it.
-                m_log.DebugFormat("[SCENE]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
+                m_log.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
                 sp.ControllingClient.Close();
                 sp = null;
             }
-
-            //Can we teleport into this region?
-            // Note: this takes care of practically every check possible, banned from estate, banned from parcels, parcel landing locations, etc
-            if (!Permissions.CanTeleport(agent.AgentID, agent.startpos, agent, out agent.startpos, out reason))
-                return false;
 
             if (!agent.child)
                 m_log.InfoFormat(
@@ -2752,28 +2752,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (sp == null) // We don't have an [child] agent here already
             {
-                try
-                {
-                    if (!VerifyUserPresence(agent, out reason))
-                        return false;
-                }
-                catch (Exception e)
-                {
-                    m_log.DebugFormat("[CONNECTION BEGIN]: Exception verifying presence {0}", e.Message);
-                    return false;
-                }
-
-                try
-                {
-                    if (!AuthorizeUser(agent, out reason))
-                        return false;
-                }
-                catch (Exception e)
-                {
-                    m_log.DebugFormat("[CONNECTION BEGIN]: Exception authorizing user {0}", e.Message);
-                    return false;
-                }
-
                 if (module != null)
                     module.AddCapsHandler(agent.AgentID);
             }
@@ -2781,9 +2759,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (sp.IsChildAgent)
                 {
-                    //m_log.DebugFormat(
-                    //    "[SCENE]: Adjusting known seeds for existing agent {0} in {1}",
-                    //    agent.AgentID, RegionInfo.RegionName);
+                    m_log.DebugFormat(
+                        "[Scene]: Adjusting known seeds for existing agent {0} in {1}",
+                        agent.AgentID, RegionInfo.RegionName);
 
                     sp.AdjustKnownSeeds();
                 }
@@ -2863,35 +2841,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Verifies that the user has a presence on the Grid
-        /// </summary>
-        /// <param name="agent">Circuit Data of the Agent we're verifying</param>
-        /// <param name="reason">Outputs the reason for the false response on this string</param>
-        /// <returns>True if the user has a session on the grid.  False if it does not.  False will 
-        /// also return a reason.</returns>
-        public virtual bool VerifyUserPresence(AgentCircuitData agent, out string reason)
-        {
-            reason = String.Empty;
-
-            IPresenceService presence = RequestModuleInterface<IPresenceService>();
-            if (presence == null)
-            {
-                reason = String.Format("Failed to verify user presence in the grid for {0} {1} in region {2}. Presence service does not exist.", agent.firstname, agent.lastname, RegionInfo.RegionName);
-                return false;
-            }
-
-            OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(agent.SessionID);
-            
-            if (pinfo == null)
-            {
-                reason = String.Format("Failed to verify user presence in the grid for {0} {1}, access denied to region {2}.", agent.firstname, agent.lastname, RegionInfo.RegionName);
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Verify if the user can connect to this region.  Checks the banlist and ensures that the region is set for public access
         /// </summary>
         /// <param name="agent">The circuit data for the agent</param>
@@ -2915,6 +2864,11 @@ namespace OpenSim.Region.Framework.Scenes
                     return false;
                 }
             }
+
+            //Can we teleport into this region?
+            // Note: this takes care of practically every check possible, banned from estate, banned from parcels, parcel landing locations, etc
+            if (!Permissions.CanTeleport(agent.AgentID, agent.startpos, agent, out agent.startpos, out reason))
+                return false;
 
             return true;
         }
