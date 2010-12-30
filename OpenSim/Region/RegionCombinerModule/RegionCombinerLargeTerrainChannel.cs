@@ -185,6 +185,11 @@ public class RegionCombinerLargeLandChannel : ILandChannel
             RootRegionLandChannel.DisableObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
         }
 
+        public void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<OpenSim.Region.Framework.Scenes.SceneObjectGroup> deleteGroups)
+        {
+            RootRegionLandChannel.AddReturns(agentID, objectName, position, reason, deleteGroups);
+        }
+
         #endregion
     }
 }

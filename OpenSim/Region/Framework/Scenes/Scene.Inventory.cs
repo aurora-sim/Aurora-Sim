@@ -1740,7 +1740,7 @@ namespace OpenSim.Region.Framework.Scenes
                     permissionToTake = true;
                     permissionToDelete = true;
 
-                    AddReturns(deleteGroups[0].OwnerID, deleteGroups[0].Name, deleteGroups.Count, deleteGroups[0].AbsolutePosition, "parcel owner return", deleteGroups);
+                    LandChannel.AddReturns(deleteGroups[0].OwnerID, deleteGroups[0].Name, deleteGroups[0].AbsolutePosition, "Parcel Owner Return", deleteGroups);
                 }
                 else // Auto return passes through here with null agent
                 {

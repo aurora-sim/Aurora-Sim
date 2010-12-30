@@ -1193,26 +1193,6 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        /// <summary>
-        /// Check all Scene Objects to see whether they should be returned by the parcel auto return
-        /// </summary>
-        protected internal void CheckParcelReturns()
-        {
-            ForEachSOG(delegate(SceneObjectGroup sog)
-            {
-                // Don't abort the whole thing if one entity happens to give us an exception.
-                try
-                {
-                    sog.CheckParcelReturn();
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat(
-                        "[INNER SCENE]: Failed to update {0}, {1} - {2}", sog.Name, sog.UUID, e);
-                }
-            });
-        }
-
         #region Linking and Delinking
 
         /// <summary>

@@ -204,7 +204,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool m_scriptListens_atRotTarget;
         private bool m_scriptListens_notAtRotTarget;
-        private bool m_isReturned = false;
 
         internal Dictionary<UUID, string> m_savedScriptState;
 
@@ -1745,39 +1744,6 @@ namespace OpenSim.Region.Framework.Scenes
             // if the object isn't allowed, we will not be able
             // to reset its position to the last known good pos
             m_lastSignificantPosition = AbsolutePosition;
-        }
-
-        /// <summary>
-        /// Check to see if we should be returned because of parcel auto returning
-        /// </summary>
-        /// <returns></returns>
-        public bool CheckParcelReturn()
-        {
-            if (!m_scene.ShuttingDown && !IsDeleted && !IsAttachment && !m_isReturned) // if shutting down then there will be nothing to handle the return so leave till next restart
-            {
-                ILandObject parcel = m_scene.LandChannel.GetLandObject(
-                        m_rootPart.GroupPosition.X, m_rootPart.GroupPosition.Y);
-
-                if (parcel != null && parcel.LandData != null &&
-                        parcel.LandData.OtherCleanTime != 0)
-                {
-                    if (parcel.LandData.OwnerID != OwnerID &&
-                            (parcel.LandData.GroupID != GroupID ||
-                            parcel.LandData.GroupID != OwnerID || //Allow group deeded prims!
-                            parcel.LandData.OwnerID != GroupID || //Allow group deeded prims!
-                            parcel.LandData.GroupID == UUID.Zero))
-                    {
-                        if ((DateTime.UtcNow - RootPart.Rezzed).TotalMinutes >
-                                parcel.LandData.OtherCleanTime)
-                        {
-                            m_scene.AddReturn(OwnerID, Name, AbsolutePosition, "parcel auto return", this);
-                            m_isReturned = true;
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
         }
 
         /// <summary>

@@ -366,6 +366,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             return new Vector3(x, y, m_scene.GetNormalizedGroundHeight(x, y));
         }
 
+        public void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<SceneObjectGroup> deleteGroups)
+        {
+            if (m_landManagementModule != null)
+                m_landManagementModule.AddReturns(agentID, objectName, position, reason, deleteGroups);
+        }
+
         #endregion
     }
 }

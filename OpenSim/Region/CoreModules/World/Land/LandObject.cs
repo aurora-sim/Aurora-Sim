@@ -1097,7 +1097,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (m_scene.Permissions.CanReturnObjects(this, remote_client.AgentId, ol))
                 {
                     //The return system will take care of the returned objects
-                    m_scene.AddReturns(ol[0].OwnerID, ol[0].Name, ol.Count, ol[0].AbsolutePosition, "parcel owner return", ol);
+                    m_scene.LandChannel.AddReturns(ol[0].OwnerID, ol[0].Name, ol[0].AbsolutePosition, "parcel owner return", ol);
                     //m_scene.returnObjects(ol.ToArray(), remote_client.AgentId);
                 }
             }

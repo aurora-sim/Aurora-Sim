@@ -90,6 +90,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         private List<LandData> m_TaintedLandData = new List<LandData>();
         private int m_minutesBeforeTimer = 60;
         private System.Timers.Timer m_UpdateDirectoryTimer = new System.Timers.Timer();
+        private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
+        protected Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
 
         #region INonSharedRegionModule Members
 
@@ -141,6 +143,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             m_scene.EventManager.OnLandObjectAdded += AddLandObject;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
+            m_scene.EventManager.OnFrame += EventManager_OnFrame;
 
             lock (m_scene)
             {
@@ -343,9 +346,134 @@ namespace OpenSim.Region.CoreModules.World.Land
             get { return "LandManagementModule"; }
         }
 
-        public bool IsSharedModule
+        #endregion
+
+        #region Heartbeat Tick, Parcel Returns, Clean temp objects
+
+        void EventManager_OnFrame()
         {
-            get { return false; }
+            if (m_scene.Frame % m_update_land == 0)
+            {
+                //It's time, check the parts we have
+                CheckParcelReturns();
+            }
+        }
+
+        /// <summary>
+        /// Return object to avatar Message
+        /// </summary>
+        /// <param name="agentID">Avatar Unique Id</param>
+        /// <param name="objectName">Name of object returned</param>
+        /// <param name="location">Location of object returned</param>
+        /// <param name="reason">Reasion for object return</param>
+        /// <param name="groups">The objects to return</param>
+        public void AddReturns(UUID agentID, string objectName, Vector3 location, string reason, List<SceneObjectGroup> Groups)
+        {
+            lock (m_returns)
+            {
+                if (m_returns.ContainsKey(agentID))
+                {
+                    ReturnInfo info = m_returns[agentID];
+                    info.count += Groups.Count;
+                    info.Groups.AddRange(Groups);
+                    m_returns[agentID] = info;
+                }
+                else
+                {
+                    ReturnInfo info = new ReturnInfo();
+                    info.count = Groups.Count;
+                    info.objectName = objectName;
+                    info.location = location;
+                    info.reason = reason;
+                    info.Groups = Groups;
+                    m_returns[agentID] = info;
+                }
+            }
+        }
+
+        /// <summary>
+        /// This deals with sending the return IMs as well as actually returning the objects
+        /// </summary>
+        protected internal void CheckParcelReturns()
+        {
+            // Go through all updates
+            m_scene.ForEachSOG(delegate(SceneObjectGroup sog)
+            {
+                // Don't abort the whole thing if one entity happens to give us an exception.
+                try
+                {
+                    if (!sog.IsDeleted && !sog.RootPart.IsAttachment)
+                    {
+                        ILandObject parcel = m_scene.LandChannel.GetLandObject(
+                                sog.RootPart.GroupPosition.X, sog.RootPart.GroupPosition.Y);
+
+                        if (parcel != null && parcel.LandData != null &&
+                                parcel.LandData.OtherCleanTime != 0)
+                        {
+                            if (parcel.LandData.OwnerID != sog.OwnerID &&
+                                    (parcel.LandData.GroupID != sog.GroupID ||
+                                    parcel.LandData.GroupID != sog.OwnerID || //Allow group deeded prims!
+                                    parcel.LandData.OwnerID != sog.GroupID || //Allow group deeded prims!
+                                    parcel.LandData.GroupID == UUID.Zero))
+                            {
+                                if ((DateTime.UtcNow - sog.RootPart.Rezzed).TotalMinutes >
+                                        parcel.LandData.OtherCleanTime)
+                                {
+                                    AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<SceneObjectGroup>() { sog });
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat(
+                        "[LandManagement]: Failed to check for parcel returns for {0}, {1} - {2}", sog.Name, sog.UUID, e);
+                }
+            });
+            lock (m_returns)
+            {
+                foreach (KeyValuePair<UUID, ReturnInfo> ret in m_returns)
+                {
+                    UUID transaction = UUID.Random();
+
+                    GridInstantMessage msg = new GridInstantMessage();
+                    msg.fromAgentID = new Guid(UUID.Zero.ToString()); // From server
+                    msg.toAgentID = new Guid(ret.Key.ToString());
+                    msg.imSessionID = new Guid(transaction.ToString());
+                    msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
+                    msg.fromAgentName = "Server";
+                    msg.dialog = (byte)19; // Object msg
+                    msg.fromGroup = false;
+                    msg.offline = (byte)1;
+                    msg.ParentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
+                    msg.Position = Vector3.Zero;
+                    msg.RegionID = m_scene.RegionInfo.RegionID.Guid;
+                    msg.binaryBucket = new byte[0];
+                    if (ret.Value.count > 1)
+                        msg.message = string.Format("Your {0} objects were returned from {1} in region {2} due to {3}", ret.Value.count, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+                    else
+                        msg.message = string.Format("Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+
+                    IMessageTransferModule tr = m_scene.RequestModuleInterface<IMessageTransferModule>();
+                    if (tr != null)
+                        tr.SendInstantMessage(msg);
+
+                    if (ret.Value.Groups.Count > 1)
+                        m_log.InfoFormat("[LandManagement]: Returning {0} objects due to parcel auto return.", ret.Value.Groups.Count);
+                    else
+                        m_log.Info("[LandManagement]: Returning 1 object due to parcel auto return.");
+
+                    IAsyncSceneObjectGroupDeleter async = m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
+                    if (async != null)
+                    {
+                        async.DeleteToInventory(
+                                DeRezAction.Return, ret.Value.Groups[0].RootPart.OwnerID, ret.Value.Groups, ret.Value.Groups[0].RootPart.OwnerID,
+                                true, true);
+                    }
+                }
+                m_returns.Clear();
+            }
         }
 
         #endregion

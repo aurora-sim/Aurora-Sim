@@ -84,5 +84,15 @@ namespace OpenSim.Region.Framework.Interfaces
         ILandObject GetNearestAllowedParcel(UUID avatarId, float x, float y);
         Vector3 GetNearestAllowedPosition(ScenePresence avatar);
         Vector3 GetParcelCenterAtGround(ILandObject parcel);
+
+        /// <summary>
+        /// Add the given return to the list of returns to send to the client
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="objectName"></param>
+        /// <param name="position"></param>
+        /// <param name="reason"></param>
+        /// <param name="deleteGroups">Groups to delete</param>
+        void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<SceneObjectGroup> deleteGroups);
     }
 }
