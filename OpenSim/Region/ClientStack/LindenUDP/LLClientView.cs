@@ -456,7 +456,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_assetService = m_scene.RequestModuleInterface<IAssetService>();
             m_GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
             m_imageManager = new LLImageManager(this, m_assetService, Scene.RequestModuleInterface<IJ2KDecoder>());
-            m_channelVersion = Util.StringToBytes256(scene.GetSimulatorVersion());
+            ISimulationBase simulationBase = m_scene.RequestModuleInterface<ISimulationBase>();
+            if (simulationBase != null)
+                m_channelVersion = Util.StringToBytes256(simulationBase.Version);
             m_agentId = agentId;
             m_sessionId = sessionId;
             m_secureSessionId = sessionInfo.SecureSessionID;

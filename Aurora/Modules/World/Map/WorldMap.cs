@@ -40,6 +40,7 @@ using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
@@ -117,13 +118,13 @@ namespace Aurora.Modules
 
                 m_scene.RegisterModuleInterface<IWorldMapModule>(this);
 
-                m_scene.AddCommand(
-                    this, "update map",
+                MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                    "update map",
                     "update map",
                     "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
 
-                m_scene.AddCommand(
-                    this, "export-map",
+                MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                    "export-map",
                     "export-map [<path>]",
                     "Save an image of the world map", HandleExportWorldMapConsoleCommand);
 

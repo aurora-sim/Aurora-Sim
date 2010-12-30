@@ -34,6 +34,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;
@@ -1248,14 +1249,16 @@ namespace OpenSim.Region.CoreModules.World.Estate
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
-            m_scene.AddCommand(this, "set terrain texture",
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                               "set terrain texture",
                                "set terrain texture <number> <uuid> [<x>] [<y>]",
                                "Sets the terrain <number> to <uuid>, if <x> or <y> are specified, it will only " +
                                "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +
                                " that coordinate.",
                                consoleSetTerrainTexture);
 
-            m_scene.AddCommand(this, "set terrain heights",
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                               "set terrain heights",
                                "set terrain heights <corner> <min> <max> [<x>] [<y>]",
                                "Sets the terrain texture heights on corner #<corner> to <min>/<max>, if <x> or <y> are specified, it will only " +
                                "set it on regions with a matching coordinate. Specify -1 in <x> or <y> to wildcard" +

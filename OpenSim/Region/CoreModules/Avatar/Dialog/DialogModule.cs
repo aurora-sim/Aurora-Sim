@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -69,13 +70,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             m_scene = scene;
             m_scene.RegisterModuleInterface<IDialogModule>(this);
 
-            m_scene.AddCommand(
-                this, "alert", "alert <first> <last> <message>",
+            MainConsole.Instance.Commands.AddCommand(
+                    this.Name, false, "alert", "alert <first> <last> <message>",
                 "Send an alert to a user",
                 HandleAlertConsoleCommand);
 
-            m_scene.AddCommand(
-                this, "alert general", "alert [general] <message>",
+            MainConsole.Instance.Commands.AddCommand(
+                    this.Name, false, "alert general", "alert [general] <message>",
                 "Send an alert to everyone",
                 "If keyword 'general' is omitted, then <message> must be surrounded by quotation marks.",
                 HandleAlertConsoleCommand);

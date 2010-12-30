@@ -231,8 +231,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Register the console commands
             if (FirstStartup)
             {
-                scene.AddCommand(this, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
-                scene.AddCommand(this, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
+                MainConsole.Instance.Commands.AddCommand(this.Name, true, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
+                MainConsole.Instance.Commands.AddCommand(this.Name, true, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
 
                 //Fire this once to make sure that the APIs are found later...
                 GetAPIs();

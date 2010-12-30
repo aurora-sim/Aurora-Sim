@@ -34,6 +34,7 @@ using NDesk.Options;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -84,8 +85,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 scene.RegisterModuleInterface<IInventoryArchiverModule>(this);
                 OnInventoryArchiveSaved += SaveInvConsoleCommandCompleted;
                 
-                scene.AddCommand(
-                    this, "load iar",
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "load iar",
                     "load iar <first> <last> <inventory path> <password> [<IAR path>]",
                     //"load iar [--merge] <first> <last> <inventory path> <password> [<IAR path>]",
                     "Load user inventory archive (IAR).",
@@ -98,9 +99,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     + "<IAR path> is the filesystem path or URI from which to load the IAR."
                     + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
                     HandleLoadInvConsoleCommand);
-                
-                scene.AddCommand(
-                    this, "save iar",
+
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "save iar",
                     "save iar <first> <last> <inventory path> <password> [<IAR path>]",
                     "Save user inventory archive (IAR).", 
                     "<first> is the user's first name." + Environment.NewLine
@@ -110,8 +111,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     + string.Format("  If this is not given then the filename {0} in the current directory is used", DEFAULT_INV_BACKUP_FILENAME),
                     HandleSaveInvConsoleCommand);
 
-                scene.AddCommand(
-                    this, "save iar withoutassets",
+                MainConsole.Instance.Commands.AddCommand(
+                    this.Name, true, "save iar withoutassets",
                     "save iar withoutassets <first> <last> <inventory path> <password> [<IAR path>]",
                     "Save user inventory archive (IAR) withOUT assets. This version will NOT load on another grid/standalone other than the current grid/standalone!",
                     "<first> is the user's first name." + Environment.NewLine

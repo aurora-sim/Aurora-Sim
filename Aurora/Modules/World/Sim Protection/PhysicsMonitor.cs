@@ -85,9 +85,12 @@ namespace Aurora.Modules
         {
             m_scenes.Add(scene);
             scene.RegisterModuleInterface<IPhysicsMonitor>(this);
-            scene.AddCommand(this, "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand);
-            scene.AddCommand(this, "physics profiler", "physics profiler", "physics profiler <region>", PhysicsProfilerCommand);
-            scene.AddCommand(this, "physics current stats", "physics current stats", "physics current stats <region> NOTE: these are not calculated and are in milliseconds per unknown time", CurrentPhysicsStatsCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "physics profiler", "physics profiler", "physics profiler <region>", PhysicsProfilerCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "physics current stats", "physics current stats", "physics current stats <region> NOTE: these are not calculated and are in milliseconds per unknown time", CurrentPhysicsStatsCommand);
         }
 
         public void RemoveRegion(Scene scene)

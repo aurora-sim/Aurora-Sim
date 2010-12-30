@@ -85,11 +85,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_clientServers; }
         }
 
-        public string GetSimulatorVersion()
-        {
-            return m_OpenSimBase.Version;
-        }
-
         public List<Scene> Scenes
         {
             get { return m_localScenes; }

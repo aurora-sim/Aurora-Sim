@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -75,11 +76,11 @@ namespace Aurora.Modules
             m_scene.RegisterModuleInterface<IDialogModule>(this);
             m_scene.EventManager.OnPermissionError += SendAlertToUser;
 
-            m_scene.AddCommand(
-                this, "alert", "alert <first> <last> <message>", "Send an alert to a user", HandleAlertConsoleCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, false, 
+                "alert", "alert <first> <last> <message>", "Send an alert to a user", HandleAlertConsoleCommand);
 
-            m_scene.AddCommand(
-                this, "alert general", "alert general <message>", "Send an alert to everyone", HandleAlertConsoleCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                 "alert general", "alert general <message>", "Send an alert to everyone", HandleAlertConsoleCommand);
         }
 
         public void RemoveRegion(Scene scene)

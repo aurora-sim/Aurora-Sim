@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -122,20 +123,25 @@ namespace OpenSim.Region.CoreModules
                 }
 
                 // This one puts an entry in the main help screen
-                m_scene.AddCommand(this, String.Empty, "wind", "Usage: wind <plugin> <param> [value] - Get or Update Wind paramaters", null);
+                MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                    String.Empty, "wind", "Usage: wind <plugin> <param> [value] - Get or Update Wind paramaters", null);
 
                 // This one enables the ability to type just the base command without any parameters
-                m_scene.AddCommand(this, "wind", "", "", HandleConsoleCommand);
+                MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                    "wind", "", "", HandleConsoleCommand);
 
                 // Get a list of the parameters for each plugin
                 foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
                 {
-                    m_scene.AddCommand(this, String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
-                    m_scene.AddCommand(this, String.Format("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
+                    MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                        String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
+                    MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                        String.Format("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
 
                     foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams())
                     {
-                        m_scene.AddCommand(this, String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
+                        MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                            String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
                     }
                 }
 

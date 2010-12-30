@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -200,17 +201,20 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnTakeLandmark += TakeLandmark;
             m_scene.Permissions.OnSetHomePoint += SetHomePoint;
 
-            m_scene.AddCommand(this, "bypass permissions",
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                "bypass permissions",
                     "bypass permissions <true / false>",
                     "Bypass permission checks",
                     HandleBypassPermissions);
 
-            m_scene.AddCommand(this, "force permissions",
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                "force permissions",
                     "force permissions <true / false>",
                     "Force permissions on or off",
                     HandleForcePermissions);
 
-            m_scene.AddCommand(this, "debug permissions",
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                "debug permissions",
                     "debug permissions <true / false>",
                     "Enable permissions debugging",
                     HandleDebugPermissions);

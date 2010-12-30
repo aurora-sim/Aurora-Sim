@@ -1348,8 +1348,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // kiddie)
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.High,"osGetSimulatorVersion", m_host, "OSSL");
-            
-            return World.GetSimulatorVersion();
+
+            ISimulationBase simulationBase = World.RequestModuleInterface<ISimulationBase>();
+            if (simulationBase != null)
+                return simulationBase.Version;
+            return "";
         }
 
         public Hashtable osParseJSON(string JSON)

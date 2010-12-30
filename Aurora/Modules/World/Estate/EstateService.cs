@@ -71,8 +71,10 @@ namespace Aurora.Modules
             scene.Permissions.OnTeleport += AllowTeleport;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
-            scene.AddCommand(this, "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
-            scene.AddCommand(this, "ban user", "ban user", "Bans a user from the current estate", BanUser);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "ban user", "ban user", "Bans a user from the current estate", BanUser);
         }
 
         public void RemoveRegion(Scene scene)

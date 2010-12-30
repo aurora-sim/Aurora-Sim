@@ -26,9 +26,10 @@
  */
 
 using System.Collections.Generic;
+using System.Net;
+using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
-using Nini.Config;
 
 namespace OpenSim.Framework
 {
@@ -45,7 +46,7 @@ namespace OpenSim.Framework
         Return = 9
     };
 
-    public interface IScene
+    public interface IScene : IRegistryCore
     {
         RegionInfo RegionInfo { get; }
         
@@ -56,20 +57,10 @@ namespace OpenSim.Framework
 
         void Restart();
 
-        string GetSimulatorVersion();
-
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
-
-        T RequestModuleInterface<T>();
-        T[] RequestModuleInterfaces<T>();
-
-        void RegisterModuleInterface<M>(M mod);
-        void StackModuleInterface<M>(M mod);
-
-        void AddCommand(object module, string command, string shorthelp, string longhelp, CommandDelegate callback);
 
         ISceneObject DeserializeObject(string representation);
 
-        bool CheckClient(UUID agentID, System.Net.IPEndPoint ep);
+        bool CheckClient(UUID agentID, IPEndPoint ep);
     }
 }

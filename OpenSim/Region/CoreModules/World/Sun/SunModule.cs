@@ -32,6 +32,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
@@ -296,14 +297,13 @@ namespace OpenSim.Region.CoreModules
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
-            // This one puts an entry in the main help screen
-            m_scene.AddCommand(this, String.Empty, "sun", "Usage: sun [param] [value] - Get or Update Sun module paramater", null);
-
             // This one enables the ability to type just "sun" without any parameters
-            m_scene.AddCommand(this, "sun", "", "", HandleSunConsoleCommand);
+            MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                 "sun", "sun", "Usage: sun [param] [value] - Get or Update Sun module paramater", HandleSunConsoleCommand);
             foreach (KeyValuePair<string, string> kvp in GetParamList())
             {
-                m_scene.AddCommand(this, String.Format("sun {0}", kvp.Key), String.Format("{0} - {1}", kvp.Key, kvp.Value), "", HandleSunConsoleCommand);
+                MainConsole.Instance.Commands.AddCommand(this.Name, false,
+                    String.Format("sun {0}", kvp.Key), String.Format("{0} - {1}", kvp.Key, kvp.Value), "", HandleSunConsoleCommand);
             }
 
 

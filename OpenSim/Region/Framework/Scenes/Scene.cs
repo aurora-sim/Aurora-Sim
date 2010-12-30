@@ -243,11 +243,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneGraph.Entities; }
         }
 
-        public string GetSimulatorVersion()
-        {
-            return m_sceneManager.GetSimulatorVersion();
-        }
-
         public IConfigSource Config
         {
             get { return m_config; }
@@ -3605,48 +3600,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_entityCreators[pcode] = null;
                 }
             }
-        }
-
-        #endregion
-
-        #region Console Commander
-
-        public void AddCommand(object mod, string command, string shorthelp, string longhelp, CommandDelegate callback)
-        {
-            AddCommand(mod, command, shorthelp, longhelp, string.Empty, callback);
-        }
-
-        /// <summary>
-        /// Call this from a region module to add a command to the OpenSim console.
-        /// </summary>
-        /// <param name="mod"></param>
-        /// <param name="command"></param>
-        /// <param name="shorthelp"></param>
-        /// <param name="longhelp"></param>
-        /// <param name="descriptivehelp"></param>
-        /// <param name="callback"></param>
-        public void AddCommand(
-            object mod, string command, string shorthelp, string longhelp, string descriptivehelp, CommandDelegate callback)
-        {
-            if (MainConsole.Instance == null)
-                return;
-
-            string modulename = String.Empty;
-            bool shared = false;
-
-            if (mod != null)
-            {
-                if (mod is IRegionModuleBase)
-                {
-                    IRegionModuleBase module = (IRegionModuleBase)mod;
-                    modulename = module.Name;
-                    shared = mod is ISharedRegionModule;
-                }
-                else throw new Exception("AddCommand module parameter must be IRegionModule or IRegionModuleBase");
-            }
-
-            MainConsole.Instance.Commands.AddCommand(
-                modulename, shared, command, shorthelp, longhelp, descriptivehelp, callback);
         }
 
         #endregion
