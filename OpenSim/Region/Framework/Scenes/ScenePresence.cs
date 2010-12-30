@@ -2987,10 +2987,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraCenter = cAgentData.Center + offset;
 
             m_avHeight = cAgentData.Size.Z;
-            //SetHeight(cAgentData.AVHeight);
 
             if ((cAgentData.Throttles != null) && cAgentData.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
+
+            SceneViewer.Reprioritize();
 
             //cAgentData.AVHeight;
             m_rootRegionHandle = cAgentData.RegionHandle;
