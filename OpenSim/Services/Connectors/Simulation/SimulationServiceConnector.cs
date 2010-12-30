@@ -694,8 +694,104 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool CreateObject(GridRegion destination, UUID userID, UUID itemID)
         {
-            // TODO, not that urgent
-            return false;
+            // Try local first
+            if (m_localBackend.CreateObject(destination, userID, itemID))
+            {
+                //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
+                return true;
+            }
+
+            bool successful = false;
+            // else do the remote thing
+            if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
+            {
+                string uri
+                    = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + ObjectPath() + itemID + "/";
+                //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
+
+                WebRequest ObjectCreateRequest = WebRequest.Create(uri);
+                ObjectCreateRequest.Method = "PUT";
+                ObjectCreateRequest.ContentType = "application/json";
+                ObjectCreateRequest.Timeout = 10000;
+
+                OSDMap args = new OSDMap(6);
+                args["userID"] = OSD.FromUUID(userID);
+                args["itemID"] = OSD.FromUUID(itemID);
+                // Add the input general arguments
+                args["destination_x"] = OSD.FromString(destination.RegionLocX.ToString());
+                args["destination_y"] = OSD.FromString(destination.RegionLocY.ToString());
+                args["destination_name"] = OSD.FromString(destination.RegionName);
+                args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
+
+                string strBuffer = "";
+                byte[] buffer = new byte[1];
+                try
+                {
+                    strBuffer = OSDParser.SerializeJsonString(args);
+                    Encoding str = Util.UTF8;
+                    buffer = str.GetBytes(strBuffer);
+
+                }
+                catch (Exception e)
+                {
+                    m_log.WarnFormat("[REMOTE SIMULATION CONNECTOR]: Exception thrown on serialization of CreateObject: {0}", e.Message);
+                    // ignore. buffer will be empty, caller should check.
+                }
+
+                Stream os = null;
+                try
+                { // send the Post
+                    ObjectCreateRequest.ContentLength = buffer.Length;   //Count bytes to send
+                    os = ObjectCreateRequest.GetRequestStream();
+                    os.Write(buffer, 0, strBuffer.Length);         //Send it
+                    m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: Posted CreateObject request to remote sim {0}", uri);
+                }
+                catch (WebException ex)
+                {
+                    m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: Bad send on CreateObject {0}", ex.Message);
+                    return false;
+                }
+                finally
+                {
+                    if (os != null)
+                        os.Close();
+                }
+
+                // Let's wait for the response
+                //m_log.Info("[REMOTE SIMULATION CONNECTOR]: Waiting for a reply after DoCreateChildAgentCall");
+
+                StreamReader sr = null;
+                string resp = "";
+                try
+                {
+                    WebResponse webResponse = ObjectCreateRequest.GetResponse();
+                    if (webResponse == null)
+                    {
+                        m_log.Info("[REMOTE SIMULATION CONNECTOR]: Null reply on CreateObject post");
+                        return false;
+                    }
+
+                    sr = new StreamReader(webResponse.GetResponseStream());
+                    //reply = sr.ReadToEnd().Trim();
+                    resp = sr.ReadToEnd().Trim();
+                    //m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: DoCreateChildAgentCall reply was {0} ", reply);
+
+                }
+                catch (WebException ex)
+                {
+                    m_log.InfoFormat("[REMOTE SIMULATION CONNECTOR]: exception on reply of CreateObject {0}", ex.Message);
+                    return false;
+                }
+                finally
+                {
+                    if (sr != null)
+                        sr.Close();
+                }
+
+                if(bool.TryParse(resp, out successful))
+                    return successful;
+            }
+            return successful;
         }
 
         public void RemoveScene(IScene scene)

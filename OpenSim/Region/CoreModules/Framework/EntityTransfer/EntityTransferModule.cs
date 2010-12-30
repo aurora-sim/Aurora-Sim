@@ -1811,6 +1811,57 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
+        /// <summary>
+        /// Move the given scene object into a new region
+        /// </summary>
+        /// <param name="newRegionHandle"></param>
+        /// <param name="grp">Scene Object Group that we're crossing</param>
+        /// <returns>
+        /// true if the crossing itself was successful, false on failure
+        /// </returns>
+        protected bool CrossAttachmentIntoNewRegion(GridRegion destination, SceneObjectGroup grp, UUID userID, UUID ItemID)
+        {
+            bool successYN = false;
+            grp.RootPart.ClearUpdateScheduleOnce();
+            if (destination != null)
+            {
+                if (m_aScene.SimulationService != null)
+                    successYN = m_aScene.SimulationService.CreateObject(destination, userID, ItemID);
+
+                if (successYN)
+                {
+                    // We remove the object here
+                    try
+                    {
+                        grp.Scene.DeleteSceneObject(grp, false, false);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[ENTITY TRANSFER MODULE]: Exception deleting the old object left behind on a border crossing for {0}, {1}",
+                            grp, e);
+                    }
+                }
+                else
+                {
+                    if (!grp.IsDeleted)
+                    {
+                        if (grp.RootPart.PhysActor != null)
+                        {
+                            grp.RootPart.PhysActor.CrossingFailure();
+                        }
+                    }
+
+                    m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: Prim crossing failed for {0}", grp);
+                }
+            }
+            else
+            {
+                m_log.Error("[ENTITY TRANSFER MODULE]: destination was unexpectedly null in Scene.CrossPrimGroupIntoNewRegion()");
+            }
+
+            return successYN;
+        }
 
         /// <summary>
         /// Move the given scene object into a new region
@@ -1903,8 +1954,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         gobj.AbsolutePosition = gobj.RootPart.AttachedPos;
                         gobj.RootPart.IsAttachment = false;
                         //gobj.RootPart.LastOwnerID = gobj.GetFromAssetID();
-                        //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending attachment {0} to region {1}", gobj.UUID, destination.RegionName);
-                        CrossPrimGroupIntoNewRegion(destination, gobj, silent);
+                        m_log.InfoFormat("[ENTITY TRANSFER MODULE]: Sending attachment {0} to region {1}", gobj.UUID, destination.RegionName);
+                        CrossAttachmentIntoNewRegion(destination, gobj, sp.UUID, gobj.RootPart.FromItemID);
                     }
                 }
                 m_attachments.Clear();

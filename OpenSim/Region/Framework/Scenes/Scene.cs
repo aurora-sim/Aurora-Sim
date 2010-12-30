@@ -142,7 +142,6 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_physics = 1; //Trigger the physics update
         private int m_update_presences = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
-        private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
         private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
         private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
 
@@ -957,9 +956,6 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
 
-                        if (m_scene.m_frame % m_scene.m_update_terrain == 0)
-                            m_scene.UpdateTerrain();
-
                         if (m_scene.m_frame % m_scene.m_update_land == 0)
                             m_scene.UpdateLand();
 
@@ -1241,14 +1237,6 @@ namespace OpenSim.Region.Framework.Scenes
                     EventManager.TriggerParcelPrimCountUpdate();
                 }
             }
-        }
-
-        /// <summary>
-        /// Update the terrain if it needs to be updated.
-        /// </summary>
-        private void UpdateTerrain()
-        {
-            EventManager.TriggerTerrainTick();
         }
 
         /// <summary>
@@ -1924,62 +1912,10 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Called when objects or attachments cross the border, or teleport, between regions.
-        /// </summary>
-        /// <param name="sog"></param>
-        /// <returns></returns>
-        public bool IncomingCreateObject(ISceneObject sog, ISceneObject oldsog)
-        {
-            //m_log.Debug(" >>> IncomingCreateObject(sog) <<< " + ((SceneObjectGroup)sog).AbsolutePosition + " deleted? " + ((SceneObjectGroup)sog).IsDeleted);
-            SceneObjectGroup newObject;
-            try
-            {
-                newObject = (SceneObjectGroup)sog;
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[SCENE]: Problem casting object: {0}", e.Message);
-                return false;
-            }
-            if (!AddSceneObject(newObject))
-            {
-                m_log.DebugFormat("[SCENE]: Problem adding scene object {0} in {1} ", sog.UUID, RegionInfo.RegionName);
-                return false;
-            }
-
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, DefaultScriptEngine, 1, UUID.Zero);
-            newObject.RootPart.ParentGroup.ResumeScripts();
-
-            // Do this as late as possible so that listeners have full access to the incoming object
-            EventManager.TriggerOnIncomingSceneObject(newObject);
-
-            TriggerChangedTeleport(newObject);
-
-            if (newObject.RootPart.SitTargetAvatar.Count != 0)
-            {
-                lock (newObject.RootPart.SitTargetAvatar)
-                {
-                    foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
-                    {
-                        ScenePresence SP = GetScenePresence(avID);
-                        while (SP == null)
-                        {
-                            Thread.Sleep(20);
-                        }
-                        SP.AbsolutePosition = newObject.AbsolutePosition;
-                        SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Attachment rezzing
         /// </summary>
         /// <param name="userID">Agent Unique ID</param>
-        /// <param name="itemID">Object ID</param>
+        /// <param name="itemID">Inventory Item ID to rez</param>
         /// <returns>False</returns>
         public virtual bool IncomingCreateObject(UUID userID, UUID itemID)
         {

@@ -87,7 +87,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private const double MAX_HEIGHT = 250;
         private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
-
+        private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
+        
         #region INonSharedRegionModule Members
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            m_scene.EventManager.OnTerrainTick += EventManager_OnTerrainTick;
+            m_scene.EventManager.OnFrame += EventManager_OnFrame;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             InstallInterfaces();
 
@@ -142,7 +143,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             lock (m_scene)
             {
                 // remove the event-handlers
-                m_scene.EventManager.OnTerrainTick -= EventManager_OnTerrainTick;
+                m_scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 // remove the interface
@@ -637,13 +638,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <summary>
         /// Performs updates to the region periodically, synchronising physics and other heightmap aware sections
         /// </summary>
-        private void EventManager_OnTerrainTick()
+        private void EventManager_OnFrame()
         {
-            if (m_tainted)
+            if ((m_scene.Frame & m_update_terrain) == 0)
             {
-                m_tainted = false;
-                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
-                SaveTerrain();
+                //It's time
+                if (m_tainted)
+                {
+                    m_tainted = false;
+                    m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
+                    SaveTerrain();
+                }
             }
         }
 

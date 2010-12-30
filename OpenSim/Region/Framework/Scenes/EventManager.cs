@@ -53,10 +53,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event ClientMovement OnClientMovement;
 
-        public delegate void OnTerrainTickDelegate();
-
-        public event OnTerrainTickDelegate OnTerrainTick;
-
         public delegate void OnBackupDelegate(ISimulationDataStore datastore, bool forceBackup);
 
         public event OnBackupDelegate OnBackup;
@@ -776,27 +772,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerMoneyTransfer failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerTerrainTick()
-        {
-            OnTerrainTickDelegate handlerTerrainTick = OnTerrainTick;
-            if (handlerTerrainTick != null)
-            {
-                foreach (OnTerrainTickDelegate d in handlerTerrainTick.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerTerrainTick failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 string reason;
                 if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
                 {
-                    m_scene.AddSceneObject(grp);
+                    m_scene.SceneGraph.AddPrimToScene(grp);
                     grp.AbsolutePosition = obj.Position;
                 }
                 else
