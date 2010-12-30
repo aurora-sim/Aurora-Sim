@@ -17,16 +17,6 @@ namespace OpenSim.Services.Connectors.Simulation
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<Scene> m_sceneList = new List<Scene>();
-        private IEntityTransferModule m_AgentTransferModule;
-        protected IEntityTransferModule AgentTransferModule
-        {
-            get
-            {
-                if (m_AgentTransferModule == null)
-                    m_AgentTransferModule = m_sceneList[0].RequestModuleInterface<IEntityTransferModule>();
-                return m_AgentTransferModule;
-            }
-        }
 
         #region IService Members
 
@@ -200,13 +190,16 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 if (s.RegionInfo.RegionID == origin)
                 {
-                    //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
-                    AgentTransferModule.AgentArrivedAtDestination(id);
-                    return true;
-                    //                    return s.IncomingReleaseAgent(id);
+                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    if (AgentTransferModule != null)
+                    {
+                        //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
+                        AgentTransferModule.AgentArrivedAtDestination(id);
+                        return true;
+                    }
                 }
             }
-            //m_log.Debug("[LOCAL COMMS]: region not found in SendReleaseAgent " + origin);
+            m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in ReleaseAgent " + origin);
             return false;
         }
 
@@ -223,7 +216,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     return s.IncomingCloseAgent(id);
                 }
             }
-            //m_log.Debug("[LOCAL COMMS]: region not found in SendCloseAgent");
+            m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in CloseAgent");
             return false;
         }
 
@@ -244,6 +237,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     return s.IncomingCreateObject(sog);
                 }
             }
+            m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in CreateObject");
             return false;
         }
 

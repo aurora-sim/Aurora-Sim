@@ -420,6 +420,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_log.DebugFormat(
                     "[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, sp.UUID);
 
+                //Set the agent in transit before we send the event
+                SetInTransit(sp.UUID);
+
                 if (eq != null)
                 {
                     eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
@@ -439,9 +442,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // that the client contacted the destination before we send the attachments and close things here.
 
                 //OpenSim sucks at callbacks, disable it for now
-
-                SetInTransit(sp.UUID);
-                
                 if (!WaitForCallback(sp.UUID))
                 {
                     //Make sure the client hasn't TPed back in this time.
@@ -1541,11 +1541,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return currentNeighbours.FindAll(delegate(ulong handle) { return !previousNeighbours.Contains(handle); });
         }
 
-        //        private List<ulong> CommonNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)
-        //        {
-        //            return currentNeighbours.FindAll(delegate(ulong handle) { return previousNeighbours.Contains(handle); });
-        //        }
-
         private List<ulong> OldNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)
         {
             return previousNeighbours.FindAll(delegate(ulong handle) { return !currentNeighbours.Contains(handle); });
@@ -1569,19 +1564,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return handles;
         }
 
-//        private void Dump(string msg, List<ulong> handles)
-//        {
-//            m_log.InfoFormat("-------------- HANDLE DUMP ({0}) ---------", msg);
-//            foreach (ulong handle in handles)
-//            {
-//                uint x, y;
-//                Utils.LongToUInts(handle, out x, out y);
-//                x = x / Constants.RegionSize;
-//                y = y / Constants.RegionSize;
-//                m_log.InfoFormat("({0}, {1})", x, y);
-//            }
-//        }
-
         #endregion
 
         #region Agent Arrived
@@ -1595,6 +1577,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         #endregion
 
         #region Object Transfers
+
         /// <summary>
         /// Move the given scene object into a new region depending on which region its absolute position has moved
         /// into.

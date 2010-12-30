@@ -314,7 +314,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 HttpWebRequest ChildUpdateRequest = (HttpWebRequest)WebRequest.Create(uri);
                 ChildUpdateRequest.Method = "PUT";
                 ChildUpdateRequest.ContentType = "application/json";
-                ChildUpdateRequest.Timeout = 30000;
+                ChildUpdateRequest.Timeout = 5000;
                 //ChildUpdateRequest.KeepAlive = false;
 
                 // Fill it in
@@ -380,6 +380,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     webResponse = ChildUpdateRequest.GetResponse();
                     if (webResponse == null)
                     {
+                        FailedSends.Add(uri, DateTime.Now.AddMinutes(TimeBeforeNextCheck));
                         m_log.Info("[REMOTE SIMULATION CONNECTOR]: Null reply on ChilAgentUpdate post");
                     }
 
@@ -806,6 +807,8 @@ namespace OpenSim.Services.Connectors.Simulation
 
         #endregion Objects
 
+        #region IService Member
+
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
@@ -834,5 +837,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
                 registry.RegisterModuleInterface<ISimulationService>(this);
         }
+
+        #endregion
     }
 }
