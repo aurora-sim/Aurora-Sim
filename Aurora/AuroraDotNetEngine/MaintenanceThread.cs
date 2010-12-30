@@ -506,7 +506,7 @@ public QueueItemStruct QIS;
         }
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
-        {
+            {
             QueueItemStruct QIS;
 
             if (ID == null || ID.EventsProcData.IgnoreNew)
@@ -525,42 +525,57 @@ public QueueItemStruct QIS;
             QIS.CurrentlyAt = null;
 
             lock (ID.EventsProcData)
-            {
+                {
                 ID.EventsProcDataLocked = true;
 
                 if (ID.EventsProcData.EventsQueue.Count > 100)
-                {
+                    {
                     ID.EventsProcDataLocked = false;
                     return;
-                }
+                    }
 
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
                 lock (ScriptIDs)
-                {
-                    if (!ScriptIDs.Contains(ID))
                     {
+                    /*
+                                        if (!ScriptIDs.Contains(ID))
+                                        {
+                                        lock (SleepingScriptIDs)
+                                            {
+                                            if (!SleepingScriptIDs.Contains(ID))
+                                                {
+                                                lock (ScriptInExec)
+                                                    {
+                                                    if (!ScriptInExec.Contains(ID))
+                     */
+                    if (!ID.InEventsProcData)
+                        {
                         ID.EventsProcData.State = (int)ScriptEventsState.Idle;
                         ID.EventsProcData.thread = null;
                         ScriptIDs.AddLast(ID);
                         NScriptIDs++;
                         ID.InEventsProcData = true;
+                        }
+                    /*                                }
+                                                }
+                                            }
+                     */
                     }
                 }
-            }
             ID.EventsProcDataLocked = false;
 
             lock (WorkersLock)
-            {
-                if (WorkersLock.nWorkers < MaxScriptThreads)
                 {
+                if (WorkersLock.nWorkers < MaxScriptThreads)
+                    {
                     Scriptthreadpool.QueueEvent(loop, 2);
+                    }
                 }
             }
-        }
 
 
         public void AddEventSchQIS(QueueItemStruct QIS)
-        {
+            {
             ScriptData ID;
 
             ID = QIS.ID;
@@ -574,38 +589,55 @@ public QueueItemStruct QIS;
             QIS.CurrentlyAt = null;
 
             lock (ID.EventsProcData)
-            {
+                {
                 ID.EventsProcDataLocked = true;
 
                 if (ID.EventsProcData.EventsQueue.Count > 100)
-                {
+                    {
                     ID.EventsProcDataLocked = false;
                     return;
-                }
+                    }
 
                 ID.EventsProcData.EventsQueue.Enqueue(QIS);
                 lock (ScriptIDs)
-                {
-                    if (!ScriptIDs.Contains(ID))
                     {
+                    /*
+                                        if (!ScriptIDs.Contains(ID))
+                                        {
+                                        lock (SleepingScriptIDs)
+                                            {
+                                            if (!SleepingScriptIDs.Contains(ID))
+                                                {
+                                                lock (ScriptInExec)
+                                                    {
+                                                    if (!ScriptInExec.Contains(ID))
+                     */
+                    if (!ID.InEventsProcData)
+                        {
                         ID.EventsProcData.State = (int)ScriptEventsState.Idle;
                         ID.EventsProcData.thread = null;
                         ScriptIDs.AddLast(ID);
                         NScriptIDs++;
                         ID.InEventsProcData = true;
+                        }
+                    /*
+                                                   }
+                                                }
+                                            }
+                                        }
+                     */
                     }
                 }
-            }
             ID.EventsProcDataLocked = false;
 
             lock (WorkersLock)
-            {
-                if (WorkersLock.nWorkers < MaxScriptThreads)
                 {
+                if (WorkersLock.nWorkers < MaxScriptThreads)
+                    {
                     Scriptthreadpool.QueueEvent(loop, 2);
+                    }
                 }
             }
-        }
 
         public bool loop()
         {
