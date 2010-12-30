@@ -195,7 +195,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (entity is SceneObjectGroup) //Only objects
                 {
                     //Check to see if they are in range
-                    if (Util.DistanceLessThan(m_presence.CameraPosition, entity.AbsolutePosition, m_presence.DrawDistance))
+                    if (CheckForCulling((SceneObjectGroup)entity))
                     {
                         //Check if we already have sent them an update
                         if (!m_objectsInView.Contains(entity.UUID))
@@ -219,15 +219,48 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool CheckForCulling(SceneObjectGroup grp)
         {
-            if (m_presence.Scene.CheckForObjectCulling)
+            if (m_presence.Scene.CheckForObjectCulling && m_presence.DrawDistance > 0)
             {
+                CheckCullingAgainstPosition(m_presence.AbsolutePosition, grp.AbsolutePosition, grp.GroupScale());
+                
                 //Check for part position against the av and the camera position
-                if ((!Util.DistanceLessThan(m_presence.AbsolutePosition, grp.AbsolutePosition, m_presence.DrawDistance) &&
-                    !Util.DistanceLessThan(m_presence.CameraPosition, grp.AbsolutePosition, m_presence.DrawDistance)))
-                    if (m_presence.DrawDistance != 0)
-                        return false;
+                if (CheckCullingAgainstPosition(m_presence.AbsolutePosition, grp.AbsolutePosition, grp.GroupScale()) ||
+                    CheckCullingAgainstPosition(m_presence.CameraPosition, grp.AbsolutePosition, grp.GroupScale()))
+                {
+                    return true;
+                }
             }
-            return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Checks to see whether the client should be able to see the given object from the given position
+        /// </summary>
+        /// <param name="checkPosition"></param>
+        /// <param name="groupPosition"></param>
+        /// <param name="groupSize"></param>
+        /// <returns></returns>
+        private bool CheckCullingAgainstPosition(Vector3 checkPosition, Vector3 groupPosition, Vector3 groupSize)
+        {
+            //First just check against the position
+            if (Util.DistanceLessThan(checkPosition, groupPosition, m_presence.DrawDistance))
+                return true;
+            //Next, start checking aginst the group corners
+            //NOTE: This really should be checking as a sphere.. but that hasn't been done yet
+            if (checkPosition.X - (groupPosition.X + groupSize.X) < m_presence.DrawDistance)
+                return true;
+            if (checkPosition.X - (groupPosition.X - groupSize.X) < m_presence.DrawDistance)
+                return true;
+            if (checkPosition.Y - (groupPosition.Y + groupSize.Y) < m_presence.DrawDistance)
+                return true;
+            if (checkPosition.Y - (groupPosition.Y - groupSize.Y) < m_presence.DrawDistance)
+                return true;
+            if (checkPosition.Z - (groupPosition.Z + groupSize.Z) < m_presence.DrawDistance)
+                return true;
+            if (checkPosition.Z - (groupPosition.Z - groupSize.Z) < m_presence.DrawDistance)
+                return true;
+            //All done then...
+            return false;
         }
 
         #endregion
