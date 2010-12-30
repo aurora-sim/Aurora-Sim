@@ -20,7 +20,7 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.World.Startup
 {
     public class Backup : ISharedRegionStartupModule
     {
@@ -37,7 +37,7 @@ namespace Aurora.Modules
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(Scene scene, IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
             MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
             //Set up the backup for the scene
@@ -54,11 +54,12 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
+            m_backup[scene].PostInitialise();
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
         {
             m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();
@@ -146,7 +147,7 @@ namespace Aurora.Modules
                         && m_dontPersistBefore != 0))
                     {
                         //Add the time now plus minimum persistance time so that we can force a run if it goes wrong
-                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        m_lastRanBackupInHeartbeat = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                         Util.FireAndForget(Backup);
                     }
                 }
@@ -160,6 +161,14 @@ namespace Aurora.Modules
             protected void Backup(object forced)
             {
                 ProcessPrimBackupTaints(false, false);
+            }
+
+            internal void PostInitialise()
+            {
+                //Load the prims from the database now that we are done loading
+                LoadPrimsFromStorage();
+                //Then load the land objects
+                LoadAllLandObjectsFromStorage();
             }
 
             /// <summary>
@@ -233,10 +242,6 @@ namespace Aurora.Modules
 
             internal void FinishStartup()
             {
-                //Load the prims from the database now that we are done loading
-                LoadPrimsFromStorage();
-                //Then load the land objects
-                LoadAllLandObjectsFromStorage();
                 //Load the prims from the database now that we are done loading
                 CreateScriptInstances();
             }
@@ -369,7 +374,7 @@ namespace Aurora.Modules
                         backupPrims = new HashSet<SceneObjectGroup>(m_backupTaintedPrims.Values);
                         m_backupTaintedPrims.Clear();
                         //Reset the timer
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
 
                         if (m_secondaryBackupTaintedPrims.Count != 0)
                         {
@@ -397,7 +402,7 @@ namespace Aurora.Modules
                     if (runSecondaryBackup.Ticks < DateTime.Now.Ticks)
                     {
                         //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                         lock (m_secondaryBackupTaintedPrims)
                         {
                             if (m_secondaryBackupTaintedPrims.Count != 0)
@@ -411,7 +416,7 @@ namespace Aurora.Modules
                             m_secondaryBackupTaintedPrims.Clear();
                         }
                         //Add the min persistance time to now to get the new time
-                        runSecondaryBackup = DateTime.Now.AddMinutes((m_dontPersistBefore / 10000000L));
+                        runSecondaryBackup = DateTime.Now.AddMinutes(((double)m_dontPersistBefore / 60));
                     }
                 }
                 int PrimsBackedUp = 0;
