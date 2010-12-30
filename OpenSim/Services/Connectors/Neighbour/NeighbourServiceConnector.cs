@@ -388,13 +388,16 @@ namespace OpenSim.Services.Connectors
 
         private Dictionary<string, object> PackRegionInfo(RegionInfo thisRegion, UUID uUID)
         {
-            List<NeighborPassword> passes = m_KnownNeighborsPass[uUID];
-            foreach (NeighborPassword p in passes)
+            if (m_KnownNeighborsPass.ContainsKey(uUID))
             {
-                if (thisRegion.RegionID == p.RegionID)
+                List<NeighborPassword> passes = m_KnownNeighborsPass[uUID];
+                foreach (NeighborPassword p in passes)
                 {
-                    thisRegion.Password = p.Password;
-                    break;
+                    if (thisRegion.RegionID == p.RegionID)
+                    {
+                        thisRegion.Password = p.Password;
+                        break;
+                    }
                 }
             }
             return Util.OSDToDictionary(thisRegion.PackRegionInfoData());
