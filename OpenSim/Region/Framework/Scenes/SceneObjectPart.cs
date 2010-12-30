@@ -2265,6 +2265,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_inventory = new SceneObjectPartInventory(dupe);
             dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
+            dupe.m_inventory.HasInventoryChanged = m_inventory.HasInventoryChanged;
 
             byte[] extraP = new byte[Shape.ExtraParams.Length];
             Array.Copy(Shape.ExtraParams, extraP, extraP.Length);

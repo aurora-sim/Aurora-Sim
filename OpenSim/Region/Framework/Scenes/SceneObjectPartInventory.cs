@@ -68,7 +68,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Tracks whether inventory has changed since the last persistent backup
         /// </summary>
-        internal bool HasInventoryChanged;
+        internal bool m_HasInventoryChanged;
+
+        public bool HasInventoryChanged
+        {
+            get 
+            { 
+                return m_HasInventoryChanged;
+            }
+            set 
+            { 
+                //Set the parent as well so that backup will occur
+                if(value)
+                    m_part.ParentGroup.HasGroupChanged = true;
+                m_HasInventoryChanged = value; 
+            }
+        }
         
         /// <value>
         /// Inventory serial number
