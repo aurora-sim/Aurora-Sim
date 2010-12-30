@@ -495,11 +495,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add a region
 
-        public void Add(Scene scene)
-        {
-            m_localScenes.Add(scene);
-        }
-
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
         /// </summary>
@@ -594,7 +589,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_clientServers.Add(clientServer);
 
             //Do this here so that we don't have issues later when startup complete messages start coming in
-            Add(scene);
+            m_localScenes.Add(scene);
 
             return scene;
         }
@@ -689,55 +684,18 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void RemoveRegion(IScene scene, bool cleanup)
+        public void RemoveRegion(Scene scene, bool cleanup)
         {
-            // only need to check this if we are not at the
-            // root level
-            if ((CurrentScene != null) && (CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
-            {
-                TrySetCurrentScene("..");
-            }
-
             IBackupModule backup = ((Scene)scene).RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteAllSceneObjects();
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
+
+            CloseRegion(scene);
 
             if (!cleanup)
                 return;
 
-            if (!String.IsNullOrEmpty(scene.RegionInfo.RegionFile))
-            {
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".xml"))
-                {
-                    File.Delete(scene.RegionInfo.RegionFile);
-                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
-                }
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".ini"))
-                {
-                    try
-                    {
-                        IniConfigSource source = new IniConfigSource(scene.RegionInfo.RegionFile, Nini.Ini.IniFileType.AuroraStyle);
-                        if (source.Configs[scene.RegionInfo.RegionName] != null)
-                        {
-                            source.Configs.Remove(scene.RegionInfo.RegionName);
-
-                            if (source.Configs.Count == 0)
-                            {
-                                File.Delete(scene.RegionInfo.RegionFile);
-                            }
-                            else
-                            {
-                                source.Save(scene.RegionInfo.RegionFile);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
+            scene.RegionInfo.DeleteRegion(scene.RegionInfo);
         }
 
         /// <summary>
@@ -745,7 +703,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="scene"></param>
         /// <returns></returns>
-        public void CloseRegion(IScene scene)
+        public void CloseRegion(Scene scene)
         {
             // only need to check this if we are not at the
             // root level
@@ -754,15 +712,10 @@ namespace OpenSim.Region.Framework.Scenes
                 TrySetCurrentScene("..");
             }
 
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
-        }
-
-        public void CloseScene(Scene scene)
-        {
             m_localScenes.Remove(scene);
             scene.Close();
             CloseModules(scene);
+            ShutdownClientServer(scene.RegionInfo);
         }
 
         #endregion

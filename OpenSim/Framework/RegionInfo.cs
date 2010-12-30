@@ -734,5 +734,44 @@ namespace OpenSim.Framework
 
             return kvp;
         }
+
+        /// <summary>
+        /// This deletes the region from the region.ini file or region.xml file and removes the file if there are no other regions in the file
+        /// </summary>
+        /// <param name="regionInfo"></param>
+        public void DeleteRegion(RegionInfo regionInfo)
+        {
+            if (!String.IsNullOrEmpty(regionInfo.RegionFile))
+            {
+                if (regionInfo.RegionFile.ToLower().EndsWith(".xml"))
+                {
+                    File.Delete(regionInfo.RegionFile);
+                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", regionInfo.RegionFile);
+                }
+                if (regionInfo.RegionFile.ToLower().EndsWith(".ini"))
+                {
+                    try
+                    {
+                        IniConfigSource source = new IniConfigSource(regionInfo.RegionFile, Nini.Ini.IniFileType.AuroraStyle);
+                        if (source.Configs[regionInfo.RegionName] != null)
+                        {
+                            source.Configs.Remove(regionInfo.RegionName);
+
+                            if (source.Configs.Count == 0)
+                            {
+                                File.Delete(regionInfo.RegionFile);
+                            }
+                            else
+                            {
+                                source.Save(regionInfo.RegionFile);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+        }
     }
 }
