@@ -168,8 +168,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         position = emergencyPos;
                     }
 
-                    // TODO: Get proper AVG Height
-                    float localAVHeight = 1.56f;
+                    float localAVHeight = sp.Appearance.AvatarHeight;
                     float posZLimit = 22;
 
                     // TODO: Check other Scene HeightField
@@ -1529,7 +1528,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 else
                 {
                     sp.ControllingClient.InformClientOfNeighbour(reg.RegionHandle, endPoint);
-                    // TODO: make Event Queue disablable!
                 }
 
                 m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());

@@ -403,7 +403,7 @@ namespace OpenSim.Services.UserAccountService
                 if (StoreUserAccount(account))
                 {
                     bool success;
-                    if (m_AuthenticationService != null)
+                    if (m_AuthenticationService != null && password != "")
                     {
                         success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, password);
                         if (!success)

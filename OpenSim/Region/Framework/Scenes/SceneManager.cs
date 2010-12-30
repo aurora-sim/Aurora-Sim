@@ -250,7 +250,6 @@ namespace OpenSim.Region.Framework.Scenes
         private void FinishStartUp()
         {
             m_OpenSimBase.RunStartupCommands();
-            AddPluginCommands();
 
             // For now, start at the 'root' level by default
             if (Scenes.Count == 1)
@@ -265,7 +264,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            m_log.InfoFormat("[SCENEMANAGER]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
+            m_log.InfoFormat("[SceneManager]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
 
         #endregion
@@ -496,11 +495,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add a region
 
-        public void Add(Scene scene)
-        {
-            m_localScenes.Add(scene);
-        }
-
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
         /// </summary>
@@ -548,8 +542,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Post init the modules now
             PostInitModules(scene);
 
-            RegisterRegionWithGrid(scene);
-
             clientServer.Start();
             scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
 
@@ -561,175 +553,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = scene;
 
             return clientServer;
-        }
-
-        private void RegisterRegionWithGrid(Scene scene)
-        {
-            string error = scene.RegisterRegionWithGrid();
-            if (error != "")
-            {
-                if (error == "Region location is reserved")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
-
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
-                }
-                if (error == "Region overlaps another region")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
-
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
-                }
-                if (error.Contains("Can't move this region"))
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - You can not move this region. Moving it back to its original position.");
-                    //Opensim Grid Servers don't have this functionality.
-                    try
-                    {
-                        string[] position = error.Split(',');
-
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]);
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]);
-
-                        IConfig config = m_config.Configs["RegionStartup"];
-                        if (config != null)
-                        {
-                            //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                            if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                                Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                            else
-                                SaveChangesFile("", scene.RegionInfo);
-                        }
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
-                        throw e;
-                    }
-                }
-                if (error == "Duplicate region name")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region name you specified is already in use. Please change the name.");
-                    string oldRegionName = scene.RegionInfo.RegionName;
-                    scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile(oldRegionName, scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile(oldRegionName, scene.RegionInfo);
-                }
-                if (error == "Region locked out")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
-                    Environment.Exit(0);
-                }
-                if (error == "Error communicating with grid service")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
-                    }
-                }
-                if (error == "Wrong Session ID")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
-                    }
-                }
-                RegisterRegionWithGrid(scene);
-            }
-        }
-
-        private void SaveChangesFile(string oldName, RegionInfo regionInfo)
-        {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-
-            if (oldName == "")
-                oldName = regionInfo.RegionName;
-            try
-            {
-                IConfig config = m_config.Configs["RegionStartup"];
-                if (config != null)
-                {
-                    regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
-                }
-            }
-            catch (Exception)
-            {
-                // No INI setting recorded.
-            }
-            if (!Directory.Exists(regionConfigPath))
-                return;
-
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[oldName];
-                if (cnf != null)
-                {
-                    try
-                    {
-                        source.Configs.Remove(cnf);
-                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
-                        cnf.Set("RegionType", regionInfo.RegionType);
-                        cnf.Name = regionInfo.RegionName;
-                        source.Configs.Add(cnf);
-                    }
-                    catch
-                    {
-                    }
-                    source.Save();
-                    break;
-                }
-            }
         }
 
         /// <summary>
@@ -766,7 +589,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_clientServers.Add(clientServer);
 
             //Do this here so that we don't have issues later when startup complete messages start coming in
-            Add(scene);
+            m_localScenes.Add(scene);
 
             return scene;
         }
@@ -861,55 +684,18 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void RemoveRegion(IScene scene, bool cleanup)
+        public void RemoveRegion(Scene scene, bool cleanup)
         {
-            // only need to check this if we are not at the
-            // root level
-            if ((CurrentScene != null) && (CurrentScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
-            {
-                TrySetCurrentScene("..");
-            }
-
             IBackupModule backup = ((Scene)scene).RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteAllSceneObjects();
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
+
+            CloseRegion(scene);
 
             if (!cleanup)
                 return;
 
-            if (!String.IsNullOrEmpty(scene.RegionInfo.RegionFile))
-            {
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".xml"))
-                {
-                    File.Delete(scene.RegionInfo.RegionFile);
-                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
-                }
-                if (scene.RegionInfo.RegionFile.ToLower().EndsWith(".ini"))
-                {
-                    try
-                    {
-                        IniConfigSource source = new IniConfigSource(scene.RegionInfo.RegionFile, Nini.Ini.IniFileType.AuroraStyle);
-                        if (source.Configs[scene.RegionInfo.RegionName] != null)
-                        {
-                            source.Configs.Remove(scene.RegionInfo.RegionName);
-
-                            if (source.Configs.Count == 0)
-                            {
-                                File.Delete(scene.RegionInfo.RegionFile);
-                            }
-                            else
-                            {
-                                source.Save(scene.RegionInfo.RegionFile);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
+            scene.RegionInfo.DeleteRegion(scene.RegionInfo);
         }
 
         /// <summary>
@@ -917,7 +703,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="scene"></param>
         /// <returns></returns>
-        public void CloseRegion(IScene scene)
+        public void CloseRegion(Scene scene)
         {
             // only need to check this if we are not at the
             // root level
@@ -926,15 +712,10 @@ namespace OpenSim.Region.Framework.Scenes
                 TrySetCurrentScene("..");
             }
 
-            CloseScene((Scene)scene);
-            ShutdownClientServer(scene.RegionInfo);
-        }
-
-        public void CloseScene(Scene scene)
-        {
             m_localScenes.Remove(scene);
             scene.Close();
             CloseModules(scene);
+            ShutdownClientServer(scene.RegionInfo);
         }
 
         #endregion
@@ -1016,16 +797,6 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.Commands.AddCommand("region", false, "modules", "modules help", "Info about simulator modules", HandleModules);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "kill uuid", "kill uuid <UUID>", "Kill an object by UUID", KillUUID);
-        }
-
-        protected virtual List<string> GetHelpTopics()
-        {
-            List<string> topics = new List<string>();
-            Scene s = CurrentOrFirstScene;
-            if (s != null && s.GetCommanders() != null)
-                topics.AddRange(s.GetCommanders().Keys);
-
-            return topics;
         }
 
         /// <summary>
@@ -1582,55 +1353,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 MainConsole.Instance.Output("[KillUUID]: Usage: kill uuid <UUID>");
             }
-        }
-
-        public void AddPluginCommands()
-        {
-            // If console exists add plugin commands.
-            if (MainConsole.Instance != null)
-            {
-                List<string> topics = GetHelpTopics();
-
-                foreach (string topic in topics)
-                {
-                    MainConsole.Instance.Commands.AddCommand("plugin", false, "help " + topic, "help " + topic, "Get help on plugin command '" + topic + "'", HandleCommanderHelp);
-
-                    MainConsole.Instance.Commands.AddCommand("plugin", false, topic, topic, "Execute subcommand for plugin '" + topic + "'", null);
-
-                    ICommander commander = null;
-
-                    Scene s = CurrentOrFirstScene;
-
-                    if (s != null && s.GetCommanders() != null)
-                    {
-                        if (s.GetCommanders().ContainsKey(topic))
-                            commander = s.GetCommanders()[topic];
-                    }
-
-                    if (commander == null)
-                        continue;
-
-                    foreach (string command in commander.Commands.Keys)
-                    {
-                        MainConsole.Instance.Commands.AddCommand(topic, false, topic + " " + command, topic + " " + commander.Commands[command].ShortHelp(), String.Empty, HandleCommanderCommand);
-                    }
-                }
-            }
-        }
-
-        private void HandleCommanderCommand(string module, string[] cmd)
-        {
-            SendCommandToPluginModules(cmd);
-        }
-
-        private void HandleCommanderHelp(string module, string[] cmd)
-        {
-            // Only safe for the interactive console, since it won't
-            // let us come here unless both scene and commander exist
-            //
-            ICommander moduleCommander = CurrentOrFirstScene.GetCommander(cmd[1]);
-            if (moduleCommander != null)
-                MainConsole.Instance.Output(moduleCommander.Help);
         }
 
         #endregion

@@ -448,11 +448,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 if (m_registry is Scene)
                 {
                     Scene scene = (Scene)m_registry;
-                    if (scene.Permissions.IsGod(item.Owner))
+                    if (scene.Permissions != null && scene.Permissions.IsGod(item.Owner))
                     {
                         userlevel = 1;
                     }
-                    scene.EventManager.TriggerOnNewInventoryItemUploadComplete(item.Owner, item.AssetID, item.Name, userlevel);
+                    if(scene.EventManager != null)
+                        scene.EventManager.TriggerOnNewInventoryItemUploadComplete(item.Owner, item.AssetID, item.Name, userlevel);
                 }
                 return true;
             }

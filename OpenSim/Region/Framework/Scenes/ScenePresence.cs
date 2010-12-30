@@ -2992,10 +2992,6 @@ namespace OpenSim.Region.Framework.Scenes
             if ((cAgentData.Throttles != null) && cAgentData.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
-            // Sends out the objects in the user's draw distance if m_sendTasksToChild is true.
-            if (m_scene.RegionInfo.SeeIntoThisSimFromNeighbor)
-                m_sceneViewer.Reset();
-
             //cAgentData.AVHeight;
             m_rootRegionHandle = cAgentData.RegionHandle;
             //m_velocity = cAgentData.Velocity;

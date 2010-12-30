@@ -35,7 +35,6 @@ using OpenMetaverse.StructuredData;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Framework.InterfaceCommander;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Caps = OpenSim.Framework.Capabilities.Caps;

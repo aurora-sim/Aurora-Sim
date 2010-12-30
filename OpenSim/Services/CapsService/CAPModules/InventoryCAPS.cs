@@ -25,7 +25,6 @@ namespace OpenSim.Services.CapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string m_newInventory = "0002";
-        private object m_fetchLock = new Object();
         private IPrivateCapsService m_handler;
         private IHttpServer m_server;
         
@@ -39,11 +38,7 @@ namespace OpenSim.Services.CapsService
 
             OSDArray foldersrequested = (OSDArray)map["folders"];
 
-            string response = "";
-            lock (m_fetchLock)
-            {
-                response = FetchInventoryReply(foldersrequested, AgentID, false);
-            }
+            string response = FetchInventoryReply(foldersrequested, AgentID, false);
             return response;
         }
 
@@ -55,11 +50,7 @@ namespace OpenSim.Services.CapsService
 
             OSDArray foldersrequested = (OSDArray)map["folders"];
 
-            string response = "";
-            lock (m_fetchLock)
-            {
-                response = FetchInventoryReply(foldersrequested, AgentID, true);
-            }
+            string response = FetchInventoryReply(foldersrequested, AgentID, true);
             return response;
         }
 
@@ -72,28 +63,25 @@ namespace OpenSim.Services.CapsService
             OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
             string response = "";
-            lock (m_fetchLock)
+            OSDMap map = new OSDMap();
+            //We have to send the agent_id in the main map as well as all the items
+            map.Add("agent_id", OSD.FromUUID(AgentID));
+
+            OSDArray items = new OSDArray();
+            for (int i = 0; i < foldersrequested.Count; i++)
             {
-                OSDMap map = new OSDMap();
-                //We have to send the agent_id in the main map as well as all the items
-                map.Add("agent_id", OSD.FromUUID(AgentID));
-
-                OSDArray items = new OSDArray();
-                for (int i = 0; i < foldersrequested.Count; i++)
+                OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                UUID item_id = requestedFolders["item_id"].AsUUID();
+                InventoryItemBase item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                if (item != null)
                 {
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                    UUID item_id = requestedFolders["item_id"].AsUUID();
-                    InventoryItemBase item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                    if (item != null)
-                    {
-                        items.Add(ConvertInventoryItem(item, owner_id));
-                    }
+                    items.Add(ConvertInventoryItem(item, owner_id));
                 }
-                map.Add("items", items);
-
-                response = OSDParser.SerializeLLSDXmlString(map);
             }
+            map.Add("items", items);
+
+            response = OSDParser.SerializeLLSDXmlString(map);
             return response;
         }
 
@@ -106,32 +94,29 @@ namespace OpenSim.Services.CapsService
             OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
             string response = "";
-            lock (m_fetchLock)
+            OSDMap map = new OSDMap();
+            map.Add("agent_id", OSD.FromUUID(AgentID));
+            OSDArray items = new OSDArray();
+            for (int i = 0; i < foldersrequested.Count; i++)
             {
-                OSDMap map = new OSDMap();
-                map.Add("agent_id", OSD.FromUUID(AgentID));
-                OSDArray items = new OSDArray();
-                for (int i = 0; i < foldersrequested.Count; i++)
+                OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                UUID item_id = requestedFolders["item_id"].AsUUID();
+                InventoryItemBase item = null;
+                if (m_handler.LibraryService != null && m_handler.LibraryService.LibraryRootFolder != null)
                 {
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                    UUID item_id = requestedFolders["item_id"].AsUUID();
-                    InventoryItemBase item = null;
-                    if (m_handler.LibraryService != null && m_handler.LibraryService.LibraryRootFolder != null)
-                    {
-                        item = m_handler.LibraryService.LibraryRootFolder.FindItem(item_id);
-                    }
-                    if (item == null) //Try normal inventory them
-                        item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                    if (item != null)
-                    {
-                        items.Add(ConvertInventoryItem(item, owner_id));
-                    }
+                    item = m_handler.LibraryService.LibraryRootFolder.FindItem(item_id);
                 }
-                map.Add("items", items);
-
-                response = OSDParser.SerializeLLSDXmlString(map);
+                if (item == null) //Try normal inventory them
+                    item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                if (item != null)
+                {
+                    items.Add(ConvertInventoryItem(item, owner_id));
+                }
             }
+            map.Add("items", items);
+
+            response = OSDParser.SerializeLLSDXmlString(map);
             return response;
         }
 

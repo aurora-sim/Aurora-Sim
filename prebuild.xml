@@ -1673,8 +1673,6 @@
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="XMLRPC" path="../../bin/"/>
       <Reference name="HttpServer" path="../../bin/"/>
-      <Reference name="Glacier2" path="../../bin/"/>
-      <Reference name="Ice" path="../../bin/"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Services.Connectors"/>

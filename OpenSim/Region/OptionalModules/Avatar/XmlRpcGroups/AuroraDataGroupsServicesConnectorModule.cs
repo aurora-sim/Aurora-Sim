@@ -448,19 +448,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         }
 
         #endregion
-        
-        /// <summary>
-        /// Group Request Tokens are an attempt to allow the groups service to authenticate 
-        /// requests.  
-        /// TODO: This broke after the big grid refactor, either find a better way, or discard this
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        private void GetClientGroupRequestID(UUID AgentID, out string UserServiceURL, out UUID SessionID)
-        {
-            UserServiceURL = "";
-            SessionID = UUID.Zero;
-        }
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {

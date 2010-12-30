@@ -33,9 +33,6 @@ namespace OpenSim.Region.Framework.Interfaces
     /// <summary>
     /// Provide mechanisms for messaging groups.
     /// </summary>
-    /// 
-    /// TODO: Provide a mechanism for receiving group messages as well as sending them
-    /// 
     public interface IGroupsMessagingModule
     {
         /// <summary>

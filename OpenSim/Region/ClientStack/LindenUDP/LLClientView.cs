@@ -1183,7 +1183,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else
                 {
-                    //Hack!
                     OutPacket(layerpack, ThrottleOutPacketType.Unknown);
                 }
             }
@@ -1224,7 +1223,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
                 
-                //HACK: Skip throtles for now...
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
             catch (Exception e)
