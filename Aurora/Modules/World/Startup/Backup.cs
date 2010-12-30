@@ -56,7 +56,6 @@ namespace Aurora.Modules
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_backup[scene].PostInitialise();
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -163,14 +162,6 @@ namespace Aurora.Modules
                 ProcessPrimBackupTaints(false, false);
             }
 
-            internal void PostInitialise()
-            {
-                //Load the prims from the database now that we are done loading
-                LoadPrimsFromStorage();
-                //Then load the land objects
-                LoadAllLandObjectsFromStorage();
-            }
-
             /// <summary>
             /// Loads the World's objects
             /// </summary>
@@ -242,6 +233,10 @@ namespace Aurora.Modules
 
             internal void FinishStartup()
             {
+                //Load the prims from the database now that we are done loading
+                LoadPrimsFromStorage();
+                //Then load the land objects
+                LoadAllLandObjectsFromStorage();
                 //Load the prims from the database now that we are done loading
                 CreateScriptInstances();
             }
