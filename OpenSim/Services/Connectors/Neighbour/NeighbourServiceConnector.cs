@@ -269,11 +269,10 @@ namespace OpenSim.Services.Connectors
                 //We informed all of them locally, so quit early
                 if (RegionsNotInformed == 0)
                     return RetVal;
+
+                //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
+                InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
             }
-
-            //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
-            InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
-
             //This tells the chat module whether we should send the message in the region it originated from, and if it 
             return RetVal;
         }
