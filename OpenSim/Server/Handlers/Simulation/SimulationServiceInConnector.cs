@@ -62,31 +62,12 @@ namespace OpenSim.Server.Handlers.Simulation
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
-            //IConfig serverConfig = config.Configs["SimulationService"];
-            //if (serverConfig == null)
-            //    throw new Exception("No section 'SimulationService' in config file");
-
-            //string simService = serverConfig.GetString("LocalServiceModule",
-            //        String.Empty);
-
-            //if (simService == String.Empty)
-            //    throw new Exception("No SimulationService in config file");
-
-            //Object[] args = new Object[] { config };
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
             if(m_LocalSimulationService.GetInnerService() != null)
                 m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
-            //ServerUtils.LoadPlugin<ISimulationService>(simService, args);
 
-            //System.Console.WriteLine("XXXXXXXXXXXXXXXXXXX m_AssetSetvice == null? " + ((m_AssetService == null) ? "yes" : "no"));
-            //server.AddStreamHandler(new AgentGetHandler(m_SimulationService, m_AuthenticationService));
-            //server.AddStreamHandler(new AgentPostHandler(m_SimulationService, m_AuthenticationService));
-            //server.AddStreamHandler(new AgentPutHandler(m_SimulationService, m_AuthenticationService));
-            //server.AddStreamHandler(new AgentDeleteHandler(m_SimulationService, m_AuthenticationService));
             server.AddHTTPHandler("/agent/", new AgentHandler(m_LocalSimulationService).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService).Handler);
-
-            //server.AddStreamHandler(new ObjectPostHandler(m_SimulationService, authentication));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

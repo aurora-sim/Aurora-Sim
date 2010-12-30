@@ -373,7 +373,5 @@ namespace OpenSim.Server.Handlers.Simulation
         {
             m_SimulationService.ReleaseAgent(regionID, id, "");
         }
-
     }
-
 }
