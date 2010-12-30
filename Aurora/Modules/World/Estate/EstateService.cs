@@ -174,7 +174,10 @@ namespace Aurora.Modules
                     return;
                 }
                 scene.RegionInfo.RegionSettings.Save();
-                scene.UpdateGridRegion();
+                //Tell the grid about the changes
+                IGridRegisterModule gridRegModule = scene.RequestModuleInterface<IGridRegisterModule>();
+                if (gridRegModule != null)
+                    gridRegModule.UpdateGridRegion(scene);
             }
             #endregion
             #region 4 Params needed

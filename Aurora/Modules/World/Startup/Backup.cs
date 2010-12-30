@@ -20,7 +20,7 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
-namespace Aurora.Modules.World.Startup
+namespace Aurora.Modules
 {
     public class Backup : ISharedRegionStartupModule
     {
@@ -37,7 +37,7 @@ namespace Aurora.Modules.World.Startup
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
+        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             MainConsole.Instance.Commands.AddCommand("region", false, "backup", "backup [all]", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
             //Set up the backup for the scene
@@ -54,12 +54,12 @@ namespace Aurora.Modules.World.Startup
             }
         }
 
-        public void PostInitialise(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_backup[scene].PostInitialise();
         }
 
-        public void FinishStartup(Scene scene, Nini.Config.IConfigSource source, OpenSim.Framework.ISimulationBase openSimBase)
+        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();

@@ -844,7 +844,11 @@ namespace Aurora.Modules
         private void OnUpdateRegion(object source, ElapsedEventArgs e)
         {
             if (m_scene != null)
-                m_scene.UpdateGridRegion();
+            {
+                IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
+                if (gridRegModule != null)
+                    gridRegModule.UpdateGridRegion(m_scene);
+            }
         }
 
         private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)
@@ -996,7 +1000,9 @@ namespace Aurora.Modules
 
             RegenerateMaptile(Mapasset.ID, Mapasset.Data);
             //Update the grid map
-            m_scene.UpdateGridRegion();
+            IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
+            if(gridRegModule != null)
+                gridRegModule.UpdateGridRegion(m_scene);
         }
 
         public void RegenerateMaptile(string ID, byte[] data)

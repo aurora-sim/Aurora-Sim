@@ -720,14 +720,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneManager.HandleRestart(this);
         }
 
-        /// <summary>
-        /// Update the grid server with new info about this region
-        /// </summary>
-        public void UpdateGridRegion()
-        {
-            GridService.UpdateMap(RegionInfo.ScopeID, new GridRegion(RegionInfo), RegionInfo.GridSecureSessionID);
-        }
-
         public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
         {
             if (RegionInfo.RegionSettings.DisableScripts == !ScriptEngine)
@@ -1345,77 +1337,6 @@ namespace OpenSim.Region.Framework.Scenes
                     info.Groups = Groups;
                     m_returns[agentID] = info;
                 }
-            }
-        }
-
-        #endregion
-
-        #region Register region with grid
-
-        /// <summary>
-        /// Register this region with a grid service
-        /// </summary>
-        /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
-        public string RegisterRegionWithGrid()
-        {
-            GridRegion region = new GridRegion(RegionInfo);
-
-            IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            GridSessionID s = null;
-            if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric<GridSessionID>(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, new GridSessionID());
-
-            if (s == null)
-            {
-                s = new GridSessionID();
-                //Set it from the regionInfo if it knows anything
-                s.SessionID = RegionInfo.GridSecureSessionID;
-            }
-
-            string error = GridService.RegisterRegion(RegionInfo.ScopeID, region, s.SessionID, out s.SessionID);
-            if (error != String.Empty)
-                return error;
-            RegionInfo.GridSecureSessionID = s.SessionID;
-
-            //Save the new SessionID to the database
-            g.AddGeneric(RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
-
-            INeighbourService service = this.RequestModuleInterface<INeighbourService>();
-            if (service != null)
-                service.InformNeighborsThatRegionIsUp(RegionInfo);
-            return "";
-        }
-
-        public class GridSessionID : IDataTransferable
-        {
-            public UUID SessionID;
-            public override void FromOSD(OSDMap map)
-            {
-                SessionID = map["SessionID"].AsUUID();
-            }
-
-            public override OSDMap ToOSD()
-            {
-                OSDMap map = new OSDMap();
-                map.Add("SessionID", SessionID);
-                return map;
-            }
-
-            public override Dictionary<string, object> ToKeyValuePairs()
-            {
-                return Util.OSDToDictionary(ToOSD());
-            }
-
-            public override void FromKVP(Dictionary<string, object> KVP)
-            {
-                FromOSD(Util.DictionaryToOSD(KVP));
-            }
-
-            public override IDataTransferable Duplicate()
-            {
-                GridSessionID m = new GridSessionID();
-                m.FromOSD(ToOSD());
-                return m;
             }
         }
 
@@ -3771,11 +3692,11 @@ namespace OpenSim.Region.Framework.Scenes
             // allocations, and there is no more work to be done until someone logs in
             GC.Collect();
 
-            m_log.Info("[REGION]: Startup Complete in region " + RegionInfo.RegionName);
+            m_log.Info("[Region]: Startup Complete in region " + RegionInfo.RegionName);
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig == null || !startupConfig.GetBoolean("StartDisabled", false))
             {
-                m_log.DebugFormat("[REGION]: Enabling logins for {0}", RegionInfo.RegionName);
+                m_log.DebugFormat("[Region]: Enabling logins for {0}", RegionInfo.RegionName);
                 LoginsDisabled = false;
             }
 

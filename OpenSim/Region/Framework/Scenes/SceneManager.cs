@@ -264,7 +264,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            m_log.InfoFormat("[SCENEMANAGER]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
+            m_log.InfoFormat("[SceneManager]: Startup is complete and took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
         }
 
         #endregion
@@ -547,8 +547,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Post init the modules now
             PostInitModules(scene);
 
-            RegisterRegionWithGrid(scene);
-
             clientServer.Start();
             scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
 
@@ -560,175 +558,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = scene;
 
             return clientServer;
-        }
-
-        private void RegisterRegionWithGrid(Scene scene)
-        {
-            string error = scene.RegisterRegionWithGrid();
-            if (error != "")
-            {
-                if (error == "Region location is reserved")
-                {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
-
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
-                }
-                if (error == "Region overlaps another region")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
-
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
-                }
-                if (error.Contains("Can't move this region"))
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - You can not move this region. Moving it back to its original position.");
-                    //Opensim Grid Servers don't have this functionality.
-                    try
-                    {
-                        string[] position = error.Split(',');
-
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]);
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]);
-
-                        IConfig config = m_config.Configs["RegionStartup"];
-                        if (config != null)
-                        {
-                            //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                            if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                                Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                            else
-                                SaveChangesFile("", scene.RegionInfo);
-                        }
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Error("Unable to move the region back to its original position, is this an opensim server? Please manually move the region back.");
-                        throw e;
-                    }
-                }
-                if (error == "Duplicate region name")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region name you specified is already in use. Please change the name.");
-                    string oldRegionName = scene.RegionInfo.RegionName;
-                    scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
-
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
-                    {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
-                        else
-                            SaveChangesFile(oldRegionName, scene.RegionInfo);
-                    }
-                    else
-                        SaveChangesFile(oldRegionName, scene.RegionInfo);
-                }
-                if (error == "Region locked out")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
-                    Environment.Exit(0);
-                }
-                if (error == "Error communicating with grid service")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
-                    }
-                }
-                if (error == "Wrong Session ID")
-                {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
-                    string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
-                    if (input == "cancel")
-                    {
-                        Environment.Exit(0);
-                    }
-                }
-                RegisterRegionWithGrid(scene);
-            }
-        }
-
-        private void SaveChangesFile(string oldName, RegionInfo regionInfo)
-        {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-
-            if (oldName == "")
-                oldName = regionInfo.RegionName;
-            try
-            {
-                IConfig config = m_config.Configs["RegionStartup"];
-                if (config != null)
-                {
-                    regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
-                }
-            }
-            catch (Exception)
-            {
-                // No INI setting recorded.
-            }
-            if (!Directory.Exists(regionConfigPath))
-                return;
-
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[oldName];
-                if (cnf != null)
-                {
-                    try
-                    {
-                        source.Configs.Remove(cnf);
-                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
-                        cnf.Set("RegionType", regionInfo.RegionType);
-                        cnf.Name = regionInfo.RegionName;
-                        source.Configs.Add(cnf);
-                    }
-                    catch
-                    {
-                    }
-                    source.Save();
-                    break;
-                }
-            }
         }
 
         /// <summary>
