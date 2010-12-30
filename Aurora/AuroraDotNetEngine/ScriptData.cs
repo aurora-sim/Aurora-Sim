@@ -305,8 +305,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ReleaseControls();
             //Remove other items from the queue.
 
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
-            
+//            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
+            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
             VersionID++;
             //Reset the state to default
             State = "default";
