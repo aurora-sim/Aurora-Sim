@@ -461,20 +461,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)
         {
-            if (LibraryService != null && (LibraryService.LibraryOwner == uuid))
+            UserAccount account = UserAccountService.GetUserAccount(RegionInfo.ScopeID, uuid);
+            if (account != null)
             {
-                remote_client.SendNameReply(uuid, LibraryService.LibraryOwnerName[0], LibraryService.LibraryOwnerName[1]);
-            }
-            else
-            {
-                UserAccount account = UserAccountService.GetUserAccount(RegionInfo.ScopeID, uuid);
-                if (account != null)
-                {
-                    remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
-                }
+                remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
             }
         }
-
         /// <summary>
         /// Handle a fetch inventory request from the client
         /// </summary>
@@ -484,12 +476,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
             //m_log.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
-            if (LibraryService != null && LibraryService.LibraryRootFolder != null && ownerID == LibraryService.LibraryRootFolder.Owner)
-            {
-                //m_log.Debug("request info for library item");
-                return;
-            }
-            
             InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
             item = InventoryService.GetItem(item);
             
@@ -517,20 +503,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             // FIXME MAYBE: We're not handling sortOrder!
-
-            // TODO: This code for looking in the folder for the library should be folded somewhere else
-            // so that this class doesn't have to know the details (and so that multiple libraries, etc.
-            // can be handled transparently).
-            InventoryFolderImpl fold = null;
-            if (LibraryService != null && LibraryService.LibraryRootFolder != null)
-                if ((fold = LibraryService.LibraryRootFolder.FindFolder(folderID)) != null)
-                {
-                    remoteClient.SendInventoryFolderDetails(
-                        fold.Owner, folderID, fold.RequestListOfItems(),
-                        fold.RequestListOfFolders(), fold.Version, fetchFolders, fetchItems);
-                    return;
-                }
-
             // We're going to send the reply async, because there may be
             // an enormous quantity of packets -- basically the entire inventory!
             // We don't want to block the client thread while all that is happening.

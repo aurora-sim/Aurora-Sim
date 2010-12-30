@@ -627,24 +627,16 @@ namespace OpenSim.Region.Framework.Scenes
                 "[AGENT INVENTORY]: CopyInventoryItem received by {0} with oldAgentID {1}, oldItemID {2}, new FolderID {3}, newName {4}",
                 remoteClient.AgentId, oldAgentID, oldItemID, newFolderID, newName);
 
-            InventoryItemBase item = null;
-            if (LibraryService != null && LibraryService.LibraryRootFolder != null)
-                item = LibraryService.LibraryRootFolder.FindItem(oldItemID);
-
+            InventoryItemBase item = new InventoryItemBase(oldItemID, remoteClient.AgentId);
+            item = InventoryService.GetItem(item);
             if (item == null)
             {
-                item = new InventoryItemBase(oldItemID, remoteClient.AgentId);
-                item = InventoryService.GetItem(item);
-
-                if (item == null)
-                {
-                    m_log.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
-                    return;
-                }
-
-                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                    return;
+                m_log.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
+                return;
             }
+
+            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                return;
 
             AssetBase asset = AssetService.Get(item.AssetID.ToString());
 
@@ -1301,21 +1293,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (folder == null)
                 return;
 
-            // TODO: This code for looking in the folder for the library should be folded somewhere else
-            // so that this class doesn't have to know the details (and so that multiple libraries, etc.
-            // can be handled transparently).
-            InventoryFolderImpl fold = null;
-            if (LibraryService != null && LibraryService.LibraryRootFolder != null)
-            {
-                if ((fold = LibraryService.LibraryRootFolder.FindFolder(folder.ID)) != null)
-                {
-                    client.SendInventoryFolderDetails(
-                        fold.Owner, folder.ID, fold.RequestListOfItems(),
-                        fold.RequestListOfFolders(), fold.Version, fetchFolders, fetchItems);
-                    return;
-                }
-            }
-
             // Fetch the folder contents
             InventoryCollection contents = InventoryService.GetFolderContent(client.AgentId, folder.ID);
 
@@ -1367,12 +1344,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                         item = InventoryService.GetItem(item);
-
-                        // Try library
-                        if (null == item && LibraryService != null && LibraryService.LibraryRootFolder != null)
-                        {
-                            item = LibraryService.LibraryRootFolder.FindItem(itemID);
-                        }
 
                         // If we've found the item in the user's inventory or in the library
                         if (item != null)
@@ -1479,13 +1450,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = InventoryService.GetItem(item);
-
-                // Try library
-                // XXX clumsy, possibly should be one call
-                if (null == item && LibraryService != null && LibraryService.LibraryRootFolder != null)
-                {
-                    item = LibraryService.LibraryRootFolder.FindItem(itemID);
-                }
 
                 if (item != null)
                 {

@@ -977,11 +977,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             InventoryItemBase assetRequestItem = GetItem(remoteClient.AgentId, itemID);
             if (assetRequestItem == null)
             {
-                ILibraryService lib = m_Scene.RequestModuleInterface<ILibraryService>();
-                if (lib != null)
-                    assetRequestItem = lib.LibraryRootFolder.FindItem(itemID);
-                if (assetRequestItem == null)
-                    return false;
+                return false;
             }
 
             // At this point, we need to apply perms

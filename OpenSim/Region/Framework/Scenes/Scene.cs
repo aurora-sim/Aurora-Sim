@@ -382,17 +382,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public ILibraryService LibraryService
-        {
-            get
-            {
-                if (m_LibraryService == null)
-                    m_LibraryService = RequestModuleInterface<ILibraryService>();
-
-                return m_LibraryService;
-            }
-        }
-
         public IPresenceService PresenceService
         {
             get
