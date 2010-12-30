@@ -429,12 +429,12 @@ public QueueItemStruct QIS;
 }
 */
 
-        private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
-        private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
-        private HashSet<ScriptData> ScriptInExec = new HashSet<ScriptData>();
-        public int NScriptIDs = 0;
-        public int NSleepingScriptIDs = 0;
-        public int NScriptInExec = 0;
+        private static LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
+        private static LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
+        private static HashSet<ScriptData> ScriptInExec = new HashSet<ScriptData>();
+        public static int NScriptIDs = 0;
+        public static int NSleepingScriptIDs = 0;
+        public static int NScriptInExec = 0;
 
         public void RemoveFromEventSchQueue(ScriptData ID)
         {
@@ -442,36 +442,36 @@ public QueueItemStruct QIS;
                 return;
             bool wasign;
             lock (ID.EventsProcData)
-            {
+                {
                 ID.EventsProcDataLocked = true;
                 wasign = ID.EventsProcData.IgnoreNew;
                 ID.EventsProcData.IgnoreNew = true;
                 ID.EventsProcData.EventsQueue.Clear();
                 if (ID.InEventsProcData)
-                {
+                    {
                     if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
                         ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
                     else if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
-                    {
-                        lock (SleepingScriptIDs)
                         {
+                        lock (SleepingScriptIDs)
+                            {
                             NSleepingScriptIDs--;
                             SleepingScriptIDs.Remove(ID);
+                            }
                         }
-                    }
                     else
-                    {
-                        lock (ScriptIDs)
                         {
+                        lock (ScriptIDs)
+                            {
                             NScriptIDs--;
                             ScriptIDs.Remove(ID);
+                            }
                         }
-                    }
                     ID.InEventsProcData = false;
-                }
+                    }
                 ID.EventsProcData.IgnoreNew = wasign;
-            }
-            ID.EventsProcDataLocked = false;
+                ID.EventsProcDataLocked = false;
+                }
 
             /* workers should leave by them selfs, so no worries about going <0
             lock (WorkersLock) // this may leave lost workers if timeslice doesn't return
@@ -491,8 +491,9 @@ public QueueItemStruct QIS;
             {
                 ID.EventsProcDataLocked = true;
                 ID.EventsProcData.EventsQueue.Clear();
+                ID.EventsProcDataLocked = false;
             }
-            ID.EventsProcDataLocked = false;
+            
         }
 
         public void SetEventSchSetIgnoreNew(ScriptData ID, bool yes)
@@ -561,8 +562,9 @@ public QueueItemStruct QIS;
                                             }
                      */
                     }
+                ID.EventsProcDataLocked = false;
                 }
-            ID.EventsProcDataLocked = false;
+            
 
             lock (WorkersLock)
                 {
@@ -579,7 +581,6 @@ public QueueItemStruct QIS;
             ScriptData ID;
 
             ID = QIS.ID;
-
             if (ID == null || ID.EventsProcData.IgnoreNew)
                 return;
 
@@ -627,8 +628,8 @@ public QueueItemStruct QIS;
                                         }
                      */
                     }
+                ID.EventsProcDataLocked = false;
                 }
-            ID.EventsProcDataLocked = false;
 
             lock (WorkersLock)
                 {
@@ -723,8 +724,9 @@ public QueueItemStruct QIS;
                                     }
                                 }
                             }
+                            ID.EventsProcDataLocked = false;
                         }
-                        ID.EventsProcDataLocked = false;
+                        
                     }
                 }
 
@@ -852,8 +854,9 @@ public QueueItemStruct QIS;
                                         break;
                                 }
                             }
+                            ID.EventsProcDataLocked = false;
                         }
-                        ID.EventsProcDataLocked = false;
+                        
                     }
                 }
 
@@ -861,7 +864,7 @@ public QueueItemStruct QIS;
                 {
                     try // this may not be ok
                     {
-                        EventSchExec(ID);
+                        EventSchExec(doID);
                     }
                     catch
                     {
@@ -930,18 +933,18 @@ public QueueItemStruct QIS;
                     }
                 }
                 ID.EventsProcData.thread = Thread.CurrentThread;
-                lock (ScriptInExec)
-                {
-                    ScriptInExec.Remove(ID);
-                }
+//                lock (ScriptInExec)
+//                {
+//                    ScriptInExec.Remove(ID);
+//                }
+                ID.EventsProcDataLocked = false;
             }
-            ID.EventsProcDataLocked = false;
+            
 
             lock (ScriptInExec)
             {
                 ScriptInExec.Add(ID);
             }
-
             bool res = EventSchProcessQIS(ref QIS);
 
             lock (ScriptInExec)
@@ -957,24 +960,28 @@ public QueueItemStruct QIS;
                 if (ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort)
                     ID.EventsProcData.State = (int)ScriptEventsState.Delete;
 
-                else if (!res || ID.VersionID != QIS.VersionID)
+//                else if (!res || ID.VersionID != QIS.VersionID)
+                else if (!res)
+                    {
                     ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    }
 
                 else
-                {
+                    {
                     ID.EventsProcData.CurExecQIS = QIS;
 
                     if (QIS.CurrentlyAt.SleepTo.Ticks != 0)
-                    {
+                        {
                         ID.EventsProcData.TimeCheck = QIS.CurrentlyAt.SleepTo;
                         ID.EventsProcData.State = (int)ScriptEventsState.Sleep;
-                    }
+                        }
                     else
                         ID.EventsProcData.State = (int)ScriptEventsState.Running;
-                }
+                    }
+            ID.EventsProcDataLocked = false;
             }
 
-            ID.EventsProcDataLocked = false;
+            
             return;
         }
 
@@ -986,8 +993,8 @@ public QueueItemStruct QIS;
                 EnumeratorInfo Running = QIS.ID.Script.ExecuteEvent(QIS.State,
                             QIS.functionName,
                             QIS.param, QIS.CurrentlyAt, out ex);
-                if (QIS.ID.VersionID != QIS.VersionID)
-                    return false;
+//                if (QIS.ID.VersionID != QIS.VersionID)
+//                    return false;
 
                 if (ex != null)
                 {

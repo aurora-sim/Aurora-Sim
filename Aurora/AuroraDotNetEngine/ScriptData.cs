@@ -307,7 +307,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 //            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
             m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
-            VersionID++;
+//            VersionID++;
             //Reset the state to default
             State = "default";
             //Reset all variables back to their original values.
@@ -670,7 +670,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             else
             {
                 //Make a new state save now
-            m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
+                m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
             }
 
             // Add it to our script memstruct so it can be found by other scripts
@@ -698,7 +698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
 
-            if (functionName == "control")
+            if (functionName == "control" || functionName=="state_entry" || functionName =="on_rez")
             {
                 //For vehicles, otherwise breaks them. DO NOT REMOVE UNLESS YOU FIND A BETTER WAY TO FIX
                 return true;
@@ -708,9 +708,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (EventDelayTicks != 0)
             {
-                if (NowTicks < NextEventTimeTicks)
-                    return false;
-
+            if (NowTicks < NextEventTimeTicks)
+                return false;
                 NextEventTimeTicks = NowTicks + EventDelayTicks;
             }
             switch (functionName)
