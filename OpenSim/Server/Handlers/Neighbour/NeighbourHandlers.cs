@@ -44,9 +44,9 @@ using Nini.Config;
 using log4net;
 
 
-namespace OpenSim.Server.Handlers.Neighbour
+namespace OpenSim.Server.Handlers.Neighbor
 {
-    public class NeighbourHandler : BaseStreamHandler
+    public class NeighborHandler : BaseStreamHandler
     {
         #region Enums
 
@@ -62,16 +62,16 @@ namespace OpenSim.Server.Handlers.Neighbour
         #endregion
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private INeighbourService m_NeighbourService;
+        private INeighborService m_NeighborService;
         private IAuthenticationService m_AuthenticationService;
         private IConfigSource m_source;
         private NeighborThreatLevel m_threatLevel = NeighborThreatLevel.Low;
 
-        public NeighbourHandler(INeighbourService service, IAuthenticationService authentication, IConfigSource config) :
+        public NeighborHandler(INeighborService service, IAuthenticationService authentication, IConfigSource config) :
             base("POST", "/region")
         {
             m_source = config;
-            m_NeighbourService = service;
+            m_NeighborService = service;
             m_AuthenticationService = authentication;
             IConfig neighborsConfig = config.Configs["NeighborService"];
             if (neighborsConfig != null)
@@ -137,7 +137,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            List<GridRegion> thisRegion = m_NeighbourService.GetNeighbors(aRegion);
+            List<GridRegion> thisRegion = m_NeighborService.GetNeighbors(aRegion);
 
             Dictionary<string, object> resp = new Dictionary<string, object>();
 
@@ -201,7 +201,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            m_NeighbourService.SendChatMessageToNeighbors(message, type, aRegion);
+            m_NeighborService.SendChatMessageToNeighbors(message, type, aRegion);
 
             Dictionary<string, object> resp = new Dictionary<string, object>();
             resp["success"] = "true";
@@ -244,7 +244,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionIsUp(aRegion);
+            List<GridRegion> thisRegion = m_NeighborService.InformNeighborsThatRegionIsUp(aRegion);
             
             Dictionary<string, object> resp = new Dictionary<string, object>();
 
@@ -303,7 +303,7 @@ namespace OpenSim.Server.Handlers.Neighbour
             }
 
             // Finally!
-            List<GridRegion> thisRegion = m_NeighbourService.InformNeighborsThatRegionIsDown(aRegion);
+            List<GridRegion> thisRegion = m_NeighborService.InformNeighborsThatRegionIsDown(aRegion);
 
             Dictionary<string, object> resp = new Dictionary<string, object>();
 

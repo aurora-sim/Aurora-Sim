@@ -34,7 +34,7 @@ using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {
-    public interface INeighbourService
+    public interface INeighborService
     {
         /// <summary>
         /// Neighbors of all local regions

@@ -334,7 +334,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // OK, it got this agent. Let's close some child agents
-                INeighbourService neighborService = sp.Scene.RequestModuleInterface<INeighbourService>();
+                INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
@@ -386,7 +386,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                     else
                     {
-                        sp.ControllingClient.InformClientOfNeighbour(destinationHandle, endPoint);
+                        sp.ControllingClient.InformClientOfNeighbor(destinationHandle, endPoint);
                     }
                 }
                 else
@@ -600,7 +600,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected virtual bool NeedsNewAgent(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY)
         {
-            INeighbourService neighborService = m_aScene.RequestModuleInterface<INeighbourService>();
+            INeighborService neighborService = m_aScene.RequestModuleInterface<INeighborService>();
             if (neighborService != null)
                 return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
             return false;
@@ -608,7 +608,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected virtual bool NeedsClosing(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY, GridRegion reg)
         {
-            INeighbourService neighborService = m_aScene.RequestModuleInterface<INeighbourService>();
+            INeighborService neighborService = m_aScene.RequestModuleInterface<INeighborService>();
             if (neighborService != null)
                 return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
             return false;
@@ -1103,7 +1103,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // Next, let's close the child agent connections that are too far away.
-                INeighbourService neighborService = agent.Scene.RequestModuleInterface<INeighbourService>();
+                INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(neighbourx, neighboury, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
@@ -1162,7 +1162,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // Next, let's close the child agent connections that are too far away.
-                INeighbourService neighborService = agent.Scene.RequestModuleInterface<INeighbourService>();
+                INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents((uint)neighbourRegion.RegionLocX / 256, (uint)neighbourRegion.RegionLocY / 256, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
@@ -1310,7 +1310,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else
                 {
-                    INeighbourService service = sp.Scene.RequestModuleInterface<INeighbourService>();
+                    INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
                     if (service != null)
                     {
                         neighbours = service.GetNeighbors(sp.Scene.RegionInfo);
@@ -1348,7 +1348,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //Dump("Old Neighbours", oldRegions);
 
             /// Update the scene presence's known regions here on this region
-            sp.DropOldNeighbours(oldRegions);
+            sp.DropOldNeighbors(oldRegions);
 
             /// Collect as many seeds as possible
             Dictionary<ulong, string> seeds;
@@ -1527,7 +1527,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else
                 {
-                    sp.ControllingClient.InformClientOfNeighbour(reg.RegionHandle, endPoint);
+                    sp.ControllingClient.InformClientOfNeighbor(reg.RegionHandle, endPoint);
                 }
 
                 m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());

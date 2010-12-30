@@ -6158,7 +6158,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     edge.x = dir.x / Math.Abs(dir.x);
                 }
             }
-            INeighbourService service = World.RequestModuleInterface<INeighbourService>();
+            INeighborService service = World.RequestModuleInterface<INeighborService>();
             List<GridRegion> neighbors = new List<GridRegion>();
             if (service != null)
             {

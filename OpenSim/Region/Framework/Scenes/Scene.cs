@@ -625,7 +625,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 //Fix its neighbor settings and add this new region
                                 List<ulong> old = new List<ulong>();
                                 old.Add(otherRegion.RegionHandle);
-                                agent.DropOldNeighbours(old);
+                                agent.DropOldNeighbors(old);
                                 //Now add the agent to the reigon that is coming up
                                 IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
@@ -655,15 +655,15 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.TriggerOnRegionUp((GridRegion)otherRegion);
         }
 
-        // Alias IncomingHelloNeighbour OtherRegionUp, for now
-        public void IncomingHelloNeighbour(RegionInfo neighbour)
+        // Alias IncomingHelloNeighbor OtherRegionUp, for now
+        public void IncomingHelloNeighbor(RegionInfo neighbor)
         {
-            OtherRegionUp(new GridRegion(neighbour));
+            OtherRegionUp(new GridRegion(neighbor));
         }
 
-        public void IncomingClosingNeighbour(RegionInfo neighbour)
+        public void IncomingClosingNeighbor(RegionInfo neighbor)
         {
-            //OtherRegionUp(new GridRegion(neighbour));
+            //OtherRegionUp(new GridRegion(neighbor));
             //return new GridRegion(RegionInfo);
         }
 
@@ -778,7 +778,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Tell the neighbors that this region is now down
-            INeighbourService service = RequestModuleInterface<INeighbourService>();
+            INeighborService service = RequestModuleInterface<INeighborService>();
             if (service != null)
                 service.InformNeighborsThatRegionIsDown(RegionInfo);
 
@@ -2547,7 +2547,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!avatar.IsChildAgent)
                     {
-                        INeighbourService service = RequestModuleInterface<INeighbourService>();
+                        INeighborService service = RequestModuleInterface<INeighborService>();
                         if (service != null)
                             service.CloseAllNeighborAgents(agentID, RegionInfo.RegionID);
                     }
@@ -2923,7 +2923,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendOutChildAgentUpdates(AgentPosition cadu, ScenePresence presence)
         {
-            INeighbourService service = RequestModuleInterface<INeighbourService>();
+            INeighborService service = RequestModuleInterface<INeighborService>();
             if (service != null)
                 service.SendChildAgentUpdate(cadu, presence.Scene.RegionInfo.RegionID);
         }

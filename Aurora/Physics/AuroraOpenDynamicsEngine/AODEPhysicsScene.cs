@@ -3088,7 +3088,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         #region ODE Specific Terrain Fixes
-        public float[] ResizeTerrain512NearestNeighbour(float[] heightMap)
+        public float[] ResizeTerrain512NearestNeighbor(float[] heightMap)
         {
             float[] returnarr = new float[262144];
             float[,] resultarr = new float[(int)WorldExtents.X, (int)WorldExtents.Y];
@@ -3102,7 +3102,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            // Resize using Nearest Neighbour
+            // Resize using Nearest Neighbor
 
             // This particular way is quick but it only works on a multiple of the original
 

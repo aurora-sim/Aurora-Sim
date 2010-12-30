@@ -601,7 +601,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Dictionary<ulong, string> seeds;
             ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
-            INeighbourService neighborService = Scene.RequestModuleInterface<INeighbourService>();
+            INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
             if (module != null)
                 seeds = module.GetChildrenSeeds(UUID);
             else
@@ -619,7 +619,7 @@ namespace OpenSim.Region.Framework.Scenes
                     old.Add(handle);
                 }
             }
-            DropOldNeighbours(old);
+            DropOldNeighbors(old);
 
             if (module != null)
                 module.SetChildrenSeed(UUID, seeds);
@@ -1043,7 +1043,7 @@ namespace OpenSim.Region.Framework.Scenes
             ControllingClient.StopFlying(this);
         }
 
-        public void DropOldNeighbours(List<ulong> oldRegions)
+        public void DropOldNeighbors(List<ulong> oldRegions)
         {
             foreach (ulong handle in oldRegions)
             {
@@ -3016,7 +3016,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Throttles 
             float multiplier = 1;
-            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighbourService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
+            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighborService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
             if (innacurateNeighbors != 0)
             {
                 multiplier = 1f / innacurateNeighbors;

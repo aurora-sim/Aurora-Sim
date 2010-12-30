@@ -2269,7 +2269,7 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
+        void IClientAPI.InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
         {
             
         }

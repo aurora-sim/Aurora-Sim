@@ -103,7 +103,7 @@ namespace Aurora.Modules
                 g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", scene.GridService.GridServiceURL, s.ToOSD());
 
                 //Tell the neighbor service about it
-                INeighbourService service = scene.RequestModuleInterface<INeighbourService>();
+                INeighborService service = scene.RequestModuleInterface<INeighborService>();
                 if (service != null)
                     service.InformNeighborsThatRegionIsUp(scene.RegionInfo);
             }

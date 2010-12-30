@@ -701,8 +701,8 @@ namespace OpenSim.Framework
         public static RegionInfo Create(UUID regionID, string regionName, uint regX, uint regY, string externalHostName, uint httpPort, uint simPort, uint remotingPort, string serverURI)
         {
             RegionInfo regionInfo;
-            IPEndPoint neighbourInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);
-            regionInfo = new RegionInfo(regX, regY, neighbourInternalEndPoint, externalHostName);
+            IPEndPoint neighborInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);
+            regionInfo = new RegionInfo(regX, regY, neighborInternalEndPoint, externalHostName);
             regionInfo.RemotingPort = remotingPort;
             regionInfo.RemotingAddress = externalHostName;
             regionInfo.HttpPort = httpPort;

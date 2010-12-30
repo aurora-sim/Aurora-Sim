@@ -50,7 +50,7 @@ namespace OpenSim.Services.Connectors
         public UUID RegionID;
         public UUID Password;
     }
-    public class NeighbourServiceConnector : IService, INeighbourService
+    public class NeighborServiceConnector : IService, INeighborService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -422,9 +422,9 @@ namespace OpenSim.Services.Connectors
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("NeighbourHandler", "") == Name)
+            if (handlers.GetString("NeighborHandler", "") == Name)
             {
-                registry.RegisterModuleInterface<INeighbourService>(this);
+                registry.RegisterModuleInterface<INeighborService>(this);
                 m_LocalService = new LocalNeighborServiceConnector();
                 m_LocalService.ReadConfig(config);
             }
@@ -441,15 +441,15 @@ namespace OpenSim.Services.Connectors
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("NeighbourHandler", "") == Name)
+            if (handlers.GetString("NeighborHandler", "") == Name)
                 m_LocalService.PostStart(config, registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterModuleInterface<INeighbourService>(this);
+            if (handlers.GetString("NeighborHandler", "") == Name)
+                registry.RegisterModuleInterface<INeighborService>(this);
         }
 
         #endregion

@@ -35,13 +35,13 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 
-namespace OpenSim.Server.Handlers.Neighbour
+namespace OpenSim.Server.Handlers.Neighbor
 {
-    public class NeighbourServiceInConnector : IService
+    public class NeighborServiceInConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private INeighbourService m_NeighbourService;
+        private INeighborService m_NeighborService;
         private IAuthenticationService m_AuthenticationService;
         public string Name
         {
@@ -63,18 +63,18 @@ namespace OpenSim.Server.Handlers.Neighbour
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("NeighbourInHandler", "") != Name)
+            if (handlerConfig.GetString("NeighborInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighbourInHandlerPort"));
-            m_NeighbourService = registry.RequestModuleInterface<INeighbourService>();
+            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("NeighborInHandlerPort"));
+            m_NeighborService = registry.RequestModuleInterface<INeighborService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
-            if (m_NeighbourService == null)
+            if (m_NeighborService == null)
             {
-                m_log.Error("[NEIGHBOUR IN CONNECTOR]: neighbour service was not provided");
+                m_log.Error("[NEIGHBOR IN CONNECTOR]: neighbor service was not provided");
                 return;
             }
-            server.AddStreamHandler(new NeighbourHandler(m_NeighbourService, m_AuthenticationService, config));
+            server.AddStreamHandler(new NeighborHandler(m_NeighborService, m_AuthenticationService, config));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

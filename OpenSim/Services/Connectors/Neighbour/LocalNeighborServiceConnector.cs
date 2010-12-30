@@ -13,7 +13,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors
 {
-    public class LocalNeighborServiceConnector : IService, INeighbourService
+    public class LocalNeighborServiceConnector : IService, INeighborService
     {
         private static readonly ILog m_log =
                        LogManager.GetLogger(
@@ -42,8 +42,8 @@ namespace OpenSim.Services.Connectors
         {
             ReadConfig(config);
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterModuleInterface<INeighbourService>(this);
+            if (handlers.GetString("NeighborHandler", "") == Name)
+                registry.RegisterModuleInterface<INeighborService>(this);
         }
 
         public void ReadConfig(IConfigSource config)
@@ -74,8 +74,8 @@ namespace OpenSim.Services.Connectors
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("NeighbourHandler", "") == Name)
-                registry.RegisterModuleInterface<INeighbourService>(this);
+            if (handlers.GetString("NeighborHandler", "") == Name)
+                registry.RegisterModuleInterface<INeighborService>(this);
         }
 
         #endregion
@@ -116,7 +116,7 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-        #region INeighbourService
+        #region INeighborService
 
         public List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
@@ -138,11 +138,11 @@ namespace OpenSim.Services.Connectors
                         //Fix this regions neighbors now that it has a new one
                         m_KnownNeighbors[s.RegionInfo.RegionID] = FindNewNeighbors(s.RegionInfo);
 
-                        m_log.InfoFormat("[NeighborConnector]: HelloNeighbour from {0} to {1}.",
+                        m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
                             incomingRegion.RegionName, n.RegionName);
 
                         //Tell this region about the original region
-                        s.IncomingHelloNeighbour(incomingRegion);
+                        s.IncomingHelloNeighbor(incomingRegion);
                         //Tell the original region about this new region
                         incomingRegion.TriggerRegionUp(n);
                         //This region knows now, so add it to the list
@@ -209,6 +209,42 @@ namespace OpenSim.Services.Connectors
             {
                 //Get the range of regions defined by RegionViewSize
                 neighbors = m_gridService.GetRegionRange(region.ScopeID, (int)(region.RegionLocX - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocX + RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY - RegionViewSize) * (int)Constants.RegionSize, (int)(region.RegionLocY + RegionViewSize) * (int)Constants.RegionSize);
+                Border[] northBorders = region.NorthBorders.ToArray();
+                Border[] southBorders = region.SouthBorders.ToArray();
+                Border[] eastBorders = region.EastBorders.ToArray();
+                Border[] westBorders = region.WestBorders.ToArray();
+
+                // Legacy one region.  Provided for simplicity while testing the all inclusive method in the else statement.
+                if (northBorders.Length > 1 && southBorders.Length > 1 && eastBorders.Length > 1 && westBorders.Length > 1)
+                {
+                    //Check for larger mega-regions
+                    Vector2 extent = Vector2.Zero;
+                    for (int i = 0; i < eastBorders.Length; i++)
+                    {
+                        extent.X = (eastBorders[i].BorderLine.Z > extent.X) ? eastBorders[i].BorderLine.Z : extent.X;
+                    }
+                    for (int i = 0; i < northBorders.Length; i++)
+                    {
+                        extent.Y = (northBorders[i].BorderLine.Z > extent.Y) ? northBorders[i].BorderLine.Z : extent.Y;
+                    }
+
+                    // Loss of fraction on purpose
+                    extent.X = ((int)extent.X / (int)Constants.RegionSize) + 1;
+                    extent.Y = ((int)extent.Y / (int)Constants.RegionSize) + 1;
+
+                    int startX = (int)(region.RegionLocX - 1) * (int)Constants.RegionSize;
+                    int startY = (int)(region.RegionLocY - 1) * (int)Constants.RegionSize;
+
+                    int endX = ((int)region.RegionLocX + (int)extent.X) * (int)Constants.RegionSize;
+                    int endY = ((int)region.RegionLocY + (int)extent.Y) * (int)Constants.RegionSize;
+
+                    List<GridRegion> Regions = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
+                    foreach (GridRegion gregion in Regions)
+                    {
+                        if (!neighbors.Contains(gregion))
+                            neighbors.Add(gregion);
+                    }
+                }
             }
             //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
             if (!CloseLocalRegions)
@@ -270,7 +306,7 @@ namespace OpenSim.Services.Connectors
                             closingRegion.RegionName, n.RegionName);
 
                         //Tell this region about the original region
-                        s.IncomingClosingNeighbour(closingRegion);
+                        s.IncomingClosingNeighbor(closingRegion);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
                     }

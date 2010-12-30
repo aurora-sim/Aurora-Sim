@@ -1335,9 +1335,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Tell the client that the given neighbour region is ready to receive a child agent.
+        /// Tell the client that the given neighbor region is ready to receive a child agent.
         /// </summary>
-        public virtual void InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourEndPoint)
+        public virtual void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourEndPoint)
         {
             IPAddress neighbourIP = neighbourEndPoint.Address;
             ushort neighbourPort = (ushort)neighbourEndPoint.Port;

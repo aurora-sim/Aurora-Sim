@@ -38,9 +38,9 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
+namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbor
 {
-    public class LocalNeighbourServicesConnector : ISharedRegionModule
+    public class LocalNeighborServicesConnector : ISharedRegionModule
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
 
         public string Name
         {
-            get { return "LocalNeighbourServicesConnectorModule"; }
+            get { return "LocalNeighborServicesConnectorModule"; }
         }
 
         public void Initialise(IConfigSource source)
@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public void AddRegion(Scene scene)
         {
             //Keep this here so that we register the region no matter what as the service needs this
-            scene.RequestModuleInterface<INeighbourService>().Init(scene);
+            scene.RequestModuleInterface<INeighborService>().Init(scene);
         }
 
         public void RegionLoaded(Scene scene)
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectorsOut.Neighbour
         public void RemoveRegion(Scene scene)
         {
             //Keep this here so that we register the region no matter what as the service needs this
-            scene.RequestModuleInterface<INeighbourService>().RemoveScene(scene);
+            scene.RequestModuleInterface<INeighborService>().RemoveScene(scene);
         }
 
         #endregion ISharedRegionModule

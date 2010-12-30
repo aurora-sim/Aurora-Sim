@@ -316,7 +316,7 @@ namespace Aurora.Modules
                 }
             }
             bool Sent = false;
-            OpenSim.Services.Interfaces.INeighbourService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighbourService>();
+            OpenSim.Services.Interfaces.INeighborService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighborService>();
             if (neighborService != null)
             {
                 string Name = "";
@@ -346,7 +346,7 @@ namespace Aurora.Modules
             if(c.Range > m_maxChatDistance) //Check for max distance
                 c.Range = m_maxChatDistance;
 
-            OpenSim.Services.Interfaces.INeighbourService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighbourService>();
+            OpenSim.Services.Interfaces.INeighborService neighborService = c.Scene.RequestModuleInterface<OpenSim.Services.Interfaces.INeighborService>();
             if (neighborService != null && c.Message != "")
             {
                 Sent = neighborService.SendChatMessageToNeighbors(c, ChatSourceType.Object, c.Scene.RegionInfo);

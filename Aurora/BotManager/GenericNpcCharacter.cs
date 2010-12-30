@@ -476,7 +476,7 @@ namespace Aurora.BotManager
         {
         }
 
-        public virtual void InformClientOfNeighbour(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
+        public virtual void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
         {
         }
 
