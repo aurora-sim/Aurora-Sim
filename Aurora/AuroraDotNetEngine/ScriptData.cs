@@ -441,7 +441,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Post the event for the prim that rezzed us
                 m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0],
-                    -1, new object[] { part.ParentGroup.RootPart.UUID });
+                    -1, new object[] { (LSL_Types.LSLString) part.ParentGroup.RootPart.UUID.ToString() });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
