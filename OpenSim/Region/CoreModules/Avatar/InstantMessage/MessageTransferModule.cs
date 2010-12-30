@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             bool successful = false;
             
-            // TODO: For now, as IMs seem to be a bit unreliable on OSGrid, catch all exception that
+            // For now, as IMs seem to be a bit unreliable on OSGrid, catch all exception that
             // happen here and aren't caught and log them.
             try 
             {

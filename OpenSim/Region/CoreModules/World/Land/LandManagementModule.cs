@@ -91,9 +91,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         private int m_minutesBeforeTimer = 60;
         private System.Timers.Timer m_UpdateDirectoryTimer = new System.Timers.Timer();
 
-        // caches ExtendedLandData
-        private Cache parcelInfoCache; 
-
         #region INonSharedRegionModule Members
 
         public Type ReplaceableInterface
@@ -127,10 +124,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             landChannel = new LandChannel(scene, this);
-
-            parcelInfoCache = new Cache();
-            parcelInfoCache.Size = 30; // the number of different parcel requests in this region to cache
-            parcelInfoCache.DefaultTTL = new TimeSpan(0, 5, 0);
 
             m_scene.EventManager.OnParcelPrimCountAdd += EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnParcelPrimCountUpdate += EventManagerOnParcelPrimCountUpdate;

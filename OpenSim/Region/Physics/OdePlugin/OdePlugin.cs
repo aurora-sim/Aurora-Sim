@@ -2706,9 +2706,7 @@ namespace OpenSim.Region.Physics.OdePlugin
                 //(step_time == 0.004f, there's 250 of those per second.   Times the step time/step size
 
                 fps = (step_time / ODE_STEPSIZE) * 1000;
-                // HACK: Using a time dilation of 1.0 to debug rubberbanding issues
-                //m_timeDilation = Math.Min((step_time / ODE_STEPSIZE) / (0.09375f / ODE_STEPSIZE), 1.0f);
-
+                
                 step_time = 0.09375f;
 
                 while (step_time > 0.0f)
@@ -3109,7 +3107,6 @@ namespace OpenSim.Region.Physics.OdePlugin
                 //DumpJointInfo();
 
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
-                // TODO: This call to the export function is already inside lock (OdeLock) - but is an extra lock needed? 
                 // This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?
                 if (physics_logging && (physics_logging_interval>0) && (framecount % physics_logging_interval == 0))
                 {

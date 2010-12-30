@@ -158,20 +158,22 @@ namespace OpenSim.Services.InventoryService
         {
             IUserAccountService UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             UserAccount uinfo = UserAccountService.GetUserAccount(UUID.Zero, LibraryOwner);
+            IInventoryService InventoryService = registry.RequestModuleInterface<IInventoryService>();
             //Make the user account for the default IAR
             if (uinfo == null)
             {
                 uinfo = new UserAccount(LibraryOwner);
                 uinfo.FirstName = LibraryOwnerName[0];
                 uinfo.LastName = LibraryOwnerName[1];
+                uinfo.Email = "";
                 uinfo.ServiceURLs = new Dictionary<string, object>();
-                uinfo.Created = Util.EnvironmentTickCount();
                 uinfo.UserLevel = 0;
                 uinfo.UserFlags = 0;
+                uinfo.ScopeID = UUID.Zero;
                 uinfo.UserTitle = "";
                 UserAccountService.StoreUserAccount(uinfo);
+                InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
-            IInventoryService InventoryService = registry.RequestModuleInterface<IInventoryService>();
             InventoryCollection col = InventoryService.GetFolderContent(LibraryOwner, UUID.Zero);
             foreach (InventoryFolderBase folder in col.Folders)
             {
