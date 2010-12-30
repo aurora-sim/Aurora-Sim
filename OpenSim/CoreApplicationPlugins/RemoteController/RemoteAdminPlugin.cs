@@ -116,7 +116,7 @@ namespace OpenSim.CoreApplicationPlugins
                     int port = m_config.GetInt("port", 0);
 
                     m_application = openSim;
-                    m_httpServer = MainServer.GetHttpServer((uint)port);
+                    m_httpServer = m_application.GetHttpServer((uint)port);
 
                     Dictionary<string, XmlRpcMethod> availableMethods = new Dictionary<string, XmlRpcMethod>();
                     availableMethods["admin_create_region"] = XmlRpcCreateRegionMethod;

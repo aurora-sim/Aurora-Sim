@@ -35,33 +35,13 @@ namespace OpenSim.Framework
     public class MainServer
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        private static BaseHttpServer instance = null;
-        private static Dictionary<uint, BaseHttpServer> m_Servers =
-                new Dictionary<uint, BaseHttpServer>();
 
-        public static BaseHttpServer Instance
+        private static IHttpServer instance = null;
+
+        public static IHttpServer Instance
         {
             get { return instance; }
             set { instance = value; }
-        }
-
-        public static IHttpServer GetHttpServer(uint port)
-        {
-            if (port == 0)
-                return Instance;
-            if (instance != null && port == Instance.Port)
-                return Instance;
-
-            if (m_Servers.ContainsKey(port))
-                return m_Servers[port];
-
-            m_Servers[port] = new BaseHttpServer(port);
-
-            m_log.InfoFormat("[MAIN HTTP SERVER]: Starting main http server on port {0}", port);
-            m_Servers[port].Start();
-
-            return m_Servers[port];
         }
     }
 }

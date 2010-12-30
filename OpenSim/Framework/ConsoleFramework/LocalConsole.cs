@@ -58,16 +58,17 @@ namespace OpenSim.Framework
             // the dark colors don't seem to be visible on some black background terminals like putty :(
             //ConsoleColor.DarkBlue,
             //ConsoleColor.DarkGreen,
-            //ConsoleColor.DarkCyan,
-            //ConsoleColor.DarkMagenta,
-            //ConsoleColor.DarkYellow,
-            ConsoleColor.Gray,
+            //ConsoleColor.Gray, 
             //ConsoleColor.DarkGray,
-            ConsoleColor.Blue,
+            ConsoleColor.DarkCyan,
+            ConsoleColor.DarkMagenta,
+            ConsoleColor.DarkYellow,
             ConsoleColor.Green,
-            ConsoleColor.Cyan,
+            ConsoleColor.Blue,
             ConsoleColor.Magenta,
-            ConsoleColor.Yellow
+            ConsoleColor.Red,
+            ConsoleColor.Yellow,
+            ConsoleColor.Cyan
         };
 
         public override void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
@@ -89,7 +90,7 @@ namespace OpenSim.Framework
         private static ConsoleColor DeriveColor(string input)
         {
             // it is important to do Abs, hash values can be negative
-            return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
+            return Colors[(Math.Abs(input.ToUpper().Length) % Colors.Length)];
         }
 
         public override string Name

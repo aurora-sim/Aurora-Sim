@@ -2351,6 +2351,12 @@ namespace OpenSim.Region.Framework.Scenes
             //        }
             //    }
             //}
+            if (Scene.UseSelectionParticles && SendEffectPackets > 7)
+            {
+                SendViewerEffects();
+                SendEffectPackets = -1;
+            }
+            SendEffectPackets++;
         }
 
         private int SendEffectPackets = -1;
@@ -2714,12 +2720,6 @@ namespace OpenSim.Region.Framework.Scenes
                 module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
                 CollisionSoundID = UUID.Zero;
             }
-            if (Scene.UseSelectionParticles && SendEffectPackets > 7)
-            {
-                SendViewerEffects();
-                SendEffectPackets = -1;
-            }
-            SendEffectPackets++;
         }
 
         #endregion

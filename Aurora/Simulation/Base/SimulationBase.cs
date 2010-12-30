@@ -35,7 +35,7 @@ namespace Aurora.Simulation.Base
         protected ICommandConsole m_console;
         protected OpenSimAppender m_consoleAppender;
         protected IAppender m_logFileAppender = null;
-        protected BaseHttpServer m_BaseHTTPServer;
+        protected IHttpServer m_BaseHTTPServer;
 
         /// <value>
         /// The config information passed into the OpenSimulator region server.
@@ -163,7 +163,7 @@ namespace Aurora.Simulation.Base
             m_log.Warn("====================================================================");
             m_log.Warn("========================= STARTING AURORA =========================");
             m_log.Warn("====================================================================");
-            m_log.Warn("[AURORASTARTUP]: Version: " + Version + "\n");
+            m_log.Warn("[AuroraStartup]: Version: " + Version + "\n");
 
             SetUpHTTPServer();
 
@@ -262,18 +262,29 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
-            m_log.DebugFormat("[SERVER]: Requested port {0}", port);
-            if (port == m_Port)
-                return HttpServer;
-            if (port == 0)
+            return GetHttpServer(port, false, 0, "");
+        }
+
+        /// <summary>
+        /// Get an HTTPServer on the given port. It will create one if one does not exist
+        /// </summary>
+        /// <param name="port">Port to find the HTTPServer for</param>
+        /// <param name="UsesSSL">Does this HttpServer support SSL</param>
+        /// <param name="sslPort">The SSL Port</param>
+        /// <param name="sslCN">the SSL CN</param>
+        /// <returns></returns>
+        public IHttpServer GetHttpServer(uint port, bool UsesSSL, uint sslPort, string sslCN)
+        {
+            m_log.DebugFormat("[Server]: Requested port {0}", port);
+            if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
             if (m_Servers.ContainsKey(port))
                 return m_Servers[port];
 
-            m_Servers[port] = new BaseHttpServer(port);
+            m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN);
 
-            m_log.InfoFormat("[SERVER]: Starting new HTTP server on port {0}", port);
+            m_log.InfoFormat("[Server]: Starting new Http server on port {0}", port);
             m_Servers[port].Start();
 
             return m_Servers[port];
@@ -302,20 +313,14 @@ namespace Aurora.Simulation.Base
             catch
             {
             }
-            m_BaseHTTPServer = new BaseHttpServer(
-                    m_Port, HttpUsesSSL, httpSSLPort,
-                    HttpSSLCN);
+            m_BaseHTTPServer = GetHttpServer(m_Port, HttpUsesSSL, httpSSLPort, HttpSSLCN);
 
             if (HttpUsesSSL && (m_Port == httpSSLPort))
             {
                 m_log.Error("[HTTPSERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
             }
 
-            m_log.InfoFormat("[HTTPSERVER]: Starting HTTP server on port {0}", m_Port);
-            m_BaseHTTPServer.Start();
-
             MainServer.Instance = m_BaseHTTPServer;
-            m_Servers[m_Port] = m_BaseHTTPServer;
         }
 
         /// <summary>

@@ -492,7 +492,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 if (AgentLocations != null && (AgentLocations.Length != 0 && AgentLocations[0] != "Failure")) //If this is true, this doesn't exist on the presence server and we use the legacy way
                 {
                     //No agents, do nothing
-                    if (AgentLocations[0] == "NoAgents")
+                    if (AgentLocations[0] == "NoAgents" || AgentLocations[0] == "")
                         return;
                     try
                     {
