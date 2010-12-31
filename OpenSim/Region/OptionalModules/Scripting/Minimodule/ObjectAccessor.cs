@@ -123,7 +123,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         public IObject Create(Vector3 position, Quaternion rotation)
         {
 
-            SceneObjectGroup sog = m_scene.AddNewPrim(m_security.owner.GlobalID,
+            SceneObjectGroup sog = m_scene.SceneGraph.AddNewPrim(m_security.owner.GlobalID,
                                                       UUID.Zero,
                                                       position,
                                                       rotation,

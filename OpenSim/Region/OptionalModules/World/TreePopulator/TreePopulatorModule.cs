@@ -188,7 +188,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             {
                 m_scene = scene;
                 m_scene.RegisterModuleInterface<IVegetationModule>(this);
-                m_scene.RegisterEntityCreatorModule(this);
+                m_scene.SceneGraph.RegisterEntityCreatorModule(this);
 
                 InstallCommands();
             }
@@ -497,7 +497,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             treeShape.Scale = scale;
             treeShape.State = (byte)treeType;
 
-            return m_scene.AddNewPrim(uuid, groupID, position, rotation, treeShape);
+            return m_scene.SceneGraph.AddNewPrim(uuid, groupID, position, rotation, treeShape);
         }
 
         #endregion

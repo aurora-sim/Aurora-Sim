@@ -685,6 +685,199 @@ namespace OpenSim.Region.Framework.Scenes
         #region Client Event handlers
 
         /// <summary>
+        /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.
+        /// </summary>
+        /// <param name="RayStart"></param>
+        /// <param name="RayEnd"></param>
+        /// <param name="RayTargetID"></param>
+        /// <param name="rot"></param>
+        /// <param name="bypassRayCast"></param>
+        /// <param name="RayEndIsIntersection"></param>
+        /// <param name="frontFacesOnly"></param>
+        /// <param name="scale"></param>
+        /// <param name="FaceCenter"></param>
+        /// <returns></returns>
+        public Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter)
+        {
+            Vector3 pos = Vector3.Zero;
+            if (RayEndIsIntersection == (byte)1)
+            {
+                pos = RayEnd;
+                return pos;
+            }
+
+            if (RayTargetID != UUID.Zero)
+            {
+                SceneObjectPart target = m_parentScene.GetSceneObjectPart(RayTargetID);
+
+                Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
+                Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
+                Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
+
+                if (target != null)
+                {
+                    pos = target.AbsolutePosition;
+                    //m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+
+                    // TODO: Raytrace better here
+
+                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection));
+                    Ray NewRay = new Ray(AXOrigin, AXdirection);
+
+                    // Ray Trace against target here
+                    EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, FaceCenter);
+
+                    // Un-comment out the following line to Get Raytrace results printed to the console.
+                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    float ScaleOffset = 0.5f;
+
+                    // If we hit something
+                    if (ei.HitTF)
+                    {
+                        Vector3 scaleComponent = new Vector3(ei.AAfaceNormal.X, ei.AAfaceNormal.Y, ei.AAfaceNormal.Z);
+                        if (scaleComponent.X != 0) ScaleOffset = scale.X;
+                        if (scaleComponent.Y != 0) ScaleOffset = scale.Y;
+                        if (scaleComponent.Z != 0) ScaleOffset = scale.Z;
+                        ScaleOffset = Math.Abs(ScaleOffset);
+                        Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
+                        Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
+                        // Set the position to the intersection point
+                        Vector3 offset = (normal * (ScaleOffset / 2f));
+                        pos = (intersectionpoint + offset);
+
+                        //Seems to make no sense to do this as this call is used for rezzing from inventory as well, and with inventory items their size is not always 0.5f
+                        //And in cases when we weren't rezzing from inventory we were re-adding the 0.25 straight after calling this method
+                        // Un-offset the prim (it gets offset later by the consumer method)
+                        //pos.Z -= 0.25F; 
+
+                    }
+
+                    return pos;
+                }
+                else
+                {
+                    // We don't have a target here, so we're going to raytrace all the objects in the scene.
+
+                    EntityIntersection ei = GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), true, false);
+
+                    // Un-comment the following line to print the raytrace results to the console.
+                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+
+                    if (ei.HitTF)
+                    {
+                        pos = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
+                    }
+                    else
+                    {
+                        // fall back to our stupid functionality
+                        pos = RayEnd;
+                    }
+
+                    return pos;
+                }
+            }
+            else
+            {
+                // fall back to our stupid functionality
+                pos = RayEnd;
+
+                //increase height so its above the ground.
+                //should be getting the normal of the ground at the rez point and using that?
+                pos.Z += scale.Z / 2f;
+                return pos;
+            }
+        }
+
+        public virtual void AddNewPrim(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape,
+                                       byte bypassRaycast, Vector3 RayStart, UUID RayTargetID,
+                                       byte RayEndIsIntersection)
+        {
+            Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
+
+            string reason;
+            if (m_parentScene.Permissions.CanRezObject(1, ownerID, pos, out reason))
+            {
+               AddNewPrim(ownerID, groupID, pos, rot, shape);
+            }
+            else
+            {
+                GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
+            }
+        }
+
+        /// <summary>
+        /// Create a New SceneObjectGroup/Part by raycasting
+        /// </summary>
+        /// <param name="ownerID"></param>
+        /// <param name="groupID"></param>
+        /// <param name="RayEnd"></param>
+        /// <param name="rot"></param>
+        /// <param name="shape"></param>
+        /// <param name="bypassRaycast"></param>
+        /// <param name="RayStart"></param>
+        /// <param name="RayTargetID"></param>
+        /// <param name="RayEndIsIntersection"></param>
+        public virtual SceneObjectGroup AddNewPrim(
+            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
+        {
+            //m_log.DebugFormat(
+            //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
+
+            SceneObjectGroup sceneObject = null;
+
+            // If an entity creator has been registered for this prim type then use that
+            if (m_entityCreators.ContainsKey((PCode)shape.PCode))
+            {
+                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity(ownerID, groupID, pos, rot, shape);
+            }
+            else
+            {
+                // Otherwise, use this default creation code;
+                sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, m_parentScene);
+                //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
+                sceneObject.m_lastSignificantPosition = pos;
+
+                AddPrimToScene(sceneObject);
+                sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                sceneObject.SetGroup(groupID, null);
+            }
+
+
+            return sceneObject;
+        }
+
+        /// <value>
+        /// Registered classes that are capable of creating entities.
+        /// </value>
+        protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
+
+        public void RegisterEntityCreatorModule(IEntityCreator entityCreator)
+        {
+            lock (m_entityCreators)
+            {
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = entityCreator;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unregister a module commander and all its commands
+        /// </summary>
+        /// <param name="name"></param>
+        public void UnregisterEntityCreatorCommander(IEntityCreator entityCreator)
+        {
+            lock (m_entityCreators)
+            {
+                foreach (PCode pcode in entityCreator.CreationCapabilities)
+                {
+                    m_entityCreators[pcode] = null;
+                }
+            }
+        }
+
+        /// <summary>
         ///
         /// </summary>
         /// <param name="localID"></param>
@@ -710,6 +903,24 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                 {
                     ((SceneObjectGroup)entity).GroupResize(scale, LocalID);
+                }
+            }
+        }
+
+        public void HandleObjectPermissionsUpdate(IClientAPI controller, UUID agentID, UUID sessionID, byte field, uint localId, uint mask, byte set)
+        {
+            // Check for spoofing..  since this is permissions we're talking about here!
+            if ((controller.SessionId == sessionID) && (controller.AgentId == agentID))
+            {
+                // Tell the object to do permission update
+                if (localId != 0)
+                {
+                    SceneObjectGroup chObjectGroup = m_parentScene.GetGroupByPrim(localId);
+                    if (chObjectGroup != null)
+                    {
+                        if (m_parentScene.Permissions.CanEditObject(chObjectGroup.UUID, controller.AgentId))
+                            chObjectGroup.UpdatePermissions(agentID, field, localId, mask, set);
+                    }
                 }
             }
         }

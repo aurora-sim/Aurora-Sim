@@ -125,7 +125,7 @@ namespace OpenSim.Region.RegionCombinerModule
             rayend.Y += differenceY * (int)Constants.RegionSize;
             raystart.X += differenceX * (int)Constants.RegionSize;
             raystart.Y += differenceY * (int)Constants.RegionSize;
-            m_rootScene.AddNewPrim(ownerid, groupid, rayend, rot, shape, bypassraycast, raystart, raytargetid,
+            m_rootScene.SceneGraph.AddNewPrim(ownerid, groupid, rayend, rot, shape, bypassraycast, raystart, raytargetid,
                                    rayendisintersection);
         }
 

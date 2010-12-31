@@ -575,7 +575,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
 
 
-            Vector3 pos = m_Scene.GetNewRezLocation(
+            Vector3 pos = m_Scene.SceneGraph.GetNewRezLocation(
                       RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                       BypassRayCast, bRayEndIsIntersection, true, scale, false);
 
@@ -666,7 +666,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         if (!attachment)
                         {
                             float offsetHeight = 0;
-                            pos = m_Scene.GetNewRezLocation(
+                            pos = m_Scene.SceneGraph.GetNewRezLocation(
                                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                                 BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
                             pos.Z += offsetHeight;
@@ -847,7 +847,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if (!attachment)
                 {
                     float offsetHeight = 0;
-                    pos = m_Scene.GetNewRezLocation(
+                    pos = m_Scene.SceneGraph.GetNewRezLocation(
                         RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                         BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
                     pos.Z += offsetHeight;

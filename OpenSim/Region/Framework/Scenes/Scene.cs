@@ -1166,168 +1166,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Primitives Methods
 
         /// <summary>
-        /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.
-        /// </summary>
-        /// <param name="RayStart"></param>
-        /// <param name="RayEnd"></param>
-        /// <param name="RayTargetID"></param>
-        /// <param name="rot"></param>
-        /// <param name="bypassRayCast"></param>
-        /// <param name="RayEndIsIntersection"></param>
-        /// <param name="frontFacesOnly"></param>
-        /// <param name="scale"></param>
-        /// <param name="FaceCenter"></param>
-        /// <returns></returns>
-        public Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter)
-        {
-            Vector3 pos = Vector3.Zero;
-            if (RayEndIsIntersection == (byte)1)
-            {
-                pos = RayEnd;
-                return pos;
-            }
-
-            if (RayTargetID != UUID.Zero)
-            {
-                SceneObjectPart target = GetSceneObjectPart(RayTargetID);
-
-                Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
-                Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
-                Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
-
-                if (target != null)
-                {
-                    pos = target.AbsolutePosition;
-                    //m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
-
-                    // TODO: Raytrace better here
-
-                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection));
-                    Ray NewRay = new Ray(AXOrigin, AXdirection);
-
-                    // Ray Trace against target here
-                    EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, FaceCenter);
-
-                    // Un-comment out the following line to Get Raytrace results printed to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
-                    float ScaleOffset = 0.5f;
-
-                    // If we hit something
-                    if (ei.HitTF)
-                    {
-                        Vector3 scaleComponent = new Vector3(ei.AAfaceNormal.X, ei.AAfaceNormal.Y, ei.AAfaceNormal.Z);
-                        if (scaleComponent.X != 0) ScaleOffset = scale.X;
-                        if (scaleComponent.Y != 0) ScaleOffset = scale.Y;
-                        if (scaleComponent.Z != 0) ScaleOffset = scale.Z;
-                        ScaleOffset = Math.Abs(ScaleOffset);
-                        Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
-                        Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
-                        // Set the position to the intersection point
-                        Vector3 offset = (normal * (ScaleOffset / 2f));
-                        pos = (intersectionpoint + offset);
-
-                        //Seems to make no sense to do this as this call is used for rezzing from inventory as well, and with inventory items their size is not always 0.5f
-                        //And in cases when we weren't rezzing from inventory we were re-adding the 0.25 straight after calling this method
-                        // Un-offset the prim (it gets offset later by the consumer method)
-                        //pos.Z -= 0.25F; 
-
-                    }
-
-                    return pos;
-                }
-                else
-                {
-                    // We don't have a target here, so we're going to raytrace all the objects in the scene.
-
-                    EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), true, false);
-
-                    // Un-comment the following line to print the raytrace results to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
-
-                    if (ei.HitTF)
-                    {
-                        pos = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
-                    }
-                    else
-                    {
-                        // fall back to our stupid functionality
-                        pos = RayEnd;
-                    }
-
-                    return pos;
-                }
-            }
-            else
-            {
-                // fall back to our stupid functionality
-                pos = RayEnd;
-
-                //increase height so its above the ground.
-                //should be getting the normal of the ground at the rez point and using that?
-                pos.Z += scale.Z / 2f;
-                return pos;
-            }
-        }
-
-        /// <summary>
-        /// Create a New SceneObjectGroup/Part by raycasting
-        /// </summary>
-        /// <param name="ownerID"></param>
-        /// <param name="groupID"></param>
-        /// <param name="RayEnd"></param>
-        /// <param name="rot"></param>
-        /// <param name="shape"></param>
-        /// <param name="bypassRaycast"></param>
-        /// <param name="RayStart"></param>
-        /// <param name="RayTargetID"></param>
-        /// <param name="RayEndIsIntersection"></param>
-        public virtual void AddNewPrim(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape,
-                                       byte bypassRaycast, Vector3 RayStart, UUID RayTargetID,
-                                       byte RayEndIsIntersection)
-        {
-            Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
-
-            string reason;
-            if (Permissions.CanRezObject(1, ownerID, pos, out reason))
-            {
-                AddNewPrim(ownerID, groupID, pos, rot, shape);
-            }
-            else
-            {
-                GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
-            }
-        }
-
-        public virtual SceneObjectGroup AddNewPrim(
-            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
-        {
-            //m_log.DebugFormat(
-            //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
-
-            SceneObjectGroup sceneObject = null;
-
-            // If an entity creator has been registered for this prim type then use that
-            if (m_entityCreators.ContainsKey((PCode)shape.PCode))
-            {
-                sceneObject = (SceneObjectGroup)m_entityCreators[(PCode)shape.PCode].CreateEntity(ownerID, groupID, pos, rot, shape);
-            }
-            else
-            {
-                // Otherwise, use this default creation code;
-                sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, this);
-                //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
-                sceneObject.m_lastSignificantPosition = pos;
-
-                SceneGraph.AddPrimToScene(sceneObject);
-                sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                sceneObject.SetGroup(groupID, null);
-            }
-
-
-            return sceneObject;
-        }
-
-        /// <summary>
         /// Synchronously delete the given object from the scene.
         /// </summary>
         /// <param name="group">Object Id</param>
@@ -1503,68 +1341,6 @@ namespace OpenSim.Region.Framework.Scenes
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
                 transferModule.Cross(grp, attemptedPosition);
-        }
-
-        public void HandleObjectPermissionsUpdate(IClientAPI controller, UUID agentID, UUID sessionID, byte field, uint localId, uint mask, byte set)
-        {
-            // Check for spoofing..  since this is permissions we're talking about here!
-            if ((controller.SessionId == sessionID) && (controller.AgentId == agentID))
-            {
-                // Tell the object to do permission update
-                if (localId != 0)
-                {
-                    SceneObjectGroup chObjectGroup = GetGroupByPrim(localId);
-                    if (chObjectGroup != null)
-                    {
-                        if (Permissions.CanEditObject(chObjectGroup.UUID, controller.AgentId))
-                            chObjectGroup.UpdatePermissions(agentID, field, localId, mask, set);
-                    }
-                }
-            }
-        }
-
-        public Vector3[] GetCombinedBoundingBox(List<SceneObjectGroup> objects, out float minX, out float maxX, out float minY, out float maxY, out float minZ, out float maxZ)
-        {
-            minX = 256;
-            maxX = -256;
-            minY = 256;
-            maxY = -256;
-            minZ = 8192;
-            maxZ = -256;
-
-            List<Vector3> offsets = new List<Vector3>();
-
-            foreach (SceneObjectGroup g in objects)
-            {
-                float ominX, ominY, ominZ, omaxX, omaxY, omaxZ;
-
-                g.GetAxisAlignedBoundingBoxRaw(out ominX, out omaxX, out ominY, out omaxY, out ominZ, out omaxZ);
-
-                if (minX > ominX)
-                    minX = ominX;
-                if (minY > ominY)
-                    minY = ominY;
-                if (minZ > ominZ)
-                    minZ = ominZ;
-                if (maxX < omaxX)
-                    maxX = omaxX;
-                if (maxY < omaxY)
-                    maxY = omaxY;
-                if (maxZ < omaxZ)
-                    maxZ = omaxZ;
-            }
-
-            foreach (SceneObjectGroup g in objects)
-            {
-                Vector3 vec = g.AbsolutePosition;
-                vec.X -= minX;
-                vec.Y -= minY;
-                vec.Z -= minZ;
-
-                offsets.Add(vec);
-            }
-
-            return offsets.ToArray();
         }
 
         public ISceneObject DeserializeObject(string representation)
@@ -2121,7 +1897,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnObjectDuplicate += m_sceneGraph.DuplicateObject;
             client.OnUpdatePrimFlags += m_sceneGraph.UpdatePrimFlags;
             client.OnRequestObjectPropertiesFamily += m_sceneGraph.RequestObjectPropertiesFamily;
-            client.OnObjectPermissions += HandleObjectPermissionsUpdate;
+            client.OnObjectPermissions += m_sceneGraph.HandleObjectPermissionsUpdate;
             client.OnGrabObject += ProcessObjectGrab;
             client.OnGrabUpdate += ProcessObjectGrabUpdate;
             client.OnDeGrabObject += ProcessObjectDeGrab;
@@ -2136,7 +1912,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void SubscribeToClientPrimRezEvents(IClientAPI client)
         {
-            client.OnAddPrim += AddNewPrim;
+            client.OnAddPrim += m_sceneGraph.AddNewPrim;
             client.OnRezObject += RezObject;
             client.OnObjectDuplicateOnRay += doObjectDuplicateOnRay;
         }
@@ -2218,7 +1994,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnObjectDuplicate -= m_sceneGraph.DuplicateObject;
             client.OnUpdatePrimFlags -= m_sceneGraph.UpdatePrimFlags;
             client.OnRequestObjectPropertiesFamily -= m_sceneGraph.RequestObjectPropertiesFamily;
-            client.OnObjectPermissions -= HandleObjectPermissionsUpdate;
+            client.OnObjectPermissions -= m_sceneGraph.HandleObjectPermissionsUpdate;
             client.OnGrabObject -= ProcessObjectGrab;
             client.OnDeGrabObject -= ProcessObjectDeGrab;
             client.OnUndo -= m_sceneGraph.HandleUndo;
@@ -2232,7 +2008,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void UnSubscribeToClientPrimRezEvents(IClientAPI client)
         {
-            client.OnAddPrim -= AddNewPrim;
+            client.OnAddPrim -= m_sceneGraph.AddNewPrim;
             client.OnRezObject -= RezObject;
             client.OnObjectDuplicateOnRay -= doObjectDuplicateOnRay;
         }
@@ -3301,41 +3077,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Tell the SceneManager about it
             m_sceneManager.HandleStartupComplete(this, data);
-        }
-
-        #endregion
-
-        #region Module Methods
-
-        /// <value>
-        /// Registered classes that are capable of creating entities.
-        /// </value>
-        protected Dictionary<PCode, IEntityCreator> m_entityCreators = new Dictionary<PCode, IEntityCreator>();
-
-        public void RegisterEntityCreatorModule(IEntityCreator entityCreator)
-        {
-            lock (m_entityCreators)
-            {
-                foreach (PCode pcode in entityCreator.CreationCapabilities)
-                {
-                    m_entityCreators[pcode] = entityCreator;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Unregister a module commander and all its commands
-        /// </summary>
-        /// <param name="name"></param>
-        public void UnregisterEntityCreatorCommander(IEntityCreator entityCreator)
-        {
-            lock (m_entityCreators)
-            {
-                foreach (PCode pcode in entityCreator.CreationCapabilities)
-                {
-                    m_entityCreators[pcode] = null;
-                }
-            }
         }
 
         #endregion

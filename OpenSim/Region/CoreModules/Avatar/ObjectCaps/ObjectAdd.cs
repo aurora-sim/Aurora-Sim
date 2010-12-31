@@ -313,7 +313,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
            
 
-            Vector3 pos = m_scene.GetNewRezLocation(ray_start, ray_end, ray_target_id, rotation, (bypass_raycast) ? (byte)1 : (byte)0,  (ray_end_is_intersection) ? (byte)1 : (byte)0, true, scale, false);
+            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(ray_start, ray_end, ray_target_id, rotation, (bypass_raycast) ? (byte)1 : (byte)0,  (ray_end_is_intersection) ? (byte)1 : (byte)0, true, scale, false);
 
             PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
 
@@ -347,7 +347,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = m_scene.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
