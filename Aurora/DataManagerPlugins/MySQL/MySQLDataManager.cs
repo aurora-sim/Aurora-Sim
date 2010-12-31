@@ -681,8 +681,13 @@ namespace Aurora.DataManager.MySQL
 
                 MySqlCommand dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = query;
-                dbcommand.ExecuteNonQuery();
-                CloseDatabase(dbcon);
+                try
+                {
+                    dbcommand.ExecuteNonQuery();
+                }
+                catch
+                {
+                }
             }
             foreach (ColumnDefinition column in modifiedColumns.Values)
             {
@@ -691,8 +696,13 @@ namespace Aurora.DataManager.MySQL
 
                 MySqlCommand dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = query;
-                dbcommand.ExecuteNonQuery();
-                CloseDatabase(dbcon);
+                try
+                {
+                    dbcommand.ExecuteNonQuery();
+                }
+                catch
+                {
+                }
             }
             foreach (ColumnDefinition column in removedColumns.Values)
             {
@@ -701,24 +711,15 @@ namespace Aurora.DataManager.MySQL
 
                 MySqlCommand dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = query;
-                dbcommand.ExecuteNonQuery();
-                CloseDatabase(dbcon);
-            }
-
-            /*string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
+                try
                 {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += column.Name;
+                    dbcommand.ExecuteNonQuery();
                 }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
-            }*/
+                catch
+                {
+                }
+            }
+            CloseDatabase(dbcon);
         }
 
         private string GetColumnTypeStringSymbol(ColumnTypes type)
