@@ -47,5 +47,13 @@ namespace OpenSim.Region.Framework.Interfaces
         void sendRegionHandshakeToAll();
 
         void TriggerEstateSunUpdate();
+
+        /// <summary>
+        /// Disable/Enable the scripting engine, the collision events, and the physics engine
+        /// </summary>
+        /// <param name="ScriptEngine"></param>
+        /// <param name="CollisionEvents"></param>
+        /// <param name="PhysicsEngine"></param>
+        void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine);
     }
 }

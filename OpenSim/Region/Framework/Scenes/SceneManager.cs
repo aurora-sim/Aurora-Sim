@@ -221,11 +221,7 @@ namespace OpenSim.Region.Framework.Scenes
             for (int i = 0; i < m_localScenes.Count; i++)
             {
                 // close scene/region
-                m_localScenes[i].Close();
-            }
-            foreach (IClientNetworkServer server in m_clientServers)
-            {
-                server.Stop();
+                CloseRegion(m_localScenes[i]);
             }
         }
 
@@ -538,7 +534,6 @@ namespace OpenSim.Region.Framework.Scenes
             PostInitModules(scene);
 
             clientServer.Start();
-            scene.EventManager.OnShutdown += delegate() { ShutdownRegion(scene); };
 
             scene.StartTimer();
             //Tell the scene that the startup is complete 
@@ -644,16 +639,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Shutdown regions
 
-        private void ShutdownRegion(Scene scene)
-        {
-            m_log.DebugFormat("[SHUTDOWN]: Shutting down region {0}", scene.RegionInfo.RegionName);
-            IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface<IRegionModulesController>(out controller))
-            {
-                controller.RemoveRegionFromModules(scene);
-            }
-        }
-
         public void ShutdownClientServer(RegionInfo whichRegion)
         {
             // Close and remove the clientserver for a region
@@ -709,6 +694,14 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_localScenes.Remove(scene);
             scene.Close();
+
+            m_log.DebugFormat("[SceneManager]: Shutting down region modules for {0}", scene.RegionInfo.RegionName);
+            IRegionModulesController controller;
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface<IRegionModulesController>(out controller))
+            {
+                controller.RemoveRegionFromModules(scene);
+            }
+
             CloseModules(scene);
             ShutdownClientServer(scene.RegionInfo);
         }
@@ -1061,30 +1054,6 @@ namespace OpenSim.Region.Framework.Scenes
                             MainConsole.Instance.Output("packet debug should be 0..255");
                         }
                         MainConsole.Instance.Output(String.Format("New packet debug: {0}", newDebug));
-                    }
-
-                    break;
-
-                case "scene":
-                    if (args.Length == 5)
-                    {
-                        if (CurrentScene == null)
-                        {
-                            MainConsole.Instance.Output("Please use 'change region <regioname>' first");
-                        }
-                        else
-                        {
-                            bool scriptingOn = !Convert.ToBoolean(args[2]);
-                            bool collisionsOn = !Convert.ToBoolean(args[3]);
-                            bool physicsOn = !Convert.ToBoolean(args[4]);
-                            CurrentScene.SetSceneCoreDebug(scriptingOn, collisionsOn, physicsOn);
-
-                            MainConsole.Instance.Output(String.Format("Set debug scene scripting = {0}, collisions = {1}, physics = {2}", !scriptingOn, !collisionsOn, !physicsOn));
-                        }
-                    }
-                    else
-                    {
-                        MainConsole.Instance.Output("debug scene <scripting> <collisions> <physics> (where inside <> is true/false)");
                     }
 
                     break;

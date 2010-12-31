@@ -55,8 +55,6 @@ namespace OpenSim.Framework
         void AddNewClient(IClientAPI client);
         void RemoveClient(UUID agentID);
 
-        void Restart();
-
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
 
         ISceneObject DeserializeObject(string representation);

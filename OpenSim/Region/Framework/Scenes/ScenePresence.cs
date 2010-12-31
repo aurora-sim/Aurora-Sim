@@ -739,6 +739,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.OnAgentCachedTextureRequest += AgentCachedTexturesRequest;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
+            m_controllingClient.OnRegionHandleRequest += RegionHandleRequest;
         }
 
         private void SetDirectionVectors()
@@ -1056,6 +1057,22 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Event Handlers
+
+        public void RegionHandleRequest(IClientAPI client, UUID regionID)
+        {
+            ulong handle = 0;
+            if (regionID == m_scene.RegionInfo.RegionID)
+                handle = m_scene.RegionInfo.RegionHandle;
+            else
+            {
+                GridRegion r = m_scene.GridService.GetRegionByUUID(UUID.Zero, regionID);
+                if (r != null)
+                    handle = r.RegionHandle;
+            }
+
+            if (handle != 0)
+                client.SendRegionHandle(regionID, handle);
+        }
 
         public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
         {

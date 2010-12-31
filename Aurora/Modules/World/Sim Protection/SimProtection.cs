@@ -129,6 +129,9 @@ namespace Aurora.Modules
             }
             else if (SimZeroFPSStartTime != DateTime.MinValue)
                 SimZeroFPSStartTime = DateTime.MinValue;
+            
+            IEstateModule mod = m_scene.RequestModuleInterface<IEstateModule>();
+            
             float[] stats = m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats(m_scene.RegionInfo.RegionID.ToString());
             if (stats[2]/*PhysicsFPS*/ < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
                 stats[2] != 0 &&
@@ -136,7 +139,8 @@ namespace Aurora.Modules
                 !m_scene.RegionInfo.RegionSettings.DisablePhysics) //Don't redisable physics again, physics will be frozen at the last FPS
             {
                 DisabledPhysicsStartTime = DateTime.Now;
-                m_scene.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts, m_scene.RegionInfo.RegionSettings.DisableCollisions, false); //These are opposite of what you want the value to be... go figure
+                if (mod != null)
+                    mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts, m_scene.RegionInfo.RegionSettings.DisableCollisions, false); //These are opposite of what you want the value to be... go figure
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisablePhysics &&
@@ -145,7 +149,8 @@ namespace Aurora.Modules
                 DisabledPhysicsStartTime.AddSeconds(TimeAfterToReenablePhysics) > DateTime.Now)
             {
                 DisabledPhysicsStartTime = DateTime.MinValue;
-                m_scene.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts, m_scene.RegionInfo.RegionSettings.DisableCollisions, true);//These are opposite of what you want the value to be... go figure
+                if (mod != null)
+                    mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts, m_scene.RegionInfo.RegionSettings.DisableCollisions, true);//These are opposite of what you want the value to be... go figure
             }
         }
 

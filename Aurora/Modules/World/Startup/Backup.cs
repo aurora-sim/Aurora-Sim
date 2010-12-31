@@ -26,6 +26,9 @@ namespace Aurora.Modules
     {
         #region Declares
 
+        protected static readonly ILog m_log
+                = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         protected SceneManager m_manager;
         protected Dictionary<Scene, InternalSceneBackup> m_backup = new Dictionary<Scene, InternalSceneBackup>();
         // the minimum time that must elapse before a changed object will be considered for persisted
@@ -66,6 +69,8 @@ namespace Aurora.Modules
 
         public void Close(Scene scene)
         {
+            m_log.Info("[BackupModule]: Persisting changed objects in scene " + scene.RegionInfo.RegionName + "...");
+            m_backup[scene].ProcessPrimBackupTaints(true, false);
         }
 
         #endregion

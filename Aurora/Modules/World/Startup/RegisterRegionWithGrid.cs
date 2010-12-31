@@ -57,6 +57,12 @@ namespace Aurora.Modules
         {
             //Deregister the interface
             scene.UnregisterModuleInterface<IGridRegisterModule>(this);
+
+            m_log.InfoFormat("[RegisterRegionWithGrid]: Deregistering region {0} from the grid...", scene.RegionInfo.RegionName);
+
+            //Deregister from the grid server
+            if (!scene.GridService.DeregisterRegion(scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
+                m_log.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}", scene.RegionInfo.RegionName);
         }
 
         #endregion
@@ -112,7 +118,7 @@ namespace Aurora.Modules
                 //Parse the error and try to do something about it if at all possible
                 if (error == "Region location is reserved")
                 {
-                    m_log.Error("[STARTUP]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
                     uint X = 0, Y = 0;
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
@@ -134,7 +140,7 @@ namespace Aurora.Modules
                 }
                 if (error == "Region overlaps another region")
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
                     uint X = 0, Y = 0;
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
@@ -156,7 +162,7 @@ namespace Aurora.Modules
                 }
                 if (error.Contains("Can't move this region"))
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - You can not move this region. Moving it back to its original position.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - You can not move this region. Moving it back to its original position.");
                     //Opensim Grid Servers don't have this functionality.
                     try
                     {
@@ -185,7 +191,7 @@ namespace Aurora.Modules
                 }
                 if (error == "Duplicate region name")
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region name you specified is already in use. Please change the name.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region name you specified is already in use. Please change the name.");
                     string oldRegionName = scene.RegionInfo.RegionName;
                     scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
 
@@ -203,13 +209,13 @@ namespace Aurora.Modules
                 }
                 if (error == "Region locked out")
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
                     Environment.Exit(0);
                 }
                 if (error == "Error communicating with grid service")
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
                     {
@@ -218,7 +224,7 @@ namespace Aurora.Modules
                 }
                 if (error == "Wrong Session ID")
                 {
-                    m_log.Error("[STARTUP]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
+                    m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - Wrong Session ID for this region!");
                     string input = MainConsole.Instance.CmdPrompt("Press enter when you are ready to proceed, or type cancel to exit");
                     if (input == "cancel")
                     {

@@ -99,6 +99,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         private SceneManager m_sceneManager;
 
+        public SceneManager SceneManager
+        {
+            get { return m_sceneManager; }
+        }
+
         protected ScenePermissions m_permissions;
         /// <summary>
         /// Controls permissions for the Scene
@@ -486,7 +491,7 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
                 if (aurorastartupConfig != null)
                 {
-                    UseTracker = aurorastartupConfig.GetBoolean("RunWithMultipleHeartbeats", true);
+                    UseOneHeartbeat = aurorastartupConfig.GetBoolean("RunWithMultipleHeartbeats", true);
                     RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
@@ -668,21 +673,34 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// This causes the region to restart immediatley.
+        /// This is the method that shuts down the scene.
         /// </summary>
-        public void Restart()
+        public void Close()
         {
-            IConfig startupConfig = m_config.Configs["Startup"];
-            if (startupConfig != null)
+            m_log.InfoFormat("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
+
+            // Kick all ROOT agents with the message, 'The simulator is going down'
+            ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
+                if (!avatar.IsChildAgent)
+                    avatar.ControllingClient.Kick("The simulator is going down.");
+
+                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
+                if (eq != null)
                 {
-                    //This will kill it asyncly
-                    MainConsole.Instance.EndConsoleProcessing();
-                    return;
+                    eq.DisableSimulator(RegionInfo.RegionHandle, avatar.UUID, RegionInfo.RegionHandle);
                 }
-            }
-            if (UseTracker)
+                else
+                    avatar.ControllingClient.SendShutdownConnectionNotice();
+            });
+
+            // Wait here, or the kick messages won't actually get to the agents before the scene terminates.
+            Thread.Sleep(500);
+
+            // Stop all client threads.
+            ForEachScenePresence(delegate(ScenePresence avatar) { avatar.ControllingClient.Close(); });
+
+            if (tracker != null)
             {
                 tracker.OnNeedToAddThread -= NeedsNewThread;
                 tracker.Close();
@@ -694,128 +712,24 @@ namespace OpenSim.Region.Framework.Scenes
                 PhysicsScene.Dispose();
             }
 
-            m_log.Error("[REGION]: Closing");
-            Close();
-
-            m_log.Error("[REGION]: Firing Region Restart Message");
-
-            m_sceneManager.HandleRestart(this);
-        }
-
-        public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
-        {
-            if (RegionInfo.RegionSettings.DisableScripts == !ScriptEngine)
-            {
-                if (ScriptEngine)
-                {
-                    m_log.Info("[SCENEDEBUG]: Stopping all Scripts in Scene");
-                    IScriptModule mod = RequestModuleInterface<IScriptModule>();
-                    mod.StopAllScripts();
-                }
-                else
-                {
-                    m_log.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
-
-                    EntityBase[] entities = Entities.GetEntities();
-                    foreach (EntityBase ent in entities)
-                    {
-                        if (ent is SceneObjectGroup)
-                        {
-                            if (ent is SceneObjectGroup)
-                            {
-                                ((SceneObjectGroup)ent).CreateScriptInstances(0, false, DefaultScriptEngine, 0, UUID.Zero);
-                                ((SceneObjectGroup)ent).ResumeScripts();
-                            }
-                        }
-                    }
-                }
-                RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;
-            }
-
-            if (RegionInfo.RegionSettings.DisablePhysics == !PhysicsEngine)
-            {
-                RegionInfo.RegionSettings.DisablePhysics = !PhysicsEngine;
-            }
-
-            if (RegionInfo.RegionSettings.DisableCollisions == !CollisionEvents)
-            {
-                RegionInfo.RegionSettings.DisableCollisions = !CollisionEvents;
-                PhysicsScene.DisableCollisions = RegionInfo.RegionSettings.DisableCollisions;
-            }
-            RegionInfo.RegionSettings.Save();
-        }
-
-        /// <summary>
-        /// This is the method that shuts down the scene.
-        /// </summary>
-        public void Close()
-        {
-            m_log.InfoFormat("[SCENE]: Closing down the single simulator: {0}", RegionInfo.RegionName);
-
-            // Kick all ROOT agents with the message, 'The simulator is going down'
-            ForEachScenePresence(delegate(ScenePresence avatar)
-            {
-                if (!avatar.IsChildAgent)
-                    avatar.ControllingClient.Kick("The simulator is going down.");
-
-                avatar.ControllingClient.SendShutdownConnectionNotice();
-            });
-
-            // Wait here, or the kick messages won't actually get to the agents before the scene terminates.
-            Thread.Sleep(500);
-
-            // Stop all client threads.
-            ForEachScenePresence(delegate(ScenePresence avatar) { avatar.ControllingClient.Close(); });
-
-            if (UseTracker)
-            {
-                if (tracker != null)
-                {
-                    tracker.OnNeedToAddThread -= NeedsNewThread;
-                    tracker.Close();
-                    tracker = null;
-                }
-            }
-
             //Tell the neighbors that this region is now down
             INeighborService service = RequestModuleInterface<INeighborService>();
             if (service != null)
                 service.InformNeighborsThatRegionIsDown(RegionInfo);
 
             // Stop updating the scene objects and agents.
-            //m_heartbeatTimer.Close();
             shuttingdown = true;
-
-            m_log.Info("[SCENE]: Persisting changed objects...");
-
-            //Backup uses the new taints system
-            IBackupModule backup = RequestModuleInterface<IBackupModule>();
-            if (backup != null)
-                backup.ProcessPrimBackupTaints(true, false);
 
             m_sceneGraph.Close();
 
-            m_log.InfoFormat("[SCENE]: Deregistering region {0} from the grid...", m_regInfo.RegionName);
-
-            //Deregister from the grid server
-            if (!GridService.DeregisterRegion(m_regInfo.RegionID, RegionInfo.GridSecureSessionID))
-                m_log.WarnFormat("[SCENE]: Deregister from grid failed for region {0}", m_regInfo.RegionName);
-
             //Trigger the last event
-            try
-            {
-                EventManager.TriggerShutdown();
-            }
-            catch (Exception e)
-            {
-                m_log.ErrorFormat("[SCENE]: Close() - Failed with exception ", e);
-            }
+            EventManager.TriggerShutdown();
         }
 
         #region Tracker
 
         public AuroraThreadTracker tracker = null;
-        private bool UseTracker = true;
+        private bool UseOneHeartbeat = true;
         /// <summary>
         /// Start the timer which triggers regular scene updates
         /// </summary>
@@ -823,7 +737,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (tracker == null)
                 tracker = new AuroraThreadTracker();
-            if (UseTracker)
+            if (UseOneHeartbeat)
             {
                 ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
                 SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
@@ -2256,7 +2170,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
             client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
             client.OnSetStartLocationRequest += SetHomeRezPoint;
-            client.OnRegionHandleRequest += RegionHandleRequest;
         }
 
         public virtual void SubscribeToClientNetworkEvents(IClientAPI client)
@@ -2351,7 +2264,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
             client.OnSetStartLocationRequest -= SetHomeRezPoint;
-            client.OnRegionHandleRequest -= RegionHandleRequest;
         }
 
         public virtual void UnSubscribeToClientNetworkEvents(IClientAPI client)
@@ -2926,22 +2838,6 @@ namespace OpenSim.Region.Framework.Scenes
             INeighborService service = RequestModuleInterface<INeighborService>();
             if (service != null)
                 service.SendChildAgentUpdate(cadu, presence.Scene.RegionInfo.RegionID);
-        }
-
-        public void RegionHandleRequest(IClientAPI client, UUID regionID)
-        {
-            ulong handle = 0;
-            if (regionID == RegionInfo.RegionID)
-                handle = RegionInfo.RegionHandle;
-            else
-            {
-                GridRegion r = GridService.GetRegionByUUID(UUID.Zero, regionID);
-                if (r != null)
-                    handle = r.RegionHandle;
-            }
-
-            if (handle != 0)
-                client.SendRegionHandle(regionID, handle);
         }
 
         #endregion

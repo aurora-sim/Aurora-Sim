@@ -222,9 +222,11 @@ namespace Aurora.Modules
             client.Scene.RegionInfo.RegionSettings.Sandbox = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.Sandbox) == (ulong)OpenMetaverse.RegionFlags.Sandbox);
             
             //Update skipping scripts/physics/collisions
-            ((Scene)client.Scene).SetSceneCoreDebug(((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipScripts) == (ulong)OpenMetaverse.RegionFlags.SkipScripts),
-                ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipCollisions) == (ulong)OpenMetaverse.RegionFlags.SkipCollisions),
-                ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipPhysics) == (ulong)OpenMetaverse.RegionFlags.SkipPhysics));
+            IEstateModule mod = client.Scene.RequestModuleInterface<IEstateModule>();
+            if(mod != null)
+                mod.SetSceneCoreDebug(((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipScripts) == (ulong)OpenMetaverse.RegionFlags.SkipScripts),
+                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipCollisions) == (ulong)OpenMetaverse.RegionFlags.SkipCollisions),
+                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipPhysics) == (ulong)OpenMetaverse.RegionFlags.SkipPhysics));
 
             //Save the changes
             client.Scene.RegionInfo.EstateSettings.Save();

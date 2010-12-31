@@ -834,7 +834,7 @@ namespace OpenSim.Region.Framework.Scenes
                     catch (Exception e)
                     {
                         m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerShutdown failed - continuing.  {0} {1}", 
+                            "[EVENT MANAGER]: Delegate for TriggerShutdown failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
                     }
                 }

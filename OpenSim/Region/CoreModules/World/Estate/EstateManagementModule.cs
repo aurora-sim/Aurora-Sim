@@ -657,7 +657,49 @@ namespace OpenSim.Region.CoreModules.World.Estate
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
 
-            m_scene.SetSceneCoreDebug(scripted, collisionEvents, physics);
+            SetSceneCoreDebug(scripted, collisionEvents, physics);
+        }
+
+        public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
+        {
+            if (m_scene.RegionInfo.RegionSettings.DisableScripts == !ScriptEngine)
+            {
+                if (ScriptEngine)
+                {
+                    m_log.Info("[SCENEDEBUG]: Stopping all Scripts in Scene");
+                    IScriptModule mod = m_scene.RequestModuleInterface<IScriptModule>();
+                    mod.StopAllScripts();
+                }
+                else
+                {
+                    m_log.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
+
+                    EntityBase[] entities = m_scene.Entities.GetEntities();
+                    foreach (EntityBase ent in entities)
+                    {
+                        if (ent is SceneObjectGroup)
+                        {
+                            if (ent is SceneObjectGroup)
+                            {
+                                ((SceneObjectGroup)ent).CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                                ((SceneObjectGroup)ent).ResumeScripts();
+                            }
+                        }
+                    }
+                }
+                m_scene.RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;
+            }
+
+            if (m_scene.RegionInfo.RegionSettings.DisablePhysics == !PhysicsEngine)
+            {
+                m_scene.RegionInfo.RegionSettings.DisablePhysics = !PhysicsEngine;
+            }
+
+            if (m_scene.RegionInfo.RegionSettings.DisableCollisions == !CollisionEvents)
+            {
+                m_scene.RegionInfo.RegionSettings.DisableCollisions = !CollisionEvents;
+                m_scene.PhysicsScene.DisableCollisions = m_scene.RegionInfo.RegionSettings.DisableCollisions;
+            }
         }
 
         private void handleEstateTeleportOneUserHomeRequest(IClientAPI remover_client, UUID invoice, UUID senderID, UUID prey)
