@@ -86,6 +86,14 @@ namespace OpenSim.Region.Framework.Interfaces
         Vector3 GetParcelCenterAtGround(ILandObject parcel);
 
         /// <summary>
+        /// Gets the average height of the area +2 in both the X and Y directions from the given position
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        float GetNormalizedGroundHeight(float x, float y);
+
+        /// <summary>
         /// Add the given return to the list of returns to send to the client
         /// </summary>
         /// <param name="agentID"></param>

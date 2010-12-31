@@ -315,7 +315,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         return "SWIM_DOWN";
                     else
                     {
-                        float groundHeight = m_scenePresence.Scene.GetNormalizedGroundHeight(m_scenePresence.AbsolutePosition.X, m_scenePresence.AbsolutePosition.Y);
+                        float groundHeight = m_scenePresence.Scene.LandChannel.GetNormalizedGroundHeight(m_scenePresence.AbsolutePosition.X, m_scenePresence.AbsolutePosition.Y);
                         if (actor != null && (m_scenePresence.AbsolutePosition.Z - groundHeight) < 2)
                             return "LAND";
                         else

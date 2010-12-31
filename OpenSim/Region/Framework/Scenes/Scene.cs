@@ -2768,9 +2768,9 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 //Keep users from being underground
-                if (agent.startpos.Z < GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
+                if (agent.startpos.Z < LandChannel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
                 {
-                    agent.startpos.Z = GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    agent.startpos.Z = LandChannel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
                 }
             }
 
@@ -3334,57 +3334,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (MainConsole.Instance.ConsoleScene is Scene)
                 return (Scene)MainConsole.Instance.ConsoleScene;
             return null;
-        }
-
-        #endregion
-
-        #region Ground
-
-        /// <summary>
-        /// Gets the average height of the area +2 in both the X and Y directions from the given position
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        public float GetNormalizedGroundHeight(float x, float y)
-        {
-            if (x < 0)
-                x = 0;
-            if (x >= Heightmap.Width)
-                x = Heightmap.Width - 1;
-            if (y < 0)
-                y = 0;
-            if (y >= Heightmap.Height)
-                y = Heightmap.Height - 1;
-
-            Vector3 p0 = new Vector3(x, y, (float)Heightmap[(int)x, (int)y]);
-            Vector3 p1 = new Vector3(p0);
-            Vector3 p2 = new Vector3(p0);
-
-            p1.X += 1.0f;
-            if (p1.X < Heightmap.Width)
-                p1.Z = (float)Heightmap[(int)p1.X, (int)p1.Y];
-
-            p2.Y += 1.0f;
-            if (p2.Y < Heightmap.Height)
-                p2.Z = (float)Heightmap[(int)p2.X, (int)p2.Y];
-
-            Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
-            Vector3 v1 = new Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
-
-            v0.Normalize();
-            v1.Normalize();
-
-            Vector3 vsn = new Vector3();
-            vsn.X = (v0.Y * v1.Z) - (v0.Z * v1.Y);
-            vsn.Y = (v0.Z * v1.X) - (v0.X * v1.Z);
-            vsn.Z = (v0.X * v1.Y) - (v0.Y * v1.X);
-            vsn.Normalize();
-
-            float xdiff = x - (float)((int)x);
-            float ydiff = y - (float)((int)y);
-
-            return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
         }
 
         #endregion

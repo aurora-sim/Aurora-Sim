@@ -191,5 +191,35 @@ public class RegionCombinerLargeLandChannel : ILandChannel
         }
 
         #endregion
+
+        #region ILandChannel Members
+
+
+        public float GetNormalizedGroundHeight(float x, float y)
+        {
+            if (x > 0 && x <= (int)Constants.RegionSize && y > 0 && y <= (int)Constants.RegionSize)
+            {
+                return RootRegionLandChannel.GetNormalizedGroundHeight(x, y);
+            }
+            else
+            {
+                int offsetX = (int)(x / (int)Constants.RegionSize);
+                int offsetY = (int)(y / (int)Constants.RegionSize);
+                offsetX *= (int)Constants.RegionSize;
+                offsetY *= (int)Constants.RegionSize;
+
+                foreach (RegionData regionData in RegionConnections)
+                {
+                    if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
+                    {
+                        return regionData.RegionScene.LandChannel.GetNormalizedGroundHeight(x - offsetX, y - offsetY);
+                    }
+                }
+
+                return 0;
+            }
+        }
+
+        #endregion
     }
 }
