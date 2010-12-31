@@ -877,9 +877,14 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Text;
                 case "blob":
                     return ColumnTypes.Blob;
-                default:
-                    throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
             }
+            if (tStr.StartsWith("varchar"))
+            {
+                //... Someone was editing the database
+                // Swallow the exception... but set it to the highest setting so we don't break anything
+                return ColumnTypes.String8196;
+            }
+            throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
         }
 
         public override IGenericData Copy()
