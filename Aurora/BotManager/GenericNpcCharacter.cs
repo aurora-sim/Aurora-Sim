@@ -1253,6 +1253,10 @@ namespace Aurora.BotManager
             return true;
         }
 
+        public void SendAbortXferPacket(ulong xferID)
+        {
+        }
+
         #endregion
     }
 }

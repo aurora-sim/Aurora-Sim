@@ -1165,5 +1165,9 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
             return true;
         }
+
+        public void SendAbortXferPacket(ulong xferID)
+        {
+        }
     }
 }

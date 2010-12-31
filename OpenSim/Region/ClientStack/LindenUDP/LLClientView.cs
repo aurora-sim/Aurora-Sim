@@ -7934,6 +7934,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
+        public void SendAbortXferPacket(ulong xferID)
+        {
+            AbortXferPacket xferItem = (AbortXferPacket)PacketPool.Instance.GetPacket(PacketType.AbortXfer);
+            xferItem.XferID.ID = xferID;
+            OutPacket(xferItem, ThrottleOutPacketType.Asset);
+        }
+
         private bool HandleCreateInventoryFolder(IClientAPI sender, Packet Pack)
         {
             CreateInventoryFolderPacket invFolder = (CreateInventoryFolderPacket)Pack;
@@ -7947,15 +7954,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
-            Util.FireAndForget(CreateInventoryFolder, Pack);
-
-            return true;
-        }
-
-        private void CreateInventoryFolder(object Pack)
-        {
-            CreateInventoryFolderPacket invFolder = (CreateInventoryFolderPacket)Pack;
-
             CreateInventoryFolder handlerCreateInventoryFolder = OnCreateNewInventoryFolder;
             if (handlerCreateInventoryFolder != null)
             {
@@ -7964,6 +7962,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                              Util.FieldToString(invFolder.FolderData.Name),
                                              invFolder.FolderData.ParentID);
             }
+
+            return true;
         }
 
         private bool HandleUpdateInventoryFolder(IClientAPI sender, Packet Pack)
@@ -7981,29 +7981,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                Util.FireAndForget(UpdateInventoryFolder, Pack);
-                
-            }
-            return true;
-        }
+                UpdateInventoryFolder handlerUpdateInventoryFolder = null;
 
-        private void UpdateInventoryFolder(object Pack)
-        {
-            UpdateInventoryFolderPacket invFolderx = (UpdateInventoryFolderPacket)Pack;
-
-            UpdateInventoryFolder handlerUpdateInventoryFolder = null;
-
-            for (int i = 0; i < invFolderx.FolderData.Length; i++)
-            {
-                handlerUpdateInventoryFolder = OnUpdateInventoryFolder;
-                if (handlerUpdateInventoryFolder != null)
+                for (int i = 0; i < invFolderx.FolderData.Length; i++)
                 {
-                    OnUpdateInventoryFolder(this, invFolderx.FolderData[i].FolderID,
-                                            (ushort)invFolderx.FolderData[i].Type,
-                                            Util.FieldToString(invFolderx.FolderData[i].Name),
-                                            invFolderx.FolderData[i].ParentID);
+                    handlerUpdateInventoryFolder = OnUpdateInventoryFolder;
+                    if (handlerUpdateInventoryFolder != null)
+                    {
+                        OnUpdateInventoryFolder(this, invFolderx.FolderData[i].FolderID,
+                                                (ushort)invFolderx.FolderData[i].Type,
+                                                Util.FieldToString(invFolderx.FolderData[i].Name),
+                                                invFolderx.FolderData[i].ParentID);
+                    }
                 }
             }
+            return true;
         }
 
         private bool HandleMoveInventoryFolder(IClientAPI sender, Packet Pack)
@@ -8056,15 +8048,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
-            Util.FireAndForget(CreateInventoryItem, Pack);
-            
-            return true;
-        }
-
-        private void CreateInventoryItem(object Pack)
-        {
-            CreateInventoryItemPacket createItem = (CreateInventoryItemPacket)Pack;
-
             CreateNewInventoryItem handlerCreateNewInventoryItem = OnCreateNewInventoryItem;
             if (handlerCreateNewInventoryItem != null)
             {
@@ -8079,6 +8062,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                               createItem.InventoryBlock.NextOwnerMask,
                                               Util.UnixTimeSinceEpoch());
             }
+
+            return true;
         }
 
         private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
@@ -8093,15 +8078,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
-
-            Util.FireAndForget(LinkInventoryItem, Pack);
-
-            return true;
-        }
-
-        private void LinkInventoryItem(object Pack)
-        {
-            LinkInventoryItemPacket createLink = (LinkInventoryItemPacket)Pack;
 
             LinkInventoryItem linkInventoryItem = OnLinkInventoryItem;
 
@@ -8118,6 +8094,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     createLink.InventoryBlock.Type,
                     createLink.InventoryBlock.OldItemID);
             }
+
+            return true;
         }
 
         private bool HandleFetchInventory(IClientAPI sender, Packet Pack)
@@ -8135,7 +8113,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                //Util.FireAndForget(FetchInventory, Pack);
                 FetchInventory handlerFetchInventory = null;
                 for (int i = 0; i < FetchInventoryx.InventoryData.Length; i++)
                 {
@@ -8151,23 +8128,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
-        private void FetchInventory(object Pack)
-        {
-            FetchInventoryPacket FetchInventoryx = (FetchInventoryPacket)Pack;
-
-            FetchInventory handlerFetchInventory = null;
-            for (int i = 0; i < FetchInventoryx.InventoryData.Length; i++)
-            {
-                handlerFetchInventory = OnFetchInventory;
-
-                if (handlerFetchInventory != null)
-                {
-                    OnFetchInventory(this, FetchInventoryx.InventoryData[i].ItemID,
-                                     FetchInventoryx.InventoryData[i].OwnerID);
-                }
-            }
-        }
-
         private bool HandleFetchInventoryDescendents(IClientAPI sender, Packet Pack)
         {
             FetchInventoryDescendentsPacket Fetch = (FetchInventoryDescendentsPacket)Pack;
@@ -8181,7 +8141,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
-            //Util.FireAndForget(FetchInventoryDescendents, Pack);
             FetchInventoryDescendents handlerFetchInventoryDescendents = OnFetchInventoryDescendents;
             if (handlerFetchInventoryDescendents != null)
             {
@@ -8191,19 +8150,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             return true;
         }
-
-        /*private void FetchInventoryDescendents(object Pack)
-        {
-            FetchInventoryDescendentsPacket Fetch = (FetchInventoryDescendentsPacket)Pack;
-
-            FetchInventoryDescendents handlerFetchInventoryDescendents = OnFetchInventoryDescendents;
-            if (handlerFetchInventoryDescendents != null)
-            {
-                handlerFetchInventoryDescendents(this, Fetch.InventoryData.FolderID, Fetch.InventoryData.OwnerID,
-                                                 Fetch.InventoryData.FetchFolders, Fetch.InventoryData.FetchItems,
-                                                 Fetch.InventoryData.SortOrder);
-            }
-        }*/
 
         private bool HandlePurgeInventoryDescendents(IClientAPI sender, Packet Pack)
         {
@@ -8707,7 +8653,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
             }
             #endregion
-            RequestMapLayer();
             return true;
         }
 
@@ -12064,56 +12009,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
             return true;
-        }
-
-        public void RequestMapLayer()
-        {
-            //should be getting the map layer from the grid server
-            //send a layer covering the 800,800 - 1200,1200 area (should be covering the requested area)
-            MapLayerReplyPacket mapReply = (MapLayerReplyPacket)PacketPool.Instance.GetPacket(PacketType.MapLayerReply);
-            // TODO: don't create new blocks if recycling an old packet
-            mapReply.AgentData.AgentID = AgentId;
-            mapReply.AgentData.Flags = 0;
-            mapReply.LayerData = new MapLayerReplyPacket.LayerDataBlock[1];
-            mapReply.LayerData[0] = new MapLayerReplyPacket.LayerDataBlock();
-            mapReply.LayerData[0].Bottom = 0;
-            mapReply.LayerData[0].Left = 0;
-            mapReply.LayerData[0].Top = 30000;
-            mapReply.LayerData[0].Right = 30000;
-            mapReply.LayerData[0].ImageID = new UUID("00000000-0000-1111-9999-000000000006");
-            mapReply.Header.Zerocoded = true;
-            OutPacket(mapReply, ThrottleOutPacketType.Land);
-        }
-
-        public void RequestMapBlocksX(int minX, int minY, int maxX, int maxY)
-        {
-            /*
-            IList simMapProfiles = m_gridServer.RequestMapBlocks(minX, minY, maxX, maxY);
-            MapBlockReplyPacket mbReply = new MapBlockReplyPacket();
-            mbReply.AgentData.AgentId = AgentId;
-            int len;
-            if (simMapProfiles == null)
-                len = 0;
-            else
-                len = simMapProfiles.Count;
-
-            mbReply.Data = new MapBlockReplyPacket.DataBlock[len];
-            int iii;
-            for (iii = 0; iii < len; iii++)
-            {
-                Hashtable mp = (Hashtable)simMapProfiles[iii];
-                mbReply.Data[iii] = new MapBlockReplyPacket.DataBlock();
-                mbReply.Data[iii].Name = Util.UTF8.GetBytes((string)mp["name"]);
-                mbReply.Data[iii].Access = System.Convert.ToByte(mp["access"]);
-                mbReply.Data[iii].Agents = System.Convert.ToByte(mp["agents"]);
-                mbReply.Data[iii].MapImageID = new UUID((string)mp["map-image-id"]);
-                mbReply.Data[iii].RegionFlags = System.Convert.ToUInt32(mp["region-flags"]);
-                mbReply.Data[iii].WaterHeight = System.Convert.ToByte(mp["water-height"]);
-                mbReply.Data[iii].X = System.Convert.ToUInt16(mp["x"]);
-                mbReply.Data[iii].Y = System.Convert.ToUInt16(mp["y"]);
-            }
-            this.OutPacket(mbReply, ThrottleOutPacketType.Land);
-             */
         }
 
         /// <summary>
