@@ -67,8 +67,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneViewer(ScenePresence presence)
         {
             m_presence = presence;
-            if(presence.Scene.CheckForObjectCulling) //Only do culling checks if enabled
-                presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
+            m_presence.Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
             m_prioritizer = new Prioritizer(presence.Scene);
             m_partsUpdateQueue = new PriorityQueue<EntityUpdate, double>(presence.Scene.Entities.Count > 1000 ? presence.Scene.Entities.Count : 1000);
         }
@@ -219,7 +218,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool CheckForCulling(SceneObjectGroup grp)
         {
-            if (m_presence.Scene.CheckForObjectCulling && m_presence.DrawDistance > 0)
+            if (!m_presence.Scene.CheckForObjectCulling)
+                return true;
+            if (m_presence.DrawDistance > 0)
             {
                 CheckCullingAgainstPosition(m_presence.AbsolutePosition, grp.AbsolutePosition, grp.GroupScale());
                 

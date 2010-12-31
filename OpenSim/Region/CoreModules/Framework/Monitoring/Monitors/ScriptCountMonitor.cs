@@ -43,7 +43,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
                 foreach (IScriptModule module in modules)
                 {
-                    ActiveScripts += module.GetActiveScripts();
+                    if(module != null)
+                        ActiveScripts += module.GetActiveScripts();
                 }
                 return ActiveScripts;
             }
@@ -57,7 +58,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
                 foreach (IScriptModule module in modules)
                 {
-                    ScriptEPS += module.GetScriptEPS();
+                    if(module != null)
+                        ScriptEPS += module.GetScriptEPS();
                 }
                 return ScriptEPS;
             }
