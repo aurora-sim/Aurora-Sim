@@ -57,8 +57,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             m_configSource = configSource;
             m_creator = creator;
             m_openSim = openSim;
-            MainConsole.Instance.Commands.AddCommand("base", false, "export database regions", "export database regions", "Exports regions in the database to an .ini file", Export);
-
+            
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
                 m_default = config.GetString("Default") == Name;
@@ -177,36 +176,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void Dispose()
         {
-        }
-
-        protected void Export(string module, string[] cmdparams)
-        {
-            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfos(false);
-            if (infos.Length != 0)
-            {
-                StreamWriter writer = new StreamWriter("Regions/"+cmdparams[3]);
-                foreach (RegionInfo info in infos)
-                {
-                    writer.WriteLine("[" + info.RegionName + "]");
-
-                    writer.WriteLine("RegionUUID = " + info.RegionID);
-                    writer.WriteLine("Location = " + info.RegionLocX + "," + info.RegionLocY);
-                    writer.WriteLine("InternalAddress = 0.0.0.0");
-                    writer.WriteLine("InternalPort = " + info.InternalEndPoint.Port);
-                    writer.WriteLine("AllowAlternatePorts = " + info.m_allow_alternate_ports);
-                    writer.WriteLine("ExternalHostName = " + info.ExternalHostName);
-                    writer.WriteLine("RegionType = " + info.RegionType);
-                    writer.WriteLine("NeighborPassword = " + info.Password);
-                    writer.WriteLine("AllowPhysicalPrims = " + info.AllowPhysicalPrims);
-                    writer.WriteLine("AllowScriptCrossing = " + info.AllowScriptCrossing);
-                    writer.WriteLine("TrustBinariesFromForeignSims = " + info.TrustBinariesFromForeignSims);
-                    writer.WriteLine("SeeIntoThisSimFromNeighbor = " + info.SeeIntoThisSimFromNeighbor);
-                    writer.WriteLine("MaxPrims = " + info.ObjectCapacity);
-                    writer.WriteLine("");
-                }
-                writer.Close();
-                writer.Dispose();
-            }
         }
     }
 }

@@ -115,6 +115,10 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.DisabledEdit = new System.Windows.Forms.CheckBox();
             this.DisabledCreate = new System.Windows.Forms.CheckBox();
+            this.Export = new System.Windows.Forms.Button();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.ExportFileName = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -123,6 +127,7 @@
             this.tabPage1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // RName
@@ -568,6 +573,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.groupBox4);
             this.tabPage1.Controls.Add(this.RegionListBox);
             this.tabPage1.Controls.Add(this.UpdateRegion);
             this.tabPage1.Controls.Add(this.SearchForRegionByName);
@@ -603,7 +609,7 @@
             // 
             // SearchForRegionByName
             // 
-            this.SearchForRegionByName.Location = new System.Drawing.Point(503, 179);
+            this.SearchForRegionByName.Location = new System.Drawing.Point(496, 163);
             this.SearchForRegionByName.Name = "SearchForRegionByName";
             this.SearchForRegionByName.Size = new System.Drawing.Size(75, 23);
             this.SearchForRegionByName.TabIndex = 31;
@@ -998,6 +1004,44 @@
             this.DisabledCreate.TabIndex = 42;
             this.DisabledCreate.UseVisualStyleBackColor = true;
             // 
+            // Export
+            // 
+            this.Export.Location = new System.Drawing.Point(136, 33);
+            this.Export.Name = "Export";
+            this.Export.Size = new System.Drawing.Size(75, 23);
+            this.Export.TabIndex = 34;
+            this.Export.Text = "Export";
+            this.Export.UseVisualStyleBackColor = true;
+            this.Export.Click += new System.EventHandler(this.Export_Click);
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.ExportFileName);
+            this.groupBox4.Controls.Add(this.label6);
+            this.groupBox4.Controls.Add(this.Export);
+            this.groupBox4.Location = new System.Drawing.Point(425, 192);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(217, 66);
+            this.groupBox4.TabIndex = 35;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Export to .ini";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(6, 16);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(54, 13);
+            this.label6.TabIndex = 35;
+            this.label6.Text = "File Name";
+            // 
+            // ExportFileName
+            // 
+            this.ExportFileName.Location = new System.Drawing.Point(9, 36);
+            this.ExportFileName.Name = "ExportFileName";
+            this.ExportFileName.Size = new System.Drawing.Size(121, 20);
+            this.ExportFileName.TabIndex = 36;
+            // 
             // RegionManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1019,6 +1063,8 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.tabPage2.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1113,5 +1159,9 @@
         private System.Windows.Forms.Button button11;
         private System.Windows.Forms.CheckBox DisabledCreate;
         private System.Windows.Forms.CheckBox DisabledEdit;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.TextBox ExportFileName;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button Export;
     }
 }

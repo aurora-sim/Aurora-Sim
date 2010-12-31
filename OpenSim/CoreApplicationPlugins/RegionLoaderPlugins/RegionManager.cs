@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -12,6 +13,8 @@ using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim;
 using log4net;
+using Nini.Config;
+using Nini.Ini;
 
 namespace Aurora.Modules.RegionLoader
 {
@@ -256,6 +259,30 @@ namespace Aurora.Modules.RegionLoader
         private void DisabledHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("If this is set to 'true', the region is not loaded.");
+        }
+
+        private void Export_Click(object sender, EventArgs e)
+        {
+            if(CurrentRegionID == UUID.Zero)
+            {
+                MessageBox.Show("Select a region before attempting to export.");
+                return;
+            }
+            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            if (region != null) //It never should be, but who knows
+            {
+                //Make sure the directory exists
+                if (!Directory.Exists("Regions"))
+                    Directory.CreateDirectory("Regions");
+                IniConfigSource source = new IniConfigSource("Regions\\" + ExportFileName.Text, IniFileType.AuroraStyle);
+                if (source.Configs[region.RegionName] != null)
+                {
+                    source.Configs.Remove(region.RegionName);
+                }
+                //Add the config to the given source
+                region.CreateIConfig(source);
+                source.Save();
+            }
         }
     }
 }

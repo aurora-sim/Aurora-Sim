@@ -557,7 +557,14 @@ namespace OpenSim.Framework
                 // yet, so just let it gracefully fail and create itself later
                 return;
             }
-            
+
+            CreateIConfig(source);
+
+            source.Save();
+        }
+
+        public void CreateIConfig(IConfigSource source)
+        {
             IConfig config = source.Configs[RegionName];
 
             if (config != null)
@@ -586,9 +593,12 @@ namespace OpenSim.Framework
             if (RegionType != String.Empty)
                 config.Set("RegionType", RegionType);
 
-            config.Set("NeighborPassword", Password.ToString());
+            config.Set("AllowPhysicalPrims", AllowPhysicalPrims);
+            config.Set("AllowScriptCrossing", AllowScriptCrossing);
+            config.Set("TrustBinariesFromForeignSims", TrustBinariesFromForeignSims);
+            config.Set("SeeIntoThisSimFromNeighbor", SeeIntoThisSimFromNeighbor);
 
-            source.Save();
+            config.Set("NeighborPassword", Password.ToString());
         }
 
         public void SaveRegionToFile(string description, string filename)
