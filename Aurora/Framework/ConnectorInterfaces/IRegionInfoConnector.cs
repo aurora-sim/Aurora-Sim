@@ -14,7 +14,7 @@ namespace Aurora.Framework
         /// Gets RegionInfos for the database region connector
         /// </summary>
         /// <returns></returns>
-        RegionInfo[] GetRegionInfos();
+        RegionInfo[] GetRegionInfos(bool nonDisabledOnly);
         
         /// <summary>
         /// Gets a specific region info for the given region ID
@@ -35,7 +35,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="region"></param>
         /// <param name="Disabled"></param>
-        void UpdateRegionInfo(RegionInfo region, bool Disabled);
+        void UpdateRegionInfo(RegionInfo region);
 
         /// <summary>
         /// Loads stored WindLight settings for the given region

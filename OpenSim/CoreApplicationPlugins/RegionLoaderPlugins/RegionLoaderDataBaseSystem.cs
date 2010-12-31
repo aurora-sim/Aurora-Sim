@@ -83,7 +83,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             Aurora.Framework.IRegionInfoConnector conn = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>();
             if (conn == null)
                 return null;
-            RegionInfo[] infos = conn.GetRegionInfos();
+            RegionInfo[] infos = conn.GetRegionInfos(true);
             if (infos.Length == 0 && m_default)
             {
                 //Load up the GUI to make a new region
@@ -156,18 +156,19 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(info, false);
+                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(info);
                 }
-                bool foundAll = false;
+                bool foundAll = true;
                 foreach (RegionInfo info in RegionsToConvert)
                 {
                     if (Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //Something went really wrong here... so lets not destroy anything
-                if(!foundAll)
-                    Directory.Delete(regionConfigPath, true);
-                MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style. The regions folder has been cleared.");
+                if (foundAll)
+                {
+                    MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                }
             }
             catch
             {
@@ -180,7 +181,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void Export(string module, string[] cmdparams)
         {
-            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfos();
+            RegionInfo[] infos = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfos(false);
             if (infos.Length != 0)
             {
                 StreamWriter writer = new StreamWriter("Regions/"+cmdparams[3]);

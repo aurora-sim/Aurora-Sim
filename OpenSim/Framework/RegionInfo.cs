@@ -599,11 +599,6 @@ namespace OpenSim.Framework
             source.Save();
         }
 
-        public bool ignoreIncomingConfiguration(string configuration_key, object configuration_result)
-        {
-            return true;
-        }
-
         public void SaveRegionToFile(string description, string filename)
         {
             if (filename.ToLower().EndsWith(".ini"))
@@ -625,6 +620,11 @@ namespace OpenSim.Framework
 
         public OSDMap PackRegionInfoData()
         {
+            return PackRegionInfoData(false);
+        }
+
+        public OSDMap PackRegionInfoData(bool secure)
+        {
             OSDMap args = new OSDMap();
             args["region_id"] = OSD.FromUUID(RegionID);
             if ((RegionName != null) && !RegionName.Equals(""))
@@ -645,7 +645,19 @@ namespace OpenSim.Framework
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
             args["password"] = OSD.FromUUID(Password);
-
+            if (secure)
+            {
+                args["disabled"] = OSD.FromBoolean(Disabled);
+                args["scope_id"] = OSD.FromUUID(ScopeID);
+                args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
+                args["region_type"] = OSD.FromString(RegionType);
+                args["estate_pass"] = OSD.FromString(EstateSettings.EstatePass);
+                args["grid_session_id"] = OSD.FromUUID(GridSecureSessionID);
+                args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
+                args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
+                args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
+                args["allow_physical_prims"] = OSD.FromBoolean(AllowPhysicalPrims);
+            }
             return args;
         }
 
@@ -696,6 +708,29 @@ namespace OpenSim.Framework
                 m_regionType = args["region_type"].AsString();
             if (args["password"] != null)
                 Password = args["password"].AsUUID();
+
+            if (args["disabled"] != null)
+                Disabled = args["disabled"].AsBoolean();
+            if (args["scope_id"] != null)
+                ScopeID = args["scope_id"].AsUUID();
+            if (args["scope_id"] != null)
+                ScopeID = args["scope_id"].AsUUID();
+            if (args["object_capacity"] != null)
+                m_objectCapacity = args["object_capacity"].AsInteger();
+            if (args["region_type"] != null)
+                RegionType = args["region_type"].AsString();
+            if (args["estate_pass"] != null)
+                EstateSettings.EstatePass = args["estate_pass"].AsString();
+            if (args["grid_session_id"] != null)
+                GridSecureSessionID = args["grid_session_id"].AsUUID();
+            if (args["see_into_this_sim_from_neighbor"] != null)
+                SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
+            if (args["trust_binaries_from_foreign_sims"] != null)
+                TrustBinariesFromForeignSims = args["trust_binaries_from_foreign_sims"].AsBoolean();
+            if (args["allow_script_crossing"] != null)
+                AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
+            if (args["allow_physical_prims"] != null)
+                AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
         }
 
         public static RegionInfo Create(UUID regionID, string regionName, uint regX, uint regY, string externalHostName, uint httpPort, uint simPort, uint remotingPort, string serverURI)
@@ -715,24 +750,6 @@ namespace OpenSim.Framework
         public int getInternalEndPointPort()
         {
             return m_internalEndPoint.Port;
-        }
-
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> kvp = new Dictionary<string, object>();
-            kvp["uuid"] = RegionID.ToString();
-            kvp["locX"] = RegionLocX.ToString();
-            kvp["locY"] = RegionLocY.ToString();
-            kvp["external_ip_address"] = ExternalEndPoint.Address.ToString();
-            kvp["external_port"] = ExternalEndPoint.Port.ToString();
-            kvp["external_host_name"] = ExternalHostName;
-            kvp["http_port"] = HttpPort.ToString();
-            kvp["internal_ip_address"] = InternalEndPoint.Address.ToString();
-            kvp["internal_port"] = InternalEndPoint.Port.ToString();
-            kvp["alternate_ports"] = m_allow_alternate_ports.ToString();
-            kvp["server_uri"] = ServerURI;
-
-            return kvp;
         }
 
         /// <summary>

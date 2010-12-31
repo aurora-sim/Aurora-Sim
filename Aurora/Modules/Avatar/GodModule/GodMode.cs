@@ -362,7 +362,7 @@ namespace Aurora.Modules
         {
             IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (connector != null)
-                connector.UpdateRegionInfo(regionInfo, false);
+                connector.UpdateRegionInfo(regionInfo);
         }
 
         /// <summary>

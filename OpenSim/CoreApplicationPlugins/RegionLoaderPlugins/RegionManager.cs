@@ -24,14 +24,27 @@ namespace Aurora.Modules.RegionLoader
         private bool OpenedForCreateRegion = false;
         private UUID CurrentRegionID = UUID.Zero;
         private ISimulationBase m_OpenSimBase;
+        private IRegionInfoConnector m_connector = null;
 
         public RegionManager(bool create, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
+            m_connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             OpenedForCreateRegion = create;
             InitializeComponent();
             if (create)
                 tabControl1.SelectedTab = tabPage2;
+            RefreshCurrentRegions();
+        }
+
+        private void RefreshCurrentRegions()
+        {
+            RegionListBox.Items.Clear();
+            RegionInfo[] regionInfos = m_connector.GetRegionInfos(false);
+            foreach(RegionInfo r in regionInfos)
+            {
+                RegionListBox.Items.Add(r.RegionName);
+            }
         }
 
         private void CreateNewRegion(object sender, EventArgs e)
@@ -63,21 +76,36 @@ namespace Aurora.Modules.RegionLoader
 
             region.RegionType = Type.Text;
             region.ObjectCapacity = int.Parse(ObjectCount.Text);
-            region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(Maturity.Text));
+            uint maturityLevel = 0;
+            if (!uint.TryParse(Maturity.Text, out maturityLevel))
+            {
+                if (Maturity.Text == "Adult")
+                    maturityLevel = 2;
+                else if (Maturity.Text == "Mature")
+                    maturityLevel = 1;
+                else //Leave it as PG by default if they do not select a valid option
+                    maturityLevel = 0;
+            }
+            region.AccessLevel = Util.ConvertMaturityToAccessLevel(maturityLevel);
+            region.Disabled = DisabledEdit.Checked;
 
-            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(Disabled.Text));
+            m_connector.UpdateRegionInfo(region);
             IScene scene;
             m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             manager.CreateRegion(region, true, out scene);
 
-            if(OpenedForCreateRegion)
+            if (OpenedForCreateRegion)
+            {
                 System.Windows.Forms.Application.Exit();
+                return;
+            }
+            RefreshCurrentRegions();
         }
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().GetRegionInfo(RegionToFind.Text);
+            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -86,8 +114,14 @@ namespace Aurora.Modules.RegionLoader
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
-            textBox4.Text = Util.ConvertAccessLevelToMaturity(Convert.ToByte(region.AccessLevel.ToString())).ToString();
-            textBox2.Text = region.Disabled.ToString();
+            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
+            if (maturityLevel == 0)
+                textBox4.Text = "PG";
+            else if (maturityLevel == 1)
+                textBox4.Text = "Mature";
+            else
+                textBox4.Text = "Adult";
+            DisabledEdit.Checked = region.Disabled;
             textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.HttpPort.ToString();
             textBox3.Text = region.RegionLocX.ToString();
@@ -124,11 +158,104 @@ namespace Aurora.Modules.RegionLoader
 
             region.RegionType = textBox11.Text;
             region.ObjectCapacity = int.Parse(textBox6.Text);
-            region.AccessLevel = Util.ConvertMaturityToAccessLevel(uint.Parse(textBox4.Text));
-
-            Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().UpdateRegionInfo(region, bool.Parse(textBox2.Text));
+            uint maturityLevel = 0;
+            if (!uint.TryParse(Maturity.Text, out maturityLevel))
+            {
+                if (Maturity.Text == "Adult")
+                    maturityLevel = 2;
+                else if (Maturity.Text == "Mature")
+                    maturityLevel = 1;
+                else //Leave it as PG by default if they do not select a valid option
+                    maturityLevel = 0;
+            }
+            region.AccessLevel = Util.ConvertMaturityToAccessLevel(maturityLevel);
+            region.Disabled = DisabledEdit.Checked;
+            m_connector.UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
+        }
+
+        private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            object item = RegionListBox.Items[RegionListBox.SelectedIndex];
+            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
+            if (region == null)
+            {
+                MessageBox.Show("Region was not found!");
+                return;
+            }
+            CurrentRegionID = region.RegionID;
+            textBox11.Text = region.RegionType;
+            textBox6.Text = region.ObjectCapacity.ToString();
+            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
+            if (maturityLevel == 0)
+                textBox4.Text = "PG";
+            else if (maturityLevel == 1)
+                textBox4.Text = "Mature";
+            else
+                textBox4.Text = "Adult";
+            DisabledEdit.Checked = region.Disabled;
+            textBox9.Text = region.ExternalHostName;
+            textBox7.Text = region.HttpPort.ToString();
+            textBox3.Text = region.RegionLocX.ToString();
+            textBox5.Text = region.RegionLocY.ToString();
+            textBox1.Text = region.RegionName;
+        }
+
+        private void RegionNameHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the name of your region.");
+        }
+
+        private void RegionLocationX_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the X (in the X,Y corrdinate plane) of the location of your region.");
+        }
+
+        private void RegionLocationY_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the Y (in the X,Y corrdinate plane) of the location of your region.");
+        }
+
+        private void RegionPort_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the port that your region will run on.");
+        }
+
+        private void ExternalIPHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is your external IP or DNS hostname. \n"
+                + "Note: Use 'DEFAULT' (without the quotes) to have the IP automatically found");
+        }
+
+        private void RegionTypeHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the type of region you are running. It is shown in the client in parcel info and Region/Estate.");
+        }
+
+        private void MaxNonPhysPrimHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the maxiumum size that you can make non physical prims.");
+        }
+
+        private void MaximumPhysPrimHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the maxiumum size that you can make physical prims.");
+        }
+
+        private void MaxPrimsHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the maxiumum number of prims you can have in the region.");
+        }
+
+        private void MaturityHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the maturity level for the region. You can choose from: PG, Mature, Adult.");
+        }
+
+        private void DisabledHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("If this is set to 'true', the region is not loaded.");
         }
     }
 }

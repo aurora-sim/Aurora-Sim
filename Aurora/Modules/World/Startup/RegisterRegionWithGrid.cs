@@ -125,7 +125,7 @@ namespace Aurora.Modules
                     {
                         //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
                         if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
                         else
                             SaveChangesFile("", scene.RegionInfo);
                     }
@@ -147,7 +147,7 @@ namespace Aurora.Modules
                     {
                         //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
                         if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
                         else
                             SaveChangesFile("", scene.RegionInfo);
                     }
@@ -170,7 +170,7 @@ namespace Aurora.Modules
                         {
                             //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
                             if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                                Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+                                Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
                             else
                                 SaveChangesFile("", scene.RegionInfo);
                         }
@@ -194,7 +194,7 @@ namespace Aurora.Modules
                     {
                         //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
                         if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo, false);
+                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
                         else
                             SaveChangesFile(oldRegionName, scene.RegionInfo);
                     }

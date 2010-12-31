@@ -41,21 +41,23 @@ namespace Aurora.Services.DataService
         {
         }
 
-        public void UpdateRegionInfo(RegionInfo region, bool Disable)
+        public void UpdateRegionInfo(RegionInfo region)
         {
             List<object> Values = new List<object>();
             Values.Add(region.RegionID);
             Values.Add(region.RegionName);
-            Values.Add(OSDParser.SerializeJsonString(region.PackRegionInfoData()));
-            Values.Add(Disable);
+            Values.Add(OSDParser.SerializeJsonString(region.PackRegionInfoData(true)));
+            Values.Add(region.Disabled);
             GD.Replace("simulator", new string[]{"RegionID","RegionName",
                 "RegionInfo","Disabled"}, Values.ToArray());
         }
 
-        public RegionInfo[] GetRegionInfos()
+        public RegionInfo[] GetRegionInfos(bool nonDisabledOnly)
         {
             List<RegionInfo> Infos = new List<RegionInfo>();
-            List<string> RetVal = GD.Query("Disabled", false, "simulator", "RegionInfo");
+            List<string> RetVal = nonDisabledOnly ?
+                GD.Query("Disabled", 0, "simulator", "RegionInfo") :
+                GD.Query("", "", "simulator", "RegionInfo");
             if (RetVal.Count == 0)
                 return Infos.ToArray();
             RegionInfo replyData = new RegionInfo();
