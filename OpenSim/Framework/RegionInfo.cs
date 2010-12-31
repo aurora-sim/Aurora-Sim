@@ -504,8 +504,6 @@ namespace OpenSim.Framework
             }
 
             m_regionType = config.GetString("RegionType", m_regionType);
-            GridSecureSessionID = UUID.Parse(config.GetString("GridSessionID", GridSecureSessionID.ToString()));
-            EstateSettings.EstatePass = config.GetString("EstatePass", "");
 
             if (m_regionType == String.Empty)
             {
@@ -588,12 +586,6 @@ namespace OpenSim.Framework
             if (RegionType != String.Empty)
                 config.Set("RegionType", RegionType);
 
-            if (EstateSettings.EstatePass != String.Empty)
-                config.Set("EstatePass", EstateSettings.EstatePass);
-
-            if (GridSecureSessionID != UUID.Zero)
-                config.Set("GridSessionID", GridSecureSessionID);
-
             config.Set("NeighborPassword", Password.ToString());
 
             source.Save();
@@ -651,8 +643,6 @@ namespace OpenSim.Framework
                 args["scope_id"] = OSD.FromUUID(ScopeID);
                 args["object_capacity"] = OSD.FromInteger(m_objectCapacity);
                 args["region_type"] = OSD.FromString(RegionType);
-                args["estate_pass"] = OSD.FromString(EstateSettings.EstatePass);
-                args["grid_session_id"] = OSD.FromUUID(GridSecureSessionID);
                 args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
                 args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
@@ -719,10 +709,6 @@ namespace OpenSim.Framework
                 m_objectCapacity = args["object_capacity"].AsInteger();
             if (args["region_type"] != null)
                 RegionType = args["region_type"].AsString();
-            if (args["estate_pass"] != null)
-                EstateSettings.EstatePass = args["estate_pass"].AsString();
-            if (args["grid_session_id"] != null)
-                GridSecureSessionID = args["grid_session_id"].AsUUID();
             if (args["see_into_this_sim_from_neighbor"] != null)
                 SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
             if (args["trust_binaries_from_foreign_sims"] != null)

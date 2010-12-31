@@ -38,6 +38,8 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
 using OpenSim.Framework;
+using Aurora.DataManager;
+using Aurora.Framework;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -80,7 +82,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if(m_default)
                 FindOldRegionFiles();
 
-            Aurora.Framework.IRegionInfoConnector conn = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>();
+            IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
             if (conn == null)
                 return null;
             RegionInfo[] infos = conn.GetRegionInfos(true);
@@ -151,21 +153,19 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         i++;
                     }
                 }
-                foreach (string file in iniFiles)
-                {
-                }
+                IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(info);
+                    conn.UpdateRegionInfo(info);
                 }
                 bool foundAll = true;
                 foreach (RegionInfo info in RegionsToConvert)
                 {
-                    if (Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().GetRegionInfo(info.RegionID) == null)
+                    if (conn.GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //Something went really wrong here... so lets not destroy anything
-                if (foundAll)
+                if (foundAll && RegionsToConvert.Count != 0)
                 {
                     MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style.");
                 }
@@ -196,6 +196,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     writer.WriteLine("AllowAlternatePorts = " + info.m_allow_alternate_ports);
                     writer.WriteLine("ExternalHostName = " + info.ExternalHostName);
                     writer.WriteLine("RegionType = " + info.RegionType);
+                    writer.WriteLine("NeighborPassword = " + info.Password);
+                    writer.WriteLine("AllowPhysicalPrims = " + info.AllowPhysicalPrims);
+                    writer.WriteLine("AllowScriptCrossing = " + info.AllowScriptCrossing);
+                    writer.WriteLine("TrustBinariesFromForeignSims = " + info.TrustBinariesFromForeignSims);
+                    writer.WriteLine("SeeIntoThisSimFromNeighbor = " + info.SeeIntoThisSimFromNeighbor);
+                    writer.WriteLine("MaxPrims = " + info.ObjectCapacity);
                     writer.WriteLine("");
                 }
                 writer.Close();

@@ -11,7 +11,10 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Nini.Config;
 using log4net;
+using Aurora.DataManager;
+using Aurora.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules
 {
@@ -45,11 +48,15 @@ namespace OpenSim.Region.CoreModules
                         break;
                     }
                 }
-                //This sets the password back so we can use it again to make changes to the estate settings later
-                if (ES.EstatePass == "" && scene.RegionInfo.EstateSettings.EstatePass != "")
-                    ES.EstatePass = scene.RegionInfo.EstateSettings.EstatePass;
+                //Get the password from the database now that we have either created a new estate and saved it, joined a new estate, or just reloaded
+                IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                EstatePassword s = null;
+                if (g != null)
+                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
+                if (s != null)
+                    ES.EstatePass = s.Password;
+
                 scene.RegionInfo.EstateSettings = ES;
-                scene.RegionInfo.WriteNiniConfig();
             }
         }
 
@@ -72,6 +79,7 @@ namespace OpenSim.Region.CoreModules
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
                     ES.EstatePass = Password;
+                    
                     ES = scene.EstateService.CreateEstate(ES, scene.RegionInfo.RegionID);
                     if (ES == null)
                     {
@@ -84,7 +92,12 @@ namespace OpenSim.Region.CoreModules
                         continue;
                     }
                     //We set this back if there wasn't an error because the EstateService will NOT send it back
-                    ES.EstatePass = Password;
+                    IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                    EstatePassword s = new EstatePassword() { Password = Password };
+                    if (g != null) //Save the pass to the database
+                    {
+                        g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
+                    }
                     break;
                 }
                 else if (response == "yes")
@@ -117,6 +130,13 @@ namespace OpenSim.Region.CoreModules
                         {
                             m_log.Warn("The connection to the server was broken, please try again soon.");
                             continue;
+                        }
+                        //Reset the pass and save it to the database
+                        IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
+                        EstatePassword s = new EstatePassword() { Password = Password };
+                        if (g != null) //Save the pass to the database
+                        {
+                            g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
                         }
                         break;
                     }
@@ -320,6 +340,42 @@ namespace OpenSim.Region.CoreModules
 
         public void Close(Scene scene)
         {
+        }
+
+        /// <summary>
+        /// This class is used to save the EstatePassword for the given region/estate service
+        /// </summary>
+        public class EstatePassword : IDataTransferable
+        {
+            public string Password;
+            public override void FromOSD(OSDMap map)
+            {
+                Password = map["Password"].AsString();
+            }
+
+            public override OSDMap ToOSD()
+            {
+                OSDMap map = new OSDMap();
+                map.Add("Password", Password);
+                return map;
+            }
+
+            public override Dictionary<string, object> ToKeyValuePairs()
+            {
+                return Util.OSDToDictionary(ToOSD());
+            }
+
+            public override void FromKVP(Dictionary<string, object> KVP)
+            {
+                FromOSD(Util.DictionaryToOSD(KVP));
+            }
+
+            public override IDataTransferable Duplicate()
+            {
+                EstatePassword m = new EstatePassword();
+                m.FromOSD(ToOSD());
+                return m;
+            }
         }
     }
 }
