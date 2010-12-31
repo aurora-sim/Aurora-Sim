@@ -595,6 +595,50 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
+        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        {
+            if (TableExists(table))
+            {
+                throw new DataManagerException("Trying to create a table with name of one that already exists.");
+            }
+
+            string columnDefinition = string.Empty;
+            var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            bool multiplePrimary = primaryColumns.Count() > 1;
+
+            foreach (ColumnDefinition column in columns)
+            {
+                if (columnDefinition != string.Empty)
+                {
+                    columnDefinition += ", ";
+                }
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+            }
+
+            string multiplePrimaryString = string.Empty;
+            if (multiplePrimary)
+            {
+                string listOfPrimaryNamesString = string.Empty;
+                foreach (ColumnDefinition column in primaryColumns)
+                {
+                    if (listOfPrimaryNamesString != string.Empty)
+                    {
+                        listOfPrimaryNamesString += ", ";
+                    }
+                    listOfPrimaryNamesString += column.Name;
+                }
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+            }
+
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
+            dbcommand.CommandText = query;
+            dbcommand.ExecuteNonQuery();
+            CloseDatabase(dbcon);
+        }
+
         private string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)

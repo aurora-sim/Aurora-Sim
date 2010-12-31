@@ -22,6 +22,7 @@ namespace Aurora.DataManager.Migration
             this.genericData = genericData;
             migrators.Add(new AuroraMigrator_2010_03_13());
             migrators.Add(new AuroraMigrator_2010_11_4());
+            migrators.Add(new AuroraMigrator_2010_12_30());
         }
 
         public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData, List<Migrator> migrators)

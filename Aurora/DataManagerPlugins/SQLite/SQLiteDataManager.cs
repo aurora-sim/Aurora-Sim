@@ -524,6 +524,120 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
+        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        {
+            if (!TableExists(table))
+            {
+                throw new DataManagerException("Trying to update a table with name of one that does not exist.");
+            }
+
+            List<ColumnDefinition> oldColumns = ExtractColumnsFromTable(table);
+
+            Dictionary<string, ColumnDefinition> sameColumns = new Dictionary<string, ColumnDefinition>();
+            foreach (ColumnDefinition column in oldColumns)
+            {
+                if (columns.Contains(column))
+                {
+                    sameColumns.Add(column.Name, column);
+                }
+            }
+
+            string columnDefinition = string.Empty;
+            /*var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            bool multiplePrimary = primaryColumns.Count() > 1;*/
+            string renamedTempTableColumnDefinition = string.Empty;
+            string renamedTempTableColumn = string.Empty;
+
+            foreach (ColumnDefinition column in oldColumns)
+            {
+                if (renamedTempTableColumnDefinition != string.Empty)
+                {
+                    renamedTempTableColumnDefinition += ", ";
+                    renamedTempTableColumn += ", ";
+                }
+                renamedTempTableColumn += column.Name;
+                renamedTempTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
+            }
+            string query = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");";
+
+            var cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+            query = "INSERT INTO " + table + "__temp SELECT " + renamedTempTableColumn + " from " + table + ";";
+            cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+            query = "drop table " + table;
+            cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+            string newTableColumnDefinition = string.Empty;
+            List<ColumnDefinition> primaryColumns = new List<ColumnDefinition>();
+            foreach (ColumnDefinition column in columns)
+            {
+                if (column.IsPrimary) primaryColumns.Add(column);
+            }
+            bool multiplePrimary = primaryColumns.Count > 1;
+            
+            foreach (ColumnDefinition column in columns)
+            {
+                if (newTableColumnDefinition != string.Empty)
+                {
+                    newTableColumnDefinition += ", ";
+                }
+                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+            }
+            string multiplePrimaryString = string.Empty;
+            if (multiplePrimary)
+            {
+                string listOfPrimaryNamesString = string.Empty;
+                foreach (ColumnDefinition column in primaryColumns)
+                {
+                    if (listOfPrimaryNamesString != string.Empty)
+                    {
+                        listOfPrimaryNamesString += ", ";
+                    }
+                    listOfPrimaryNamesString += column.Name;
+                }
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+            }
+
+            query = string.Format("create table " + table + " ( {0} {1}) ", newTableColumnDefinition, multiplePrimaryString);
+            cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+            string InsertFromTempTableColumnDefinition = string.Empty;
+
+            foreach (ColumnDefinition column in sameColumns.Values)
+            {
+                if (InsertFromTempTableColumnDefinition != string.Empty)
+                {
+                    InsertFromTempTableColumnDefinition += ", ";
+                }
+                InsertFromTempTableColumnDefinition += column.Name;
+            }
+            query = "INSERT INTO " + table + " (" + InsertFromTempTableColumnDefinition + ") SELECT " + InsertFromTempTableColumnDefinition + " from " + table + "__temp;";
+            cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+
+
+            query = "drop table " + table + "__temp";
+            cmd = new SqliteCommand();
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+        }
+
         private string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)

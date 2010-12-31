@@ -86,6 +86,17 @@ namespace Aurora.DataManager.Migration
             schema.Add(new Rec<string, ColumnDefinition[]>(table, definitions));
         }
 
+        protected void RemoveSchema(string table)
+        {
+            //Remove all of the tables that have this name
+            schema.RemoveAll(delegate(Rec<string, ColumnDefinition[]> r)
+            {
+                if (r.X1 == table)
+                    return true;
+                return false;
+            });
+        }
+
         protected void EnsureAllTablesInSchemaExist(IDataConnector genericData)
         {
             foreach (var s in schema)
@@ -96,6 +107,7 @@ namespace Aurora.DataManager.Migration
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
+
             foreach (var s in schema)
             {
                 if (!genericData.VerifyTableExists(s.X1, s.X2))

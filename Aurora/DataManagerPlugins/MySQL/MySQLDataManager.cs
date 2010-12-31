@@ -632,6 +632,95 @@ namespace Aurora.DataManager.MySQL
             CloseDatabase(dbcon);
         }
 
+        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        {
+            table = table.ToLower();
+            if (!TableExists(table))
+            {
+                throw new DataManagerException("Trying to update a table with name of one that does not exist.");
+            }
+
+            List<ColumnDefinition> oldColumns = ExtractColumnsFromTable(table);
+
+            Dictionary<string, ColumnDefinition> addedColumns = new Dictionary<string, ColumnDefinition>();
+            Dictionary<string, ColumnDefinition> removedColumns = new Dictionary<string, ColumnDefinition>();
+            Dictionary<string, ColumnDefinition> modifiedColumns = new Dictionary<string, ColumnDefinition>();
+            foreach (ColumnDefinition column in columns)
+            {
+                if (!oldColumns.Contains(column))
+                {
+                    addedColumns.Add(column.Name, column);
+                }
+            }
+            foreach (ColumnDefinition column in oldColumns)
+            {
+                if (!columns.Contains(column))
+                {
+                    if (addedColumns.ContainsKey(column.Name))
+                    {
+                        modifiedColumns.Add(column.Name, addedColumns[column.Name]);
+                        addedColumns.Remove(column.Name);
+                    }
+                    else
+                        removedColumns.Add(column.Name, column);
+                }
+            }
+
+            string columnDefinition = string.Empty;
+            /*var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            bool multiplePrimary = primaryColumns.Count() > 1;*/
+
+            string addedColumnsQuery = "";
+            string modifiedColumnsQuery = "";
+            string droppedColumnsQuery = "";
+            MySqlConnection dbcon = GetLockedConnection();
+            foreach (ColumnDefinition column in addedColumns.Values)
+            {
+                addedColumnsQuery = "add " + column.Name + " " + GetColumnTypeStringSymbol(column.Type) + " ";
+                string query = string.Format("alter table " + table + " " + addedColumnsQuery);
+
+                MySqlCommand dbcommand = dbcon.CreateCommand();
+                dbcommand.CommandText = query;
+                dbcommand.ExecuteNonQuery();
+                CloseDatabase(dbcon);
+            }
+            foreach (ColumnDefinition column in modifiedColumns.Values)
+            {
+                modifiedColumnsQuery = "modify column " + column.Name + " " + GetColumnTypeStringSymbol(column.Type) + " ";
+                string query = string.Format("alter table " + table + " " + modifiedColumnsQuery);
+
+                MySqlCommand dbcommand = dbcon.CreateCommand();
+                dbcommand.CommandText = query;
+                dbcommand.ExecuteNonQuery();
+                CloseDatabase(dbcon);
+            }
+            foreach (ColumnDefinition column in removedColumns.Values)
+            {
+                droppedColumnsQuery = "drop " + column.Name + " ";
+                string query = string.Format("alter table " + table + " " + droppedColumnsQuery);
+
+                MySqlCommand dbcommand = dbcon.CreateCommand();
+                dbcommand.CommandText = query;
+                dbcommand.ExecuteNonQuery();
+                CloseDatabase(dbcon);
+            }
+
+            /*string multiplePrimaryString = string.Empty;
+            if (multiplePrimary)
+            {
+                string listOfPrimaryNamesString = string.Empty;
+                foreach (ColumnDefinition column in primaryColumns)
+                {
+                    if (listOfPrimaryNamesString != string.Empty)
+                    {
+                        listOfPrimaryNamesString += ", ";
+                    }
+                    listOfPrimaryNamesString += column.Name;
+                }
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+            }*/
+        }
+
         private string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)

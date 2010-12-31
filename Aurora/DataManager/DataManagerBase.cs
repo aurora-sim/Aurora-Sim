@@ -32,6 +32,7 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
+        public abstract void UpdateTable(string table, ColumnDefinition[] columns);
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract IGenericData Copy();
 
@@ -121,7 +122,8 @@ namespace Aurora.DataManager
             {
                 if (!VerifyTableExists(tableName, columnDefinitions))
                 {
-                    throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
+                    //throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
+                    UpdateTable(tableName, columnDefinitions);
                 }
                 return;
             }

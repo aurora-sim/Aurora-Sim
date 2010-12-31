@@ -330,7 +330,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[AGENTCIRCUITDATA] failed to unpack appearance; {0}", e.Message);
+                m_log.ErrorFormat("[AGENTCIRCUITDATA] failed to unpack appearance; {0}", e.ToString());
             }
 
             ServiceURLs = new Dictionary<string, object>();
