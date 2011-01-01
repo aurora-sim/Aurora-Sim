@@ -32,7 +32,6 @@ namespace OpenSim.Framework
 {
     public interface ISceneObject : ISceneEntity
     {
-        UUID UUID { get; }
         ISceneObject CloneForNewScene(IScene scene);
         string ToXml2();
         string ExtraToXmlString();

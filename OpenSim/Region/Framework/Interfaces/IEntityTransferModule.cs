@@ -58,9 +58,9 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint p);
 
-        void IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
+        bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
 
-        void IncomingCreateObject(UUID regionID, ISceneObject sog);
+        bool IncomingCreateObject(UUID regionID, ISceneObject sog);
     }
 
     public interface IUserAgentVerificationModule

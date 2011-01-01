@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
             // Let's find out if this is a foreign user or a local user
-            UserAccount account = GetScene(client.Scene.RegionInfo.RegionID).UserAccountService.GetUserAccount(m_aScene.RegionInfo.ScopeID, id);
+            UserAccount account = GetScene(client.Scene.RegionInfo.RegionID).UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, id);
             if (account != null)
             {
                 // local grid user

@@ -196,7 +196,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 */
 
                         string serialisedSceneObject = sogdata;
-                        SceneObjectGroup sceneObject = serialiser.DeserializeGroupFromXml2(serialisedSceneObject, m_scene);
+                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(serialisedSceneObject, m_scene);
 
                         if (sceneObject == null)
                         {
