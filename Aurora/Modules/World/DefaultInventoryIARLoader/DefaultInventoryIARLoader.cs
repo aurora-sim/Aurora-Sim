@@ -100,6 +100,14 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
 
+            InventoryFolderBase rootFolder = m_MockScene.InventoryService.GetRootFolder(uinfo.PrincipalID);
+
+            if (null == rootFolder)
+            {
+                //We need to create the root folder, otherwise the IAR freaks
+                m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
+            }
+
             InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
 
             try
