@@ -30,12 +30,16 @@ namespace Aurora.Modules.World.Auction
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
+            m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
+            m_scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
         public void RemoveRegion(Scene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
+            m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+            m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
         }
 
         public void RegionLoaded(Scene scene)
@@ -49,6 +53,25 @@ namespace Aurora.Modules.World.Auction
 
         public void PostInitialise()
         {
+        }
+
+        public string Name
+        {
+            get { return "SetHomeModule"; }
+        }
+
+        public void Close()
+        {
+        }
+
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnSetStartLocationRequest += SetHomeRezPoint;
+        }
+
+        void EventManager_OnClosingClient(IClientAPI client)
+        {
+            client.OnSetStartLocationRequest -= SetHomeRezPoint;
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)
@@ -110,13 +133,41 @@ namespace Aurora.Modules.World.Auction
             return responsedata;
         }
 
-        public string Name
+        /// <summary>
+        /// Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="flags"></param>
+        public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
         {
-            get { return "SetHomeModule"; }
-        }
+            Scene scene = (Scene)remoteClient.Scene;
+            if (scene == null)
+                return;
 
-        public void Close()
-        {
+            ScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
+            IDialogModule module = scene.RequestModuleInterface<IDialogModule>();
+
+            if (module != null && SP != null)
+            {
+                if (scene.Permissions.CanSetHome(SP.UUID))
+                {
+                    position.Z += SP.Appearance.AvatarHeight / 2;
+                    if (scene.GridUserService != null &&
+                        scene.GridUserService.SetHome(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID, position, lookAt) &&
+                        module != null) //Do this last so it doesn't screw up the rest
+                    {
+                        // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
+                        module.SendAlertToUser(remoteClient, "Home position set.");
+                    }
+                    else if (module != null)
+                        module.SendAlertToUser(remoteClient, "Set Home request failed.");
+                }
+                else if (module != null)
+                    module.SendAlertToUser(remoteClient, "Set Home request failed: Permissions do not allow the setting of home here.");
+            }
         }
     }
 }

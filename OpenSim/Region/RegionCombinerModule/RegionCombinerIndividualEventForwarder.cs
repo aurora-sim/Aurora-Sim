@@ -155,7 +155,7 @@ namespace OpenSim.Region.RegionCombinerModule
             RayStart.X += differenceX * (int)Constants.RegionSize;
             RayStart.Y += differenceY * (int)Constants.RegionSize;
 
-            m_rootScene.doObjectDuplicateOnRay(localID, dupeFlags, AgentID, GroupID, RayTargetObj,
+            m_rootScene.SceneGraph.doObjectDuplicateOnRay(localID, dupeFlags, AgentID, GroupID, RayTargetObj,
                 RayEnd, RayStart, BypassRaycast, RayEndIsIntersection, CopyCenters, CopyRotates);
         }
     }

@@ -32,6 +32,7 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using log4net;
+using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
@@ -60,6 +61,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected int m_numPrim = 0;
         protected int m_numChildAgents = 0;
         protected int m_physicalPrim = 0;
+        protected bool EnableFakeRaycasting = false;
 
         /// <summary>
         /// The last allocated local prim id.  When a new local id is requested, the next number in the sequence is
@@ -94,6 +96,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
             m_parentScene = parent;
             m_regInfo = regInfo;
+
+            IConfig aurorastartupConfig = parent.Config.Configs["AuroraStartup"];
+            if (aurorastartupConfig != null)
+            {
+                EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
+            }
         }
 
         protected internal void Close()
@@ -844,6 +852,97 @@ namespace OpenSim.Region.Framework.Scenes
 
 
             return sceneObject;
+        }
+
+        /// <summary>
+        /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
+        /// RayEnd and RayStart to determine what the angle of the ray is
+        /// </summary>
+        /// <param name="localID">ID of object to duplicate</param>
+        /// <param name="dupeFlags"></param>
+        /// <param name="AgentID">Agent doing the duplication</param>
+        /// <param name="GroupID">Group of new object</param>
+        /// <param name="RayTargetObj">The target of the Ray</param>
+        /// <param name="RayEnd">The ending of the ray (farthest away point)</param>
+        /// <param name="RayStart">The Beginning of the ray (closest point)</param>
+        /// <param name="BypassRaycast">Bool to bypass raycasting</param>
+        /// <param name="RayEndIsIntersection">The End specified is the place to add the object</param>
+        /// <param name="CopyCenters">Position the object at the center of the face that it's colliding with</param>
+        /// <param name="CopyRotates">Rotate the object the same as the localID object</param>
+        public void doObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
+                                           UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
+                                           bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
+        {
+            Vector3 pos;
+            const bool frontFacesOnly = true;
+            //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
+            SceneObjectPart target = m_parentScene.GetSceneObjectPart(localID);
+            SceneObjectPart target2 = m_parentScene.GetSceneObjectPart(RayTargetObj);
+            ScenePresence Sp = GetScenePresence(AgentID);
+            if (target != null && target2 != null)
+            {
+                if (EnableFakeRaycasting)
+                {
+                    RayStart = Sp.CameraPosition;
+                    RayEnd = pos = target2.AbsolutePosition;
+                }
+                Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
+                Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
+                Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
+
+                if (target2.ParentGroup != null)
+                {
+                    pos = target2.AbsolutePosition;
+                    //m_log.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+                    //m_log.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
+                    // TODO: Raytrace better here
+
+                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), false, false);
+                    Ray NewRay = new Ray(AXOrigin, AXdirection);
+
+                    // Ray Trace against target here
+                    EntityIntersection ei = target2.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, CopyCenters);
+
+                    // Un-comment out the following line to Get Raytrace results printed to the console.
+                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    float ScaleOffset = 0.5f;
+
+                    // If we hit something
+                    if (ei.HitTF)
+                    {
+                        Vector3 scale = target.Scale;
+                        Vector3 scaleComponent = new Vector3(ei.AAfaceNormal.X, ei.AAfaceNormal.Y, ei.AAfaceNormal.Z);
+                        if (scaleComponent.X != 0) ScaleOffset = scale.X;
+                        if (scaleComponent.Y != 0) ScaleOffset = scale.Y;
+                        if (scaleComponent.Z != 0) ScaleOffset = scale.Z;
+                        ScaleOffset = Math.Abs(ScaleOffset);
+                        Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
+                        Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
+                        Vector3 offset = normal * (ScaleOffset / 2f);
+                        pos = intersectionpoint + offset;
+
+                        // stick in offset format from the original prim
+                        pos = pos - target.ParentGroup.AbsolutePosition;
+                        if (CopyRotates)
+                        {
+                            Quaternion worldRot = target2.GetWorldRotation();
+
+                            // SceneObjectGroup obj = m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, worldRot);
+                            DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, worldRot);
+                            //obj.Rotation = worldRot;
+                            //obj.UpdateGroupRotationR(worldRot);
+                        }
+                        else
+                        {
+                            DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, Quaternion.Identity);
+                        }
+                    }
+
+                    return;
+                }
+
+                return;
+            }
         }
 
         /// <value>

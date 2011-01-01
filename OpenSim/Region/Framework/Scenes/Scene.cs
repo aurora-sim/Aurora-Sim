@@ -157,7 +157,6 @@ namespace OpenSim.Region.Framework.Scenes
         private double m_rootReprioritizationDistance = 10.0;
         private double m_childReprioritizationDistance = 20.0;
 
-        private bool EnableFakeRaycasting = false;
         private bool m_UseSelectionParticles = true;
         public bool CheckForObjectCulling = false;
         public bool[,] DirectionsToBlockChildAgents;
@@ -493,7 +492,6 @@ namespace OpenSim.Region.Framework.Scenes
                     UseOneHeartbeat = aurorastartupConfig.GetBoolean("RunWithMultipleHeartbeats", true);
                     RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
-                    EnableFakeRaycasting = aurorastartupConfig.GetBoolean("EnableFakeRaycasting", false);
                     MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
                     Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
                     m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
@@ -1183,56 +1181,37 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (UnlinkSceneObject(group, false))
+            if (m_sceneGraph.DeleteEntity(group))
             {
-                EventManager.TriggerObjectBeingRemovedFromScene(group);
-                return true;
-            }
-            return false;
-            //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
-        }
+                IBackupModule backup = RequestModuleInterface<IBackupModule>();
+                if (backup != null)
+                    backup.DeleteFromStorage(group.UUID);
 
-        /// <summary>
-        /// Unlink the given object from the scene.  Unlike delete, this just removes the record of the object - the
-        /// object itself is not destroyed.
-        /// </summary>
-        /// <param name="so">The scene object.</param>
-        /// <param name="softDelete">If true, only deletes from scene, but keeps the object in the database.</param>
-        /// <returns>true if the object was in the scene, false if it was not</returns>
-        protected bool UnlinkSceneObject(SceneObjectGroup so, bool softDelete)
-        {
-            if (m_sceneGraph.DeleteEntity(so))
-            {
-                if (!softDelete)
+                // We need to keep track of this state in case this group is still queued for backup.
+                group.IsDeleted = true;
+                //Clear the update schedule HERE so that IsDeleted will not have to fire as well
+                lock (group.ChildrenListLock)
                 {
-                    IBackupModule backup = RequestModuleInterface<IBackupModule>();
-                    if (backup != null)
-                        backup.DeleteFromStorage(so.UUID);
-
-                    // We need to keep track of this state in case this group is still queued for backup.
-                    so.IsDeleted = true;
-                    //Clear the update schedule HERE so that IsDeleted will not have to fire as well
-                    lock (so.ChildrenListLock)
+                    foreach (SceneObjectPart part in group.ChildrenList)
                     {
-                        foreach (SceneObjectPart part in so.ChildrenList)
+                        //Make sure it isn't going to be updated again
+                        part.ClearUpdateSchedule();
+                        //If it is the root part, kill the object in the client
+                        if (part == group.RootPart)
                         {
-                            //Make sure it isn't going to be updated again
-                            part.ClearUpdateSchedule();
-                            //If it is the root part, kill the object in the client
-                            if (part == so.RootPart)
+                            ForEachScenePresence(delegate(ScenePresence avatar)
                             {
-                                ForEachScenePresence(delegate(ScenePresence avatar)
-                                {
-                                    avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, new ISceneEntity[] { part });
-                                });
-                            }
+                                avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, new ISceneEntity[] { part });
+                            });
                         }
                     }
                 }
                 EventManager.TriggerParcelPrimCountTainted();
+                EventManager.TriggerObjectBeingRemovedFromScene(group);
                 return true;
             }
 
+            //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
             return false;
         }
 
@@ -1649,7 +1628,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnAddPrim += m_sceneGraph.AddNewPrim;
             client.OnRezObject += RezObject;
-            client.OnObjectDuplicateOnRay += doObjectDuplicateOnRay;
+            client.OnObjectDuplicateOnRay += m_sceneGraph.doObjectDuplicateOnRay;
         }
 
         public virtual void SubscribeToClientInventoryEvents(IClientAPI client)
@@ -1680,7 +1659,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnNameFromUUIDRequest += HandleUUIDNameRequest;
             client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
             client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
-            client.OnSetStartLocationRequest += SetHomeRezPoint;
         }
 
         public virtual void SubscribeToClientNetworkEvents(IClientAPI client)
@@ -1745,7 +1723,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             client.OnAddPrim -= m_sceneGraph.AddNewPrim;
             client.OnRezObject -= RezObject;
-            client.OnObjectDuplicateOnRay -= doObjectDuplicateOnRay;
+            client.OnObjectDuplicateOnRay -= m_sceneGraph.doObjectDuplicateOnRay;
         }
 
         public virtual void UnSubscribeToClientInventoryEvents(IClientAPI client)
@@ -1774,7 +1752,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnNameFromUUIDRequest -= HandleUUIDNameRequest;
             client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
-            client.OnSetStartLocationRequest -= SetHomeRezPoint;
         }
 
         public virtual void UnSubscribeToClientNetworkEvents(IClientAPI client)
@@ -1783,126 +1760,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        /// <summary>
-        /// Duplicates object specified by localID at position raycasted against RayTargetObject using 
-        /// RayEnd and RayStart to determine what the angle of the ray is
-        /// </summary>
-        /// <param name="localID">ID of object to duplicate</param>
-        /// <param name="dupeFlags"></param>
-        /// <param name="AgentID">Agent doing the duplication</param>
-        /// <param name="GroupID">Group of new object</param>
-        /// <param name="RayTargetObj">The target of the Ray</param>
-        /// <param name="RayEnd">The ending of the ray (farthest away point)</param>
-        /// <param name="RayStart">The Beginning of the ray (closest point)</param>
-        /// <param name="BypassRaycast">Bool to bypass raycasting</param>
-        /// <param name="RayEndIsIntersection">The End specified is the place to add the object</param>
-        /// <param name="CopyCenters">Position the object at the center of the face that it's colliding with</param>
-        /// <param name="CopyRotates">Rotate the object the same as the localID object</param>
-        public void doObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
-                                           UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
-                                           bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
-        {
-            Vector3 pos;
-            const bool frontFacesOnly = true;
-            //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
-            SceneObjectPart target = GetSceneObjectPart(localID);
-            SceneObjectPart target2 = GetSceneObjectPart(RayTargetObj);
-            ScenePresence Sp = GetScenePresence(AgentID);
-            if (target != null && target2 != null)
-            {
-                if (EnableFakeRaycasting)
-                {
-                    RayStart = Sp.CameraPosition;
-                    RayEnd = pos = target2.AbsolutePosition;
-                }
-                Vector3 direction = Vector3.Normalize(RayEnd - RayStart);
-                Vector3 AXOrigin = new Vector3(RayStart.X, RayStart.Y, RayStart.Z);
-                Vector3 AXdirection = new Vector3(direction.X, direction.Y, direction.Z);
-
-                if (target2.ParentGroup != null)
-                {
-                    pos = target2.AbsolutePosition;
-                    //m_log.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
-                    //m_log.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
-                    // TODO: Raytrace better here
-
-                    //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), false, false);
-                    Ray NewRay = new Ray(AXOrigin, AXdirection);
-
-                    // Ray Trace against target here
-                    EntityIntersection ei = target2.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, CopyCenters);
-
-                    // Un-comment out the following line to Get Raytrace results printed to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
-                    float ScaleOffset = 0.5f;
-
-                    // If we hit something
-                    if (ei.HitTF)
-                    {
-                        Vector3 scale = target.Scale;
-                        Vector3 scaleComponent = new Vector3(ei.AAfaceNormal.X, ei.AAfaceNormal.Y, ei.AAfaceNormal.Z);
-                        if (scaleComponent.X != 0) ScaleOffset = scale.X;
-                        if (scaleComponent.Y != 0) ScaleOffset = scale.Y;
-                        if (scaleComponent.Z != 0) ScaleOffset = scale.Z;
-                        ScaleOffset = Math.Abs(ScaleOffset);
-                        Vector3 intersectionpoint = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
-                        Vector3 normal = new Vector3(ei.normal.X, ei.normal.Y, ei.normal.Z);
-                        Vector3 offset = normal * (ScaleOffset / 2f);
-                        pos = intersectionpoint + offset;
-
-                        // stick in offset format from the original prim
-                        pos = pos - target.ParentGroup.AbsolutePosition;
-                        if (CopyRotates)
-                        {
-                            Quaternion worldRot = target2.GetWorldRotation();
-
-                            // SceneObjectGroup obj = m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, worldRot);
-                            m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, worldRot);
-                            //obj.Rotation = worldRot;
-                            //obj.UpdateGroupRotationR(worldRot);
-                        }
-                        else
-                        {
-                            m_sceneGraph.DuplicateObject(localID, pos, target.GetEffectiveObjectFlags(), AgentID, GroupID, Quaternion.Identity);
-                        }
-                    }
-
-                    return;
-                }
-
-                return;
-            }
-        }
-
-        /// <summary>
-        /// Sets the Home Point.   The LoginService uses this to know where to put a user when they log-in
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="position"></param>
-        /// <param name="lookAt"></param>
-        /// <param name="flags"></param>
-        public virtual void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
-        {
-            ScenePresence SP = GetScenePresence(remoteClient.AgentId);
-            IDialogModule module = RequestModuleInterface<IDialogModule>();
-            if (Permissions.CanSetHome(SP.UUID))
-            {
-                position.Z += SP.Appearance.AvatarHeight / 2;
-                if (GridUserService != null &&
-                    GridUserService.SetHome(remoteClient.AgentId.ToString(), RegionInfo.RegionID, position, lookAt) &&
-                    module != null) //Do this last so it doesn't screw up the rest
-                {
-                    // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
-                    module.SendAlertToUser(remoteClient, "Home position set.");
-                }
-                else if (module != null)
-                    module.SendAlertToUser(remoteClient, "Set Home request failed.");
-            }
-            else if (module != null)
-                module.SendAlertToUser(remoteClient, "Set Home request failed: Permissions do not allow the setting of home here.");
-        }
 
         /// <summary>
         /// Create a child agent scene presence and add it to this scene.
@@ -1945,12 +1802,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="agentID"></param>
         public void RemoveClient(UUID agentID)
         {
-            bool childagentYN = false;
             ScenePresence avatar = GetScenePresence(agentID);
             if (avatar != null)
             {
-                childagentYN = avatar.IsChildAgent;
-
                 if (avatar.ParentID != UUID.Zero)
                 {
                     avatar.StandUp(true);
@@ -1958,12 +1812,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    if (!childagentYN)
+                    if (!avatar.IsChildAgent)
                         m_log.DebugFormat(
                             "[SCENE]: Removing {0} agent {1} from region {2}",
-                            (childagentYN ? "child" : "root"), agentID, RegionInfo.RegionName);
+                            (avatar.IsChildAgent ? "child" : "root"), agentID, RegionInfo.RegionName);
 
-                    m_sceneGraph.removeUserCount(!childagentYN);
+                    m_sceneGraph.removeUserCount(!avatar.IsChildAgent);
                     ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
                     if (module != null)
                         module.RemoveCapsHandler(agentID);
