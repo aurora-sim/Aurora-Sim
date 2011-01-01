@@ -1056,7 +1056,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else if (eventType == scriptEvents.changed)
             {
-                Changed changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
+                Changed changed;
+                if (param[0] is Changed)
+                {
+                    changed = (Changed)param[0];
+                }
+                else
+                {
+                    changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
+                }
                 if (ID.ChangedInQueue.Contains(changed))
                     return false;
                 ID.ChangedInQueue.Add(changed);
@@ -1094,7 +1102,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 QIS.ID.LandCollisionInQueue = false;
             else if (QIS.functionName == "changed")
             {
-                Changed changed = (Changed)Enum.Parse(typeof(Changed),QIS.param[0].ToString());
+                Changed changed;
+                if (QIS.param[0] is Changed)
+                {
+                    changed = (Changed)QIS.param[0];
+                }
+                else
+                {
+                    changed = (Changed)(((LSL_Types.LSLInteger)QIS.param[0]).value);
+                }
                 QIS.ID.ChangedInQueue.Remove(changed);
             }
         }

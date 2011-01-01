@@ -565,6 +565,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     lsl_p[i] = new LSL_Types.Quaternion(((Quaternion)p[i]).X, ((Quaternion)p[i]).Y, ((Quaternion)p[i]).Z, ((Quaternion)p[i]).W);
                 else if (p[i] is float)
                     lsl_p[i] = new LSL_Types.LSLFloat((float)p[i]);
+                else if (p[i] is Changed)
+                {
+                    Changed c = (Changed)p[i];
+                    lsl_p[i] = new LSL_Types.LSLInteger((int)c);
+                }
                 else
                     lsl_p[i] = p[i];
             }

@@ -1799,7 +1799,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
                 part.UpdateTexture(tex);
-                return;
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1816,8 +1815,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.DefaultTexture.RGBA = texcolor;
                 part.UpdateTexture(tex);
-                return;
             }
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>
