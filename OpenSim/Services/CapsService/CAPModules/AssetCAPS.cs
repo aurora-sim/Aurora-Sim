@@ -433,7 +433,7 @@ namespace OpenSim.Services.CapsService
                 string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
-                map["new_inventory_item"] = UUID.Zero;
+                map["item_id"] = UUID.Zero;
                 map["state"] = "complete";
                 res = OSDParser.SerializeLLSDXmlString(map);
                 httpListener.RemoveStreamHandler("POST", uploaderPath);

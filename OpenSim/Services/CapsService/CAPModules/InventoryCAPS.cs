@@ -462,6 +462,11 @@ namespace OpenSim.Services.CapsService
                 inType = 19;
                 assType = 20;
             }
+            else if (inventoryType == "snapshot")
+            {
+                inType = 15;
+                assType = 0;
+            }
             else if (inventoryType == "wearable")
             {
                 inType = 18;
@@ -475,7 +480,6 @@ namespace OpenSim.Services.CapsService
                         break;
                 }
             }
-
             AssetBase asset;
             asset = new AssetBase(assetID, assetName, assType, m_handler.AgentID.ToString());
             asset.Data = data;
