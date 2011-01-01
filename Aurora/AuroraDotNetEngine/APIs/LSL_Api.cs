@@ -8771,8 +8771,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (remain < 1)
                         return res;
 
-                    face = (int)rules.GetLSLIntegerItem(idx++);
-
                     tex = part.Shape.Textures;
                     Color4 texcolor;
                     if (face == ScriptBaseClass.ALL_SIDES)

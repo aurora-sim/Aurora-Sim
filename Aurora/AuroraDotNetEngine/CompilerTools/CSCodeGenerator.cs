@@ -1835,7 +1835,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         if (GlobalVariables.TryGetValue(d.Id, out var))
             return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
 
-        if (MethodVariables.TryGetValue(d.Id, out var))
+            //Commented out because we can't handle the same var name in different if/else statements
+        /*if (MethodVariables.TryGetValue(d.Id, out var))
             {
             if (var.Type != d.Datatype)
                 {
@@ -1855,9 +1856,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
         else
             {
-            MethodVariables.Add(d.Id, new GlobalVar() { Type = d.Datatype, Value = "" });
+            MethodVariables[d.Id] = new GlobalVar() { Type = d.Datatype, Value = "" };
             return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
-            }              
+            }  
+         * */
+
+        return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
         }
 
         /// <summary>
