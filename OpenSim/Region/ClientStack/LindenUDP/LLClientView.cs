@@ -12386,7 +12386,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         private static int CalculateNumPackets(byte[] data)
         {
-            const uint m_maxPacketSize = 2048;
+            const uint m_maxPacketSize = 1024;
 
             int numPackets = 1;
 
