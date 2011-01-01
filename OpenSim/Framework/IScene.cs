@@ -37,13 +37,18 @@ namespace OpenSim.Framework
     /// Indicate what action to take on an object derez request
     /// </value>
     public enum DeRezAction : byte
-    {
+    {	
         SaveToExistingUserInventoryItem = 0,
-        TakeCopy = 1,
+        AcquireToUserInventory = 1,		// try to leave copy in world
+        SaveIntoTaskInventory = 2,
+        Attachment = 3,
         Take = 4,
-        GodTakeCopy = 5,
+        GodTakeCopy = 5,   // force take copy
         Delete = 6,
-        Return = 9
+        AttachmentToInventory = 7,
+        AttachmentExists = 8,
+        Return = 9,           // back to owner's inventory
+        ReturnToLastOwner = 10    // deeded object back to last owner's inventory
     };
 
     public interface IScene : IRegistryCore

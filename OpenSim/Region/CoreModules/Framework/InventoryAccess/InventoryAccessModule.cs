@@ -306,7 +306,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             ScenePresence SP = m_Scene.GetScenePresence(agentId);
             UUID userID = UUID.Zero;
 
-            if (action == DeRezAction.Take || action == DeRezAction.TakeCopy ||
+            if (action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory ||
                 action == DeRezAction.SaveToExistingUserInventoryItem)
             {
                 // Take or take copy require a taker
@@ -409,7 +409,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // Override and put into where it came from, if it came
                 // from anywhere in inventory
                 //
-                if (action == DeRezAction.Take || action == DeRezAction.TakeCopy)
+                if (action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory)
                 {
                     if (objectGroups[0].RootPart.FromItemID != UUID.Zero)
                     {

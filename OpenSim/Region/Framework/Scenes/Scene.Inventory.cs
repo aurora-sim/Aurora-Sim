@@ -1719,7 +1719,7 @@ namespace OpenSim.Region.Framework.Scenes
             // becomes irrelevant. It already includes the permissionToTake
             // permission and after excluding no copy items here, we can
             // just use that.
-            if (action == DeRezAction.TakeCopy)
+            if (action == DeRezAction.AcquireToUserInventory)
             {
                 // If we don't have permission, stop right here
                 if (!permissionToTakeCopy)
