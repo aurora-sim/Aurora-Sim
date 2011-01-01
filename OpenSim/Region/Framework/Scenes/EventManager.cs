@@ -81,10 +81,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnRemovePresenceDelegate OnRemovePresence;
 
-        public delegate void OnParcelPrimCountUpdateDelegate();
-
-        public event OnParcelPrimCountUpdateDelegate OnParcelPrimCountUpdate;
-
         public delegate void OnParcelPrimCountAddDelegate(SceneObjectGroup obj);
 
         public event OnParcelPrimCountAddDelegate OnParcelPrimCountAdd;
@@ -730,27 +726,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnBackup failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerParcelPrimCountUpdate()
-        {
-            OnParcelPrimCountUpdateDelegate handlerParcelPrimCountUpdate = OnParcelPrimCountUpdate;
-            if (handlerParcelPrimCountUpdate != null)
-            {
-                foreach (OnParcelPrimCountUpdateDelegate d in handlerParcelPrimCountUpdate.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerParcelPrimCountUpdate failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

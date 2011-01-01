@@ -233,7 +233,7 @@ namespace Aurora.Modules
                 else
                     m_scene.EventManager.TriggerIncomingLandDataFromStorage(LandObjects);
 
-                m_scene.EventManager.TriggerParcelPrimCountUpdate();
+                m_scene.EventManager.TriggerParcelPrimCountTainted();
             }
 
             internal void FinishStartup()

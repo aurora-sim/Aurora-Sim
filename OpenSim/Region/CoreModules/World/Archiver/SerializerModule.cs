@@ -34,6 +34,7 @@ using log4net;
 using Nini.Config;
 
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
@@ -88,59 +89,30 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
 
         #region IRegionSerialiser Members
 
-        public void LoadPrimsFromXml(Scene scene, string fileName, bool newIDS, Vector3 loadOffset)
+        public void LoadPrimsFromXml2(IScene scene, string fileName)
         {
-            SceneXmlLoader.LoadPrimsFromXml(scene, fileName, newIDS, loadOffset);
+            if (scene is Scene)
+                SceneXmlLoader.LoadPrimsFromXml2((Scene)scene, fileName);
         }
 
-        public void SavePrimsToXml(Scene scene, string fileName)
+        public void SavePrimsToXml2(IScene scene, string fileName)
         {
-            SceneXmlLoader.SavePrimsToXml(scene, fileName);
+            if (scene is Scene)
+                SceneXmlLoader.SavePrimsToXml2((Scene)scene, fileName);
         }
 
-        public void LoadPrimsFromXml2(Scene scene, string fileName)
+        public ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene)
         {
-            SceneXmlLoader.LoadPrimsFromXml2(scene, fileName);
+            if (scene is Scene)
+                return SceneXmlLoader.DeserializeGroupFromXml2(xmlString, (Scene)scene);
+            return null;
         }
 
-        public void LoadPrimsFromXml2(Scene scene, TextReader reader, bool startScripts)
+        public string SerializeGroupToXml2(ISceneEntity grp)
         {
-            SceneXmlLoader.LoadPrimsFromXml2(scene, reader, startScripts);
-        }
-
-        public void SavePrimsToXml2(Scene scene, string fileName)
-        {
-            SceneXmlLoader.SavePrimsToXml2(scene, fileName);
-        }
-
-        public void SavePrimsToXml2(Scene scene, TextWriter stream, Vector3 min, Vector3 max)
-        {
-            SceneXmlLoader.SavePrimsToXml2(scene, stream, min, max);
-        }
-
-        public void SaveNamedPrimsToXml2(Scene scene, string primName, string fileName)
-        {
-            SceneXmlLoader.SaveNamedPrimsToXml2(scene, primName, fileName);
-        }
-
-        public SceneObjectGroup DeserializeGroupFromXml2(string xmlString, Scene scene)
-        {
-            return SceneXmlLoader.DeserializeGroupFromXml2(xmlString, scene);
-        }
-
-        public string SerializeGroupToXml2(SceneObjectGroup grp)
-        {
-            return SceneXmlLoader.SaveGroupToXml2(grp);
-        }
-
-        public void SavePrimListToXml2(EntityBase[] entityList, string fileName)
-        {
-            SceneXmlLoader.SavePrimListToXml2(entityList, fileName);
-        }
-
-        public void SavePrimListToXml2(EntityBase[] entityList, TextWriter stream, Vector3 min, Vector3 max)
-        {
-            SceneXmlLoader.SavePrimListToXml2(entityList, stream, min, max);
+            if(grp is SceneObjectGroup)
+                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup)grp);
+            return "";
         }
 
         #endregion

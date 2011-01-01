@@ -353,7 +353,9 @@ namespace OpenSim.Region.Framework.Scenes
                     || m_scene.TestBorderCross(val - Vector3.UnitY, Cardinals.N) || m_scene.TestBorderCross(val + Vector3.UnitY, Cardinals.S))
                     && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims)))
                 {
-                    m_scene.CrossPrimGroupIntoNewRegion(val, this);
+                    IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.CrossGroupToNewRegion(this, val);
                 }
                 
                 if (RootPart.GetStatusSandbox())

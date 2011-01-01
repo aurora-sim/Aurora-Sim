@@ -863,7 +863,7 @@ namespace OpenSim.Region.Framework.Scenes
             // elsewhere anyway
             // Animator.SendAnimPack();
 
-            m_scene.SwapRootAgentCount(false);
+            m_scene.SceneGraph.SwapRootChildAgent(false);
             
             //CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(m_uuid);
             //if (userInfo != null)
@@ -947,7 +947,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Velocity = new Vector3(0, 0, 0);
 
             IsChildAgent = true;
-            m_scene.SwapRootAgentCount(true);
+            m_scene.SceneGraph.SwapRootChildAgent(true);
             RemoveFromPhysicalScene();
 
             // FIXME: Set m_rootRegionHandle to the region handle of the scene this agent is moving into
@@ -1579,20 +1579,20 @@ namespace OpenSim.Region.Framework.Scenes
 
             proxyObjectGroup = new SceneObjectGroup(UUID, Pos, Rotation, proxy, m_scene);
             proxyObjectGroup.AttachToScene(m_scene);
-            
+
             // Commented out this code since it could never have executed, but might still be informative.
-//            if (proxyObjectGroup != null)
-//            {
-            proxyObjectGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate); 
-                remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
-                m_scene.DeleteSceneObject(proxyObjectGroup, true);
-//            }
-//            else
-//            {
-//                m_autopilotMoving = false;
-//                m_autoPilotTarget = Vector3.Zero;
-//                ControllingClient.SendAlertMessage("Autopilot cancelled");
-//            }
+            //            if (proxyObjectGroup != null)
+            //            {
+            proxyObjectGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+            remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
+            m_scene.DeleteSceneObject(proxyObjectGroup, true);
+            //            }
+            //            else
+            //            {
+            //                m_autopilotMoving = false;
+            //                m_autoPilotTarget = Vector3.Zero;
+            //                ControllingClient.SendAlertMessage("Autopilot cancelled");
+            //            }
         }
 
         public void DoMoveToPosition(Object sender, string method, List<String> args)

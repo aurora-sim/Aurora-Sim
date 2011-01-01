@@ -128,7 +128,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             landChannel = new LandChannel(scene, this);
 
             m_scene.EventManager.OnParcelPrimCountAdd += EventManagerOnParcelPrimCountAdd;
-            m_scene.EventManager.OnParcelPrimCountUpdate += EventManagerOnParcelPrimCountUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateLandBuy += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy += EventManagerOnLandBuy;
@@ -169,7 +168,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             m_scene.EventManager.OnParcelPrimCountAdd -= EventManagerOnParcelPrimCountAdd;
-            m_scene.EventManager.OnParcelPrimCountUpdate -= EventManagerOnParcelPrimCountUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateLandBuy -= EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy -= EventManagerOnLandBuy;
@@ -355,7 +353,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.Frame % m_update_land == 0)
             {
                 //It's time, check the parts we have
-                CheckParcelReturns();
+                CheckFrameEvents();
             }
         }
 
@@ -394,8 +392,12 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <summary>
         /// This deals with sending the return IMs as well as actually returning the objects
         /// </summary>
-        protected internal void CheckParcelReturns()
+        protected internal void CheckFrameEvents()
         {
+            if (landChannel.IsLandPrimCountTainted())
+            {
+                EventManagerOnParcelPrimCountUpdate();
+            }
             // Go through all updates
             m_scene.ForEachSOG(delegate(SceneObjectGroup sog)
             {
@@ -404,6 +406,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (!sog.IsDeleted && !sog.RootPart.IsAttachment)
                     {
+                        //Check for temp objects as well
+                        if ((sog.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
+                        {
+                            if (sog.RootPart.Expires <= DateTime.Now)
+                                AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "", new List<SceneObjectGroup>() { sog });
+                        }
+
                         ILandObject parcel = m_scene.LandChannel.GetLandObject(
                                 sog.RootPart.GroupPosition.X, sog.RootPart.GroupPosition.Y);
 
@@ -450,10 +459,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                     msg.Position = Vector3.Zero;
                     msg.RegionID = m_scene.RegionInfo.RegionID.Guid;
                     msg.binaryBucket = new byte[0];
-                    if (ret.Value.count > 1)
-                        msg.message = string.Format("Your {0} objects were returned from {1} in region {2} due to {3}", ret.Value.count, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
-                    else
-                        msg.message = string.Format("Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+
+                    if (ret.Value.reason != "")
+                    {
+                        if (ret.Value.count > 1)
+                            msg.message = string.Format("Your {0} objects were returned from {1} in region {2} due to {3}", ret.Value.count, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+                        else
+                            msg.message = string.Format("Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName, ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
+                    }
 
                     IMessageTransferModule tr = m_scene.RequestModuleInterface<IMessageTransferModule>();
                     if (tr != null)
@@ -1011,7 +1024,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void EventManagerOnRequestParcelPrimCountUpdate()
         {
             ResetAllLandPrimCounts();
-            m_scene.EventManager.TriggerParcelPrimCountUpdate();
+            EventManagerOnParcelPrimCountUpdate();
             FinalizeLandPrimCountUpdate();
             m_landPrimCountTainted = false;
         }

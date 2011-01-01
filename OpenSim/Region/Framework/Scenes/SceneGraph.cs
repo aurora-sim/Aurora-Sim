@@ -1397,7 +1397,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // required for physics to update it's position
                     duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;
 
-                    m_parentScene.EventManager.TriggerParcelPrimCountUpdate();
+                    m_parentScene.EventManager.TriggerParcelPrimCountTainted();
                     return true;
                 }
             }

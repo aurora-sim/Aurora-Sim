@@ -50,13 +50,17 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void EnableChildAgent(ScenePresence agent, GridRegion region);
 
-        void Cross(SceneObjectGroup sog, Vector3 position);
+        void CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position);
 
         void CancelTeleport(UUID AgentID);
 
         void RequestTeleportLocation(IClientAPI iClientAPI, ulong regionHandle, Vector3 position, Vector3 lookAt, uint p);
 
         void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint p);
+
+        void IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);
+
+        void IncomingCreateObject(UUID regionID, ISceneObject sog);
     }
 
     public interface IUserAgentVerificationModule

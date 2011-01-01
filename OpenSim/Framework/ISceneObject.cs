@@ -30,7 +30,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
-    public interface ISceneObject
+    public interface ISceneObject : ISceneEntity
     {
         UUID UUID { get; }
         ISceneObject CloneForNewScene(IScene scene);

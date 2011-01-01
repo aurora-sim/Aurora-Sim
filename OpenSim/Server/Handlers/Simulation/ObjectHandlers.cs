@@ -150,8 +150,13 @@ namespace OpenSim.Server.Handlers.Simulation
             try
             {
                 //m_log.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
-                sog = s.DeserializeObject(sogXmlStr);
-                sog.ExtraFromXmlString(extraStr);
+                IRegionSerialiserModule mod = s.RequestModuleInterface<IRegionSerialiserModule>();
+                if (mod != null)
+                {
+                    sog = mod.DeserializeGroupFromXml2(sogXmlStr, s);
+                    if(sog != null)
+                        sog.ExtraFromXmlString(extraStr);
+                }
             }
             catch (Exception ex)
             {
@@ -159,6 +164,16 @@ namespace OpenSim.Server.Handlers.Simulation
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
+            }
+
+            bool result = false;
+            
+            if (sog == null)
+            {
+                m_log.ErrorFormat("[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
+
+                responsedata["int_response_code"] = HttpStatusCode.OK;
+                responsedata["str_response_string"] = result.ToString();
             }
 
             if ((args["state"] != null) && s.RegionInfo.AllowScriptCrossing)
@@ -178,7 +193,6 @@ namespace OpenSim.Server.Handlers.Simulation
                 }
             }
 
-            bool result = false;
             try
             {
                 // This is the meaning of POST object

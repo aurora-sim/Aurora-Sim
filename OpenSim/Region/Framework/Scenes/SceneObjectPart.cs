@@ -2348,7 +2348,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (PhysActor.IsPhysical) // implies UsePhysics==false for this block
                         {
                             if (!isNew)
-                                ParentGroup.Scene.RemovePhysicalPrim(1);
+                                ParentGroup.Scene.SceneGraph.RemovePhysicalPrim(1);
 
                             PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
                             PhysActor.OnSignificantMovement -= ParentGroup.CheckForSignificantMovement;
@@ -2392,7 +2392,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (UsePhysics)
                             {
-                                ParentGroup.Scene.AddPhysicalPrim(1);
+                                ParentGroup.Scene.SceneGraph.AddPhysicalPrim(1);
 
                                 PhysActor.OnRequestTerseUpdate += PhysicsRequestingTerseUpdate;
                                 PhysActor.OnSignificantMovement += ParentGroup.CheckForSignificantMovement;

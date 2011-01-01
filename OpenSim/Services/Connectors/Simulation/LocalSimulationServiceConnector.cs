@@ -234,7 +234,11 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
                     //m_log.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
-                    return s.IncomingCreateObject(sog);
+                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    if (AgentTransferModule != null)
+                    {
+                        AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
+                    }
                 }
             }
             m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in CreateObject");
@@ -250,7 +254,11 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
-                    return s.IncomingCreateObject(userID, itemID);
+                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    if (AgentTransferModule != null)
+                    {
+                        AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, userID, itemID);
+                    }
                 }
             }
             return false;

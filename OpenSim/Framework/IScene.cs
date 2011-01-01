@@ -57,8 +57,6 @@ namespace OpenSim.Framework
 
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
 
-        ISceneObject DeserializeObject(string representation);
-
         bool CheckClient(UUID agentID, IPEndPoint ep);
     }
 }

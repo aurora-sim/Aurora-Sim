@@ -147,7 +147,6 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_physics = 1; //Trigger the physics update
         private int m_update_presences = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
-        private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
         private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
 
         private string m_defaultScriptEngine;
@@ -839,11 +838,6 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         int OtherFrameTime = Util.EnvironmentTickCount();
-                        // Delete temp-on-rez stuff
-                        if (m_scene.m_frame % m_scene.m_update_land == 0)
-                        {
-                            m_scene.CleanTempObjects();
-                        }
                         if (m_scene.PhysicsReturns.Count != 0)
                         {
                             lock (m_scene.PhysicsReturns)
@@ -856,7 +850,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             List<Vector3> coarseLocations;
                             List<UUID> avatarUUIDs;
-                            m_scene.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                            m_scene.SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
                             // Send coarse locations to clients 
                             foreach(ScenePresence presence in m_scene.ScenePresences)
                             {
@@ -869,9 +863,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
-
-                        if (m_scene.m_frame % m_scene.m_update_land == 0)
-                            m_scene.UpdateLand();
 
                         // Check if any objects have reached their targets
                         m_scene.CheckAtTargets();
@@ -1140,20 +1131,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Recount SceneObjectPart in parcel aabb
-        /// </summary>
-        private void UpdateLand()
-        {
-            if (LandChannel != null)
-            {
-                if (LandChannel.IsLandPrimCountTainted())
-                {
-                    EventManager.TriggerParcelPrimCountUpdate();
-                }
-            }
-        }
-
-        /// <summary>
         /// Sends out the OnFrame event to the modules
         /// </summary>
         private void UpdateEvents()
@@ -1291,82 +1268,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.WarnFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
                 DeleteSceneObject(grp, true);
-            }
-        }
-
-        /// <summary>
-        /// Move the given scene object into a new region depending on which region its absolute position has moved
-        /// into.
-        ///
-        /// </summary>
-        /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
-        /// <param name="grp">the scene object that we're crossing</param>
-        public void CrossPrimGroupIntoNewRegion(Vector3 attemptedPosition, SceneObjectGroup grp)
-        {
-            if (grp == null)
-                return;
-            if (grp.IsDeleted)
-                return;
-
-            if (grp.RootPart.DIE_AT_EDGE)
-            {
-                // We remove the object here
-                try
-                {
-                    DeleteSceneObject(grp, true);
-                }
-                catch (Exception)
-                {
-                    m_log.Warn("[SCENE]: exception when trying to remove the prim that crossed the border.");
-                }
-                return;
-            }
-
-            if (grp.RootPart.RETURN_AT_EDGE)
-            {
-                // We remove the object here
-                try
-                {
-                    List<SceneObjectGroup> objects = new List<SceneObjectGroup>();
-                    objects.Add(grp);
-                    SceneObjectGroup[] objectsArray = objects.ToArray();
-                    returnObjects(objectsArray, UUID.Zero);
-                }
-                catch (Exception)
-                {
-                    m_log.Warn("[SCENE]: exception when trying to return the prim that crossed the border.");
-                }
-                return;
-            }
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
-                transferModule.Cross(grp, attemptedPosition);
-        }
-
-        public ISceneObject DeserializeObject(string representation)
-        {
-            return SceneObjectSerializer.FromXml2Format(representation, this);
-        }
-
-        public void CleanTempObjects()
-        {
-            EntityBase[] objs = Entities.GetEntities();
-
-            foreach (EntityBase obj in objs)
-            {
-                if (obj is SceneObjectGroup)
-                {
-                    SceneObjectGroup grp = (SceneObjectGroup)obj;
-
-                    if (!grp.IsDeleted)
-                    {
-                        if ((grp.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
-                        {
-                            if (grp.RootPart.Expires <= DateTime.Now)
-                                DeleteSceneObject(grp, true);
-                        }
-                    }
-                }
             }
         }
 
@@ -1547,172 +1448,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Called when objects or attachments cross the border, or teleport, between regions.
-        /// </summary>
-        /// <param name="sog"></param>
-        /// <returns></returns>
-        public bool IncomingCreateObject(ISceneObject sog)
-        {
-            //m_log.Debug(" >>> IncomingCreateObject(sog) <<< " + ((SceneObjectGroup)sog).AbsolutePosition + " deleted? " + ((SceneObjectGroup)sog).IsDeleted);
-            SceneObjectGroup newObject;
-            try
-            {
-                newObject = (SceneObjectGroup)sog;
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[SCENE]: Problem casting object: {0}", e.Message);
-                return false;
-            }
-
-            if (!AddSceneObject(newObject))
-            {
-                m_log.DebugFormat("[SCENE]: Problem adding scene object {0} in {1} ", sog.UUID, RegionInfo.RegionName);
-                return false;
-            }
-
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, DefaultScriptEngine, 1, UUID.Zero);
-            newObject.RootPart.ParentGroup.ResumeScripts();
-
-            // Do this as late as possible so that listeners have full access to the incoming object
-            EventManager.TriggerOnIncomingSceneObject(newObject);
-
-            TriggerChangedTeleport(newObject);
-
-            if (newObject.RootPart.SitTargetAvatar.Count != 0)
-            {
-                lock (newObject.RootPart.SitTargetAvatar)
-                {
-                    foreach (UUID avID in newObject.RootPart.SitTargetAvatar)
-                    {
-                        ScenePresence SP = GetScenePresence(avID);
-                        while (SP == null)
-                        {
-                            Thread.Sleep(20);
-                        }
-                        SP.AbsolutePosition = newObject.AbsolutePosition;
-                        SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attachment rezzing
-        /// </summary>
-        /// <param name="userID">Agent Unique ID</param>
-        /// <param name="itemID">Inventory Item ID to rez</param>
-        /// <returns>False</returns>
-        public virtual bool IncomingCreateObject(UUID userID, UUID itemID)
-        {
-            //m_log.DebugFormat(" >>> IncomingCreateObject(userID, itemID) <<< {0} {1}", userID, itemID);
-
-            ScenePresence sp = GetScenePresence(userID);
-            IAttachmentsModule attachMod = RequestModuleInterface<IAttachmentsModule>();
-            if (sp != null && attachMod != null)
-            {
-                int attPt = sp.Appearance.GetAttachpoint(itemID);
-                attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Adds a Scene Object group to the Scene.
-        /// Verifies that the creator of the object is not banned from the simulator.
-        /// Checks if the item is an Attachment
-        /// </summary>
-        /// <param name="sceneObject"></param>
-        /// <returns>True if the SceneObjectGroup was added, False if it was not</returns>
-        public bool AddSceneObject(SceneObjectGroup sceneObject)
-        {
-            // If the user is banned, we won't let any of their objects
-            // enter. Period.
-            //
-            if (m_regInfo.EstateSettings.IsBanned(sceneObject.OwnerID))
-            {
-                m_log.Info("[INTERREGION]: Denied prim crossing for " +
-                        "banned avatar");
-
-                return false;
-            }
-
-            if (sceneObject.IsAttachmentCheckFull()) // Attachment
-            {
-                sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
-                sceneObject.RootPart.AddFlag(PrimFlags.Phantom);
-                SceneGraph.AddPrimToScene(sceneObject);
-
-                // Fix up attachment Parent Local ID
-                ScenePresence sp = GetScenePresence(sceneObject.OwnerID);
-
-                if (sp != null)
-                {
-                    m_log.DebugFormat(
-                        "[ATTACHMENT]: Received attachment {0}, inworld asset id {1}", sceneObject.GetFromItemID(), sceneObject.UUID);
-                    m_log.DebugFormat(
-                        "[ATTACHMENT]: Attach to avatar {0} at position {1}", sp.UUID, sceneObject.AbsolutePosition);
-
-                    IAttachmentsModule attachModule = RequestModuleInterface<IAttachmentsModule>();
-                    if (attachModule != null)
-                        attachModule.AttachObject(sp.ControllingClient, sceneObject.LocalId, 0, false);
-
-                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-                }
-                else
-                {
-                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-                    sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
-                }
-            }
-            else
-            {
-                if (!Permissions.CanObjectEntry(sceneObject.UUID,
-                        true, sceneObject.AbsolutePosition))
-                {
-                    // Deny non attachments based on parcel settings
-                    //
-                    m_log.Info("[INTERREGION]: Denied prim crossing " +
-                            "because of parcel settings");
-
-                    DeleteSceneObject(sceneObject, true);
-
-                    return false;
-                }
-                SceneGraph.AddPrimToScene(sceneObject);
-            }
-            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-
-            return true;
-        }
-
-        private void TriggerChangedTeleport(SceneObjectGroup sog)
-        {
-            ScenePresence sp = GetScenePresence(sog.OwnerID);
-
-            if (sp != null)
-            {
-                AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(sp.UUID);
-
-                if (aCircuit != null && (aCircuit.teleportFlags != (uint)TeleportFlags.Default))
-                {
-                    // This will get your attention
-                    //m_log.Error("[XXX] Triggering ");
-
-                    // Trigger CHANGED_TELEPORT
-                    foreach (SceneObjectPart part in sog.ChildrenList)
-                    {
-                        EventManager.TriggerOnScriptChangedEvent(part, (uint)Changed.TELEPORT);
-                    }
-                }
-
-            }
         }
 
         #endregion
@@ -2620,21 +2355,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region SceneGraph wrapper methods
 
-        public void SwapRootAgentCount(bool rootChildChildRootTF)
-        {
-            m_sceneGraph.SwapRootChildAgent(rootChildChildRootTF);
-        }
-
-        public void AddPhysicalPrim(int num)
-        {
-            m_sceneGraph.AddPhysicalPrim(num);
-        }
-
-        public void RemovePhysicalPrim(int num)
-        {
-            m_sceneGraph.RemovePhysicalPrim(num);
-        }
-
         public int GetRootAgentCount()
         {
             return m_sceneGraph.GetRootAgentCount();
@@ -2785,11 +2505,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEachSOG(Action<SceneObjectGroup> action)
         {
             m_sceneGraph.ForEachSOG(action);
-        }
-
-        public void GetCoarseLocations(out List<Vector3> coarseLocations, out List<UUID> avatarUUIDs, uint maxLocations)
-        {
-            m_sceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, maxLocations);
         }
 
         #endregion

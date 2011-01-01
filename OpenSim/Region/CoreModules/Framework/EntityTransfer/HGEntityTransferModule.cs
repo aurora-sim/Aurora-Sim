@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected override GridRegion GetFinalDestination(GridRegion region)
         {
-            int flags = m_aScene.GridService.GetRegionFlags(m_aScene.RegionInfo.ScopeID, region.RegionID);
+            int flags = m_scenes[0].GridService.GetRegionFlags(m_scenes[0].RegionInfo.ScopeID, region.RegionID);
             m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: region {0} flags: {1}", region.RegionID, flags);
             if ((flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
             {
@@ -140,7 +140,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (base.NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
                 return true;
 
-            int flags = m_aScene.GridService.GetRegionFlags(m_aScene.RegionInfo.ScopeID, reg.RegionID);
+            int flags = m_scenes[0].GridService.GetRegionFlags(m_scenes[0].RegionInfo.ScopeID, reg.RegionID);
             if (flags == -1 /* no region in DB */ || (flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
                 return true;
 
@@ -151,14 +151,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             if (logout)
                 // Log them out of this grid
-                m_aScene.PresenceService.LogoutAgent(sessionID);
+                m_scenes[0].PresenceService.LogoutAgent(sessionID);
         }
 
         protected override bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool logout)
         {
             reason = string.Empty;
             logout = false;
-            int flags = m_aScene.GridService.GetRegionFlags(m_aScene.RegionInfo.ScopeID, reg.RegionID);
+            int flags = sp.Scene.GridService.GetRegionFlags(sp.Scene.RegionInfo.ScopeID, reg.RegionID);
             if (flags == -1 /* no region in DB */ || (flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
             {
                 // this user is going to another grid
@@ -178,7 +178,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
             }
 
-            return m_aScene.SimulationService.CreateAgent(reg, agentCircuit, teleportFlags, out reason);
+            return sp.Scene.SimulationService.CreateAgent(reg, agentCircuit, teleportFlags, out reason);
         }
 
         public override void TeleportHome(UUID id, IClientAPI client)
@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
             // Let's find out if this is a foreign user or a local user
-            UserAccount account = m_aScene.UserAccountService.GetUserAccount(m_aScene.RegionInfo.ScopeID, id);
+            UserAccount account = GetScene(client.Scene.RegionInfo.RegionID).UserAccountService.GetUserAccount(m_aScene.RegionInfo.ScopeID, id);
             if (account != null)
             {
                 // local grid user
@@ -259,7 +259,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 // Let's find out if this is a foreign user or a local user
-                UserAccount account = m_aScene.UserAccountService.GetUserAccount(m_aScene.RegionInfo.ScopeID, obj.AgentId);
+                UserAccount account = GetScene(obj.Scene.RegionInfo.RegionID).UserAccountService.GetUserAccount(GetScene(obj.Scene.RegionInfo.RegionID).RegionInfo.ScopeID, obj.AgentId);
                 if (account != null)
                 {
                     // local grid user
