@@ -281,8 +281,8 @@ namespace OpenSim.Services.Interfaces
                 if (Data.ContainsKey("Textures"))
                 {
                     string t = Data["Textures"];
-                    
-                    appearance.Texture = Primitive.TextureEntry.FromOSD(OSDParser.DeserializeJson(t));
+                    OSD tex = OSDParser.DeserializeJson(t);
+                    appearance.Texture = Primitive.TextureEntry.FromOSD(tex);
                 }
 
                 // New style wearables

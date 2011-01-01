@@ -275,13 +275,17 @@ namespace OpenSim.Framework
                     if (oldface != null && oldface.TextureID == newface.TextureID) continue;
                 }
 
-                changed = true;
-                if(oldface != null)
-                    if(!ChangedTextures.Contains(oldface.TextureID))
-                        ChangedTextures.Add(oldface.TextureID);
+                //Ignore the 0 based one... as its always null and causes issues
+                if (i > 0)
+                {
+                    changed = true;
+                    if (oldface != null)
+                        if (!ChangedTextures.Contains(oldface.TextureID))
+                            ChangedTextures.Add(oldface.TextureID);
 
-                //                if (newface != null)
-                //                    m_log.WarnFormat("[AVATAR APPEARANCE]: index {0}, new texture id {1}",i,newface.TextureID);
+                    //                if (newface != null)
+                    //                    m_log.WarnFormat("[AVATAR APPEARANCE]: index {0}, new texture id {1}",i,newface.TextureID);
+                }
             }
 
             if (changed)
