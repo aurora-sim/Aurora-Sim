@@ -248,6 +248,8 @@ namespace OpenSim.Services.CapsService
 
                     if (len < texture.Data.Length)
                         response.StatusCode = (int)System.Net.HttpStatusCode.PartialContent;
+                    else
+                        response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 
                     response.ContentLength = len;
                     response.ContentType = texture.Metadata.ContentType;
