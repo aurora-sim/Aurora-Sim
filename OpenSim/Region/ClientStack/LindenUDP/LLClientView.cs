@@ -6987,7 +6987,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 handlerObjectRequest = OnObjectRequest;
                 if (handlerObjectRequest != null)
                 {
-                    handlerObjectRequest(incomingRequest.ObjectData[i].ID, this);
+                    handlerObjectRequest(incomingRequest.ObjectData[i].ID, incomingRequest.ObjectData[i].CacheMissType, this);
                 }
             }
             return true;
@@ -7136,14 +7136,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (handlerUpdatePrimFlags != null)
             {
-                byte[] data = Pack.ToBytes();
-                // 46,47,48 are special positions within the packet
-                // This may change so perhaps we need a better way
-                // of storing this (OMV.FlagUpdatePacket.UsePhysics,etc?)
-                bool UsePhysics = (data[46] != 0) ? true : false;
-                bool IsTemporary = (data[47] != 0) ? true : false;
-                bool IsPhantom = (data[48] != 0) ? true : false;
-                handlerUpdatePrimFlags(flags.AgentData.ObjectLocalID, UsePhysics, IsTemporary, IsPhantom, this);
+                handlerUpdatePrimFlags(flags.AgentData.ObjectLocalID, flags.AgentData.UsePhysics, flags.AgentData.IsTemporary, flags.AgentData.IsPhantom, this);
             }
             return true;
         }

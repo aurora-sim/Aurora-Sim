@@ -96,8 +96,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Invoked when the client requests a prim.
         /// </summary>
         /// <param name="primLocalID"></param>
+        /// <param name="cacheMissType">0 => full object (viewer doesn't have it)
+        /// 1 => CRC mismatch only</param>
         /// <param name="remoteClient"></param>
-        public void RequestPrim(uint primLocalID, IClientAPI remoteClient)
+        public void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
             EntityBase entity;
             if (Entities.TryGetChildPrimParent(primLocalID, out entity))

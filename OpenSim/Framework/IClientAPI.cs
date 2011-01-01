@@ -113,7 +113,7 @@ namespace OpenSim.Framework
 
     public delegate void ObjectSelect(List<uint> localIDs, IClientAPI remoteClient);
 
-    public delegate void ObjectRequest(uint localID, IClientAPI remoteClient);
+    public delegate void ObjectRequest(uint localID, byte cacheMissType, IClientAPI remoteClient);
 
     public delegate void RequestObjectPropertiesFamily(
         IClientAPI remoteClient, UUID AgentID, uint RequestFlags, UUID TaskID);
