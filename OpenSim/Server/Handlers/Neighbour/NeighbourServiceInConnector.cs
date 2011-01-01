@@ -74,7 +74,8 @@ namespace OpenSim.Server.Handlers.Neighbor
                 m_log.Error("[NEIGHBOR IN CONNECTOR]: neighbor service was not provided");
                 return;
             }
-            server.AddStreamHandler(new NeighborHandler(m_NeighborService, m_AuthenticationService, config));
+
+            server.AddStreamHandler(new NeighborHandler(m_NeighborService.InnerService, m_AuthenticationService, config));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

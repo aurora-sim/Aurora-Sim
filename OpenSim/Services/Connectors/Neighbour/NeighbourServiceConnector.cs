@@ -66,6 +66,11 @@ namespace OpenSim.Services.Connectors
             get { return m_KnownNeighbors; }
         }
 
+        public INeighborService InnerService
+        {
+            get { return m_LocalService; }
+        }
+
         #region INeighborService
 
         public virtual List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)

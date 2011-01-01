@@ -44,6 +44,11 @@ namespace OpenSim.Services.Interfaces
         Dictionary<UUID, List<GridRegion>> Neighbors { get; }
 
         /// <summary>
+        /// The local only Neighbor Service
+        /// </summary>
+        INeighborService InnerService { get; }
+
+        /// <summary>
         /// Tell the neighbors that this region is now up and running
         /// </summary>
         /// <param name="incomingRegion">The region that is now up</param>

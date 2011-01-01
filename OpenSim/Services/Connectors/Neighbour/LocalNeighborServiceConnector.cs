@@ -31,6 +31,11 @@ namespace OpenSim.Services.Connectors
             get { return m_KnownNeighbors; }
         }
 
+        public INeighborService InnerService
+        {
+            get { return this; }
+        }
+
         #region IService Members
 
         public string Name
