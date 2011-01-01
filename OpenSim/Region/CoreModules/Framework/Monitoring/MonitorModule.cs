@@ -578,6 +578,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     for (int i = 0; i < sb.Length; i++)
                     {
+                        if (float.IsInfinity(sb[i].StatValue) ||
+                            float.IsNaN(sb[i].StatValue))
+                            sb[i].StatValue = 0;
                         lastReportedSimStats[i] = sb[i].StatValue;
                     }
 
