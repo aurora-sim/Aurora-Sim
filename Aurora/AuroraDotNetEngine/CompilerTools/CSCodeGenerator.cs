@@ -359,9 +359,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (e.slInfo.charPosition - 1 <= 0)
                     e.slInfo.charPosition = 2;
 
-                message = String.Format("({0},{1}) {2}, line: {3}",
+                message = String.Format("({0},{1}) {2}",
                         e.slInfo.lineNumber - 1,
-                        e.slInfo.charPosition - 1, emessage, e.slInfo.sourceLine);
+                        e.slInfo.charPosition - 1, emessage);
 
                 m_compiler.AddError(message);
 //                p.m_lexer.Reset();

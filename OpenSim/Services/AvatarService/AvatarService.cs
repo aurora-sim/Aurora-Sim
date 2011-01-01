@@ -211,5 +211,10 @@ namespace OpenSim.Services.AvatarService
             }
             return true;
         }
+
+        public bool CacheWearableData(UUID principalID)
+        {
+            return false;
+        }
     }
 }

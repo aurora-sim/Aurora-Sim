@@ -119,6 +119,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             client.OnRequestWearables += SendWearables;
             client.OnSetAppearance += SetAppearance;
             client.OnAvatarNowWearing += AvatarIsWearing;
+            client.OnAgentCachedTextureRequest += AgentCachedTexturesRequest;
         }
 
         public void RemoveClient(IClientAPI client)
@@ -126,6 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             client.OnRequestWearables -= SendWearables;
             client.OnSetAppearance -= SetAppearance;
             client.OnAvatarNowWearing -= AvatarIsWearing;
+            client.OnAgentCachedTextureRequest -= AgentCachedTexturesRequest;
         }
 
         #endregion
@@ -197,7 +199,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="visualParam"></param>
-        public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams)
+        public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables)
         {
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
@@ -248,6 +250,15 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         sp.SetHeight(sp.Appearance.AvatarHeight);
                 }
 
+                if (wearables.Length != 0)
+                {
+                    //The client wants us to cache the baked textures
+                    Util.FireAndForget(delegate(object o)
+                    {
+                        CacheWearableData(sp, textureEntry, wearables); 
+                    });
+                }
+
                 // Process the baked texture array
                 if (textureEntry != null)
                 {
@@ -265,6 +276,39 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             QueueAppearanceSend(client.AgentId);
 
             // m_log.WarnFormat("[AVFACTORY]: complete SetAppearance for {0}:\n{1}",client.AgentId,sp.Appearance.ToString());
+        }
+
+        /// <summary>
+        /// Tell the Avatar Service about these baked textures and items
+        /// </summary>
+        /// <param name="sp"></param>
+        /// <param name="textureEntry"></param>
+        /// <param name="wearables"></param>
+        private void CacheWearableData(ScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
+        {
+
+            //m_scene.AvatarService.CacheWearableData(
+        }
+
+        /// <summary>
+        /// The client wants to know whether we already have baked textures for the given items
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="args"></param>
+        public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
+        {
+            List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
+
+            //Send all with UUID zero for now so that we don't confuse the client about baked textures...
+            foreach (CachedAgentArgs arg in args)
+            {
+                CachedAgentArgs respArgs = new CachedAgentArgs();
+                respArgs.ID = UUID.Zero;
+                respArgs.TextureIndex = arg.TextureIndex;
+                resp.Add(respArgs);
+            }
+
+            client.SendAgentCachedTexture(resp);
         }
 
         /// <summary>

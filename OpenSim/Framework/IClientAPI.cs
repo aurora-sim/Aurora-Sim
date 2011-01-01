@@ -65,7 +65,7 @@ namespace OpenSim.Framework
 
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
-    public delegate void SetAppearance(IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams);
+    public delegate void SetAppearance(IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables);
 
     public delegate void StartAnim(IClientAPI remoteClient, UUID animID);
 
@@ -509,6 +509,12 @@ namespace OpenSim.Framework
     public delegate void AgentCachedTextureRequest(IClientAPI client, List<CachedAgentArgs> args);
 
     #endregion
+
+    public class WearableCache
+    {
+        public UUID CacheID;
+        public int TextureIndex;
+    }
 
     public class DirPlacesReplyData
     {

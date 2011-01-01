@@ -737,7 +737,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnStopAnim += HandleStopAnim;
             m_controllingClient.OnForceReleaseControls += HandleForceReleaseControls;
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
-            m_controllingClient.OnAgentCachedTextureRequest += AgentCachedTexturesRequest;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
             m_controllingClient.OnRegionHandleRequest += RegionHandleRequest;
         }
@@ -1072,22 +1071,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (handle != 0)
                 client.SendRegionHandle(regionID, handle);
-        }
-
-        public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
-        {
-            List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
-
-            //Send all with UUID zero for now so that we don't confuse the client about baked textures...
-            foreach (CachedAgentArgs arg in args)
-            {
-                CachedAgentArgs respArgs = new CachedAgentArgs();
-                respArgs.ID = UUID.Zero;
-                respArgs.TextureIndex = arg.TextureIndex;
-                resp.Add(respArgs);
-            }
-
-            client.SendAgentCachedTexture(resp);
         }
 
         /// <summary>
