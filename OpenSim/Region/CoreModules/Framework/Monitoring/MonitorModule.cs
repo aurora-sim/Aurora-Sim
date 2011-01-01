@@ -836,8 +836,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                             {
                                 if (client is IStatsCollector)
                                 {
-                                    bool isChild = scene.PresenceChildStatus(client.AgentId);
-                                    if (isChild && !showChildren)
+                                    ScenePresence SP = scene.GetScenePresence(client.AgentId);
+                                    if (SP == null || (SP.IsChildAgent && !showChildren))
                                         return;
 
                                     string name = client.Name;
@@ -851,7 +851,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                                         regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
                                     report.AppendFormat(
                                         "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
-                                        isChild ? "Child" : "Root", "");
+                                        SP.IsChildAgent ? "Child" : "Root", "");
 
                                     IStatsCollector stats = (IStatsCollector)client;
 

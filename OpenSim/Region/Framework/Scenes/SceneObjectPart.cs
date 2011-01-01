@@ -2316,7 +2316,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (UsePhysics)
                 {
-                    ParentGroup.Scene.jointCreate(this);
+                    INinjaPhysicsModule ninjaMod = ParentGroup.Scene.RequestModuleInterface<INinjaPhysicsModule>();
+                    if(ninjaMod != null)
+                        ninjaMod.jointCreate(this);
                 }
                 else
                 {
@@ -2859,7 +2861,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.GetScenePresence(localId);
+                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
                                 if(av != null)
                                 {
                                     if (av.LocalId == localId)
@@ -3005,7 +3007,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.GetScenePresence(localId);
+                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
                                 if (av.LocalId == localId)
                                 {
                                     if (m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || m_parentGroup.RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3148,7 +3150,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             else
                             {
-                                ScenePresence av = ParentGroup.Scene.GetScenePresence(localId);
+                                ScenePresence av = ParentGroup.Scene.SceneGraph.GetScenePresence(localId);
                                 if(av != null)
                                 {
                                     if (av.LocalId == localId)

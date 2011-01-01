@@ -116,7 +116,7 @@ namespace Aurora.Modules
                 return;
             }
 
-            ScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).GetScenePresence(cmdparams[2], cmdparams[3]);
+            ScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
             if(SP == null)
             {
                 m_log.Warn("Could not find user");

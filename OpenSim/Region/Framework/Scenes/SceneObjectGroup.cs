@@ -2790,8 +2790,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="rot"></param>
         private void UpdateRootRotation(Quaternion rot)
         {
-            Quaternion axRot = rot;
-            Quaternion oldParentRot = m_rootPart.RotationOffset;
+            Quaternion new_global_group_rot = rot;
+            Quaternion old_global_group_rot = m_rootPart.RotationOffset;
 
             m_rootPart.UpdateRotation(rot);
             if (m_rootPart.PhysActor != null)
@@ -2800,22 +2800,23 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
-            foreach (SceneObjectPart prim in m_partsList)
+            foreach (SceneObjectPart childPrim in m_partsList)
             {
-                if (prim.UUID != m_rootPart.UUID)
+                if (childPrim.UUID != m_rootPart.UUID)
                 {
-                    prim.StoreUndoState();
-                    prim.IgnoreUndoUpdate = true;
-                    Vector3 axPos = prim.OffsetPosition;
-                    axPos *= oldParentRot;
-                    axPos *= Quaternion.Inverse(axRot);
-                    prim.OffsetPosition = axPos;
-                    Quaternion primsRot = prim.RotationOffset;
-                    Quaternion newRot = primsRot * oldParentRot;
-                    newRot *= Quaternion.Inverse(axRot);
-                    prim.RotationOffset = newRot;
-                    prim.ScheduleTerseUpdate();
-                    prim.IgnoreUndoUpdate = false;
+                    childPrim.StoreUndoState();
+                    childPrim.IgnoreUndoUpdate = true;
+                    Vector3 axPos = childPrim.OffsetPosition;
+                    axPos *= old_global_group_rot;
+                    axPos *= Quaternion.Inverse(new_global_group_rot);
+                    childPrim.OffsetPosition = axPos;
+                    Quaternion primsRot = childPrim.RotationOffset;
+
+                    Quaternion newRot = primsRot * old_global_group_rot;
+                    newRot *= Quaternion.Inverse(new_global_group_rot);
+                    childPrim.RotationOffset = newRot;
+                    childPrim.ScheduleTerseUpdate();
+                    childPrim.IgnoreUndoUpdate = false;
                 }
             }
 
@@ -3351,7 +3352,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.GetScenePresence(localId);
+                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3472,7 +3473,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.GetScenePresence(localId);
+                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
@@ -3592,7 +3593,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            ScenePresence av = Scene.GetScenePresence(localId);
+                            ScenePresence av = Scene.SceneGraph.GetScenePresence(localId);
                             if (av.LocalId == localId)
                             {
                                 if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))

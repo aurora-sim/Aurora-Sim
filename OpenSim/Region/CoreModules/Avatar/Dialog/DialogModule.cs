@@ -127,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         
         public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
         {
-            ScenePresence presence = m_scene.GetScenePresence(firstName, lastName);
+            ScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
             if (presence != null)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }

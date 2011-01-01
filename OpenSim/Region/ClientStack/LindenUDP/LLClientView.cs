@@ -5173,7 +5173,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         public bool ChildAgentStatus()
         {
-            return m_scene.PresenceChildStatus(AgentId);
+            ScenePresence Sp = m_scene.GetScenePresence(AgentId);
+            if (Sp == null || (Sp.IsChildAgent))
+                return true;
+            return false;
         }
 
         #endregion

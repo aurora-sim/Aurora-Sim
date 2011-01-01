@@ -506,7 +506,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <returns>null if the presence was not found</returns>
-        protected internal ScenePresence GetScenePresence(string firstName, string lastName)
+        public ScenePresence GetScenePresence(string firstName, string lastName)
         {
             List<ScenePresence> presences = GetScenePresences();
             foreach (ScenePresence presence in presences)
@@ -522,7 +522,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns>null if the presence was not found</returns>
-        protected internal ScenePresence GetScenePresence(uint localID)
+        public ScenePresence GetScenePresence(uint localID)
         {
             List<ScenePresence> presences = GetScenePresences();
             foreach (ScenePresence presence in presences)
@@ -586,7 +586,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="name"></param>
         /// <returns>null if the part was not found</returns>
-        protected internal SceneObjectPart GetSceneObjectPart(string name)
+        public SceneObjectPart GetSceneObjectPart(string name)
         {
             SceneObjectPart sop = null;
 

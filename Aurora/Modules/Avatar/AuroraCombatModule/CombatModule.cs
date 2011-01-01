@@ -391,7 +391,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 else
                 {
                     // Try to get the avatar responsible for the killing
-                    killingAvatar = m_SP.Scene.GetScenePresence(killerObjectLocalID);
+                    killingAvatar = m_SP.Scene.SceneGraph.GetScenePresence(killerObjectLocalID);
                     if (killingAvatar == null)
                     {
                         // Try to get the object which was responsible for the killing
