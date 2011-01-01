@@ -30,6 +30,7 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 using System.Threading;
@@ -227,12 +228,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     //Do this async as it accesses the asset service (could be remote) multiple times
                     Util.FireAndForget(delegate(object o) 
                     {
-                        //Delete the old baked textures from the DB that have changed
-                        foreach (UUID texture in ChangedTextures)
-                        {
-                            m_scene.AssetService.Delete(texture.ToString());
-                        }
-
                         //Validate all the textures now that we've updated
                         ValidateBakedTextureCache(client, false);
                     });
@@ -290,6 +285,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
 
             AvatarWearable cachedWearable = new AvatarWearable();
+            cachedWearable.MaxItems = 0; //Unlimited items
             for (int i = 0; i < wearables.Length; i++)
             {
                 WearableCache item = wearables[i];
@@ -310,11 +306,21 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
 
+            AvatarData ad = m_scene.AvatarService.GetAvatar(client.AgentId);
             //Send all with UUID zero for now so that we don't confuse the client about baked textures...
             foreach (CachedAgentArgs arg in args)
             {
+                UUID cachedID = UUID.Zero;
+                if (ad.Data.ContainsKey("CachedWearables"))
+                {
+                    OSDArray array = (OSDArray)OSDParser.DeserializeJson(ad.Data["CachedWearables"]);
+                    AvatarWearable wearable = new AvatarWearable();
+                    wearable.MaxItems = 0; //Unlimited items
+                    wearable.Unpack(array);
+                    cachedID = wearable.GetAsset(arg.ID);
+                }
                 CachedAgentArgs respArgs = new CachedAgentArgs();
-                respArgs.ID = UUID.Zero;
+                respArgs.ID = cachedID;
                 respArgs.TextureIndex = arg.TextureIndex;
                 resp.Add(respArgs);
             }

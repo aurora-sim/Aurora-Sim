@@ -9,3 +9,15 @@ CREATE TABLE Avatars (
 	PRIMARY KEY(PrincipalID, Name));
 
 COMMIT;
+
+:VERSION 2
+
+BEGIN TRANSACTION;
+
+CREATE TABLE AvatarsCache (
+	PrincipalID CHAR(36) NOT NULL, 
+	Name VARCHAR(32) NOT NULL, 
+	Value VARCHAR(255) NOT NULL DEFAULT '', 
+	PRIMARY KEY(PrincipalID, Name));
+
+COMMIT;

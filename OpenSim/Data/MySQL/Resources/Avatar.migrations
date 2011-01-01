@@ -18,3 +18,16 @@ BEGIN;
 alter table Avatars change column Value Value text;
 
 COMMIT;
+
+:VERSION 2
+
+BEGIN;
+
+CREATE TABLE AvatarsCache (
+	PrincipalID CHAR(36) NOT NULL, 
+	Name VARCHAR(32) NOT NULL, 
+	Value text NOT NULL DEFAULT '', 
+	PRIMARY KEY(PrincipalID, Name), 
+	KEY(PrincipalID));
+
+COMMIT;

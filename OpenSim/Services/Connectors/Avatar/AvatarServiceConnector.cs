@@ -289,6 +289,10 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
+        public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
+        {
+        }
+
         #endregion
 
         #region IService Members

@@ -343,6 +343,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
+        public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
+        {
+        }
+
         #endregion IAvatarService
     }
 }

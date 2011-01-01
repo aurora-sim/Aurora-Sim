@@ -92,6 +92,7 @@ namespace OpenSim.Framework
 
         protected Dictionary<UUID, UUID> m_items = new Dictionary<UUID, UUID>();
         protected List<UUID> m_ids = new List<UUID>();
+        public int MaxItems = 5;
 
         public Dictionary<UUID, UUID> GetItems()
         {
@@ -156,7 +157,7 @@ namespace OpenSim.Framework
                 m_items[itemID] = assetID;
                 return;
             }
-            if (m_ids.Count >= 5)
+            if (MaxItems != 0 && m_ids.Count >= MaxItems)
                 return;
 
             m_ids.Add(itemID);

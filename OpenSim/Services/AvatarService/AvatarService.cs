@@ -36,6 +36,7 @@ using OpenSim.Framework.Console;
 using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 
@@ -47,13 +48,19 @@ namespace OpenSim.Services.AvatarService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IAvatarData m_Database = null;
+        protected IAvatarData m_CacheDatabase = null;
+        protected IRegistryCore m_registry = null;
+        protected bool m_enableCacheBakedTextures = true;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            m_registry = registry;
+
             string dllName = String.Empty;
             string connString = String.Empty;
             ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
             string realm = "Avatars";
+            string cacherealm = "AvatarsCache";
 
             //
             // Try reading the [DatabaseService] section, if it exists
@@ -76,6 +83,8 @@ namespace OpenSim.Services.AvatarService
                 dllName = presenceConfig.GetString("StorageProvider", dllName);
                 connString = presenceConfig.GetString("ConnectionString", connString);
                 realm = presenceConfig.GetString("Realm", realm);
+                cacherealm = presenceConfig.GetString("CacheRealm", cacherealm);
+                m_enableCacheBakedTextures = presenceConfig.GetBoolean("EnableBakedTextureCaching", m_enableCacheBakedTextures);
             }
 
             //
@@ -85,6 +94,7 @@ namespace OpenSim.Services.AvatarService
                 throw new Exception("No StorageProvider configured");
 
             m_Database = AuroraModuleLoader.LoadPlugin<IAvatarData>(dllName, new Object[] { connString, realm });
+            m_CacheDatabase = AuroraModuleLoader.LoadPlugin<IAvatarData>(dllName, new Object[] { connString, cacherealm });
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module " + dllName);
             registry.RegisterModuleInterface<IAvatarService>(this);
@@ -122,6 +132,8 @@ namespace OpenSim.Services.AvatarService
         public AvatarData GetAvatar(UUID principalID)
         {
             AvatarBaseData[] av = m_Database.Get("PrincipalID", principalID.ToString());
+            AvatarBaseData[] cachedAv = m_CacheDatabase.Get("PrincipalID", principalID.ToString());
+            
             AvatarData ret = new AvatarData();
             ret.Data = new Dictionary<string, string>();
 
@@ -137,6 +149,10 @@ namespace OpenSim.Services.AvatarService
                     ret.AvatarType = Convert.ToInt32(b.Data["Value"]);
                 else
                     ret.Data[b.Data["Name"]] = b.Data["Value"];
+            }
+            foreach (AvatarBaseData b in cachedAv)
+            {
+                ret.Data[b.Data["Name"]] = b.Data["Value"];
             }
 
             return ret;
@@ -214,14 +230,58 @@ namespace OpenSim.Services.AvatarService
 
         public void CacheWearableData(UUID principalID, AvatarWearable wearable)
         {
-            AvatarBaseData baseData = new AvatarBaseData();
-            baseData.PrincipalID = principalID;
-            Dictionary<UUID, UUID> items = wearable.GetItems();
-            foreach(KeyValuePair<UUID, UUID> kvp in items)
+            if (!m_enableCacheBakedTextures)
             {
-                baseData.Data.Add(kvp.Key.ToString(), kvp.Value.ToString());
+                IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
+                if (service != null)
+                {
+                    //Remove the old baked textures then from the DB as we don't want to keep them around
+                    foreach (UUID texture in wearable.GetItems().Values)
+                    {
+                        service.Delete(texture.ToString());
+                    }
+                }
+                return;
             }
-            m_Database.Store(baseData);
+            wearable.MaxItems = 0; //Unlimited items
+            
+            AvatarBaseData baseData = new AvatarBaseData();
+            AvatarBaseData[] av = m_CacheDatabase.Get("PrincipalID", principalID.ToString());
+            foreach (AvatarBaseData abd in av)
+            {
+                //If we have one already made, keep what is already there
+                if (abd.Data["Name"] == "CachedWearables")
+                {
+                    baseData = abd;
+                    OSDArray array = (OSDArray)OSDParser.DeserializeJson(abd.Data["Value"]);
+                    AvatarWearable w = new AvatarWearable();
+                    w.MaxItems = 0; //Unlimited items
+                    w.Unpack(array);
+                    foreach (KeyValuePair<UUID, UUID> kvp in w.GetItems())
+                    {
+                        wearable.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+            //If we don't have one, set it up for saving a new one
+            if (baseData.Data == null)
+            {
+                baseData.PrincipalID = principalID;
+                baseData.Data = new Dictionary<string, string>();
+                baseData.Data.Add("Name", "CachedWearables");
+            }
+            baseData.Data["Value"] = OSDParser.SerializeJsonString(wearable.Pack());
+            try
+            {
+                bool store = m_CacheDatabase.Store(baseData);
+                if (!store)
+                {
+
+                }
+            }
+            catch
+            {
+            }
         }
     }
 }
