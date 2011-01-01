@@ -79,8 +79,8 @@ namespace OpenSim.Region.Framework.Scenes
             set 
             { 
                 //Set the parent as well so that backup will occur
-                if(value)
-                    m_part.ParentGroup.HasGroupChanged = true;
+                if (value && m_part.ParentGroup != null)
+                     m_part.ParentGroup.HasGroupChanged = true;
                 m_HasInventoryChanged = value; 
             }
         }
