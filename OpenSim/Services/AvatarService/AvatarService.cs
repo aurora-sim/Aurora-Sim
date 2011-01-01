@@ -212,9 +212,16 @@ namespace OpenSim.Services.AvatarService
             return true;
         }
 
-        public bool CacheWearableData(UUID principalID)
+        public void CacheWearableData(UUID principalID, AvatarWearable wearable)
         {
-            return false;
+            AvatarBaseData baseData = new AvatarBaseData();
+            baseData.PrincipalID = principalID;
+            Dictionary<UUID, UUID> items = wearable.GetItems();
+            foreach(KeyValuePair<UUID, UUID> kvp in items)
+            {
+                baseData.Data.Add(kvp.Key.ToString(), kvp.Value.ToString());
+            }
+            m_Database.Store(baseData);
         }
     }
 }

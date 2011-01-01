@@ -85,6 +85,13 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool SetItems(UUID userID, string[] names, string[] values);
         bool RemoveItems(UUID userID, string[] names);
+
+        /// <summary>
+        /// Cache the given avatarWearable for the client
+        /// </summary>
+        /// <param name="principalID"></param>
+        /// <param name="cachedWearable"></param>
+        void CacheWearableData(UUID principalID, AvatarWearable cachedWearable);
     }
 
     /// <summary>

@@ -286,8 +286,19 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="wearables"></param>
         private void CacheWearableData(ScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
         {
+            if(textureEntry == null)
+                return;
 
-            //m_scene.AvatarService.CacheWearableData(
+            AvatarWearable cachedWearable = new AvatarWearable();
+            for (int i = 0; i < wearables.Length; i++)
+            {
+                WearableCache item = wearables[i];
+                if (textureEntry.FaceTextures[item.TextureIndex] != null)
+                {
+                    cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
+                }
+            }
+            m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);
         }
 
         /// <summary>
