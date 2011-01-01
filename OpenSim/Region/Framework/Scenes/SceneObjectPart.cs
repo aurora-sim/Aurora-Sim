@@ -1167,7 +1167,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
-                TriggerScriptMovingStartEvent();
+                bool TriggerMoving_End = false;
+                if (m_groupPosition != value)
+                {
+                    TriggerMoving_End = true;
+                    TriggerScriptMovingStartEvent();
+                }
                 m_groupPosition = value;
 
                 PhysicsActor actor = PhysActor;
@@ -1210,7 +1215,8 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-                TriggerScriptMovingEndEvent();
+                if(TriggerMoving_End)
+                    TriggerScriptMovingEndEvent();
             }
         }
 
@@ -1219,7 +1225,12 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_offsetPosition; }
             set
             {
-                TriggerScriptMovingStartEvent();
+                bool triggerMoving_End = false;
+                if (m_offsetPosition != value)
+                {
+                    triggerMoving_End = true;
+                    TriggerScriptMovingStartEvent();
+                }
                 StoreUndoState();
                 m_offsetPosition = value;
 
@@ -1236,7 +1247,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                     }
                 }
-                TriggerScriptMovingEndEvent();
+                if(triggerMoving_End)
+                    TriggerScriptMovingEndEvent();
             }
         }
 
