@@ -33,7 +33,7 @@ namespace OpenSim._32BitLaunch
     {
         public static void Main(string[] args)
         {
-            System.Console.WriteLine("32-bit OpenSim executor");
+            System.Console.WriteLine("32-bit Aurora executor");
             System.Console.WriteLine("-----------------------");
             System.Console.WriteLine("");
             System.Console.WriteLine("This application is compiled for 32-bit CPU and will run under WOW32 or similar.");

@@ -19,7 +19,7 @@ alter table Avatars change column Value Value text;
 
 COMMIT;
 
-:VERSION 2
+:VERSION 3
 
 BEGIN;
 
