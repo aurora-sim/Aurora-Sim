@@ -46,7 +46,7 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface ICapsServiceConnector
     {
-        void RegisterCaps(IRegionClientCapsService perRegionClientCapsService, IRegistryCore m_registry);
+        void RegisterCaps(IRegionClientCapsService perRegionClientCapsService);
         void DeregisterCaps();
     }
 

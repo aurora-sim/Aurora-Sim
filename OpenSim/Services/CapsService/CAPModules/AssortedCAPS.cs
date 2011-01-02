@@ -24,34 +24,37 @@ namespace OpenSim.Services.CapsService
     public class AssortedCAPS : ICapsServiceConnector
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IPrivateCapsService m_handler;
+        private IRegionClientCapsService m_service;
+        private IPresenceService m_presenceService;
+        private IGridUserService m_gridUserService;
+
         #region ICapsServiceConnector Members
 
-        public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
+        public void RegisterCaps(IRegionClientCapsService service)
         {
-            m_handler = handler;
-            List<IRequestHandler> handlers = new List<IRequestHandler>();
-
+            m_service = service;
+            m_presenceService = service.Registry.RequestModuleInterface<IPresenceService>();
+            m_gridUserService = service.Registry.RequestModuleInterface<IGridUserService>();
+            
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
-                return ProcessUpdateAgentLanguage(httpMethod, agentID);
+                return ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", handler.CreateCAPS("UpdateAgentLanguage"),
+            service.AddStreamHandler("UpdateAgentLanguage", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
                                                       method));
             method = delegate(Hashtable httpMethod)
             {
-                return ProcessUpdateAgentInfo(httpMethod, agentID);
+                return ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", handler.CreateCAPS("UpdateAgentInformation"),
+            service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
                                                       method));
 
             method = delegate(Hashtable httpMethod)
             {
-                return HomeLocation(httpMethod, agentID);
+                return HomeLocation(httpMethod, m_service.AgentID);
             };
-            handlers.Add(new RestHTTPHandler("POST", handler.CreateCAPS("HomeLocation"),
+            service.AddStreamHandler("HomeLocation", new RestHTTPHandler("POST", service.CreateCAPS("HomeLocation", ""),
                                                       method));
-            return handlers;
         }
 
         #region Other CAPS
@@ -70,8 +73,8 @@ namespace OpenSim.Services.CapsService
                 (float)lookat["Z"].AsReal());
             int locationID = HomeLocation["LocationId"].AsInteger();
 
-            PresenceInfo presence = m_handler.PresenceService.GetAgents(new string[] { agentID.ToString() })[0];
-            bool r = m_handler.GridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
+            PresenceInfo presence = m_presenceService.GetAgents(new string[] { agentID.ToString() })[0];
+            bool r = m_gridUserService.SetHome(agentID.ToString(), presence.RegionID, position, lookAt);
 
             rm.Add("success", OSD.FromBoolean(r));
 

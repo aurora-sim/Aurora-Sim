@@ -25,23 +25,22 @@ namespace OpenSim.Services.CapsService
     public class MapCAPS : ICapsServiceConnector
     {
         private readonly string m_mapLayerPath = "0001";
-        private UUID m_agentID = UUID.Zero;
-        private IPrivateCapsService m_handler;
+        private IRegionClientCapsService m_service;
+        private IGridService m_gridService;
         private List<MapBlockData> m_mapLayer = new List<MapBlockData>();
-        public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
-        {
-            m_handler = handler;
-            m_agentID = agentID;
 
-            List<IRequestHandler> handlers = new List<IRequestHandler>();
+        public void RegisterCaps(IRegionClientCapsService service)
+        {
+            m_service = service;
+            m_gridService = service.Registry.RequestModuleInterface<IGridService>();
+
             RestMethod method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return MapLayerRequest(request, path, param, httpRequest, httpResponse, agentID);
+                return MapLayerRequest(request, path, param, httpRequest, httpResponse, m_service.AgentID);
             };
-            handlers.Add(new RestStreamHandler("POST", handler.CreateCAPS("MapLayer", m_mapLayerPath),
+            m_service.AddStreamHandler("MapLayer", new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
                                                       method));
-            return handlers;
         }
 
         /// <summary>
@@ -57,7 +56,7 @@ namespace OpenSim.Services.CapsService
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
             uint x, y;
-            Utils.LongToUInts(m_handler.RegionHandle, out x, out y);
+            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
             int bottom = (int)(y / Constants.RegionSize) - 100;
             int top = (int)(y / Constants.RegionSize) + 100;
             int left = (int)(x / Constants.RegionSize) - 100;
@@ -78,7 +77,7 @@ namespace OpenSim.Services.CapsService
             }
             else
             {
-                List<GridRegion> regions = m_handler.GridService.GetRegionRange(UUID.Zero,
+                List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
                         left * (int)Constants.RegionSize,
                         right * (int)Constants.RegionSize,
                         bottom * (int)Constants.RegionSize,

@@ -57,13 +57,11 @@ namespace OpenSim.Services.CapsService
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
         protected string REDIRECT_URL = null;
-        protected UUID m_agentID;
-
-        public void RegisterCaps(UUID agentID, IRegionClientCapsService service)
+        
+        public void RegisterCaps(IRegionClientCapsService service)
         {
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
-            m_agentID = agentID;
-
+            
             service.AddStreamHandler("GetTexture", 
                 new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
                                                         ProcessGetTexture));
@@ -449,7 +447,7 @@ namespace OpenSim.Services.CapsService
         {
             m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset;
-            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_agentID.ToString());
+            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_service.AgentID.ToString());
             asset.Data = data;
             asset.Temporary = true;
             asset.Flags = AssetFlags.Deletable;

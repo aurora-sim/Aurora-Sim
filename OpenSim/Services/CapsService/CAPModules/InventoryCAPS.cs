@@ -12,6 +12,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
+using Caps = OpenSim.Framework.Capabilities.Caps;
 
 using OpenMetaverse;
 using Aurora.DataManager;
@@ -25,8 +26,10 @@ namespace OpenSim.Services.CapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string m_newInventory = "0002";
-        private IPrivateCapsService m_handler;
-        private IHttpServer m_server;
+        private IRegionClientCapsService m_service;
+        private IInventoryService m_inventoryService;
+        private ILibraryService m_libraryService;
+        private IAssetService m_assetService;
         
         #region Inventory
 
@@ -73,7 +76,7 @@ namespace OpenSim.Services.CapsService
                 OSDMap requestedFolders = (OSDMap)foldersrequested[i];
                 UUID owner_id = requestedFolders["owner_id"].AsUUID();
                 UUID item_id = requestedFolders["item_id"].AsUUID();
-                InventoryItemBase item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                InventoryItemBase item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
                 if (item != null)
                 {
                     items.Add(ConvertInventoryItem(item, owner_id));
@@ -103,12 +106,12 @@ namespace OpenSim.Services.CapsService
                 UUID owner_id = requestedFolders["owner_id"].AsUUID();
                 UUID item_id = requestedFolders["item_id"].AsUUID();
                 InventoryItemBase item = null;
-                if (m_handler.LibraryService != null && m_handler.LibraryService.LibraryRootFolder != null)
+                if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
                 {
-                    item = m_handler.LibraryService.LibraryRootFolder.FindItem(item_id);
+                    item = m_libraryService.LibraryRootFolder.FindItem(item_id);
                 }
                 if (item == null) //Try normal inventory them
-                    item = m_handler.InventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                    item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
                 if (item != null)
                 {
                     items.Add(ConvertInventoryItem(item, owner_id));
@@ -280,9 +283,9 @@ namespace OpenSim.Services.CapsService
             //if (Library)
             // {
             //version = 0;
-            if (m_handler.LibraryService != null && m_handler.LibraryService.LibraryRootFolder != null)
+            if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
             {
-                if ((fold = m_handler.LibraryService.LibraryRootFolder.FindFolder(folderID)) != null)
+                if ((fold = m_libraryService.LibraryRootFolder.FindFolder(folderID)) != null)
                 {
                     version = 0;
                     InventoryCollection ret = new InventoryCollection();
@@ -299,16 +302,16 @@ namespace OpenSim.Services.CapsService
             //{
             if (fetchFolders)
             {
-                contents = m_handler.InventoryService.GetFolderContent(agentID, folderID);
+                contents = m_inventoryService.GetFolderContent(agentID, folderID);
             }
             if (fetchItems)
             {
-                contents.Items = m_handler.InventoryService.GetFolderItems(agentID, folderID);
+                contents.Items = m_inventoryService.GetFolderItems(agentID, folderID);
             }
             InventoryFolderBase containingFolder = new InventoryFolderBase();
             containingFolder.ID = folderID;
             containingFolder.Owner = agentID;
-            containingFolder = m_handler.InventoryService.GetFolder(containingFolder);
+            containingFolder = m_inventoryService.GetFolder(containingFolder);
             if (containingFolder != null)
                 version = containingFolder.Version;
             else
@@ -327,49 +330,52 @@ namespace OpenSim.Services.CapsService
 
         #region ICapsServiceConnector Members
 
-        public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
+        public void RegisterCaps(IRegionClientCapsService service)
         {
-            m_handler = handler;
-            m_server = server;
-
-            List<IRequestHandler> handlers = new List<IRequestHandler>();
+            m_service = service;
+            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
+            m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
+            m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
             RestMethod method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return HandleWebFetchInventoryDescendents(request, agentID);
+                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
             };
-            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("WebFetchInventoryDescendents"),
+            service.AddStreamHandler("WebFetchInventoryDescendents",
+                new RestStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return HandleFetchLibDescendents(request, agentID);
+                return HandleFetchLibDescendents(request, m_service.AgentID);
             };
-            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchLibDescendents"),
+            service.AddStreamHandler("FetchLibDescendents",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return HandleFetchInventory(request, agentID);
+                return HandleFetchInventory(request, m_service.AgentID);
             };
-            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchInventory"),
+            service.AddStreamHandler("FetchInventory",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
                                                       method));
 
             method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return HandleFetchLib(request, agentID);
+                return HandleFetchLib(request, m_service.AgentID);
             };
-            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("FetchLib"),
+            service.AddStreamHandler("FetchLib",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                       method));
 
-            handlers.Add(new RestStreamHandler("POST", m_handler.CreateCAPS("NewFileAgentInventory", m_newInventory),
+            service.AddStreamHandler("NewFileAgentInventory",
+                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
                                                       NewAgentInventoryRequest));
-
-            return handlers;
         }
 
         #endregion
@@ -423,20 +429,84 @@ namespace OpenSim.Services.CapsService
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+            string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
+                
+            AssetUploader uploader =
+                new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
+                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service);
+            m_service.AddStreamHandler("Upload" + uploaderPath,
+                new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
-            OpenSim.Framework.Capabilities.Caps.AssetUploader uploader =
-                new OpenSim.Framework.Capabilities.Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, "/CAPS/" + m_handler.CapsObjectPath + "/" + uploaderPath, m_server);
-            m_server.AddStreamHandler(
-                new BinaryStreamHandler("POST", "/CAPS/" + m_handler.CapsObjectPath + uploaderPath + "/", uploader.uploaderCaps));
-
-            string uploaderURL = m_handler.PublicHandler.HostURI + "/CAPS/" + 
-                m_handler.CapsObjectPath + uploaderPath + "/";
+            string uploaderURL = m_service.HostUri + uploadpath;
             uploader.OnUpLoad += UploadCompleteHandler;
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
             return OSDParser.SerializeLLSDXmlString(map);
+        }
+
+        public class AssetUploader
+        {
+            public event UpLoadedAsset OnUpLoad;
+            private UpLoadedAsset handlerUpLoad = null;
+
+            private string uploaderPath = String.Empty;
+            private string uploadMethod = String.Empty;
+            private UUID newAssetID;
+            private UUID inventoryItemID;
+            private UUID parentFolder;
+            private IRegionClientCapsService clientCaps;
+
+
+            private string m_assetName = String.Empty;
+            private string m_assetDes = String.Empty;
+
+            private string m_invType = String.Empty;
+            private string m_assetType = String.Empty;
+
+            public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
+                                 UUID parentFolderID, string invType, string assetType, string path,
+                                 string method, IRegionClientCapsService caps)
+            {
+                m_assetName = assetName;
+                m_assetDes = description;
+                newAssetID = assetID;
+                inventoryItemID = inventoryItem;
+                uploaderPath = path;
+                parentFolder = parentFolderID;
+                m_assetType = assetType;
+                m_invType = invType;
+                clientCaps = caps;
+                uploadMethod = method;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                UUID inv = inventoryItemID;
+                string res = String.Empty;
+                OSDMap map = new OSDMap();
+                map["new_asset"] = newAssetID.ToString();
+                map["new_inventory_item"] = inv;
+                map["state"] = "complete";
+                res = OSDParser.SerializeLLSDXmlString(map);
+
+                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
+
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
+                }
+
+                return res;
+            }
         }
 
         /// <summary>
@@ -480,14 +550,13 @@ namespace OpenSim.Services.CapsService
                         break;
                 }
             }
-            AssetBase asset;
-            asset = new AssetBase(assetID, assetName, assType, m_handler.AgentID.ToString());
+            AssetBase asset = new AssetBase(assetID, assetName, assType, m_service.AgentID.ToString());
             asset.Data = data;
-            m_handler.AssetService.Store(asset);
+            m_assetService.Store(asset);
 
             InventoryItemBase item = new InventoryItemBase();
-            item.Owner = m_handler.AgentID;
-            item.CreatorId = m_handler.AgentID.ToString();
+            item.Owner = m_service.AgentID;
+            item.CreatorId = m_service.AgentID.ToString();
             item.ID = inventoryItem;
             item.AssetID = asset.FullID;
             item.Description = assetDescription;
@@ -500,7 +569,8 @@ namespace OpenSim.Services.CapsService
             item.EveryOnePermissions = 0;
             item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
             item.CreationDate = Util.UnixTimeSinceEpoch();
-            m_handler.InventoryService.AddItem(item);
+
+            m_inventoryService.AddItem(item);
         }
 
         #endregion

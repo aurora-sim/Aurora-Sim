@@ -233,29 +233,6 @@ namespace OpenSim.Services.CapsService
             return caps;
         }
 
-        public string CreateCAPS(string method, string appendedPath)
-        {
-            string caps = "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
-            AddCAPS(method, caps);
-            return caps;
-        }
-
-        public void AddCAPS(string method, string caps)
-        {
-            if (method == null || caps == null)
-                return;
-            string CAPSPath = this.PublicHandler.HostURI + caps;
-            registeredCAPS[method] = CAPSPath;
-            registeredCAPSPath[CAPSPath] = method;
-        }
-
-        public string GetCAPS(string method)
-        {
-            if (registeredCAPS.ContainsKey(method))
-                return registeredCAPS[method].ToString();
-            return "";
-        }
-
         #endregion
     }
 }

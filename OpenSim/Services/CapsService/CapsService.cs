@@ -348,7 +348,7 @@ namespace OpenSim.Services.CapsService
             List<ICapsServiceConnector> connectors = GetServiceConnectors();
             foreach (ICapsServiceConnector connector in connectors)
             {
-                connector.RegisterCaps(this, Registry);
+                connector.RegisterCaps(this);
             }
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
