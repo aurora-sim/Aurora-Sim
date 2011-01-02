@@ -211,6 +211,7 @@ namespace OpenSim.Services.Interfaces
         UUID AgentID { get; }
         OSDMap InfoToSendToUrl { get; set; }
         string UrlToInform { get; set; }
+        String HostUri { get; }
         String CapsUrl { get; }
 
         void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase);

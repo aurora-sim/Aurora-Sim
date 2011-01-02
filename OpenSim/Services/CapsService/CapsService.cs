@@ -21,177 +21,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
 {
-    /// <summary>
-    /// This handles requests from the user server about clients that need a CAPS seed URL.
-    /// </summary>
     public class CapsService : ICapsService, IService
-    {
-        #region Declares
-
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        protected IHttpServer m_server;
-        protected IGridUserService m_GridUserService;
-        protected IGridService m_GridService;
-        protected IPresenceService m_PresenceService;
-        protected IInventoryService m_InventoryService;
-        protected ILibraryService m_LibraryService;
-        protected IAssetService m_AssetService;
-        protected string m_hostName;
-        protected uint m_port;
-        public string HostURI
-        {
-            get { return m_hostName + ":" + m_port; }
-        }
-        protected Dictionary<UUID, Dictionary<ulong, IPrivateCapsService>> m_CapsServices = new Dictionary<UUID, Dictionary<ulong, IPrivateCapsService>>();
-        
-        #endregion
-
-        #region IService members
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_log.Debug("[AuroraCAPSService]: Starting...");
-            IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
-            if (m_CAPSServerConfig == null)
-                throw new Exception(String.Format("No section CAPSService in config file"));
-
-            m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
-            //Sanitize the results, remove / and :
-            m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
-            
-            m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
-            registry.RegisterModuleInterface<ICapsService>(this);
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
-            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
-            m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
-            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
-            m_GridService = registry.RequestModuleInterface<IGridService>();
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
-            ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
-            m_server = simBase.GetHttpServer(m_port);
-        }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            registry.RegisterModuleInterface<ICapsService>(this);
-        }
-
-        #endregion
-
-        #region ICapsService members
-
-        #region Remove user/region CAPS handlers
-
-        /// <summary>
-        /// Remove the all of the user's CAPS from the system
-        /// </summary>
-        /// <param name="AgentID"></param>
-        public void RemoveCAPS(UUID AgentID)
-        {
-            if(m_CapsServices.ContainsKey(AgentID))
-            {
-                List<ulong> regionHandles = new List<ulong>(m_CapsServices[AgentID].Keys);
-                foreach (ulong regionHandle in regionHandles)
-                {
-                    RemoveCAPS(AgentID, regionHandle);
-                }
-                m_CapsServices.Remove(AgentID);
-            }
-        }
-
-        /// <summary>
-        /// Remove the CAPS for the given user in the given region
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="regionHandle"></param>
-        public void RemoveCAPS(UUID AgentID, ulong regionHandle)
-        {
-            //Remove all the CAPS handlers
-            m_CapsServices[AgentID][regionHandle].RemoveCAPS();
-            //Remove the SEED cap
-            m_server.RemoveStreamHandler("POST", m_CapsServices[AgentID][regionHandle].CapsURL);
-            m_CapsServices[AgentID].Remove(regionHandle);
-        }
-
-        #endregion
-
-        #region Create user/region CAPS handlers
-
-        /// <summary>
-        /// Create a Caps URL for the given user/region. Called normally by the EventQueueService or the LLLoginService on login
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="SimCAPS"></param>
-        /// <param name="CAPS"></param>
-        /// <param name="regionHandle"></param>
-        /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, string CAPSPath, ulong regionHandle)
-        {
-            //Add the HostURI so that it ends up here
-            string CAPSBase = CAPS;
-            CAPS = HostURI + CAPS;
-            //This makes the new SEED url on the CAPS server
-            AddCapsService(new PrivateCapsService(m_server, m_InventoryService, m_LibraryService, 
-                m_GridUserService, m_GridService, m_PresenceService, m_AssetService, SimCAPS,
-                AgentID, regionHandle, this, CAPS, CAPSBase, CAPSPath));
-            //Now make sure we didn't use an old one or something
-            IPrivateCapsService service = GetCapsService(regionHandle, AgentID);
-            return service.CapsURL;
-        }
-
-        /// <summary>
-        /// Add a new CapsService if the CapsService doesn't already exist for the given user/region
-        /// </summary>
-        /// <param name="handler"></param>
-        public void AddCapsService(IPrivateCapsService handler)
-        {
-            if (!m_CapsServices.ContainsKey(handler.AgentID))
-                m_CapsServices.Add(handler.AgentID, new Dictionary<ulong, IPrivateCapsService>());
-            if (!m_CapsServices[handler.AgentID].ContainsKey(handler.RegionHandle))
-            {
-                //It doesn't exist, add it
-                m_CapsServices[handler.AgentID][handler.RegionHandle] = handler;
-                handler.Initialise();
-                m_server.AddStreamHandler(new RestStreamHandler("POST", handler.CapsBase, handler.CapsRequest));
-            }
-        }
-
-        #endregion
-
-        #region Get user/region CapsService handlers
-
-        /// <summary>
-        /// Attempt to find the CapsService for the given user/region
-        /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
-        /// <returns></returns>
-        public IPrivateCapsService GetCapsService(ulong regionID, UUID agentID)
-        {
-            if (m_CapsServices.ContainsKey(agentID) && m_CapsServices[agentID].ContainsKey(regionID))
-                return m_CapsServices[agentID][regionID];
-            return null;
-        }
-
-        #endregion
-
-        #endregion
-    }
-
-    public class NewCapsService : ICapsService/*, IService*/
     {
         #region Declares
 
@@ -280,11 +110,11 @@ namespace OpenSim.Services.CapsService
         /// <param name="CAPS"></param>
         /// <param name="regionHandle"></param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string SimCAPS, string CAPSBase, string CAPSPath, ulong regionHandle)
+        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, string CAPSPath, ulong regionHandle)
         {
             //Now make sure we didn't use an old one or something
             PerClientBasedCapsService service = GetOrCreateClientCapsService(AgentID);
-            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase);
+            IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
             return clientService.CapsUrl;
         }
 
@@ -350,12 +180,12 @@ namespace OpenSim.Services.CapsService
         /// Add a new Caps Service for the given region if one does not already exist
         /// </summary>
         /// <param name="regionHandle"></param>
-        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase)
+        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, string UrlToInform)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise(m_CapsService.Registry, this, CAPSBase);
+                regionClient.Initialise(m_CapsService.Registry, this, CAPSBase, UrlToInform);
                 m_RegionCapsServices.Add(regionHandle, regionClient);
             }
         }
@@ -378,13 +208,13 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase)
+        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform)
         {
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
                 return m_RegionCapsServices[regionID];
             //Create a new one, and then call Get to find it
-            AddCapsServiceForRegion(regionID, CAPSBase);
+            AddCapsServiceForRegion(regionID, CAPSBase, UrlToInform);
             return GetCapsService(regionID);
         }
 
@@ -460,15 +290,21 @@ namespace OpenSim.Services.CapsService
             get { return m_clientCapsService.HostUri + m_capsUrlBase; }
         }
 
+        public String HostUri
+        {
+            get { return m_clientCapsService.HostUri; }
+        }
+
         #endregion
 
         #region Initialise/Close
 
-        public void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase)
+        public void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase, string urlToInform)
         {
             m_registry = registry;
             m_clientCapsService = perClientBasedCapsService;
             m_capsUrlBase = capsBase;
+            m_UrlToInform = urlToInform;
 
             AddCAPS();
         }
