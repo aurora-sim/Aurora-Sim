@@ -211,7 +211,7 @@ namespace OpenSim.Services.PresenceService
                 {
                     PresenceInfo ret = new PresenceInfo();
 
-                    if (m_checkLastSeen && int.Parse(d.Data["LastSeen"]) + (60 * 60) < Util.UnixTimeSinceEpoch())
+                    if (m_checkLastSeen && int.Parse(d.Data["LastSeen"]) + (1000 * 60 * 60) < Util.UnixTimeSinceEpoch())
                     {
                         m_log.Warn("[PresenceService]: Found a user (" + d.UserID + ") that was not seen within the last hour! Logging them out.");
                         LogoutAgent(d.SessionID);
