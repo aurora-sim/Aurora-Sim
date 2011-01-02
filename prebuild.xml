@@ -553,6 +553,7 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -742,6 +743,7 @@
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -1274,8 +1276,8 @@
       </Files>
     </Project>
 
-    <!-- OpenSim app -->
-    <Project frameworkVersion="v3_5" name="OpenSim" path="OpenSim/Region/Application" type="Exe">
+    <!-- Aurora app -->
+    <Project frameworkVersion="v3_5" name="Aurora" path="OpenSim/Region/Application" type="Exe">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -1400,7 +1402,6 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Windows.Forms"/>
-      <Reference name="OpenSim"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Framework"/>
@@ -1541,7 +1542,6 @@
       <Reference name="System.Web"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
-      <Reference name="OpenSim"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="Nini" path="../../../../bin/"/>
