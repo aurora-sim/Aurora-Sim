@@ -181,6 +181,10 @@ namespace OpenSim.Services.Interfaces
         /// <param name="server"></param>
         /// <param name="handler"></param>
         /// <returns>All the CAPS request the given module has</returns>
-        List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler); 
+        List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler);
+
+        void DeregisterCaps();
+
+        void RegisterCaps(PerRegionClientCapsService perRegionClientCapsService, IRegistryCore m_registry);
     }
 }
