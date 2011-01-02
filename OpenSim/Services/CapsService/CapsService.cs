@@ -141,6 +141,18 @@ namespace OpenSim.Services.CapsService
             return m_CapsServices[AgentID];
         }
 
+        /// <summary>
+        /// Get a Caps Service for the given client
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <returns></returns>
+        public IClientCapsService GetClientCapsService(UUID AgentID)
+        {
+            if (!m_CapsServices.ContainsKey(AgentID))
+                return null;
+            return m_CapsServices[AgentID];
+        }
+
         #endregion
     }
 
@@ -259,7 +271,7 @@ namespace OpenSim.Services.CapsService
             get { return m_regionHandle; }
         }
 
-        protected IRegistryCore Registry
+        public IRegistryCore Registry
         {
             get { return m_clientCapsService.Registry; }
         }

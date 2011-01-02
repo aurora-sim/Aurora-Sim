@@ -111,8 +111,8 @@ namespace OpenSim.Server.Handlers
             ulong regionHandle = ulong.Parse((string)m_dhttpMethod["REGIONHANDLE"]);
             UUID password = UUID.Parse((string)m_dhttpMethod["PASS"]);
             string llsd = (string)m_dhttpMethod["LLSD"];
-            //This is called by the user server
-            IPrivateCapsService privateCaps = m_handler.GetCapsService(regionHandle, agentID);
+
+            IClientCapsService privateCaps = m_handler.GetClientCapsService(agentID);
 
             if (!privateCaps.EventQueueService.AuthenticateRequest(agentID, password))
             {

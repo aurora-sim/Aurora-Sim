@@ -52,31 +52,24 @@ namespace OpenSim.Services.CapsService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string m_uploadBakedTexturePath = "0010";
-        protected IPrivateCapsService m_handler;
         protected IAssetService m_assetService;
+        protected IRegionClientCapsService m_service;
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
         protected string REDIRECT_URL = null;
-        protected string m_capsObjectPath = "";
-        protected IHttpServer m_server;
-        protected string m_hostName;
         protected UUID m_agentID;
 
-        public List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService service)
         {
-            m_assetService = handler.AssetService;
-            m_handler = handler;
-            m_server = server;
-            m_hostName = handler.PublicHandler.HostURI;
+            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             m_agentID = agentID;
 
-            List<IRequestHandler> handlers = new List<IRequestHandler>();
-            handlers.Add(new StreamHandler("GET", handler.CreateCAPS("GetTexture"),
-                                                      ProcessGetTexture));
-            m_capsObjectPath = "/CAPS/" + handler.CapsObjectPath;
-            handlers.Add(new RestStreamHandler("POST", handler.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
-                                                      UploadBakedTexture));
-            return handlers;
+            service.AddStreamHandler("GetTexture", 
+                new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
+                                                        ProcessGetTexture));
+            service.AddStreamHandler("UploadBakedTexture", 
+                new RestStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+                                                        UploadBakedTexture));
         }
 
         #region Get Texture
@@ -382,17 +375,17 @@ namespace OpenSim.Services.CapsService
                 //        m_regionName);
 
                 string uploaderPath = Util.RandomClass.Next(1000, 8000).ToString("0000");
-
+                string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
                 BakedTextureUploader uploader =
-                    new BakedTextureUploader(m_capsObjectPath + uploaderPath,
-                        m_server);
+                    new BakedTextureUploader(uploadpath, "Upload" + uploaderPath,
+                        m_service);
                 uploader.OnUpLoad += BakedTextureUploaded;
 
-                m_server.AddStreamHandler(
-                        new BinaryStreamHandler("POST", m_capsObjectPath + uploaderPath,
+                m_service.AddStreamHandler(uploadpath,
+                        new BinaryStreamHandler("POST", uploadpath,
                         uploader.uploaderCaps));
 
-                string uploaderURL = m_hostName + m_capsObjectPath + uploaderPath + "/";
+                string uploaderURL = m_service.HostUri + uploadpath;
                 OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
@@ -413,14 +406,16 @@ namespace OpenSim.Services.CapsService
             private UploadedBakedTexture handlerUpLoad = null;
 
             private string uploaderPath = String.Empty;
+            private string uploadMethod = "";
             private UUID newAssetID;
-            private IHttpServer httpListener;
+            private IRegionClientCapsService clientCaps;
 
-            public BakedTextureUploader(string path, IHttpServer httpServer)
+            public BakedTextureUploader(string path, string method, IRegionClientCapsService caps)
             {
                 newAssetID = UUID.Random();
                 uploaderPath = path;
-                httpListener = httpServer;
+                uploadMethod = method;
+                clientCaps = caps;
             }
 
             /// <summary>
@@ -438,7 +433,7 @@ namespace OpenSim.Services.CapsService
                 map["item_id"] = UUID.Zero;
                 map["state"] = "complete";
                 res = OSDParser.SerializeLLSDXmlString(map);
-                httpListener.RemoveStreamHandler("POST", uploaderPath);
+                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
                 handlerUpLoad = OnUpLoad;
                 if (handlerUpLoad != null)
