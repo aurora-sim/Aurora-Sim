@@ -52,7 +52,11 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// The URI of the CAPS service with http:// and port
         /// </summary>
-        string HostURI { get; }
+        string HostUri { get; }
+
+        IRegistryCore Registry { get; }
+
+        IHttpServer Server { get; }
     }
 
     /// <summary>
@@ -174,17 +178,45 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface ICapsServiceConnector
     {
-        /// <summary>
-        /// Register all CAPS that the module has to offer at thsi time
-        /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="server"></param>
-        /// <param name="handler"></param>
-        /// <returns>All the CAPS request the given module has</returns>
-        List<IRequestHandler> RegisterCaps(UUID agentID, IHttpServer server, IPrivateCapsService handler);
-
+        void RegisterCaps(IRegionClientCapsService perRegionClientCapsService, IRegistryCore m_registry);
         void DeregisterCaps();
+    }
 
-        void RegisterCaps(PerRegionClientCapsService perRegionClientCapsService, IRegistryCore m_registry);
+
+
+    /// <summary>
+    /// This is the client Caps Service.
+    /// It is created once for every client and controls the creation and deletion of 
+    ///    the IRegionClientCapsService interfaces.
+    /// </summary>
+    public interface IClientCapsService
+    {
+        UUID AgentID { get; }
+        IHttpServer Server { get; }
+        String HostUri { get; }
+
+        void Initialise(ICapsService server, UUID agentID);
+        void Close();
+        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase);
+        void RemoveCAPS(ulong regionHandle);
+    }
+
+    /// <summary>
+    /// This is the per Region, per Client Caps Service
+    /// This is created for every region the client enters, either as a child or root agent.
+    /// </summary>
+    public interface IRegionClientCapsService
+    {
+        ulong RegionHandle { get; }
+        UUID AgentID { get; }
+        OSDMap InfoToSendToUrl { get; set; }
+        string UrlToInform { get; set; }
+        String CapsUrl { get; }
+
+        void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase);
+        void Close();
+        string CreateCAPS(string method, string appendedPath);
+        void AddStreamHandler(string method, IRequestHandler handler);
+        void RemoveStreamHandler(string method, string httpMethod, string path);
     }
 }
