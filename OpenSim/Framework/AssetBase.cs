@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using System.Reflection;
 using log4net;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
@@ -37,7 +38,7 @@ namespace OpenSim.Framework
     public enum AssetFlags : int
     {
         Normal = 0,         // Immutable asset
-        Maptile = 1,        // What it says
+        Maptile = 1,        // Depriated, use Deletable instead: What it says
         Rewritable = 2,     // Content can be rewritten
         Collectable = 4,    // Can be GC'ed after some time
         Deletable = 8       // The asset can be deleted
@@ -353,5 +354,281 @@ namespace OpenSim.Framework
             get { return m_flags; }
             set { m_flags = value; }
         }
+    }
+
+    public enum AssetMetaDataFlags
+    {
+        Normal = 0,               ///No flags
+        Deletable = 1,            ///Can this asset be deleted from the database?
+        Temperary = 4,            ///Is this asset going to exist permanently in the database, or can it be purged after a set amount of time?
+        Local = 8,                ///Region-only asset, never stored in the database
+        RemotelyAccessable = 16,  ///Regions outside of this grid can access this asset
+        Rewritable = 32,          ///The asset can be changed
+    }
+
+    public class AssetMetaverseData
+    {
+        #region Declares
+
+        /// <summary>
+        /// The UUID of the Asset.
+        /// </summary>
+        private UUID m_AssetID = UUID.Zero;
+
+        /// <summary>
+        /// The hostname of the place this asset was created.
+        /// This can be called to retrieve the asset if needed.
+        /// </summary>
+        private String m_HostUri = "";
+
+        /// <summary>
+        /// The asset data itself.
+        /// </summary>
+        private byte[] m_Data = new byte[0];
+
+        /// <summary>
+        /// The name of this asset.
+        /// </summary>
+        private String m_Name = "";
+
+        /// <summary>
+        /// The last time this asset was accessed. Used for purging the database of temperary assets.
+        /// </summary>
+        private DateTime m_LastAccessed = DateTime.Now;
+
+        /// <summary>
+        /// The last time this asset was changed in the database.
+        /// </summary>
+        private DateTime m_LastChanged = DateTime.Now;
+
+        /// <summary>
+        /// The time that this asset was created.
+        /// </summary>
+        private DateTime m_CreationDate = DateTime.Now;
+
+        /// <summary>
+        /// The UUID of the Creator of this asset.
+        /// It is assumed that the Creator is from the same place the asset was created, and therefore, 
+        ///    the creator info should be able to be found by the m_HostUri above as well.
+        /// </summary>
+        private UUID m_CreatorID;
+
+        /// <summary>
+        /// The flags that this asset has.
+        /// </summary>
+        private AssetMetaDataFlags m_AssetFlags = AssetMetaDataFlags.Normal;
+
+        /// <summary>
+        /// The type of asset this represents.
+        /// </summary>
+        private AssetType m_AssetType = AssetType.Unknown;
+
+        public UUID AssetID
+        {
+            get { return m_AssetID; }
+        }
+
+        public UUID CreatorID
+        {
+            get { return m_CreatorID; }
+        }
+
+        public String HostUri
+        {
+            get { return m_HostUri; }
+        }
+
+        public byte[] Data
+        {
+            get { return m_Data; }
+            set
+            {
+                //Update the times on the asset
+                m_LastAccessed = DateTime.Now;
+                m_LastChanged = DateTime.Now;
+                m_Data = value;
+            }
+        }
+
+        public DateTime CreationDate
+        {
+            get { return m_CreationDate; }
+        }
+
+        public DateTime LastAccessed
+        {
+            get { return m_LastAccessed; }
+        }
+
+        public DateTime LastChanged
+        {
+            get { return m_LastChanged; }
+        }
+
+        public String Name
+        {
+            get { return m_Name; }
+            set
+            {
+                //Update the times on the asset
+                m_LastAccessed = DateTime.Now;
+                m_LastChanged = DateTime.Now; 
+                m_Name = value;
+            }
+        }
+
+        public AssetType AssetType
+        {
+            get { return m_AssetType; }
+            set
+            {
+                //Update the times on the asset
+                m_LastAccessed = DateTime.Now;
+                m_LastChanged = DateTime.Now;
+                m_AssetType = value;
+            }
+        }
+
+        public AssetMetaDataFlags AssetFlags
+        {
+            get { return m_AssetFlags; }
+            set
+            {
+                //Update the times on the asset
+                m_LastAccessed = DateTime.Now;
+                m_LastChanged = DateTime.Now;
+                m_AssetFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Checks if this asset is a text based asset
+        /// This is used in the database to determine what table the asset should go in
+        /// </summary>
+        public bool IsTextBasedAsset
+        {
+            get
+            {
+                return
+                    (m_AssetType == AssetType.Bodypart ||
+                     m_AssetType == AssetType.Bodypart ||
+                     m_AssetType == AssetType.CallingCard ||
+                     m_AssetType == AssetType.Clothing ||
+                     m_AssetType == AssetType.Gesture ||
+                     m_AssetType == AssetType.Landmark ||
+                     m_AssetType == AssetType.LSLBytecode ||
+                     m_AssetType == AssetType.LSLText ||
+                     m_AssetType == AssetType.Notecard ||
+                     m_AssetType == AssetType.Object ||
+                     m_AssetType == AssetType.Simstate);
+            }
+        }
+
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// A constructor of the class
+        /// </summary>
+        /// <param name="assetID">The ID of this asset</param>
+        /// <param name="creatorID">The creator of this asset</param>
+        /// <param name="hostUri">The HostUri that this asset can be accessed at</param>
+        /// <param name="data">The binary data of this asset</param>
+        /// <param name="name">The name of this asset</param>
+        /// <param name="assetType">The type of asset this is</param>
+        /// <param name="assetFlags">The flags that the asset will have</param>
+        public AssetMetaverseData(UUID assetID, UUID creatorID, String hostUri, byte[] data,
+            String name, AssetType assetType, AssetMetaDataFlags assetFlags)
+        {
+            m_AssetID = assetID;
+            m_CreatorID = creatorID;
+            m_HostUri = hostUri;
+            m_Data = data;
+            m_Name = name;
+            m_AssetType = assetType;
+            m_AssetFlags = assetFlags;
+        }
+
+        /// <summary>
+        /// A constructor of the class
+        /// </summary>
+        /// <param name="assetID">The ID of this asset</param>
+        /// <param name="creatorID">The creator of this asset</param>
+        /// <param name="hostUri">The HostUri that this asset can be accessed at</param>
+        /// <param name="data">The binary data of this asset</param>
+        /// <param name="name">The name of this asset</param>
+        public AssetMetaverseData(UUID assetID, UUID creatorID, String hostUri, byte[] data,
+            String name)
+        {
+            m_AssetID = assetID;
+            m_CreatorID = creatorID;
+            m_HostUri = hostUri;
+            m_Data = data;
+            m_Name = name;
+        }
+
+        #endregion
+
+        #region Overrides
+
+        /// <summary>
+        /// A nicer way to display the asset rather than letting it do it automatically
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return m_AssetID.ToString();
+        }
+
+        #endregion
+
+        #region Packing/Unpacking
+
+        /// <summary>
+        /// Pack this asset into an OSDMap
+        /// </summary>
+        /// <returns></returns>
+        public OSD Pack()
+        {
+            OSDMap assetMap = new OSDMap();
+
+            assetMap["AssetFlags"] = (int)this.AssetFlags;
+            assetMap["AssetID"] = this.AssetID;
+            assetMap["CreationDate"] = this.CreationDate;
+            assetMap["CreatorID"] = this.CreatorID;
+            assetMap["Data"] = this.Data;
+            assetMap["HostUri"] = this.HostUri;
+            assetMap["LastAccessed"] = this.LastAccessed;
+            assetMap["LastChanged"] = this.LastChanged;
+            assetMap["Name"] = this.Name;
+            assetMap["AssetType"] = (int)this.AssetType;
+
+            return assetMap;
+        }
+
+        /// <summary>
+        /// Unpack the asset from an OSDMap
+        /// </summary>
+        /// <param name="osd"></param>
+        public void Unpack(OSD osd)
+        {
+            if (!(osd is OSDMap))
+                return;
+            OSDMap assetMap = (OSDMap)osd;
+
+            m_AssetFlags = (AssetMetaDataFlags)assetMap["AssetFlags"].AsInteger();
+            m_AssetID = assetMap["AssetID"].AsUUID();
+            m_CreationDate = assetMap["CreationDate"].AsDate();
+            m_CreatorID = assetMap["CreationDate"].AsUUID();
+            m_Data = assetMap["Data"].AsBinary();
+            m_HostUri = assetMap["HostUri"].AsString();
+            m_LastAccessed = assetMap["LastAccessed"].AsDate();
+            m_LastChanged = assetMap["LastChanged"].AsDate();
+            m_Name = assetMap["Name"].AsString();
+            m_AssetType = (AssetType)assetMap["AssetType"].AsInteger();
+        }
+
+        #endregion
     }
 }

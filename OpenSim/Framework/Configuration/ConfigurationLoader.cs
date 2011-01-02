@@ -296,6 +296,7 @@ namespace OpenSim.Framework
             }
             return success;
         }
+
         private void WriteConfigFile(int i, IConfigSource m_config)
         {
             string m_fileName = "ConfigFileDump" + i + ".ini";

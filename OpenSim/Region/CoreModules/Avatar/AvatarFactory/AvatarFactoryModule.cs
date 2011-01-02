@@ -98,7 +98,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public void RegionLoaded(Scene scene)
         {
-
         }
 
         public Type ReplaceableInterface

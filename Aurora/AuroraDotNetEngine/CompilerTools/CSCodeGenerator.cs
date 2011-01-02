@@ -148,9 +148,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private class VarRename
         {
-            public string NewVarName;
-            public bool HasBeenAssigned;
-            public string OldVarName;
+            //public string NewVarName;
+            //public bool HasBeenAssigned;
+            //public string OldVarName;
         }
         /// <summary>
         /// This contains a list of variables that we need to rename because of some constraint
@@ -2955,7 +2955,7 @@ default
                 return "@" + s;
             else
             {
-                VarRename var;
+                /*VarRename var;
                 if(VariablesToRename.TryGetValue(s, out var))
                 {
                     Console.WriteLine("[CSCodeGenerator]: found var needing renamed!");
@@ -2967,7 +2967,7 @@ default
                         var.HasBeenAssigned = true;
                         VariablesToRename[s] = var;
                     }
-                }
+                }*/
                 return s;
             }
         }
