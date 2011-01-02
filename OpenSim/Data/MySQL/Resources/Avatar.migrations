@@ -26,7 +26,7 @@ BEGIN;
 CREATE TABLE AvatarsCache (
 	PrincipalID CHAR(36) NOT NULL, 
 	Name VARCHAR(32) NOT NULL, 
-	Value text NOT NULL DEFAULT '', 
+	Value text, 
 	PRIMARY KEY(PrincipalID, Name), 
 	KEY(PrincipalID));
 
