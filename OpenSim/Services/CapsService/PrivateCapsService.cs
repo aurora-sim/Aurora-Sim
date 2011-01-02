@@ -171,7 +171,8 @@ namespace OpenSim.Services.CapsService
             if (handle != null)
                 handlers.Add(handle);
 
-            foreach (ICapsServiceConnector conn in m_publicHandler.CapsModules)
+            List<ICapsServiceConnector> m_CapsModules = AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
+            foreach (ICapsServiceConnector conn in m_CapsModules)
             {
                 handlers.AddRange(conn.RegisterCaps(m_AgentID, m_server, this));
             }

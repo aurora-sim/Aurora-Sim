@@ -13,11 +13,6 @@ namespace OpenSim.Services.Interfaces
     public interface ICapsService
     {
         /// <summary>
-        /// All of the loaded modules that add CAP requests
-        /// </summary>
-        List<ICapsServiceConnector> CapsModules { get; }
-        
-        /// <summary>
         /// Remove all instances of the agent from the Caps server
         /// </summary>
         /// <param name="AgentID"></param>
