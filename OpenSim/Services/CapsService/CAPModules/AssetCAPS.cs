@@ -60,6 +60,7 @@ namespace OpenSim.Services.CapsService
         
         public void RegisterCaps(IRegionClientCapsService service)
         {
+            m_service = service;
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
             
             service.AddStreamHandler("GetTexture", 

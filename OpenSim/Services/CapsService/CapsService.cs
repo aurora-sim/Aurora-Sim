@@ -208,7 +208,7 @@ namespace OpenSim.Services.CapsService
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise(this, CAPSBase, UrlToInform);
+                regionClient.Initialise(this, regionHandle, CAPSBase, UrlToInform);
                 m_RegionCapsServices.Add(regionHandle, regionClient);
             }
         }
@@ -328,11 +328,12 @@ namespace OpenSim.Services.CapsService
 
         #region Initialise/Close
 
-        public void Initialise(IClientCapsService clientCapsService, string capsBase, string urlToInform)
+        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform)
         {
             m_clientCapsService = clientCapsService;
             m_capsUrlBase = capsBase;
             m_UrlToInform = urlToInform;
+            m_regionHandle = regionHandle;
 
             AddCAPS();
         }
