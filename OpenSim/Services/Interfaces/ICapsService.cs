@@ -64,6 +64,7 @@ namespace OpenSim.Services.Interfaces
 
         void Initialise(ICapsService server, UUID agentID);
         void Close();
+        IRegionClientCapsService GetCapsService(ulong regionID);
         IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform);
         void RemoveCAPS(ulong regionHandle);
     }
@@ -81,10 +82,12 @@ namespace OpenSim.Services.Interfaces
         String HostUri { get; }
         String CapsUrl { get; }
         IRegistryCore Registry { get; }
+        IClientCapsService ClientCaps { get; }
 
         void Initialise(IClientCapsService clientCapsService, string capsBase, string urlToInform);
         void Close();
         string CreateCAPS(string method, string appendedPath);
+        List<ICapsServiceConnector> GetServiceConnectors();
         void AddStreamHandler(string method, IRequestHandler handler);
         void RemoveStreamHandler(string method, string httpMethod, string path);
     }

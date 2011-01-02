@@ -219,7 +219,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="regionID"></param>
         /// <param name="agentID"></param>
         /// <returns></returns>
-        protected IRegionClientCapsService GetCapsService(ulong regionID)
+        public IRegionClientCapsService GetCapsService(ulong regionID)
         {
             if (m_RegionCapsServices.ContainsKey(regionID))
                 return m_RegionCapsServices[regionID];
@@ -261,14 +261,17 @@ namespace OpenSim.Services.CapsService
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        protected IClientCapsService m_clientCapsService;
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
 
         protected ulong m_regionHandle;
         public ulong RegionHandle
         {
             get { return m_regionHandle; }
+        }
+        protected IClientCapsService m_clientCapsService;
+        public IClientCapsService ClientCaps
+        {
+            get { return m_clientCapsService; }
         }
 
         public IRegistryCore Registry
@@ -365,7 +368,7 @@ namespace OpenSim.Services.CapsService
             RemoveStreamHandler("SEED", "POST", CapsUrl);
         }
 
-        protected List<ICapsServiceConnector> GetServiceConnectors()
+        public List<ICapsServiceConnector> GetServiceConnectors()
         {
             if (m_connectors.Count == 0)
             {

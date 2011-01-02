@@ -45,18 +45,12 @@ namespace OpenSim.Server.Handlers
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            ICapsService service = registry.RequestModuleInterface<ICapsService>();
+            IEventQueueService service = registry.RequestModuleInterface<IEventQueueService>();
             server.AddStreamHandler(new EQMEventPoster(service));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
-                return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            ICapsService service = registry.RequestModuleInterface<ICapsService>();
-            server.AddStreamHandler(new EQMEventPoster(service));
         }
 
         #endregion
@@ -66,12 +60,12 @@ namespace OpenSim.Server.Handlers
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private ICapsService m_handler;
+        private IEventQueueService m_eventQueueService;
 
-        public EQMEventPoster(ICapsService handler) :
+        public EQMEventPoster(IEventQueueService handler) :
             base("POST", "/CAPS/EQMPOSTER")
         {
-            m_handler = handler;
+            m_eventQueueService = handler;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -112,9 +106,7 @@ namespace OpenSim.Server.Handlers
             UUID password = UUID.Parse((string)m_dhttpMethod["PASS"]);
             string llsd = (string)m_dhttpMethod["LLSD"];
 
-            IClientCapsService privateCaps = m_handler.GetClientCapsService(agentID);
-
-            if (!privateCaps.EventQueueService.AuthenticateRequest(agentID, password))
+            if (!m_eventQueueService.AuthenticateRequest(agentID, password, regionHandle))
             {
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "false");
@@ -124,7 +116,7 @@ namespace OpenSim.Server.Handlers
             }
             else
             {
-                privateCaps.EventQueueService.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID);
+                m_eventQueueService.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID, regionHandle);
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "true");
                 string xmlString = WebUtils.BuildXmlResponse(result);

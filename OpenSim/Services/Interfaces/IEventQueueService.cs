@@ -69,26 +69,4 @@ namespace OpenSim.Services.Interfaces
 
         bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
     }
-
-    /// <summary>
-    /// This is the internal per user/per region EventQueueService
-    /// </summary>
-    public interface IInternalEventQueueService
-    {
-        /// <summary>
-        /// Enqueues an EQM to the given user
-        /// </summary>
-        /// <param name="o"></param>
-        /// <param name="avatarID"></param>
-        /// <returns></returns>
-        bool Enqueue(OSD o, UUID avatarID);
-
-        /// <summary>
-        /// Check to make sure the request to add the EQM is not being faked by some outside source by checking the password
-        /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        bool AuthenticateRequest(UUID agentID, UUID password);
-    }
 }

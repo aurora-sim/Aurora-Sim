@@ -19,9 +19,6 @@ using Aurora.Services.DataService;
 
 namespace OpenSim.Services.CapsService
 {
-    /// <summary>
-    /// This is loaded ONCE by the service loader and runs events depending on where the user is in the grid
-    /// </summary>
     public class EventQueueMasterService : EventQueueModuleBase, IService, IEventQueueService
     {
         #region Declares
@@ -70,83 +67,73 @@ namespace OpenSim.Services.CapsService
 
         #region IEventQueueService Members
 
-        public override bool Enqueue(OSD o, UUID avatarID, ulong regionHandle)
+        public override bool Enqueue(OSD o, UUID agentID, ulong regionHandle)
         {
             //Find the CapsService for the user and enqueue the event
-            PrivateCapsService service = (PrivateCapsService)m_service.GetCapsService(regionHandle, avatarID);
-            return service.EventQueueService.Enqueue(o, avatarID);
+            IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionHandle);
+            if (service == null)
+                return false;
+            RegionClientEventQueueService eventQueueService = FindEventQueueConnector(service);
+            if (eventQueueService == null)
+                return false;
+
+            return eventQueueService.Enqueue(o);
         }
 
-        public bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle)
+        public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
         {
             //Find the CapsService for the user and check their authentication
-            PrivateCapsService service = (PrivateCapsService)m_service.GetCapsService(RegionHandle, agentID);
-            return service.EventQueueService.AuthenticateRequest(agentID, password);
+            IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionHandle);
+            if (service == null)
+                return false;
+            RegionClientEventQueueService eventQueueService = FindEventQueueConnector(service);
+            if (eventQueueService == null)
+                return false;
+
+            return eventQueueService.AuthenticateRequest(password);
+        }
+
+        private IRegionClientCapsService GetRegionClientCapsService(UUID agentID, ulong RegionHandle)
+        {
+            IClientCapsService clientCaps = m_service.GetClientCapsService(agentID);
+            if (clientCaps == null)
+                return null;
+            IRegionClientCapsService regionCaps = clientCaps.GetCapsService(RegionHandle);
+            //If it doesn't exist, it will be null anyway, so we don't need to check anything else
+            return regionCaps;
+        }
+
+        private RegionClientEventQueueService FindEventQueueConnector(IRegionClientCapsService service)
+        {
+            foreach (ICapsServiceConnector connector in service.GetServiceConnectors())
+            {
+                if (connector is RegionClientEventQueueService)
+                {
+                    return (RegionClientEventQueueService)connector;
+                }
+            }
+            return null;
         }
 
         #endregion
     }
-    
-    /// <summary>
-    /// This is created for EVERY client in EVERY region they have a CAPS seed in, unlike the one MasterService above
-    /// </summary>
-    public class EventQueueService : IInternalEventQueueService
+
+    public class RegionClientEventQueueService : ICapsServiceConnector
     {
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Dictionary<UUID, int> m_ids = new Dictionary<UUID, int>();
+        private int m_ids = 0;
 
-        private Dictionary<UUID, Queue<OSD>> queues = new Dictionary<UUID, Queue<OSD>>();
-        private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
-        private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
-        private IHttpServer m_server;
-        protected Dictionary<UUID, IPrivateCapsService> m_handlers = new Dictionary<UUID, IPrivateCapsService>();
+        private Queue<OSD> queue = new Queue<OSD>();
+        private UUID m_AvatarPassword = UUID.Zero;
+        private IRegionClientCapsService m_service;
+        private string m_capsPath;
 
         #endregion
 
         #region IInternalEventQueueService members
-
-        #region TryGet/Get queue's
-
-        /// <summary>
-        ///  Always returns a valid queue
-        /// </summary>
-        /// <param name="agentId"></param>
-        /// <returns></returns>
-        private Queue<OSD> TryGetQueue(UUID agentId)
-        {
-            lock (queues)
-            {
-                if (!queues.ContainsKey(agentId))
-                {
-                    queues[agentId] = new Queue<OSD>();
-                }
-
-                return queues[agentId];
-            }
-        }
-
-        /// <summary>
-        /// May return a null queue
-        /// </summary>
-        /// <param name="agentId"></param>
-        /// <returns></returns>
-        private Queue<OSD> GetQueue(UUID agentId)
-        {
-            lock (queues)
-            {
-                if (queues.ContainsKey(agentId))
-                {
-                    return queues[agentId];
-                }
-                else
-                    return null;
-            }
-        }
-
-        #endregion
 
         #region Enqueue a message/Create/Remove handlers
 
@@ -156,25 +143,26 @@ namespace OpenSim.Services.CapsService
         /// <param name="ev"></param>
         /// <param name="avatarID"></param>
         /// <returns></returns>
-        public bool Enqueue(OSD ev, UUID avatarID)
+        public bool Enqueue(OSD ev)
         {
             try
             {
                 //Check the messages to pull out ones that are creating or destroying CAPS in this or other regions
-                Queue<OSD> queue = GetQueue(avatarID);
                 if (ev.Type == OSDType.Map)
                 {
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
-                        //m_handlers[avatarID].PublicHandler.RemoveCAPS(avatarID)
+                        m_service.Close();
                     }
                     if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
                         string SeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
                         ulong regionHandle = ((OSDMap)map["body"])["region-handle"].AsULong();
 
-                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
+                        string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
+                        SeedCap = otherRegionService.CapsUrl;
 
                         ((OSDMap)map["body"])["seed-capability"] = SeedCap;
                     }
@@ -184,7 +172,9 @@ namespace OpenSim.Services.CapsService
                         string SeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
 
-                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
+                        string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
+                        SeedCap = otherRegionService.CapsUrl;
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = SeedCap;
@@ -195,7 +185,9 @@ namespace OpenSim.Services.CapsService
                         string SeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
 
-                        SeedCap = CreateNewCAPSClient(SeedCap, regionHandle, avatarID);
+                        string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
+                        SeedCap = otherRegionService.CapsUrl;
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = SeedCap;
@@ -213,167 +205,18 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
-        /// <summary>
-        /// If a EQM comes in that is going to open a new connection in another region, this gets called to make sure that we open a new CAPS handler there and then fix the URL to it
-        /// </summary>
-        /// <param name="SeedCap"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="avatarID"></param>
-        /// <returns></returns>
-        public string CreateNewCAPSClient(string SeedCap, ulong regionHandle, UUID avatarID)
-        {
-            //Create a new private seed handler by default, but let the public handler deal with whether it actually needs created
-            string pathBase = CapsUtil.GetRandomCapsObjectPath();
-            string newSeedCap = CapsUtil.GetCapsSeedPath(pathBase);
-            IPrivateCapsService handler = new PrivateCapsService(m_server, m_handlers[avatarID].InventoryService, m_handlers[avatarID].LibraryService, m_handlers[avatarID].GridUserService, m_handlers[avatarID].GridService, m_handlers[avatarID].PresenceService, m_handlers[avatarID].AssetService,
-                SeedCap, avatarID, regionHandle, m_handlers[avatarID].PublicHandler, m_handlers[avatarID].PublicHandler.HostURI + newSeedCap, newSeedCap, pathBase);
-
-            handler.PublicHandler.AddCapsService(handler);
-            //Now make sure we have the right one, as there could have already been a CAP in that region
-            handler = m_handlers[avatarID].PublicHandler.GetCapsService(regionHandle, handler.AgentID);
-            //Now send the client the Seed created by the CapsService
-            return handler.CapsURL;
-        }
-
-        //We don't have a way to implement this yet...
-        /*private void ClientClosed(UUID AgentID, Scene scene)
-        {
-            //m_log.DebugFormat("[EVENTQUEUE]: Closed client {0} in region {1}", AgentID, m_scene.RegionInfo.RegionName);
-
-            //Errr... shouldn't we just close the client?
-            int count = 0;
-            while (queues.ContainsKey(AgentID) && queues[AgentID].Count > 0 && count++ < 2)
-            {
-                Thread.Sleep(100);
-            }
-
-            lock (queues)
-            {
-                queues.Remove(AgentID);
-            }
-            List<UUID> removeitems = new List<UUID>();
-            lock (m_AvatarQueueUUIDMapping)
-            {
-                foreach (UUID ky in m_AvatarQueueUUIDMapping.Keys)
-                {
-                    if (ky == AgentID)
-                    {
-                        removeitems.Add(ky);
-                    }
-                }
-
-                foreach (UUID ky in removeitems)
-                {
-                    m_AvatarQueueUUIDMapping.Remove(ky);
-                    MainServer.Instance.RemovePollServiceHTTPHandler("", "/CAPS/EQG/" + ky.ToString() + "/");
-                }
-
-            }
-            UUID searchval = UUID.Zero;
-
-            removeitems.Clear();
-
-            lock (m_QueueUUIDAvatarMapping)
-            {
-                foreach (UUID ky in m_QueueUUIDAvatarMapping.Keys)
-                {
-                    searchval = m_QueueUUIDAvatarMapping[ky];
-
-                    if (searchval == AgentID)
-                    {
-                        removeitems.Add(ky);
-                    }
-                }
-
-                foreach (UUID ky in removeitems)
-                    m_QueueUUIDAvatarMapping.Remove(ky);
-            }
-        }*/
-
         #endregion
 
         #region Register and authenticate requests
 
         /// <summary>
-        /// Register our EventQueue CAP
-        /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="server"></param>
-        /// <param name="handler"></param>
-        /// <returns></returns>
-        public IRequestHandler RegisterCap(UUID agentID, IHttpServer server, IPrivateCapsService handler)
-        {
-            m_server = server;
-            m_handlers[agentID] = handler;
-            // Register an event queue for the client
-
-            // Let's instantiate a Queue for this agent right now
-            TryGetQueue(agentID);
-
-            string capsBase = "/CAPS/EQG/";
-            UUID EventQueueGetUUID = UUID.Zero;
-
-            lock (m_AvatarQueueUUIDMapping)
-            {
-                // Reuse open queues.  The client does!
-                if (m_AvatarQueueUUIDMapping.ContainsKey(agentID))
-                {
-                    //m_log.DebugFormat("[EVENTQUEUE]: Found Existing UUID!");
-                    EventQueueGetUUID = m_AvatarQueueUUIDMapping[agentID];
-                }
-                else
-                {
-                    EventQueueGetUUID = UUID.Random();
-                    //m_log.DebugFormat("[EVENTQUEUE]: Using random UUID!");
-                }
-            }
-
-            lock (m_AvatarQueueUUIDMapping)
-            {
-                if (!m_AvatarQueueUUIDMapping.ContainsKey(agentID))
-                    m_AvatarQueueUUIDMapping.Add(agentID, EventQueueGetUUID);
-            }
-
-            string caps = capsBase + EventQueueGetUUID.ToString() + "/";
-
-
-            // Register this as a caps handler
-            IRequestHandler rhandler = new RestHTTPHandler("POST", caps,
-                                                           delegate(Hashtable m_dhttpMethod)
-                                                           {
-                                                               return ProcessQueue(m_dhttpMethod, agentID);
-                                                           });
-            handler.AddCAPS("EventQueueGet", caps);
-
-            // This will persist this beyond the expiry of the caps handlers
-            MainServer.Instance.AddPollServiceHTTPHandler(
-                caps, EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, agentID));
-
-            Random rnd = new Random(Environment.TickCount);
-            lock (m_ids)
-            {
-                if (!m_ids.ContainsKey(agentID))
-                    m_ids.Add(agentID, rnd.Next(30000000));
-            }
-
-            UUID Password = UUID.Random();
-
-            if (!m_AvatarPasswordMap.ContainsKey(agentID))
-                m_AvatarPasswordMap.Add(agentID, Password);
-            m_AvatarPasswordMap[agentID] = Password;
-            handler.PostToSendToSim["EventQueuePass"] = OSD.FromUUID(Password);
-            return rhandler;
-        }
-
-        /// <summary>
         /// Check to make sure that the password we sent to the region is the same as the one here
         /// </summary>
-        /// <param name="agentID"></param>
         /// <param name="Password"></param>
         /// <returns></returns>
-        public bool AuthenticateRequest(UUID agentID, UUID Password)
+        public bool AuthenticateRequest(UUID Password)
         {
-            if (m_AvatarPasswordMap.ContainsKey(agentID) && m_AvatarPasswordMap[agentID] == Password)
+            if (m_AvatarPassword == Password)
                 return true;
             return false;
         }
@@ -387,7 +230,6 @@ namespace OpenSim.Services.CapsService
             // Don't use this, because of race conditions at agent closing time
             //Queue<OSD> queue = TryGetQueue(agentID);
 
-            Queue<OSD> queue = GetQueue(agentID);
             if (queue != null)
                 lock (queue)
                 {
@@ -401,7 +243,6 @@ namespace OpenSim.Services.CapsService
 
         public Hashtable GetEvents(UUID requestID, UUID pAgentId, string request)
         {
-            Queue<OSD> queue = TryGetQueue(pAgentId);
             OSD element;
             lock (queue)
             {
@@ -409,12 +250,6 @@ namespace OpenSim.Services.CapsService
                     return NoEvents(requestID, pAgentId);
                 element = queue.Dequeue(); // 15s timeout
             }
-
-
-
-            int thisID = 0;
-            lock (m_ids)
-                thisID = m_ids[pAgentId];
 
             OSDArray array = new OSDArray();
             if (element == null) // didn't have an event in 15s
@@ -435,7 +270,7 @@ namespace OpenSim.Services.CapsService
                     while (queue.Count > 0)
                     {
                         array.Add(queue.Dequeue());
-                        thisID++;
+                        m_ids++;
                     }
                 }
             }
@@ -443,11 +278,8 @@ namespace OpenSim.Services.CapsService
             OSDMap events = new OSDMap();
             events.Add("events", array);
 
-            events.Add("id", new OSDInteger(thisID));
-            lock (m_ids)
-            {
-                m_ids[pAgentId] = thisID + 1;
-            }
+            events.Add("id", new OSDInteger(m_ids));
+            m_ids += 1;
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200;
             responsedata["content_type"] = "application/xml";
@@ -486,21 +318,16 @@ namespace OpenSim.Services.CapsService
             //                m_log.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
             //            }
             //m_log.Warn("Got EQM get at " + m_handler.CapsURL);
-            Queue<OSD> queue = TryGetQueue(agentID);
             OSD element = null;
             if (queue.Count != 0)
                 element = queue.Dequeue(); // 15s timeout
 
             Hashtable responsedata = new Hashtable();
 
-            int thisID = 0;
-            lock (m_ids)
-                thisID = m_ids[agentID];
-
             if (element == null)
             {
                 //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                if (thisID == -1) // close-request
+                if (m_ids == -1) // close-request
                 {
                     m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
                     responsedata["int_response_code"] = 404; //501; //410; //404;
@@ -526,14 +353,14 @@ namespace OpenSim.Services.CapsService
                 if (item != null)
                 {
                     array.Add(item);
-                    thisID++;
+                    m_ids++;
                 }
             }
             //Nothing to process... don't confuse the client
             if (array.Count == 0)
             {
                 //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                if (thisID == -1) // close-request
+                if (m_ids == -1) // close-request
                 {
                     m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
                     responsedata["int_response_code"] = 404; //501; //410; //404;
@@ -554,11 +381,8 @@ namespace OpenSim.Services.CapsService
             OSDMap events = new OSDMap();
             events.Add("events", array);
 
-            events.Add("id", new OSDInteger(thisID));
-            lock (m_ids)
-            {
-                m_ids[agentID] = thisID + 1;
-            }
+            events.Add("id", new OSDInteger(m_ids));
+            m_ids += 1;
 
             responsedata["int_response_code"] = 200;
             responsedata["content_type"] = "application/xml";
@@ -575,6 +399,43 @@ namespace OpenSim.Services.CapsService
         }
 
         #endregion
+
+        #endregion
+
+        #region ICapsServiceConnector Members
+
+        public void RegisterCaps(IRegionClientCapsService service)
+        {
+            m_service = service;
+            
+            string capsBase = "/CAPS/EQG/";
+            m_capsPath = capsBase + UUID.Random() + "/";
+
+
+            // Register this as a caps handler
+            IRequestHandler rhandler = new RestHTTPHandler("POST", m_capsPath,
+                                                           delegate(Hashtable m_dhttpMethod)
+                                                           {
+                                                               return ProcessQueue(m_dhttpMethod, service.AgentID);
+                                                           });
+            m_service.AddStreamHandler("EventQueueGet", rhandler);
+
+            // This will persist this beyond the expiry of the caps handlers
+            MainServer.Instance.AddPollServiceHTTPHandler(
+                m_capsPath, EventQueuePoll, new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, service.AgentID));
+
+            Random rnd = new Random(Environment.TickCount);
+            m_ids = rnd.Next(30000000);
+
+            m_AvatarPassword = UUID.Random();
+            service.InfoToSendToUrl["EventQueuePass"] = OSD.FromUUID(m_AvatarPassword);
+        }
+
+        public void DeregisterCaps()
+        {
+            m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
+            MainServer.Instance.RemovePollServiceHTTPHandler("", m_capsPath);
+        }
 
         #endregion
     }
