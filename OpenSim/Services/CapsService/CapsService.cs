@@ -27,24 +27,30 @@ namespace OpenSim.Services.CapsService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// A list of all clients and their Client Caps Handlers
+        /// </summary>
+        protected Dictionary<UUID, IClientCapsService> m_CapsServices = new Dictionary<UUID, IClientCapsService>();
+
         protected IRegistryCore m_registry;
         public IRegistryCore Registry
         {
             get { return m_registry; }
         }
+
         protected IHttpServer m_server;
         public IHttpServer Server
         {
             get { return m_server; }
         }
+
         protected string m_hostName;
         protected uint m_port;
         public string HostUri
         {
             get { return m_hostName + ":" + m_port; }
         }
-        protected Dictionary<UUID, PerClientBasedCapsService> m_CapsServices = new Dictionary<UUID, PerClientBasedCapsService>();
-        
+
         #endregion
 
         #region IService members
@@ -96,7 +102,7 @@ namespace OpenSim.Services.CapsService
         {
             if(m_CapsServices.ContainsKey(AgentID))
             {
-                PerClientBasedCapsService perClient = m_CapsServices[AgentID];
+                IClientCapsService perClient = m_CapsServices[AgentID];
                 perClient.Close();
                 m_CapsServices.Remove(AgentID);
             }
@@ -110,10 +116,10 @@ namespace OpenSim.Services.CapsService
         /// <param name="CAPS"></param>
         /// <param name="regionHandle"></param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, string CAPSPath, ulong regionHandle)
+        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle)
         {
             //Now make sure we didn't use an old one or something
-            PerClientBasedCapsService service = GetOrCreateClientCapsService(AgentID);
+            IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
             return clientService.CapsUrl;
         }
@@ -124,7 +130,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="AgentID"></param>
         /// <returns></returns>
-        public PerClientBasedCapsService GetOrCreateClientCapsService(UUID AgentID)
+        public IClientCapsService GetOrCreateClientCapsService(UUID AgentID)
         {
             if (!m_CapsServices.ContainsKey(AgentID))
             {
@@ -151,6 +157,11 @@ namespace OpenSim.Services.CapsService
         public IHttpServer Server
         {
             get { return m_CapsService.Server; }
+        }
+
+        public IRegistryCore Registry
+        {
+            get { return m_CapsService.Registry; }
         }
 
         public String HostUri
@@ -185,7 +196,7 @@ namespace OpenSim.Services.CapsService
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise(m_CapsService.Registry, this, CAPSBase, UrlToInform);
+                regionClient.Initialise(this, CAPSBase, UrlToInform);
                 m_RegionCapsServices.Add(regionHandle, regionClient);
             }
         }
@@ -239,8 +250,7 @@ namespace OpenSim.Services.CapsService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected IRegistryCore m_registry;
-        protected PerClientBasedCapsService m_clientCapsService;
+        protected IClientCapsService m_clientCapsService;
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
 
         protected ulong m_regionHandle;
@@ -249,6 +259,10 @@ namespace OpenSim.Services.CapsService
             get { return m_regionHandle; }
         }
 
+        protected IRegistryCore Registry
+        {
+            get { return m_clientCapsService.Registry; }
+        }
         protected IHttpServer Server
         {
             get { return m_clientCapsService.Server; }
@@ -299,10 +313,9 @@ namespace OpenSim.Services.CapsService
 
         #region Initialise/Close
 
-        public void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase, string urlToInform)
+        public void Initialise(IClientCapsService clientCapsService, string capsBase, string urlToInform)
         {
-            m_registry = registry;
-            m_clientCapsService = perClientBasedCapsService;
+            m_clientCapsService = clientCapsService;
             m_capsUrlBase = capsBase;
             m_UrlToInform = urlToInform;
 
@@ -323,7 +336,7 @@ namespace OpenSim.Services.CapsService
             List<ICapsServiceConnector> connectors = GetServiceConnectors();
             foreach (ICapsServiceConnector connector in connectors)
             {
-                connector.RegisterCaps(this, m_registry);
+                connector.RegisterCaps(this, Registry);
             }
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));

@@ -17,13 +17,6 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="AgentID"></param>
         void RemoveCAPS(UUID AgentID);
-        
-        /// <summary>
-        /// Remove the user from the given region
-        /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="regionHandle"></param>
-        void RemoveCAPS(UUID AgentID, ulong regionHandle);
 
         /// <summary>
         /// Create the CAPS handler for the given user at the region given by the regionHandle
@@ -33,21 +26,9 @@ namespace OpenSim.Services.Interfaces
         /// <param name="CAPS">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
         /// <param name="regionHandle">The region handle of the region the user is being added to</param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string SimCAPS, string CAPS, string CAPSPath, ulong regionHandle);
+        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle);
 
-        /// <summary>
-        /// Add the given user's CAPS to the general service if it does not already exist
-        /// </summary>
-        /// <param name="handler"></param>
-        void AddCapsService(IPrivateCapsService handler);
-
-        /// <summary>
-        /// Attempt to find a user's CAPS handler that already exists
-        /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
-        /// <returns></returns>
-        IPrivateCapsService GetCapsService(ulong regionID, UUID agentID);
+        IClientCapsService GetOrCreateClientCapsService(UUID AgentID);
 
         /// <summary>
         /// The URI of the CAPS service with http:// and port
@@ -192,12 +173,13 @@ namespace OpenSim.Services.Interfaces
     public interface IClientCapsService
     {
         UUID AgentID { get; }
+        IRegistryCore Registry { get; }
         IHttpServer Server { get; }
         String HostUri { get; }
 
         void Initialise(ICapsService server, UUID agentID);
         void Close();
-        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase);
+        IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, string UrlToInform);
         void RemoveCAPS(ulong regionHandle);
     }
 
@@ -214,7 +196,7 @@ namespace OpenSim.Services.Interfaces
         String HostUri { get; }
         String CapsUrl { get; }
 
-        void Initialise(IRegistryCore registry, PerClientBasedCapsService perClientBasedCapsService, string capsBase);
+        void Initialise(IClientCapsService clientCapsService, string capsBase, string urlToInform);
         void Close();
         string CreateCAPS(string method, string appendedPath);
         void AddStreamHandler(string method, IRequestHandler handler);
