@@ -57,6 +57,10 @@ namespace OpenSim.Services.CapsService
                                                       method));
         }
 
+        public void DeregisterCaps()
+        {
+        }
+
         #region Other CAPS
 
         private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)

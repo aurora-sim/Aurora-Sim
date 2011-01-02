@@ -70,6 +70,10 @@ namespace OpenSim.Services.CapsService
                                                         UploadBakedTexture));
         }
 
+        public void DeregisterCaps()
+        {
+        }
+
         #region Get Texture
 
         private byte[] ProcessGetTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)

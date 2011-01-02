@@ -43,6 +43,10 @@ namespace OpenSim.Services.CapsService
                                                       method));
         }
 
+        public void DeregisterCaps()
+        {
+        }
+
         /// <summary>
         /// Callback for a map layer request
         /// </summary>

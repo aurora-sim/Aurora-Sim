@@ -30,6 +30,62 @@ namespace OpenSim.Services.CapsService
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
         private IAssetService m_assetService;
+
+        #region ICapsServiceConnector Members
+
+        public void RegisterCaps(IRegionClientCapsService service)
+        {
+            m_service = service;
+            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
+            m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
+            m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
+
+            RestMethod method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
+            };
+            service.AddStreamHandler("WebFetchInventoryDescendents",
+                new RestStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
+                                                      method));
+
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLibDescendents(request, m_service.AgentID);
+            };
+            service.AddStreamHandler("FetchLibDescendents",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
+                                                      method));
+
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchInventory(request, m_service.AgentID);
+            };
+            service.AddStreamHandler("FetchInventory",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
+                                                      method));
+
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLib(request, m_service.AgentID);
+            };
+            service.AddStreamHandler("FetchLib",
+                new RestStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
+                                                      method));
+
+            service.AddStreamHandler("NewFileAgentInventory",
+                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
+                                                      NewAgentInventoryRequest));
+        }
+
+        public void DeregisterCaps()
+        {
+        }
+
+        #endregion
         
         #region Inventory
 
@@ -326,58 +382,6 @@ namespace OpenSim.Services.CapsService
             return contents;
 
         }
-        #endregion
-
-        #region ICapsServiceConnector Members
-
-        public void RegisterCaps(IRegionClientCapsService service)
-        {
-            m_service = service;
-            m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
-            m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
-            m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
-
-            RestMethod method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("WebFetchInventoryDescendents",
-                new RestStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
-                                                      method));
-
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchLibDescendents(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("FetchLibDescendents",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
-                                                      method));
-
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchInventory(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("FetchInventory",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
-                                                      method));
-
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchLib(request, m_service.AgentID);
-            };
-            service.AddStreamHandler("FetchLib",
-                new RestStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
-                                                      method));
-
-            service.AddStreamHandler("NewFileAgentInventory",
-                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
-                                                      NewAgentInventoryRequest));
-        }
-
         #endregion
 
         #region Inventory upload
