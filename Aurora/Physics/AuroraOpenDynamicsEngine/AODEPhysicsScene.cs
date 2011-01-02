@@ -52,12 +52,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         private readonly ILog m_log;
 
-        CollisionLocker ode;
-
-        //private Random fluidRandomizer = new Random(Environment.TickCount);
-
-        private const uint m_regionWidth = Constants.RegionSize;
-        private const uint m_regionHeight = Constants.RegionSize;
+        private CollisionLocker ode;
 
         private float ODE_STEPSIZE = 0.020f;
         private float metersInSpace = 29.9f;
@@ -79,9 +74,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int framecount = 0;
 
         private readonly IntPtr contactgroup;
-
-        //internal IntPtr LandGeom;
-        //internal IntPtr WaterGeom;
 
         private float nmTerrainContactFriction = 255.0f;
         private float nmTerrainContactBounce = 0.1f;
@@ -201,16 +193,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public int physics_logging_interval = 0;
         public bool physics_logging_append_existing_logfile = false;
 
-        public d.Vector3 xyz = new d.Vector3(128.1640f, 128.3079f, 25.7600f);
-        public d.Vector3 hpr = new d.Vector3(125.5000f, -17.0000f, 0.0000f);
-
         private volatile int m_global_contactcount = 0;
 
         private Vector3 m_worldOffset = Vector3.Zero;
         public Vector2 WorldExtents = new Vector2((int)Constants.RegionSize, (int)Constants.RegionSize);
         private PhysicsScene m_parentScene = null;
         private int contactsPerCollision = 80;
-
 
         public bool AllowUnderwaterPhysics = false;
         public bool AllowAvGravity = true;
@@ -233,6 +221,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private List<PhysicsActor> RemoveQueue;
         private Dictionary<PhysicsActor, bool> ActiveCollisionQueue = new Dictionary<PhysicsActor, bool>();
         private bool m_disableCollisions = false;
+
+        public float m_avDecayTime = 0.985f;
+        public float m_avStopDecaying = 2.05f;
 
         public override bool DisableCollisions
         {
@@ -397,6 +388,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
                     gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f) / 5;
+
+                    m_avDecayTime = physicsconfig.GetFloat("avDecayTime", m_avDecayTime);
+                    m_avStopDecaying = physicsconfig.GetFloat("avStopDecaying", m_avStopDecaying);
 
                     AllowUnderwaterPhysics = physicsconfig.GetBoolean("useUnderWaterPhysics", false);
                     AllowAvGravity = physicsconfig.GetBoolean("useAvGravity", true);

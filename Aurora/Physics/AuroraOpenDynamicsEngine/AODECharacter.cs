@@ -1199,9 +1199,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     //Decay out the target velocity
-                    const float DECAY_RATE = 0.985f;
-                    _target_velocity *= DECAY_RATE;
-                    if (!_zeroFlag && _target_velocity.ApproxEquals(Vector3.Zero, 0.75f))
+                    _target_velocity *= _parent_scene.m_avDecayTime;
+                    if (!_zeroFlag && _target_velocity.ApproxEquals(Vector3.Zero, _parent_scene.m_avStopDecaying))
                         _target_velocity = Vector3.Zero;
 
                     //Check if the capsule is tilted before changing it
