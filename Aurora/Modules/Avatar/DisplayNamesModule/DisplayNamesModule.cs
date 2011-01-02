@@ -121,7 +121,8 @@ namespace Aurora.Modules
                     //Send to the incoming user all known display names of avatar's around the client
                     if (info != null)
                         DisplayNameUpdate(info.DisplayName, info.DisplayName, SP, us.UUID);
-                    DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, SP.UUID);
+                    if (usProfile != null)
+                        DisplayNameUpdate(usProfile.DisplayName, usProfile.DisplayName, us, SP.UUID);
                 }
             }
         }

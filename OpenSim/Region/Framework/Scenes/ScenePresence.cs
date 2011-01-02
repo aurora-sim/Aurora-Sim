@@ -2488,8 +2488,9 @@ namespace OpenSim.Region.Framework.Scenes
             IAvatarFactory AvatarFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
             if (AvatarFactory != null)
             {
-                if (AvatarFactory.ValidateBakedTextureCache(m_controllingClient))
-                {
+                //Disabled for now to test that appearance works, as some users are stuck as clouds to themselves
+                //if (AvatarFactory.ValidateBakedTextureCache(m_controllingClient))
+                //{
                     //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
                     SendAppearanceToAgent(this);
 
@@ -2497,7 +2498,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // complete appearance... send it out, if not, then we'll send it when
                     // the avatar finishes updating its appearance
                     SendAppearanceToAllOtherAgents();
-                }
+                //}
             }
             else
             {
