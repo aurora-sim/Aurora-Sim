@@ -230,6 +230,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     {
                         //Validate all the textures now that we've updated
                         ValidateBakedTextureCache(client, false);
+                        //The client wants us to cache the baked textures
+                        CacheWearableData(sp, textureEntry, wearables); 
                     });
 
                     // m_log.WarnFormat("[AVFACTORY]: Complete texture check for {0}",client.AgentId);
@@ -243,15 +245,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     //Fix the height only if the parameters have changed
                     if (visualParamsChanged && sp.Appearance.AvatarHeight > 0)
                         sp.SetHeight(sp.Appearance.AvatarHeight);
-                }
-
-                if (wearables.Length != 0)
-                {
-                    //The client wants us to cache the baked textures
-                    Util.FireAndForget(delegate(object o)
-                    {
-                        CacheWearableData(sp, textureEntry, wearables); 
-                    });
                 }
 
                 // Process the baked texture array
@@ -281,7 +274,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <param name="wearables"></param>
         private void CacheWearableData(ScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
         {
-            if(textureEntry == null)
+            if (textureEntry == null || wearables.Length == 0)
                 return;
 
             AvatarWearable cachedWearable = new AvatarWearable();

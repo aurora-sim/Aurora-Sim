@@ -185,7 +185,8 @@ namespace OpenSim.Services.AvatarService
 
                 if (!m_Database.Store(av))
                 {
-                    m_Database.Delete("PrincipalID", principalID.ToString());
+                    m_log.Error("[AvatarService]: Issue in SetAvatar, could not save appearance to the database.");
+                    //m_Database.Delete("PrincipalID", principalID.ToString());
                     return false;
                 }
             }
@@ -276,7 +277,7 @@ namespace OpenSim.Services.AvatarService
                 bool store = m_CacheDatabase.Store(baseData);
                 if (!store)
                 {
-
+                    m_log.Warn("[AvatarService]: Issue saving the cached wearables to the database.");
                 }
             }
             catch
