@@ -38,6 +38,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using IAvatarService = OpenSim.Services.Interfaces.IAvatarService;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Connectors
 {
@@ -291,6 +292,26 @@ namespace OpenSim.Services.Connectors
 
         public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
         {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            //sendData["SCOPEID"] = scopeID.ToString();
+            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "cachewearabledata";
+
+            sendData["WEARABLES"] = OSDParser.SerializeJsonString(cachedWearable.Pack());
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/avatar",
+                        reqString);
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
+            }
         }
 
         #endregion

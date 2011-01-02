@@ -41,6 +41,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Server.Handlers.Avatar
 {
@@ -88,6 +89,8 @@ namespace OpenSim.Server.Handlers.Avatar
                         return SetItems(request);
                     case "removeitems":
                         return RemoveItems(request);
+                    case "cachewearabledata":
+                        return CacheWearableData(request);
                 }
                 m_log.DebugFormat("[AVATAR HANDLER]: unknown method request: {0}", method);
             }
@@ -208,7 +211,23 @@ namespace OpenSim.Server.Handlers.Avatar
             return FailureResult();
         }
 
+        byte[] CacheWearableData(Dictionary<string, object> request)
+        {
+            UUID user = UUID.Zero;
 
+            if (!request.ContainsKey("UserID") || !request.ContainsKey("WEARABLES"))
+                return FailureResult();
+
+            if (!UUID.TryParse(request["UserID"].ToString(), out user))
+                return FailureResult();
+
+            AvatarWearable w = new AvatarWearable();
+            OSDArray array = (OSDArray)OSDParser.DeserializeJson(request["WEARABLES"].ToString());
+            w.Unpack(array);
+
+            m_AvatarService.CacheWearableData(user, w);
+            return SuccessResult();
+        }
         
         private byte[] SuccessResult()
         {
