@@ -242,7 +242,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Exception on teleport: {0}\n{1}", e.Message, e.StackTrace);
+                m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: Exception on teleport: {0}\n{1}", e.Message, e.StackTrace);
                 sp.ControllingClient.SendTeleportFailed("Internal error");
             }
         }
@@ -550,12 +550,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected virtual bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool logout)
         {
             logout = false;
-            return sp.Scene.SimulationService.CreateAgent(finalDestination, agentCircuit, teleportFlags, out reason);
+            //We use tryGet as we can't be completely sure that the Scene isn't null or is incorrect
+            return TryGetScene(sp.Scene.RegionInfo.RegionID).SimulationService.CreateAgent(finalDestination, agentCircuit, teleportFlags, out reason);
         }
 
         protected virtual bool UpdateAgent(GridRegion reg, GridRegion finalDestination, AgentData agent)
         {
-            return GetScene(reg.RegionID).SimulationService.UpdateAgent(finalDestination, agent);
+            return TryGetScene(reg.RegionID).SimulationService.UpdateAgent(finalDestination, agent);
         }
 
         protected virtual void SetCallbackURL(AgentData agent, RegionInfo region)
@@ -1814,8 +1815,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             grp.RootPart.ClearUpdateScheduleOnce();
             if (destination != null)
             {
-                if (GetScene(destination.RegionID) != null)
-                    successYN = GetScene(destination.RegionID).SimulationService.CreateObject(destination, userID, ItemID);
+                if (grp.Scene != null && grp.Scene.SimulationService != null)
+                    successYN = grp.Scene.SimulationService.CreateObject(destination, userID, ItemID);
 
                 if (successYN)
                 {
@@ -1878,8 +1879,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                 }
 
-                if (GetScene(destination.RegionID).SimulationService != null)
-                    successYN = GetScene(destination.RegionID).SimulationService.CreateObject(destination, grp);
+                if (grp.Scene != null && grp.Scene.SimulationService != null)
+                    successYN = grp.Scene.SimulationService.CreateObject(destination, grp);
 
                 if (successYN)
                 {
@@ -2150,6 +2151,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             m_cancelingAgents.Add(AgentID);
         }
 
+        /// <summary>
+        /// This 'can' return null, so be careful
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <returns></returns>
         public Scene GetScene(UUID RegionID)
         {
             foreach (Scene scene in m_scenes)
@@ -2158,6 +2164,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return scene;
             }
             return null;
+        }
+
+        /// <summary>
+        /// This is pretty much guaranteed to return a Scene
+        ///   as it will return the first scene if it cannot find the scene
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <returns></returns>
+        public Scene TryGetScene(UUID RegionID)
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                if (scene.RegionInfo.RegionID == RegionID)
+                    return scene;
+            }
+            return m_scenes[0];
         }
 
         #endregion
