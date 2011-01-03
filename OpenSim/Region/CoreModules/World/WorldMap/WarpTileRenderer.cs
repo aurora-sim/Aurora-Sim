@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         private void CreateTerrain(WarpRenderer renderer, bool textureTerrain)
         {
-            ITerrainChannel terrain = m_scene.Heightmap;
+            ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
             float[] heightmap = terrain.GetFloatsSerialised(m_scene);
 
             warp_Object obj = new warp_Object(256 * 256, 255 * 255 * 2);

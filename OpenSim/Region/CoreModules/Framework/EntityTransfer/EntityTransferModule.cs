@@ -170,7 +170,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // TODO: Check other Scene HeightField
                     if (position.X > 0 && position.X <= (int)Constants.RegionSize && position.Y > 0 && position.Y <= (int)Constants.RegionSize)
                     {
-                        posZLimit = (float)sp.Scene.Heightmap[(int)position.X, (int)position.Y];
+                        ITerrainChannel heightmap = sp.Scene.RequestModuleInterface<ITerrainChannel>();
+                        posZLimit = (float)heightmap[(int)position.X, (int)position.Y];
                     }
 
                     float newPosZ = posZLimit + localAVHeight;

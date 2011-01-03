@@ -31,6 +31,7 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
@@ -56,7 +57,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             int tc = Environment.TickCount;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
-            double[,] hm = m_scene.Heightmap.GetDoubles(m_scene);
+            ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
+            double[,] hm = heightmap.GetDoubles(m_scene);
             bool ShadowDebugContinue = true;
 
             bool terraincorruptedwarningsaid = false;

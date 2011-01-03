@@ -797,7 +797,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
         private void CreateTree(UUID uuid, Copse copse, Vector3 position)
         {
 
-            position.Z = (float)m_scene.Heightmap[(int)position.X, (int)position.Y];
+            position.Z = (float)m_scene.RequestModuleInterface<ITerrainChannel>()[(int)position.X, (int)position.Y];
             if (position.Z >= copse.m_treeline_low && position.Z <= copse.m_treeline_high)
             {
                 SceneObjectGroup tree = AddTree(uuid, UUID.Zero, copse.m_initial_scale, Quaternion.Identity, position, copse.m_tree_type, false);

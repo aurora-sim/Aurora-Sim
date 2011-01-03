@@ -72,8 +72,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected RegionInfo m_regInfo;
 
-        public ITerrainChannel Heightmap;
-
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
         /// <value>
@@ -2022,9 +2020,10 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 //Keep users from being underground
-                if (agent.startpos.Z < Heightmap.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
+                ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
+                if (agent.startpos.Z < channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
                 {
-                    agent.startpos.Z = Heightmap.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    agent.startpos.Z = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
                 }
             }
 

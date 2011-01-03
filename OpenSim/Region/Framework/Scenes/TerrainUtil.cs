@@ -58,7 +58,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //Fix this position in the new heightmap
                     x -= w;
-                    map = scene.Heightmap;
+                    map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
                     x = w - 2;
@@ -70,7 +70,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //Fix this position in the new heightmap
                     y -= h;
-                    map = scene.Heightmap;
+                    map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
                     y = h - 2;
@@ -82,7 +82,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //Fix this position in the new heightmap
                     x += w;
-                    map = scene.Heightmap;
+                    map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
                     x = 0.0;
@@ -94,15 +94,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //Fix this position in the new heightmap
                     y += h;
-                    map = scene.Heightmap;
+                    map = scene.RequestModuleInterface<ITerrainChannel>();
                 }
                 else //1 away from the edge if we don't have a sim on this instance
                     y = 0.0;
-            }
-
-            if (scene != null) //Set the heightmap up for that scene
-            {
-                scene.Heightmap = map;
             }
 
             if (x > map.Width - 2)

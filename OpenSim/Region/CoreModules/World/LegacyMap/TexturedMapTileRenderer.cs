@@ -35,6 +35,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
@@ -317,7 +318,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             float waterHeight = (float)settings.WaterHeight;
 
-            double[,] hm = m_scene.Heightmap.GetDoubles(m_scene);
+            ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
+            double[,] hm = heightmap.GetDoubles(m_scene);
 
             for (int y = 0; y < (int)Constants.RegionSize; y++)
             {

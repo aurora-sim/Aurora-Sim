@@ -224,7 +224,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
         {
             int tc = 0;
-            double[,] hm = whichScene.Heightmap.GetDoubles(whichScene);
+            ITerrainChannel heightmap = whichScene.RequestModuleInterface<ITerrainChannel>();
+            double[,] hm = heightmap.GetDoubles(whichScene);
             tc = Environment.TickCount;
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
             EntityBase[] objs = whichScene.Entities.GetEntities();

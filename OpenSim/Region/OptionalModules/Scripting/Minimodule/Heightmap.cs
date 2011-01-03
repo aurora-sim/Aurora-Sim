@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
@@ -46,22 +47,22 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         public int Length
         {
-            get { return m_scene.Heightmap.Height; }
+            get { return m_scene.RequestModuleInterface<ITerrainChannel>().Height; }
         }
 
         public int Width
         {
-            get { return m_scene.Heightmap.Width; }
+            get { return m_scene.RequestModuleInterface<ITerrainChannel>().Width; }
         }
 
         protected double Get(int x, int y)
         {
-            return m_scene.Heightmap[x, y];
+            return m_scene.RequestModuleInterface<ITerrainChannel>()[x, y];
         }
 
         protected void Set(int x, int y, double val)
         {
-            m_scene.Heightmap[x, y] = val;
+            m_scene.RequestModuleInterface<ITerrainChannel>()[x, y] = val;
         }
     }
 }

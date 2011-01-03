@@ -50,7 +50,7 @@ namespace OpenSim.Region.RegionCombinerModule
                 RegData = rData;
             }
             RegionConnections.Add(rData, thisRegionTerrainChannel);
-            RegData.RegionScene.Heightmap = this;
+            RegData.RegionScene.RegisterModuleInterface<ITerrainChannel>(this);
         }
 
         // We just overload the height

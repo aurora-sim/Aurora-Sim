@@ -177,7 +177,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (World.Permissions.CanTerraformLand(m_host.OwnerID, new Vector3(x, y, 0)))
             {
-                World.Heightmap[x, y] = val;
+                ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
+                heightmap[x, y] = val;
                 ITerrainModule terrainModule = World.RequestModuleInterface<ITerrainModule>();
                 if (terrainModule != null) terrainModule.TaintTerrain();
                 return 1;
@@ -196,7 +197,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (x > ((int)Constants.RegionSize - 1) || x < 0 || y > ((int)Constants.RegionSize - 1) || y < 0)
                 OSSLError("osTerrainGetHeight: Coordinate out of bounds");
 
-            return World.Heightmap[x, y];
+            ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
+            return heightmap[x, y];
         }
 
         public void osTerrainFlush()

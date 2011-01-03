@@ -653,6 +653,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// </summary>
         private void UpdateAABBAndAreaValues()
         {
+            ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             int min_x = 64;
             int min_y = 64;
             int max_x = 0;
@@ -681,7 +682,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ty = ((int)Constants.RegionSize - 1);
             LandData.AABBMin =
                 new Vector3((float) (min_x * 4), (float) (min_y * 4),
-                              (float) m_scene.Heightmap[tx, ty]);
+                              (float)heightmap[tx, ty]);
 
             tx = max_x * 4;
             if (tx > ((int)Constants.RegionSize - 1))
@@ -691,7 +692,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ty = ((int)Constants.RegionSize - 1);
             LandData.AABBMax =
                 new Vector3((float) (max_x * 4), (float) (max_y * 4),
-                              (float) m_scene.Heightmap[tx, ty]);
+                              (float)heightmap[tx, ty]);
             LandData.Area = tempArea;
         }
 

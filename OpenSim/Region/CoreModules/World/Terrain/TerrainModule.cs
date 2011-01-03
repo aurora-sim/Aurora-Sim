@@ -106,22 +106,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scenes.Add(scene);
 
             LoadWorldMap();
-            // Install terrain module in the simulator
-            if (m_scene.Heightmap == null)
-            {
-                m_channel = new TerrainChannel(m_scene);
-                m_scene.Heightmap = m_channel;
-                m_revert = m_channel;
-                UpdateRevertMap();
-            }
-            else
-            {
-                m_channel = m_scene.Heightmap;
-                m_revert = m_scene.Heightmap;
-                FindRevertMap();
-            }
-
-            scene.PhysicsScene.SetTerrain(scene.Heightmap.GetFloatsSerialised(scene), scene.Heightmap.GetDoubles(scene));
+            scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
             scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
@@ -174,7 +159,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveTerrain()
         {
-            m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
         }
 
         /// <summary>
@@ -184,8 +169,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             TerrainChannel channel = new TerrainChannel(m_scene);
             SaveRevertTerrain(channel);
-            m_scene.Heightmap = channel;
             m_channel = channel;
+            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
             CheckForTerrainUpdates(false, true);
         }
 
@@ -194,7 +179,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveRevertTerrain(ITerrainChannel channel)
         {
-            m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -207,7 +192,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true);
                 if (map == null)
                 {
-                    map = m_scene.Heightmap.GetDoubles(m_scene);
+                    map = m_channel.GetDoubles(m_scene);
                     TerrainChannel channel = new TerrainChannel(map, m_scene);
                     SaveRevertTerrain(channel);
                     return channel;
@@ -218,7 +203,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
             }
-            return m_scene.Heightmap;
+            return m_channel;
         }
 
         /// <summary>
@@ -232,25 +217,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
-                    m_scene.Heightmap = new TerrainChannel(m_scene);
+                    m_channel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
                 else
                 {
-                    m_scene.Heightmap = new TerrainChannel(map, m_scene);
+                    m_channel = new TerrainChannel(map, m_scene);
                 }
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
 #pragma warning disable 0162
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if ((int)Constants.RegionSize != 256)
                 {
-                    m_scene.Heightmap = new TerrainChannel(m_scene);
+                    m_channel = new TerrainChannel(m_scene);
 
-                    m_scene.SimulationDataService.StoreTerrain(m_scene.Heightmap.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
 #pragma warning restore 0162
             }
@@ -258,6 +243,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
             }
+            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
         }
 
         public void UndoTerrain(ITerrainChannel channel)
@@ -288,7 +274,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                                           Constants.RegionSize, Constants.RegionSize));
                             }
                             m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
-                            m_scene.Heightmap = channel;
                             m_channel = channel;
                             UpdateRevertMap();
                         }
@@ -378,8 +363,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             ITerrainChannel channel = loader.Value.LoadStream(stream);
                             channel.Scene = m_scene;
-                            m_scene.Heightmap = channel;
                             m_channel = channel;
+                            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                             UpdateRevertMap();
                         }
                         catch (NotImplementedException)
@@ -625,8 +610,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                                             (int) Constants.RegionSize,
                                                                             (int) Constants.RegionSize);
                             channel.Scene = m_scene;
-                            m_scene.Heightmap = channel;
                             m_channel = channel;
+                            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                             UpdateRevertMap();
                         }
                         return;
@@ -683,7 +668,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void SendLayerData(IClientAPI RemoteClient)
         {
             Scene scene = (Scene)RemoteClient.Scene;
-            RemoteClient.SendLayerData(scene.Heightmap.GetFloatsSerialised(scene));
+            RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(scene));
         }
         
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
@@ -961,7 +946,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
         {
             //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, m_scene.Heightmap.GetFloatsSerialised(m_scene));
+            client.SendLayerData(patchX, patchY, m_channel.GetFloatsSerialised(m_scene));
         }
 
         private void StoreUndoState()

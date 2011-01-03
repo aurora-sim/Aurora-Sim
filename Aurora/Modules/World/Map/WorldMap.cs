@@ -879,7 +879,8 @@ namespace Aurora.Modules
             }
 
             // Cannot create a map for a nonexistant heightmap.
-            if (m_scene.Heightmap == null)
+            ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
+            if (heightmap == null)
                 return;
 
             int lastMapRefresh = 0;
