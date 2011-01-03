@@ -537,19 +537,26 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region AccessList Functions
 
-        public List<UUID>  CreateAccessListArrayByFlag(AccessList flag)
+        public List<List<UUID>> CreateAccessListArrayByFlag(AccessList flag)
         {
-            List<UUID> list = new List<UUID>();
+            List<List<UUID>> list = new List<List<UUID>>();
+            int num = 0;
+            list[num] = new List<UUID>();
             foreach (ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList)
             {
                 if (entry.Flags == flag)
                 {
-                   list.Add(entry.AgentID);
+                    if (list[num].Count > LandChannel.LAND_MAX_ENTRIES_PER_PACKET)
+                    {
+                        num++;
+                        list[num] = new List<UUID>();
+                    }
+                    list[num].Add(entry.AgentID);
                 }
             }
-            if (list.Count == 0)
+            if (list[0].Count == 0)
             {
-                list.Add(UUID.Zero);
+                list[num].Add(UUID.Zero);
             }
 
             return list;
@@ -558,17 +565,22 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void SendAccessList(UUID agentID, UUID sessionID, uint flags, int sequenceID,
                                    IClientAPI remote_client)
         {
-
             if (flags == (uint) AccessList.Access || flags == (uint) AccessList.Both)
             {
-                List<UUID> avatars = CreateAccessListArrayByFlag(AccessList.Access);
-                remote_client.SendLandAccessListData(avatars,(uint) AccessList.Access,LandData.LocalID);
+                List<List<UUID>> avatars = CreateAccessListArrayByFlag(AccessList.Access);
+                foreach (List<UUID> accessListAvs in avatars)
+                {
+                    remote_client.SendLandAccessListData(accessListAvs, (uint)AccessList.Access, LandData.LocalID);
+                }
             }
 
             if (flags == (uint) AccessList.Ban || flags == (uint) AccessList.Both)
             {
-                List<UUID> avatars = CreateAccessListArrayByFlag(AccessList.Ban);
-                remote_client.SendLandAccessListData(avatars, (uint)AccessList.Ban, LandData.LocalID);
+                List<List<UUID>> avatars = CreateAccessListArrayByFlag(AccessList.Ban);
+                foreach (List<UUID> accessListAvs in avatars)
+                {
+                    remote_client.SendLandAccessListData(accessListAvs, (uint)AccessList.Ban, LandData.LocalID);
+                }
             }
         }
 

@@ -238,9 +238,6 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void IncomingLandDataFromStorage(List<LandData> data);
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
 
-        public delegate void SetAllowForcefulBan(bool allow);
-        public event SetAllowForcefulBan OnSetAllowForcefulBan;
-
         public delegate void RequestParcelPrimCountUpdate();
         public event RequestParcelPrimCountUpdate OnRequestParcelPrimCountUpdate;
 
@@ -1581,27 +1578,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerIncomingLandDataFromStorage failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerSetAllowForcefulBan(bool allow)
-        {
-            SetAllowForcefulBan handlerSetAllowForcefulBan = OnSetAllowForcefulBan;
-            if (handlerSetAllowForcefulBan != null)
-            {
-                foreach (SetAllowForcefulBan d in handlerSetAllowForcefulBan.GetInvocationList())
-                {
-                    try
-                    {
-                        d(allow);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerSetAllowForcefulBan failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

@@ -45,10 +45,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         public const byte LAND_FLAG_PROPERTY_BORDER_SOUTH = 128; //Equals 10000000
         public const byte LAND_FLAG_PROPERTY_BORDER_WEST = 64; //Equals 01000000
 
-        //RequestResults (I think these are right, they seem to work):
-        public const int LAND_RESULT_MULTIPLE = 1; // The request they made contained more than a single peice of land
+        public const int LAND_RESULT_NO_DATA = -1; // The request they made had no data
         public const int LAND_RESULT_SINGLE = 0; // The request they made contained only a single piece of land
-
+        public const int LAND_RESULT_MULTIPLE = 1; // The request they made contained more than a single peice of land
+        
         //ParcelSelectObjects
         public const int LAND_SELECT_OBJECTS_GROUP = 4;
         public const int LAND_SELECT_OBJECTS_OTHER = 8;
@@ -59,6 +59,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         public const byte LAND_TYPE_OWNED_BY_OTHER = 1; //Equals 00000001
         public const byte LAND_TYPE_OWNED_BY_REQUESTER = 3; //Equals 00000011
         public const byte LAND_TYPE_PUBLIC = 0; //Equals 00000000
+
+        public const int LAND_OVERLAY_CHUNKS = 4; //The number of land chunks to send to the client
+
+        public const int LAND_MAX_ENTRIES_PER_PACKET = 48; //Max number of access/ban entry updates
 
         //These are other constants. Yay!
         public const int START_LAND_LOCAL_ID = 1;
@@ -135,16 +139,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_landManagementModule != null)
             {
                 return m_landManagementModule.IsLandPrimCountTainted();
-            }
-
-            return false;
-        }
-
-        public bool IsForcefulBansAllowed()
-        {
-            if (m_landManagementModule != null)
-            {
-                return m_landManagementModule.AllowedForcefulBans;
             }
 
             return false;
