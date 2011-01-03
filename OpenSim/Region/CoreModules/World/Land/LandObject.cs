@@ -546,7 +546,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 if (entry.Flags == flag)
                 {
-                    if (list[num].Count > LandChannel.LAND_MAX_ENTRIES_PER_PACKET)
+                    if (list[num].Count > LandManagementModule.LAND_MAX_ENTRIES_PER_PACKET)
                     {
                         num++;
                         list[num] = new List<UUID>();
@@ -885,15 +885,15 @@ namespace OpenSim.Region.CoreModules.World.Land
                         {
                             if (obj.LocalId > 0)
                             {
-                                if (request_type == LandChannel.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
+                                if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);
                                 }
-                                else if (request_type == LandChannel.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
+                                else if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);
                                 }
-                                else if (request_type == LandChannel.LAND_SELECT_OBJECTS_OTHER &&
+                                else if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_OTHER &&
                                          obj.OwnerID != remote_client.AgentId)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);

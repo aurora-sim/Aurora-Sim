@@ -617,7 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(avatarId);
             if (presence != null)
             {
-                LandData land = World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y).LandData;
+                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
                 if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                 {
                     ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
@@ -636,7 +636,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(avatarId);
             if (presence != null)
             {
-                LandData land = World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y).LandData;
+                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
                 if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                 {
                     ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
@@ -657,7 +657,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (presence != null)
             {
                 Vector3 pos = m_host.GetWorldPosition();
-                LandData land = World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y).LandData;
+                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
                 if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                 {
                     ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();

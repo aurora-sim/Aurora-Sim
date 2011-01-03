@@ -551,7 +551,7 @@ namespace Aurora.Modules
             }
 
             //parcel permissions
-            if (ILO.IsEitherBannedOrRestricted(userID))
+            if (ILO.IsBannedFromLand(userID)) //Note: restricted is dealt with in the next block
             {
                 if (Sp == null)
                 {
@@ -594,7 +594,7 @@ namespace Aurora.Modules
                         return true;
                     }
                     //All but the people on the access list are banned
-                    if (!ILO.CreateAccessListArrayByFlag(AccessList.Access).Contains(Sp.UUID))
+                    if (ILO.IsRestrictedFromLand(Sp.UUID))
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
                             //We found a place for them, but we don't need to check any further
                             return true;
@@ -607,7 +607,7 @@ namespace Aurora.Modules
                         return true;
                     }
                     //All but the people on the pass/access list are banned
-                    if (!ILO.CreateAccessListArrayByFlag(AccessList.Access).Contains(Sp.UUID))
+                    if (ILO.IsRestrictedFromLand(Sp.UUID))
                         if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
                             //We found a place for them, but we don't need to check any further
                             return true;
