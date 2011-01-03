@@ -162,7 +162,11 @@ namespace OpenSim.Services.CapsService
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                         IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
+                        //ONLY UPDATE THE SIM SEED HERE
+                        //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                        // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                        // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                        otherRegionService.AddSEEDCap("", SimSeedCap);
                         
                         ((OSDMap)map["body"])["seed-capability"] = otherRegionService.CapsUrl;
                     }
@@ -174,7 +178,11 @@ namespace OpenSim.Services.CapsService
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                         IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
+                        //ONLY UPDATE THE SIM SEED HERE
+                        //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                        // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                        // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                        otherRegionService.AddSEEDCap("", SimSeedCap);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
@@ -187,7 +195,11 @@ namespace OpenSim.Services.CapsService
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                         IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
-                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
+                        //ONLY UPDATE THE SIM SEED HERE
+                        //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                        // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                        // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                        otherRegionService.AddSEEDCap("", SimSeedCap);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
