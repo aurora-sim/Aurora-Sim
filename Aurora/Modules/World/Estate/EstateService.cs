@@ -9,6 +9,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Nini.Config;
 using log4net;
 using Aurora.Framework;
@@ -139,7 +140,7 @@ namespace Aurora.Modules
             if (alert != null)
                 SP.ControllingClient.Kick(alert);
             else
-                SP.ControllingClient.Kick("\nThe OpenSim manager banned and kicked you out.\n");
+                SP.ControllingClient.Kick("\nThe Aurora manager banned and kicked you out.\n");
             
             // kick client...
             SP.Scene.IncomingCloseAgent(SP.UUID);
@@ -543,7 +544,11 @@ namespace Aurora.Modules
                 return false;
             }
 
-            ILandObject ILO = scene.LandChannel.GetLandObject(Position.X, Position.Y);
+            ILandObject ILO = null;
+            IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+                ILO = parcelManagement.GetLandObject(Position.X, Position.Y);
+
             if (ILO == null) // Can't teleport into a parcel that doesn't exist
             {
                 reason = "Failed authentication.";
@@ -650,12 +655,12 @@ namespace Aurora.Modules
                     if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
                     {
                         //Find a new parcel for them
-                        List<ILandObject> Parcels = m_scene.LandChannel.ParcelsNearPoint(Position);
+                        List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
                         if (Parcels.Count == 0)
                         {
                             ScenePresence SP;
                             scene.TryGetScenePresence(userID, out SP);
-                            newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(SP);
+                            newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
                         }
                         else
                         {
@@ -671,14 +676,14 @@ namespace Aurora.Modules
                                     else if (ILO.LandData.LandingType == 1) //Use their landing spot
                                         newPosition = Parcel.LandData.UserLocation;
                                     else //They allow for anywhere, so dump them in the center at the ground
-                                        newPosition = m_scene.LandChannel.GetParcelCenterAtGround(Parcel);
+                                        newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
                                     found = true;
                                 }
                             }
                             if (!found) //Dump them at the edge
                             {
                                 if(Sp != null)
-                                    newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(Sp);
+                                    newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
                                 else
                                 {
                                     reason = "Banned from this parcel.";
@@ -695,17 +700,20 @@ namespace Aurora.Modules
             //Can only enter prelude regions once!
             int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
             //We assume that our own region isn't null....
-            if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
+            if (agentInfo != null)
             {
-                if (((agentInfo.Flags & IAgentFlags.PastPrelude) == IAgentFlags.PastPrelude))
+                if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
                 {
-                    reason = "You may not enter this region as you have already been to a prelude region.";
-                    return false;
-                }
-                else
-                {
-                    agentInfo.Flags |= IAgentFlags.PastPrelude;
-                    AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
+                    if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + m_scene.RegionInfo.RegionID))
+                    {
+                        reason = "You may not enter this region as you have already been to this prelude region.";
+                        return false;
+                    }
+                    else
+                    {
+                        agentInfo.OtherAgentInformation.Add("Prelude" + m_scene.RegionInfo.RegionID, OSD.FromInteger((int)IAgentFlags.PastPrelude));
+                        AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
+                    }
                 }
             }
 
@@ -735,42 +743,46 @@ namespace Aurora.Modules
         private bool FindUnBannedParcel(Vector3 Position, ScenePresence Sp, UUID AgentID, out ILandObject ILO, out Vector3 newPosition, out string reason)
         {
             ILO = null;
-            List<ILandObject> Parcels = m_scene.LandChannel.ParcelsNearPoint(Position);
-            if (Parcels.Count == 0)
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                if (Sp == null)
-                    newPosition = new Vector3(0, 0, 0);
-                else
-                    newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(Sp);
-                ILO = null;
-
-                //Dumped in the region corner, we will leave them there
-                reason = "";
-                return false;
-            }
-            else
-            {
-                bool FoundParcel = false;
-                foreach (ILandObject lo in Parcels)
+                List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
+                if (Parcels.Count == 0)
                 {
-                    if (!lo.IsEitherBannedOrRestricted(AgentID))
-                    {
-                        newPosition = lo.LandData.UserLocation;
-                        ILO = lo; //Update the parcel settings
-                        FoundParcel = true;
-                        break;
-                    }
-                }
-                if (!FoundParcel)
-                {
-                    //Dump them in the region corner as they are banned from all nearby parcels
                     if (Sp == null)
                         newPosition = new Vector3(0, 0, 0);
                     else
-                        newPosition = m_scene.LandChannel.GetNearestRegionEdgePosition(Sp);
-                    reason = "";
+                        newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
                     ILO = null;
+
+                    //Dumped in the region corner, we will leave them there
+                    reason = "";
                     return false;
+                }
+                else
+                {
+                    bool FoundParcel = false;
+                    foreach (ILandObject lo in Parcels)
+                    {
+                        if (!lo.IsEitherBannedOrRestricted(AgentID))
+                        {
+                            newPosition = lo.LandData.UserLocation;
+                            ILO = lo; //Update the parcel settings
+                            FoundParcel = true;
+                            break;
+                        }
+                    }
+                    if (!FoundParcel)
+                    {
+                        //Dump them in the region corner as they are banned from all nearby parcels
+                        if (Sp == null)
+                            newPosition = new Vector3(0, 0, 0);
+                        else
+                            newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
+                        reason = "";
+                        ILO = null;
+                        return false;
+                    }
                 }
             }
             newPosition = Position;

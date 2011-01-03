@@ -101,6 +101,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private IFriendsModule m_friendsModule;
         private IGroupsModule m_groupsModule;
         private IMoapModule m_moapModule;
+        private IParcelManagementModule m_parcelManagement;
 
         #endregion
 
@@ -293,6 +294,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // This log line will be commented out when no longer required for debugging
 //            if (m_moapModule == null)
 //                m_log.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");
+
+            m_parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
         }
 
         public Type ReplaceableInterface
@@ -604,7 +607,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             // Users should be able to edit what is over their land.
             Vector3 taskPos = task.AbsolutePosition;
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(taskPos.X, taskPos.Y);
+            if (m_parcelManagement == null)
+                return objectOwnerMask;
+            ILandObject parcel = m_parcelManagement.GetLandObject(taskPos.X, taskPos.Y);
             if (parcel != null && parcel.LandData.OwnerID == user && m_ParcelOwnerIsGod)
             {
                 // Admin objects should not be editable by the above
@@ -727,7 +732,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
         
             // Users should be able to edit what is over their land.
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(group.AbsolutePosition.X, group.AbsolutePosition.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(group.AbsolutePosition.X, group.AbsolutePosition.Y);
             if ((parcel != null) && (parcel.LandData.OwnerID == currentUser))
             {
                 permission = true;
@@ -835,7 +842,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (SP == null)
                 return false;
 
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
             if (parcel == null) return false;
 
             if (GenericParcelPermission(userID, parcel, (ulong)GroupPowers.AllowSetHome))
@@ -860,7 +869,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (SP == null)
                 return false;
 
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
             if (parcel == null) return false;
 
             if (GenericParcelPermission(userID, parcel, (ulong)GroupPowers.AllowLandmark))
@@ -913,7 +924,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         protected bool GenericParcelPermission(UUID user, Vector3 pos, ulong groupPowers)
         {
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(pos.X, pos.Y);
             if (parcel == null) return false;
             return GenericParcelPermission(user, parcel, groupPowers);
         }
@@ -1240,7 +1253,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             SceneObjectGroup task = (SceneObjectGroup)m_scene.Entities[objectID];
 
-            ILandObject land = m_scene.LandChannel.GetLandObject(newPoint.X, newPoint.Y);
+            if (m_parcelManagement == null)
+                return true;
+
+            ILandObject land = m_parcelManagement.GetLandObject(newPoint.X, newPoint.Y);
 
             if (land == null)
             {
@@ -1311,8 +1327,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 else
                 {
                     Vector3 pos = g.AbsolutePosition;
+                    if (m_parcelManagement == null)
+                        continue;
 
-                    l = scene.LandChannel.GetLandObject(pos.X, pos.Y);
+                    l = m_parcelManagement.GetLandObject(pos.X, pos.Y);
                 }
 
                 // If it's not over any land, then we can't do a thing
@@ -1388,7 +1406,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             bool permission = false;
 
-            ILandObject land = m_scene.LandChannel.GetLandObject(objectPosition.X, objectPosition.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject land = m_parcelManagement.GetLandObject(objectPosition.X, objectPosition.Y);
             if (land == null) return false;
 
             if ((land.LandData.Flags & ((int)ParcelFlags.CreateObjects)) ==
@@ -1436,7 +1456,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (part == null)
                 return false;
 
-            ILandObject parcel = scene.LandChannel.GetLandObject(part.AbsolutePosition.X, part.AbsolutePosition.Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(part.AbsolutePosition.X, part.AbsolutePosition.Y);
 
             if (parcel == null)
                 return false;
@@ -1543,7 +1565,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (Y < 0)
                 Y = 0;
 
-            ILandObject parcel = m_scene.LandChannel.GetLandObject(X, Y);
+            if (m_parcelManagement == null)
+                return true;
+            ILandObject parcel = m_parcelManagement.GetLandObject(X, Y);
             if (parcel == null)
                 return false;
 
@@ -1850,7 +1874,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if ((int)InventoryType.Landmark == invType)
             {
                 ScenePresence SP = m_scene.GetScenePresence(userID);
-                ILandObject parcel = m_scene.LandChannel.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
+                if (m_parcelManagement == null)
+                    return true;
+                ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
                 if ((parcel.LandData.Flags & (int)ParcelFlags.AllowLandmark) != 0)
                     return true;
                 else

@@ -266,54 +266,58 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Dictionary<UUID, List<SceneObjectGroup>> returns =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
-            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-                
-            if (Parameter == 0) // Owner objects
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
-                {
-                    if (obj.OwnerID == LO.LandData.OwnerID)
-                    {
-                        if (!returns.ContainsKey(obj.OwnerID))
-                            returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        returns[obj.OwnerID].Add(obj);
-                    }
-                }
-            }
-            if (Parameter == 1) //Everyone elses
-            {
-                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
-                {
-                    if (obj.OwnerID != LO.LandData.OwnerID &&
-                        (obj.GroupID != LO.LandData.GroupID ||
-                        LO.LandData.GroupID == UUID.Zero))
-                    {
-                        if (!returns.ContainsKey(obj.OwnerID))
-                            returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        returns[obj.OwnerID].Add(obj);
-                    }
-                }
-            }
-            if (Parameter == 2) // Group
-            {
-                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
-                {
-                    if (obj.GroupID == LO.LandData.GroupID)
-                    {
-                        if (!returns.ContainsKey(obj.OwnerID))
-                            returns[obj.OwnerID] =
-                                    new List<SceneObjectGroup>();
-                        returns[obj.OwnerID].Add(obj);
-                    }
-                }
-            }
+                ILandObject LO = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
-            foreach (List<SceneObjectGroup> ol in returns.Values)
-            {
-                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
-                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                if (Parameter == 0) // Owner objects
+                {
+                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    {
+                        if (obj.OwnerID == LO.LandData.OwnerID)
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                if (Parameter == 1) //Everyone elses
+                {
+                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    {
+                        if (obj.OwnerID != LO.LandData.OwnerID &&
+                            (obj.GroupID != LO.LandData.GroupID ||
+                            LO.LandData.GroupID == UUID.Zero))
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+                if (Parameter == 2) // Group
+                {
+                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    {
+                        if (obj.GroupID == LO.LandData.GroupID)
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] =
+                                        new List<SceneObjectGroup>();
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+                }
+
+                foreach (List<SceneObjectGroup> ol in returns.Values)
+                {
+                    if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                        World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                }
             }
         }
 
@@ -321,23 +325,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             Dictionary<UUID, List<SceneObjectGroup>> returns =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
-            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-
-            foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                if (obj.OwnerID == new UUID(userID.m_string))
+                ILandObject LO = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+
+                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
                 {
-                    if (!returns.ContainsKey(obj.OwnerID))
-                        returns[obj.OwnerID] =
-                                new List<SceneObjectGroup>();
-                    returns[obj.OwnerID].Add(obj);
+                    if (obj.OwnerID == new UUID(userID.m_string))
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        returns[obj.OwnerID].Add(obj);
+                    }
                 }
-            }
 
-            foreach (List<SceneObjectGroup> ol in returns.Values)
-            {
-                if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
-                    World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                foreach (List<SceneObjectGroup> ol in returns.Values)
+                {
+                    if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
+                        World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                }
             }
         }
 
@@ -591,23 +599,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (presence != null)
             {
                 // agent must be over owners land to avoid abuse
-                if (m_host.OwnerID
-                    == World.LandChannel.GetLandObject(
-                        presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
-
-                    IEntityTransferModule entityTransfer = World.RequestModuleInterface<IEntityTransferModule>();
-                    if (entityTransfer != null)
+                    if (m_host.OwnerID != parcelManagement.GetLandObject(
+                                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
+                        !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
                     {
-                        entityTransfer.RequestTeleportLocation(presence.ControllingClient,
-                            regionHandle,
-                            position,
-                            lookAt, (uint)TeleportFlags.ViaLocation);
+                        return DateTime.Now;
                     }
-
-                    return PScriptSleep(5000);
                 }
+                presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
+
+                IEntityTransferModule entityTransfer = World.RequestModuleInterface<IEntityTransferModule>();
+                if (entityTransfer != null)
+                {
+                    entityTransfer.RequestTeleportLocation(presence.ControllingClient,
+                        regionHandle,
+                        position,
+                        lookAt, (uint)TeleportFlags.ViaLocation);
+                }
+
+                return PScriptSleep(5000);
             }
             return DateTime.Now;
         }
@@ -1167,77 +1180,89 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int endx = (int)(pos1.x > pos2.x ? pos1.x : pos2.x);
             int endy = (int)(pos1.y > pos2.y ? pos1.y : pos2.y);
 
-            World.LandChannel.Join(startx,starty,endx,endy,m_host.OwnerID);
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                parcelManagement.Join(startx, starty, endx, endy, m_host.OwnerID);
+            }
         }
-          
+
         public void osParcelSubdivide(LSL_Vector pos1, LSL_Vector pos2)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSubdivide", m_host, "OSSL");
-            
+
 
             int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
             int starty = (int)(pos1.y < pos2.y ? pos1.y : pos2.y);
             int endx = (int)(pos1.x > pos2.x ? pos1.x : pos2.x);
             int endy = (int)(pos1.y > pos2.y ? pos1.y : pos2.y);
 
-            World.LandChannel.Subdivide(startx,starty,endx,endy,m_host.OwnerID);
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                parcelManagement.Subdivide(startx, starty, endx, endy, m_host.OwnerID);
+            }
         }
 
         public void osParcelSetDetails(LSL_Vector pos, LSL_List rules)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails", m_host, "OSSL");
-            
+
 
             // Get a reference to the land data and make sure the owner of the script
             // can modify it
 
-            ILandObject startLandObject = World.LandChannel.GetLandObject((int)pos.x, (int)pos.y);
-	    if (startLandObject == null)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                OSSLShoutError("There is no land at that location");
-                return;
-            }
-
-            if (! World.Permissions.CanEditParcel(m_host.OwnerID, startLandObject))
-            {
-                OSSLShoutError("You do not have permission to modify the parcel");
-                return;
-            }
-
-            // Create a new land data object we can modify
-            LandData newLand = startLandObject.LandData.Copy();
-            UUID uuid;
-
-            // Process the rules, not sure what the impact would be of changing owner or group
-            for (int idx = 0; idx < rules.Length; )
-            {
-                int code = rules.GetLSLIntegerItem(idx++);
-                string arg = rules.GetLSLStringItem(idx++);
-                switch (code)
+                ILandObject startLandObject = parcelManagement.GetLandObject((int)pos.x, (int)pos.y);
+                if (startLandObject == null)
                 {
-                    case 0:
-                      newLand.Name = arg;
-                      break;
-
-                    case 1:
-                      newLand.Description = arg;
-                      break;
-
-                    case 2:
-                      ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
-                      if (UUID.TryParse(arg , out uuid))
-                          newLand.OwnerID = uuid;
-                      break;
-
-                    case 3:
-                      ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
-                      if (UUID.TryParse(arg , out uuid))
-                          newLand.GroupID = uuid;
-                      break;
+                    OSSLShoutError("There is no land at that location");
+                    return;
                 }
-            }
 
-            World.LandChannel.UpdateLandObject(newLand.LocalID,newLand);
+                if (!World.Permissions.CanEditParcel(m_host.OwnerID, startLandObject))
+                {
+                    OSSLShoutError("You do not have permission to modify the parcel");
+                    return;
+                }
+
+                // Create a new land data object we can modify
+                LandData newLand = startLandObject.LandData.Copy();
+                UUID uuid;
+
+                // Process the rules, not sure what the impact would be of changing owner or group
+                for (int idx = 0; idx < rules.Length; )
+                {
+                    int code = rules.GetLSLIntegerItem(idx++);
+                    string arg = rules.GetLSLStringItem(idx++);
+                    switch (code)
+                    {
+                        case 0:
+                            newLand.Name = arg;
+                            break;
+
+                        case 1:
+                            newLand.Description = arg;
+                            break;
+
+                        case 2:
+                            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
+                            if (UUID.TryParse(arg, out uuid))
+                                newLand.OwnerID = uuid;
+                            break;
+
+                        case 3:
+                            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
+                            if (UUID.TryParse(arg, out uuid))
+                                newLand.GroupID = uuid;
+                            break;
+                    }
+                }
+                
+                parcelManagement.UpdateLandObject(newLand.LocalID, newLand);
+            }
         }
 
         public double osList2Double(LSL_Types.list src, int index)
@@ -1269,13 +1294,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             
 
-            ILandObject land
-                = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject land
+                   = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
-            if (land.LandData.OwnerID != m_host.OwnerID)
-                return;
+                if (land == null || land.LandData.OwnerID != m_host.OwnerID)
+                    return;
 
-            land.SetMediaUrl(url);
+                land.SetMediaUrl(url);
+            }
         }
 
         public void osSetParcelSIPAddress(string SIPAddress)
@@ -1287,24 +1316,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
 
-            ILandObject land
-                = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-
-            if (land.LandData.OwnerID != m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                OSSLError("osSetParcelSIPAddress: Sorry, you need to own the land to use this function");
-                return;
+                ILandObject land
+                    = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+
+                if (land == null || land.LandData.OwnerID != m_host.OwnerID)
+                {
+                    OSSLError("osSetParcelSIPAddress: Sorry, you need to own the land to use this function");
+                    return;
+                }
+
+                // get the voice module
+                IVoiceModule voiceModule = World.RequestModuleInterface<IVoiceModule>();
+
+                if (voiceModule != null)
+                    voiceModule.setLandSIPAddress(SIPAddress, land.LandData.GlobalID);
+                else
+                    OSSLError("osSetParcelSIPAddress: No voice module enabled for this land");
             }
-
-            // get the voice module
-            IVoiceModule voiceModule = World.RequestModuleInterface<IVoiceModule>();
-
-            if (voiceModule != null)
-                voiceModule.setLandSIPAddress(SIPAddress,land.LandData.GlobalID);
-            else
-                OSSLError("osSetParcelSIPAddress: No voice module enabled for this land");
-
-
         }
 
         public string osGetScriptEngineName()

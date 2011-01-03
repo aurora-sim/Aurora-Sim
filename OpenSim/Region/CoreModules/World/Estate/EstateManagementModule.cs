@@ -1048,12 +1048,16 @@ namespace OpenSim.Region.CoreModules.World.Estate
             if (m_scene.Permissions.CanIssueEstateCommand(client.AgentId, false))
             {
                 List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
-                foreach (ILandObject selectedParcel in m_scene.LandChannel.AllParcels())
+                IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    if (selectedParcel.LandData.OwnerID == targetID &&
-                        (flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) ==
-                        (int)SimWideDeletesFlags.OthersLandNotUserOnly)
-                        prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, (int)SimWideDeletesFlags.ScriptedPrimsOnly));
+                    foreach (ILandObject selectedParcel in parcelManagement.AllParcels())
+                    {
+                        if (selectedParcel.LandData.OwnerID == targetID &&
+                            (flags & (int)SimWideDeletesFlags.OthersLandNotUserOnly) ==
+                            (int)SimWideDeletesFlags.OthersLandNotUserOnly)
+                            prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, (int)SimWideDeletesFlags.ScriptedPrimsOnly));
+                    }
                 }
                 m_scene.returnObjects(prims.ToArray(), client.AgentId);
             }

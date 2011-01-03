@@ -188,12 +188,16 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
         {
             get
             {
-                List<ILandObject> m_los = m_internalScene.LandChannel.AllParcels();
-                List<IParcel> m_parcels = new List<IParcel>(m_los.Count);
-
-                foreach (ILandObject landObject in m_los)
+                IParcelManagementModule parcelManagement = m_internalScene.RequestModuleInterface<IParcelManagementModule>();
+                List<IParcel> m_parcels = new List<IParcel>();
+                if (parcelManagement != null)
                 {
-                    m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
+                    List<ILandObject> m_los = parcelManagement.AllParcels();
+
+                    foreach (ILandObject landObject in m_los)
+                    {
+                        m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
+                    }
                 }
 
                 return m_parcels.ToArray();

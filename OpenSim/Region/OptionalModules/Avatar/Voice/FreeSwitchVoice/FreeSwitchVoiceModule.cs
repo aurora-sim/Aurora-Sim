@@ -432,7 +432,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             {
                 string channelUri;
 
-                if (null == scene.LandChannel)
+                IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement == null)
                     throw new Exception(String.Format("region \"{0}\": avatar \"{1}\": land data not yet available",
                                                       scene.RegionInfo.RegionName, avatarName));
 
@@ -440,7 +441,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 // settings allow voice, then whether parcel allows
                 // voice, if all do retrieve or obtain the parcel
                 // voice channel
-                LandData land = scene.LandChannel.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y).LandData;
+                LandData land = parcelManagement.GetLandObject(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y).LandData;
 
                 m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": request: {4}, path: {5}, param: {6}",
                                   scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, request, path, param);

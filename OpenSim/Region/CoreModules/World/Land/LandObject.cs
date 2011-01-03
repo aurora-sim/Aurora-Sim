@@ -54,6 +54,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         protected LandData m_landData = new LandData();
         protected Scene m_scene;
         protected List<SceneObjectGroup> primsOverMe = new List<SceneObjectGroup>();
+        protected IParcelManagementModule m_parcelManagementModule;
         public List<SceneObjectGroup> PrimsOverMe
         {
             get { return primsOverMe; }
@@ -103,6 +104,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             LandData.RegionID = scene.RegionInfo.RegionID;
             LandData.RegionHandle = scene.RegionInfo.RegionHandle;
+
+            m_parcelManagementModule = scene.RequestModuleInterface<IParcelManagementModule>();
 
             //We don't set up the InfoID here... it will just be overwriten
         }
@@ -330,7 +333,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     newData.Flags = args.ParcelFlags;
 
-                    m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
+                    m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
 
                     SendLandUpdateToAvatarsOverMe(snap_selection);
                 }
@@ -357,7 +360,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             newData.SalePrice = 0;
             newData.AuthBuyerID = UUID.Zero;
             newData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
-            m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
+            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
 
             SendLandUpdateToAvatarsOverMe(true);
         }
@@ -372,7 +375,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             // Reset show in directory flag on deed
             newData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
 
-            m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
+            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
         }
 
         public bool IsEitherBannedOrRestricted(UUID avatar)
@@ -503,7 +506,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 try
                 {
                     over =
-                        m_scene.LandChannel.GetLandObject(Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)),
+                         m_parcelManagementModule.GetLandObject(Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)),
                                                           Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
                 }
                 catch (Exception)
@@ -546,7 +549,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 if (entry.Flags == flag)
                 {
-                    if (list[num].Count > LandManagementModule.LAND_MAX_ENTRIES_PER_PACKET)
+                    if (list[num].Count > ParcelManagementModule.LAND_MAX_ENTRIES_PER_PACKET)
                     {
                         num++;
                         list[num] = new List<UUID>();
@@ -619,7 +622,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
 
-            m_scene.LandChannel.UpdateLandObject(LandData.LocalID, newData);
+            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
         }
 
         #endregion
@@ -885,15 +888,15 @@ namespace OpenSim.Region.CoreModules.World.Land
                         {
                             if (obj.LocalId > 0)
                             {
-                                if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
+                                if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);
                                 }
-                                else if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
+                                else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);
                                 }
-                                else if (request_type == LandManagementModule.LAND_SELECT_OBJECTS_OTHER &&
+                                else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OTHER &&
                                          obj.OwnerID != remote_client.AgentId)
                                 {
                                     resultLocalIDs.Add(obj.LocalId);
@@ -976,7 +979,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 try
                 {
-
                     foreach (SceneObjectGroup obj in primsOverMe)
                     {
                         if (!ownersAndCount.ContainsKey(obj.OwnerID))
@@ -998,13 +1000,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         #endregion
 
         #region Object Returning
-
-        public void ReturnObject(SceneObjectGroup obj)
-        {
-            SceneObjectGroup[] objs = new SceneObjectGroup[1];
-            objs[0] = obj;
-            m_scene.returnObjects(objs, obj.OwnerID);
-        }
 
         public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags)
         {
@@ -1109,7 +1104,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (m_scene.Permissions.CanReturnObjects(this, remote_client.AgentId, ol))
                 {
                     //The return system will take care of the returned objects
-                    m_scene.LandChannel.AddReturns(ol[0].OwnerID, ol[0].Name, ol[0].AbsolutePosition, "parcel owner return", ol);
+                    m_parcelManagementModule.AddReturns(ol[0].OwnerID, ol[0].Name, ol[0].AbsolutePosition, "parcel owner return", ol);
                     //m_scene.returnObjects(ol.ToArray(), remote_client.AgentId);
                 }
             }

@@ -74,11 +74,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ITerrainChannel Heightmap;
 
-        /// <value>
-        /// Allows retrieval of land information for this scene.
-        /// </value>
-        public ILandChannel LandChannel;
-
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
         /// <value>
@@ -2026,10 +2021,14 @@ namespace OpenSim.Region.Framework.Scenes
                             agent.startpos.Z = 720;
                     }
                 }
-                //Keep users from being underground
-                if (agent.startpos.Z < LandChannel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
+                IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    agent.startpos.Z = LandChannel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    //Keep users from being underground
+                    if (agent.startpos.Z < parcelManagement.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
+                    {
+                        agent.startpos.Z = parcelManagement.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    }
                 }
             }
 

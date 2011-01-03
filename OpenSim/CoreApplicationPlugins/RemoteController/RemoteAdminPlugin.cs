@@ -729,13 +729,17 @@ namespace OpenSim.CoreApplicationPlugins
                     // configuration
                     if (GetBoolean(requestData, "enable_voice", m_enableVoiceForNewRegions))
                     {
-                        List<ILandObject> parcels = ((Scene)newScene).LandChannel.AllParcels();
-
-                        foreach (ILandObject parcel in parcels)
+                        IParcelManagementModule parcelManagement = newScene.RequestModuleInterface<IParcelManagementModule>();
+                        if (parcelManagement != null)
                         {
-                            parcel.LandData.Flags |= (uint) ParcelFlags.AllowVoiceChat;
-                            parcel.LandData.Flags |= (uint) ParcelFlags.UseEstateVoiceChan;
-                            ((Scene)newScene).LandChannel.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
+                            List<ILandObject> parcels = parcelManagement.AllParcels();
+
+                            foreach (ILandObject parcel in parcels)
+                            {
+                                parcel.LandData.Flags |= (uint)ParcelFlags.AllowVoiceChat;
+                                parcel.LandData.Flags |= (uint)ParcelFlags.UseEstateVoiceChan;
+                                parcelManagement.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
+                            }
                         }
                     }
 
@@ -979,21 +983,25 @@ namespace OpenSim.CoreApplicationPlugins
                     if (requestData.ContainsKey("enable_voice"))
                     {
                         bool enableVoice = GetBoolean(requestData, "enable_voice", true);
-                        List<ILandObject> parcels = ((Scene)scene).LandChannel.AllParcels();
-
-                        foreach (ILandObject parcel in parcels)
+                        IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
+                        if (parcelManagement != null)
                         {
-                            if (enableVoice)
+                            List<ILandObject> parcels = parcelManagement.AllParcels();
+
+                            foreach (ILandObject parcel in parcels)
                             {
-                                parcel.LandData.Flags |= (uint)ParcelFlags.AllowVoiceChat;
-                                parcel.LandData.Flags |= (uint)ParcelFlags.UseEstateVoiceChan;
+                                if (enableVoice)
+                                {
+                                    parcel.LandData.Flags |= (uint)ParcelFlags.AllowVoiceChat;
+                                    parcel.LandData.Flags |= (uint)ParcelFlags.UseEstateVoiceChan;
+                                }
+                                else
+                                {
+                                    parcel.LandData.Flags &= ~(uint)ParcelFlags.AllowVoiceChat;
+                                    parcel.LandData.Flags &= ~(uint)ParcelFlags.UseEstateVoiceChan;
+                                }
+                                parcelManagement.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
                             }
-                            else
-                            {
-                                parcel.LandData.Flags &= ~(uint)ParcelFlags.AllowVoiceChat;
-                                parcel.LandData.Flags &= ~(uint)ParcelFlags.UseEstateVoiceChan;
-                            }
-                            scene.LandChannel.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
                         }
                     }
 

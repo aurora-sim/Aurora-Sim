@@ -211,7 +211,7 @@ namespace OpenSim.Region.RegionCombinerModule
             RegionConnections regionConnections = new RegionConnections();
             regionConnections.ConnectedRegions = new List<RegionData>();
             regionConnections.RegionScene = scene;
-            regionConnections.RegionLandChannel = scene.LandChannel;
+            regionConnections.RegionLandChannel = scene.RequestModuleInterface<IParcelManagementModule>();
             regionConnections.RegionId = scene.RegionInfo.RegionID;
             regionConnections.X = scene.RegionInfo.RegionLocX;
             regionConnections.Y = scene.RegionInfo.RegionLocY;
@@ -671,12 +671,12 @@ namespace OpenSim.Region.RegionCombinerModule
             rdata.RegionId = scene.RegionInfo.RegionID;
             rdata.RegionScene = scene;
             // save it's land channel
-            regionConnections.RegionLandChannel = scene.LandChannel;
+            regionConnections.RegionLandChannel = scene.RequestModuleInterface<IParcelManagementModule>();
 
             // Substitue our landchannel
-            RegionCombinerLargeLandChannel lnd = new RegionCombinerLargeLandChannel(rdata, scene.LandChannel,
+            RegionCombinerLargeLandChannel lnd = new RegionCombinerLargeLandChannel(rdata, scene.RequestModuleInterface<IParcelManagementModule>(),
                                                             regionConnections.ConnectedRegions);
-            scene.LandChannel = lnd;
+            scene.RegisterModuleInterface<IParcelManagementModule>(lnd);
             // Forward the permissions modules of each of the connected regions to the root region
             lock (m_regions)
             {

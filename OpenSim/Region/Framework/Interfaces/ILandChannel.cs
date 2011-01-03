@@ -32,7 +32,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public interface ILandChannel
+    public interface IParcelManagementModule
     {
         /// <summary>
         /// Get all parcels

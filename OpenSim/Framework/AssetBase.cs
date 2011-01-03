@@ -407,11 +407,11 @@ namespace OpenSim.Framework
         private DateTime m_CreationDate = DateTime.Now;
 
         /// <summary>
-        /// The UUID of the Creator of this asset.
+        /// The UUID of the Creator of this asset with the place the Creator was created at.
         /// It is assumed that the Creator is from the same place the asset was created, and therefore, 
         ///    the creator info should be able to be found by the m_HostUri above as well.
         /// </summary>
-        private UUID m_CreatorID;
+        private String m_CreatorID;
 
         /// <summary>
         /// The flags that this asset has.
@@ -428,7 +428,7 @@ namespace OpenSim.Framework
             get { return m_AssetID; }
         }
 
-        public UUID CreatorID
+        public String CreatorID
         {
             get { return m_CreatorID; }
         }
@@ -538,7 +538,7 @@ namespace OpenSim.Framework
         /// <param name="name">The name of this asset</param>
         /// <param name="assetType">The type of asset this is</param>
         /// <param name="assetFlags">The flags that the asset will have</param>
-        public AssetMetaverseData(UUID assetID, UUID creatorID, String hostUri, byte[] data,
+        public AssetMetaverseData(UUID assetID, String creatorID, String hostUri, byte[] data,
             String name, AssetType assetType, AssetMetaDataFlags assetFlags)
         {
             m_AssetID = assetID;
@@ -558,7 +558,7 @@ namespace OpenSim.Framework
         /// <param name="hostUri">The HostUri that this asset can be accessed at</param>
         /// <param name="data">The binary data of this asset</param>
         /// <param name="name">The name of this asset</param>
-        public AssetMetaverseData(UUID assetID, UUID creatorID, String hostUri, byte[] data,
+        public AssetMetaverseData(UUID assetID, String creatorID, String hostUri, byte[] data,
             String name)
         {
             m_AssetID = assetID;
@@ -620,7 +620,7 @@ namespace OpenSim.Framework
             m_AssetFlags = (AssetMetaDataFlags)assetMap["AssetFlags"].AsInteger();
             m_AssetID = assetMap["AssetID"].AsUUID();
             m_CreationDate = assetMap["CreationDate"].AsDate();
-            m_CreatorID = assetMap["CreationDate"].AsUUID();
+            m_CreatorID = assetMap["CreationDate"].AsString();
             m_Data = assetMap["Data"].AsBinary();
             m_HostUri = assetMap["HostUri"].AsString();
             m_LastAccessed = assetMap["LastAccessed"].AsDate();

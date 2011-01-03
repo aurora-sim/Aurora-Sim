@@ -34,17 +34,17 @@ using OpenSim.Region.CoreModules.World.Land;
 
 namespace OpenSim.Region.RegionCombinerModule
 {
-public class RegionCombinerLargeLandChannel : ILandChannel
+public class RegionCombinerLargeLandChannel : IParcelManagementModule
     {
         // private static readonly ILog m_log =
         //     LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private RegionData RegData;
-        private ILandChannel RootRegionLandChannel;
+        private IParcelManagementModule RootRegionLandChannel;
         private readonly List<RegionData> RegionConnections;
         
         #region ILandChannel Members
 
-        public RegionCombinerLargeLandChannel(RegionData regData, ILandChannel rootRegionLandChannel,
+        public RegionCombinerLargeLandChannel(RegionData regData, IParcelManagementModule rootRegionLandChannel,
                                               List<RegionData> regionConnections)
         {
             RegData = regData;
@@ -82,7 +82,7 @@ public class RegionCombinerLargeLandChannel : ILandChannel
                 {
                     if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
                     {
-                        return regionData.RegionScene.LandChannel.GetLandObject(x - offsetX, y - offsetY);
+                        return regionData.RegionScene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(x - offsetX, y - offsetY);
                     }
                 }
                 ILandObject obj = new LandObject(UUID.Zero, false, RegData.RegionScene);
@@ -115,7 +115,7 @@ public class RegionCombinerLargeLandChannel : ILandChannel
                 {
                     if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
                     {
-                        return regionData.RegionScene.LandChannel.GetLandObject(x - offsetX, y - offsetY);
+                        return regionData.RegionScene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(x - offsetX, y - offsetY);
                     }
                 }
 
@@ -207,7 +207,7 @@ public class RegionCombinerLargeLandChannel : ILandChannel
                 {
                     if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
                     {
-                        return regionData.RegionScene.LandChannel.GetNormalizedGroundHeight(x - offsetX, y - offsetY);
+                        return regionData.RegionScene.RequestModuleInterface<IParcelManagementModule>().GetNormalizedGroundHeight(x - offsetX, y - offsetY);
                     }
                 }
 

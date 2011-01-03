@@ -48,7 +48,7 @@ namespace OpenSim.Region.RegionCombinerModule
         /// <summary>
         /// LargeLandChannel for combined region
         /// </summary>
-        public ILandChannel RegionLandChannel;
+        public IParcelManagementModule RegionLandChannel;
         public uint X;
         public uint Y;
         public int XEnd;

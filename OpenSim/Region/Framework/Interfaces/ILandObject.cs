@@ -68,7 +68,6 @@ namespace OpenSim.Region.Framework.Interfaces
         bool[,] MergeLandBitmaps(bool[,] bitmap_base, bool[,] bitmap_add);
         void SendForceObjectSelect(int local_id, int request_type, List<UUID> returnIDs, IClientAPI remote_client);
         void SendLandObjectOwners(IClientAPI remote_client);
-        void ReturnObject(SceneObjectGroup obj);
         void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);
         void DisableLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);
         void ResetLandPrimCounts();

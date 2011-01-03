@@ -1107,7 +1107,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Put the agent in an allowed area and above the terrain.
-            AbsolutePosition = Scene.LandChannel.GetNearestAllowedPosition(this);
+            IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                AbsolutePosition = parcelManagement.GetNearestAllowedPosition(this);
+            }
 
             //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
             if ((m_callbackURI != null) && !m_callbackURI.Equals(""))

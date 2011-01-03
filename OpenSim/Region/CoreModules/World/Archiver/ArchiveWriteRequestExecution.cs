@@ -119,13 +119,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_log.InfoFormat("[ARCHIVER]: Added region settings to archive.");
 
             // Write out land data (aka parcel) settings
-            List<ILandObject>landObjects = m_scene.LandChannel.AllParcels();
-            foreach (ILandObject lo in landObjects)
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                LandData landData = lo.LandData;
-                string landDataPath = String.Format("{0}{1}.xml", ArchiveConstants.LANDDATA_PATH, 
-                                                    landData.GlobalID.ToString());
-                m_archiveWriter.WriteFile(landDataPath, LandDataSerializer.Serialize(landData));
+                List<ILandObject> landObjects = parcelManagement.AllParcels();
+                foreach (ILandObject lo in landObjects)
+                {
+                    LandData landData = lo.LandData;
+                    string landDataPath = String.Format("{0}{1}.xml", ArchiveConstants.LANDDATA_PATH,
+                                                        landData.GlobalID.ToString());
+                    m_archiveWriter.WriteFile(landDataPath, LandDataSerializer.Serialize(landData));
+                }
             }
             m_log.InfoFormat("[ARCHIVER]: Added parcel settings to archive.");
 

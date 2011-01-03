@@ -1333,40 +1333,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Scene scene = part.ParentGroup.Scene;
             if (part.IsAttachment && scene.RunScriptsInAttachments)
                 return true; //Always run as in SL
-            ILandObject parcel = scene.LandChannel.GetLandObject(pos.X, pos.Y);
-            if (parcel != null)
+
+            IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
-                    return true;
-                else if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0)
+                ILandObject parcel = parcelManagement.GetLandObject(pos.X, pos.Y);
+                if (parcel != null)
                 {
-                    if (part.OwnerID == parcel.LandData.OwnerID
-                        || (parcel.LandData.IsGroupOwned && part.GroupID == parcel.LandData.GroupID)
-                        || scene.Permissions.IsGod(part.OwnerID))
+                    if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
                         return true;
+                    else if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0)
+                    {
+                        if (part.OwnerID == parcel.LandData.OwnerID
+                            || (parcel.LandData.IsGroupOwned && part.GroupID == parcel.LandData.GroupID)
+                            || scene.Permissions.IsGod(part.OwnerID))
+                            return true;
+                        else
+                            return false;
+                    }
                     else
-                        return false;
+                    {
+                        //Gods should be able to run scripts. 
+                        // -- Revolution
+                        if (part.OwnerID == parcel.LandData.OwnerID || scene.Permissions.IsGod(part.OwnerID))
+                            return true;
+                        else
+                            return false;
+                    }
                 }
                 else
                 {
-                    //Gods should be able to run scripts. 
-                    // -- Revolution
-                    if (part.OwnerID == parcel.LandData.OwnerID || scene.Permissions.IsGod(part.OwnerID))
+                    if (pos.X > 0f && pos.X < Constants.RegionSize && pos.Y > 0f && pos.Y < Constants.RegionSize)
+                        // The only time parcel != null when an object is inside a region is when
+                        // there is nothing behind the landchannel.  IE, no land plugin loaded.
                         return true;
                     else
+                        // The object is outside of this region.  Stop piping events to it.
                         return false;
                 }
             }
-            else
-            {
-                if (pos.X > 0f && pos.X < Constants.RegionSize && pos.Y > 0f && pos.Y < Constants.RegionSize)
-                    // The only time parcel != null when an object is inside a region is when
-                    // there is nothing behind the landchannel.  IE, no land plugin loaded.
-                    return true;
-                else
-                    // The object is outside of this region.  Stop piping events to it.
-                    return false;
-            }
+            return true;
         }
 
         public bool PipeEventsForScript(SceneObjectPart part)

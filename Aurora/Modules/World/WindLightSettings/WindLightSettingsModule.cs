@@ -186,7 +186,8 @@ namespace Aurora.Modules
             ScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
                 return responsedata; //They don't exist
-
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                        
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
             OSDMap retVal = new OSDMap();
             if (rm.ContainsKey("RegionID"))
@@ -209,8 +210,33 @@ namespace Aurora.Modules
                 if (rm["ParcelID"].AsInteger() == -1)
                 {
                     //All parcels
-                    foreach(ILandObject land in SP.Scene.LandChannel.AllParcels())
+                    if (parcelManagement != null)
                     {
+                        foreach (ILandObject land in parcelManagement.AllParcels())
+                        {
+                            OSDMap map = land.LandData.GenericDataMap;
+                            if (map.ContainsKey("WindLight"))
+                            {
+                                OSDMap parcelWindLight = (OSDMap)map["WindLight"];
+                                foreach (OSD innerMap in parcelWindLight.Values)
+                                {
+                                    RegionLightShareData rlsd = new RegionLightShareData();
+                                    rlsd.FromOSD((OSDMap)innerMap);
+                                    OSDMap imap = new OSDMap();
+                                    imap = rlsd.ToOSD();
+                                    imap.Add("Name", OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
+                                    retVals.Add(imap);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //Only the given parcel parcel given by localID
+                    if (parcelManagement != null)
+                    {
+                        ILandObject land = parcelManagement.GetLandObject(rm["ParcelID"].AsInteger());
                         OSDMap map = land.LandData.GenericDataMap;
                         if (map.ContainsKey("WindLight"))
                         {
@@ -224,25 +250,6 @@ namespace Aurora.Modules
                                 imap.Add("Name", OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
                                 retVals.Add(imap);
                             }
-                        }
-                    }
-                }
-                else
-                {
-                    //Only the given parcel parcel given by localID
-                    ILandObject land = SP.Scene.LandChannel.GetLandObject(rm["ParcelID"].AsInteger());
-                    OSDMap map = land.LandData.GenericDataMap;
-                    if (map.ContainsKey("WindLight"))
-                    {
-                        OSDMap parcelWindLight = (OSDMap)map["WindLight"];
-                        foreach (OSD innerMap in parcelWindLight.Values)
-                        {
-                            RegionLightShareData rlsd = new RegionLightShareData();
-                            rlsd.FromOSD((OSDMap)innerMap);
-                            OSDMap imap = new OSDMap();
-                            imap = rlsd.ToOSD();
-                            imap.Add("Name", OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
-                            retVals.Add(imap);
                         }
                     }
                 }
@@ -301,30 +308,34 @@ namespace Aurora.Modules
                 }
                 else if (lsd.type == 1) //Parcel
                 {
-                    ILandObject land = SP.Scene.LandChannel.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
-                    if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
-                        return responsedata; // No permissions
-                    IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-                    if (ORSM == null || !ORSM.AllowParcelWindLight)
+                    IParcelManagementModule parcelManagement = SP.Scene.RequestModuleInterface<IParcelManagementModule>();
+                    if (parcelManagement != null)
                     {
-                        SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
-                        return responsedata;
+                        ILandObject land = parcelManagement.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
+                        if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
+                            return responsedata; // No permissions
+                        IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+                        if (ORSM == null || !ORSM.AllowParcelWindLight)
+                        {
+                            SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
+                            return responsedata;
+                        }
+
+                        OSDMap map = land.LandData.GenericDataMap;
+
+                        OSDMap innerMap = new OSDMap();
+                        if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
+                            innerMap = (OSDMap)map["WindLight"];
+
+                        if (innerMap.ContainsKey(lsd.minEffectiveAltitude.ToString()))
+                        {
+                            innerMap.Remove(lsd.minEffectiveAltitude.ToString());
+                        }
+
+                        land.LandData.AddGenericData("WindLight", innerMap);
+                        //Update the client
+                        SendProfileToClient(SP);
                     }
-
-                    OSDMap map = land.LandData.GenericDataMap;
-
-                    OSDMap innerMap = new OSDMap();
-                    if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
-                        innerMap = (OSDMap)map["WindLight"];
-
-                    if (innerMap.ContainsKey(lsd.minEffectiveAltitude.ToString()))
-                    {
-                        innerMap.Remove(lsd.minEffectiveAltitude.ToString());
-                    }
-
-                    land.LandData.AddGenericData("WindLight", innerMap);
-                    //Update the client
-                    SendProfileToClient(SP);
                 }
             }
             else
@@ -347,46 +358,50 @@ namespace Aurora.Modules
                 }
                 else if (lsd.type == 1) //Parcel
                 {
-                    ILandObject land = SP.Scene.LandChannel.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
-                    if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
-                        return responsedata; // No permissions
-                    IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
-                    if (ORSM == null || !ORSM.AllowParcelWindLight)
+                    IParcelManagementModule parcelManagement = SP.Scene.RequestModuleInterface<IParcelManagementModule>();
+                    if (parcelManagement != null)
                     {
-                        SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
-                        return responsedata;
-                    }
-
-                    OSDMap map = land.LandData.GenericDataMap;
-
-                    OSDMap innerMap = new OSDMap();
-                    if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
-                        innerMap = (OSDMap)map["WindLight"];
-
-                    string removeThisMap = "";
-
-                    foreach (KeyValuePair<string, OSD> kvp in innerMap)
-                    {
-                        OSDMap lsdMap = (OSDMap)kvp.Value;
-                        RegionLightShareData parcelLSD = new RegionLightShareData();
-                        parcelLSD.FromOSD(lsdMap);
-
-                        string message = "";
-                        if (checkAltitude(lsd, parcelLSD, out message))
+                        ILandObject land = parcelManagement.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
+                        if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
+                            return responsedata; // No permissions
+                        IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
+                        if (ORSM == null || !ORSM.AllowParcelWindLight)
                         {
-                            SP.ControllingClient.SendAlertMessage(message);
+                            SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
                             return responsedata;
                         }
+
+                        OSDMap map = land.LandData.GenericDataMap;
+
+                        OSDMap innerMap = new OSDMap();
+                        if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
+                            innerMap = (OSDMap)map["WindLight"];
+
+                        string removeThisMap = "";
+
+                        foreach (KeyValuePair<string, OSD> kvp in innerMap)
+                        {
+                            OSDMap lsdMap = (OSDMap)kvp.Value;
+                            RegionLightShareData parcelLSD = new RegionLightShareData();
+                            parcelLSD.FromOSD(lsdMap);
+
+                            string message = "";
+                            if (checkAltitude(lsd, parcelLSD, out message))
+                            {
+                                SP.ControllingClient.SendAlertMessage(message);
+                                return responsedata;
+                            }
+                        }
+
+                        if (removeThisMap != "")
+                            innerMap.Remove(removeThisMap);
+
+                        innerMap[lsd.minEffectiveAltitude.ToString()] = lsd.ToOSD();
+
+                        land.LandData.AddGenericData("WindLight", innerMap);
+                        //Update the client
+                        SendProfileToClient(SP, lsd);
                     }
-
-                    if (removeThisMap != "")
-                        innerMap.Remove(removeThisMap);
-
-                    innerMap[lsd.minEffectiveAltitude.ToString()] = lsd.ToOSD();
-
-                    land.LandData.AddGenericData("WindLight", innerMap);
-                    //Update the client
-                    SendProfileToClient(SP, lsd);
                 }
             }
             SP.ControllingClient.SendAlertMessage("WindLight Settings updated.");
@@ -459,7 +474,12 @@ namespace Aurora.Modules
         {
             if (presence == null)
                 return;
-            ILandObject land = presence.Scene.LandChannel.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
+            ILandObject land = null;
+            IParcelManagementModule parcelManagement = presence.Scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                land = parcelManagement.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
+            }
             OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
             if (map.ContainsKey("WindLight"))
             {

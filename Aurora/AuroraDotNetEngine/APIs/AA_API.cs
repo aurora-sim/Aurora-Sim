@@ -617,11 +617,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(avatarId);
             if (presence != null)
             {
-                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
-                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
-                    cp.IncurDamage(m_host.LocalId, damage, m_host.OwnerID);
+                    LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                        cp.IncurDamage(m_host.LocalId, damage, m_host.OwnerID);
+                    }
                 }
             }
         }
@@ -636,13 +640,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(avatarId);
             if (presence != null)
             {
-                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
-                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
-                    cp.IncurDamage(m_host.LocalId, damage, regionName, new Vector3((float)position.x, (float)position.y, (float)position.z),
-                            new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), m_host.OwnerID);
+                    LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                        cp.IncurDamage(m_host.LocalId, damage, regionName, new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z), m_host.OwnerID);
 
+                    }
                 }
             }
         }
@@ -657,11 +665,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (presence != null)
             {
                 Vector3 pos = m_host.GetWorldPosition();
-                LandData land = World.LandChannel.GetLandObject(pos.X, pos.Y).LandData;
-                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                if (parcelManagement != null)
                 {
-                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
-                    cp.IncurHealing(healing, m_host.OwnerID);
+                    LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                    {
+                        ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
+                        cp.IncurHealing(healing, m_host.OwnerID);
+                    }
                 }
             }
         }

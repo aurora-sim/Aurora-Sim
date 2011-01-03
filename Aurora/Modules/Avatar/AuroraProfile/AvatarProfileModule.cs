@@ -297,12 +297,15 @@ namespace Aurora.Modules
 
             UUID parceluuid = p.currentParcelUUID;
             string parcelname = "Unknown";
-
-            ILandObject parcel = GetRegionUserIsIn(remoteClient.AgentId).LandChannel.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
-            if(parcel != null)
+            IParcelManagementModule parcelManagement = GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                parcelname = parcel.LandData.Name;
-                parceluuid = parcel.LandData.InfoUUID;
+                ILandObject parcel = parcelManagement.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
+                if (parcel != null)
+                {
+                    parcelname = parcel.LandData.Name;
+                    parceluuid = parcel.LandData.InfoUUID;
+                }
             }
 
             uint creationdate = (uint)Util.UnixTimeSinceEpoch();
@@ -432,17 +435,21 @@ namespace Aurora.Modules
 
             Vector3 pos_global = new Vector3(globalPos);
 
-            ILandObject targetlandObj = GetRegionUserIsIn(remoteClient.AgentId).LandChannel.GetLandObject(pos_global.X / Constants.RegionSize, pos_global.Y / Constants.RegionSize);
-
-            if (targetlandObj != null)
+            IParcelManagementModule parcelManagement = GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                UserAccount parcelOwner = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, targetlandObj.LandData.OwnerID);
-                if (parcelOwner != null)
-                    user = parcelOwner.Name;
+                ILandObject targetlandObj = parcelManagement.GetLandObject(pos_global.X / Constants.RegionSize, pos_global.Y / Constants.RegionSize);
 
-                parceluuid = targetlandObj.LandData.InfoUUID;
+                if (targetlandObj != null)
+                {
+                    UserAccount parcelOwner = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, targetlandObj.LandData.OwnerID);
+                    if (parcelOwner != null)
+                        user = parcelOwner.Name;
 
-                OrigionalName = targetlandObj.LandData.Name;
+                    parceluuid = targetlandObj.LandData.InfoUUID;
+
+                    OrigionalName = targetlandObj.LandData.Name;
+                }
             }
 
             if (!info.Picks.ContainsKey(pickID.ToString()))

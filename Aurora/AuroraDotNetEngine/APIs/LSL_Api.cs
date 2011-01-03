@@ -2158,13 +2158,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
             LSL_Vector currentPos = GetPartLocalPos(part);
-
-            float ground = World.LandChannel.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
+            float ground = 0;
             bool disable_underground_movement = m_ScriptEngine.Config.GetBoolean("DisableUndergroundMovement", true);
 
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ground = parcelManagement.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
+            }
             if (part.ParentGroup == null)
             {
-                if ((targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
+                if (ground != 0 && (targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
                     targetPos.z = ground;
                     LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
                     part.UpdateOffSet(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
@@ -2174,7 +2178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 SceneObjectGroup parent = part.ParentGroup;
                 if (!part.IsAttachment)
                 {
-                    if ((targetPos.z < ground) && disable_underground_movement)
+                    if (ground != 0 && (targetPos.z < ground) && disable_underground_movement)
                         targetPos.z = ground;
                 }
                 LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
@@ -4848,16 +4852,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (presence != null)
                 {
                     // agent must be over the owners land
-                    if (m_host.OwnerID == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                    IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                    if (parcelManagement != null)
                     {
-                        presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
-                        IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
-                        if (transferModule != null)
-                            transferModule.TeleportHome(agentId, presence.ControllingClient);
-                        else
-                            presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
+                        if (m_host.OwnerID != parcelManagement.GetLandObject(
+                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
+                            !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+                        {
+                            return PScriptSleep(5000);
+                        }
                     }
+
+                    presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
+                    IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.TeleportHome(agentId, presence.ControllingClient);
+                    else
+                        presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                 }
             }
             return PScriptSleep(5000);
@@ -5060,51 +5071,58 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 if (pushrestricted)
                 {
-                    ILandObject targetlandObj = World.LandChannel.GetLandObject(PusheePos.X, PusheePos.Y);
-
-                    // We didn't find the parcel but region is push restricted so assume it is NOT ok
-                    if (targetlandObj == null)
-                        return;
-
-                    // Need provisions for Group Owned here
-                    if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
-                        targetlandObj.LandData.IsGroupOwned || m_host.OwnerID == targetID)
+                    if (parcelManagement != null)
                     {
-                        pushAllowed = true;
+                        ILandObject targetlandObj = parcelManagement.GetLandObject(PusheePos.X, PusheePos.Y);
+
+                        // We didn't find the parcel but region is push restricted so assume it is NOT ok
+                        if (targetlandObj == null)
+                            return;
+
+                        // Need provisions for Group Owned here
+                        if (m_host.OwnerID == targetlandObj.LandData.OwnerID ||
+                            targetlandObj.LandData.IsGroupOwned || m_host.OwnerID == targetID)
+                        {
+                            pushAllowed = true;
+                        }
                     }
                 }
                 else
                 {
-                    ILandObject targetlandObj = World.LandChannel.GetLandObject(PusheePos.X, PusheePos.Y);
-                    if (targetlandObj == null)
+                    if (parcelManagement != null)
                     {
-                        // We didn't find the parcel but region isn't push restricted so assume it's ok
-                        pushAllowed = true;
-                    }
-                    else
-                    {
-                        // Parcel push restriction
-                        if ((targetlandObj.LandData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
+                        ILandObject targetlandObj = parcelManagement.GetLandObject(PusheePos.X, PusheePos.Y);
+                        if (targetlandObj == null)
                         {
-                            //This takes care of everything
-                            pushAllowed = m_host.ParentGroup.Scene.Permissions.CanPushObject(m_host.OwnerID, targetlandObj);
-                            // Need provisions for Group Owned here
-                            /*if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
-                                targetlandObj.LandData.IsGroupOwned || 
-                                m_host.OwnerID == targetID)
-                            {
-                                pushAllowed = true;
-                            }*/
-
-                            //ParcelFlags.RestrictPushObject
-                            //pushAllowed = true;
+                            // We didn't find the parcel but region isn't push restricted so assume it's ok
+                            pushAllowed = true;
                         }
                         else
                         {
-                            // Parcel isn't push restricted
-                            pushAllowed = true;
+                            // Parcel push restriction
+                            if ((targetlandObj.LandData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
+                            {
+                                //This takes care of everything
+                                pushAllowed = m_host.ParentGroup.Scene.Permissions.CanPushObject(m_host.OwnerID, targetlandObj);
+                                // Need provisions for Group Owned here
+                                /*if (m_host.OwnerID == targetlandObj.LandData.OwnerID || 
+                                    targetlandObj.LandData.IsGroupOwned || 
+                                    m_host.OwnerID == targetID)
+                                {
+                                    pushAllowed = true;
+                                }*/
+
+                                //ParcelFlags.RestrictPushObject
+                                //pushAllowed = true;
+                            }
+                            else
+                            {
+                                // Parcel isn't push restricted
+                                pushAllowed = true;
+                            }
                         }
                     }
                 }
@@ -6411,15 +6429,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (presence != null)
                 {
                     // agent must be over the owners land
-                    if (m_host.OwnerID == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                    IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                    if (parcelManagement != null)
                     {
-                        IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
-                        if (transferModule != null)
-                            transferModule.TeleportHome(agentId, presence.ControllingClient);
-                        else
-                            presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
+                        if (m_host.OwnerID != parcelManagement.GetLandObject(
+                                       presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID &&
+                            !World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+                        {
+                            return PScriptSleep(5000);
+                        }
                     }
+                    IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.TeleportHome(agentId, presence.ControllingClient);
+                    else
+                        presence.ControllingClient.SendTeleportFailed("Unable to perform teleports on this simulator.");
                 }
             }
             return PScriptSleep(5000);
@@ -6433,21 +6457,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (UUID.TryParse(id, out key))
             {
                 ScenePresence presence = World.GetScenePresence(key);
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 if (presence != null) // object is an avatar
                 {
-                    if (m_host.OwnerID
-                        == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
-                        return 1;
+                    if (parcelManagement != null)
+                    {
+                        if (m_host.OwnerID
+                            == parcelManagement.GetLandObject(
+                                presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                            return 1;
+                    }
                 }
                 else // object is not an avatar
                 {
                     SceneObjectPart obj = World.GetSceneObjectPart(key);
                     if (obj != null)
-                        if (m_host.OwnerID
-                            == World.LandChannel.GetLandObject(
-                                obj.AbsolutePosition.X, obj.AbsolutePosition.Y).LandData.OwnerID)
-                            return 1;
+                        if (parcelManagement != null)
+                        {
+                            if (m_host.OwnerID
+                                == parcelManagement.GetLandObject(
+                                    obj.AbsolutePosition.X, obj.AbsolutePosition.Y).LandData.OwnerID)
+                                return 1;
+                        }
                 }
             }
 
@@ -6457,11 +6488,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_String llGetLandOwnerAt(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            ILandObject land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
-            if (land == null)
-                return UUID.Zero.ToString();
-            return land.LandData.OwnerID.ToString();
+
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y);
+                if (land != null)
+                    return land.LandData.OwnerID.ToString();
+            }
+            return UUID.Zero.ToString();
         }
 
         /// <summary>
@@ -6530,14 +6565,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // or
                         // if the object is owned by a person with estate access.
 
-                        ILandObject parcel = World.LandChannel.GetLandObject(av.AbsolutePosition.X, av.AbsolutePosition.Y);
-                        if (parcel != null)
+                        IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                        if (parcelManagement != null)
                         {
-                            if (m_host.OwnerID == parcel.LandData.OwnerID ||
-                                (m_host.OwnerID == m_host.GroupID && m_host.GroupID == parcel.LandData.GroupID
-                                && parcel.LandData.IsGroupOwned) || World.Permissions.IsGod(m_host.OwnerID))
+                            ILandObject parcel = parcelManagement.GetLandObject(av.AbsolutePosition.X, av.AbsolutePosition.Y);
+                            if (parcel != null)
                             {
-                                av.StandUp(true);
+                                if (m_host.OwnerID == parcel.LandData.OwnerID ||
+                                    (m_host.OwnerID == m_host.GroupID && m_host.GroupID == parcel.LandData.GroupID
+                                    && parcel.LandData.IsGroupOwned) || World.Permissions.IsGod(m_host.OwnerID))
+                                {
+                                    av.StandUp(true);
+                                }
                             }
                         }
                     }
@@ -7154,16 +7193,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                if (UUID.TryParse(avatar, out key))
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    entry.AgentID = key;
-                    entry.Flags = AccessList.Access;
-                    entry.Time = DateTime.Now.AddHours(hours);
-                    land.ParcelAccessList.Add(entry);
+                    ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    if (UUID.TryParse(avatar, out key))
+                    {
+                        entry.AgentID = key;
+                        entry.Flags = AccessList.Access;
+                        entry.Time = DateTime.Now.AddHours(hours);
+                        land.ParcelAccessList.Add(entry);
+                    }
                 }
             }
             return PScriptSleep(100);
@@ -8348,16 +8391,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
-            ILandObject land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-            
-            if(land == null)
-                return DateTime.Now;
+                if (land == null)
+                    return DateTime.Now;
 
-            if(!World.Permissions.CanEditParcel(m_host.UUID, land))
-                return DateTime.Now;
+                if (!World.Permissions.CanEditParcel(m_host.UUID, land))
+                    return DateTime.Now;
 
-            land.SetMusicUrl(url);
+                land.SetMusicUrl(url);
+            }
 
             return PScriptSleep(2000); 
         }
@@ -9798,256 +9844,263 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             // according to the docs, this command only works if script owner and land owner are the same
             // lets add estate owners and gods, too, and use the generic permission check.
-            ILandObject landObject = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-            if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) return DateTime.Now;
-
-            bool update = false; // send a ParcelMediaUpdate (and possibly change the land's media URL)?
-            byte loop = 0;
-
-            LandData landData = landObject.LandData;
-            string url = landData.MediaURL;
-            string texture = landData.MediaID.ToString();
-            bool autoAlign = landData.MediaAutoScale != 0;
-            string mediaType = landData.MediaType;
-            string description = landData.MediaDescription;
-            int width = landData.MediaWidth;
-            int height = landData.MediaHeight;
-            float mediaLoopSet = landData.MediaLoopSet;
-            
-            ParcelMediaCommandEnum? commandToSend = null;
-            float time = 0.0f; // default is from start
-
-            ScenePresence presence = null;
-
-            for (int i = 0; i < commandList.Data.Length; i++)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                ParcelMediaCommandEnum command = (ParcelMediaCommandEnum)commandList.Data[i];
-                switch (command)
+                ILandObject landObject = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+                if(landObject != null)
+                    return DateTime.Now;
+                if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) 
+                    return DateTime.Now;
+
+                bool update = false; // send a ParcelMediaUpdate (and possibly change the land's media URL)?
+                byte loop = 0;
+
+                LandData landData = landObject.LandData;
+                string url = landData.MediaURL;
+                string texture = landData.MediaID.ToString();
+                bool autoAlign = landData.MediaAutoScale != 0;
+                string mediaType = landData.MediaType;
+                string description = landData.MediaDescription;
+                int width = landData.MediaWidth;
+                int height = landData.MediaHeight;
+                float mediaLoopSet = landData.MediaLoopSet;
+
+                ParcelMediaCommandEnum? commandToSend = null;
+                float time = 0.0f; // default is from start
+
+                ScenePresence presence = null;
+
+                for (int i = 0; i < commandList.Data.Length; i++)
                 {
-                    case ParcelMediaCommandEnum.Agent:
-                        // we send only to one agent
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
+                    ParcelMediaCommandEnum command = (ParcelMediaCommandEnum)commandList.Data[i];
+                    switch (command)
+                    {
+                        case ParcelMediaCommandEnum.Agent:
+                            // we send only to one agent
+                            if ((i + 1) < commandList.Length)
                             {
-                                UUID agentID;
-                                if (UUID.TryParse((LSL_String)commandList.Data[i + 1], out agentID))
+                                if (commandList.Data[i + 1] is LSL_String)
                                 {
-                                    presence = World.GetScenePresence(agentID);
+                                    UUID agentID;
+                                    if (UUID.TryParse((LSL_String)commandList.Data[i + 1], out agentID))
+                                    {
+                                        presence = World.GetScenePresence(agentID);
+                                    }
                                 }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_AGENT must be a key");
+                                ++i;
                             }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_AGENT must be a key");
-                            ++i;
-                        }
-                        break;
+                            break;
 
-                    case ParcelMediaCommandEnum.Loop:
-                        loop = 1;
-                        commandToSend = command;
-                        update = true; //need to send the media update packet to set looping
-                        break;
+                        case ParcelMediaCommandEnum.Loop:
+                            loop = 1;
+                            commandToSend = command;
+                            update = true; //need to send the media update packet to set looping
+                            break;
 
-                    case ParcelMediaCommandEnum.LoopSet:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Float)
+                        case ParcelMediaCommandEnum.LoopSet:
+                            if ((i + 1) < commandList.Length)
                             {
-                                mediaLoopSet = (float)((LSL_Float)commandList.Data[i + 1]).value;
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_LOOP_SET must be a float");
-                            ++i;
-                        }
-                        commandToSend = command;
-                        break;
-
-                    case ParcelMediaCommandEnum.Play:
-                        loop = 0;
-                        commandToSend = command;
-                        update = true; //need to send the media update packet to make sure it doesn't loop
-                        break;
-
-                    case ParcelMediaCommandEnum.Pause:
-                    case ParcelMediaCommandEnum.Stop:
-                    case ParcelMediaCommandEnum.Unload:
-                        commandToSend = command;
-                        break;
-
-                    case ParcelMediaCommandEnum.Url:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                url = (LSL_String)commandList.Data[i + 1];
-                                update = true;
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_URL must be a string.");
-                            ++i;
-                        }
-                        break;
-
-                    case ParcelMediaCommandEnum.Texture:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                texture = (LSL_String)commandList.Data[i + 1];
-                                update = true;
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TEXTURE must be a string or key.");
-                            ++i;
-                        }
-                        break;
-
-                    case ParcelMediaCommandEnum.Time:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Float)
-                            {
-                                time = (float)(LSL_Float)commandList.Data[i + 1];
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TIME must be a float.");
-                            ++i;
-                        }
-                        commandToSend = command;
-                        break;
-
-                    case ParcelMediaCommandEnum.AutoAlign:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                autoAlign = (LSL_Integer)commandList.Data[i + 1];
-                                update = true;
-                            }
-
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_AUTO_ALIGN must be an integer.");
-                            ++i;
-                        }
-                        break;
-
-                    case ParcelMediaCommandEnum.Type:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                mediaType = (LSL_String)commandList.Data[i + 1];
-                                update = true;
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TYPE must be a string.");
-                            ++i;
-                        }
-                        break;
-
-                    case ParcelMediaCommandEnum.Desc:
-                        if ((i + 1) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_String)
-                            {
-                                description = (LSL_String)commandList.Data[i + 1];
-                                update = true;
-                            }
-                            else ShoutError("The argument of PARCEL_MEDIA_COMMAND_DESC must be a string.");
-                            ++i;
-                        }
-                        break;
-                    case ParcelMediaCommandEnum.Size:
-                        if ((i + 2) < commandList.Length)
-                        {
-                            if (commandList.Data[i + 1] is LSL_Integer)
-                            {
-                                if (commandList.Data[i + 2] is LSL_Integer)
+                                if (commandList.Data[i + 1] is LSL_Float)
                                 {
-                                    width = (LSL_Integer)commandList.Data[i + 1];
-                                    height = (LSL_Integer)commandList.Data[i + 2];
+                                    mediaLoopSet = (float)((LSL_Float)commandList.Data[i + 1]).value;
+                                }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_LOOP_SET must be a float");
+                                ++i;
+                            }
+                            commandToSend = command;
+                            break;
+
+                        case ParcelMediaCommandEnum.Play:
+                            loop = 0;
+                            commandToSend = command;
+                            update = true; //need to send the media update packet to make sure it doesn't loop
+                            break;
+
+                        case ParcelMediaCommandEnum.Pause:
+                        case ParcelMediaCommandEnum.Stop:
+                        case ParcelMediaCommandEnum.Unload:
+                            commandToSend = command;
+                            break;
+
+                        case ParcelMediaCommandEnum.Url:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_String)
+                                {
+                                    url = (LSL_String)commandList.Data[i + 1];
                                     update = true;
                                 }
-                                else ShoutError("The second argument of PARCEL_MEDIA_COMMAND_SIZE must be an integer.");
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_URL must be a string.");
+                                ++i;
                             }
-                            else ShoutError("The first argument of PARCEL_MEDIA_COMMAND_SIZE must be an integer.");
-                            i += 2;
-                        }
-                        break;
+                            break;
 
-                    default:
-                        NotImplemented("llParcelMediaCommandList parameter not supported yet: " + Enum.Parse(typeof(ParcelMediaCommandEnum), commandList.Data[i].ToString()).ToString());
-                        break;
-                }//end switch
-            }//end for
+                        case ParcelMediaCommandEnum.Texture:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_String)
+                                {
+                                    texture = (LSL_String)commandList.Data[i + 1];
+                                    update = true;
+                                }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TEXTURE must be a string or key.");
+                                ++i;
+                            }
+                            break;
 
-            // if we didn't get a presence, we send to all and change the url
-            // if we did get a presence, we only send to the agent specified, and *don't change the land settings*!
+                        case ParcelMediaCommandEnum.Time:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_Float)
+                                {
+                                    time = (float)(LSL_Float)commandList.Data[i + 1];
+                                }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TIME must be a float.");
+                                ++i;
+                            }
+                            commandToSend = command;
+                            break;
 
-            // did something important change or do we only start/stop/pause?
-            if (update)
-            {
-                if (presence == null)
+                        case ParcelMediaCommandEnum.AutoAlign:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_Integer)
+                                {
+                                    autoAlign = (LSL_Integer)commandList.Data[i + 1];
+                                    update = true;
+                                }
+
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_AUTO_ALIGN must be an integer.");
+                                ++i;
+                            }
+                            break;
+
+                        case ParcelMediaCommandEnum.Type:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_String)
+                                {
+                                    mediaType = (LSL_String)commandList.Data[i + 1];
+                                    update = true;
+                                }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_TYPE must be a string.");
+                                ++i;
+                            }
+                            break;
+
+                        case ParcelMediaCommandEnum.Desc:
+                            if ((i + 1) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_String)
+                                {
+                                    description = (LSL_String)commandList.Data[i + 1];
+                                    update = true;
+                                }
+                                else ShoutError("The argument of PARCEL_MEDIA_COMMAND_DESC must be a string.");
+                                ++i;
+                            }
+                            break;
+                        case ParcelMediaCommandEnum.Size:
+                            if ((i + 2) < commandList.Length)
+                            {
+                                if (commandList.Data[i + 1] is LSL_Integer)
+                                {
+                                    if (commandList.Data[i + 2] is LSL_Integer)
+                                    {
+                                        width = (LSL_Integer)commandList.Data[i + 1];
+                                        height = (LSL_Integer)commandList.Data[i + 2];
+                                        update = true;
+                                    }
+                                    else ShoutError("The second argument of PARCEL_MEDIA_COMMAND_SIZE must be an integer.");
+                                }
+                                else ShoutError("The first argument of PARCEL_MEDIA_COMMAND_SIZE must be an integer.");
+                                i += 2;
+                            }
+                            break;
+
+                        default:
+                            NotImplemented("llParcelMediaCommandList parameter not supported yet: " + Enum.Parse(typeof(ParcelMediaCommandEnum), commandList.Data[i].ToString()).ToString());
+                            break;
+                    }//end switch
+                }//end for
+
+                // if we didn't get a presence, we send to all and change the url
+                // if we did get a presence, we only send to the agent specified, and *don't change the land settings*!
+
+                // did something important change or do we only start/stop/pause?
+                if (update)
                 {
-                    // we send to all
-                    landData.MediaID = new UUID(texture);
-                    landData.MediaAutoScale = autoAlign ? (byte)1 : (byte)0;
-                    landData.MediaWidth = width;
-                    landData.MediaHeight = height;
-                    landData.MediaType = mediaType;
-                    landData.MediaDescription = description;
-                    landData.MediaLoop = loop == 1;
-                    landData.MediaLoopSet = mediaLoopSet;
-
-                    // do that one last, it will cause a ParcelPropertiesUpdate
-                    landObject.SetMediaUrl(url);
-
-                    // now send to all (non-child) agents
-                    World.ForEachScenePresence(delegate(ScenePresence sp)
+                    if (presence == null)
                     {
-                        if (!sp.IsChildAgent && (sp.currentParcelUUID == landData.GlobalID))
+                        // we send to all
+                        landData.MediaID = new UUID(texture);
+                        landData.MediaAutoScale = autoAlign ? (byte)1 : (byte)0;
+                        landData.MediaWidth = width;
+                        landData.MediaHeight = height;
+                        landData.MediaType = mediaType;
+                        landData.MediaDescription = description;
+                        landData.MediaLoop = loop == 1;
+                        landData.MediaLoopSet = mediaLoopSet;
+
+                        // do that one last, it will cause a ParcelPropertiesUpdate
+                        landObject.SetMediaUrl(url);
+
+                        // now send to all (non-child) agents
+                        World.ForEachScenePresence(delegate(ScenePresence sp)
                         {
-                            sp.ControllingClient.SendParcelMediaUpdate(landData.MediaURL,
-                                                                          landData.MediaID,
-                                                                          landData.MediaAutoScale,
-                                                                          mediaType,
-                                                                          description,
-                                                                          width, height,
-                                                                          loop);
-                        }
-                    });
-                }
-                else if (!presence.IsChildAgent)
-                {
-                    // we only send to one (root) agent
-                    presence.ControllingClient.SendParcelMediaUpdate(url,
-                                                                     new UUID(texture),
-                                                                     autoAlign ? (byte)1 : (byte)0,
-                                                                     mediaType,
-                                                                     description,
-                                                                     width, height,
-                                                                     loop);
-                }
-            }
-
-            if (commandToSend != null)
-            {
-                float ParamToSend = time;
-                if ((ParcelMediaCommandEnum)commandToSend == ParcelMediaCommandEnum.LoopSet)
-                    ParamToSend = mediaLoopSet;
-
-                // the commandList contained a start/stop/... command, too
-                if (presence == null)
-                {
-                    // send to all (non-child) agents
-                    World.ForEachScenePresence(delegate(ScenePresence sp)
+                            if (!sp.IsChildAgent && (sp.currentParcelUUID == landData.GlobalID))
+                            {
+                                sp.ControllingClient.SendParcelMediaUpdate(landData.MediaURL,
+                                                                              landData.MediaID,
+                                                                              landData.MediaAutoScale,
+                                                                              mediaType,
+                                                                              description,
+                                                                              width, height,
+                                                                              loop);
+                            }
+                        });
+                    }
+                    else if (!presence.IsChildAgent)
                     {
-                        if (!sp.IsChildAgent)
-                        {
-                            sp.ControllingClient.SendParcelMediaCommand(landData.Flags,
-                                                                           (ParcelMediaCommandEnum)commandToSend,
-                                                                           ParamToSend);
-                        }
-                    });
+                        // we only send to one (root) agent
+                        presence.ControllingClient.SendParcelMediaUpdate(url,
+                                                                         new UUID(texture),
+                                                                         autoAlign ? (byte)1 : (byte)0,
+                                                                         mediaType,
+                                                                         description,
+                                                                         width, height,
+                                                                         loop);
+                    }
                 }
-                else if (!presence.IsChildAgent)
+
+                if (commandToSend != null)
                 {
-                    presence.ControllingClient.SendParcelMediaCommand(landData.Flags,
-                                                                      (ParcelMediaCommandEnum)commandToSend,
-                                                                      ParamToSend);
+                    float ParamToSend = time;
+                    if ((ParcelMediaCommandEnum)commandToSend == ParcelMediaCommandEnum.LoopSet)
+                        ParamToSend = mediaLoopSet;
+
+                    // the commandList contained a start/stop/... command, too
+                    if (presence == null)
+                    {
+                        // send to all (non-child) agents
+                        World.ForEachScenePresence(delegate(ScenePresence sp)
+                        {
+                            if (!sp.IsChildAgent)
+                            {
+                                sp.ControllingClient.SendParcelMediaCommand(landData.Flags,
+                                                                               (ParcelMediaCommandEnum)commandToSend,
+                                                                               ParamToSend);
+                            }
+                        });
+                    }
+                    else if (!presence.IsChildAgent)
+                    {
+                        presence.ControllingClient.SendParcelMediaCommand(landData.Flags,
+                                                                          (ParcelMediaCommandEnum)commandToSend,
+                                                                          ParamToSend);
+                    }
                 }
             }
             return PScriptSleep(2000);
@@ -10063,36 +10116,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (aList.Data[i] != null)
                 {
-                    switch ((ParcelMediaCommandEnum) aList.Data[i])
+                    IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+                    if (parcelManagement != null)
                     {
-                        case ParcelMediaCommandEnum.Url:
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaURL));
-                            break;
-                        case ParcelMediaCommandEnum.Desc:
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaDescription));
-                            break;
-                        case ParcelMediaCommandEnum.Texture:
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaID.ToString()));
-                            break;
-                        case ParcelMediaCommandEnum.Type:
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaType));
-                            break;
-                        case ParcelMediaCommandEnum.Loop:
-                            list.Add(new LSL_Integer(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoop ? 1 : 0));
-                            break;
-                        case ParcelMediaCommandEnum.LoopSet:
-                            list.Add(new LSL_Integer(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoopSet));
-                            break;
-                        case ParcelMediaCommandEnum.Size:
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaHeight));
-                            list.Add(new LSL_String(World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaWidth));
-                            break;
-                        default:
-                            ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
-                            NotImplemented("llParcelMediaQuery parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType() , aList.Data[i].ToString()).ToString());
-                            break;
+                        switch ((ParcelMediaCommandEnum)aList.Data[i])
+                        {
+                            case ParcelMediaCommandEnum.Url:
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaURL));
+                                break;
+                            case ParcelMediaCommandEnum.Desc:
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaDescription));
+                                break;
+                            case ParcelMediaCommandEnum.Texture:
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaID.ToString()));
+                                break;
+                            case ParcelMediaCommandEnum.Type:
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaType));
+                                break;
+                            case ParcelMediaCommandEnum.Loop:
+                                list.Add(new LSL_Integer(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoop ? 1 : 0));
+                                break;
+                            case ParcelMediaCommandEnum.LoopSet:
+                                list.Add(new LSL_Integer(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaLoopSet));
+                                break;
+                            case ParcelMediaCommandEnum.Size:
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaHeight));
+                                list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaWidth));
+                                break;
+                            default:
+                                ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
+                                NotImplemented("llParcelMediaQuery parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), aList.Data[i].ToString()).ToString());
+                                break;
+                        }
                     }
-
                 }
             }
             ScriptSleep(2000);
@@ -10521,16 +10577,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                if (UUID.TryParse(avatar, out key))
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    entry.AgentID = key;
-                    entry.Flags = AccessList.Ban;
-                    entry.Time = DateTime.Now.AddHours(hours);
-                    land.ParcelAccessList.Add(entry);
+                    ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    if (UUID.TryParse(avatar, out key))
+                    {
+                        entry.AgentID = key;
+                        entry.Flags = AccessList.Ban;
+                        entry.Time = DateTime.Now.AddHours(hours);
+                        land.ParcelAccessList.Add(entry);
+                    }
                 }
             }
             return PScriptSleep(100);
@@ -10541,17 +10601,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                if (UUID.TryParse(avatar, out key))
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                    if (UUID.TryParse(avatar, out key))
                     {
-                        if (entry.AgentID == key && entry.Flags == AccessList.Access)
+                        foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                         {
-                            land.ParcelAccessList.Remove(entry);
-                            break;
+                            if (entry.AgentID == key && entry.Flags == AccessList.Access)
+                            {
+                                land.ParcelAccessList.Remove(entry);
+                                break;
+                            }
                         }
                     }
                 }
@@ -10564,17 +10628,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                if (UUID.TryParse(avatar, out key))
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                    if (UUID.TryParse(avatar, out key))
                     {
-                        if (entry.AgentID == key && entry.Flags == AccessList.Ban)
+                        foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                         {
-                            land.ParcelAccessList.Remove(entry);
-                            break;
+                            if (entry.AgentID == key && entry.Flags == AccessList.Ban)
+                            {
+                                land.ParcelAccessList.Remove(entry);
+                                break;
+                            }
                         }
                     }
                 }
@@ -10710,8 +10778,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetParcelFlags(LSL_Vector pos)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return (int)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData.Flags;
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                return (int)parcelManagement.GetLandObject((float)pos.x, (float)pos.y).LandData.Flags;
+            }
+            return 0;
         }
 
         public LSL_Integer llGetRegionFlags()
@@ -10836,14 +10908,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    if (entry.Flags == AccessList.Ban)
+                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                     {
-                        land.ParcelAccessList.Remove(entry);
+                        if (entry.Flags == AccessList.Ban)
+                        {
+                            land.ParcelAccessList.Remove(entry);
+                        }
                     }
                 }
             }
@@ -10854,14 +10930,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
-            if (land.OwnerID == m_host.OwnerID)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
+                if (land.OwnerID == m_host.OwnerID)
                 {
-                    if (entry.Flags == AccessList.Access)
+                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                     {
-                        land.ParcelAccessList.Remove(entry);
+                        if (entry.Flags == AccessList.Access)
+                        {
+                            land.ParcelAccessList.Remove(entry);
+                        }
                     }
                 }
             }
@@ -10872,60 +10952,54 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-
-            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
-
-            if (land == null)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                return 0;
-            }
+                LandData land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y).LandData;
 
-            else
-            {
-                if (sim_wide != 0)
+                if (land == null)
                 {
-                    if (category == 0)
-                    {
-                        return land.SimwidePrims;
-                    }
-
-                    else
-                    {
-                        //public int simwideArea = 0;
-                        return 0;
-                    }
+                    return 0;
                 }
-
                 else
                 {
-                    if (category == 0)//Total Prims
+                    if (sim_wide != 0)
                     {
-                        return 0;//land.
+                        if (category == 0)
+                        {
+                            return land.SimwidePrims;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
                     }
-
-                    else if (category == 1)//Owner Prims
+                    else
                     {
-                        return land.OwnerPrims;
-                    }
-
-                    else if (category == 2)//Group Prims
-                    {
-                        return land.GroupPrims;
-                    }
-
-                    else if (category == 3)//Other Prims
-                    {
-                        return land.OtherPrims;
-                    }
-
-                    else if (category == 4)//Selected
-                    {
-                        return land.SelectedPrims;
-                    }
-
-                    else if (category == 5)//Temp
-                    {
-                        return 0;//land.
+                        if (category == 0)//Total Prims
+                        {
+                            return 0;//land.
+                        }
+                        else if (category == 1)//Owner Prims
+                        {
+                            return land.OwnerPrims;
+                        }
+                        else if (category == 2)//Group Prims
+                        {
+                            return land.GroupPrims;
+                        }
+                        else if (category == 3)//Other Prims
+                        {
+                            return land.OtherPrims;
+                        }
+                        else if (category == 4)//Selected
+                        {
+                            return land.SelectedPrims;
+                        }
+                        else if (category == 5)//Temp
+                        {
+                            return 0;//land.
+                        }
                     }
                 }
             }
@@ -10936,14 +11010,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            LandObject land = (LandObject)World.LandChannel.GetLandObject((float)pos.x, (float)pos.y);
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             LSL_List ret = new LSL_List();
-            if (land != null)
+            if (parcelManagement != null)
             {
-                foreach (KeyValuePair<UUID, int> detectedParams in land.GetLandObjectOwners())
+                LandObject land = (LandObject)parcelManagement.GetLandObject((float)pos.x, (float)pos.y);
+                if (land != null)
                 {
-                    ret.Add(detectedParams.Key.ToString());
-                    ret.Add(detectedParams.Value);
+                    foreach (KeyValuePair<UUID, int> detectedParams in land.GetLandObjectOwners())
+                    {
+                        ret.Add(detectedParams.Key.ToString());
+                        ret.Add(detectedParams.Value);
+                    }
                 }
             }
             ScriptSleep(2000);
@@ -10971,68 +11049,74 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             // Alondria: This currently just is utilizing the normal grid's 0.22 prims/m2 calculation
             // Which probably will be irrelevent in OpenSim....
-            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
-
-            float bonusfactor = (float)World.RegionInfo.RegionSettings.ObjectBonus;
-
-            if (land == null)
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                return 0;
+                LandData land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y).LandData;
+
+                float bonusfactor = (float)World.RegionInfo.RegionSettings.ObjectBonus;
+
+                if (land == null)
+                {
+                    return 0;
+                }
+                else if (sim_wide != 0)
+                {
+                    decimal v = land.SimwideArea * (decimal)(0.22) * (decimal)bonusfactor;
+
+                    return (int)v;
+                }
+                else
+                {
+                    decimal v = land.Area * (decimal)(0.22) * (decimal)bonusfactor;
+
+                    return (int)v;
+                }
             }
-
-            if (sim_wide != 0)
-            {
-                decimal v = land.SimwideArea * (decimal)(0.22) * (decimal)bonusfactor;
-
-                return (int)v;
-            }
-
-            else
-            {
-                decimal v = land.Area * (decimal)(0.22) * (decimal)bonusfactor;
-
-                return (int)v;
-            }
-
+            return 0;
         }
 
         public LSL_List llGetParcelDetails(LSL_Vector pos, LSL_List param)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
-            LandData land = World.LandChannel.GetLandObject((float)pos.x, (float)pos.y).LandData;
-            if (land == null)
-            {
-                return new LSL_List(0);
-            }
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             LSL_List ret = new LSL_List();
-            foreach (object o in param.Data)
+            if (parcelManagement != null)
             {
-                switch (o.ToString())
+                LandData land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y).LandData;
+                if (land == null)
                 {
-                    case "0":
-                        ret = ret + new LSL_List(land.Name);
-                        break;
-                    case "1":
-                        ret = ret + new LSL_List(land.Description);
-                        break;
-                    case "2":
-                        ret = ret + new LSL_List(land.OwnerID.ToString());
-                        break;
-                    case "3":
-                        ret = ret + new LSL_List(land.GroupID.ToString());
-                        break;
-                    case "4":
-                        ret = ret + new LSL_List(land.Area);
-                        break;
-                    case "5":
-                        ret = ret + new LSL_List(land.InfoUUID);
-                    //Returning the InfoUUID so that we can use this for landmarks outside of this region
-                    // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
-                        break;
-                    default:
-                        ret = ret + new LSL_List(0);
-                        break;
+                    return new LSL_List(0);
+                }
+                foreach (object o in param.Data)
+                {
+                    switch (o.ToString())
+                    {
+                        case "0":
+                            ret = ret + new LSL_List(land.Name);
+                            break;
+                        case "1":
+                            ret = ret + new LSL_List(land.Description);
+                            break;
+                        case "2":
+                            ret = ret + new LSL_List(land.OwnerID.ToString());
+                            break;
+                        case "3":
+                            ret = ret + new LSL_List(land.GroupID.ToString());
+                            break;
+                        case "4":
+                            ret = ret + new LSL_List(land.Area);
+                            break;
+                        case "5":
+                            ret = ret + new LSL_List(land.InfoUUID);
+                            //Returning the InfoUUID so that we can use this for landmarks outside of this region
+                            // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
+                            break;
+                        default:
+                            ret = ret + new LSL_List(0);
+                            break;
+                    }
                 }
             }
             return ret;

@@ -97,8 +97,15 @@ namespace OpenSim.Region.CoreModules.World.Sound
 
             SceneObjectGroup grp = part.ParentGroup;
 
-            ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
-            bool LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+            bool LocalOnly = false;
+            ILandObject ILO = null;
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILO = parcelManagement.GetLandObject(position.X, position.Y);
+                if(ILO != null)
+                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+            }
 
             m_scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
@@ -173,14 +180,17 @@ namespace OpenSim.Region.CoreModules.World.Sound
         {
             //Must have parcel owner permissions, too many places for abuse in this
             SceneObjectGroup group = m_scene.GetSceneObjectPart(objectID).ParentGroup;
-            ILandObject land = m_scene.LandChannel.GetLandObject((int)position.X, (int)position.Y);
-            if (m_scene.Permissions.CanEditParcel(group.OwnerID, land))
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
             {
-                ConeOfSilence CS = new ConeOfSilence();
-                CS.Position = position;
-                CS.Radius = Radius;
-                Cones.Add(objectID, CS);
+                ILandObject land = parcelManagement.GetLandObject((int)position.X, (int)position.Y);
+                if (!m_scene.Permissions.CanEditParcel(group.OwnerID, land))
+                    return;
             }
+            ConeOfSilence CS = new ConeOfSilence();
+            CS.Position = position;
+            CS.Radius = Radius;
+            Cones.Add(objectID, CS);
         }
 
         public virtual void RemoveConeOfSilence(UUID objectID)
@@ -191,11 +201,15 @@ namespace OpenSim.Region.CoreModules.World.Sound
         public virtual void TriggerSound(
             UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius)
         {
-            ILandObject ILO = m_scene.LandChannel.GetLandObject(position.X, position.Y);
             bool LocalOnly = false;
-            if (ILO != null) //Check only if null, otherwise this breaks megaregions
-                LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
-
+            ILandObject ILO = null;
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILO = parcelManagement.GetLandObject(position.X, position.Y);
+                if (ILO != null) //Check only if null, otherwise this breaks megaregions
+                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+            }
             SceneObjectPart part = m_scene.GetSceneObjectPart(objectID);
             if (part == null)
             {

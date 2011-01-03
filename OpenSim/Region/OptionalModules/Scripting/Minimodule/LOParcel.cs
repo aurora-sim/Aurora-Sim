@@ -43,7 +43,12 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 
         private ILandObject GetLO()
         {
-            return m_scene.LandChannel.GetLandObject(m_parcelID);
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                return parcelManagement.GetLandObject(m_parcelID);
+            }
+            return null;
         }
 
         public string Name

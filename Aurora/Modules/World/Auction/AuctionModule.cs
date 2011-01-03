@@ -69,10 +69,16 @@ namespace Aurora.Modules
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
                 return;
-            ILandObject landObject = m_scene.LandChannel.GetLandObject(LocalID);
-            landObject.LandData.SnapshotID = SnapshotID;
-            landObject.LandData.AuctionID++;
-            landObject.SendLandUpdateToAvatarsOverMe();
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
+                if (landObject == null)
+                    return;
+                landObject.LandData.SnapshotID = SnapshotID;
+                landObject.LandData.AuctionID++;
+                landObject.SendLandUpdateToAvatarsOverMe();
+            }
         }
 
         public void RegisterCaps(UUID agentID, Caps caps)
