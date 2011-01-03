@@ -153,7 +153,7 @@ namespace OpenSim.Services.CapsService
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
-                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                        //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }
                     if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
