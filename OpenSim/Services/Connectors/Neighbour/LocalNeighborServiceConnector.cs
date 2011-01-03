@@ -110,9 +110,9 @@ namespace OpenSim.Services.Connectors
         public void Init(IScene sscene)
         {
             Scene scene = (Scene)sscene;
-            if (!m_Scenes.Contains(scene))
+            lock (m_Scenes)
             {
-                lock (m_Scenes)
+                if (!m_Scenes.Contains(scene))
                 {
                     m_Scenes.Add(scene);
                 }
@@ -415,11 +415,14 @@ namespace OpenSim.Services.Connectors
                 if (neighbor.RegionID == region.RegionID)
                     continue;
                 Scene scene = FindSceneByUUID(region.RegionID);
-                Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
-                if (chatModule != null && !RetVal)
+                if (scene != null)
                 {
-                    chatModule.DeliverChatToAvatars(type, message);
-                    RetVal = true;
+                    Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
+                    if (chatModule != null && !RetVal)
+                    {
+                        chatModule.DeliverChatToAvatars(type, message);
+                        RetVal = true;
+                    }
                 }
             }
             return RetVal;
