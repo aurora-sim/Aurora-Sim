@@ -121,6 +121,7 @@ namespace OpenSim.Services.CapsService
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
+            clientService.AddSEEDCap("", "");
             return clientService.CapsUrl;
         }
 
@@ -354,6 +355,14 @@ namespace OpenSim.Services.CapsService
             {
                 connector.RegisterCaps(this);
             }
+        }
+
+        public void AddSEEDCap(string CapsUrl, string UrlToInform)
+        {
+            if(CapsUrl != "")
+                m_capsUrlBase = CapsUrl;
+            if (UrlToInform != "")
+                m_UrlToInform = UrlToInform;
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
         }

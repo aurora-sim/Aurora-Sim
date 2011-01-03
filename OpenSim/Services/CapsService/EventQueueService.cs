@@ -157,40 +157,40 @@ namespace OpenSim.Services.CapsService
                     }
                     if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
-                        string SeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
+                        string SimSeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
                         ulong regionHandle = ((OSDMap)map["body"])["region-handle"].AsULong();
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
-                        SeedCap = otherRegionService.CapsUrl;
-
-                        ((OSDMap)map["body"])["seed-capability"] = SeedCap;
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
+                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
+                        
+                        ((OSDMap)map["body"])["seed-capability"] = otherRegionService.CapsUrl;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "CrossedRegion")
                     {
                         OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0]);
-                        string SeedCap = infoMap["SeedCapability"].AsString();
+                        string SimSeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
-                        SeedCap = otherRegionService.CapsUrl;
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
+                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
 
                         //Now tell the client about it correctly
-                        ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = SeedCap;
+                        ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "TeleportFinish")
                     {
                         OSDMap infoMap = ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0]);
-                        string SeedCap = infoMap["SeedCapability"].AsString();
+                        string SimSeedCap = infoMap["SeedCapability"].AsString();
                         ulong regionHandle = infoMap["RegionHandle"].AsULong();
 
                         string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SeedCap);
-                        SeedCap = otherRegionService.CapsUrl;
+                        IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(regionHandle, newSeedCap, SimSeedCap);
+                        otherRegionService.AddSEEDCap(newSeedCap, SimSeedCap);
 
                         //Now tell the client about it correctly
-                        ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = SeedCap;
+                        ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
                     }
                 }
                 if (queue != null)
