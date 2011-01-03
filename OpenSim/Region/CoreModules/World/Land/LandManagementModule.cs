@@ -287,59 +287,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private Vector3 GetPositionAtGround(float x, float y)
         {
-            return new Vector3(x, y, GetNormalizedGroundHeight(x, y));
+            return new Vector3(x, y, m_scene.Heightmap.GetNormalizedGroundHeight(x, y));
         }
-
-        #region Ground
-
-        /// <summary>
-        /// Gets the average height of the area +2 in both the X and Y directions from the given position
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        public float GetNormalizedGroundHeight(float x, float y)
-        {
-            if (x < 0)
-                x = 0;
-            if (x >= m_scene.Heightmap.Width)
-                x = m_scene.Heightmap.Width - 1;
-            if (y < 0)
-                y = 0;
-            if (y >= m_scene.Heightmap.Height)
-                y = m_scene.Heightmap.Height - 1;
-
-            Vector3 p0 = new Vector3(x, y, (float)m_scene.Heightmap[(int)x, (int)y]);
-            Vector3 p1 = new Vector3(p0);
-            Vector3 p2 = new Vector3(p0);
-
-            p1.X += 1.0f;
-            if (p1.X < m_scene.Heightmap.Width)
-                p1.Z = (float)m_scene.Heightmap[(int)p1.X, (int)p1.Y];
-
-            p2.Y += 1.0f;
-            if (p2.Y < m_scene.Heightmap.Height)
-                p2.Z = (float)m_scene.Heightmap[(int)p2.X, (int)p2.Y];
-
-            Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
-            Vector3 v1 = new Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
-
-            v0.Normalize();
-            v1.Normalize();
-
-            Vector3 vsn = new Vector3();
-            vsn.X = (v0.Y * v1.Z) - (v0.Z * v1.Y);
-            vsn.Y = (v0.Z * v1.X) - (v0.X * v1.Z);
-            vsn.Z = (v0.X * v1.Y) - (v0.Y * v1.X);
-            vsn.Normalize();
-
-            float xdiff = x - (float)((int)x);
-            float ydiff = y - (float)((int)y);
-
-            return (((vsn.X * xdiff) + (vsn.Y * ydiff)) / (-1 * vsn.Z)) + p0.Z;
-        }
-
-        #endregion
 
         #endregion
 

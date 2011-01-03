@@ -2161,11 +2161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             float ground = 0;
             bool disable_underground_movement = m_ScriptEngine.Config.GetBoolean("DisableUndergroundMovement", true);
 
-            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
-            {
-                ground = parcelManagement.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
-            }
+            ground = World.Heightmap.GetNormalizedGroundHeight((float)targetPos.x, (float)targetPos.y);
             if (part.ParentGroup == null)
             {
                 if (ground != 0 && (targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)

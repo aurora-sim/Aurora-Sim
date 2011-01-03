@@ -45,5 +45,13 @@ namespace OpenSim.Region.Framework.Interfaces
         ITerrainChannel MakeCopy(IScene scene);
         string SaveToXmlString(IScene scene);
         void LoadFromXmlString(IScene scene, string data);
+
+        /// <summary>
+        /// Gets the average height of the area +2 in both the X and Y directions from the given position
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        float GetNormalizedGroundHeight(float x, float y);
     }
 }

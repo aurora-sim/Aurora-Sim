@@ -204,5 +204,30 @@ namespace OpenSim.Region.RegionCombinerModule
                 }
             }
         }
+
+        public float GetNormalizedGroundHeight(float x, float y)
+        {
+            if (x > 0 && x <= (int)Constants.RegionSize && y > 0 && y <= (int)Constants.RegionSize)
+            {
+                return RegionConnections[RegData].GetNormalizedGroundHeight(x, y);
+            }
+            else
+            {
+                int offsetX = (int)(x / (int)Constants.RegionSize);
+                int offsetY = (int)(y / (int)Constants.RegionSize);
+                offsetX *= (int)Constants.RegionSize;
+                offsetY *= (int)Constants.RegionSize;
+
+                foreach (RegionData regionData in RegionConnections.Keys)
+                {
+                    if (regionData.Offset.X == offsetX && regionData.Offset.Y == offsetY)
+                    {
+                        return RegionConnections[regionData].GetNormalizedGroundHeight(x - offsetX, y - offsetY);
+                    }
+                }
+
+                return 0;
+            }
+        }
     }
 }

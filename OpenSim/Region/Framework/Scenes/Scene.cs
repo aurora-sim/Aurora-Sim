@@ -2021,14 +2021,10 @@ namespace OpenSim.Region.Framework.Scenes
                             agent.startpos.Z = 720;
                     }
                 }
-                IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
-                if (parcelManagement != null)
+                //Keep users from being underground
+                if (agent.startpos.Z < Heightmap.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
                 {
-                    //Keep users from being underground
-                    if (agent.startpos.Z < parcelManagement.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
-                    {
-                        agent.startpos.Z = parcelManagement.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
-                    }
+                    agent.startpos.Z = Heightmap.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
                 }
             }
 
