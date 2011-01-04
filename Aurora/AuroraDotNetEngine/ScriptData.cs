@@ -686,7 +686,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
-                    " in object " + part.Name +
+                    " in object " + part.Name + "@" + part.ParentGroup.RootPart.AbsolutePosition +
                     (presence != null ? " by " + presence.Name : "") + 
                     " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
                     " in " + time.TotalSeconds + " seconds.", "AppendTimeStamp");
