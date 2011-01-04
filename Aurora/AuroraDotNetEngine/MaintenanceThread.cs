@@ -433,7 +433,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private static DateTime NextSleepersTest = DateTime.Now;
 
         public void RemoveFromEventSchQueue(ScriptData ID)
-        {
+            {
             if (ID == null)
                 return;
 
@@ -464,11 +464,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Interlocked.Decrement(ref nEventScripts);
                         ID.InEventsProcData = false;
                         }
-                    }              
+                    }
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
                 }
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
-
-        }
+            }
 
         public void FlushEventSchQueue(ScriptData ID, bool abortcur)
         {
@@ -476,19 +475,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
             lock (ID.EventsProcData)
+                {
                 ID.EventsProcData.EventsQueue.Clear();
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
-
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                }
         }
 
         public void SetEventSchSetIgnoreNew(ScriptData ID, bool yes)
         {
             if (ID == null)
                 return;
+            Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
             lock (ID.EventsProcData)
-            {
+                {
                 ID.EventsProcData.IgnoreNew = yes;
-            }
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                }
         }
 
         public void AddEventSchQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, int VersionID, EventPriority priority, params object[] param)
@@ -533,8 +535,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Interlocked.Increment(ref nEventScripts);
                         }
                     }
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
                 }
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
 
             lock (WorkersLock)
                 {
@@ -581,8 +583,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ID.InEventsProcData = true;
                         }
                     }
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
                 }
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
 
             lock (WorkersLock)
                 {
@@ -598,9 +600,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // insert sorted by time to wakeup
             LinkedListNode<ScriptData> where=null;
 
+            Interlocked.Exchange(ref SleepingScriptIDsLock, 1);
             lock (SleepingScriptIDs)
                 {
-                Interlocked.Exchange(ref SleepingScriptIDsLock, 1);
                 if (SleepingScriptIDs.Count > 0)
                     {
                     DateTime when = ID.EventsProcData.TimeCheck;
@@ -674,9 +676,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                                 // sleep expired
                                 SleepingScriptIDs.RemoveFirst();
+
+                                Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
                                 lock (ID.EventsProcData)
                                     {
-                                    Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
                                     ID.EventsProcData.State = (int)ScriptEventsState.Running;
                                     ID.EventsProcData.TimeCheck = Tnow.AddMilliseconds(100);
                                     Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
@@ -862,42 +865,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
 
         public void EventSchExec(ScriptData ID)
-        {
+            {
             QueueItemStruct QIS;
 
             Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
             lock (ID.EventsProcData)
-            {
+                {
                 QIS = ID.EventsProcData.CurExecQIS;
                 if (!ID.Running)
-                {
+                    {
                     //do only state_entry and on_rez
                     if (QIS.functionName != "state_entry"
                         || QIS.functionName != "on_rez")
-                    {
-                    Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                        {
+                        Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
                         return;
+                        }
                     }
-                }
                 ID.EventsProcData.thread = Thread.CurrentThread;
-            }
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                }
+
 
             lock (ScriptInExec)
-            {
+                {
                 ScriptInExec.Add(ID);
-            }
+                }
 
             bool res = EventSchProcessQIS(ref QIS);
 
             lock (ScriptInExec)
-            {
+                {
                 ScriptInExec.Remove(ID);
-            }
+                }
 
             Interlocked.Exchange(ref ID.EventsProcDataLocked, 1);
             lock (ID.EventsProcData)
-            {
+                {
                 ID.EventsProcData.thread = null;
 
                 if (ID.EventsProcData.State == (int)ScriptEventsState.InExecAbort)
@@ -921,12 +925,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     else
                         ID.EventsProcData.State = (int)ScriptEventsState.Running;
                     }
-            }
-            Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
-
-            
+                Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
+                }
             return;
-        }
+            }
 
         public bool EventSchProcessQIS(ref QueueItemStruct QIS)
         {
