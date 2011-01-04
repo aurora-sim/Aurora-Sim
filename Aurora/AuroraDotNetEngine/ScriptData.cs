@@ -171,8 +171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
 
 // this is still broken ?
-            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, true);
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this,true);
 
             if (!Silent)
             {
@@ -306,7 +305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Remove other items from the queue.
 
 //            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
-            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, true); // flush and ignore new
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, false); // let current InExec finish or lsl reset fails
 //            VersionID++;
             //Reset the state to default
             State = "default";

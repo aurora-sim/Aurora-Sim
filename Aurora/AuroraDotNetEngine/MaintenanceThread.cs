@@ -432,7 +432,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private static DateTime NextSleepersTest = DateTime.Now;
 
-        public void RemoveFromEventSchQueue(ScriptData ID)
+        public void RemoveFromEventSchQueue(ScriptData ID,bool abortcur)
             {
             if (ID == null)
                 return;
@@ -446,7 +446,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                     if (ID.EventsProcData.State == (int)ScriptEventsState.InExec)
                         {
-                        ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
+                        if(abortcur)
+                            ID.EventsProcData.State = (int)ScriptEventsState.InExecAbort;
                         }
                     else
                         {
@@ -469,7 +470,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
 
-        public void FlushEventSchQueue(ScriptData ID, bool abortcur)
+        public void FlushEventSchQueue(ScriptData ID, bool ignorenew)
         {
             if (ID == null)
                 return;
@@ -477,6 +478,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             lock (ID.EventsProcData)
                 {
                 ID.EventsProcData.EventsQueue.Clear();
+                ID.EventsProcData.IgnoreNew = ignorenew;
+                if (ID.EventsProcData.State == (int)ScriptEventsState.Sleep)
+                    {
+                    lock (SleepingScriptIDs)
+                        SleepingScriptIDs.Remove(ID);
+                    ID.EventsProcData.State = (int)ScriptEventsState.Idle;
+                    }
+                
                 Interlocked.Exchange(ref ID.EventsProcDataLocked, 0);
                 }
         }
