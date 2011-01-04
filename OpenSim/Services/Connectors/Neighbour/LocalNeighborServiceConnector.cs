@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using OpenSim.Framework;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -156,7 +157,7 @@ namespace OpenSim.Services.Connectors
                 }
             }
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
-            if (RegionsNotInformed != 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            if (RegionsNotInformed > 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a new neighbor.");
             }
@@ -318,7 +319,7 @@ namespace OpenSim.Services.Connectors
                 }
             }
             int RegionsNotInformed = neighbors.Count - m_informedRegions.Count;
-            if (RegionsNotInformed != 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            if (RegionsNotInformed > 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a closing neighbor.");
             }
@@ -417,7 +418,7 @@ namespace OpenSim.Services.Connectors
                 Scene scene = FindSceneByUUID(region.RegionID);
                 if (scene != null)
                 {
-                    Aurora.Framework.IChatModule chatModule = scene.RequestModuleInterface<Aurora.Framework.IChatModule>();
+                    IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
                     if (chatModule != null && !RetVal)
                     {
                         chatModule.DeliverChatToAvatars(type, message);

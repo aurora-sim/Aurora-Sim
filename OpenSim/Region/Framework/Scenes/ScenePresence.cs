@@ -811,19 +811,20 @@ namespace OpenSim.Region.Framework.Scenes
             // before the inventory is processed in MakeRootAgent. This fixes a race condition
             // related to the handling of attachments
             //m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
-            if (m_scene.TestBorderCross(pos, Cardinals.E))
+
+            float posZLimit = 0;
+
+            if (pos.X < Constants.RegionSize && pos.Y < Constants.RegionSize)
+                posZLimit = (float)m_scene.RequestModuleInterface<ITerrainChannel>()[(int)pos.X, (int)pos.Y];
+
+            float newPosZ = posZLimit + m_avHeight / 2;
+            if (posZLimit >= (pos.Z - (m_avHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
             {
-                Border crossedBorder = m_scene.GetCrossedBorder(pos, Cardinals.E);
-                pos.X = crossedBorder.BorderLine.Z - 1;
+                pos.Z = newPosZ;
             }
 
-            if (m_scene.TestBorderCross(pos, Cardinals.N))
-            {
-                Border crossedBorder = m_scene.GetCrossedBorder(pos, Cardinals.N);
-                pos.Y = crossedBorder.BorderLine.Z - 1;
-            }
-
-            if (pos.X < 0f || pos.Y < 0f || pos.Z < 0f)
+            if (pos.X < 0f || pos.Y < 0f || pos.Z < 0f ||
+                pos.X > Scene.RegionInfo.RegionSizeX || pos.Y > Scene.RegionInfo.RegionSizeY)
             {
                 m_log.WarnFormat(
                     "[SCENE PRESENCE]: MakeRootAgent() was given an illegal position of {0} for avatar {1}, {2}. Clamping",
@@ -832,30 +833,19 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pos.X < 0f) pos.X = 0f;
                 if (pos.Y < 0f) pos.Y = 0f;
                 if (pos.Z < 0f) pos.Z = 0f;
+
+                if (pos.X > Scene.RegionInfo.RegionSizeX) pos.X = Scene.RegionInfo.RegionSizeX;
+                if (pos.Y > Scene.RegionInfo.RegionSizeY) pos.Y = Scene.RegionInfo.RegionSizeY;
             }
 
-            float posZLimit = 0;
-
-            if (pos.X < Constants.RegionSize && pos.Y < Constants.RegionSize)
-                posZLimit = (float)m_scene.Heightmap[(int)pos.X, (int)pos.Y];
-
-            float newPosZ = posZLimit + m_avHeight / 2;
-            if (posZLimit >= (pos.Z - (m_avHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
-            {
-                pos.Z = newPosZ;
-            }
             AbsolutePosition = pos;
 
             AddToPhysicalScene(isFlying, false);
             
             if (m_forceFly)
-            {
                 m_physicsActor.Flying = true;
-            }
             else if (m_flyDisabled)
-            {
                 m_physicsActor.Flying = false;
-            }
             
             // Don't send an animation pack here, since on a region crossing this will sometimes cause a flying 
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
@@ -3113,7 +3103,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Animations
             try
             {
-                cAgent.Anims = Animator.Animations.ToArray();
+                if(Animator != null)
+                    cAgent.Anims = Animator.Animations.ToArray();
             }
             catch { }
 

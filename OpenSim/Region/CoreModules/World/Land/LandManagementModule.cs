@@ -826,7 +826,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 dataResult = ParcelResult.Single;
 
             ILandObject ourLandObject = GetLandObject((int)sp.AbsolutePosition.X, (int)sp.AbsolutePosition.Y);
-            ourLandObject.SendLandProperties(result, false, (int)dataResult, client);
+            if(ourLandObject != null)
+                ourLandObject.SendLandProperties(result, false, (int)dataResult, client);
         }
 
         public void SendLandUpdate(ScenePresence avatar, bool force)

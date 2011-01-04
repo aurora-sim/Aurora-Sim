@@ -544,15 +544,15 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             List<List<UUID>> list = new List<List<UUID>>();
             int num = 0;
-            list[num] = new List<UUID>();
+            list.Add(new List<UUID>());
             foreach (ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList)
             {
                 if (entry.Flags == flag)
                 {
                     if (list[num].Count > ParcelManagementModule.LAND_MAX_ENTRIES_PER_PACKET)
                     {
-                        num++;
-                        list[num] = new List<UUID>();
+                        num++; 
+                        list.Add(new List<UUID>());
                     }
                     list[num].Add(entry.AgentID);
                 }

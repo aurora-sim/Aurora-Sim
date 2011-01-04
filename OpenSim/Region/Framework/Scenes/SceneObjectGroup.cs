@@ -335,10 +335,15 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 val = value;
                 if (!IsAttachment && RootPart.Shape.State == 0)
                 {
-                    if (val.X < 0) //Fixes borders at 0... but nothing for out yet because of megas
+                    //Fix prim location
+                    if (val.X < 0)
                         val.X = Math.Abs(val.X);
                     if (val.Y < 0)
-                        val.X = Math.Abs(val.Y);
+                        val.Y = Math.Abs(val.Y);
+                    if (val.X > Scene.RegionInfo.RegionSizeX)
+                        val.X = Scene.RegionInfo.RegionSizeX;
+                    if (val.Y > Scene.RegionInfo.RegionSizeY)
+                        val.Y = Scene.RegionInfo.RegionSizeY;
 
                     if (val.Z < m_scene.MaxLowValue)
                     {

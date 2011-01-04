@@ -148,6 +148,7 @@ namespace Aurora.Modules.RegionLoader
             IPAddress address = IPAddress.Parse("0.0.0.0");
             int port = port = Convert.ToInt32(textBox7.Text);
             region.InternalEndPoint = new IPEndPoint(address, port);
+            region.HttpPort = (uint)port;
 
             string externalName = textBox9.Text;
             if (externalName == "DEFAULT")
@@ -173,6 +174,7 @@ namespace Aurora.Modules.RegionLoader
             }
             region.AccessLevel = Util.ConvertMaturityToAccessLevel(maturityLevel);
             region.Disabled = DisabledEdit.Checked;
+            region.NumberStartup = int.Parse(StartupNumberBox.Text);
             m_connector.UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
@@ -199,10 +201,11 @@ namespace Aurora.Modules.RegionLoader
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
             textBox9.Text = region.ExternalHostName;
-            textBox7.Text = region.HttpPort.ToString();
+            textBox7.Text = region.InternalEndPoint.Port.ToString();
             textBox3.Text = region.RegionLocX.ToString();
             textBox5.Text = region.RegionLocY.ToString();
             textBox1.Text = region.RegionName;
+            StartupNumberBox.Text = region.NumberStartup.ToString();
         }
 
         private void RegionNameHelp_Click(object sender, EventArgs e)
@@ -259,6 +262,11 @@ namespace Aurora.Modules.RegionLoader
         private void DisabledHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("If this is set to 'true', the region is not loaded.");
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This determines the order that your regions are started.");
         }
 
         private void Export_Click(object sender, EventArgs e)

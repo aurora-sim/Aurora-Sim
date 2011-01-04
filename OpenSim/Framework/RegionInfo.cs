@@ -95,7 +95,19 @@ namespace OpenSim.Framework
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
         private IniConfigSource m_source;
+        public int NumberStartup = 0;
 
+        /// <summary>
+        /// The X length (in meters) that the region is
+        /// The default is 256m
+        /// </summary>
+        public int RegionSizeX = 256;
+
+        /// <summary>
+        /// The Y length (in meters) that the region is
+        /// The default is 256m
+        /// </summary>
+        public int RegionSizeY = 256;
 
         // File based loading
         //
@@ -657,6 +669,7 @@ namespace OpenSim.Framework
                 args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
                 args["allow_physical_prims"] = OSD.FromBoolean(AllowPhysicalPrims);
+                args["number_startup"] = OSD.FromInteger(NumberStartup);
             }
             return args;
         }
@@ -727,6 +740,8 @@ namespace OpenSim.Framework
                 AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
             if (args["allow_physical_prims"] != null)
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
+            if(args["number_startup"] != null)
+                NumberStartup = args["number_startup"].AsInteger();
         }
 
         public static RegionInfo Create(UUID regionID, string regionName, uint regX, uint regY, string externalHostName, uint httpPort, uint simPort, uint remotingPort, string serverURI)

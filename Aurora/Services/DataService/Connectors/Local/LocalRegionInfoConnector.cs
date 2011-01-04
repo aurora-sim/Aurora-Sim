@@ -71,7 +71,14 @@ namespace Aurora.Services.DataService
                 Infos.Add(replyData);
                 replyData = new RegionInfo();
             }
+            //Sort by startup number
+            Infos.Sort(RegionInfoStartupSorter);
             return Infos.ToArray();
+        }
+
+        private int RegionInfoStartupSorter(RegionInfo A, RegionInfo B)
+        {
+            return A.NumberStartup.CompareTo(B.NumberStartup);
         }
 
         public RegionInfo GetRegionInfo(UUID regionID)

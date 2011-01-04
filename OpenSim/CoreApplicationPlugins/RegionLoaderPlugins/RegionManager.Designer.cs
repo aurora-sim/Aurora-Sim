@@ -52,6 +52,7 @@
             this.label12 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.DisabledCreate = new System.Windows.Forms.CheckBox();
             this.button11 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
@@ -73,12 +74,17 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.ExportFileName = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.Export = new System.Windows.Forms.Button();
             this.RegionListBox = new System.Windows.Forms.ListBox();
             this.UpdateRegion = new System.Windows.Forms.Button();
             this.SearchForRegionByName = new System.Windows.Forms.Button();
             this.label31 = new System.Windows.Forms.Label();
             this.RegionToFind = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.DisabledEdit = new System.Windows.Forms.CheckBox();
             this.DisabledHelp = new System.Windows.Forms.Button();
             this.MaturityHelp = new System.Windows.Forms.Button();
             this.MaxPrimsHelp = new System.Windows.Forms.Button();
@@ -113,21 +119,18 @@
             this.textBox11 = new System.Windows.Forms.TextBox();
             this.label30 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.DisabledEdit = new System.Windows.Forms.CheckBox();
-            this.DisabledCreate = new System.Windows.Forms.CheckBox();
-            this.Export = new System.Windows.Forms.Button();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.ExportFileName = new System.Windows.Forms.TextBox();
+            this.button12 = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
+            this.StartupNumberBox = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tabPage2.SuspendLayout();
-            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // RName
@@ -370,6 +373,15 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Region Info";
             // 
+            // DisabledCreate
+            // 
+            this.DisabledCreate.AutoSize = true;
+            this.DisabledCreate.Location = new System.Drawing.Point(247, 272);
+            this.DisabledCreate.Name = "DisabledCreate";
+            this.DisabledCreate.Size = new System.Drawing.Size(15, 14);
+            this.DisabledCreate.TabIndex = 42;
+            this.DisabledCreate.UseVisualStyleBackColor = true;
+            // 
             // button11
             // 
             this.button11.Location = new System.Drawing.Point(56, 269);
@@ -588,6 +600,44 @@
             this.tabPage1.Text = "Edit existing region";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.ExportFileName);
+            this.groupBox4.Controls.Add(this.label6);
+            this.groupBox4.Controls.Add(this.Export);
+            this.groupBox4.Location = new System.Drawing.Point(425, 192);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(217, 66);
+            this.groupBox4.TabIndex = 35;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Export to .ini";
+            // 
+            // ExportFileName
+            // 
+            this.ExportFileName.Location = new System.Drawing.Point(9, 36);
+            this.ExportFileName.Name = "ExportFileName";
+            this.ExportFileName.Size = new System.Drawing.Size(121, 20);
+            this.ExportFileName.TabIndex = 36;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(6, 16);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(54, 13);
+            this.label6.TabIndex = 35;
+            this.label6.Text = "File Name";
+            // 
+            // Export
+            // 
+            this.Export.Location = new System.Drawing.Point(136, 33);
+            this.Export.Name = "Export";
+            this.Export.Size = new System.Drawing.Size(75, 23);
+            this.Export.TabIndex = 34;
+            this.Export.Text = "Export";
+            this.Export.UseVisualStyleBackColor = true;
+            this.Export.Click += new System.EventHandler(this.Export_Click);
+            // 
             // RegionListBox
             // 
             this.RegionListBox.FormattingEnabled = true;
@@ -635,6 +685,9 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.StartupNumberBox);
+            this.groupBox3.Controls.Add(this.button12);
+            this.groupBox3.Controls.Add(this.label13);
             this.groupBox3.Controls.Add(this.DisabledEdit);
             this.groupBox3.Controls.Add(this.DisabledHelp);
             this.groupBox3.Controls.Add(this.MaturityHelp);
@@ -675,6 +728,15 @@
             this.groupBox3.TabIndex = 28;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Region Info";
+            // 
+            // DisabledEdit
+            // 
+            this.DisabledEdit.AutoSize = true;
+            this.DisabledEdit.Location = new System.Drawing.Point(247, 272);
+            this.DisabledEdit.Name = "DisabledEdit";
+            this.DisabledEdit.Size = new System.Drawing.Size(15, 14);
+            this.DisabledEdit.TabIndex = 41;
+            this.DisabledEdit.UseVisualStyleBackColor = true;
             // 
             // DisabledHelp
             // 
@@ -986,61 +1048,32 @@
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // DisabledEdit
+            // button12
             // 
-            this.DisabledEdit.AutoSize = true;
-            this.DisabledEdit.Location = new System.Drawing.Point(247, 272);
-            this.DisabledEdit.Name = "DisabledEdit";
-            this.DisabledEdit.Size = new System.Drawing.Size(15, 14);
-            this.DisabledEdit.TabIndex = 41;
-            this.DisabledEdit.UseVisualStyleBackColor = true;
+            this.button12.Location = new System.Drawing.Point(93, 291);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(21, 20);
+            this.button12.TabIndex = 43;
+            this.button12.Text = "?";
+            this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
             // 
-            // DisabledCreate
+            // label13
             // 
-            this.DisabledCreate.AutoSize = true;
-            this.DisabledCreate.Location = new System.Drawing.Point(247, 272);
-            this.DisabledCreate.Name = "DisabledCreate";
-            this.DisabledCreate.Size = new System.Drawing.Size(15, 14);
-            this.DisabledCreate.TabIndex = 42;
-            this.DisabledCreate.UseVisualStyleBackColor = true;
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(6, 295);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(81, 13);
+            this.label13.TabIndex = 42;
+            this.label13.Text = "Startup Number";
             // 
-            // Export
+            // StartupNumberBox
             // 
-            this.Export.Location = new System.Drawing.Point(136, 33);
-            this.Export.Name = "Export";
-            this.Export.Size = new System.Drawing.Size(75, 23);
-            this.Export.TabIndex = 34;
-            this.Export.Text = "Export";
-            this.Export.UseVisualStyleBackColor = true;
-            this.Export.Click += new System.EventHandler(this.Export_Click);
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.ExportFileName);
-            this.groupBox4.Controls.Add(this.label6);
-            this.groupBox4.Controls.Add(this.Export);
-            this.groupBox4.Location = new System.Drawing.Point(425, 192);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(217, 66);
-            this.groupBox4.TabIndex = 35;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Export to .ini";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 16);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(54, 13);
-            this.label6.TabIndex = 35;
-            this.label6.Text = "File Name";
-            // 
-            // ExportFileName
-            // 
-            this.ExportFileName.Location = new System.Drawing.Point(9, 36);
-            this.ExportFileName.Name = "ExportFileName";
-            this.ExportFileName.Size = new System.Drawing.Size(121, 20);
-            this.ExportFileName.TabIndex = 36;
+            this.StartupNumberBox.Location = new System.Drawing.Point(247, 291);
+            this.StartupNumberBox.Name = "StartupNumberBox";
+            this.StartupNumberBox.Size = new System.Drawing.Size(157, 20);
+            this.StartupNumberBox.TabIndex = 44;
+            this.StartupNumberBox.Text = "50";
             // 
             // RegionManager
             // 
@@ -1060,11 +1093,11 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.tabPage2.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1163,5 +1196,8 @@
         private System.Windows.Forms.TextBox ExportFileName;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button Export;
+        private System.Windows.Forms.Button button12;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox StartupNumberBox;
     }
 }
