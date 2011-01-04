@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Net.Mail;
@@ -203,35 +204,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
         }
-        
+
         public void AddPreviouslyCompiled(string source, ScriptData ID)
-        {
-            lock (PreviouslyCompiled)
             {
-                if (!PreviouslyCompiled.ContainsKey(source))
+            string key = source.Length.ToString() + source.GetHashCode().ToString();
+            lock (PreviouslyCompiled)
                 {
-                    PreviouslyCompiled.Add(source, ID.AssemblyName);
+
+                if (!PreviouslyCompiled.ContainsKey(key))
+                    {
+                    PreviouslyCompiled.Add(key, ID.AssemblyName);
+                    }
                 }
             }
-        }
 
         public void RemovePreviouslyCompiled(string source)
-        {
-            lock (PreviouslyCompiled)
             {
-                if (PreviouslyCompiled.ContainsKey(source))
+            string key = source.Length.ToString() + source.GetHashCode().ToString();
+            lock (PreviouslyCompiled)
                 {
-                    PreviouslyCompiled.Remove(source);
+                if (PreviouslyCompiled.ContainsKey(key))
+                    {
+                    PreviouslyCompiled.Remove(key);
+                    }
                 }
             }
-        }
-        
+
         public string TryGetPreviouslyCompiledScript(string source)
-        {
+            {
+            string key = source.Length.ToString() + source.GetHashCode().ToString();
             string assemblyName = "";
-            PreviouslyCompiled.TryGetValue(source, out assemblyName);
+            PreviouslyCompiled.TryGetValue(key,out assemblyName);
+
             return assemblyName;
-        }
+            }
         
         public ScriptData GetScript(UUID primID, UUID itemID)
         {
