@@ -155,7 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
 
-        public bool EventsProcDataLocked = false;
+        public int EventsProcDataLocked = 0;
         public bool InEventsProcData = false;
         public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
 
