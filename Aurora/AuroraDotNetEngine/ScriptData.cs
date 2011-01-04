@@ -306,7 +306,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Remove other items from the queue.
 
 //            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
-            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
+            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, true); // flush and ignore new
 //            VersionID++;
             //Reset the state to default
             State = "default";
@@ -331,6 +331,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.RemoveScript(part.UUID, ItemID);
 
             //Fire state_entry
+            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
             m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
