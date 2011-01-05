@@ -39,6 +39,8 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Scenes.Serialization;
+using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -335,32 +337,51 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 val = value;
                 if (!IsAttachment && RootPart.Shape.State == 0)
                 {
-                    //Fix prim location
-                    if (val.X < 0)
-                        val.X = Math.Abs(val.X);
-                    if (val.Y < 0)
-                        val.Y = Math.Abs(val.Y);
-                    if (val.X > Scene.RegionInfo.RegionSizeX)
-                        val.X = Scene.RegionInfo.RegionSizeX;
-                    if (val.Y > Scene.RegionInfo.RegionSizeY)
-                        val.Y = Scene.RegionInfo.RegionSizeY;
-
-                    if (val.Z < m_scene.MaxLowValue)
+                    IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
+                    if ((val.X < 0f || val.Y < 0f || val.Z < m_scene.MaxLowValue ||
+                        val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
+                        && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
                     {
-                        m_log.Warn("[Scene Movement]: Returning prim " + Name + " because Z has fallen too low");
-                        Scene.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
-                        return;
-                    }
-                }
+                        //If we are headed out of the region, make sure we have a region there
+                        INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
+                        if (neighborService != null)
+                        {
+                            List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
-                if ((m_scene.TestBorderCross(val - Vector3.UnitX, Cardinals.E) || m_scene.TestBorderCross(val + Vector3.UnitX, Cardinals.W)
-                    || m_scene.TestBorderCross(val - Vector3.UnitY, Cardinals.N) || m_scene.TestBorderCross(val + Vector3.UnitY, Cardinals.S))
-                    && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims)))
-                {
-                    IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
-                    if (transferModule != null)
-                        transferModule.CrossGroupToNewRegion(this, val);
+                            uint RegionCrossX = Scene.RegionInfo.RegionLocX * Constants.RegionSize;
+                            uint RegionCrossY = Scene.RegionInfo.RegionLocY * Constants.RegionSize;
+
+                            if (val.X < 0f) RegionCrossX--;
+                            if (val.Y < 0f) RegionCrossY--;
+                            if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += Constants.RegionSize;
+                            if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += Constants.RegionSize;
+                            GridRegion neighborRegion = null;
+
+                            foreach (GridRegion region in neighbors)
+                            {
+                                if (region.RegionLocX == RegionCrossX &&
+                                    region.RegionLocY == RegionCrossY)
+                                {
+                                    neighborRegion = region;
+                                    break;
+                                }
+                            }
+
+                            if (neighborRegion != null)
+                            {
+                                IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                                if (transferModule != null)
+                                    transferModule.CrossGroupToNewRegion(this, val);
+                            }
+                            else
+                            {
+                                //The group should have crossed a region, but no region was found so return it instead
+                                m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
+                                Scene.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                                return;
+                            }
+                        }
+                    }
                 }
                 
                 if (RootPart.GetStatusSandbox())
