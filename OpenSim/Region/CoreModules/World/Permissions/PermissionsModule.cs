@@ -1230,29 +1230,24 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return permission;
         }
 
-        private bool CanObjectEntry(UUID objectID, bool enteringRegion, Vector3 newPoint, Scene scene)
+        private bool CanObjectEntry(UUID objectID, bool enteringRegion, Vector3 newPoint, UUID OwnerID)
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            if ((newPoint.X > 257f || newPoint.X < -1f || newPoint.Y > 257f || newPoint.Y < -1f))
+            if (newPoint.X > m_scene.RegionInfo.RegionSizeX || newPoint.X < 0 || 
+                newPoint.Y > m_scene.RegionInfo.RegionSizeY || newPoint.Y < 0)
             {
                 return true;
             }
 
-            if (!m_scene.Entities.ContainsKey(objectID))
+            //If the object is entering the region, its not here yet and we can't check for it
+            if (!enteringRegion && !m_scene.Entities.ContainsKey(objectID))
             {
                 return false;
             }
 
-            // If it's not an object, we cant edit it.
-            if (!(m_scene.Entities[objectID] is SceneObjectGroup))
-            {
-                return false;
-            }
-
-            SceneObjectGroup task = (SceneObjectGroup)m_scene.Entities[objectID];
-
+            //If there is no parcel management, we don't do anymore checks
             if (m_parcelManagement == null)
                 return true;
 
@@ -1268,7 +1263,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return true;
             }
 
-            if (land.LandData.OwnerID == task.OwnerID)
+            if (land.LandData.OwnerID == OwnerID)
             {
                 return true;
             }
@@ -1276,18 +1271,18 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             //Check for group permissions
             if (((land.LandData.Flags & ((int)ParcelFlags.AllowGroupObjectEntry)) != 0) &&
                 (land.LandData.GroupID != UUID.Zero)
-                && IsGroupMember(land.LandData.GroupID, task.OwnerID, (ulong)GroupPowers.None))
+                && IsGroupMember(land.LandData.GroupID, OwnerID, (ulong)GroupPowers.None))
             {
                 return true;
             }
 
             //check for admin statuses
-            if (IsEstateManager(task.OwnerID))
+            if (IsEstateManager(OwnerID))
             {
                 return true;
             }
 
-            if (IsAdministrator(task.OwnerID))
+            if (IsAdministrator(OwnerID))
             {
                 return true;
             }

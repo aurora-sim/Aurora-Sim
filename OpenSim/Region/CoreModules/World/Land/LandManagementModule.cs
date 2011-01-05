@@ -907,7 +907,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (over.LandData.GlobalID != group.m_lastParcelUUID)
                 {
                     if (!m_scene.Permissions.CanObjectEntry(group.UUID,
-                        false, group.AbsolutePosition))
+                        false, group.AbsolutePosition, group.OwnerID))
                     {
                         //Revert the position and do not update the parcel ID
                         group.AbsolutePosition = group.m_lastSignificantPosition;

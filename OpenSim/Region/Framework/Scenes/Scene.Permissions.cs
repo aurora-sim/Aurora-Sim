@@ -47,7 +47,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditObjectHandler(UUID objectID, UUID editorID, Scene scene);
     public delegate bool EditObjectInventoryHandler(UUID objectID, UUID editorID, Scene scene);
     public delegate bool MoveObjectHandler(UUID objectID, UUID moverID, Scene scene);
-    public delegate bool ObjectEntryHandler(UUID objectID, bool enteringRegion, Vector3 newPoint, Scene scene);
+    public delegate bool ObjectEntryHandler(UUID objectID, bool enteringRegion, Vector3 newPoint, UUID OwnerID);
     public delegate bool ReturnObjectsHandler(ILandObject land, UUID user, List<SceneObjectGroup> objects, Scene scene);
     public delegate bool InstantMessageHandler(UUID user, UUID target, Scene startScene);
     public delegate bool InventoryTransferHandler(UUID user, UUID target, Scene startScene);
@@ -374,7 +374,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region OBJECT ENTRY
-        public bool CanObjectEntry(UUID objectID, bool enteringRegion, Vector3 newPoint)
+        public bool CanObjectEntry(UUID objectID, bool enteringRegion, Vector3 newPoint, UUID OwnerID)
         {
             ObjectEntryHandler handler = OnObjectEntry;
             if (handler != null)
@@ -382,7 +382,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handler.GetInvocationList();
                 foreach (ObjectEntryHandler h in list)
                 {
-                    if (h(objectID, enteringRegion, newPoint, m_scene) == false)
+                    if (h(objectID, enteringRegion, newPoint, OwnerID) == false)
                         return false;
                 }
             }

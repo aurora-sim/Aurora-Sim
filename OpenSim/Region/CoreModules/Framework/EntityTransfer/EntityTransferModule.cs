@@ -1361,15 +1361,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (grp.IsDeleted)
                 return;
 
-            Scene scene = grp.Scene;
-            if (scene == null)
+            if (grp.Scene == null)
                 return;
             if (grp.RootPart.DIE_AT_EDGE)
             {
                 // We remove the object here
                 try
                 {
-                    scene.DeleteSceneObject(grp, true);
+                    grp.Scene.DeleteSceneObject(grp, true);
                 }
                 catch (Exception)
                 {
@@ -1384,7 +1383,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 try
                 {
                     List<SceneObjectGroup> objects = new List<SceneObjectGroup>() { grp };
-                    scene.returnObjects(objects.ToArray(), UUID.Zero);
+                    grp.Scene.returnObjects(objects.ToArray(), UUID.Zero);
                 }
                 catch (Exception)
                 {
@@ -1695,7 +1694,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             else
             {
                 if (!scene.Permissions.CanObjectEntry(sceneObject.UUID,
-                        true, sceneObject.AbsolutePosition))
+                        true, sceneObject.AbsolutePosition, sceneObject.OwnerID))
                 {
                     // Deny non attachments based on parcel settings
                     //

@@ -130,9 +130,9 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanMoveObject(objectid, moverid);
         }
 
-        public bool CanObjectEntry(UUID objectid, bool enteringregion, Vector3 newpoint, Scene scene)
+        public bool CanObjectEntry(UUID objectid, bool enteringregion, Vector3 newpoint, UUID OwnerID)
         {
-            return m_rootScene.Permissions.CanObjectEntry(objectid, enteringregion, newpoint);
+            return m_rootScene.Permissions.CanObjectEntry(objectid, enteringregion, newpoint, OwnerID);
         }
 
         public bool CanReturnObjects(ILandObject land, UUID user, List<SceneObjectGroup> objects, Scene scene)
