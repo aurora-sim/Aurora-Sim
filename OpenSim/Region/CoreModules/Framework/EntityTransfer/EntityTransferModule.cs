@@ -745,21 +745,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Crossings
 
-        public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
-        {
-            Scene scene = agent.Scene;
-            uint neighbourx = scene.RegionInfo.RegionLocX;
-            uint neighboury = scene.RegionInfo.RegionLocY;
-            //Add the offset
-            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
-            newposition.X += (scene.RegionInfo.RegionLocX * Constants.RegionSize) - crossingRegion.RegionLocX;
-            newposition.Y += (scene.RegionInfo.RegionLocY * Constants.RegionSize) - crossingRegion.RegionLocY;
-
-            CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
-            d.BeginInvoke(agent, newposition, neighbourx, neighboury, isFlying, CrossAgentToNewRegionCompleted, d);
-        }
-
-
         public delegate void InformClientToInitateTeleportToLocationDelegate(ScenePresence agent, uint regionX, uint regionY,
                                                             Vector3 position,
                                                             Scene initiatingScene);
@@ -811,23 +796,33 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             icon.EndInvoke(iar);
         }
 
-        public delegate ScenePresence CrossAgentToNewRegionDelegate(ScenePresence agent, Vector3 pos, uint neighbourx, uint neighboury, bool isFlying);
+        public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
+        {
+            Scene scene = agent.Scene;
+            uint neighbourx = scene.RegionInfo.RegionLocX;
+            uint neighboury = scene.RegionInfo.RegionLocY;
+            //Add the offset
+            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
+            newposition.X += (scene.RegionInfo.RegionLocX * Constants.RegionSize) - crossingRegion.RegionLocX;
+            newposition.Y += (scene.RegionInfo.RegionLocY * Constants.RegionSize) - crossingRegion.RegionLocY;
+
+            CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
+            d.BeginInvoke(agent, newposition, crossingRegion, isFlying, CrossAgentToNewRegionCompleted, d);
+        }
+
+        public delegate ScenePresence CrossAgentToNewRegionDelegate(ScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying);
 
         /// <summary>
         /// This Closes child agents on neighboring regions
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
         /// </summary>
-        protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos, uint neighbourx, uint neighboury, bool isFlying)
+        protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying)
         {
-            m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Crossing agent {0} {1} to {2}-{3}", agent.Firstname, agent.Lastname, neighbourx, neighboury);
+            m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} {1} to region {2}", agent.Firstname, agent.Lastname, crossingRegion.RegionName);
 
             Scene m_scene = agent.Scene;
-            ulong neighbourHandle = Utils.UIntsToLong((uint)(neighbourx * Constants.RegionSize), (uint)(neighboury * Constants.RegionSize));
 
-            int x = (int)(neighbourx * Constants.RegionSize), y = (int)(neighboury * Constants.RegionSize);
-            GridRegion neighbourRegion = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, (int)x, (int)y);
-
-            if (neighbourRegion != null && agent.ValidateAttachments())
+            if (crossingRegion != null && agent.ValidateAttachments())
             {
                 pos = pos + (agent.Velocity);
 
@@ -840,7 +835,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 cAgent.CallbackURI = "http://" + m_scene.RegionInfo.ExternalHostName + ":" + m_scene.RegionInfo.HttpPort +
                     "/agent/" + agent.UUID.ToString() + "/" + m_scene.RegionInfo.RegionID.ToString() + "/release/";
 
-                if (!m_scene.SimulationService.UpdateAgent(neighbourRegion, cAgent))
+                if (!m_scene.SimulationService.UpdateAgent(crossingRegion, cAgent))
                 {
                     // region doesn't take it
                     ResetFromTransit(agent.UUID);
@@ -857,34 +852,34 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     seeds = module.GetChildrenSeeds(agent.UUID);
                 }
-                if (!seeds.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
+                if (!seeds.TryGetValue(crossingRegion.RegionHandle, out agentcaps))
                 {
                     m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: No ENTITY TRANSFER MODULE information for region handle {0}, exiting CrossToNewRegion.",
-                                     neighbourRegion.RegionHandle);
+                                     crossingRegion.RegionHandle);
                     return agent;
                 }
                 // TODO Should construct this behind a method
                 string capsPath =
-                    "http://" + neighbourRegion.ExternalHostName + ":" + neighbourRegion.HttpPort
+                    "http://" + crossingRegion.ExternalHostName + ":" + crossingRegion.HttpPort
                      + "/CAPS/" + agentcaps /*circuitdata.CapsPath*/ + "0000/";
 
-                m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
+                m_log.DebugFormat("[EntityTransferModule]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.CrossRegion(neighbourHandle, pos, agent.Velocity, neighbourRegion.ExternalEndPoint,
+                    eq.CrossRegion(crossingRegion.RegionHandle, pos, agent.Velocity, crossingRegion.ExternalEndPoint,
                                    capsPath, agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {
-                    agent.ControllingClient.CrossRegion(neighbourHandle, pos, agent.Velocity, neighbourRegion.ExternalEndPoint,
+                    agent.ControllingClient.CrossRegion(crossingRegion.RegionHandle, pos, agent.Velocity, crossingRegion.ExternalEndPoint,
                                                 capsPath);
                 }
 
                 if (!WaitForCallback(agent.UUID))
                 {
-                    m_log.Debug("[ENTITY TRANSFER MODULE]: Callback never came in crossing agent");
+                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent. Resetting.");
                     ResetFromTransit(agent.UUID);
 
                     // Yikes! We should just have a ref to scene here.
@@ -897,19 +892,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Next, let's close the child agent connections that are too far away.
                 INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
-                    neighborService.CloseNeighborAgents(neighbourx, neighboury, agent.UUID, agent.Scene.RegionInfo.RegionID);
+                    neighborService.CloseNeighborAgents((uint)crossingRegion.RegionLocX / Constants.RegionSize, (uint)crossingRegion.RegionLocX / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 agent.MakeChildAgent();
-                // now we have a child agent in this region. Request all interesting data about other (root) agents
+                // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
                 agent.SendOtherAgentsAvatarDataToMe();
                 agent.SendOtherAgentsAppearanceToMe();
 
-                CrossAttachmentsIntoNewRegion(neighbourRegion, agent);
+                CrossAttachmentsIntoNewRegion(crossingRegion, agent);
             }
-
-            //m_log.Debug("AFTER CROSS");
-            //Scene.DumpChildrenSeeds(UUID);
-            //DumpKnownRegions();
             return agent;
         }
 
