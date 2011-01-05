@@ -784,8 +784,8 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             position.X = s_tree.AbsolutePosition.X + (float)randX;
             position.Y = s_tree.AbsolutePosition.Y + (float)randY;
 
-            if (!m_scene.TestBorderCross(position, Cardinals.W) && position.X >= 0 &&
-                !m_scene.TestBorderCross(position, Cardinals.N) && position.Y >= 0 &&
+            if (!(position.X < 0f || position.Y < 0f ||
+                position.X > m_scene.RegionInfo.RegionSizeX || position.Y > m_scene.RegionInfo.RegionSizeY) &&
                 Util.GetDistanceTo(position, copse.m_seed_point) <= copse.m_range)
             {
                 UUID uuid = m_scene.RegionInfo.EstateSettings.EstateOwner;

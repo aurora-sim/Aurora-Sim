@@ -61,8 +61,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<SceneObjectGroup> PhysicsReturns = new List<SceneObjectGroup>();
 
-        private volatile int m_bordersLocked = 0;
-
         /// <value>
         /// The scene graph for this scene
         /// </value>
@@ -242,18 +240,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_sceneGraph.PhysicsScene.TimeDilation = value; }
         }
 
-        public bool BordersLocked
-        {
-            get { return m_bordersLocked == 1; }
-            set
-            {
-                if (value == true)
-                    m_bordersLocked = 1;
-                else
-                    m_bordersLocked = 0;
-            }
-        }
-
         #region Services
 
         public IAssetService AssetService
@@ -406,31 +392,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_config = manager.ConfigSource;
             m_authenticateHandler = authen;
-
-
-            BordersLocked = true;
-
-            Border northBorder = new Border();
-            northBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize);  //<---
-            northBorder.CrossDirection = Cardinals.N;
-            RegionInfo.NorthBorders.Add(northBorder);
-
-            Border southBorder = new Border();
-            southBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0);    //--->
-            southBorder.CrossDirection = Cardinals.S;
-            RegionInfo.SouthBorders.Add(southBorder);
-
-            Border eastBorder = new Border();
-            eastBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, (int)Constants.RegionSize);   //<---
-            eastBorder.CrossDirection = Cardinals.E;
-            RegionInfo.EastBorders.Add(eastBorder);
-
-            Border westBorder = new Border();
-            westBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0);     //--->
-            westBorder.CrossDirection = Cardinals.W;
-            RegionInfo.WestBorders.Add(westBorder);
-
-            BordersLocked = false;
 
             m_AuroraEventManager = new AuroraEventManager();
             m_eventManager = new EventManager();
@@ -1223,185 +1184,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
                 DeleteSceneObject(grp, true);
             }
-        }
-
-        public Border GetCrossedBorder(Vector3 position, Cardinals gridline)
-        {
-            if (BordersLocked)
-            {
-                switch (gridline)
-                {
-                    case Cardinals.N:
-                        lock (RegionInfo.NorthBorders)
-                        {
-                            foreach (Border b in RegionInfo.NorthBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return b;
-                            }
-                        }
-                        break;
-                    case Cardinals.S:
-                        lock (RegionInfo.SouthBorders)
-                        {
-                            foreach (Border b in RegionInfo.SouthBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return b;
-                            }
-                        }
-
-                        break;
-                    case Cardinals.E:
-                        lock (RegionInfo.EastBorders)
-                        {
-                            foreach (Border b in RegionInfo.EastBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return b;
-                            }
-                        }
-
-                        break;
-                    case Cardinals.W:
-
-                        lock (RegionInfo.WestBorders)
-                        {
-                            foreach (Border b in RegionInfo.WestBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return b;
-                            }
-                        }
-                        break;
-
-                }
-            }
-            else
-            {
-                switch (gridline)
-                {
-                    case Cardinals.N:
-                        foreach (Border b in RegionInfo.NorthBorders)
-                        {
-                            if (b.TestCross(position))
-                                return b;
-                        }
-
-                        break;
-                    case Cardinals.S:
-                        foreach (Border b in RegionInfo.SouthBorders)
-                        {
-                            if (b.TestCross(position))
-                                return b;
-                        }
-                        break;
-                    case Cardinals.E:
-                        foreach (Border b in RegionInfo.EastBorders)
-                        {
-                            if (b.TestCross(position))
-                                return b;
-                        }
-
-                        break;
-                    case Cardinals.W:
-                        foreach (Border b in RegionInfo.WestBorders)
-                        {
-                            if (b.TestCross(position))
-                                return b;
-                        }
-                        break;
-
-                }
-            }
-
-
-            return null;
-        }
-
-        public bool TestBorderCross(Vector3 position, Cardinals border)
-        {
-            if (BordersLocked)
-            {
-                switch (border)
-                {
-                    case Cardinals.N:
-                        lock (RegionInfo.NorthBorders)
-                        {
-                            foreach (Border b in RegionInfo.NorthBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return true;
-                            }
-                        }
-                        break;
-                    case Cardinals.E:
-                        lock (RegionInfo.EastBorders)
-                        {
-                            foreach (Border b in RegionInfo.EastBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return true;
-                            }
-                        }
-                        break;
-                    case Cardinals.S:
-                        lock (RegionInfo.SouthBorders)
-                        {
-                            foreach (Border b in RegionInfo.SouthBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return true;
-                            }
-                        }
-                        break;
-                    case Cardinals.W:
-                        lock (RegionInfo.WestBorders)
-                        {
-                            foreach (Border b in RegionInfo.WestBorders)
-                            {
-                                if (b.TestCross(position))
-                                    return true;
-                            }
-                        }
-                        break;
-                }
-            }
-            else
-            {
-                switch (border)
-                {
-                    case Cardinals.N:
-                        foreach (Border b in RegionInfo.NorthBorders)
-                        {
-                            if (b.TestCross(position))
-                                return true;
-                        }
-                        break;
-                    case Cardinals.E:
-                        foreach (Border b in RegionInfo.EastBorders)
-                        {
-                            if (b.TestCross(position))
-                                return true;
-                        }
-                        break;
-                    case Cardinals.S:
-                        foreach (Border b in RegionInfo.SouthBorders)
-                        {
-                            if (b.TestCross(position))
-                                return true;
-                        }
-                        break;
-                    case Cardinals.W:
-                        foreach (Border b in RegionInfo.WestBorders)
-                        {
-                            if (b.TestCross(position))
-                                return true;
-                        }
-                        break;
-                }
-            }
-            return false;
         }
 
         #endregion
