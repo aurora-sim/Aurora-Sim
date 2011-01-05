@@ -1486,8 +1486,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                 }
 
+                SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy();
                 if (grp.Scene != null && grp.Scene.SimulationService != null)
-                    successYN = grp.Scene.SimulationService.CreateObject(destination, grp);
+                    successYN = grp.Scene.SimulationService.CreateObject(destination, copiedGroup);
 
                 if (successYN)
                 {
@@ -1667,13 +1668,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
                 sceneObject.RootPart.AddFlag(PrimFlags.Phantom);
-                scene.SceneGraph.AddPrimToScene(sceneObject);
 
                 // Fix up attachment Parent Local ID
                 ScenePresence sp = scene.GetScenePresence(sceneObject.OwnerID);
-
                 if (sp != null)
                 {
+                    scene.SceneGraph.AddPrimToScene(sceneObject);
+
                     m_log.DebugFormat(
                         "[EntityTransferModule]: Received attachment {0}, inworld asset id {1}", sceneObject.GetFromItemID(), sceneObject.UUID);
                     m_log.DebugFormat(
@@ -1684,11 +1685,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         attachModule.AttachObject(sp.ControllingClient, sceneObject.LocalId, 0, false);
 
                     sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-                }
-                else
-                {
-                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-                    sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
+                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    return true;
                 }
             }
             else
@@ -1705,11 +1703,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     return false;
                 }
-                scene.SceneGraph.AddPrimToScene(sceneObject);
+                if (scene.SceneGraph.AddPrimToScene(sceneObject))
+                {
+                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    return true;
+                }
             }
-            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-
-            return true;
+            return false;
         }
 
         #endregion

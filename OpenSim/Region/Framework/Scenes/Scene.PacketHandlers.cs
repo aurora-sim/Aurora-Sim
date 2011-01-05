@@ -149,6 +149,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, running through all prims.");
                     EntityBase[] EntityList = Entities.GetEntities();
+                    bool foundPrim = false;
                     foreach (EntityBase ent in EntityList)
                     {
                         if (ent is SceneObjectGroup)
@@ -157,13 +158,13 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 ((SceneObjectGroup)ent).IsSelected = true;
                                 EntitiesToUpdate.Add(((SceneObjectGroup)ent).RootPart);
+                                foundPrim = true;
                                 break;
                             }
                             else
                             {
                                 // We also need to check the children of this prim as they
                                 // can be selected as well and send property information
-                                bool foundPrim = false;
                                 foreach (SceneObjectPart child in ((SceneObjectGroup)ent).ChildrenList)
                                 {
                                     if (child.LocalId == primLocalID)
@@ -177,6 +178,10 @@ namespace OpenSim.Region.Framework.Scenes
                                 if (foundPrim) break;
                             }
                         }
+                    }
+                    if (!foundPrim)
+                    {
+                        //remoteClient.SendKillObject(
                     }
                 }
             }
