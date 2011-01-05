@@ -939,9 +939,9 @@ namespace OpenSim.Region.RegionCombinerModule
             lock (m_regions)
             {
                 //For each region, we have to adjust the region size so that it includes all the other regions
-                // So to do this, we'll first find the corners of the rectangle we are going to create,
-                // then fix the sizes for all the regions.
-                // Note: all child regions get infinite borders
+                //  So to do this, we'll first find the corners of the rectangle we are going to create,
+                //  then fix the sizes for all the regions.
+                //  Note: all child regions get infinite borders
 
                 foreach (RegionConnections rconn in m_regions.Values) //This is normally just the 'root' region, but is stubbed out for multiple 'root' regions
                 {

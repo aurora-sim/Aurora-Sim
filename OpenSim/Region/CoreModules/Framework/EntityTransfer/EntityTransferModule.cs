@@ -659,21 +659,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
-                if (regionHandle != scene.RegionInfo.RegionHandle)
-                {
-                    // not in this region, do the shift
-                    uint regionX = scene.RegionInfo.RegionLocX;
-                    uint regionY = scene.RegionInfo.RegionLocY;
-
-                    Utils.LongToUInts(regionHandle, out regionX, out regionY);
-
-                    int shiftx = (int)regionX - (int)scene.RegionInfo.RegionLocX * (int)Constants.RegionSize;
-                    int shifty = (int)regionY - (int)scene.RegionInfo.RegionLocY * (int)Constants.RegionSize;
-
-                    position.X += shiftx;
-                    position.Y += shifty;
-                }
-
                 Teleport(sp, regionHandle, position, lookAt, teleportFlags);
             }
         }
@@ -801,7 +786,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Scene scene = agent.Scene;
             uint neighbourx = scene.RegionInfo.RegionLocX;
             uint neighboury = scene.RegionInfo.RegionLocY;
-            //Add the offset
+            //Add the offset as its needed
             Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
             newposition.X += (scene.RegionInfo.RegionLocX * Constants.RegionSize) - crossingRegion.RegionLocX;
             newposition.Y += (scene.RegionInfo.RegionLocY * Constants.RegionSize) - crossingRegion.RegionLocY;
@@ -1102,7 +1087,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
             else
             {
-                m_log.Debug("[ENTITY TRANSFER MODULE]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
+                m_log.Debug("[EntityTransferModule]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
             }
             
             /// We need to find the difference between the new regions where there are no child agents
@@ -1278,7 +1263,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Utils.LongToUInts(reg.RegionHandle, out x, out y);
             x = x / Constants.RegionSize;
             y = y / Constants.RegionSize;
-            m_log.Info("[ENTITY TRANSFER MODULE]: Starting to inform client about neighbour " + x + ", " + y + "(" + endPoint.ToString() + ")");
+            m_log.Info("[EntityTransferModule]: Starting to inform client about neighbour " + reg.RegionName);
 
             string capsPath = "http://" + reg.ExternalHostName + ":" + reg.HttpPort
                   + "/CAPS/" + a.CapsPath + "0000/";
@@ -1313,7 +1298,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     sp.ControllingClient.InformClientOfNeighbor(reg.RegionHandle, endPoint);
                 }
 
-                m_log.Info("[ENTITY TRANSFER MODULE]: Completed inform client about neighbour " + endPoint.ToString());
+                m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
 
             }
 
