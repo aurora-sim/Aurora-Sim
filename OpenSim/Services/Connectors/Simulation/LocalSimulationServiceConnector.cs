@@ -237,8 +237,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
                     if (AgentTransferModule != null)
                     {
-                        AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
-                        return true;
+                        return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
                     }
                 }
             }
@@ -258,7 +257,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
                     if (AgentTransferModule != null)
                     {
-                        AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, userID, itemID);
+                        return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, userID, itemID);
                     }
                 }
             }

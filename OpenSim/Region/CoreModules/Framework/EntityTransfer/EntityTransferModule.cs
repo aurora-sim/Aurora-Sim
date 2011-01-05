@@ -1585,6 +1585,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
                 int attPt = sp.Appearance.GetAttachpoint(itemID);
                 attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt);
+                return true;
             }
 
             return false;
