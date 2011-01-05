@@ -421,16 +421,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
         #region Scripts events scheduler control
 
-        private static LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
-        private static LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
-        private static HashSet<ScriptData> ScriptInExec = new HashSet<ScriptData>();
+        private LinkedList<ScriptData> ScriptIDs = new LinkedList<ScriptData>();
+        private LinkedList<ScriptData> SleepingScriptIDs = new LinkedList<ScriptData>();
+        private HashSet<ScriptData> ScriptInExec = new HashSet<ScriptData>();
 
-        private static int SleepingScriptIDsLock = 0;
+        private int SleepingScriptIDsLock = 0;
 
-        private static int nEventScripts = 0;
-        private static int nScriptIDs = 0;
+        private int nEventScripts = 0;
+        private int nScriptIDs = 0;
 
-        private static DateTime NextSleepersTest = DateTime.Now;
+        private DateTime NextSleepersTest = DateTime.Now;
 
         public void RemoveFromEventSchQueue(ScriptData ID,bool abortcur)
             {
