@@ -238,6 +238,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     if (AgentTransferModule != null)
                     {
                         AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
+                        return true;
                     }
                 }
             }

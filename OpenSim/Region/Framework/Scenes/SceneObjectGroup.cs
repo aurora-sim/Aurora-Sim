@@ -351,8 +351,8 @@ namespace OpenSim.Region.Framework.Scenes
                             uint RegionCrossX = Scene.RegionInfo.RegionLocX * Constants.RegionSize;
                             uint RegionCrossY = Scene.RegionInfo.RegionLocY * Constants.RegionSize;
 
-                            if (val.X < 0f) RegionCrossX--;
-                            if (val.Y < 0f) RegionCrossY--;
+                            if (val.X < 0f) RegionCrossX -= Constants.RegionSize;
+                            if (val.Y < 0f) RegionCrossY -= Constants.RegionSize;
                             if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += Constants.RegionSize;
                             if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += Constants.RegionSize;
                             GridRegion neighborRegion = null;
@@ -371,7 +371,7 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
-                                    transferModule.CrossGroupToNewRegion(this, val);
+                                    transferModule.CrossGroupToNewRegion(this, val, neighborRegion);
                             }
                             else
                             {
@@ -2704,6 +2704,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void OffsetForNewRegion(Vector3 offset)
         {
+            if (offset.X < 0)
+                offset.X = Scene.RegionInfo.RegionSizeX + offset.X;
+            if (offset.Y < 0)
+                offset.Y = Scene.RegionInfo.RegionSizeX + offset.Y;
+            if (offset.X > Scene.RegionInfo.RegionSizeX)
+                offset.X = offset.X - Scene.RegionInfo.RegionSizeX;
+            if (offset.Y > Scene.RegionInfo.RegionSizeY)
+                offset.X = offset.Y - Scene.RegionInfo.RegionSizeY;
             m_rootPart.GroupPosition = offset;
         }
 

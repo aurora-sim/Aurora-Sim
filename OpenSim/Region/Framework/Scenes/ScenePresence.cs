@@ -2792,7 +2792,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                RemoveFromPhysicalScene();
+                /*RemoveFromPhysicalScene();
                 // This constant has been inferred from experimentation
                 // I'm not sure what this value should be, so I tried a few values.
                 timeStep = 0.04f;
@@ -2800,7 +2800,7 @@ namespace OpenSim.Region.Framework.Scenes
                 pos2.X = pos2.X + (vel.X * timeStep);
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
-                m_pos = pos2;
+                m_pos = pos2;*/
             }
         }
 

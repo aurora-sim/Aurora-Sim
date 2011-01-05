@@ -1354,7 +1354,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
         /// <param name="grp">the scene object that we're crossing</param>
-        public void CrossGroupToNewRegion(SceneObjectGroup grp, Vector3 attemptedPosition)
+        public void CrossGroupToNewRegion(SceneObjectGroup grp, Vector3 attemptedPosition, GridRegion destination)
         {
             if (grp == null)
                 return;
@@ -1393,19 +1393,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            int thisx = (int)scene.RegionInfo.RegionLocX;
-            int thisy = (int)scene.RegionInfo.RegionLocY;
-            Vector3 EastCross = new Vector3(0.1f, 0, 0);
-            Vector3 WestCross = new Vector3(-0.1f, 0, 0);
-            Vector3 NorthCross = new Vector3(0, 0.1f, 0);
-            Vector3 SouthCross = new Vector3(0, -0.1f, 0);
-
-
-            // use this if no borders were crossed!
-            ulong newRegionHandle
-                        = Util.UIntsToLong((uint)((thisx) * Constants.RegionSize),
-                                           (uint)((thisy) * Constants.RegionSize));
-
             Vector3 pos = attemptedPosition;
 
             //TODO: Fix up group transfer as its probably broken
@@ -1415,9 +1402,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             grp.OffsetForNewRegion(pos);
 
             // If we fail to cross the border, then reset the position of the scene object on that border.
-            uint x = 0, y = 0;
-            Utils.LongToUInts(newRegionHandle, out x, out y);
-            GridRegion destination = scene.GridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
             if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
@@ -1631,7 +1615,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             if (!AddSceneObject(scene, newObject))
             {
-                m_log.DebugFormat("[EntityTransferModule]: Problem adding scene object {0} in {1} ", sog.UUID, scene.RegionInfo.RegionName);
+                m_log.WarnFormat("[EntityTransferModule]: Problem adding scene object {0} in {1} ", sog.UUID, scene.RegionInfo.RegionName);
                 return false;
             }
 
