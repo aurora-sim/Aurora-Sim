@@ -174,6 +174,18 @@ namespace OpenSim.Services.Interfaces
             set { m_estateOwner = value; }
         }
 
+        public float RegionSizeX
+        {
+            get { return m_RegionSizeX; }
+        }
+
+        public float RegionSizeY
+        {
+            get { return m_RegionSizeY; }
+        }
+
+        private float m_RegionSizeX = 256;
+        private float m_RegionSizeY = 256;
         public UUID RegionID = UUID.Zero;
         public UUID ScopeID = UUID.Zero;
 
@@ -230,6 +242,8 @@ namespace OpenSim.Services.Interfaces
             Maturity = ConvertFrom.RegionSettings.Maturity;
             RegionSecret = ConvertFrom.regionSecret;
             EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
+            m_RegionSizeX = ConvertFrom.RegionSizeX;
+            m_RegionSizeY = ConvertFrom.RegionSizeY;
         }
 
         public GridRegion(GridRegion ConvertFrom)
@@ -249,6 +263,8 @@ namespace OpenSim.Services.Interfaces
             Maturity = ConvertFrom.Maturity;
             RegionSecret = ConvertFrom.RegionSecret;
             EstateOwner = ConvertFrom.EstateOwner;
+            m_RegionSizeX = ConvertFrom.RegionSizeX;
+            m_RegionSizeY = ConvertFrom.RegionSizeY;
         }
 
         #region Definition of equality
@@ -364,7 +380,8 @@ namespace OpenSim.Services.Interfaces
             kvp["owner_uuid"] = EstateOwner.ToString();
             kvp["Maturity"] = Maturity.ToString();
             kvp["Token"] = Token.ToString();
-            // Maturity doesn't seem to exist in the DB
+            kvp["sizex"] = RegionSizeX.ToString();
+            kvp["sizey"] = RegionSizeY.ToString();
             return kvp;
         }
 
@@ -433,6 +450,11 @@ namespace OpenSim.Services.Interfaces
             if (kvp.ContainsKey("Token"))
                 Token = kvp["Token"].ToString();
 
+            if (kvp.ContainsKey("sizex"))
+                m_RegionSizeX = float.Parse(kvp["sizex"].ToString());
+
+            if (kvp.ContainsKey("sizey"))
+                m_RegionSizeY = float.Parse(RegionSizeY.ToString());
         }
     }
 

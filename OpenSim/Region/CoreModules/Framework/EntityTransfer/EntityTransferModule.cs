@@ -165,7 +165,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     position.Y += YShift;
 
                     // Teleport within the same region
-                    if (position.X < 0f || position.Y < 0f || position.Z < 0f ||
+                    ITerrainChannel channel = sp.Scene.RequestModuleInterface<ITerrainChannel>();
+                    float groundHeight = channel.GetNormalizedGroundHeight(position.X, position.Y);
+                    if (position.X < 0f || position.Y < 0f || position.Z < groundHeight ||
                         position.X > sp.Scene.RegionInfo.RegionSizeX || position.Y > sp.Scene.RegionInfo.RegionSizeY)
                     {
                         m_log.WarnFormat(
@@ -174,10 +176,17 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                         if (position.X < 0f) position.X = 0f;
                         if (position.Y < 0f) position.Y = 0f;
-                        if (position.Z < 0f) position.Z = 0f;
 
                         if (position.X > sp.Scene.RegionInfo.RegionSizeX) position.X = sp.Scene.RegionInfo.RegionSizeX;
                         if (position.Y > sp.Scene.RegionInfo.RegionSizeY) position.Y = sp.Scene.RegionInfo.RegionSizeY;
+
+                        //Keep users from being underground
+                        // Not good to get it twice, but we need to, because the X,Y might have changed
+                        groundHeight = channel.GetNormalizedGroundHeight(position.X, position.Y);
+                        if (position.Z < groundHeight)
+                        {
+                            position.Z = groundHeight;
+                        }
                     }
 
                     sp.ControllingClient.SendTeleportStart(teleportFlags);
