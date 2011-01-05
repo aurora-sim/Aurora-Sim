@@ -1235,16 +1235,15 @@ namespace OpenSim.Region.Framework.Scenes
                 Util.FireAndForget(delegate(object o) { sp.RezAttachments(); });
             }
 
+            m_clientManager.Add(client);
+            SubscribeToClientEvents(client);
+
             if (GetScenePresence(client.AgentId) != null)
             {
                 EventManager.TriggerOnNewClient(client);
                 if (vialogin)
                     EventManager.TriggerOnClientLogin(client);
             }
-
-            //Leave these below so we don't allow clients to be able to get fake entrance into the sim as this DOES set up the checking for IPs
-            m_clientManager.Add(client);
-            SubscribeToClientEvents(client);
 
             ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
             if (!sp.IsChildAgent && monitor != null)

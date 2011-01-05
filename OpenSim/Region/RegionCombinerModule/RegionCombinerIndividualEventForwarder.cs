@@ -56,6 +56,7 @@ namespace OpenSim.Region.RegionCombinerModule
 
             m_rootScene.SubscribeToClientPrimEvents(client);
             m_rootScene.UnSubscribeToClientPrimRezEvents(client);
+            m_virtScene.UnSubscribeToClientPrimRezEvents(client);
             client.OnAddPrim += LocalAddNewPrim;
             client.OnRezObject += LocalRezObject;
             client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
