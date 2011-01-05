@@ -518,6 +518,9 @@ namespace OpenSim.Region.RegionCombinerModule
                              conn.RegionScene.RegionInfo.RegionName,
                              regionConnections.RegionScene.RegionInfo.RegionName, offset, extents);
 
+            conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
+            scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
+            
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
