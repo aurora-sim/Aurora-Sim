@@ -2758,8 +2758,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if (pos2.X < 0f) RegionCrossX -= Constants.RegionSize;
                         if (pos2.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += Constants.RegionSize;
-                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += Constants.RegionSize;
+                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (uint)Scene.RegionInfo.RegionSizeX;
+                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (uint)Scene.RegionInfo.RegionSizeY;
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)

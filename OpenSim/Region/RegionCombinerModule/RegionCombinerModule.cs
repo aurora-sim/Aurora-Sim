@@ -958,8 +958,8 @@ namespace OpenSim.Region.RegionCombinerModule
                     }
 
                     //Add the default region size + the offset so that we get the full rectangle
-                    rconn.RegionScene.RegionInfo.RegionSizeX = Constants.RegionSize + (offset.X * Constants.RegionSize);
-                    rconn.RegionScene.RegionInfo.RegionSizeY = Constants.RegionSize + (offset.Y * Constants.RegionSize);
+                    rconn.RegionScene.RegionInfo.RegionSizeX = Constants.RegionSize + offset.X;
+                    rconn.RegionScene.RegionInfo.RegionSizeY = Constants.RegionSize + offset.Y;
                 }
             }
         }
