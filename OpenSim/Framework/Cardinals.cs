@@ -31,8 +31,18 @@ using System.Text;
 
 namespace OpenSim.Framework
 {
+    /// <summary>
+    /// Currently unused, but left as it is a useful enum
+    /// </summary>
     public enum Cardinals
     {
-        N = 1, NE, E, SE, S, SW, W, NW
+        N = 1,
+        NE = 2,
+        E = 3,
+        SE = 4,
+        S = 5,
+        SW = 6,
+        W = 7,
+        NW = 8
     }
 }

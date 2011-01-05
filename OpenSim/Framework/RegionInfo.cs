@@ -96,13 +96,13 @@ namespace OpenSim.Framework
         /// The X length (in meters) that the region is
         /// The default is 256m
         /// </summary>
-        public int RegionSizeX = 256;
+        public float RegionSizeX = 256;
 
         /// <summary>
         /// The Y length (in meters) that the region is
         /// The default is 256m
         /// </summary>
-        public int RegionSizeY = 256;
+        public float RegionSizeY = 256;
 
         // File based loading
         //

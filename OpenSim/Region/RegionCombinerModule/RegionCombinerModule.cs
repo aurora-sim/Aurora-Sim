@@ -185,29 +185,6 @@ namespace OpenSim.Region.RegionCombinerModule
             lock (m_startingScenes)
                 m_startingScenes.Add(scene.RegionInfo.RegionID, scene);
 
-            // Give each region a standard set of non-infinite borders
-            Border northBorder = new Border();
-            northBorder.BorderLine = new Vector3(0, (int)Constants.RegionSize, (int)Constants.RegionSize);  //<---
-            northBorder.CrossDirection = Cardinals.N;
-            scene.RegionInfo.NorthBorders[0] = northBorder;
-
-            Border southBorder = new Border();
-            southBorder.BorderLine = new Vector3(0, (int)Constants.RegionSize, 0);    //--->
-            southBorder.CrossDirection = Cardinals.S;
-            scene.RegionInfo.SouthBorders[0] = southBorder;
-
-            Border eastBorder = new Border();
-            eastBorder.BorderLine = new Vector3(0, (int)Constants.RegionSize, (int)Constants.RegionSize);   //<---
-            eastBorder.CrossDirection = Cardinals.E;
-            scene.RegionInfo.EastBorders[0] = eastBorder;
-
-            Border westBorder = new Border();
-            westBorder.BorderLine = new Vector3(0, (int)Constants.RegionSize, 0);     //--->
-            westBorder.CrossDirection = Cardinals.W;
-            scene.RegionInfo.WestBorders[0] = westBorder;
-
-
-
             RegionConnections regionConnections = new RegionConnections();
             regionConnections.ConnectedRegions = new List<RegionData>();
             regionConnections.RegionScene = scene;
@@ -454,9 +431,6 @@ namespace OpenSim.Region.RegionCombinerModule
                               conn.RegionScene.RegionInfo.RegionName,
                               regionConnections.RegionScene.RegionInfo.RegionName, offset, extents);
 
-            scene.BordersLocked = true;
-            conn.RegionScene.BordersLocked = true;
-
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
             ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
@@ -469,35 +443,10 @@ namespace OpenSim.Region.RegionCombinerModule
             // Inform Child region that it needs to forward it's terrain to the root region
             scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
 
-            // Extend the borders as appropriate
-            lock (conn.RegionScene.RegionInfo.EastBorders)
-                conn.RegionScene.RegionInfo.EastBorders[0].BorderLine.Z += (int)Constants.RegionSize;
-
-            lock (conn.RegionScene.RegionInfo.NorthBorders)
-                conn.RegionScene.RegionInfo.NorthBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-
-            lock (conn.RegionScene.RegionInfo.SouthBorders)
-                conn.RegionScene.RegionInfo.SouthBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-
-            lock (scene.RegionInfo.WestBorders)
-            {
-
-
-                scene.RegionInfo.WestBorders[0].BorderLine.Z = (int)((scene.RegionInfo.RegionLocX - conn.RegionScene.RegionInfo.RegionLocX) * (int)Constants.RegionSize); //auto teleport West
-
-                // Trigger auto teleport to root region
-                scene.RegionInfo.WestBorders[0].TriggerRegionX = conn.RegionScene.RegionInfo.RegionLocX;
-                scene.RegionInfo.WestBorders[0].TriggerRegionY = conn.RegionScene.RegionInfo.RegionLocY;
-            }
-
             // Reset Terrain..  since terrain loads before we get here, we need to load 
             // it again so it loads in the root region
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
             scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
-
-            // Unlock borders
-            conn.RegionScene.BordersLocked = false;
-            scene.BordersLocked = false;
 
             // Create a client event forwarder and add this region's events to the root region.
             if (conn.ClientEventForwarder != null)
@@ -520,9 +469,6 @@ namespace OpenSim.Region.RegionCombinerModule
             extents.X = conn.XEnd;
             conn.UpdateExtents(extents);
 
-            scene.BordersLocked = true;
-            conn.RegionScene.BordersLocked = true;
-
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
             ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
@@ -536,27 +482,12 @@ namespace OpenSim.Region.RegionCombinerModule
             conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
             scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
 
-            lock (conn.RegionScene.RegionInfo.NorthBorders)
-                conn.RegionScene.RegionInfo.NorthBorders[0].BorderLine.Z += (int)Constants.RegionSize;
-            lock (conn.RegionScene.RegionInfo.EastBorders)
-                conn.RegionScene.RegionInfo.EastBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-            lock (conn.RegionScene.RegionInfo.WestBorders)
-                conn.RegionScene.RegionInfo.WestBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-            lock (scene.RegionInfo.SouthBorders)
-            {
-                scene.RegionInfo.SouthBorders[0].BorderLine.Z = (int)((scene.RegionInfo.RegionLocY - conn.RegionScene.RegionInfo.RegionLocY) * (int)Constants.RegionSize); //auto teleport south
-                scene.RegionInfo.SouthBorders[0].TriggerRegionX = conn.RegionScene.RegionInfo.RegionLocX;
-                scene.RegionInfo.SouthBorders[0].TriggerRegionY = conn.RegionScene.RegionInfo.RegionLocY;
-            }
-
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
             scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
 
-            scene.BordersLocked = false;
-            conn.RegionScene.BordersLocked = false;
             if (conn.ClientEventForwarder != null)
                 conn.ClientEventForwarder.AddSceneToEventForwarding(scene);
             landTerrainChannel.AddRegion(ConnectedRegion, terrainHeightmap);
@@ -576,9 +507,6 @@ namespace OpenSim.Region.RegionCombinerModule
             extents.X = regionConnections.XEnd + conn.XEnd;
             conn.UpdateExtents(extents);
 
-            scene.BordersLocked = true;
-            conn.RegionScene.BordersLocked = true;
-
             RegionData ConnectedRegion = new RegionData();
             ConnectedRegion.Offset = offset;
             ConnectedRegion.RegionId = scene.RegionInfo.RegionID;
@@ -590,71 +518,12 @@ namespace OpenSim.Region.RegionCombinerModule
                              conn.RegionScene.RegionInfo.RegionName,
                              regionConnections.RegionScene.RegionInfo.RegionName, offset, extents);
 
-            conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
-            scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
-            lock (conn.RegionScene.RegionInfo.NorthBorders)
-            {
-                if (conn.RegionScene.RegionInfo.NorthBorders.Count == 1)// &&  2)
-                {
-                    //compound border
-                    // already locked above
-                    conn.RegionScene.RegionInfo.NorthBorders[0].BorderLine.Z += (int)Constants.RegionSize;
-
-                    lock (conn.RegionScene.RegionInfo.EastBorders)
-                        conn.RegionScene.RegionInfo.EastBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-                    lock (conn.RegionScene.RegionInfo.WestBorders)
-                        conn.RegionScene.RegionInfo.WestBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-                }
-            }
-
-            lock (scene.RegionInfo.SouthBorders)
-            {
-                scene.RegionInfo.SouthBorders[0].BorderLine.Z = (int)((scene.RegionInfo.RegionLocY - conn.RegionScene.RegionInfo.RegionLocY) * (int)Constants.RegionSize); //auto teleport south
-                scene.RegionInfo.SouthBorders[0].TriggerRegionX = conn.RegionScene.RegionInfo.RegionLocX;
-                scene.RegionInfo.SouthBorders[0].TriggerRegionY = conn.RegionScene.RegionInfo.RegionLocY;
-            }
-
-            lock (conn.RegionScene.RegionInfo.EastBorders)
-            {
-                if (conn.RegionScene.RegionInfo.EastBorders.Count == 1)// && conn.RegionScene.EastBorders.Count == 2)
-                {
-
-                    conn.RegionScene.RegionInfo.EastBorders[0].BorderLine.Z += (int)Constants.RegionSize;
-                    lock (conn.RegionScene.RegionInfo.NorthBorders)
-                        conn.RegionScene.RegionInfo.NorthBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-                    lock (conn.RegionScene.RegionInfo.SouthBorders)
-                        conn.RegionScene.RegionInfo.SouthBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-
-
-                }
-            }
-
-            lock (scene.RegionInfo.WestBorders)
-            {
-                scene.RegionInfo.WestBorders[0].BorderLine.Z = (int)((scene.RegionInfo.RegionLocX - conn.RegionScene.RegionInfo.RegionLocX) * (int)Constants.RegionSize); //auto teleport West
-                scene.RegionInfo.WestBorders[0].TriggerRegionX = conn.RegionScene.RegionInfo.RegionLocX;
-                scene.RegionInfo.WestBorders[0].TriggerRegionY = conn.RegionScene.RegionInfo.RegionLocY;
-            }
-
-            /*
-                                    else
-                                    {
-                                        conn.RegionScene.NorthBorders[0].BorderLine.Z += (int)Constants.RegionSize;
-                                        conn.RegionScene.EastBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-                                        conn.RegionScene.WestBorders[0].BorderLine.Y += (int)Constants.RegionSize;
-                                        scene.SouthBorders[0].BorderLine.Z += (int)Constants.RegionSize; //auto teleport south
-                                    }
-            */
-
-
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
             scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
-            scene.BordersLocked = false;
-            conn.RegionScene.BordersLocked = false;
-
+            
             if (conn.ClientEventForwarder != null)
                 conn.ClientEventForwarder.AddSceneToEventForwarding(scene);
 
@@ -1069,96 +938,30 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             lock (m_regions)
             {
-                foreach (RegionConnections rconn in m_regions.Values)
+                //For each region, we have to adjust the region size so that it includes all the other regions
+                // So to do this, we'll first find the corners of the rectangle we are going to create,
+                // then fix the sizes for all the regions.
+                // Note: all child regions get infinite borders
+
+                foreach (RegionConnections rconn in m_regions.Values) //This is normally just the 'root' region, but is stubbed out for multiple 'root' regions
                 {
-                    Vector3 offset = Vector3.Zero;
-                    rconn.RegionScene.BordersLocked = true;
+                    Vector2 offset = Vector2.Zero;
+                    //Find the largest offset of the connected regions to find the corners of our rectangle
                     foreach (RegionData rdata in rconn.ConnectedRegions)
                     {
                         if (rdata.Offset.X > offset.X) offset.X = rdata.Offset.X;
                         if (rdata.Offset.Y > offset.Y) offset.Y = rdata.Offset.Y;
+
+                        //Infinite so that they cannot have crossings as the root will have to deal with that
+                        rdata.RegionScene.RegionInfo.RegionSizeX = float.PositiveInfinity;
+                        rdata.RegionScene.RegionInfo.RegionSizeY = float.PositiveInfinity;
                     }
 
-                    lock (rconn.RegionScene.RegionInfo.NorthBorders)
-                    {
-                        Border northBorder = null;
-                        // If we don't already have an infinite border, create one.
-                        if (!TryGetInfiniteBorder(rconn.RegionScene.RegionInfo.NorthBorders, out northBorder))
-                        {
-                            northBorder = new Border();
-                            rconn.RegionScene.RegionInfo.NorthBorders.Add(northBorder);
-                        }
-                        
-                        northBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue,
-                                                             offset.Y + (int) Constants.RegionSize); //<---
-                        northBorder.CrossDirection = Cardinals.N;
-                    }
-
-                    lock (rconn.RegionScene.RegionInfo.SouthBorders)
-                    {
-                        Border southBorder = null;
-                        // If we don't already have an infinite border, create one.
-                        if (!TryGetInfiniteBorder(rconn.RegionScene.RegionInfo.SouthBorders, out southBorder))
-                        {
-                            southBorder = new Border();
-                            rconn.RegionScene.RegionInfo.SouthBorders.Add(southBorder);
-                        }
-                        southBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0); //--->
-                        southBorder.CrossDirection = Cardinals.S;
-                    }
-
-                    lock (rconn.RegionScene.RegionInfo.EastBorders)
-                    {
-                        Border eastBorder = null;
-                        // If we don't already have an infinite border, create one.
-                        if (!TryGetInfiniteBorder(rconn.RegionScene.RegionInfo.EastBorders, out eastBorder))
-                        {
-                            eastBorder = new Border();
-                            rconn.RegionScene.RegionInfo.EastBorders.Add(eastBorder);
-                        }
-                        eastBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, offset.X + (int)Constants.RegionSize);
-                        //<---
-                        eastBorder.CrossDirection = Cardinals.E;
-                    }
-
-                    lock (rconn.RegionScene.RegionInfo.WestBorders)
-                    {
-                        Border westBorder = null;
-                        // If we don't already have an infinite border, create one.
-                        if (!TryGetInfiniteBorder(rconn.RegionScene.RegionInfo.WestBorders, out westBorder))
-                        {
-                            westBorder = new Border();
-                            rconn.RegionScene.RegionInfo.WestBorders.Add(westBorder);
-
-                        }
-                        westBorder.BorderLine = new Vector3(float.MinValue, float.MaxValue, 0); //--->
-                        westBorder.CrossDirection = Cardinals.W;
-                    }
-
-                    rconn.RegionScene.BordersLocked = false;
+                    //Add the default region size + the offset so that we get the full rectangle
+                    rconn.RegionScene.RegionInfo.RegionSizeX = Constants.RegionSize + (offset.X * Constants.RegionSize);
+                    rconn.RegionScene.RegionInfo.RegionSizeY = Constants.RegionSize + (offset.Y * Constants.RegionSize);
                 }
             }
-        }
-
-        /// <summary>
-        /// Try and get an Infinite border out of a listT of borders
-        /// </summary>
-        /// <param name="borders"></param>
-        /// <param name="oborder"></param>
-        /// <returns></returns>
-        public static bool TryGetInfiniteBorder(List<Border> borders, out Border oborder)
-        {
-            // Warning! Should be locked before getting here!
-            foreach (Border b in borders)
-            {
-                if (b.BorderLine.X == float.MinValue && b.BorderLine.Y == float.MaxValue)
-                {
-                    oborder = b;
-                    return true;
-                }
-            }
-            oborder = null;
-            return false;
         }
        
         public RegionData GetRegionFromPosition(Vector3 pPosition)
