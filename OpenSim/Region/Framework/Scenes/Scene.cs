@@ -1964,66 +1964,29 @@ namespace OpenSim.Region.Framework.Scenes
             if (vialogin)
             {
                 CleanDroppedAttachments();
-                if (TestBorderCross(agent.startpos, Cardinals.E))
-                {
-                    Border crossedBorder = GetCrossedBorder(agent.startpos, Cardinals.E);
-                    agent.startpos.X = crossedBorder.BorderLine.Z - 1;
-                }
-
-                if (TestBorderCross(agent.startpos, Cardinals.N))
-                {
-                    Border crossedBorder = GetCrossedBorder(agent.startpos, Cardinals.N);
-                    agent.startpos.Y = crossedBorder.BorderLine.Z - 1;
-                }
-
-                //Mitigate http://opensimulator.org/mantis/view.php?id=3522
-                // Check if start position is outside of region
-                // If it is, check the Z start position also..   if not, leave it alone.
-                if (BordersLocked)
-                {
-                    lock (RegionInfo.EastBorders)
-                    {
-                        if (agent.startpos.X > RegionInfo.EastBorders[0].BorderLine.Z)
-                        {
-                            m_log.Warn("FIX AGENT POSITION");
-                            agent.startpos.X = RegionInfo.EastBorders[0].BorderLine.Z * 0.5f;
-                            if (agent.startpos.Z > 720)
-                                agent.startpos.Z = 720;
-                        }
-                    }
-                    lock (RegionInfo.NorthBorders)
-                    {
-                        if (agent.startpos.Y > RegionInfo.NorthBorders[0].BorderLine.Z)
-                        {
-                            m_log.Warn("FIX Agent POSITION");
-                            agent.startpos.Y = RegionInfo.NorthBorders[0].BorderLine.Z * 0.5f;
-                            if (agent.startpos.Z > 720)
-                                agent.startpos.Z = 720;
-                        }
-                    }
-                }
-                else
-                {
-                    if (agent.startpos.X > RegionInfo.EastBorders[0].BorderLine.Z)
-                    {
-                        m_log.Warn("FIX AGENT POSITION");
-                        agent.startpos.X = RegionInfo.EastBorders[0].BorderLine.Z * 0.5f;
-                        if (agent.startpos.Z > 720)
-                            agent.startpos.Z = 720;
-                    }
-                    if (agent.startpos.Y > RegionInfo.NorthBorders[0].BorderLine.Z)
-                    {
-                        m_log.Warn("FIX Agent POSITION");
-                        agent.startpos.Y = RegionInfo.NorthBorders[0].BorderLine.Z * 0.5f;
-                        if (agent.startpos.Z > 720)
-                            agent.startpos.Z = 720;
-                    }
-                }
-                //Keep users from being underground
+                //Make sure that users are not logging into bad positions in the sim
                 ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
-                if (agent.startpos.Z < channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y))
+                float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
+                if (agent.startpos.X < 0f || agent.startpos.Y < 0f || agent.startpos.Z < groundHeight ||
+                    agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
                 {
-                    agent.startpos.Z = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y) + 1;
+                    m_log.WarnFormat(
+                        "[Scene]: NewUserConnection was given an illegal position of {0} for avatar {1}. Clamping",
+                        agent.startpos, agent.firstname + " " + agent.lastname);
+
+                    if (agent.startpos.X < 0f) agent.startpos.X = 0f;
+                    if (agent.startpos.Y < 0f) agent.startpos.Y = 0f;
+
+                    if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
+                    if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
+
+                    //Keep users from being underground
+                    // Not good to get it twice, but we need to, because the X,Y might have changed
+                    groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
+                    if (agent.startpos.Z < groundHeight)
+                    {
+                        agent.startpos.Z = groundHeight;
+                    }
                 }
             }
 

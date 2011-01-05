@@ -154,30 +154,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //    position, sp.Scene.RegionInfo.RegionName);
 
                     // Teleport within the same region
-                    if (IsOutsideRegion(sp.Scene, position) || position.Z < 0)
+                    if (position.X < 0f || position.Y < 0f || position.Z < 0f ||
+                        position.X > sp.Scene.RegionInfo.RegionSizeX || position.Y > sp.Scene.RegionInfo.RegionSizeY)
                     {
-                        Vector3 emergencyPos = new Vector3(128, 128, 128);
-
                         m_log.WarnFormat(
-                            "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation() was given an illegal position of {0} for avatar {1}, {2}.  Substituting {3}",
-                            position, sp.Name, sp.UUID, emergencyPos);
-                        position = emergencyPos;
-                    }
+                            "[EntityTransferModule]: Given an illegal position of {0} for avatar {1}. Clamping",
+                            position, Name);
 
-                    float localAVHeight = sp.Appearance.AvatarHeight;
-                    float posZLimit = 22;
+                        if (position.X < 0f) position.X = 0f;
+                        if (position.Y < 0f) position.Y = 0f;
+                        if (position.Z < 0f) position.Z = 0f;
 
-                    // TODO: Check other Scene HeightField
-                    if (position.X > 0 && position.X <= (int)Constants.RegionSize && position.Y > 0 && position.Y <= (int)Constants.RegionSize)
-                    {
-                        ITerrainChannel heightmap = sp.Scene.RequestModuleInterface<ITerrainChannel>();
-                        posZLimit = (float)heightmap[(int)position.X, (int)position.Y];
-                    }
-
-                    float newPosZ = posZLimit + localAVHeight;
-                    if (posZLimit >= (position.Z - (localAVHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
-                    {
-                        position.Z = newPosZ;
+                        if (position.X > sp.Scene.RegionInfo.RegionSizeX) position.X = sp.Scene.RegionInfo.RegionSizeX;
+                        if (position.Y > sp.Scene.RegionInfo.RegionSizeY) position.Y = sp.Scene.RegionInfo.RegionSizeY;
                     }
 
                     sp.ControllingClient.SendTeleportStart(teleportFlags);
@@ -608,21 +597,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        protected virtual bool IsOutsideRegion(Scene s, Vector3 pos)
-        {
-            if (s.TestBorderCross(pos, Cardinals.N))
-                return true;
-            if (s.TestBorderCross(pos, Cardinals.S))
-                return true;
-            if (s.TestBorderCross(pos, Cardinals.E))
-                return true;
-            if (s.TestBorderCross(pos, Cardinals.W))
-                return true;
-
-            return false;
-        }
-
-
         #endregion
 
         #region Client Events
@@ -685,40 +659,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
-                uint regionX = scene.RegionInfo.RegionLocX;
-                uint regionY = scene.RegionInfo.RegionLocY;
-
-                Utils.LongToUInts(regionHandle, out regionX, out regionY);
-
-                int shiftx = (int)regionX - (int)scene.RegionInfo.RegionLocX * (int)Constants.RegionSize;
-                int shifty = (int)regionY - (int)scene.RegionInfo.RegionLocY * (int)Constants.RegionSize;
-
-                position.X += shiftx;
-                position.Y += shifty;
-
-                bool result = false;
-
-                if (scene.TestBorderCross(position, Cardinals.N))
-                    result = true;
-
-                if (scene.TestBorderCross(position, Cardinals.S))
-                    result = true;
-
-                if (scene.TestBorderCross(position, Cardinals.E))
-                    result = true;
-
-                if (scene.TestBorderCross(position, Cardinals.W))
-                    result = true;
-
-                // bordercross if position is outside of region
-
-                if (!result)
-                    regionHandle = scene.RegionInfo.RegionHandle;
-                else
+                if (regionHandle != scene.RegionInfo.RegionHandle)
                 {
-                    // not in this region, undo the shift!
-                    position.X -= shiftx;
-                    position.Y -= shifty;
+                    // not in this region, do the shift
+                    uint regionX = scene.RegionInfo.RegionLocX;
+                    uint regionY = scene.RegionInfo.RegionLocY;
+
+                    Utils.LongToUInts(regionHandle, out regionX, out regionY);
+
+                    int shiftx = (int)regionX - (int)scene.RegionInfo.RegionLocX * (int)Constants.RegionSize;
+                    int shifty = (int)regionY - (int)scene.RegionInfo.RegionLocY * (int)Constants.RegionSize;
+
+                    position.X += shiftx;
+                    position.Y += shifty;
                 }
 
                 Teleport(sp, regionHandle, position, lookAt, teleportFlags);
@@ -792,172 +745,18 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Crossings
 
-        public virtual void Cross(ScenePresence agent, bool isFlying)
+        public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
             Scene scene = agent.Scene;
-            Vector3 pos = agent.AbsolutePosition;
-            Vector3 newpos = new Vector3(pos.X, pos.Y, pos.Z);
             uint neighbourx = scene.RegionInfo.RegionLocX;
             uint neighboury = scene.RegionInfo.RegionLocY;
-            const float boundaryDistance = 1.7f;
-            Vector3 northCross = new Vector3(0, boundaryDistance, 0);
-            Vector3 southCross = new Vector3(0, -1 * boundaryDistance, 0);
-            Vector3 eastCross = new Vector3(boundaryDistance, 0, 0);
-            Vector3 westCross = new Vector3(-1 * boundaryDistance, 0, 0);
-
-            // distance to edge that will trigger crossing
-
-
-            // distance into new region to place avatar
-            const float enterDistance = 0.5f;
-
-            if (scene.TestBorderCross(pos + westCross, Cardinals.W))
-            {
-                if (scene.TestBorderCross(pos + northCross, Cardinals.N))
-                {
-                    Border b = scene.GetCrossedBorder(pos + northCross, Cardinals.N);
-                    neighboury += (uint)(int)(b.BorderLine.Z / (int)Constants.RegionSize);
-                }
-                else if (scene.TestBorderCross(pos + southCross, Cardinals.S))
-                {
-                    Border b = scene.GetCrossedBorder(pos + southCross, Cardinals.S);
-                    if (b.TriggerRegionX == 0 && b.TriggerRegionY == 0)
-                    {
-                        neighboury--;
-                        newpos.Y = Constants.RegionSize - enterDistance;
-                    }
-                    else
-                    {
-                        neighboury = b.TriggerRegionY;
-                        neighbourx = b.TriggerRegionX;
-
-                        Vector3 newposition = pos;
-                        newposition.X += (scene.RegionInfo.RegionLocX - neighbourx) * Constants.RegionSize;
-                        newposition.Y += (scene.RegionInfo.RegionLocY - neighboury) * Constants.RegionSize;
-                        agent.ControllingClient.SendAgentAlertMessage(
-                            String.Format("Moving you to region {0},{1}", neighbourx, neighboury), false);
-                        InformClientToInitateTeleportToLocation(agent, neighbourx, neighboury, newposition, scene);
-                        return;
-                    }
-                }
-
-                Border ba = scene.GetCrossedBorder(pos + westCross, Cardinals.W);
-                if (ba.TriggerRegionX == 0 && ba.TriggerRegionY == 0)
-                {
-                    neighbourx--;
-                    newpos.X = Constants.RegionSize - enterDistance;
-                }
-                else
-                {
-                    neighboury = ba.TriggerRegionY;
-                    neighbourx = ba.TriggerRegionX;
-
-
-                    Vector3 newposition = pos;
-                    newposition.X += (scene.RegionInfo.RegionLocX - neighbourx) * Constants.RegionSize;
-                    newposition.Y += (scene.RegionInfo.RegionLocY - neighboury) * Constants.RegionSize;
-                    agent.ControllingClient.SendAgentAlertMessage(
-                            String.Format("Moving you to region {0},{1}", neighbourx, neighboury), false);
-                    InformClientToInitateTeleportToLocation(agent, neighbourx, neighboury, newposition, scene);
-
-
-                    return;
-                }
-
-            }
-            else if (scene.TestBorderCross(pos + eastCross, Cardinals.E))
-            {
-                Border b = scene.GetCrossedBorder(pos + eastCross, Cardinals.E);
-                neighbourx += (uint)(int)(b.BorderLine.Z / (int)Constants.RegionSize);
-                newpos.X = enterDistance;
-
-                if (scene.TestBorderCross(pos + southCross, Cardinals.S))
-                {
-                    Border ba = scene.GetCrossedBorder(pos + southCross, Cardinals.S);
-                    if (ba.TriggerRegionX == 0 && ba.TriggerRegionY == 0)
-                    {
-                        neighboury--;
-                        newpos.Y = Constants.RegionSize - enterDistance;
-                    }
-                    else
-                    {
-                        neighboury = ba.TriggerRegionY;
-                        neighbourx = ba.TriggerRegionX;
-                        Vector3 newposition = pos;
-                        newposition.X += (scene.RegionInfo.RegionLocX - neighbourx) * Constants.RegionSize;
-                        newposition.Y += (scene.RegionInfo.RegionLocY - neighboury) * Constants.RegionSize;
-                        agent.ControllingClient.SendAgentAlertMessage(
-                            String.Format("Moving you to region {0},{1}", neighbourx, neighboury), false);
-                        InformClientToInitateTeleportToLocation(agent, neighbourx, neighboury, newposition, scene);
-                        return;
-                    }
-                }
-                else if (scene.TestBorderCross(pos + northCross, Cardinals.N))
-                {
-                    Border c = scene.GetCrossedBorder(pos + northCross, Cardinals.N);
-                    neighboury += (uint)(int)(c.BorderLine.Z / (int)Constants.RegionSize);
-                    newpos.Y = enterDistance;
-                }
-
-
-            }
-            else if (scene.TestBorderCross(pos + southCross, Cardinals.S))
-            {
-                Border b = scene.GetCrossedBorder(pos + southCross, Cardinals.S);
-                if (b.TriggerRegionX == 0 && b.TriggerRegionY == 0)
-                {
-                    neighboury--;
-                    newpos.Y = Constants.RegionSize - enterDistance;
-                }
-                else
-                {
-                    neighboury = b.TriggerRegionY;
-                    neighbourx = b.TriggerRegionX;
-                    Vector3 newposition = pos;
-                    newposition.X += (scene.RegionInfo.RegionLocX - neighbourx) * Constants.RegionSize;
-                    newposition.Y += (scene.RegionInfo.RegionLocY - neighboury) * Constants.RegionSize;
-                    agent.ControllingClient.SendAgentAlertMessage(
-                            String.Format("Moving you to region {0},{1}", neighbourx, neighboury), false);
-                    InformClientToInitateTeleportToLocation(agent, neighbourx, neighboury, newposition, scene);
-                    return;
-                }
-            }
-            else if (scene.TestBorderCross(pos + northCross, Cardinals.N))
-            {
-
-                Border b = scene.GetCrossedBorder(pos + northCross, Cardinals.N);
-                neighboury += (uint)(int)(b.BorderLine.Z / (int)Constants.RegionSize);
-                newpos.Y = enterDistance;
-            }
-
-            /*
-
-            if (pos.X < boundaryDistance) //West
-            {
-                neighbourx--;
-                newpos.X = Constants.RegionSize - enterDistance;
-            }
-            else if (pos.X > Constants.RegionSize - boundaryDistance) // East
-            {
-                neighbourx++;
-                newpos.X = enterDistance;
-            }
-
-            if (pos.Y < boundaryDistance) // South
-            {
-                neighboury--;
-                newpos.Y = Constants.RegionSize - enterDistance;
-            }
-            else if (pos.Y > Constants.RegionSize - boundaryDistance) // North
-            {
-                neighboury++;
-                newpos.Y = enterDistance;
-            }
-            */
+            //Add the offset
+            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
+            newposition.X += (scene.RegionInfo.RegionLocX * Constants.RegionSize) - crossingRegion.RegionLocX;
+            newposition.Y += (scene.RegionInfo.RegionLocY * Constants.RegionSize) - crossingRegion.RegionLocY;
 
             CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
-            d.BeginInvoke(agent, newpos, neighbourx, neighboury, isFlying, CrossAgentToNewRegionCompleted, d);
-
+            d.BeginInvoke(agent, newposition, neighbourx, neighboury, isFlying, CrossAgentToNewRegionCompleted, d);
         }
 
 

@@ -834,8 +834,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pos.Y < 0f) pos.Y = 0f;
                 if (pos.Z < 0f) pos.Z = 0f;
 
-                if (pos.X > Scene.RegionInfo.RegionSizeX) pos.X = Scene.RegionInfo.RegionSizeX;
-                if (pos.Y > Scene.RegionInfo.RegionSizeY) pos.Y = Scene.RegionInfo.RegionSizeY;
+                if (pos.X > Scene.RegionInfo.RegionSizeX) pos.X = Scene.RegionInfo.RegionSizeX / 2;
+                if (pos.Y > Scene.RegionInfo.RegionSizeY) pos.Y = Scene.RegionInfo.RegionSizeY / 2;
             }
 
             AbsolutePosition = pos;
@@ -2735,7 +2735,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 pos2 = AbsolutePosition;
             Vector3 vel = Velocity;
-            int neighbor = 0;
             int[] fix = new int[2];
 
             float timeStep = 0.1f;
@@ -2745,95 +2744,51 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsInTransit)
             {
-                // Checks if where it's headed exists a region
-                if (m_scene.TestBorderCross(pos2, Cardinals.W))
+                if (pos2.X < 0f || pos2.Y < 0f || pos2.Z < 0f ||
+                    pos2.X > Scene.RegionInfo.RegionSizeX || pos2.Y > Scene.RegionInfo.RegionSizeY)
                 {
-                    if (m_scene.TestBorderCross(pos2, Cardinals.S))
+                    //If we are headed out of the region, make sure we have a region there
+                    INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
+                    if (neighborService != null)
                     {
-                        neighbor = HaveNeighbor(Cardinals.SW, ref fix);
-                    }
-                    else if (m_scene.TestBorderCross(pos2, Cardinals.N))
-                    {
-                        neighbor = HaveNeighbor(Cardinals.NW, ref fix);
-                    }
-                    else
-                    {
-                        neighbor = HaveNeighbor(Cardinals.W, ref fix);
-                    }
-                }
-                else if (m_scene.TestBorderCross(pos2, Cardinals.E))
-                {
-                    if (m_scene.TestBorderCross(pos2, Cardinals.S))
-                    {
-                        neighbor = HaveNeighbor(Cardinals.SE, ref fix);
-                    }
-                    else if (m_scene.TestBorderCross(pos2, Cardinals.N))
-                    {
-                        neighbor = HaveNeighbor(Cardinals.NE, ref fix);
-                    }
-                    else
-                    {
-                        neighbor = HaveNeighbor(Cardinals.E, ref fix);
-                    }
-                }
-                else if (m_scene.TestBorderCross(pos2, Cardinals.S))
-                {
-                    neighbor = HaveNeighbor(Cardinals.S, ref fix);
-                }
-                else if (m_scene.TestBorderCross(pos2, Cardinals.N))
-                {
-                    neighbor = HaveNeighbor(Cardinals.N, ref fix);
-                }
+                        List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                // Makes sure avatar does not end up outside region
-                if (neighbor <= 0)
-                {
-                    if (m_requestedSitTargetUUID == UUID.Zero)
-                    {
-                        /*if (m_scene.TestBorderCross(pos2, Cardinals.S))
+                        uint RegionCrossX = Scene.RegionInfo.RegionLocX * Constants.RegionSize;
+                        uint RegionCrossY = Scene.RegionInfo.RegionLocY * Constants.RegionSize;
+
+                        if (pos2.X < 0f) RegionCrossX--;
+                        if (pos2.Y < 0f) RegionCrossY--;
+                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += Constants.RegionSize;
+                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += Constants.RegionSize;
+                        GridRegion neighborRegion = null;
+
+                        foreach (GridRegion region in neighbors)
                         {
-                            m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
-                            m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
+                            if (region.RegionLocX == RegionCrossX &&
+                                region.RegionLocY == RegionCrossY)
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
                         }
-                        else if (m_scene.TestBorderCross(pos2, Cardinals.N))
+
+                        if (neighborRegion != null)
                         {
-                            m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
-                            m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
-                        }
-                        else if (m_scene.TestBorderCross(pos2, Cardinals.E))
-                        {
-                            m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
-                            m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
-                        }
-                        else if (m_scene.TestBorderCross(pos2, Cardinals.W))
-                        {
-                            m_forceToApply = new Vector3(-5, 0, 0) * Rotation;
-                            m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.1;
-                        }
-                        if (pos2.Z < 0 || pos2.Z + 2 < Scene.GetGroundHeight(pos2.X, pos2.Y))
-                        {
-                            if(m_forceToApply.HasValue)
-                                m_forceToApply += new Vector3(0, 0, 1);
+                            InTransit();
+                            bool isFlying = false;
+                            if (m_physicsActor != null)
+                                isFlying = m_physicsActor.Flying;
+
+                            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                            if (transferModule != null)
+                                transferModule.Cross(this, isFlying, neighborRegion);
                             else
-                                m_forceToApply = new Vector3(0, 0, 1);
-                            m_overrideUserInput = true;
-                            m_endForceTime = Util.UnixTimeSinceEpoch() + 0.5;
+                            {
+                                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+                            }
                         }
-                        double timenow = (double)Util.UnixTimeSinceEpoch();
-                        if (m_endForceTime != 0 && m_endForceTime < timenow)
-                        {
-                            m_overrideUserInput = false;
-                            m_endForceTime = 0;
-                            m_forceToApply = Vector3.Zero;
-                        }*/
                     }
                 }
-                else if (neighbor > 0)
-                    CrossToNewRegion();
             }
             else
             {
@@ -2846,59 +2801,6 @@ namespace OpenSim.Region.Framework.Scenes
                 pos2.Y = pos2.Y + (vel.Y * timeStep);
                 pos2.Z = pos2.Z + (vel.Z * timeStep);
                 m_pos = pos2;
-            }
-        }
-
-        protected int HaveNeighbor(Cardinals car, ref int[] fix)
-        {
-            uint neighbourx = m_regionInfo.RegionLocX;
-            uint neighboury = m_regionInfo.RegionLocY;
-
-            int dir = (int)car;
-
-            if (dir > 1 && dir < 5) //Heading East
-                neighbourx++;
-            else if (dir > 5) // Heading West
-                neighbourx--;
-
-            if (dir < 3 || dir == 8) // Heading North
-                neighboury++;
-            else if (dir > 3 && dir < 7) // Heading Sout
-                neighboury--;
-
-            int x = (int)(neighbourx * Constants.RegionSize);
-            int y = (int)(neighboury * Constants.RegionSize);
-            GridRegion neighbourRegion = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, x, y);
-
-            if (neighbourRegion == null)
-            {
-                fix[0] = (int)(m_regionInfo.RegionLocX - neighbourx);
-                fix[1] = (int)(m_regionInfo.RegionLocY - neighboury);
-                return dir * (-1);
-            }
-            else
-                return dir;
-        }
-
-        /// <summary>
-        /// Moves the agent outside the region bounds
-        /// Tells neighbor region that we're crossing to it
-        /// If the neighbor accepts, remove the agent's viewable avatar from this scene
-        /// set them to a child agent.
-        /// </summary>
-        protected void CrossToNewRegion()
-        {
-            InTransit();
-            bool isFlying = false;
-            if (m_physicsActor != null)
-                isFlying = m_physicsActor.Flying;
-
-            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
-            if (transferModule != null)
-                transferModule.Cross(this, isFlying);
-            else
-            {
-                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
             }
         }
 
