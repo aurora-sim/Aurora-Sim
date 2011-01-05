@@ -147,11 +147,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             try
             {
-                if (regionHandle == sp.Scene.RegionInfo.RegionHandle)
+                uint x = 0, y = 0;
+                Utils.LongToUInts(regionHandle, out x, out y);
+
+                long XShift = (x - (int)(sp.Scene.RegionInfo.RegionLocX * Constants.RegionSize));
+                long YShift = (y - (int)(sp.Scene.RegionInfo.RegionLocY * Constants.RegionSize));
+                if (regionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
+                    (XShift <= sp.Scene.RegionInfo.RegionSizeX && YShift <= sp.Scene.RegionInfo.RegionSizeY &&
+                    sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
                 {
                     // m_log.DebugFormat(
                     //    "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
                     //    position, sp.Scene.RegionInfo.RegionName);
+
+                    //We have to add the shift as it is brought into this as well in regions that have larger RegionSizes
+                    position.X += XShift;
+                    position.Y += YShift;
 
                     // Teleport within the same region
                     if (position.X < 0f || position.Y < 0f || position.Z < 0f ||
@@ -176,8 +187,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else // Another region possibly in another simulator
                 {
-                    uint x = 0, y = 0;
-                    Utils.LongToUInts(regionHandle, out x, out y);
                     GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
 
                     if (reg != null)
