@@ -155,7 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
 
-        public bool EventsProcDataLocked = false;
+        public int EventsProcDataLocked = 0;
         public bool InEventsProcData = false;
         public ScriptEventsProcData EventsProcData = new ScriptEventsProcData();
 
@@ -171,8 +171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
 
 // this is still broken ?
-            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, true);
-            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this,true);
 
             if (!Silent)
             {
@@ -216,8 +215,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
-            if (!Silent) //Don't remove on a recompile because we'll make it under a different assembly
-                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+//            if (!Silent) //Don't remove on a recompile because we'll make it under a different assembly
+//                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
             //Remove any errors that might be sitting around
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
@@ -306,7 +305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Remove other items from the queue.
 
 //            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this);
-            m_ScriptEngine.MaintenanceThread.FlushEventSchQueue(this, false);
+            m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, false); // let current InExec finish or lsl reset fails
 //            VersionID++;
             //Reset the state to default
             State = "default";
@@ -331,6 +330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.RemoveScript(part.UUID, ItemID);
 
             //Fire state_entry
+            m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this,false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], VersionID, EventPriority.FirstStart, new object[] { });
 
             m_ScriptEngine.MaintenanceThread.AddToStateSaverQueue(this, true);
@@ -476,6 +476,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Start(bool reupload)
         {
             DateTime StartTime = DateTime.Now.ToUniversalTime();
+            string stmp="";
 
             //Clear out the removing of events for this script.
             VersionID++;
@@ -528,19 +529,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
 
             // Attempt to find a state save to load from
+            
+
             if (!reupload && Loading && ScriptFrontend != null) //Only get state saves on rezzing or region start up, in both cases, we will have the cached state as we loaded all states when the region started. 
                 LastStateSave = ScriptFrontend.GetStateSave(ItemID, UserInventoryItemID, true);
 
+            if(LastStateSave != null)
+                stmp = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
+                    LastStateSave.AssemblyName.ToString().Substring(0, 3),
+                    LastStateSave.AssemblyName));
             //If the saved state exists, if it isn't a reupload (something changed), and if the assembly exists, load the state save
             if (!reupload && Loading && LastStateSave != null
-                && File.Exists(Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
-                    "Scripts",
-                    LastStateSave.AssemblyName))))
+                && File.Exists(stmp))
             {
                 //Retrive the previous assembly
-                AssemblyName = Path.Combine(m_ScriptEngine.ScriptEnginesPath, Path.Combine(
-                    "Scripts",
-                    LastStateSave.AssemblyName));
+                AssemblyName = stmp;
             }
             else
             {
@@ -683,7 +686,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             MainConsole.Instance.Output("[" + m_ScriptEngine.ScriptEngineName +
                     "]: Started Script " + InventoryItem.Name +
-                    " in object " + part.Name +
+                    " in object " + part.Name + "@" + part.ParentGroup.RootPart.AbsolutePosition +
                     (presence != null ? " by " + presence.Name : "") + 
                     " in region " + part.ParentGroup.Scene.RegionInfo.RegionName +
                     " in " + time.TotalSeconds + " seconds.", "AppendTimeStamp");

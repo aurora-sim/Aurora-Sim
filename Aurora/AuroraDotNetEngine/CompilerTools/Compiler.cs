@@ -174,6 +174,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, int VersionID, out string assembly)
         {
             assembly = "";
+            
             if (Script == String.Empty)
             {
                 AddError("No script text present");
@@ -183,7 +184,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_warnings.Clear();
             m_errors.Clear();
 
-            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
+            UUID assemblyGuid = UUID.Random();
+
+//            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
+
+            assembly = CheckDirectories(assemblyGuid.ToString() + ".dll", assemblyGuid);          
 
             IScriptConverter converter;
             string compileScript;
@@ -388,8 +393,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // DEBUG - write source to disk
                 if (WriteScriptSourceToDebugFile)
                 {
-                    string srcFileName = FilePrefix + "_source_" +
-                            Path.GetFileNameWithoutExtension(assembly) + ext;
+                    string srcFileName = Path.GetFileNameWithoutExtension(assembly) + ext;
                     try
                     {
                         File.WriteAllText(Path.Combine(m_scriptEngine.ScriptEnginesPath,
