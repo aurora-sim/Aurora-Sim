@@ -1242,7 +1242,6 @@ namespace OpenSim.Framework
                         float OrbitalPosition);
 
         void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks);
-        void SendViewerTime(int phase);
         UUID GetDefaultAnimation(string name);
 
         void SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, Byte[] charterMember, string flAbout,

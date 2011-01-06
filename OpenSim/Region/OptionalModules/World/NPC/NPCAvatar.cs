@@ -819,10 +819,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks)
         {
         }
-            
-        public void SendViewerTime(int phase)
-        {
-        }
 
         public void SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, Byte[] charterMember,
                                          string flAbout, uint flags, UUID flImageID, UUID imageID, string profileURL,

@@ -240,6 +240,12 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_sceneGraph.PhysicsScene.TimeDilation = value; }
         }
 
+        public override string ToString()
+        {
+            return "Name: " + m_regInfo.RegionName + ", Loc: " +
+                m_regInfo.RegionLocX + "," + m_regInfo.RegionLocY + ", Port: " + m_regInfo.InternalEndPoint.Port;
+        }
+
         #region Services
 
         public IAssetService AssetService

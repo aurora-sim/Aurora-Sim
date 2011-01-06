@@ -54,6 +54,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public int Asset;
         /// <summary>Drip rate for state packets</summary>
         public int State;
+        /// <summary>Drip rate for AvatarInfo packets</summary>
+        public int AvatarInfo;
         /// <summary>Drip rate for the parent token bucket</summary>
         public int Total;
 
@@ -75,6 +77,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public int StateLimit;
         /// <summary>Burst rate for the parent token bucket</summary>
         public int TotalLimit;
+        /// <summary>Burst rate for the parent token bucket</summary>
+        public int AvatarInfoLimit;
 
         /// <summary>
         /// Default constructor
@@ -94,6 +98,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 Texture = throttleConfig.GetInt("texture_default", 1000);
                 Asset = throttleConfig.GetInt("asset_default", 1000);
                 State = throttleConfig.GetInt("state_default", 1000);
+                AvatarInfo = throttleConfig.GetInt("avatar_info_default", 1000);
 
                 ResendLimit = throttleConfig.GetInt("resend_limit", 18750);
                 LandLimit = throttleConfig.GetInt("land_limit", 29750);
@@ -103,6 +108,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 TextureLimit = throttleConfig.GetInt("texture_limit", 55750);
                 AssetLimit = throttleConfig.GetInt("asset_limit", 27500);
                 StateLimit = throttleConfig.GetInt("state_limit", 37000);
+                AvatarInfoLimit = throttleConfig.GetInt("avatar_info_limit", 37000);
 
                 Total = throttleConfig.GetInt("client_throttle_max_bps", 0);
                 TotalLimit = Total;
@@ -130,6 +136,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return Asset;
                 case ThrottleOutPacketType.State:
                     return State;
+                case ThrottleOutPacketType.AvatarInfo:
+                    return AvatarInfo;
                 case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;
@@ -156,6 +164,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return AssetLimit;
                 case ThrottleOutPacketType.State:
                     return StateLimit;
+                case ThrottleOutPacketType.AvatarInfo:
+                    return AvatarInfoLimit;
                 case ThrottleOutPacketType.Unknown:
                 default:
                     return 0;

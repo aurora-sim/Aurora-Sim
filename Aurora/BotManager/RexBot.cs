@@ -2452,11 +2452,6 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.SendViewerTime(int phase)
-        {
-            
-        }
-
         UUID IClientAPI.GetDefaultAnimation(string name)
         {
             return UUID.Zero;

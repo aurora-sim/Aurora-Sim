@@ -752,10 +752,6 @@ namespace Aurora.BotManager
         
         public void SendViewerEffect(ViewerEffectPacket.EffectBlock[] effectBlocks)
         {
-        }        
-
-        public void SendViewerTime(int phase)
-        {
         }
 
         public void SendAvatarProperties(UUID avatarID, string aboutText, string bornOn, Byte[] charterMember,
