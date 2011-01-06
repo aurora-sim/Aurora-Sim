@@ -2855,7 +2855,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Bit 0: Mature, bit 7: on sale, other bits: no idea
             reply.Data.Flags = (byte)(
-                (((Scene)this.Scene).RegionInfo.AccessLevel > 13 ? (1 << 0) : 0) +
+                (((Scene)this.Scene).RegionInfo.RegionSettings.Maturity > 0 ? (1 << 0) : 0) +
                 ((land.Flags & (uint)ParcelFlags.ForSale) != 0 ? (1 << 7) : 0));
 
             Vector3 pos = land.UserLocation;

@@ -46,6 +46,22 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
     public class SceneObjectSerializer
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
+        /// <summary>
+        /// Restore this part from the serialized xml representation.
+        /// </summary>
+        /// <param name="fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
+        /// <param name="xmlReader"></param>
+        /// <returns></returns>
+        public static SceneObjectPart FromXml(XmlTextReader xmlReader, IRegistryCore scene)
+        {
+            SceneObjectPart part = Xml2ToSOP(xmlReader, scene);
+
+            // for tempOnRez objects, we have to fix the Expire date.
+            if ((part.Flags & PrimFlags.TemporaryOnRez) != 0) part.ResetExpire();
+
+            return part;
+        }
 
         /// <summary>
         /// Deserialize a scene object from the original xml format
@@ -84,7 +100,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 sr = new StringReader(parts[0].InnerXml);
                 reader = new XmlTextReader(sr);
                 Scene m_sceneForGroup = scene is Scene ? (Scene)scene : null;
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(fromUserInventoryItemID, reader, scene), m_sceneForGroup, false);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader, scene), m_sceneForGroup, false);
+                sceneObject.RootPart.FromUserInventoryItemID = fromUserInventoryItemID;
                 reader.Close();
                 sr.Close();
 
@@ -94,7 +111,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].InnerXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
+                    SceneObjectPart part = FromXml(reader, scene);
                     sceneObject.AddChild(part, part.LinkNum);
                     part.TrimPermissions();
                     part.StoreUndoState();
@@ -195,7 +212,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
                 StringReader sr = new StringReader(parts[0].OuterXml);
                 XmlTextReader reader = new XmlTextReader(sr);
-                SceneObjectGroup sceneObject = new SceneObjectGroup(SceneObjectPart.FromXml(reader, scene), scene);
+                SceneObjectGroup sceneObject = new SceneObjectGroup(FromXml(reader, scene), scene);
                 reader.Close();
                 sr.Close();
 
@@ -204,7 +221,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 {
                     sr = new StringReader(parts[i].OuterXml);
                     reader = new XmlTextReader(sr);
-                    SceneObjectPart part = SceneObjectPart.FromXml(reader, scene);
+                    SceneObjectPart part = FromXml(reader, scene);
 
                     sceneObject.AddChild(part, part.LinkNum);
 
@@ -1381,7 +1398,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, IRegistryCore scene)
         {
-            SceneObjectPart obj = new SceneObjectPart(scene);
+            /*SceneObjectPart obj = new SceneObjectPart(scene);
             obj.IsLoading = true;
             reader.ReadStartElement("SceneObjectPart");
 
@@ -1413,6 +1430,41 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             //reader.ReadEndElement(); // SceneObjectPart
             obj.IsLoading = false;
+
+            //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
+            return obj;*/
+
+            SceneObjectPart obj = new SceneObjectPart(scene);
+
+            reader.ReadStartElement("SceneObjectPart");
+
+            string nodeName = string.Empty;
+            while (reader.Name != "SceneObjectPart")
+            {
+                nodeName = reader.Name;
+                SOPXmlProcessor p = null;
+                if (m_SOPXmlProcessors.TryGetValue(reader.Name, out p))
+                {
+                    //m_log.DebugFormat("[XXX] Processing: {0}", reader.Name);
+                    try
+                    {
+                        p(obj, reader);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}", nodeName, e);
+                        if (reader.NodeType == XmlNodeType.EndElement)
+                            reader.Read();
+                    }
+                }
+                else
+                {
+                    //                    m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element {0}", nodeName);
+                    reader.ReadOuterXml(); // ignore
+                }
+            }
+
+            reader.ReadEndElement(); // SceneObjectPart
 
             //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
             return obj;

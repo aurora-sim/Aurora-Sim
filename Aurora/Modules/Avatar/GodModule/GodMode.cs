@@ -387,7 +387,8 @@ namespace Aurora.Modules
             IEstateModule estate = m_scene.RequestModuleInterface<IEstateModule>();
             if (estate == null)
                 args.regionFlags = 0;
-            args.regionFlags = estate.GetRegionFlags();
+            else
+                args.regionFlags = estate.GetRegionFlags();
 
             args.simAccess = m_scene.RegionInfo.AccessLevel;
             args.sunHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;

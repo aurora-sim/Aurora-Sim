@@ -172,7 +172,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         m_log.WarnFormat(
                             "[EntityTransferModule]: Given an illegal position of {0} for avatar {1}. Clamping",
-                            position, Name);
+                            position, sp.Name);
 
                         if (position.X < 0f) position.X = 0f;
                         if (position.Y < 0f) position.Y = 0f;

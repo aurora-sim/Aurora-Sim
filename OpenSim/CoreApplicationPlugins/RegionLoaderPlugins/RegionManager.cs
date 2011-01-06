@@ -79,8 +79,8 @@ namespace Aurora.Modules.RegionLoader
 
             region.RegionType = Type.Text;
             region.ObjectCapacity = int.Parse(ObjectCount.Text);
-            uint maturityLevel = 0;
-            if (!uint.TryParse(Maturity.Text, out maturityLevel))
+            int maturityLevel = 0;
+            if (!int.TryParse(Maturity.Text, out maturityLevel))
             {
                 if (Maturity.Text == "Adult")
                     maturityLevel = 2;
@@ -89,7 +89,7 @@ namespace Aurora.Modules.RegionLoader
                 else //Leave it as PG by default if they do not select a valid option
                     maturityLevel = 0;
             }
-            region.AccessLevel = Util.ConvertMaturityToAccessLevel(maturityLevel);
+            region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
 
             m_connector.UpdateRegionInfo(region);
@@ -117,7 +117,7 @@ namespace Aurora.Modules.RegionLoader
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
-            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
+            int maturityLevel = region.RegionSettings.Maturity;
             if (maturityLevel == 0)
                 textBox4.Text = "PG";
             else if (maturityLevel == 1)
@@ -162,8 +162,8 @@ namespace Aurora.Modules.RegionLoader
 
             region.RegionType = textBox11.Text;
             region.ObjectCapacity = int.Parse(textBox6.Text);
-            uint maturityLevel = 0;
-            if (!uint.TryParse(Maturity.Text, out maturityLevel))
+            int maturityLevel = 0;
+            if (!int.TryParse(Maturity.Text, out maturityLevel))
             {
                 if (Maturity.Text == "Adult")
                     maturityLevel = 2;
@@ -172,7 +172,7 @@ namespace Aurora.Modules.RegionLoader
                 else //Leave it as PG by default if they do not select a valid option
                     maturityLevel = 0;
             }
-            region.AccessLevel = Util.ConvertMaturityToAccessLevel(maturityLevel);
+            region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
             region.NumberStartup = int.Parse(StartupNumberBox.Text);
             m_connector.UpdateRegionInfo(region);
@@ -192,7 +192,7 @@ namespace Aurora.Modules.RegionLoader
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
-            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
+            int maturityLevel = region.RegionSettings.Maturity;
             if (maturityLevel == 0)
                 textBox4.Text = "PG";
             else if (maturityLevel == 1)

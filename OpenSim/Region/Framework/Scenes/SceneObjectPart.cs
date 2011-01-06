@@ -403,6 +403,7 @@ namespace OpenSim.Region.Framework.Scenes
         public UUID FromUserInventoryItemID
         {
             get { return m_fromUserInventoryItemID; }
+            set { m_fromUserInventoryItemID = value; }
         }
 
         [XmlIgnore]
@@ -2424,33 +2425,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
                 }
             }
-        }
-
-        /// <summary>
-        /// Restore this part from the serialized xml representation.
-        /// </summary>
-        /// <param name="xmlReader"></param>
-        /// <returns></returns>
-        public static SceneObjectPart FromXml(XmlTextReader xmlReader, IRegistryCore scene)
-        {
-            return FromXml(UUID.Zero, xmlReader, scene);
-        }
-
-        /// <summary>
-        /// Restore this part from the serialized xml representation.
-        /// </summary>
-        /// <param name="fromUserInventoryItemId">The inventory id from which this part came, if applicable</param>
-        /// <param name="xmlReader"></param>
-        /// <returns></returns>
-        public static SceneObjectPart FromXml(UUID fromUserInventoryItemId, XmlTextReader xmlReader, IRegistryCore scene)
-        {
-            SceneObjectPart part = SceneObjectSerializer.Xml2ToSOP(xmlReader, scene);
-            part.m_fromUserInventoryItemID = fromUserInventoryItemId;
-
-            // for tempOnRez objects, we have to fix the Expire date.
-            if ((part.Flags & PrimFlags.TemporaryOnRez) != 0) part.ResetExpire();
-
-            return part;
         }
 
         public List<UUID> GetAvatarOnSitTarget()

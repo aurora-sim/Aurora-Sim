@@ -62,7 +62,6 @@ namespace OpenSim.Framework
 
         private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
-        // private IConfigSource m_configSource = null;
 
         public string proxyUrl = "";
         public int ProxyOffset = 0;
@@ -156,15 +155,6 @@ namespace OpenSim.Framework
             catch (Exception)
             {
             }
-        }
-
-        public RegionInfo(uint regionLocX, uint regionLocY, IPEndPoint internalEndPoint, string externalUri)
-        {
-            m_regionLocX = regionLocX;
-            m_regionLocY = regionLocY;
-
-            m_internalEndPoint = internalEndPoint;
-            m_externalHostName = externalUri;
         }
 
         public RegionInfo()
@@ -480,7 +470,7 @@ namespace OpenSim.Framework
                 NeedsUpdate = true;
                 m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
 
-                config.Set("AllowAlternatePorts for region " + name, m_allow_alternate_ports.ToString());
+                config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
             }
 
             // External IP
@@ -737,25 +727,6 @@ namespace OpenSim.Framework
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
             if(args["number_startup"] != null)
                 NumberStartup = args["number_startup"].AsInteger();
-        }
-
-        public static RegionInfo Create(UUID regionID, string regionName, uint regX, uint regY, string externalHostName, uint httpPort, uint simPort, uint remotingPort, string serverURI)
-        {
-            RegionInfo regionInfo;
-            IPEndPoint neighborInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);
-            regionInfo = new RegionInfo(regX, regY, neighborInternalEndPoint, externalHostName);
-            regionInfo.RemotingPort = remotingPort;
-            regionInfo.RemotingAddress = externalHostName;
-            regionInfo.HttpPort = httpPort;
-            regionInfo.RegionID = regionID;
-            regionInfo.RegionName = regionName;
-            regionInfo.ServerURI = serverURI;
-            return regionInfo;
-        }
-
-        public int getInternalEndPointPort()
-        {
-            return m_internalEndPoint.Port;
         }
 
         /// <summary>
