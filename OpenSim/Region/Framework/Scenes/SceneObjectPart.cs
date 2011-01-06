@@ -1308,7 +1308,7 @@ namespace OpenSim.Region.Framework.Scenes
                             actor.Orientation = value;
                             //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
                         }
-                        else
+                        else 
                         {
                             // Child prim we have to calculate it's world rotationwel
                             Quaternion resultingrotation = GetWorldRotation();
@@ -2155,100 +2155,102 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="linkNum"></param>
         /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
         /// <returns></returns>
-        public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts, SceneObjectGroup parent)
-        {
-            SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
-            dupe.m_parentGroup = parent;
-            dupe.m_shape = m_shape.Copy();
-            dupe.m_regionHandle = m_regionHandle;
-
-            if (userExposed)
+        /// 
+        /* not in use
+                public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts, SceneObjectGroup parent)
                 {
-                //                dupe.UUID = UUID.Random();  can't whould mess original inventory
-                dupe.m_uuid = UUID.Random();
-                dupe.ParentGroup.HasGroupChanged = true;
-                }
+                    SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
+                    dupe.m_parentGroup = parent;
+                    dupe.m_shape = m_shape.Copy();
+                    dupe.m_regionHandle = m_regionHandle;
 
-            //memberwiseclone means it also clones the physics actor reference
-            // This will make physical prim 'bounce' if not set to null.
-            if (!userExposed)
-                dupe.PhysActor = null;
+                    if (userExposed)
+                        {
+                        //                dupe.UUID = UUID.Random();  can't whould mess original inventory
+                        dupe.m_uuid = UUID.Random();
+                        dupe.ParentGroup.HasGroupChanged = true;
+                        }
 
-            dupe._ownerID = AgentID;
-            dupe._groupID = GroupID;
-            dupe.GroupPosition = GroupPosition;
-            dupe.OffsetPosition = OffsetPosition;
-            dupe.RotationOffset = RotationOffset;
-            dupe.Velocity = new Vector3(0, 0, 0);
-            dupe.Acceleration = new Vector3(0, 0, 0);
-            dupe.AngularVelocity = new Vector3(0, 0, 0);
-            dupe.Flags = Flags;
+                    //memberwiseclone means it also clones the physics actor reference
+                    // This will make physical prim 'bounce' if not set to null.
+                    if (!userExposed)
+                        dupe.PhysActor = null;
 
-            dupe._ownershipCost = _ownershipCost;
-            dupe._objectSaleType = _objectSaleType;
-            dupe._salePrice = _salePrice;
-            dupe._category = _category;
-            dupe.Rezzed = Rezzed;
+                    dupe._ownerID = AgentID;
+                    dupe._groupID = GroupID;
+                    dupe.m_groupPosition = m_groupPosition;
+                    dupe.m_offsetPosition = m_offsetPosition;
+                    dupe.m_rotationOffset = m_rotationOffset;
+                    dupe.Velocity = new Vector3(0, 0, 0);
+                    dupe.Acceleration = new Vector3(0, 0, 0);
+                    dupe.AngularVelocity = new Vector3(0, 0, 0);
+                    dupe.Flags = Flags;
 
-            dupe.m_inventory = new SceneObjectPartInventory(dupe);
-            dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
+                    dupe._ownershipCost = _ownershipCost;
+                    dupe._objectSaleType = _objectSaleType;
+                    dupe._salePrice = _salePrice;
+                    dupe._category = _category;
+                    dupe.Rezzed = Rezzed;
 
-            if (userExposed)
-            {
-                dupe.ResetEntityIDs();
-                dupe.LinkNum = linkNum;
-//              dupe.CloneScrips(this);  // go to fix our scripts
-                dupe.m_inventory.HasInventoryChanged = true;
+                    dupe.m_inventory = new SceneObjectPartInventory(dupe);
+                    dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
 
-            }
-            else
-            {
-                dupe.m_inventory.HasInventoryChanged = m_inventory.HasInventoryChanged;
-            }
-
-            // Move afterwards ResetIDs as it clears the localID
-            dupe.LocalId = localID;
-            // This may be wrong...    it might have to be applied in SceneObjectGroup to the object that's being duplicated.
-            dupe._lastOwnerID = OwnerID;
-
-            byte[] extraP = new byte[Shape.ExtraParams.Length];
-            Array.Copy(Shape.ExtraParams, extraP, extraP.Length);
-            dupe.Shape.ExtraParams = extraP;
-
-            if (userExposed)
-            {
-                if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
-                {
-                    m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived); 
-                }
-
-                PrimitiveBaseShape pbs = dupe.Shape;
-                if (dupe.PhysActor != null)
+                    if (userExposed)
                     {
-                    dupe.PhysActor.LocalID = localID;
-                    dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
-                        dupe.Name,
-                        pbs,
-                        dupe.AbsolutePosition,
-                        dupe.Scale,
-                        dupe.RotationOffset,
-                        dupe.PhysActor.IsPhysical);
+                        dupe.ResetEntityIDs();
+                        dupe.LinkNum = linkNum;
+        //              dupe.CloneScrips(this);  // go to fix our scripts
+                        dupe.m_inventory.HasInventoryChanged = true;
 
-                    dupe.PhysActor.LocalID = dupe.LocalId;
-                    dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
+                    }
+                    else
+                    {
+                        dupe.m_inventory.HasInventoryChanged = m_inventory.HasInventoryChanged;
+                    }
 
-                    if (VolumeDetectActive)
-                        dupe.PhysActor.SetVolumeDetect(1);
+                    // Move afterwards ResetIDs as it clears the localID
+                    dupe.LocalId = localID;
+                    // This may be wrong...    it might have to be applied in SceneObjectGroup to the object that's being duplicated.
+                    dupe._lastOwnerID = OwnerID;
+
+                    byte[] extraP = new byte[Shape.ExtraParams.Length];
+                    Array.Copy(Shape.ExtraParams, extraP, extraP.Length);
+                    dupe.Shape.ExtraParams = extraP;
+
+                    if (userExposed)
+                    {
+                        if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
+                        {
+                            m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived); 
+                        }
+
+                        PrimitiveBaseShape pbs = dupe.Shape;
+                        if (dupe.PhysActor != null)
+                            {
+                            dupe.PhysActor.LocalID = localID;
+                            dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
+                                dupe.Name,
+                                pbs,
+                                dupe.AbsolutePosition,
+                                dupe.Scale,
+                                dupe.RotationOffset,
+                                dupe.PhysActor.IsPhysical);
+
+                            dupe.PhysActor.LocalID = dupe.LocalId;
+                            dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
+
+                            if (VolumeDetectActive)
+                                dupe.PhysActor.SetVolumeDetect(1);
+                        }
+                    }
+
+                    ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this);
+
+        //            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
+
+                    return dupe;
                 }
-            }
-
-            ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this);
-
-//            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
-
-            return dupe;
-        }
-
+        */
         public SceneObjectPart Copy(SceneObjectGroup parent)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
@@ -2259,9 +2261,9 @@ namespace OpenSim.Region.Framework.Scenes
             //memberwiseclone means it also clones the physics actor reference
             // This will make physical prim 'bounce' if not set to null.
             dupe._groupID = GroupID;
-            dupe.GroupPosition = GroupPosition;
-            dupe.OffsetPosition = OffsetPosition;
-            dupe.RotationOffset = RotationOffset;
+            dupe.m_groupPosition = m_groupPosition;
+            dupe.m_offsetPosition = m_offsetPosition;
+            dupe.m_rotationOffset = m_rotationOffset;
             dupe.Velocity = new Vector3(0, 0, 0);
             dupe.Acceleration = new Vector3(0, 0, 0);
             dupe.AngularVelocity = new Vector3(0, 0, 0);
@@ -2621,12 +2623,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 GetWorldPosition()
         {
             Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
-
-            Vector3 axPos = OffsetPosition;
-
-            axPos *= parentRot;
-            Vector3 translationOffsetPosition = axPos;
-            return GroupPosition + translationOffsetPosition;
+            return (GroupPosition + OffsetPosition * parentRot);
         }
 
         /// <summary>
@@ -2635,17 +2632,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public Quaternion GetWorldRotation()
         {
-            Quaternion newRot;
+            Quaternion newRot = RotationOffset;
 
-            if (this.LinkNum == 0)
-            {
-                newRot = RotationOffset;
-            }
-            else
+            if (this.LinkNum != 0)
             {
                 Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
-                Quaternion oldRot = RotationOffset;
-                newRot = parentRot * oldRot;
+                newRot = parentRot * newRot;
             }
 
             return newRot;
@@ -4365,7 +4357,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
+/* not in use
         public EntityIntersection TestIntersection(Ray iray, Quaternion parentrot)
         {
             // In this case we're using a sphere with a radius of the largest dimension of the prim
@@ -4409,7 +4401,7 @@ namespace OpenSim.Region.Framework.Scenes
             // change this to;
             // radius = (radius / 2) - 0.01f;
             //
-            radius = (radius / 2) + (0.5f / 2) - 0.1f;
+            radius = (radius / 2) + (0.25f) - 0.1f;
 
             //radius = radius;
 
@@ -4441,8 +4433,8 @@ namespace OpenSim.Region.Framework.Scenes
             // We got an intersection.  putting together an EntityIntersection object with the
             // intersection information
             Vector3 ipoint =
-                new Vector3(iray.Origin.X + (iray.Direction.X*root), iray.Origin.Y + (iray.Direction.Y*root),
-                            iray.Origin.Z + (iray.Direction.Z*root));
+                new Vector3(rOrigin.X + (rDirection.X * root), rOrigin.Y + (rDirection.Y * root),
+                            rOrigin.Z + (rDirection.Z * root));
 
             result.HitTF = true;
             result.ipoint = ipoint;
@@ -4454,15 +4446,16 @@ namespace OpenSim.Region.Framework.Scenes
             // It's funny how the Vector3 object has a Distance function, but the Axiom.Math object doesn't.
             // I can write a function to do it..    but I like the fact that this one is Static.
 
-            Vector3 distanceConvert1 = new Vector3(iray.Origin.X, iray.Origin.Y, iray.Origin.Z);
-            Vector3 distanceConvert2 = new Vector3(ipoint.X, ipoint.Y, ipoint.Z);
-            float distance = (float) Util.GetDistanceTo(distanceConvert1, distanceConvert2);
+//            Vector3 distanceConvert1 = new Vector3(iray.Origin.X, iray.Origin.Y, iray.Origin.Z);
+//            Vector3 distanceConvert2 = new Vector3(ipoint.X, ipoint.Y, ipoint.Z);
+//
+            float distance = (float)Util.GetDistanceTo(rOrigin, ipoint);
 
             result.distance = distance;
 
             return result;
         }
-
+*/
         public EntityIntersection TestIntersectionOBB(Ray iray, Quaternion parentrot, bool frontFacesOnly, bool faceCenters)
         {
             // In this case we're using a rectangular prism, which has 6 faces and therefore 6 planes
@@ -4506,7 +4499,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 tScale = Vector3.Zero;
 
-            Vector3 AXscale = new Vector3(m_shape.Scale.X * 0.5f, m_shape.Scale.Y * 0.5f, m_shape.Scale.Z * 0.5f);
+            Vector3 AXscale = new Vector3(m_shape.Scale.X * 0.5f, m_shape.Scale.Y * 0.5f, m_shape.Scale.Z * 0.5f);           
 
             //Vector3 pScale = (AXscale) - (AXrot.Inverse() * (AXscale));
             //Vector3 nScale = (AXscale * -1) - (AXrot.Inverse() * (AXscale * -1));
@@ -4880,8 +4873,8 @@ namespace OpenSim.Region.Framework.Scenes
                 (pos.Y != GroupPosition.Y) ||
                 (pos.Z != GroupPosition.Z))
             {
-                Vector3 newPos = new Vector3(pos.X, pos.Y, pos.Z);
-                GroupPosition = newPos;
+//                Vector3 newPos = new Vector3(pos.X, pos.Y, pos.Z);
+                GroupPosition = pos;
                 ScheduleTerseUpdate();
             }
         }
