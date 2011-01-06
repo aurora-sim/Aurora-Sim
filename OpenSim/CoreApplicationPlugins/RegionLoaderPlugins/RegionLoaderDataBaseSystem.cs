@@ -114,6 +114,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 RegionLoaderFileSystem system = new RegionLoaderFileSystem();
                 system.Initialise(m_configSource, m_creator, m_openSim);
                 RegionInfo[] regionsToConvert = system.LoadRegions();
+                if (regionsToConvert == null)
+                    return;
 
                 //Now load all the regions into the database
                 IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();

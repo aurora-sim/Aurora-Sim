@@ -120,6 +120,8 @@ namespace OpenSim.Services.AvatarService
         public AvatarAppearance GetAppearance(UUID principalID)
         {
             AvatarData avatar = GetAvatar(principalID);
+            if (avatar == null || avatar.Data.Count == 0)
+                return null;
             return avatar.ToAvatarAppearance(principalID);
         }
 

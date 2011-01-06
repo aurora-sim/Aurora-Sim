@@ -545,27 +545,26 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Get the avatar
                 //
-                AvatarData avatar = null;
+                AvatarAppearance avappearance = new AvatarAppearance(account.PrincipalID);
                 if (m_AvatarService != null)
                 {
-                    avatar = m_AvatarService.GetAvatar(account.PrincipalID);
-                    if (avatar == null)
+                    avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
+                    if (avappearance == null)
                     {
-                        m_log.Error("[LLLOGINSERVICE]: CANNOT FIND AVATAR APPEARANCE " + account.FirstName + " " + account.LastName + ", SETTING TO DEFAULT");
+                        //Create an appearance for the user if one doesn't exist
+                        m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                         if (m_DefaultUserAvatarArchive != "")
                         {
                             archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, firstName, lastName);
                         }
                         else
                         {
-                            AvatarAppearance appearance = new AvatarAppearance();
-                            appearance.SetDefaultWearables();
+                            AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
                         }
-                        avatar = m_AvatarService.GetAvatar(account.PrincipalID);
+                        avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
                     //Verify that all assets exist now
-                    AvatarAppearance avappearance = avatar.ToAvatarAppearance(account.PrincipalID);
                     for (int i = 0; i < avappearance.Wearables.Length; i++)
                     {
                         bool messedUp = false;
@@ -574,14 +573,13 @@ namespace OpenSim.Services.LLLoginService
                             AssetBase asset = m_AssetService.Get(item.Value.ToString());
                             if (asset == null)
                             {
-                                m_log.Warn("Missing avatar appearance asset!");
+                                m_log.Warn("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
                                 messedUp = true;
                             }
                         }
                         if (messedUp)
                             avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                     }
-                    avatar = new AvatarData(avappearance);
                 }
 
                 //
@@ -589,7 +587,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 string reason = string.Empty;
                 GridRegion dest;
-                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avatar, session, secureSession, position, where,
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avappearance, session, secureSession, position, where,
                     clientVersion, channel, mac, id0, clientIP, out where, out reason, out dest);
                 destination = dest;
                 if (requestData.ContainsKey("id0"))
@@ -920,7 +918,7 @@ namespace OpenSim.Services.LLLoginService
             }
         }
 
-        protected AgentCircuitData LaunchAgentAtGrid(GridRegion gatekeeper, GridRegion destination, UserAccount account, AvatarData avatar,
+        protected AgentCircuitData LaunchAgentAtGrid(GridRegion gatekeeper, GridRegion destination, UserAccount account, AvatarAppearance appearance,
             UUID session, UUID secureSession, Vector3 position, string currentWhere, string viewer, string channel, string mac, string id0,
             IPEndPoint clientIP, out string where, out string reason, out GridRegion dest)
         {
@@ -962,7 +960,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService == null && simConnector != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
                 success = LaunchAgentDirectly(simConnector, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -976,7 +974,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, avatar, session, secureSession, circuitCode, position, viewer, clientIP.Address.ToString(), channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, viewer, clientIP.Address.ToString(), channel, mac, id0);
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -995,7 +993,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, avatar, session, secureSession, circuitCode, position, viewer, channel, clientIP.Address.ToString(), mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, viewer, channel, clientIP.Address.ToString(), mac, id0);
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1010,7 +1008,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, avatar, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
                 success = LaunchAgentIndirectly(gatekeeper, destination, aCircuit, clientIP, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -1024,7 +1022,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, clientIP, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, avatar, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1043,7 +1041,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, clientIP, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, avatar, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1062,14 +1060,14 @@ namespace OpenSim.Services.LLLoginService
         }
 
         protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
-            AvatarData avatar, UUID session, UUID secureSession, uint circuit, Vector3 position,
+            AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit, Vector3 position,
             string ipaddress, string viewer, string channel, string mac, string id0)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
 
             aCircuit.AgentID = account.PrincipalID;
-            if (avatar != null)
-                aCircuit.Appearance = avatar.ToAvatarAppearance(account.PrincipalID);
+            if (appearance != null)
+                aCircuit.Appearance = appearance;
             else
             {
                 m_log.Warn("Could not find appearance for acircuit!");

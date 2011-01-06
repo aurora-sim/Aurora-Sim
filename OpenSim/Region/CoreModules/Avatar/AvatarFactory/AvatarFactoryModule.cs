@@ -513,6 +513,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         // Ignore ruth's assets
                         if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
                         {
+                            m_log.ErrorFormat(
+                                "[AvatarFactory]: Found an asset for the default avatar, setting to default asset.",
+                                appearance.Wearables[i][j].ItemID, (WearableType)i);
                             appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
                             continue;
                         }
