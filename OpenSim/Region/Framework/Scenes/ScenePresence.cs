@@ -1075,7 +1075,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Vector3 SetSize = new Vector3(0.45f, 0.6f, Appearance.AvatarHeight);
                     PhysicsActor.Size = SetSize;
-                    SendAppearanceToAllOtherAgents();
                 }
             }
             m_avHeight = height;
@@ -2639,7 +2638,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Send appearance data to an agent.
         /// </summary>
         /// <param name="avatar"></param>
-        private void SendAppearanceToAgent(ScenePresence avatar)
+        public void SendAppearanceToAgent(ScenePresence avatar)
         {
             avatar.ControllingClient.SendAppearance(
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());

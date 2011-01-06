@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: SetAppearance unable to find presence for {0}", client.AgentId);
+                m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);
                 return false;
             }
 
@@ -183,12 +183,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     // one and we're done otherwise, ask for a rebake
                     if (checkonly) return false;
 
-                    m_log.InfoFormat("[AVFACTORY] missing baked texture {0}, request rebake", face.TextureID);
+                    m_log.InfoFormat("[AvatarFactory] missing baked texture {0}, request rebake", face.TextureID);
                     client.SendRebakeAvatarTextures(face.TextureID);
                 }
             }
 
-            m_log.DebugFormat("[AVFACTORY]: complete texture check for {0}", client.AgentId);
+            m_log.DebugFormat("[AvatarFactory]: complete texture check for {0}", client.AgentId);
 
             // If we only found default textures, then the appearance is not cached
             return (defonly ? false : true);
@@ -204,7 +204,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: SetAppearance unable to find presence for {0}", client.AgentId);
+                m_log.WarnFormat("[AvatarFactory]: SetAppearance unable to find presence for {0}", client.AgentId);
                 return;
             }
 
@@ -331,7 +331,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             if (m_scene.AssetService.Get(textureID.ToString()) == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: Missing baked texture {0} ({1}) for avatar {2}",
+                m_log.WarnFormat("[AvatarFactory]: Missing baked texture {0} ({1}) for avatar {2}",
                                  textureID, idx, client.Name);
                 return false;
             }
@@ -375,11 +375,14 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: Agent {0} no longer in the scene", agentid);
+                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
                 return;
             }
 
-            // m_log.WarnFormat("[AVFACTORY]: Handle appearance send for {0}", agentid);
+            // m_log.WarnFormat("[AvatarFactory]: Handle appearance send for {0}", agentid);
+
+            //Send our avatar to ourselves as well
+            sp.SendAppearanceToAgent(sp);
 
             // Send the appearance to everyone in the scene
             sp.SendAppearanceToAllOtherAgents();
@@ -393,11 +396,11 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: Agent {0} no longer in the scene", agentid);
+                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
                 return;
             }
 
-            // m_log.WarnFormat("[AVFACTORY] avatar {0} save appearance",agentid);
+            // m_log.WarnFormat("[AvatarFactory] avatar {0} save appearance",agentid);
 
             m_scene.AvatarService.SetAppearance(agentid, sp.Appearance);
         }
@@ -446,13 +449,13 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: SendWearables unable to find presence for {0}", client.AgentId);
+                m_log.WarnFormat("[AvatarFactory]: SendWearables unable to find presence for {0}", client.AgentId);
                 return;
             }
 
             //Make sure that the timer doesn't go off in the ScenePresence that this avatar hasn't requested its wearables yet
             sp.m_InitialHasWearablesBeenSent = true;
-            m_log.DebugFormat("[AVFACTORY]: Received request for wearables of {0}", sp.Name);
+            m_log.DebugFormat("[AvatarFactory]: Received request for wearables of {0}", sp.Name);
             client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
         }
 
@@ -466,11 +469,11 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
             {
-                m_log.WarnFormat("[AVFACTORY]: AvatarIsWearing unable to find presence for {0}", client.AgentId);
+                m_log.WarnFormat("[AvatarFactory]: AvatarIsWearing unable to find presence for {0}", client.AgentId);
                 return;
             }
 
-            m_log.DebugFormat("[AVFACTORY]: AvatarIsWearing called for {0}", client.AgentId);
+            m_log.DebugFormat("[AvatarFactory]: AvatarIsWearing called for {0}", client.AgentId);
 
             // operate on a copy of the appearance so we don't have to lock anything
             AvatarAppearance avatAppearance = new AvatarAppearance(sp.Appearance, false);
@@ -508,8 +511,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                             continue;
 
                         // Ignore ruth's assets
-                        if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][0].ItemID)
+                        if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
+                        {
+                            appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
                             continue;
+                        }
+
                         InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
                         baseItem = invService.GetItem(baseItem);
 
@@ -520,7 +527,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         else
                         {
                             m_log.ErrorFormat(
-                                "[AVFACTORY]: Can't find inventory item {0} for {1}, setting to default",
+                                "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
                                 appearance.Wearables[i][j].ItemID, (WearableType)i);
 
                             appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
@@ -532,7 +539,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             else
             {
                 appearance.Wearables = AvatarWearable.DefaultWearables;
-                m_log.WarnFormat("[AVFACTORY]: user {0} has no inventory, appearance isn't going to work", userID);
+                m_log.WarnFormat("[AvatarFactory]: user {0} has no inventory, setting appearance to default", userID);
             }
         }
     }
