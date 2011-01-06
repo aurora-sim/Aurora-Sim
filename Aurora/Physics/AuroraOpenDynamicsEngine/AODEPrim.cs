@@ -1981,8 +1981,6 @@ Console.WriteLine(" JointCreateFixed");
             
             resetCollisionAccounting();
             m_taintrot = _orientation;
-            if (Body != IntPtr.Zero)
-            myrot = d.BodyGetQuaternion(Body);
         }
 
         private void resetCollisionAccounting()
