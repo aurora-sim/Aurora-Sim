@@ -380,8 +380,8 @@ namespace OpenSim.Services.Interfaces
             kvp["owner_uuid"] = EstateOwner.ToString();
             kvp["Maturity"] = Maturity.ToString();
             kvp["Token"] = Token.ToString();
-            kvp["sizex"] = RegionSizeX.ToString();
-            kvp["sizey"] = RegionSizeY.ToString();
+            kvp["sizeX"] = RegionSizeX.ToString();
+            kvp["sizeY"] = RegionSizeY.ToString();
             return kvp;
         }
 
@@ -450,12 +450,11 @@ namespace OpenSim.Services.Interfaces
             if (kvp.ContainsKey("Token"))
                 Token = kvp["Token"].ToString();
 
-            if (kvp.ContainsKey("sizex"))
-                m_RegionSizeX = float.Parse(kvp["sizex"].ToString());
+            if (kvp.ContainsKey("sizeX"))
+                m_RegionSizeX = float.Parse(kvp["sizeX"].ToString());
 
-            if (kvp.ContainsKey("sizey"))
-                m_RegionSizeY = float.Parse(RegionSizeY.ToString());
+            if (kvp.ContainsKey("sizeY"))
+                m_RegionSizeY = float.Parse(kvp["sizeY"].ToString());
         }
     }
-
 }
