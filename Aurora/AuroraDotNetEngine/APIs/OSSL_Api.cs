@@ -266,7 +266,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Dictionary<UUID, List<SceneObjectGroup>> returns =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
-            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            Vector3 tmp = m_host.AbsolutePosition;
+            ILandObject LO = World.LandChannel.GetLandObject(tmp.X, tmp.Y);
                 
             if (Parameter == 0) // Owner objects
             {
@@ -321,7 +322,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             Dictionary<UUID, List<SceneObjectGroup>> returns =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
-            ILandObject LO = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            Vector3 tmp = m_host.AbsolutePosition;
+            ILandObject LO = World.LandChannel.GetLandObject(tmp.X, tmp.Y);
 
             foreach (SceneObjectGroup obj in LO.PrimsOverMe)
             {
@@ -590,10 +592,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(agentID);
             if (presence != null)
             {
+                Vector3 tmp = presence.AbsolutePosition;
                 // agent must be over owners land to avoid abuse
                 if (m_host.OwnerID
                     == World.LandChannel.GetLandObject(
-                        presence.AbsolutePosition.X, presence.AbsolutePosition.Y).LandData.OwnerID)
+                        tmp.X, tmp.Y).LandData.OwnerID)
                 {
                     presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
 
@@ -1268,9 +1271,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
             
-
+            Vector3 tmp = m_host.AbsolutePosition;
             ILandObject land
-                = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+                = World.LandChannel.GetLandObject(tmp.X, tmp.Y);
 
             if (land.LandData.OwnerID != m_host.OwnerID)
                 return;
@@ -1284,11 +1287,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
-            
 
+            Vector3 tmp = m_host.AbsolutePosition;
 
             ILandObject land
-                = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+                = World.LandChannel.GetLandObject(tmp.X, tmp.Y);
 
             if (land.LandData.OwnerID != m_host.OwnerID)
             {
