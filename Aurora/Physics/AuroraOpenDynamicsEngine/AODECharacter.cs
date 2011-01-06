@@ -94,7 +94,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool m_isPhysical = false; // the current physical status
         public bool m_tainted_isPhysical = false; // set when the physical status is tainted (false=not existing in physics engine, true=existing)
         public float MinimumGroundFlightOffset = 3f;
-
+        private Vector2[] m_blockedPositions = new Vector2[0];
+        
          private float lastUnderwaterPush = 0;
         private bool WasUnderWater = false;
         private bool ShouldBeWalking = true;
