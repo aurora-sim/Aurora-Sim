@@ -1035,6 +1035,7 @@ namespace OpenSim.Region.RegionCombinerModule
         }
 
         #region console commands
+
         public void FixPhantoms(string module, string[] cmdparams)
         {
         List<Scene> scenes = new List<Scene>(m_startingScenes.Values);
@@ -1047,6 +1048,7 @@ namespace OpenSim.Region.RegionCombinerModule
                 );
             }
         }
+
         #endregion
     }
 }

@@ -87,8 +87,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     int i = 0;
                     foreach (IConfig config in source.Configs)
                     {
-                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
-                        regionInfos.Add(regionInfo);
+                        RegionInfo region = new RegionInfo();
+                        //Use this to load the config from the file
+                        RegionLoaderFileSystem system = new RegionLoaderFileSystem();
+                        system.LoadRegionFromFile("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
+                        regionInfos.Add(region);
                         i++;
                     }
                     return regionInfos.ToArray();
@@ -100,6 +103,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void AddRegion(ISimulationBase baseOS, string[] cmd)
         {
             //Can't add regions to remote locations
+        }
+
+        public void DeleteRegion(RegionInfo region)
+        {
         }
 
         public void Dispose()

@@ -195,6 +195,8 @@ namespace OpenSim.Services.CapsService
         {
             foreach (ulong regionHandle in m_RegionCapsServices.Keys)
             {
+                if (m_RegionCapsServices[regionHandle] == null)
+                    continue;
                 m_RegionCapsServices[regionHandle].Close();
             }
             m_RegionCapsServices.Clear();

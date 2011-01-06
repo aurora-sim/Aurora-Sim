@@ -38,6 +38,12 @@ namespace Aurora.Framework
         void UpdateRegionInfo(RegionInfo region);
 
         /// <summary>
+        /// Delete the region from the loader
+        /// </summary>
+        /// <param name="regionInfo"></param>
+        void Delete(RegionInfo regionInfo);
+
+        /// <summary>
         /// Loads stored WindLight settings for the given region
         /// </summary>
         /// <param name="regionUUID"></param>
@@ -49,5 +55,5 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="wl"></param>
         void StoreRegionWindlightSettings(UUID RegionID, UUID ID, RegionLightShareData lsd);
-	}
+    }
 }

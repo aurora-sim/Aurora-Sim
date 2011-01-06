@@ -150,7 +150,7 @@ namespace OpenSim.Services.Connectors
                         //Tell this region about the original region
                         s.IncomingHelloNeighbor(incomingRegion);
                         //Tell the original region about this new region
-                        incomingRegion.TriggerRegionUp(n);
+                        s.EventManager.TriggerOnRegionUp(n);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
                     }

@@ -44,16 +44,6 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        //The object is a GridRegion
-        public delegate void TriggerOnRegionUp(object otherRegion);
-        public event TriggerOnRegionUp OnRegionUp;
-
-        public void TriggerRegionUp(object otherRegion)
-        {
-            if (OnRegionUp != null)
-                OnRegionUp(otherRegion);
-        }
-
         public bool commFailTF = false;
         public string RegionFile = String.Empty;
         public bool isSandbox = false;
@@ -88,7 +78,6 @@ namespace OpenSim.Framework
         public string RemotingAddress;
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
-        private IniConfigSource m_source;
         public int NumberStartup = 0;
 
         /// <summary>
@@ -102,64 +91,6 @@ namespace OpenSim.Framework
         /// The default is 256m
         /// </summary>
         public float RegionSizeY = 256;
-
-        // File based loading
-        //
-        public RegionInfo(string description, string filename, bool skipConsoleConfig, IConfigSource configSource, string configName)
-        {
-            // m_configSource = configSource;
-
-            if (filename.ToLower().EndsWith(".ini"))
-            {
-                if (!File.Exists(filename)) // New region config request
-                {
-                    IniConfigSource newFile = new IniConfigSource();
-
-                    RegionFile = filename;
-
-                    ReadNiniConfig(newFile, configName);
-                    newFile.Save(filename);
-
-                    return;
-                }
-
-                m_source = new IniConfigSource(filename, Nini.Ini.IniFileType.AuroraStyle);
-
-                bool saveFile = false;
-                if (m_source.Configs[configName] == null)
-                    saveFile = true;
-
-                RegionFile = filename;
-
-                bool update = ReadNiniConfig(m_source, configName);
-
-                if (configName != String.Empty && (saveFile || update))
-                    m_source.Save(filename);
-
-                return;
-            }
-
-            try
-            {
-                // This will throw if it's not legal Nini XML format
-                // and thereby toss it to the legacy loader
-                //
-                IConfigSource xmlsource = new XmlConfigSource(filename);
-
-                ReadNiniConfig(xmlsource, configName);
-
-                RegionFile = filename;
-
-                return;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public RegionInfo()
-        {
-        }
 
         public EstateSettings EstateSettings
         {
@@ -365,182 +296,6 @@ namespace OpenSim.Framework
             m_internalEndPoint = tmpEPE;
         }
 
-        //Returns true if the source should be updated. Returns false if it does not.
-        private bool ReadNiniConfig(IConfigSource source, string name)
-        {
-//            bool creatingNew = false;
-
-            if (name == String.Empty || source.Configs.Count == 0)
-            {
-                MainConsole.Instance.Output("=====================================\n");
-                MainConsole.Instance.Output("We are now going to ask a couple of questions about your region.\n");
-                MainConsole.Instance.Output("You can press 'enter' without typing anything to use the default\n");
-                MainConsole.Instance.Output("the default is displayed between [ ] brackets.\n");
-                MainConsole.Instance.Output("=====================================\n");
-            }
-
-            bool NeedsUpdate = false;
-            if (name == String.Empty)
-                name = MainConsole.Instance.CmdPrompt("New region name", name);
-            if (name == String.Empty)
-                throw new Exception("Cannot interactively create region with no name");
-
-            if (source.Configs.Count == 0)
-            {
-                source.AddConfig(name);
-
-//                creatingNew = true;
-                NeedsUpdate = true;
-            }
-
-            if (source.Configs[name] == null)
-            {
-                source.AddConfig(name);
-                NeedsUpdate = true;
-//                creatingNew = true;
-            }
-
-            IConfig config = source.Configs[name];
-
-            // UUID
-            //
-            string regionUUID = config.GetString("RegionUUID", string.Empty);
-
-            if (regionUUID == String.Empty)
-            {
-                NeedsUpdate = true;
-                UUID newID = UUID.Random();
-
-                regionUUID = MainConsole.Instance.CmdPrompt("Region UUID for region " + name, newID.ToString());
-                config.Set("RegionUUID", regionUUID);
-            }
-
-            RegionID = new UUID(regionUUID);
-            
-            RegionName = name;
-            string location = config.GetString("Location", String.Empty);
-
-            if (location == String.Empty)
-            {
-                NeedsUpdate = true;
-                location = MainConsole.Instance.CmdPrompt("Region Location for region " + name, "1000,1000");
-                config.Set("Location", location);
-            }
-
-            string[] locationElements = location.Split(new char[] {','});
-
-            m_regionLocX = Convert.ToUInt32(locationElements[0]);
-            m_regionLocY = Convert.ToUInt32(locationElements[1]);
-
-            // Internal IP
-            IPAddress address;
-
-            if (config.Contains("InternalAddress"))
-            {
-                address = IPAddress.Parse(config.GetString("InternalAddress", String.Empty));
-            }
-            else
-            {
-                NeedsUpdate = true;
-                address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address for region " + name, "0.0.0.0"));
-                config.Set("InternalAddress", address.ToString());
-            }
-
-            int port;
-
-            if (config.Contains("InternalPort"))
-            {
-                port = config.GetInt("InternalPort", 9000);
-            }
-            else
-            {
-                NeedsUpdate = true;
-                port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port for region " + name, "9000"));
-                config.Set("InternalPort", port);
-            }
-
-            m_internalEndPoint = new IPEndPoint(address, port);
-
-            if (config.Contains("AllowAlternatePorts"))
-            {
-                m_allow_alternate_ports = config.GetBoolean("AllowAlternatePorts", true);
-            }
-            else
-            {
-                NeedsUpdate = true;
-                m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
-
-                config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
-            }
-
-            // External IP
-            //
-            string externalName;
-
-            if (config.Contains("ExternalHostName"))
-            {
-                externalName = config.GetString("ExternalHostName", "SYSTEMIP");
-            }
-            else
-            {
-                NeedsUpdate = true;
-                externalName = MainConsole.Instance.CmdPrompt("External host name for region " + name, "SYSTEMIP");
-                config.Set("ExternalHostName", externalName);
-            }
-
-            if (externalName == "SYSTEMIP")
-            {
-                m_externalHostName = Util.GetLocalHost().ToString();
-                m_log.InfoFormat(
-                    "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}",
-                    m_externalHostName, name);
-            }
-            else
-            {
-                m_externalHostName = externalName;
-            }
-
-            m_regionType = config.GetString("RegionType", m_regionType);
-
-            if (m_regionType == String.Empty)
-            {
-                NeedsUpdate = true;
-                m_regionType = MainConsole.Instance.CmdPrompt("Region Type for region " + name, "Mainland");
-                config.Set("RegionType", m_regionType);
-            }
-
-            m_allowPhysicalPrims = config.GetBoolean("AllowPhysicalPrims", m_allowPhysicalPrims);
-
-            m_allowScriptCrossing = config.GetBoolean("AllowScriptCrossing", m_allowScriptCrossing);
-
-            m_trustBinariesFromForeignSims = config.GetBoolean("TrustBinariesFromForeignSims", m_trustBinariesFromForeignSims);
-
-            m_seeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor", m_seeIntoThisSimFromNeighbor);
-
-            m_objectCapacity = config.GetInt("MaxPrims", m_objectCapacity);
-
-
-            // Multi-tenancy
-            //
-            ScopeID = new UUID(config.GetString("ScopeID", ScopeID.ToString()));
-
-            //Do this last so that we can save the password immediately if it doesn't exist
-            UUID password = Password; //Save the pass as this TryParse will wipe it out
-            if (!UUID.TryParse(config.GetString("NeighborPassword", ""), out Password))
-            {
-                Password = password;
-                config.Set("NeighborPassword", password);
-                WriteNiniConfig(source);
-            }
-
-            return NeedsUpdate;
-        }
-
-        public void WriteNiniConfig()
-        {
-            WriteNiniConfig(m_source);
-        }
-
         public void WriteNiniConfig(IConfigSource source)
         {
             try
@@ -727,45 +482,6 @@ namespace OpenSim.Framework
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
             if(args["number_startup"] != null)
                 NumberStartup = args["number_startup"].AsInteger();
-        }
-
-        /// <summary>
-        /// This deletes the region from the region.ini file or region.xml file and removes the file if there are no other regions in the file
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        public void DeleteRegion(RegionInfo regionInfo)
-        {
-            if (!String.IsNullOrEmpty(regionInfo.RegionFile))
-            {
-                if (regionInfo.RegionFile.ToLower().EndsWith(".xml"))
-                {
-                    File.Delete(regionInfo.RegionFile);
-                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", regionInfo.RegionFile);
-                }
-                if (regionInfo.RegionFile.ToLower().EndsWith(".ini"))
-                {
-                    try
-                    {
-                        IniConfigSource source = new IniConfigSource(regionInfo.RegionFile, Nini.Ini.IniFileType.AuroraStyle);
-                        if (source.Configs[regionInfo.RegionName] != null)
-                        {
-                            source.Configs.Remove(regionInfo.RegionName);
-
-                            if (source.Configs.Count == 0)
-                            {
-                                File.Delete(regionInfo.RegionFile);
-                            }
-                            else
-                            {
-                                source.Save(regionInfo.RegionFile);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
         }
     }
 }

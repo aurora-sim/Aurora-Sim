@@ -110,67 +110,42 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             try
             {
-                List<RegionInfo> RegionsToConvert = new List<RegionInfo>();
-                string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
+                //Load the file loader and set it up and make sure that we pull any regions from it
+                RegionLoaderFileSystem system = new RegionLoaderFileSystem();
+                system.Initialise(m_configSource, m_creator, m_openSim);
+                RegionInfo[] regionsToConvert = system.LoadRegions();
 
-                try
-                {
-                    IConfig startupConfig = (IConfig)m_configSource.Configs["RegionStartup"];
-                    regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
-                }
-                catch (Exception)
-                {
-                    // No INI setting recorded.
-                }
-                if (!Directory.Exists(regionConfigPath))
-                    return;
-                //
-                string[] configFiles = Directory.GetFiles(regionConfigPath, "*.xml");
-                string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-
-                int i = 0;
-                if (iniFiles.Length != 0)
-                {
-                    foreach (string file in iniFiles)
-                    {
-                        IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
-
-                        foreach (IConfig config in source.Configs)
-                        {
-                            RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource, config.Name);
-                            RegionsToConvert.Add(regionInfo);
-                            i++;
-                        }
-                    }
-                }
-                if (configFiles.Length != 0)
-                {
-                    foreach (string file in configFiles)
-                    {
-                        RegionInfo regionInfo = new RegionInfo("REGION CONFIG #" + (i + 1), file, false, m_configSource, string.Empty);
-                        RegionsToConvert.Add(regionInfo);
-                        i++;
-                    }
-                }
+                //Now load all the regions into the database
                 IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
-                foreach (RegionInfo info in RegionsToConvert)
+                foreach (RegionInfo info in regionsToConvert)
                 {
                     conn.UpdateRegionInfo(info);
                 }
+
+                //Make sure all the regions got saved
                 bool foundAll = true;
-                foreach (RegionInfo info in RegionsToConvert)
+                foreach (RegionInfo info in regionsToConvert)
                 {
                     if (conn.GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //Something went really wrong here... so lets not destroy anything
-                if (foundAll && RegionsToConvert.Count != 0)
+                if (foundAll && regionsToConvert.Length != 0)
                 {
                     MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style.");
                 }
             }
             catch
             {
+            }
+        }
+
+        public void DeleteRegion(RegionInfo regionInfo)
+        {
+            IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            if (connector != null)
+            {
+                connector.Delete(regionInfo);
             }
         }
 

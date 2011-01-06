@@ -48,12 +48,16 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 {
     public class EntityTransferModule : ISharedRegionModule, IEntityTransferModule
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected bool m_Enabled = false;
         protected List<Scene> m_scenes = new List<Scene>();
         protected List<UUID> m_agentsInTransit;
         protected List<UUID> m_cancelingAgents;
+
+        #endregion
 
         #region ISharedRegionModule
 

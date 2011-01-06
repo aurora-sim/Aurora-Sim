@@ -52,6 +52,11 @@ namespace Aurora.Services.DataService
                 "RegionInfo","Disabled"}, Values.ToArray());
         }
 
+        public void Delete(RegionInfo region)
+        {
+            GD.Delete("simulator", new string[] { "RegionID" }, new object[] { region.RegionID });
+        }
+
         public RegionInfo[] GetRegionInfos(bool nonDisabledOnly)
         {
             List<RegionInfo> Infos = new List<RegionInfo>();

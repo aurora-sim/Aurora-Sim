@@ -675,7 +675,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (!cleanup)
                 return;
 
-            scene.RegionInfo.DeleteRegion(scene.RegionInfo);
+            IRegionLoader[] loaders = m_OpenSimBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader>();
+            foreach (IRegionLoader loader in loaders)
+            {
+                loader.DeleteRegion(scene.RegionInfo);
+            }
         }
 
         /// <summary>

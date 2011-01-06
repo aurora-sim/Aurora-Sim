@@ -378,9 +378,6 @@ namespace OpenSim.Region.Framework.Scenes
         public Scene(RegionInfo regInfo)
         {
             m_regInfo = regInfo;
-
-            //Register to regInfo events
-            m_regInfo.OnRegionUp += new RegionInfo.TriggerOnRegionUp(regInfo_OnRegionUp);
         }
 
         public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager) : this(regInfo)

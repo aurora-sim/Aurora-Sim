@@ -36,5 +36,7 @@ namespace OpenSim.Framework
         void AddRegion(ISimulationBase baseOS, string[] cmd);
 
         void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim);
+
+        void DeleteRegion(RegionInfo regionInfo);
     }
 }
