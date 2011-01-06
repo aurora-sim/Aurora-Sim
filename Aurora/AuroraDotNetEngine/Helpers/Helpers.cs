@@ -194,6 +194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void Populate(Scene scene)
         {
             SceneObjectPart part = scene.GetSceneObjectPart(Key);
+            Vector3 tmp;
             if (part == null) // Avatar, maybe?
             {
                 ScenePresence presence = scene.GetScenePresence(Key);
@@ -202,19 +203,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 Name = presence.Firstname + " " + presence.Lastname;
                 Owner = Key;
+
+                tmp = presence.AbsolutePosition;
                 Position = new LSL_Types.Vector3(
-                        presence.AbsolutePosition.X,
-                        presence.AbsolutePosition.Y,
-                        presence.AbsolutePosition.Z);
+                        tmp.X,
+                        tmp.Y,
+                        tmp.Z);
+                Quaternion rtmp = presence.Rotation;
                 Rotation = new LSL_Types.Quaternion(
-                        presence.Rotation.X,
-                        presence.Rotation.Y,
-                        presence.Rotation.Z,
-                        presence.Rotation.W);
+                        rtmp.X,
+                        rtmp.Y,
+                        rtmp.Z,
+                        rtmp.W);
+                tmp = presence.Velocity;
                 Velocity = new LSL_Types.Vector3(
-                        presence.Velocity.X,
-                        presence.Velocity.Y,
-                        presence.Velocity.Z);
+                        tmp.X,
+                        tmp.Y,
+                        tmp.Z);
 
                 Type = 0x01; // Avatar
                 if (presence.Velocity != Vector3.Zero)
@@ -245,17 +250,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     break;
                 }
             }
-
-            Position = new LSL_Types.Vector3(part.AbsolutePosition.X,
-                                             part.AbsolutePosition.Y,
-                                             part.AbsolutePosition.Z);
+            tmp = part.AbsolutePosition;
+            Position = new LSL_Types.Vector3(tmp.X,
+                                             tmp.Y,
+                                             tmp.Z);
 
             Quaternion wr = part.ParentGroup.GroupRotation;
             Rotation = new LSL_Types.Quaternion(wr.X, wr.Y, wr.Z, wr.W);
 
-            Velocity = new LSL_Types.Vector3(part.Velocity.X,
-                                             part.Velocity.Y,
-                                             part.Velocity.Z);
+            tmp = part.Velocity;
+            Velocity = new LSL_Types.Vector3(tmp.X,
+                                             tmp.Y,
+                                             tmp.Z);
         }
     }
 
