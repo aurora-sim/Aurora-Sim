@@ -55,6 +55,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         private System.Timers.Timer m_updateTimer = new System.Timers.Timer();
         private Dictionary<UUID, long> m_savequeue = new Dictionary<UUID, long>();
         private Dictionary<UUID, long> m_sendqueue = new Dictionary<UUID, long>();
+        private Dictionary<UUID, AvatarAppearance> m_saveQueueData = new Dictionary<UUID, AvatarAppearance>();
 
         private object m_setAppearanceLock = new object();
 
@@ -303,14 +304,14 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             foreach (CachedAgentArgs arg in args)
             {
                 UUID cachedID = UUID.Zero;
-                if (ad.Data.ContainsKey("CachedWearables"))
+                /*if (ad.Data.ContainsKey("CachedWearables"))
                 {
                     OSDArray array = (OSDArray)OSDParser.DeserializeJson(ad.Data["CachedWearables"]);
                     AvatarWearable wearable = new AvatarWearable();
                     wearable.MaxItems = 0; //Unlimited items
                     wearable.Unpack(array);
                     cachedID = wearable.GetAsset(arg.ID);
-                }
+                }*/
                 CachedAgentArgs respArgs = new CachedAgentArgs();
                 respArgs.ID = cachedID;
                 respArgs.TextureIndex = arg.TextureIndex;
@@ -365,7 +366,17 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             lock (m_savequeue)
             {
+                ScenePresence sp = m_scene.GetScenePresence(agentid);
+                if (sp == null)
+                {
+                    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                    return;
+                }
                 m_savequeue[agentid] = timestamp;
+                lock (m_saveQueueData)
+                {
+                    m_saveQueueData[agentid] = sp.Appearance;
+                }
                 m_updateTimer.Start();
             }
         }
@@ -375,14 +386,14 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             ScenePresence sp = m_scene.GetScenePresence(agentid);
             if (sp == null)
             {
-                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
                 return;
             }
 
             // m_log.WarnFormat("[AvatarFactory]: Handle appearance send for {0}", agentid);
 
             //Send our avatar to ourselves as well
-            sp.SendAppearanceToAgent(sp);
+            //sp.SendAppearanceToAgent(sp);
 
             // Send the appearance to everyone in the scene
             sp.SendAppearanceToAllOtherAgents();
@@ -393,16 +404,27 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         private void HandleAppearanceSave(UUID agentid)
         {
-            ScenePresence sp = m_scene.GetScenePresence(agentid);
-            if (sp == null)
-            {
-                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
-                return;
-            }
+            //If the avatar changes appearance, then proptly logs out, this will break!
+            //ScenePresence sp = m_scene.GetScenePresence(agentid);
+            //if (sp == null)
+            //{
+            //    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+            //    return;
+            //}
 
             // m_log.WarnFormat("[AvatarFactory] avatar {0} save appearance",agentid);
 
-            m_scene.AvatarService.SetAppearance(agentid, sp.Appearance);
+            lock (m_saveQueueData)
+            {
+                if (!m_saveQueueData.ContainsKey(agentid))
+                    return;
+
+                AvatarAppearance appearance = m_saveQueueData[agentid];
+
+                m_scene.AvatarService.SetAppearance(agentid, appearance);
+
+                m_saveQueueData.Remove(agentid);
+            }
         }
 
         private void HandleAppearanceUpdateTimer(object sender, EventArgs ea)

@@ -580,6 +580,16 @@ namespace OpenSim.Services.LLLoginService
                         if (messedUp)
                             avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                     }
+                    //Also verify that all baked texture indices exist
+                    foreach(byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
+                    {
+                        if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                        {
+                            m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
+                            avappearance.Texture.FaceTextures[BakedTextureIndex] = avappearance.Texture.CreateFace(BakedTextureIndex);
+                            m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                        }
+                    }
                 }
 
                 //
