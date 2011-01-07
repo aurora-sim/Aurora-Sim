@@ -778,12 +778,11 @@ namespace Aurora.Modules
             m_log.InfoFormat(
                 "[WORLD MAP]: Exporting world map for {0} to {1}", m_scene.RegionInfo.RegionName, exportPath);
 
-            List<MapBlockData> mapBlocks = new List<MapBlockData>();
             List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                    (int)(m_scene.RegionInfo.RegionLocX - 9) * (int)Constants.RegionSize,
-                    (int)(m_scene.RegionInfo.RegionLocX + 9) * (int)Constants.RegionSize,
-                    (int)(m_scene.RegionInfo.RegionLocY - 9) * (int)Constants.RegionSize,
-                    (int)(m_scene.RegionInfo.RegionLocY + 9) * (int)Constants.RegionSize);
+                    (int)(m_scene.RegionInfo.RegionLocX - (9 * (int)Constants.RegionSize)),
+                    (int)(m_scene.RegionInfo.RegionLocX + (9 * (int)Constants.RegionSize)),
+                    (int)(m_scene.RegionInfo.RegionLocY - (9 * (int)Constants.RegionSize)),
+                    (int)(m_scene.RegionInfo.RegionLocY + (9 * (int)Constants.RegionSize)));
             List<AssetBase> textures = new List<AssetBase>();
             List<Image> bitImages = new List<Image>();
 
@@ -809,10 +808,10 @@ namespace Aurora.Modules
             SolidBrush sea = new SolidBrush(Color.DarkBlue);
             g.FillRectangle(sea, 0, 0, 2560, 2560);
 
-            for (int i = 0; i < mapBlocks.Count; i++)
+            for (int i = 0; i < regions.Count; i++)
             {
-                ushort x = (ushort)((mapBlocks[i].X - m_scene.RegionInfo.RegionLocX) + 10);
-                ushort y = (ushort)((mapBlocks[i].Y - m_scene.RegionInfo.RegionLocY) + 10);
+                ushort x = (ushort)((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) + 10);
+                ushort y = (ushort)((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) + 10);
                 g.DrawImage(bitImages[i], (x * 128), 2560 - (y * 128), 128, 128); // y origin is top
             }
 

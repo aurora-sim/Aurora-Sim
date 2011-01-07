@@ -123,20 +123,14 @@ namespace Aurora.Modules
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
                     uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
 
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
+                    scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
+                    scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;
 
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
+                    IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
+                    foreach (IRegionLoader loader in loaders)
                     {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
+                        loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
                     }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
                 }
                 if (error == "Region overlaps another region")
                 {
@@ -148,17 +142,11 @@ namespace Aurora.Modules
                     scene.RegionInfo.RegionLocX = X;
                     scene.RegionInfo.RegionLocY = Y;
 
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
+                    IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
+                    foreach (IRegionLoader loader in loaders)
                     {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
+                        loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
                     }
-                    else
-                        SaveChangesFile("", scene.RegionInfo);
                 }
                 if (error.Contains("Can't move this region"))
                 {
@@ -168,20 +156,14 @@ namespace Aurora.Modules
                     {
                         string[] position = error.Split(',');
 
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]);
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]);
+                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]) * Constants.RegionSize;
+                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]) * Constants.RegionSize;
 
-                        IConfig config = m_config.Configs["RegionStartup"];
-                        if (config != null)
+                        IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
+                        foreach (IRegionLoader loader in loaders)
                         {
-                            //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                            if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                                Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
-                            else
-                                SaveChangesFile("", scene.RegionInfo);
+                            loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
                         }
-                        else
-                            SaveChangesFile("", scene.RegionInfo);
                     }
                     catch (Exception e)
                     {
@@ -195,17 +177,11 @@ namespace Aurora.Modules
                     string oldRegionName = scene.RegionInfo.RegionName;
                     scene.RegionInfo.RegionName = MainConsole.Instance.CmdPrompt("New Region Name", "");
 
-                    IConfig config = m_config.Configs["RegionStartup"];
-                    if (config != null)
+                    IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
+                    foreach (IRegionLoader loader in loaders)
                     {
-                        //TERRIBLE! Needs to be modular, but we can't access the module from a scene module!
-                        if (config.GetString("Default") == "RegionLoaderDataBaseSystem")
-                            Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IRegionInfoConnector>().UpdateRegionInfo(scene.RegionInfo);
-                        else
-                            SaveChangesFile(oldRegionName, scene.RegionInfo);
+                        loader.UpdateRegionInfo(oldRegionName, scene.RegionInfo);
                     }
-                    else
-                        SaveChangesFile(oldRegionName, scene.RegionInfo);
                 }
                 if (error == "Region locked out")
                 {
@@ -234,60 +210,6 @@ namespace Aurora.Modules
                 RegisterRegionWithGrid(scene);
             }
         }
-
-        #region Private Members
-
-        /// <summary>
-        /// Save the changes to the RegionInfo to the file that it came from in the Regions/ directory
-        /// </summary>
-        /// <param name="oldName"></param>
-        /// <param name="regionInfo"></param>
-        private void SaveChangesFile(string oldName, RegionInfo regionInfo)
-        {
-            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-
-            if (oldName == "")
-                oldName = regionInfo.RegionName;
-            try
-            {
-                IConfig config = m_config.Configs["RegionStartup"];
-                if (config != null)
-                {
-                    regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
-                }
-            }
-            catch (Exception)
-            {
-                // No INI setting recorded.
-            }
-            if (!Directory.Exists(regionConfigPath))
-                return;
-
-            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
-            foreach (string file in iniFiles)
-            {
-                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
-                IConfig cnf = source.Configs[oldName];
-                if (cnf != null)
-                {
-                    try
-                    {
-                        source.Configs.Remove(cnf);
-                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
-                        cnf.Set("RegionType", regionInfo.RegionType);
-                        cnf.Name = regionInfo.RegionName;
-                        source.Configs.Add(cnf);
-                    }
-                    catch
-                    {
-                    }
-                    source.Save();
-                    break;
-                }
-            }
-        }
-
-        #endregion
 
         #region GridSessionID class
 

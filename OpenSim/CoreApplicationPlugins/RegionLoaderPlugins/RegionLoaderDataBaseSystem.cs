@@ -52,6 +52,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private IConfigSource m_configSource;
         private bool m_default = false;
 
+        public bool Default
+        {
+            get { return m_default; }
+        }
+
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
@@ -61,6 +66,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
                 m_default = config.GetString("Default") == Name;
+
+            m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
         public void Close()
@@ -153,6 +160,26 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void Dispose()
         {
+        }
+
+        public void UpdateRegionInfo(string oldName, RegionInfo regionInfo)
+        {
+            IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            if (connector != null)
+            {
+                //Make sure we have this region in the database
+                if (connector.GetRegionInfo(oldName) == null)
+                    return;
+                RegionInfo copy = new RegionInfo();
+                //Make an exact copy
+                copy.UnpackRegionInfoData(regionInfo.PackRegionInfoData(true));
+
+                //Fix the name of the region so we can delete the old one
+                copy.RegionName = oldName;
+                DeleteRegion(copy);
+                //Now add the new one
+                connector.UpdateRegionInfo(regionInfo);
+            }
         }
     }
 }

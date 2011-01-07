@@ -31,9 +31,13 @@ namespace OpenSim.Framework
 {
     public interface IRegionLoader : IPlugin
     {
+        bool Default { get; }
+
         RegionInfo[] LoadRegions();
 
         void AddRegion(ISimulationBase baseOS, string[] cmd);
+
+        void UpdateRegionInfo(string oldName, RegionInfo regionInfo);
 
         void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim);
 

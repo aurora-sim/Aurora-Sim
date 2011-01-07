@@ -47,6 +47,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
+        public bool Default
+        {
+            get { return false; }
+        }
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IConfigSource m_configSource;
@@ -54,6 +59,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
+            openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
         public RegionInfo[] LoadRegions()
@@ -101,6 +107,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         }
 
         public void AddRegion(ISimulationBase baseOS, string[] cmd)
+        {
+            //Can't add regions to remote locations
+        }
+
+        public void UpdateRegionInfo(string oldName, RegionInfo regionInfo)
         {
             //Can't add regions to remote locations
         }

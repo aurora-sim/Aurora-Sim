@@ -526,8 +526,8 @@ namespace Aurora.Modules
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
                             //Global coords, so add the meters
-                            locX = scene.RegionInfo.RegionLocX * Constants.RegionSize;
-                            locY = scene.RegionInfo.RegionLocY * Constants.RegionSize;
+                            locX = scene.RegionInfo.RegionLocX;
+                            locY = scene.RegionInfo.RegionLocY;
                         }
                     }
                     if (locY == 0 && locX == 0)

@@ -4804,8 +4804,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                      m_itemID, item.AssetID.ToString());
 
                     Vector3 region = new Vector3(
-                        World.RegionInfo.RegionLocX * Constants.RegionSize,
-                        World.RegionInfo.RegionLocY * Constants.RegionSize,
+                        World.RegionInfo.RegionLocX,
+                        World.RegionInfo.RegionLocY,
                         0);
 
                     World.AssetService.Get(item.AssetID.ToString(), this,
@@ -6005,7 +6005,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            return new LSL_Vector(World.RegionInfo.RegionLocX * Constants.RegionSize, World.RegionInfo.RegionLocY * Constants.RegionSize, 0);
+            return new LSL_Vector(World.RegionInfo.RegionLocX, World.RegionInfo.RegionLocY, 0);
         }
 
         /// <summary>

@@ -357,25 +357,6 @@ namespace Aurora.Modules
                 DeliverChatToAvatars(ChatSourceType.Object, c);
         }
 
-        /// <summary>
-        /// Find the scene at X, Y if it exists
-        /// </summary>
-        /// <param name="LocX"></param>
-        /// <param name="LocY"></param>
-        /// <returns></returns>
-        private Scene FindScene(uint LocX, uint LocY)
-        {
-            foreach (Scene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionLocX == LocX &&
-                    scene.RegionInfo.RegionLocY == LocY)
-                {
-                    return scene;
-                }
-            }
-            return null;
-        }
-
         public virtual void DeliverChatToAvatars(ChatSourceType sourceType, OSChatMessage c)
         {
             string fromName = c.From;
@@ -437,8 +418,8 @@ namespace Aurora.Modules
                         //Block this out early so we don't look through the mutes if the message shouldn't even be sent
                         Vector3 fromRegionPos = fromPos + regionPos;
                         Vector3 toRegionPos = presence.AbsolutePosition +
-                            new Vector3(presence.Scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                        presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
+                            new Vector3(presence.Scene.RegionInfo.RegionLocX,
+                                        presence.Scene.RegionInfo.RegionLocY, 0);
 
                         int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
 
@@ -531,8 +512,8 @@ namespace Aurora.Modules
             {
                 Vector3 fromRegionPos = fromPos + regionPos;
                 Vector3 toRegionPos = presence.AbsolutePosition +
-                    new Vector3(presence.Scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                presence.Scene.RegionInfo.RegionLocY * Constants.RegionSize, 0);
+                    new Vector3(presence.Scene.RegionInfo.RegionLocX,
+                                presence.Scene.RegionInfo.RegionLocY, 0);
 
                 int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
                 //Set the best fitting setting for custom

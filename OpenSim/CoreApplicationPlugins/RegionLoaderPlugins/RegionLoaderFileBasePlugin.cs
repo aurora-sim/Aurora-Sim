@@ -49,6 +49,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private ISimulationBase m_openSim;
         private string m_regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
+        public bool Default
+        {
+            get { return m_default; }
+        }
+
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
@@ -59,6 +64,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 m_default = config.GetString("Default", Name) == Name; //.ini loader defaults
                 m_regionConfigPath = config.GetString("RegionsDirectory", m_regionConfigPath).Trim();
             }
+            m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
         public RegionInfo[] LoadRegions()
@@ -354,6 +360,56 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
                 return;
+            }
+        }
+
+        /// <summary>
+        /// Save the changes to the RegionInfo to the file that it came from in the Regions/ directory
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="regionInfo"></param>
+        public void UpdateRegionInfo(string oldName, RegionInfo regionInfo)
+        {
+            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
+
+            if (oldName == "")
+                oldName = regionInfo.RegionName;
+            try
+            {
+                IConfig config = m_configSource.Configs["RegionStartup"];
+                if (config != null)
+                {
+                    regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
+                }
+            }
+            catch (Exception)
+            {
+                // No INI setting recorded.
+            }
+            if (!Directory.Exists(regionConfigPath))
+                return;
+
+            string[] iniFiles = Directory.GetFiles(regionConfigPath, "*.ini");
+            foreach (string file in iniFiles)
+            {
+                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
+                IConfig cnf = source.Configs[oldName];
+                if (cnf != null)
+                {
+                    try
+                    {
+                        source.Configs.Remove(cnf);
+                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
+                        cnf.Set("RegionType", regionInfo.RegionType);
+                        cnf.Name = regionInfo.RegionName;
+                        source.Configs.Add(cnf);
+                    }
+                    catch
+                    {
+                    }
+                    source.Save();
+                    break;
+                }
             }
         }
 

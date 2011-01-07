@@ -175,9 +175,9 @@ namespace Aurora.Modules
             
             //Set the region loc X and Y
             if(RedirectX != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX;
+                ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX * Constants.RegionSize;
             if (RedirectY != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY;
+                ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY * Constants.RegionSize;
 
             //Update the estate ID
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)
@@ -342,14 +342,14 @@ namespace Aurora.Modules
                     IConfig check = source.Configs[regionInfo.RegionName];
                     if (check == null) //Is the new name non existant as well?
                     {
-                        cnf.Set("Location", regionInfo.RegionLocX.ToString() + "," + regionInfo.RegionLocY.ToString());
+                        cnf.Set("Location", (regionInfo.RegionLocX / Constants.RegionSize) + "," + (regionInfo.RegionLocY / Constants.RegionSize));
                         cnf.Name = regionInfo.RegionName;
                         source.Save();
                     }
                     else
                     {
                         //The new region exists too, no name change
-                        check.Set("Location", regionInfo.RegionLocX.ToString() + "," + regionInfo.RegionLocY.ToString());
+                        check.Set("Location", (regionInfo.RegionLocX / Constants.RegionSize) + "," + (regionInfo.RegionLocY / Constants.RegionSize));
                     }
                 }
                 i++;

@@ -70,8 +70,8 @@ namespace OpenSim.Framework
         public bool m_allow_alternate_ports;
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
-        protected uint? m_regionLocX;
-        protected uint? m_regionLocY;
+        protected uint m_regionLocX;
+        protected uint m_regionLocY;
         protected uint m_remotingPort;
         public UUID RegionID = UUID.Zero;
         public UUID Password = UUID.Random();
@@ -274,13 +274,13 @@ namespace OpenSim.Framework
 
         public uint RegionLocX
         {
-            get { return m_regionLocX.Value; }
+            get { return m_regionLocX; }
             set { m_regionLocX = value; }
         }
 
         public uint RegionLocY
         {
-            get { return m_regionLocY.Value; }
+            get { return m_regionLocY; }
             set { m_regionLocY = value; }
         }
 
