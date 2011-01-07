@@ -154,10 +154,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 uint x = 0, y = 0;
                 Utils.LongToUInts(regionHandle, out x, out y);
 
-                long XShift = (x - (int)(sp.Scene.RegionInfo.RegionLocX * Constants.RegionSize));
-                long YShift = (y - (int)(sp.Scene.RegionInfo.RegionLocY * Constants.RegionSize));
+                GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
+
+                long XShift = (reg.RegionLocX - (int)(sp.Scene.RegionInfo.RegionLocX * Constants.RegionSize));
+                long YShift = (reg.RegionLocY - (int)(sp.Scene.RegionInfo.RegionLocY * Constants.RegionSize));
                 if (regionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
-                    (XShift <= sp.Scene.RegionInfo.RegionSizeX && YShift <= sp.Scene.RegionInfo.RegionSizeY &&
+                    (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
+                    XShift > 0 && YShift > 0 && //Can't have negatively sized regions
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
                 {
                     // m_log.DebugFormat(
@@ -200,8 +203,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else // Another region possibly in another simulator
                 {
-                    GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
-
                     if (reg != null)
                     {
                         GridRegion finalDestination = GetFinalDestination(reg);

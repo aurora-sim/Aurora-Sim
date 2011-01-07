@@ -12279,7 +12279,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (asset == null)
             {
-                SendFailedAsset(req, TransferPacketStatus.AssetRequestFailed);
+                SendFailedAsset(req, TransferPacketStatus.AssetUnknownSource);
                 return;
             }
             // Scripts cannot be retrieved by direct request

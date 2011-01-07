@@ -271,6 +271,9 @@ namespace OpenSim.Services.GridService
             rdata.Data["flags"] = flags.ToString();
             rdata.Data["last_seen"] = Util.UnixTimeSinceEpoch();
 
+            rdata.sizeX = (int)regionInfos.RegionSizeX;
+            rdata.sizeY = (int)regionInfos.RegionSizeY;
+
             if (region != null)
             {
                 //If we already have a session, we need to check it

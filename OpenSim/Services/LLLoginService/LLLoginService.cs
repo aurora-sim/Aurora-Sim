@@ -583,12 +583,22 @@ namespace OpenSim.Services.LLLoginService
                     //Also verify that all baked texture indices exist
                     foreach(byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
                     {
+                        if (BakedTextureIndex == 19)
+                            continue;
                         if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                         {
                             m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
                             avappearance.Texture.FaceTextures[BakedTextureIndex] = avappearance.Texture.CreateFace(BakedTextureIndex);
+                            avappearance.Texture.FaceTextures[BakedTextureIndex].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
                             m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                         }
+                    }
+                    if (avappearance.Texture.GetFace(0).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                    {
+                        m_log.Warn("Bad texture index for user " + account.Name + " for " + 0 + "!");
+                        avappearance.Texture.FaceTextures[0] = avappearance.Texture.CreateFace(0);
+                        avappearance.Texture.FaceTextures[0].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
+                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                     }
                 }
 

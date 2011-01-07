@@ -52,6 +52,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const int DEBUG_CHANNEL = 2147483647;
+        private const int DEFAULT_CHANNEL = 0;
 
         private bool m_enabled = true;
         private bool m_useMuteListModule = true;
@@ -290,7 +291,7 @@ namespace Aurora.Modules
             scene.EventManager.TriggerOnChatFromClient(sender, c);
 
             // early return if not on public or debug channel
-            if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
+            if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL) return;
 
             // sanity check:
             if (c.Sender == null)
@@ -339,7 +340,7 @@ namespace Aurora.Modules
         public virtual void OnChatFromWorld(Object sender, OSChatMessage c)
         {
             // early return if not on public or debug channel
-            if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
+            if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL) return;
 
             bool Sent = false;
 
@@ -461,7 +462,7 @@ namespace Aurora.Modules
         {
             // unless the chat to be broadcast is of type Region, we
             // drop it if its channel is neither 0 nor DEBUG_CHANNEL
-            if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL && c.Type != ChatTypeEnum.Region) return;
+            if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL && c.Type != ChatTypeEnum.Region) return;
 
             ChatTypeEnum cType = c.Type;
             if (c.Channel == DEBUG_CHANNEL)

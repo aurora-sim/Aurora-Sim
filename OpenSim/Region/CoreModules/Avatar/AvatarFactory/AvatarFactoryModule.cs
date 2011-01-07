@@ -299,7 +299,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             List<CachedAgentArgs> resp = new List<CachedAgentArgs>();
 
-            AvatarData ad = m_scene.AvatarService.GetAvatar(client.AgentId);
+            //AvatarData ad = m_scene.AvatarService.GetAvatar(client.AgentId);
             //Send all with UUID zero for now so that we don't confuse the client about baked textures...
             foreach (CachedAgentArgs arg in args)
             {
