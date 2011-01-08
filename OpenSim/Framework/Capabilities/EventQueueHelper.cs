@@ -107,6 +107,21 @@ namespace OpenSim.Framework.Capabilities
 
             return buildEvent("DisableSimulator", llsdBody);
         }
+
+        public static OSD EnableChildAgents(ulong handle, int AgentDrawDistance)
+        {
+            //OSDMap llsdSimInfo = new OSDMap(1);
+
+            //llsdSimInfo.Add("Handle", new OSDBinary(regionHandleToByteArray(handle)));
+
+            //OSDArray arr = new OSDArray(1);
+            //arr.Add(llsdSimInfo);
+
+            OSDMap llsdBody = new OSDMap(0);
+            //llsdBody.Add("SimulatorInfo", arr);
+
+            return buildEvent("DisableSimulator", llsdBody);
+        }
         
         public static OSD CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                       IPEndPoint newRegionExternalEndPoint,

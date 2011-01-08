@@ -103,5 +103,16 @@ namespace OpenSim.Framework.Capabilities
             OSD item = EventQueueHelper.PlacesQuery(groupUpdate, info);
             Enqueue(item, avatarID, RegionHandle);
         }
+
+        //
+        // Region > CapsService EventQueueMessages ONLY
+        // These are NOT sent to the client under ANY circumstances!
+        //
+
+        public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors)
+        {
+            OSD item = EventQueueHelper.EnableChildAgents(RegionHandle);
+            Enqueue(item, avatarID, RegionHandle);
+        }
     }
 }

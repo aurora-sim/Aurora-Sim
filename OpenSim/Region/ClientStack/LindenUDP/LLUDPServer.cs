@@ -119,7 +119,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Bandwidth throttle rates for this UDP server</summary>
         protected ThrottleRates m_throttleRates;
         /// <summary>Manages authentication for agent circuits</summary>
-        private AgentCircuitManager m_circuitManager;
+        public AgentCircuitManager m_circuitManager;
         /// <summary>Reference to the scene this UDP server is attached to</summary>
         protected Scene m_scene;
         /// <summary>The X/Y coordinates of the scene this UDP server is attached to</summary>

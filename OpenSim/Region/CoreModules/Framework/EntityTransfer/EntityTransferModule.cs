@@ -303,20 +303,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                AgentCircuitData currentAgentCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.ControllingClient.CircuitCode);
                 AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
                 agentCircuit.startpos = position;
                 agentCircuit.child = true;
                 agentCircuit.Appearance = sp.Appearance;
-                if (currentAgentCircuit != null)
-                {
-                    agentCircuit.ServiceURLs = currentAgentCircuit.ServiceURLs;
-                    agentCircuit.IPAddress = currentAgentCircuit.IPAddress;
-                    agentCircuit.Viewer = currentAgentCircuit.Viewer;
-                    agentCircuit.Channel = currentAgentCircuit.Channel;
-                    agentCircuit.Mac = currentAgentCircuit.Mac;
-                    agentCircuit.Id0 = currentAgentCircuit.Id0;
-                }
 
                 string reason = String.Empty;
                 // Let's create an agent there if one doesn't exist yet. 
@@ -789,8 +779,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return agent;
                 }
 
-				agent.ControllingClient.RequestClientInfo();
-
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
@@ -907,6 +895,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         #endregion
 
         #region Enable Child Agent
+
         /// <summary>
         /// This informs a single neighboring region about agent "avatar".
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
@@ -915,24 +904,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             m_log.DebugFormat("[ENTITY TRANSFER]: Enabling child agent in new neighour {0}", region.RegionName);
 
-            AgentCircuitData currentAgentCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.ControllingClient.CircuitCode);
             AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
-            agent.BaseFolder = UUID.Zero;
-            agent.InventoryFolder = UUID.Zero;
             agent.startpos = new Vector3(128, 128, 70);
             agent.child = true;
             agent.Appearance = sp.Appearance;
             agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-
-            if (currentAgentCircuit != null)
-            {
-                agent.ServiceURLs = currentAgentCircuit.ServiceURLs;
-                agent.IPAddress = currentAgentCircuit.IPAddress;
-                agent.Viewer = currentAgentCircuit.Viewer;
-                agent.Channel = currentAgentCircuit.Channel;
-                agent.Mac = currentAgentCircuit.Mac;
-                agent.Id0 = currentAgentCircuit.Id0;
-            }
 
             InformClientOfNeighbourDelegate d = InformClientOfNeighbourAsync;
             d.BeginInvoke(sp, agent, region, region.ExternalEndPoint, true,
@@ -955,30 +931,23 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             List<GridRegion> neighbours = new List<GridRegion>();
             RegionInfo m_regionInfo = sp.Scene.RegionInfo;
 
-            if (m_regionInfo != null)
+            if (Util.VariableRegionSight && sp.DrawDistance != 0)
             {
-                if (Util.VariableRegionSight && sp.DrawDistance != 0)
-                {
-                    int xMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
-                    int xMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
-                    int yMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
-                    int yMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
-                    
-                    neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
-                        xMin, xMax, yMin, yMax);
-                }
-                else
-                {
-                    INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
-                    if (service != null)
-                    {
-                        neighbours = service.GetNeighbors(sp.Scene.RegionInfo);
-                    }
-                }
+                int xMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
+                int xMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
+                int yMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
+                int yMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
+
+                neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
+                    xMin, xMax, yMin, yMax);
             }
             else
             {
-                m_log.Debug("[EntityTransferModule]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
+                INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                {
+                    neighbours = service.GetNeighbors(sp.Scene.RegionInfo);
+                }
             }
             
             /// Create the necessary child agents
@@ -987,23 +956,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if (neighbour.RegionHandle != sp.Scene.RegionInfo.RegionHandle)
                 {
-
                     AgentCircuitData currentAgentCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.ControllingClient.CircuitCode);
                     AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
-                    agent.BaseFolder = UUID.Zero;
-                    agent.InventoryFolder = UUID.Zero;
                     agent.startpos = new Vector3(128, 128, 70);
                     agent.child = true;
                     agent.Appearance = sp.Appearance;
-                    if (currentAgentCircuit != null)
-                    {
-                        agent.ServiceURLs = currentAgentCircuit.ServiceURLs;
-                        agent.IPAddress = currentAgentCircuit.IPAddress;
-                        agent.Viewer = currentAgentCircuit.Viewer;
-                        agent.Channel = currentAgentCircuit.Channel;
-                        agent.Mac = currentAgentCircuit.Mac;
-                        agent.Id0 = currentAgentCircuit.Id0;
-                    }
 
                     cagents.Add(agent);
                 }
@@ -1026,15 +983,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                       InformClientOfNeighbourCompleted,
                                       d);
                     }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        m_log.ErrorFormat(
-                           "[ENTITY TRANSFER MODULE]: Neighbour Regions response included the current region in the neighbor list.  The following region will not display to the client: {0} for region {1} ({2}, {3}).",
-                           neighbour.ExternalHostName,
-                           neighbour.RegionHandle,
-                           neighbour.RegionLocX,
-                           neighbour.RegionLocY);
-                    }
                     catch (Exception e)
                     {
                         m_log.ErrorFormat(
@@ -1044,13 +992,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                             neighbour.RegionLocX,
                             neighbour.RegionLocY,
                             e);
-
-                        // FIXME: Okay, even though we've failed, we're still going to throw the exception on,
-                        // since I don't know what will happen if we just let the client continue
-
-                        // XXX: Well, decided to swallow the exception instead for now.  Let us see how that goes.
-                        // throw e;
-
                     }
                 }
                 count++;
@@ -1081,17 +1022,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // after a cross here
             Thread.Sleep(500);
 
-            Scene m_scene = sp.Scene;
-
-            uint x, y;
-            Utils.LongToUInts(reg.RegionHandle, out x, out y);
-            x = x / Constants.RegionSize;
-            y = y / Constants.RegionSize;
             m_log.Info("[EntityTransferModule]: Starting to inform client about neighbour " + reg.RegionName);
 
             string reason = String.Empty;
 
-            bool regionAccepted = m_scene.SimulationService.CreateAgent(reg, a, (uint)TeleportFlags.Default, out reason); 
+            bool regionAccepted = sp.Scene.SimulationService.CreateAgent(reg, a, (uint)TeleportFlags.Default, out reason); 
 
             if (regionAccepted && newAgent)
             {
@@ -1116,6 +1051,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
             }
+            else if(reason != "")
+                m_log.Info("[EntityTransferModule]: Failed to inform client about neighbour " + reg.RegionName + ", reason: " + reason);
+
         }
 
         private List<ulong> NewNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)

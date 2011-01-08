@@ -1259,7 +1259,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Do the verification here
             if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0)
             {
-                m_log.DebugFormat("[SCENE]: Incoming client {0} {1} in region {2} via HG login", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                m_log.DebugFormat("[SCENE]: Incoming client {0} in region {1} via HG login", aCircuit.AgentID, RegionInfo.RegionName);
                 vialogin = true;
                 IUserAgentVerificationModule userVerification = RequestModuleInterface<IUserAgentVerificationModule>();
                 if (userVerification != null && ep != null)
@@ -1267,11 +1267,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!userVerification.VerifyClient(aCircuit, ep.Address.ToString()))
                     {
                         // uh-oh, this is fishy
-                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} {1} in {2} returned false", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} in {1} returned false", aCircuit.AgentID, RegionInfo.RegionName);
                         return false;
                     }
                     else
-                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} {1} in {2} returned true", aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
+                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} in {1} returned true", aCircuit.AgentID, RegionInfo.RegionName);
                 }
             }
 
@@ -1684,7 +1684,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!agent.child)
                 m_log.DebugFormat(
                     "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
-                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
+                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                     agent.AgentID, agent.circuitcode, teleportFlags);
 
             try
@@ -1736,7 +1736,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_log.WarnFormat(
                         "[Scene]: NewUserConnection was given an illegal position of {0} for avatar {1}. Clamping",
-                        agent.startpos, agent.firstname + " " + agent.lastname);
+                        agent.startpos, agent.AgentID);
 
                     if (agent.startpos.X < 0f) agent.startpos.X = 0f;
                     if (agent.startpos.Y < 0f) agent.startpos.Y = 0f;
@@ -1757,7 +1757,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!agent.child)
                 m_log.InfoFormat(
                     "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
-                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
+                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                     agent.AgentID, agent.circuitcode);
 
             return true;
@@ -1781,9 +1781,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (Permissions.IsGod(agent.AgentID)) return true;
 
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user does not have access to the region",
-                                     agent.AgentID, agent.firstname, agent.lastname, RegionInfo.RegionName);
-                    reason = String.Format("You do not have access to the region {0}",RegionInfo.RegionName);
+                    m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} at {1} because the user does not have access to the region",
+                                     agent.AgentID, RegionInfo.RegionName);
+                    reason = String.Format("You do not have access to the region {0}", RegionInfo.RegionName);
                     return false;
                 }
             }

@@ -2122,18 +2122,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return (int)pws;
         }
         
-        public void osSetSpeed(string UUID, float SpeedModifier)
+        public void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL");
             
             ScenePresence avatar = World.GetScenePresence(new UUID(UUID));
             if (avatar != null)
             {
-                avatar.SpeedModifier = SpeedModifier;
+                if (avatar.UUID != m_host.OwnerID)
+                {
+                    //We need to make sure that they can do this then
+                    if (!World.Permissions.IsGod(m_host.OwnerID))
+                        return;
+                }
+                avatar.SpeedModifier = (float)SpeedModifier;
             }
         }
-        
-        public void osKickAvatar(string FirstName,string SurName, string alert)
+
+        public void osKickAvatar(LSL_String FirstName, LSL_String SurName, LSL_String alert)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
             if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))

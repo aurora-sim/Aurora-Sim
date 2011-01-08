@@ -464,8 +464,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_secureSessionId = sessionInfo.SecureSessionID;
             m_circuitCode = circuitCode;
             m_userEndPoint = remoteEP;
-            m_firstName = sessionInfo.firstname;
-            m_lastName = sessionInfo.lastname;
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, m_agentId);
+            if (account != null)
+            {
+                m_firstName = account.FirstName;
+                m_lastName = account.LastName;
+            }
             m_startpos = sessionInfo.startpos;
 
             m_udpServer = udpServer;
@@ -1336,8 +1340,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             agentData.SecureSessionID = SecureSessionId;
             agentData.circuitcode = m_circuitCode;
             agentData.child = false;
-            agentData.firstname = m_firstName;
-            agentData.lastname = m_lastName;
+
+            AgentCircuitData currentAgentCircuit = this.m_udpServer.m_circuitManager.GetAgentCircuitData(CircuitCode);
+            if (currentAgentCircuit != null)
+            {
+                agentData.ServiceURLs = currentAgentCircuit.ServiceURLs;
+                agentData.IPAddress = currentAgentCircuit.IPAddress;
+            }
 
             return agentData;
         }

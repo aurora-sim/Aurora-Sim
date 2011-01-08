@@ -891,9 +891,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         Vector3 pos = GetNearestAllowedPosition(clientAvatar);
                         clientAvatar.Teleport(pos);
                     }
+                    SendLandUpdate(clientAvatar);
+                    SendOutNearestBanLine(remote_client);
                 }
-                SendLandUpdate(clientAvatar);
-                SendOutNearestBanLine(remote_client);
             }
         }
 

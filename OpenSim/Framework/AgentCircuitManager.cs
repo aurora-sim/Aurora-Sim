@@ -127,8 +127,6 @@ namespace OpenSim.Framework
         {
             if (AgentCircuits.ContainsKey((uint) agentData.circuitcode))
             {
-                AgentCircuits[(uint) agentData.circuitcode].firstname = agentData.firstname;
-                AgentCircuits[(uint) agentData.circuitcode].lastname = agentData.lastname;
                 AgentCircuits[(uint) agentData.circuitcode].startpos = agentData.startpos;
 
                 // Updated for when we don't know them before calling Scene.NewUserConnection

@@ -129,9 +129,6 @@ namespace Aurora.BotManager
             AgentCircuitData m_aCircuitData = new AgentCircuitData();
             m_aCircuitData.child = false;
 
-            m_aCircuitData.firstname = m_character.FirstName;
-            m_aCircuitData.lastname = m_character.LastName;
-
             //Add the circuit data so they can login
             m_aCircuitData.circuitcode = m_character.CircuitCode;
 
@@ -174,9 +171,6 @@ namespace Aurora.BotManager
 
             AgentCircuitData m_aCircuitData = new AgentCircuitData();
             m_aCircuitData.child = false;
-
-            m_aCircuitData.firstname = m_character.FirstName;
-            m_aCircuitData.lastname = m_character.LastName;
 
             //Add the circuit data so they can login
             m_aCircuitData.circuitcode = m_character.CircuitCode;

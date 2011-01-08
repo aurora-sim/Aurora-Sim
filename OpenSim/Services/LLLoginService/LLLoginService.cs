@@ -608,7 +608,7 @@ namespace OpenSim.Services.LLLoginService
                 string reason = string.Empty;
                 GridRegion dest;
                 AgentCircuitData aCircuit = LaunchAgentAtGrid(gatekeeper, destination, account, avappearance, session, secureSession, position, where,
-                    clientVersion, channel, mac, id0, clientIP, out where, out reason, out dest);
+                    clientIP, out where, out reason, out dest);
                 destination = dest;
                 if (requestData.ContainsKey("id0"))
                     id0 = (string)requestData["id0"];
@@ -939,7 +939,7 @@ namespace OpenSim.Services.LLLoginService
         }
 
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion gatekeeper, GridRegion destination, UserAccount account, AvatarAppearance appearance,
-            UUID session, UUID secureSession, Vector3 position, string currentWhere, string viewer, string channel, string mac, string id0,
+            UUID session, UUID secureSession, Vector3 position, string currentWhere,
             IPEndPoint clientIP, out string where, out string reason, out GridRegion dest)
         {
             where = currentWhere;
@@ -980,7 +980,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService == null && simConnector != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                 success = LaunchAgentDirectly(simConnector, destination, aCircuit, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -994,7 +994,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, viewer, clientIP.Address.ToString(), channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1013,7 +1013,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, viewer, channel, clientIP.Address.ToString(), mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1028,7 +1028,7 @@ namespace OpenSim.Services.LLLoginService
             if (m_UserAgentService != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
-                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                 success = LaunchAgentIndirectly(gatekeeper, destination, aCircuit, clientIP, out reason);
                 if (!success && m_GridService != null)
                 {
@@ -1042,7 +1042,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, clientIP, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1061,7 +1061,7 @@ namespace OpenSim.Services.LLLoginService
                             success = LaunchAgentIndirectly(gatekeeper, r, aCircuit, clientIP, out reason);
                             if (success)
                             {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString(), viewer, channel, mac, id0);
+                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
                                 where = "safe";
                                 destination = r;
                                 break;
@@ -1081,7 +1081,7 @@ namespace OpenSim.Services.LLLoginService
 
         protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit, Vector3 position,
-            string ipaddress, string viewer, string channel, string mac, string id0)
+            string ipaddress)
         {
             AgentCircuitData aCircuit = new AgentCircuitData();
 
@@ -1094,20 +1094,13 @@ namespace OpenSim.Services.LLLoginService
                 aCircuit.Appearance = new AvatarAppearance(account.PrincipalID);
             }
 
-            //aCircuit.BaseFolder = irrelevant
             aCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath();
             aCircuit.child = false; // the first login agent is root
             aCircuit.circuitcode = circuit;
-            aCircuit.firstname = account.FirstName;
-            //aCircuit.InventoryFolder = irrelevant
-            aCircuit.lastname = account.LastName;
             aCircuit.SecureSessionID = secureSession;
             aCircuit.SessionID = session;
             aCircuit.startpos = position;
             aCircuit.IPAddress = ipaddress;
-            aCircuit.Viewer = viewer;
-            aCircuit.Mac = mac;
-            aCircuit.Id0 = id0;
             SetServiceURLs(aCircuit, account);
 
             return aCircuit;

@@ -394,7 +394,7 @@ namespace Aurora.Modules
                 IPresenceService presence = scene.RequestModuleInterface<IPresenceService>();
                 if (presence == null)
                 {
-                    reason = String.Format("Failed to verify user presence in the grid for {0} {1} in region {2}. Presence service does not exist.", ACD.firstname, ACD.lastname, scene.RegionInfo.RegionName);
+                    reason = String.Format("Failed to verify user presence in the grid for {0} in region {1}. Presence service does not exist.", ACD.AgentID, scene.RegionInfo.RegionName);
                     return false;
                 }
 
@@ -402,7 +402,7 @@ namespace Aurora.Modules
 
                 if (pinfo == null)
                 {
-                    reason = String.Format("Failed to verify user presence in the grid for {0} {1}, access denied to region {2}.", ACD.firstname, ACD.lastname, scene.RegionInfo.RegionName);
+                    reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", ACD.AgentID, scene.RegionInfo.RegionName);
                     return false;
                 }
             }

@@ -57,11 +57,6 @@ namespace OpenSim.Framework
         public AvatarAppearance Appearance;
 
         /// <summary>
-        /// Agent's root inventory folder
-        /// </summary>
-        public UUID BaseFolder;
-
-        /// <summary>
         /// Base Caps path for user
         /// </summary>
         public string CapsPath = String.Empty;
@@ -81,17 +76,6 @@ namespace OpenSim.Framework
         /// How this agent got here
         /// </summary>
         public uint teleportFlags;
-
-        /// <summary>
-        /// Agent's account first name
-        /// </summary>
-        public string firstname;
-        public UUID InventoryFolder;
-
-        /// <summary>
-        /// Agent's account last name
-        /// </summary>
-        public string lastname;
 
         /// <summary>
         /// Random Unique GUID for this session.  Client gets this at login and it's
@@ -116,26 +100,6 @@ namespace OpenSim.Framework
         public string IPAddress;
 
         /// <summary>
-        /// Viewer's version string as reported by the viewer at login
-        /// </summary>
-        public string Viewer;
-
-        /// <summary>
-        /// The channel strinf sent by the viewer at login
-        /// </summary>
-        public string Channel;
-
-        /// <summary>
-        /// The Mac address as reported by the viewer at login
-        /// </summary>
-        public string Mac;
-
-        /// <summary>
-        /// The id0 as reported by the viewer at login
-        /// </summary>
-        public string Id0;
-
-        /// <summary>
         /// Position the Agent's Avatar starts in the region
         /// </summary>
         public Vector3 startpos;
@@ -146,27 +110,7 @@ namespace OpenSim.Framework
         {
         }
 
-        /// <summary>
-        /// Create AgentCircuitData from a Serializable AgentCircuitData
-        /// </summary>
-        /// <param name="cAgent"></param>
-        public AgentCircuitData(sAgentCircuitData cAgent)
-        {
-            AgentID = new UUID(cAgent.AgentID);
-            SessionID = new UUID(cAgent.SessionID);
-            SecureSessionID = new UUID(cAgent.SecureSessionID);
-            startpos = new Vector3(cAgent.startposx, cAgent.startposy, cAgent.startposz);
-            firstname = cAgent.firstname;
-            lastname = cAgent.lastname;
-            circuitcode = cAgent.circuitcode;
-            child = cAgent.child;
-            InventoryFolder = new UUID(cAgent.InventoryFolder);
-            BaseFolder = new UUID(cAgent.BaseFolder);
-            CapsPath = cAgent.CapsPath;
-            Viewer = cAgent.Viewer;
-        }
-
-        /// <summary>
+         /// <summary>
         /// Pack AgentCircuitData into an OSDMap for transmission over LLSD XML or LLSD json
         /// </summary>
         /// <returns>map of the agent circuit data</returns>
@@ -174,21 +118,16 @@ namespace OpenSim.Framework
         {
             OSDMap args = new OSDMap();
             args["agent_id"] = OSD.FromUUID(AgentID);
-            args["base_folder"] = OSD.FromUUID(BaseFolder);
             args["caps_path"] = OSD.FromString(CapsPath);
 
             args["child"] = OSD.FromBoolean(child);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
-            args["first_name"] = OSD.FromString(firstname);
-            args["last_name"] = OSD.FromString(lastname);
-            args["inventory_folder"] = OSD.FromUUID(InventoryFolder);
             args["secure_session_id"] = OSD.FromUUID(SecureSessionID);
             args["session_id"] = OSD.FromUUID(SessionID);
 
             args["service_session_id"] = OSD.FromString(ServiceSessionID);
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["client_ip"] = OSD.FromString(IPAddress);
-            args["viewer"] = OSD.FromString(Viewer);
             args["channel"] = OSD.FromString("");
             args["mac"] = OSD.FromString("");
             args["id0"] = OSD.FromString("");
@@ -224,8 +163,6 @@ namespace OpenSim.Framework
         {
             if (args["agent_id"] != null)
                 AgentID = args["agent_id"].AsUUID();
-            if (args["base_folder"] != null)
-                BaseFolder = args["base_folder"].AsUUID();
             if (args["caps_path"] != null)
                 CapsPath = args["caps_path"].AsString();
 
@@ -233,12 +170,6 @@ namespace OpenSim.Framework
                 child = args["child"].AsBoolean();
             if (args["circuit_code"] != null)
                 UInt32.TryParse(args["circuit_code"].AsString(), out circuitcode);
-            if (args["first_name"] != null)
-                firstname = args["first_name"].AsString();
-            if (args["last_name"] != null)
-                lastname = args["last_name"].AsString();
-            if (args["inventory_folder"] != null)
-                InventoryFolder = args["inventory_folder"].AsUUID();
             if (args["secure_session_id"] != null)
                 SecureSessionID = args["secure_session_id"].AsUUID();
             if (args["session_id"] != null)
@@ -247,14 +178,6 @@ namespace OpenSim.Framework
                 ServiceSessionID = args["service_session_id"].AsString();
             if (args["client_ip"] != null)
                 IPAddress = args["client_ip"].AsString();
-            if (args["viewer"] != null)
-                Viewer = args["viewer"].AsString();
-            if (args["channel"] != null)
-                Channel = args["channel"].AsString();
-            if (args["mac"] != null)
-                Mac = args["mac"].AsString();
-            if (args["id0"] != null)
-                Id0 = args["id0"].AsString();
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);
@@ -301,54 +224,6 @@ namespace OpenSim.Framework
 
                 }
             }
-        }
-    }
-
-
-    /// <summary>
-    /// Serializable Agent Circuit Data
-    /// </summary>
-    [Serializable]
-    public class sAgentCircuitData
-    {
-        public Guid AgentID;
-        public Guid BaseFolder;
-        public string CapsPath = String.Empty;
-        public bool child;
-        public uint circuitcode;
-        public string firstname;
-        public Guid InventoryFolder;
-        public string lastname;
-        public Guid SecureSessionID;
-        public Guid SessionID;
-        public float startposx;
-        public float startposy;
-        public float startposz;
-        public string Viewer;
-        public string Channel;
-        public string Mac;
-        public string Id0;
-
-        public sAgentCircuitData()
-        {
-        }
-
-        public sAgentCircuitData(AgentCircuitData cAgent)
-        {
-            AgentID = cAgent.AgentID.Guid;
-            SessionID = cAgent.SessionID.Guid;
-            SecureSessionID = cAgent.SecureSessionID.Guid;
-            startposx = cAgent.startpos.X;
-            startposy = cAgent.startpos.Y;
-            startposz = cAgent.startpos.Z;
-            firstname = cAgent.firstname;
-            lastname = cAgent.lastname;
-            circuitcode = cAgent.circuitcode;
-            child = cAgent.child;
-            InventoryFolder = cAgent.InventoryFolder.Guid;
-            BaseFolder = cAgent.BaseFolder.Guid;
-            CapsPath = cAgent.CapsPath;
-            Viewer = cAgent.Viewer;
         }
     }
 }

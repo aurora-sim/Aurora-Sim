@@ -179,8 +179,8 @@ namespace OpenSim.Services.HypergridService
             string authURL = string.Empty;
             if (aCircuit.ServiceURLs.ContainsKey("HomeURI"))
                 authURL = aCircuit.ServiceURLs["HomeURI"].ToString();
-            m_log.DebugFormat("[GATEKEEPER SERVICE]: Request to login foreign agent {0} {1} @ {2} ({3}) at destination {4}", 
-                aCircuit.firstname, aCircuit.lastname, authURL, aCircuit.AgentID, destination.RegionName);
+            m_log.DebugFormat("[GATEKEEPER SERVICE]: Request to login foreign agent @ {0} ({1}) at destination {2}", 
+                authURL, aCircuit.AgentID, destination.RegionName);
 
             //
             // Authenticate the user
@@ -188,10 +188,10 @@ namespace OpenSim.Services.HypergridService
             if (!Authenticate(aCircuit))
             {
                 reason = "Unable to verify identity";
-                m_log.InfoFormat("[GATEKEEPER SERVICE]: Unable to verify identity of agent {0} {1}. Refusing service.", aCircuit.firstname, aCircuit.lastname);
+                m_log.InfoFormat("[GATEKEEPER SERVICE]: Unable to verify identity of agent {0}. Refusing service.", aCircuit.AgentID);
                 return false;
             }
-            m_log.DebugFormat("[GATEKEEPER SERVICE]: Identity verified for {0} {1} @ {2}", aCircuit.firstname, aCircuit.lastname, authURL);
+            m_log.DebugFormat("[GATEKEEPER SERVICE]: Identity verified for {0} @ {1}", aCircuit.AgentID, authURL);
             
             //
             // Check for impersonations
@@ -210,8 +210,8 @@ namespace OpenSim.Services.HypergridService
                         {
                             // Can't do, sorry
                             reason = "Unauthorized";
-                            m_log.InfoFormat("[GATEKEEPER SERVICE]: Foreign agent {0} {1} has same ID as local user. Refusing service.",
-                                aCircuit.firstname, aCircuit.lastname);
+                            m_log.InfoFormat("[GATEKEEPER SERVICE]: Foreign agent {0} has same ID as local user. Refusing service.",
+                                aCircuit.AgentID);
                             return false;
 
                         }
@@ -234,8 +234,8 @@ namespace OpenSim.Services.HypergridService
                 if (!m_PresenceService.LoginAgent(aCircuit.AgentID.ToString(), aCircuit.SessionID, aCircuit.SecureSessionID))
                 {
                     reason = "Unable to login presence";
-                    m_log.InfoFormat("[GATEKEEPER SERVICE]: Presence login failed for foreign agent {0} {1}. Refusing service.",
-                        aCircuit.firstname, aCircuit.lastname);
+                    m_log.InfoFormat("[GATEKEEPER SERVICE]: Presence login failed for foreign agent {0}. Refusing service.",
+                        aCircuit.AgentID);
                     return false;
                 }
                 m_log.DebugFormat("[GATEKEEPER SERVICE]: Login presence ok");
@@ -250,29 +250,6 @@ namespace OpenSim.Services.HypergridService
                 return false;
             }
             m_log.DebugFormat("[GATEKEEPER SERVICE]: destination ok: {0}", destination.RegionName);
-
-            //
-            // Adjust the visible name
-            //
-            if (account != null)
-            {
-                aCircuit.firstname = account.FirstName;
-                aCircuit.lastname = account.LastName;
-            }
-            if (account == null && !aCircuit.lastname.StartsWith("@"))
-            {
-                aCircuit.firstname = aCircuit.firstname + "." + aCircuit.lastname;
-                try
-                {
-                    Uri uri = new Uri(aCircuit.ServiceURLs["HomeURI"].ToString());
-                    aCircuit.lastname = "@" + uri.Host; // + ":" + uri.Port;
-                }
-                catch
-                {
-                    m_log.WarnFormat("[GATEKEEPER SERVICE]: Malformed HomeURI (this should never happen): {0}", aCircuit.ServiceURLs["HomeURI"]);
-                    aCircuit.lastname = "@" + aCircuit.ServiceURLs["HomeURI"].ToString();
-                }
-            }
 
             //
             // Finally launch the agent at the destination
