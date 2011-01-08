@@ -542,14 +542,18 @@ namespace OpenSim.Services.CapsService
                 //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                 // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                 // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                string CapsBase = "";
                 if (otherRegionService.UrlToInform == "")
                 {
+                    CapsBase = CapsUtil.GetRandomCapsObjectPath();
                     //If the Url is "", then we havn't been here before, and we need to add a new Url for the client.
-                    SimSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                    SimSeedCap = CapsUtil.GetCapsSeedPath(CapsBase);
                     otherRegionService.AddSEEDCap("", SimSeedCap);
                     //We had to make a new Url, its a new agent to this other region
                     newAgent = true;
                 }
+                else
+                    CapsBase = CapsUtil.GetCapsPathFromCapsSeed(otherRegionService.CapsPath);
 
                 //Fix the AgentCircuitData with the new CapsUrl
                 a.CapsPath = SimSeedCap;

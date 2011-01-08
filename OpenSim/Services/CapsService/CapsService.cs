@@ -322,6 +322,10 @@ namespace OpenSim.Services.CapsService
         {
             get { return m_clientCapsService.HostUri + m_capsUrlBase; }
         }
+        public String CapsPath
+        {
+            get { return m_capsUrlBase; }
+        }
 
         public String HostUri
         {

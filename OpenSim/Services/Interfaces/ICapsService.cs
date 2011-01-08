@@ -81,6 +81,7 @@ namespace OpenSim.Services.Interfaces
         string UrlToInform { get; }
         String HostUri { get; }
         String CapsUrl { get; }
+        String CapsPath { get; }
         IRegistryCore Registry { get; }
         IClientCapsService ClientCaps { get; }
 

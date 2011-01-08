@@ -43,6 +43,23 @@ namespace OpenSim.Framework.Capabilities
         {
             return "/CAPS/" + capsObjectPath + "0000/";
         }
+
+        /// <summary>
+        /// Retrieve the CapsPath from a CapsSeed
+        /// </summary>
+        /// <param name="capsSeedPath">Should be in the form of "/CAPS/CapsPath/</param>
+        /// <returns></returns>
+        public static string GetCapsPathFromCapsSeed(string capsSeedPath)
+        {
+            if (!capsSeedPath.StartsWith("/CAPS/"))
+                return "";
+            //Remove the /CAPS/
+            capsSeedPath = capsSeedPath.Remove(0, 6);
+            //Now remove the trailing /
+            capsSeedPath = capsSeedPath.Remove(capsSeedPath.Length - 1, 1);
+
+            return capsSeedPath;
+        }
         
         /// <summary>
         /// Get a random CAPS object path component that will be used as the identifying part of all future CAPS requests
