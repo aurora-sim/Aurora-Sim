@@ -34,19 +34,13 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ICapabilitiesModule
     {
-        void NewUserConnection(AgentCircuitData agent);
-        
         /// <summary>
-        /// Add a caps handler for the given agent.  If the CAPS handler already exists for this agent,
-        /// then it is replaced by a new CAPS handler.
-        ///
-        /// FIXME: On login this is called twice, once for the login and once when the connection is made.
-        /// This is somewhat innefficient and should be fixed.  The initial login creation is necessary
-        /// since the client asks for capabilities immediately after being informed of the seed.
+        /// Add a caps handler for the given agent.
+        /// If the Caps handler already exists for this agent,
+        ///   a new one is not created and the old is reused.
         /// </summary>
-        /// <param name="agentId"></param>
-        /// <param name="capsObjectPath"></param>
-        void AddCapsHandler(UUID agentId);
+        /// <param name="agent">The incoming agent to make sure we have Caps for</param>
+        void AddCapsHandler(AgentCircuitData agent);
         
         /// <summary>
         /// Remove the caps handler for a given agent.

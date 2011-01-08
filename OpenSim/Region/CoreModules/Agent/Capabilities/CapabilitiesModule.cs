@@ -49,8 +49,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
         /// </summary>
         protected Dictionary<UUID, Caps> m_capsHandlers = new Dictionary<UUID, Caps>();
         
-        protected Dictionary<UUID, string> capsPaths = new Dictionary<UUID, string>();
-        
         public void Initialise(IConfigSource source)
         {
         }
@@ -84,17 +82,20 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             get { return null; }
         }
 
-        public void AddCapsHandler(UUID agentId)
+        public void AddCapsHandler(AgentCircuitData agent)
         {
-            Caps caps
-                = new Caps(m_scene,
-                    MainServer.Instance, agentId);
+            if (!m_capsHandlers.ContainsKey(agent.AgentID))
+            {
+                Caps caps
+                    = new Caps(m_scene,
+                        MainServer.Instance, agent.AgentID);
 
-            caps.RegisterHandlers(capsPaths[agentId]);
+                caps.RegisterHandlers(agent.CapsPath);
 
-            m_scene.EventManager.TriggerOnRegisterCaps(agentId, caps);
-            
-            m_capsHandlers[agentId] = caps;
+                m_scene.EventManager.TriggerOnRegisterCaps(agent.AgentID, caps);
+
+                m_capsHandlers[agent.AgentID] = caps;
+            }
         }
 
         public void RemoveCapsHandler(UUID agentId)
@@ -127,11 +128,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             }
             
             return null;
-        }
-        
-        public void NewUserConnection(AgentCircuitData agent)
-        {
-            capsPaths[agent.AgentID] = agent.CapsPath;
         }
     }
 }

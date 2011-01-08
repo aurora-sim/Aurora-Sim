@@ -545,30 +545,26 @@ namespace OpenSim.Services.CapsService
                 string CapsBase = "";
                 if (otherRegionService.UrlToInform == "")
                 {
+                    //If the Url is "", then we havn't been here before, 
+                    //  and we need to add a new Url for the client.
                     CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                    //If the Url is "", then we havn't been here before, and we need to add a new Url for the client.
+                    //Build the full URL
                     SimSeedCap
                         = "http://"
                       + neighbor.ExternalHostName
                       + ":"
                       + neighbor.HttpPort
                       + CapsUtil.GetCapsSeedPath(CapsBase);
+                    //Add the new Seed for this region
                     otherRegionService.AddSEEDCap("", SimSeedCap);
                     //We had to make a new Url, its a new agent to this other region
                     newAgent = true;
                 }
                 else
                 {
-                    //The otherRegionService.UrlToInform is a full URL, not a CapsSeed, so we need to remove the http:// parts
-                    string CapsSeed = otherRegionService.UrlToInform;
-                    CapsSeed = CapsSeed.Split(new string[1]{"/CAPS/"}, StringSplitOptions.RemoveEmptyEntries)[1];
-                    //Readd the /CAPS/ so it is a CapsSeed again
-                    CapsSeed = "/CAPS/" + CapsSeed;
-                    //Now we can find the CapsBase
-                    CapsBase = CapsUtil.GetCapsPathFromCapsSeed(CapsSeed);
-                    //Remove the 0000 at the end
-                    CapsBase = CapsBase.Remove(CapsBase.Length - 4, 4);
-                    SimSeedCap = otherRegionService.UrlToInform;
+                    //If the agent is still in this region, 
+                    //  we have already set up the CAPS on the region side, 
+                    //  and can safely send a blank CapsBase as its already ready
                 }
 
                 //Fix the AgentCircuitData with the new CapsUrl

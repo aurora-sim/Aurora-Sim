@@ -1713,13 +1713,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
             if (module != null)
-                module.NewUserConnection(agent);
-
-            if (sp == null) // We don't have an [child] agent here already
-            {
-                if (module != null)
-                    module.AddCapsHandler(agent.AgentID);
-            }
+                module.AddCapsHandler(agent);
 
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
