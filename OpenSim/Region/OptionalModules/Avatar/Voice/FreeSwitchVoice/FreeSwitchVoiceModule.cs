@@ -309,7 +309,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         {
             m_log.DebugFormat("[FreeSwitchVoice] OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
 
-            string capsBase = "/CAPS/" + caps.CapsObjectPath;
+            string capsBase = "/CAPS/" + UUID.Random();
             caps.RegisterHandler("ProvisionVoiceAccountRequest",
                                  new RestStreamHandler("POST", capsBase + m_provisionVoiceAccountRequestPath,
                                                        delegate(string request, string path, string param,

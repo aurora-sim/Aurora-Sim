@@ -42,9 +42,7 @@ namespace OpenSim.Framework.Capabilities
     {
         private Dictionary <string, IRequestHandler> m_capsHandlers = new Dictionary<string, IRequestHandler>();
         private IHttpServer m_httpListener;
-        private string m_httpListenerHostName;
-        private uint m_httpListenerPort;
-        private bool m_useSSL = false;
+        private string m_httpAddress = "";
 
         /// <summary></summary>
         /// CapsHandlers is a cap handler container but also takes
@@ -55,31 +53,10 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="httpListenerHostname">host name of the HTTP
         /// server</param>
         /// <param name="httpListenerPort">HTTP port</param>
-        public CapsHandlers(BaseHttpServer httpListener, string httpListenerHostname, uint httpListenerPort)
-         : this (httpListener,httpListenerHostname,httpListenerPort, false)
-        {
-        }
-
-        /// <summary></summary>
-        /// CapsHandlers is a cap handler container but also takes
-        /// care of adding and removing cap handlers to and from the
-        /// supplied BaseHttpServer.
-        /// </summary>
-        /// <param name="httpListener">base HTTP server</param>
-        /// <param name="httpListenerHostname">host name of the HTTP
-        /// server</param>
-        /// <param name="httpListenerPort">HTTP port</param>
-        public CapsHandlers(IHttpServer httpListener, string httpListenerHostname, uint httpListenerPort, bool https)
+        public CapsHandlers(IHttpServer httpListener, string httpListenerHostname)
         {
             m_httpListener = httpListener;
-            m_httpListenerHostName = httpListenerHostname;
-            m_httpListenerPort = httpListenerPort;
-            m_useSSL = https;
-            if (httpListener != null && m_useSSL)
-            {
-                m_httpListenerHostName = httpListener.SSLCommonName;
-                m_httpListenerPort = httpListener.SSLPort;
-            }
+            m_httpAddress = httpListenerHostname;
         }
 
         /// <summary>
@@ -153,12 +130,7 @@ namespace OpenSim.Framework.Capabilities
             get
             {
                 OSDMap caps = new OSDMap();
-                string protocol = "http://";
                 
-                if (m_useSSL)
-                    protocol = "https://";
-
-                string baseUrl = protocol + m_httpListenerHostName + ":" + m_httpListenerPort.ToString();
                 foreach (string capsName in m_capsHandlers.Keys)
                 {
                     // skip SEED cap
@@ -170,7 +142,7 @@ namespace OpenSim.Framework.Capabilities
                     }
                     else
                     {
-                        caps[capsName] = baseUrl + m_capsHandlers[capsName].Path;
+                        caps[capsName] = m_httpAddress + m_capsHandlers[capsName].Path;
                     }
                 }
                 return caps;

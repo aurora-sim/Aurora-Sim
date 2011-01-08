@@ -88,18 +88,15 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
         public void AddCapsHandler(UUID agentId)
         {
-            if (m_scene.RegionInfo.EstateSettings.IsBanned(agentId))
-                return;
-
             String capsObjectPath = GetCapsPath(agentId);
 
             if (m_capsHandlers.ContainsKey(agentId))
             {
                 Caps oldCaps = m_capsHandlers[agentId];
                 
-                //m_log.DebugFormat(
-                //    "[CAPS]: Reregistering caps for agent {0}.  Old caps path {1}, new caps path {2}. ", 
-                //    agentId, oldCaps.CapsObjectPath, capsObjectPath);
+                m_log.WarnFormat(
+                    "[CAPS]: Reregistering caps for agent {0}.  Old caps path {1}, new caps path {2}. ", 
+                    agentId, capsObjectPath);
                 // This should not happen. The caller code is confused. We need to fix that.
                 // CAPs can never be reregistered, or the client will be confused.
                 // Hence this return here.
@@ -108,9 +105,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
             Caps caps
                 = new Caps(m_scene,
-                    m_scene.AssetService, MainServer.Instance, m_scene.RegionInfo.ExternalHostName,
-                    (MainServer.Instance == null) ? 0: MainServer.Instance.Port,
-                    capsObjectPath, agentId, m_scene.RegionInfo.RegionName);
+                    MainServer.Instance, agentId);
 
             caps.RegisterHandlers();
 

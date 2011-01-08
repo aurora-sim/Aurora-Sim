@@ -1686,7 +1686,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't disable this log message - it's too helpful
             if (!agent.child)
                 m_log.DebugFormat(
-                    "[CONNECTION BEGIN]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
+                    "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
                     agent.AgentID, agent.circuitcode, teleportFlags);
 
@@ -1697,7 +1697,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[CONNECTION BEGIN]: Exception authorizing user {0}", e.Message);
+                m_log.DebugFormat("[ConnectionBegin]: Exception authorizing user {0}", e.Message);
                 return false;
             }
 
@@ -1712,12 +1712,6 @@ namespace OpenSim.Region.Framework.Scenes
                 sp.ControllingClient.Close();
                 sp = null;
             }
-
-            if (!agent.child)
-                m_log.InfoFormat(
-                    "[CONNECTION BEGIN]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
-                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
-                    agent.AgentID, agent.circuitcode);
 
             ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
             if (module != null)
@@ -1773,6 +1767,12 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            if (!agent.child)
+                m_log.InfoFormat(
+                    "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
+                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.firstname, agent.lastname,
+                    agent.AgentID, agent.circuitcode);
 
             return true;
         }

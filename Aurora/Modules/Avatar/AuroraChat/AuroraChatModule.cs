@@ -709,7 +709,7 @@ namespace Aurora.Modules
         /// <param name="caps"></param>
         public void RegisterCaps(UUID agentID, Caps caps)
         {
-            string capsBase = "/CAPS/" + caps.CapsObjectPath;
+            string capsBase = "/CAPS/" + UUID.Random() + "/";
 
             caps.RegisterHandler("ChatSessionRequest",
                                 new RestHTTPHandler("POST", capsBase,

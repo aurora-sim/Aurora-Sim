@@ -275,8 +275,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             int newRegionX = (int)(reg.RegionHandle >> 40);
             int newRegionY = (((int)(reg.RegionHandle)) >> 8);
-            int oldRegionX = (int)(sp.Scene.RegionInfo.RegionHandle >> 40);
-            int oldRegionY = (((int)(sp.Scene.RegionInfo.RegionHandle)) >> 8);
+            int oldRegionX = (int)(sp.Scene.RegionInfo.RegionHandle >> 40) * Constants.RegionSize;
+            int oldRegionY = (((int)(sp.Scene.RegionInfo.RegionHandle)) >> 8) * Constants.RegionSize;
 
             ulong destinationHandle = finalDestination.RegionHandle;
 

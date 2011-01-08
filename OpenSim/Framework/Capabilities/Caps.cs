@@ -58,35 +58,9 @@ namespace OpenSim.Framework.Capabilities
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_httpListenerHostName;
-        private uint m_httpListenPort;
-
-        /// <summary>
-        /// This is the uuid portion of every CAPS path.  It is used to make capability urls private to the requester.
-        /// </summary>
-        private string m_capsObjectPath;
-        public string CapsObjectPath { get { return m_capsObjectPath; } }
-
         private CapsHandlers m_capsHandlers;
 
-        private static readonly string m_requestPath = "0000/";
-        // private static readonly string m_mapLayerPath = "0001/";
-        //private static readonly string m_newInventory = "0002/";
-        //private static readonly string m_requestTexture = "0003/";
-        private static readonly string m_notecardUpdatePath = "0004/";
-        private static readonly string m_notecardTaskUpdatePath = "0005/";
-        //private static readonly string m_fetchInventoryPath = "0006/";
-
-
-        // The following entries are in a module, however, they are also here so that we don't re-assign
-        // the path to another cap by mistake.
-        // private static readonly string m_parcelVoiceInfoRequestPath = "0007/"; // This is in a module.
-        // private static readonly string m_provisionVoiceAccountRequestPath = "0008/";// This is in a module.
-
-        // private static readonly string m_remoteParcelRequestPath = "0009/";// This is in the LandManagementModule.
-        //private static readonly string m_uploadBakedTexturePath = "0010/";
-
-        //private string eventQueue = "0100/";
+        private static readonly string m_seedRequestPath = "0000/";
         private IScene m_Scene;
         public ulong RegionHandle
         {
@@ -94,22 +68,7 @@ namespace OpenSim.Framework.Capabilities
         }
         private IHttpServer m_httpListener;
         private UUID m_agentID;
-        private IAssetService m_assetCache;
-        private string m_regionName;
-        private bool m_persistBakedTextures = true;
-
-        public bool SSLCaps
-        {
-            get { return m_httpListener.UseSSL; }
-        }
-        public string SSLCommonName
-        {
-            get { return m_httpListener.SSLCommonName; }
-        }
-        public CapsHandlers CapsHandlers
-        {
-            get { return m_capsHandlers; }
-        }
+        private String m_httpBase;
 
         // These are callbacks which will be setup by the scene so that we can update scene data when we
         // receive capability calls
@@ -117,35 +76,18 @@ namespace OpenSim.Framework.Capabilities
         public TaskScriptUpdatedCallback TaskScriptUpdatedCall = null;
         public OSDMap RequestMap = new OSDMap();
         
-        public Caps(IScene scene, IAssetService assetCache, IHttpServer httpServer, string httpListen, uint httpPort, string capsPath,
-                    UUID agent, string regionName)
+        public Caps(IScene scene, IHttpServer httpServer, UUID agent)
         {
             m_Scene = scene;
-            m_assetCache = assetCache;
-            m_capsObjectPath = capsPath;
             m_httpListener = httpServer;
-            m_httpListenerHostName = httpListen;
 
-            m_httpListenPort = httpPort;
-
-            IConfigSource config = m_Scene.Config;
-            if (config != null)
-            {
-                IConfig sconfig = config.Configs["Startup"];
-                if (sconfig != null)
-                    m_persistBakedTextures = sconfig.GetBoolean("PersistBakedTextures", m_persistBakedTextures);
-            }
-
-            if (httpServer != null && httpServer.UseSSL)
-            {
-                m_httpListenPort = httpServer.SSLPort;
-                httpListen = httpServer.SSLCommonName;
-                httpPort = httpServer.SSLPort;
-            }
+            string Protocol = "http://";
+            if (httpServer.UseSSL)
+                Protocol = "https://";
+            m_httpBase = Protocol + scene.RegionInfo.ExternalHostName + ":" + httpServer.Port;
 
             m_agentID = agent;
-            m_capsHandlers = new CapsHandlers(httpServer, httpListen, httpPort, (httpServer == null) ? false : httpServer.UseSSL);
-            m_regionName = regionName;
+            m_capsHandlers = new CapsHandlers(httpServer, m_httpBase);
         }
 
         /// <summary>
@@ -155,29 +97,35 @@ namespace OpenSim.Framework.Capabilities
         {
             DeregisterHandlers();
 
-            string capsBase = "/CAPS/" + m_capsObjectPath;
-
-            RegisterRegionServiceHandlers(capsBase);
+            RegisterRegionServiceHandlers();
         }
 
-        public void RegisterRegionServiceHandlers(string capsBase)
+        public void RegisterRegionServiceHandlers()
         {
             try
             {
+                string capsBase = "/CAPS/" + UUID.Random();
                 // the root of all evil
-                m_capsHandlers["SEED"] = new RestStreamHandler("POST", capsBase + m_requestPath, CapsRequest);
+                RegisterHandler("SEED", 
+                    new RestStreamHandler("POST", capsBase + m_seedRequestPath, CapsRequest));
 
+                capsBase = "/CAPS/" + UUID.Random() + "/";
                 //Region Server bound
-                m_capsHandlers["UpdateScriptTaskInventory"] =
-                    new RestStreamHandler("POST", capsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
-                m_capsHandlers["UpdateScriptTask"] = m_capsHandlers["UpdateScriptTaskInventory"];
+                IRequestHandler handler = new RestStreamHandler("POST", capsBase, ScriptTaskInventory);
+                RegisterHandler("UpdateScriptTaskInventory",
+                    handler);
+                RegisterHandler("UpdateScriptTask",
+                    handler);
 
+                capsBase = "/CAPS/" + UUID.Random() + "/";
                 //Unless the script engine goes, region server bound
-                m_capsHandlers["UpdateNotecardAgentInventory"] =
-                    new RestStreamHandler("POST", capsBase + m_notecardUpdatePath, NoteCardAgentInventory);
-                m_capsHandlers["UpdateScriptAgentInventory"] = m_capsHandlers["UpdateNotecardAgentInventory"];
-                m_capsHandlers["UpdateScriptAgent"] = m_capsHandlers["UpdateNotecardAgentInventory"];
-
+                handler = new RestStreamHandler("POST", capsBase, NoteCardAgentInventory);
+                RegisterHandler("UpdateNotecardAgentInventory",
+                    handler);
+                RegisterHandler("UpdateScriptAgentInventory",
+                    handler);
+                RegisterHandler("UpdateScriptAgent",
+                    handler);
             }
             catch (Exception e)
             {
@@ -204,12 +152,9 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="restMethod"></param>
         public void DeregisterHandlers()
         {
-            if (m_capsHandlers != null)
+            foreach (string capsName in m_capsHandlers.Caps)
             {
-                foreach (string capsName in m_capsHandlers.Caps)
-                {
-                    m_capsHandlers.Remove(capsName);
-                }
+                m_capsHandlers.Remove(capsName);
             }
         }
 
@@ -265,13 +210,13 @@ namespace OpenSim.Framework.Capabilities
         {
             try
             {
-                m_log.Debug("[CAPS]: ScriptTaskInventory Request in region: " + m_regionName);
+                m_log.Debug("[CAPS]: ScriptTaskInventory Request in region: " + m_Scene.RegionInfo.RegionName);
                 //m_log.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 int is_script_running = map["is_script_running"].AsInteger();
-                string capsBase = "/CAPS/" + m_capsObjectPath;
+                string capsBase = "/CAPS/" + UUID.Random();
                 string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
 
                 TaskInventoryScriptUpdater uploader =
@@ -286,12 +231,7 @@ namespace OpenSim.Framework.Capabilities
                 m_httpListener.AddStreamHandler(
                     new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-                string protocol = "http://";
-
-                if (m_httpListener.UseSSL)
-                    protocol = "https://";
-
-                string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
+                string uploaderURL = m_httpBase + capsBase +
                                      uploaderPath;
 
                 map = new OSDMap();
@@ -322,7 +262,7 @@ namespace OpenSim.Framework.Capabilities
             
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
             
-            string capsBase = "/CAPS/" + m_capsObjectPath;
+            string capsBase = "/CAPS/" + UUID.Random();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
 
             ItemUpdater uploader =
@@ -332,12 +272,7 @@ namespace OpenSim.Framework.Capabilities
             m_httpListener.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-            string protocol = "http://";
-
-            if (m_httpListener.UseSSL)
-                protocol = "https://";
-
-            string uploaderURL = protocol + m_httpListenerHostName + ":" + m_httpListenPort.ToString() + capsBase +
+            string uploaderURL = m_httpBase + capsBase +
                                  uploaderPath;
 
             map = new OSDMap();
