@@ -1195,7 +1195,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void AddNewClient(IClientAPI client)
         {
-            AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(client.CircuitCode);
+            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.CircuitCode);
             bool vialogin = false;
 
             if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
@@ -1287,7 +1287,7 @@ namespace OpenSim.Region.Framework.Scenes
         // Called by Caps, on the first HTTP contact from the client
         public bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
         {
-            AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(agentID);
+            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(agentID);
             if (aCircuit != null)
             {
                 bool vialogin = false;
@@ -1306,7 +1306,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
 
                         // BANG! SLASH!
-                        m_authenticateHandler.RemoveCircuit(agentID);
+                        AuthenticateHandler.RemoveCircuit(agentID);
 
                         return false;
                     }
@@ -1524,7 +1524,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected virtual ScenePresence CreateAndAddScenePresence(IClientAPI client)
         {
             AvatarAppearance appearance = null;
-            AgentCircuitData aCircuit = m_authenticateHandler.GetAgentCircuitData(client.CircuitCode);
+            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.CircuitCode);
 
             if (aCircuit == null)
             {
@@ -1626,7 +1626,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_sceneGraph.RemoveScenePresence(agentID);
                 m_clientManager.Remove(agentID);
 
-                m_authenticateHandler.RemoveCircuit(avatar.ControllingClient.CircuitCode);
+                AuthenticateHandler.RemoveCircuit(avatar.ControllingClient.CircuitCode);
                 //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
                 //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
             }
@@ -1722,7 +1722,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
-            m_authenticateHandler.AddNewCircuit(agent.circuitcode, agent);
+            AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
             if (vialogin)
             {

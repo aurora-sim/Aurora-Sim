@@ -155,7 +155,7 @@ namespace OpenSim.Services.CapsService
                     {
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }
-                    if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
+                    else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
                         string SimSeedCap = ((OSDMap)map["body"])["seed-capability"].AsString();
                         ulong regionHandle = ((OSDMap)map["body"])["region-handle"].AsULong();

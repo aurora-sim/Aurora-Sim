@@ -143,8 +143,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
             //sp.ControllingClient.SendTeleportProgress("resolving");
 
-            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-
             // Reset animations; the viewer does that in teleports.
             if(sp.Animator != null)
                 sp.Animator.ResetAnimations();
@@ -227,7 +225,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         //
                         // This is it
                         //
-                        DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags, eq);
+                        DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags);
                         //
                         //
                         //
@@ -260,7 +258,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags, IEventQueueService eq)
+        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
             if (reg == null || finalDestination == null)
@@ -335,6 +333,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
+                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
+
                 if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
                 {
                     //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Creating agent...");
@@ -346,14 +346,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         // ES makes the client send a UseCircuitCode message to the destination, 
                         // which triggers a bunch of things there.
                         // So let's wait
-                        Thread.Sleep(200);
+                        Thread.Sleep(400);
 
                         eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, sp.Scene.RegionInfo.RegionHandle);
-
-                    }
-                    else
-                    {
-                        sp.ControllingClient.InformClientOfNeighbor(destinationHandle, endPoint);
                     }
                 }
 
@@ -1094,11 +1089,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             y = y / Constants.RegionSize;
             m_log.Info("[EntityTransferModule]: Starting to inform client about neighbour " + reg.RegionName);
 
-            string capsPath = "http://" + reg.ExternalHostName + ":" + reg.HttpPort
-                  + "/CAPS/" + a.CapsPath + "0000/";
-
             string reason = String.Empty;
-
 
             bool regionAccepted = m_scene.SimulationService.CreateAgent(reg, a, (uint)TeleportFlags.Default, out reason); 
 
@@ -1121,10 +1112,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
                     eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, sp.Scene.RegionInfo.RegionHandle);
-                }
-                else
-                {
-                    sp.ControllingClient.InformClientOfNeighbor(reg.RegionHandle, endPoint);
                 }
 
                 m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
