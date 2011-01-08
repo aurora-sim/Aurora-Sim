@@ -30,28 +30,30 @@ namespace OpenSim.Framework.Capabilities
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string capsPath, ulong RegionHandle)
+        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), capsPath);
+            //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
+            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), "");
             Enqueue(item, avatarID, RegionHandle);
         }
 
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                         IPEndPoint regionExternalEndPoint,
-                                        uint locationID, uint flags, string capsURL,
+                                        uint locationID, uint flags,
                                         UUID avatarID, uint teleportFlags, ulong RegionHandle)
         {
+            //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
             OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, regionExternalEndPoint,
-                                                            locationID, flags, capsURL, avatarID, teleportFlags);
+                                                            locationID, flags, "", avatarID, teleportFlags);
             Enqueue(item, avatarID, RegionHandle);
         }
 
         public virtual void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                 IPEndPoint newRegionExternalEndPoint,
-                                string capsURL, UUID avatarID, UUID sessionID, ulong RegionHandle)
+                                UUID avatarID, UUID sessionID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, newRegionExternalEndPoint,
-                                                    capsURL, avatarID, sessionID);
+                                                    "", avatarID, sessionID);
             Enqueue(item, avatarID, RegionHandle);
         }
 

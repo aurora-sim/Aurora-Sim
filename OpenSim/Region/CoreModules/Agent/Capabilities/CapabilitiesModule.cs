@@ -50,8 +50,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
         protected Dictionary<UUID, Caps> m_capsHandlers = new Dictionary<UUID, Caps>();
         
         protected Dictionary<UUID, string> capsPaths = new Dictionary<UUID, string>();
-        protected Dictionary<UUID, Dictionary<ulong, string>> childrenSeeds 
-            = new Dictionary<UUID, Dictionary<ulong, string>>();
         
         public void Initialise(IConfigSource source)
         {
@@ -88,26 +86,11 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
         public void AddCapsHandler(UUID agentId)
         {
-            String capsObjectPath = GetCapsPath(agentId);
-
-            if (m_capsHandlers.ContainsKey(agentId))
-            {
-                Caps oldCaps = m_capsHandlers[agentId];
-                
-                m_log.WarnFormat(
-                    "[CAPS]: Reregistering caps for agent {0}.  Old caps path {1}, new caps path {2}. ", 
-                    agentId, capsObjectPath);
-                // This should not happen. The caller code is confused. We need to fix that.
-                // CAPs can never be reregistered, or the client will be confused.
-                // Hence this return here.
-                //return;
-            }
-
             Caps caps
                 = new Caps(m_scene,
                     MainServer.Instance, agentId);
 
-            caps.RegisterHandlers(capsObjectPath);
+            caps.RegisterHandlers("");
 
             m_scene.EventManager.TriggerOnRegisterCaps(agentId, caps);
 
@@ -119,11 +102,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
         public void RemoveCapsHandler(UUID agentId)
         {
-            if (childrenSeeds.ContainsKey(agentId))
-            {
-                childrenSeeds.Remove(agentId);
-            }
-
             lock (m_capsHandlers)
             {
                 if (m_capsHandlers.ContainsKey(agentId))
@@ -135,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
                 else
                 {
                     m_log.WarnFormat(
-                        "[CAPS]: Received request to remove CAPS handler for root agent {0} in {1}, but no such CAPS handler found!",
+                        "[CapsModule]: Received request to remove CAPS handler for root agent {0} in {1}, but no such CAPS handler found!",
                         agentId, m_scene.RegionInfo.RegionName);
                 }
             }
@@ -157,66 +135,6 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
         public void NewUserConnection(AgentCircuitData agent)
         {
             capsPaths[agent.AgentID] = agent.CapsPath;
-            childrenSeeds[agent.AgentID] 
-                = ((agent.ChildrenCapSeeds == null) ? new Dictionary<ulong, string>() : agent.ChildrenCapSeeds);
-        }
-        
-        public string GetCapsPath(UUID agentId)
-        {
-            if (capsPaths.ContainsKey(agentId))
-            {
-                return capsPaths[agentId];
-            }
-
-            return null;
-        }
-        
-        public Dictionary<ulong, string> GetChildrenSeeds(UUID agentID)
-        {
-            Dictionary<ulong, string> seeds = null;
-            if (childrenSeeds.TryGetValue(agentID, out seeds))
-                return seeds;
-            return new Dictionary<ulong, string>();
-        }
-
-        public void DropChildSeed(UUID agentID, ulong handle)
-        {
-            Dictionary<ulong, string> seeds;
-            if (childrenSeeds.TryGetValue(agentID, out seeds))
-            {
-                seeds.Remove(handle);
-            }
-        }
-
-        public string GetChildSeed(UUID agentID, ulong handle)
-        {
-            Dictionary<ulong, string> seeds;
-            string returnval;
-            if (childrenSeeds.TryGetValue(agentID, out seeds))
-            {
-                if (seeds.TryGetValue(handle, out returnval))
-                    return returnval;
-            }
-            return null;
-        }
-
-        public void SetChildrenSeed(UUID agentID, Dictionary<ulong, string> seeds)
-        {
-            //m_log.DebugFormat(" !!! Setting child seeds in {0} to {1}", m_scene.RegionInfo.RegionName, seeds.Count);
-            childrenSeeds[agentID] = seeds;
-        }
-
-        public void DumpChildrenSeeds(UUID agentID)
-        {
-            m_log.Info("================ ChildrenSeed "+m_scene.RegionInfo.RegionName+" ================");
-            foreach (KeyValuePair<ulong, string> kvp in childrenSeeds[agentID])
-            {
-                uint x, y;
-                Utils.LongToUInts(kvp.Key, out x, out y);
-                x = x / Constants.RegionSize;
-                y = y / Constants.RegionSize;
-                m_log.Info(" >> "+x+", "+y+": "+kvp.Value);
-            }
         }
     }
 }

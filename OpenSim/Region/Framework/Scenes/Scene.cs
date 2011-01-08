@@ -563,10 +563,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 // If agent is a root agent.
                                 if (!agent.IsChildAgent)
                                 {
-                                    //Fix its neighbor settings and add this new region
-                                    List<ulong> old = new List<ulong>();
-                                    old.Add(otherRegion.RegionHandle);
-                                    agent.DropOldNeighbors(old);
                                     //Now add the agent to the reigon that is coming up
                                     IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
                                     if (transferModule != null)
@@ -1721,17 +1717,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (module != null)
                     module.AddCapsHandler(agent.AgentID);
-            }
-            else
-            {
-                if (sp.IsChildAgent)
-                {
-                    m_log.DebugFormat(
-                        "[Scene]: Adjusting known seeds for existing agent {0} in {1}",
-                        agent.AgentID, RegionInfo.RegionName);
-
-                    sp.AdjustKnownSeeds();
-                }
             }
 
 

@@ -67,11 +67,6 @@ namespace OpenSim.Framework
         public string CapsPath = String.Empty;
 
         /// <summary>
-        /// Seed caps for neighbor regions that the user can see into
-        /// </summary>
-        public Dictionary<ulong, string> ChildrenCapSeeds;
-
-        /// <summary>
         /// Root agent, or Child agent
         /// </summary>
         public bool child;
@@ -168,7 +163,6 @@ namespace OpenSim.Framework
             InventoryFolder = new UUID(cAgent.InventoryFolder);
             BaseFolder = new UUID(cAgent.BaseFolder);
             CapsPath = cAgent.CapsPath;
-            ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
         }
 
@@ -183,19 +177,6 @@ namespace OpenSim.Framework
             args["base_folder"] = OSD.FromUUID(BaseFolder);
             args["caps_path"] = OSD.FromString(CapsPath);
 
-            if (ChildrenCapSeeds != null)
-            {
-                OSDArray childrenSeeds = new OSDArray(ChildrenCapSeeds.Count);
-                foreach (KeyValuePair<ulong, string> kvp in ChildrenCapSeeds)
-                {
-                    OSDMap pair = new OSDMap();
-                    pair["handle"] = OSD.FromString(kvp.Key.ToString());
-                    pair["seed"] = OSD.FromString(kvp.Value);
-                    childrenSeeds.Add(pair);
-                }
-                if (ChildrenCapSeeds.Count > 0)
-                    args["children_seeds"] = childrenSeeds;
-            }
             args["child"] = OSD.FromBoolean(child);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
             args["first_name"] = OSD.FromString(firstname);
@@ -247,30 +228,6 @@ namespace OpenSim.Framework
                 BaseFolder = args["base_folder"].AsUUID();
             if (args["caps_path"] != null)
                 CapsPath = args["caps_path"].AsString();
-
-            if ((args["children_seeds"] != null) && (args["children_seeds"].Type == OSDType.Array))
-            {
-                OSDArray childrenSeeds = (OSDArray)(args["children_seeds"]);
-                ChildrenCapSeeds = new Dictionary<ulong, string>();
-                foreach (OSD o in childrenSeeds)
-                {
-                    if (o.Type == OSDType.Map)
-                    {
-                        ulong handle = 0;
-                        string seed = "";
-                        OSDMap pair = (OSDMap)o;
-                        if (pair["handle"] != null)
-                            if (!UInt64.TryParse(pair["handle"].AsString(), out handle))
-                                continue;
-                        if (pair["seed"] != null)
-                            seed = pair["seed"].AsString();
-                        if (!ChildrenCapSeeds.ContainsKey(handle))
-                            ChildrenCapSeeds.Add(handle, seed);
-                    }
-                }
-            }
-            else
-                ChildrenCapSeeds = new Dictionary<ulong, string>();
 
             if (args["child"] != null)
                 child = args["child"].AsBoolean();
@@ -357,7 +314,6 @@ namespace OpenSim.Framework
         public Guid AgentID;
         public Guid BaseFolder;
         public string CapsPath = String.Empty;
-        public Dictionary<ulong, string> ChildrenCapSeeds;
         public bool child;
         public uint circuitcode;
         public string firstname;
@@ -392,7 +348,6 @@ namespace OpenSim.Framework
             InventoryFolder = cAgent.InventoryFolder.Guid;
             BaseFolder = cAgent.BaseFolder.Guid;
             CapsPath = cAgent.CapsPath;
-            ChildrenCapSeeds = cAgent.ChildrenCapSeeds;
             Viewer = cAgent.Viewer;
         }
     }

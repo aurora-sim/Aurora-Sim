@@ -305,8 +305,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                string capsPath = String.Empty;
-
                 AgentCircuitData currentAgentCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.ControllingClient.CircuitCode);
                 AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
                 agentCircuit.startpos = position;
@@ -320,12 +318,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     agentCircuit.Channel = currentAgentCircuit.Channel;
                     agentCircuit.Mac = currentAgentCircuit.Mac;
                     agentCircuit.Id0 = currentAgentCircuit.Id0;
-                }
-
-                if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
-                {
-                    // brand new agent, let's create a new caps seed
-                    agentCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath();
                 }
 
                 string reason = String.Empty;
@@ -347,38 +339,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Creating agent...");
 
-                    #region IP Translation for NAT
-                    IClientIPEndpoint ipepClient;
-                    if (sp.ClientView.TryGet(out ipepClient))
-                    {
-                        capsPath
-                            = "http://"
-                              + NetworkUtil.GetHostFor(ipepClient.EndPoint, finalDestination.ExternalHostName)
-                              + ":"
-                              + finalDestination.HttpPort
-                              + CapsUtil.GetCapsSeedPath(agentCircuit.CapsPath);
-                    }
-                    else
-                    {
-                        capsPath
-                            = "http://"
-                              + finalDestination.ExternalHostName
-                              + ":"
-                              + finalDestination.HttpPort
-                              + CapsUtil.GetCapsSeedPath(agentCircuit.CapsPath);
-                    }
-                    #endregion
-
                     if (eq != null)
                     {
-                        #region IP Translation for NAT
-                        // Uses ipepClient above
-                        if (sp.ClientView.TryGet(out ipepClient))
-                        {
-                            endPoint.Address = NetworkUtil.GetIPFor(ipepClient.EndPoint, endPoint.Address);
-                        }
-                        #endregion
-
                         eq.EnableSimulator(destinationHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
 
                         // ES makes the client send a UseCircuitCode message to the destination, 
@@ -386,21 +348,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         // So let's wait
                         Thread.Sleep(200);
 
-                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, capsPath, sp.Scene.RegionInfo.RegionHandle);
+                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, sp.Scene.RegionInfo.RegionHandle);
 
                     }
                     else
                     {
                         sp.ControllingClient.InformClientOfNeighbor(destinationHandle, endPoint);
                     }
-                }
-                else
-                {
-                    ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
-                    if (module != null)
-                        agentCircuit.CapsPath = module.GetChildSeed(sp.UUID, reg.RegionHandle);
-                    capsPath = "http://" + finalDestination.ExternalHostName + ":" + finalDestination.HttpPort
-                                + "/CAPS/" + agentCircuit.CapsPath + "0000/";
                 }
 
                 if (m_cancelingAgents.Contains(sp.UUID))
@@ -422,21 +376,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                m_log.DebugFormat(
-                    "[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, sp.UUID);
-
                 //Set the agent in transit before we send the event
                 SetInTransit(sp.UUID);
 
                 if (eq != null)
                 {
                     eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
-                                           4, teleportFlags, capsPath, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
-                }
-                else
-                {
-                    sp.ControllingClient.SendRegionTeleport(destinationHandle, 13, endPoint, 4,
-                                                                teleportFlags, capsPath);
+                                           4, teleportFlags, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
                 }
 
                 // Let's set this to true tentatively. This does not trigger OnChildAgent
@@ -850,37 +796,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
 				agent.ControllingClient.RequestClientInfo();
 
-                string agentcaps;
-                ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
-                Dictionary<ulong, string> seeds = new Dictionary<ulong, string>();
-                //Get children seeds from the CAPS module
-                if (module != null)
-                {
-                    seeds = module.GetChildrenSeeds(agent.UUID);
-                }
-                if (!seeds.TryGetValue(crossingRegion.RegionHandle, out agentcaps))
-                {
-                    m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: No ENTITY TRANSFER MODULE information for region handle {0}, exiting CrossToNewRegion.",
-                                     crossingRegion.RegionHandle);
-                    return agent;
-                }
-                // TODO Should construct this behind a method
-                string capsPath =
-                    "http://" + crossingRegion.ExternalHostName + ":" + crossingRegion.HttpPort
-                     + "/CAPS/" + agentcaps /*circuitdata.CapsPath*/ + "0000/";
-
-                m_log.DebugFormat("[EntityTransferModule]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
-
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.CrossRegion(crossingRegion.RegionHandle, pos, agent.Velocity, crossingRegion.ExternalEndPoint,
-                                   capsPath, agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
-                }
-                else
-                {
-                    agent.ControllingClient.CrossRegion(crossingRegion.RegionHandle, pos, agent.Velocity, crossingRegion.ExternalEndPoint,
-                                                capsPath);
+                                   agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
 
                 if (!WaitForCallback(agent.UUID))
@@ -955,37 +875,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(neighbourRegion.RegionLocX, neighbourRegion.RegionLocY, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
-                string agentcaps;
-                ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
-                Dictionary<ulong, string> seeds = new Dictionary<ulong, string>();
-                //Get children seeds from the CAPS module
-                if (module != null)
-                {
-                    seeds = module.GetChildrenSeeds(agent.UUID);
-                }
-                if (!seeds.TryGetValue(neighbourRegion.RegionHandle, out agentcaps))
-                {
-                    m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: No ENTITY TRANSFER MODULE information for region handle {0}, exiting CrossToNewRegion.",
-                                     neighbourRegion.RegionHandle);
-                    return agent;
-                }
-                // TODO Should construct this behind a method
-                string capsPath =
-                    "http://" + neighbourRegion.ExternalHostName + ":" + neighbourRegion.HttpPort
-                     + "/CAPS/" + agentcaps /*circuitdata.CapsPath*/ + "0000/";
-
-                m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Sending new CAPS seed url {0} to client {1}", capsPath, agent.UUID);
-
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.CrossRegion(neighbourRegion.RegionHandle, agent.AbsolutePosition, agent.Velocity, neighbourRegion.ExternalEndPoint,
-                                   capsPath, agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
-                }
-                else
-                {
-                    agent.ControllingClient.CrossRegion(neighbourRegion.RegionHandle, agent.AbsolutePosition, agent.Velocity, neighbourRegion.ExternalEndPoint,
-                                                capsPath);
+                                   agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
 
                 agent.MakeChildAgent();
@@ -1034,25 +928,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             agent.child = true;
             agent.Appearance = sp.Appearance;
             agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-
-            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
-            if (module != null)
-                agent.ChildrenCapSeeds = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
-            //m_log.DebugFormat("[XXX] Seeds 1 {0}", agent.ChildrenCapSeeds.Count);
-
-            if (!agent.ChildrenCapSeeds.ContainsKey(sp.Scene.RegionInfo.RegionHandle))
-                agent.ChildrenCapSeeds.Add(sp.Scene.RegionInfo.RegionHandle, sp.ControllingClient.RequestClientInfo().CapsPath);
-            //m_log.DebugFormat("[XXX] Seeds 2 {0}", agent.ChildrenCapSeeds.Count);
-
-            //foreach (ulong h in agent.ChildrenCapSeeds.Keys)
-            //    m_log.DebugFormat("[XXX] --> {0}", h);
-            //m_log.DebugFormat("[XXX] Adding {0}", region.RegionHandle);
-            agent.ChildrenCapSeeds.Add(region.RegionHandle, agent.CapsPath);
-
-            if (module != null)
-            {
-                module.SetChildrenSeed(sp.UUID, agent.ChildrenCapSeeds);
-            }
 
             if (currentAgentCircuit != null)
             {
@@ -1111,46 +986,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_log.Debug("[EntityTransferModule]: m_regionInfo was null in EnableChildAgents, is this a NPC?");
             }
             
-            /// We need to find the difference between the new regions where there are no child agents
-            /// and the regions where there are already child agents. We only send notification to the former.
-            List<ulong> neighbourHandles = NeighbourHandles(sp.Scene, neighbours); // on this region
-            neighbourHandles.Add(sp.Scene.RegionInfo.RegionHandle);  // add this region too
-            List<ulong> previousRegionNeighbourHandles;
-
-            ICapabilitiesModule module = sp.Scene.RequestModuleInterface<ICapabilitiesModule>();
-            if (module != null)
-            {
-                previousRegionNeighbourHandles =
-                    new List<ulong>(module.GetChildrenSeeds(sp.UUID).Keys);
-            }
-            else
-            {
-                previousRegionNeighbourHandles = new List<ulong>();
-            }
-
-            List<ulong> newRegions = NewNeighbours(neighbourHandles, previousRegionNeighbourHandles);
-            List<ulong> oldRegions = OldNeighbours(neighbourHandles, previousRegionNeighbourHandles);
-
-            //Dump("Current Neighbors", neighbourHandles);
-            //Dump("Previous Neighbours", previousRegionNeighbourHandles);
-            //Dump("New Neighbours", newRegions);
-            //Dump("Old Neighbours", oldRegions);
-
-            /// Update the scene presence's known regions here on this region
-            sp.DropOldNeighbors(oldRegions);
-
-            /// Collect as many seeds as possible
-            Dictionary<ulong, string> seeds;
-            if (module != null)
-                seeds
-                    = new Dictionary<ulong, string>(module.GetChildrenSeeds(sp.UUID));
-            else
-                seeds = new Dictionary<ulong, string>();
-
-            //m_log.Debug(" !!! No. of seeds: " + seeds.Count);
-            if (!seeds.ContainsKey(sp.Scene.RegionInfo.RegionHandle))
-                seeds.Add(sp.Scene.RegionInfo.RegionHandle, sp.ControllingClient.RequestClientInfo().CapsPath);
-
             /// Create the necessary child agents
             List<AgentCircuitData> cagents = new List<AgentCircuitData>();
             foreach (GridRegion neighbour in neighbours)
@@ -1175,43 +1010,16 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         agent.Id0 = currentAgentCircuit.Id0;
                     }
 
-                    if (newRegions.Contains(neighbour.RegionHandle))
-                    {
-                        agent.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-                        if(!seeds.ContainsKey(neighbour.RegionHandle))
-                            seeds.Add(neighbour.RegionHandle, agent.CapsPath);
-                    }
-                    else if (module != null)
-                        agent.CapsPath = module.GetChildSeed(sp.UUID, neighbour.RegionHandle);
-
                     cagents.Add(agent);
                 }
                 else
                     cagents.Add(new AgentCircuitData());
             }
 
-            /// Update all child agent with everyone's seeds
-            foreach (AgentCircuitData a in cagents)
-            {
-                a.ChildrenCapSeeds = new Dictionary<ulong, string>(seeds);
-            }
-
-            if (module != null)
-            {
-                module.SetChildrenSeed(sp.UUID, seeds);
-            }
-            //avatar.Scene.DumpChildrenSeeds(avatar.UUID);
-            //avatar.DumpKnownRegions();
-
             bool newAgent = false;
             int count = 0;
             foreach (GridRegion neighbour in neighbours)
             {
-                // Don't do it if there's already an agent in that region
-                if (newRegions.Contains(neighbour.RegionHandle))
-                    newAgent = true;
-                else
-                    newAgent = false;
                 //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
                 
                 if (neighbour.RegionHandle != sp.Scene.RegionInfo.RegionHandle)
@@ -1312,7 +1120,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
 
                     eq.EnableSimulator(reg.RegionHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
-                    eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, capsPath, sp.Scene.RegionInfo.RegionHandle);
+                    eq.EstablishAgentCommunication(sp.UUID, reg.RegionHandle, endPoint, sp.Scene.RegionInfo.RegionHandle);
                 }
                 else
                 {

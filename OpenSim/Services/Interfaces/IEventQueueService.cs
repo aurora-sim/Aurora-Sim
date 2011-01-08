@@ -47,15 +47,14 @@ namespace OpenSim.Services.Interfaces
         // These are required to decouple Scenes from EventQueueHelper
         void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
         void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle);
-        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint,
-                                         string capsPath, ulong RegionHandle);
+        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
-                                 uint locationID, uint flags, string capsURL,
+                                 uint locationID, uint flags,
                                  UUID agentID, uint teleportFlags, ulong RegionHandle);
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPEndPoint newRegionExternalEndPoint,
-                         string capsURL, UUID avatarID, UUID sessionID, ulong RegionHandle);
+                         UUID avatarID, UUID sessionID, ulong RegionHandle);
         void ChatterboxInvitation(UUID sessionID, string sessionName,
                                   UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                   uint timeStamp, bool offline, int parentEstateID, Vector3 position,

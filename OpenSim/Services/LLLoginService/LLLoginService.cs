@@ -1097,7 +1097,6 @@ namespace OpenSim.Services.LLLoginService
             //aCircuit.BaseFolder = irrelevant
             aCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath();
             aCircuit.child = false; // the first login agent is root
-            aCircuit.ChildrenCapSeeds = new Dictionary<ulong, string>();
             aCircuit.circuitcode = circuit;
             aCircuit.firstname = account.FirstName;
             //aCircuit.InventoryFolder = irrelevant

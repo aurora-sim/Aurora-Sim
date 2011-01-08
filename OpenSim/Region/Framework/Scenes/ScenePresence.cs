@@ -597,32 +597,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneViewer; }
         }
 
-        public void AdjustKnownSeeds()
-        {
-            Dictionary<ulong, string> seeds;
-            ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
-            INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
-            if (module != null)
-                seeds = module.GetChildrenSeeds(UUID);
-            else
-                seeds = new Dictionary<ulong, string>();
-
-            List<ulong> old = new List<ulong>();
-            foreach (ulong handle in seeds.Keys)
-            {
-                uint x, y;
-                Utils.LongToUInts(handle, out x, out y);
-                if (neighborService.IsOutsideView((int)x, Scene.RegionInfo.RegionLocX, (int)y, Scene.RegionInfo.RegionLocY))
-                {
-                    old.Add(handle);
-                }
-            }
-            DropOldNeighbors(old);
-
-            if (module != null)
-                module.SetChildrenSeed(UUID, seeds);
-        }
-
         private bool m_inTransit;
         private bool m_mouseLook;
         private bool m_leftButtonDown;
@@ -696,8 +670,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_userLevel = account.UserLevel;
 
             AbsolutePosition = posLastSignificantMove = m_CameraCenter = m_controllingClient.StartPos;
-
-            AdjustKnownSeeds();
 
             // This won't send anything, as we are still a child here...
             //Animator.TrySetMovementAnimation("STAND"); 
@@ -1030,16 +1002,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void StopFlying()
         {
             ControllingClient.StopFlying(this);
-        }
-
-        public void DropOldNeighbors(List<ulong> oldRegions)
-        {
-            foreach (ulong handle in oldRegions)
-            {
-                ICapabilitiesModule module = Scene.RequestModuleInterface<ICapabilitiesModule>();
-                if(module != null)
-                    module.DropChildSeed(UUID, handle);
-            }
         }
 
         #endregion

@@ -59,15 +59,5 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="agentId"></param>
         Caps GetCapsHandlerForUser(UUID agentId);
-        
-        Dictionary<ulong, string> GetChildrenSeeds(UUID agentID);
-        
-        string GetChildSeed(UUID agentID, ulong handle);
-        
-        void SetChildrenSeed(UUID agentID, Dictionary<ulong, string> seeds);
-        
-        void DropChildSeed(UUID agentID, ulong handle);
-
-        string GetCapsPath(UUID agentId);
     }
 }
