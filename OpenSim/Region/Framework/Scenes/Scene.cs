@@ -1684,9 +1684,9 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't disable this log message - it's too helpful
             if (!agent.child)
                 m_log.DebugFormat(
-                    "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} {3} {4} (circuit code {5}, teleportflags {6})",
+                    "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                    agent.AgentID, agent.circuitcode, teleportFlags);
+                    agent.circuitcode, teleportFlags);
 
             try
             {
@@ -1757,9 +1757,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!agent.child)
                 m_log.InfoFormat(
-                    "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
+                    "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                    agent.AgentID, agent.circuitcode);
+                    agent.circuitcode);
 
             return true;
         }

@@ -2802,6 +2802,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_attachments.Clear();
             }
+            //Reset the parcel UUID for the user
+            currentParcelUUID = UUID.Zero;
             // Put the child agent back at the center
             AbsolutePosition 
                 = new Vector3(((float)Constants.RegionSize * 0.5f), ((float)Constants.RegionSize * 0.5f), 70);
