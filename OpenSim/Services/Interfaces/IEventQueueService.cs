@@ -26,6 +26,7 @@
  */
 
 using System.Net;
+using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Messages.Linden;
@@ -47,7 +48,7 @@ namespace OpenSim.Services.Interfaces
         // These are required to decouple Scenes from EventQueueHelper
         void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
         void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle);
-        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, ulong RegionHandle);
+        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string CapsUrl, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
                                  uint locationID, uint flags,
@@ -67,5 +68,17 @@ namespace OpenSim.Services.Interfaces
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
 
         bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
+
+
+        /// <summary>
+        /// This is a region > CapsService message ONLY, this should never be sent to the client.
+        /// </summary>
+        /// <param name="avatarID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="neighbors"></param>
+        /// <param name="circuit"></param>
+        void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
+            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit);
     }
 }

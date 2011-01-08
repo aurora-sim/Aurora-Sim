@@ -31,6 +31,7 @@ using System.Net;
 using System.Net.Sockets;
 using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
@@ -111,7 +112,7 @@ namespace OpenSim.Services.Interfaces
         string GridServiceURL { get; }
     }
 
-    public class GridRegion : Object
+    public class GridRegion
     {
 
         /// <summary>
@@ -383,6 +384,101 @@ namespace OpenSim.Services.Interfaces
             kvp["sizeX"] = RegionSizeX.ToString();
             kvp["sizeY"] = RegionSizeY.ToString();
             return kvp;
+        }
+
+        public OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["uuid"] = RegionID;
+            map["locX"] = RegionLocX;
+            map["locY"] = RegionLocY;
+            map["regionName"] = RegionName;
+            map["regionType"] = RegionType;
+            map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
+            map["serverHttpPort"] = HttpPort;
+            map["serverURI"] = ServerURI;
+            map["serverPort"] = InternalEndPoint.Port;
+            map["regionMapTexture"] = TerrainImage;
+            map["regionTerrainTexture"] = TerrainMapImage;
+            map["access"] = (int)Access;
+            map["regionSecret"] = RegionSecret;
+            map["owner_uuid"] = EstateOwner;
+            map["Maturity"] = Maturity;
+            map["Token"] = Token;
+            map["sizeX"] = RegionSizeX;
+            map["sizeY"] = RegionSizeY;
+
+            return map;
+        }
+
+        public void FromOSD(OSDMap map)
+        {
+            if (map.ContainsKey("uuid"))
+                RegionID = map["uuid"].AsUUID();
+
+            if (map.ContainsKey("locX"))
+                RegionLocX = map["locX"].AsInteger();
+
+            if (map.ContainsKey("locY"))
+                RegionLocY = map["locY"].AsInteger();
+
+            if (map.ContainsKey("regionName"))
+                RegionName = map["regionName"].AsString();
+
+            if (map.ContainsKey("regionType"))
+                RegionType = map["regionType"].AsString();
+
+            if (map.ContainsKey("serverIP"))
+            {
+                //int port = 0;
+                //Int32.TryParse((string)kvp["serverPort"], out port);
+                //IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["serverIP"]), port);
+                ExternalHostName = map["serverIP"].AsString();
+            }
+            else
+                ExternalHostName = "127.0.0.1";
+
+            if (map.ContainsKey("serverPort"))
+            {
+                Int32 port = map["serverPort"].AsInteger();
+                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
+            }
+
+            if (map.ContainsKey("serverHttpPort"))
+            {
+                UInt32 port = map["serverHttpPort"].AsUInteger();
+                HttpPort = port;
+            }
+
+            if (map.ContainsKey("serverURI"))
+                ServerURI = map["serverURI"];
+
+            if (map.ContainsKey("regionMapTexture"))
+                TerrainImage = map["regionMapTexture"].AsUUID();
+
+            if (map.ContainsKey("regionTerrainTexture"))
+                TerrainMapImage = map["regionTerrainTexture"].AsUUID();
+
+            if (map.ContainsKey("access"))
+                Access = (byte)map["access"].AsInteger();
+
+            if (map.ContainsKey("Maturity"))
+                Maturity = map["Maturity"].AsInteger();
+
+            if (map.ContainsKey("regionSecret"))
+                RegionSecret = map["regionSecret"].AsString();
+
+            if (map.ContainsKey("owner_uuid"))
+                EstateOwner = map["owner_uuid"].AsUUID();
+
+            if (map.ContainsKey("Token"))
+                Token = map["Token"].AsString();
+
+            if (map.ContainsKey("sizeX"))
+                m_RegionSizeX = (float)map["sizeX"].AsReal();
+
+            if (map.ContainsKey("sizeY"))
+                m_RegionSizeY = (float)map["sizeY"].AsReal();
         }
 
         public GridRegion(Dictionary<string, object> kvp)

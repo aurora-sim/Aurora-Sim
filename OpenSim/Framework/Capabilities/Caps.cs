@@ -138,11 +138,11 @@ namespace OpenSim.Framework.Capabilities
         public string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            //m_log.Debug("[CAPS]: Seed Caps Request in region: " + m_regionName);
+            m_log.Debug("[RegionCaps]: Seed Caps Request in region " + m_Scene.RegionInfo.RegionName + " @ " + path);
 
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {
-                m_log.Warn("[CAPS]: Unauthorized CAPS client");
+                m_log.Error("[RegionCaps]: Unauthorized CAPS client");
                 return string.Empty;
             }
             try

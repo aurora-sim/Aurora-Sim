@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using log4net;
@@ -16,6 +17,7 @@ using OpenMetaverse.StructuredData;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
@@ -154,6 +156,42 @@ namespace OpenSim.Services.CapsService
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
                         m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    }
+                    else if (map.ContainsKey("message") && map["message"] == "EnableChildAgents")
+                    {
+                        //Some notes on this message:
+                        // 1) This is a region > CapsService message ONLY, this should never be sent to the client!
+                        // 2) This just enables child agents in the regions given, as the region cannot do it,
+                        //       as regions do not have the ability to know what Cap Urls other regions have.
+                        // 3) We could do more checking here, but we don't really 'have' to at this point.
+                        //       If the sim was able to get it past the password checks and everything,
+                        //       it should be able to add the neighbors here. We could do the neighbor finding here
+                        //       as well, but it's not necessary at this time.
+                        OSDMap body = ((OSDMap)map["body"]);
+
+                        //Parse the OSDMap
+                        int DrawDistance = body["DrawDistance"].AsInteger();
+
+                        AgentCircuitData circuitData = new AgentCircuitData();
+                        circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
+
+                        OSDArray neighborsArray = (OSDArray)body["Regions"];
+                        GridRegion[] neighbors = new GridRegion[neighborsArray.Count];
+
+                        int i = 0;
+                        foreach (OSD r in neighborsArray)
+                        {
+                            GridRegion region = new GridRegion();
+                            region.FromOSD((OSDMap)r);
+                            neighbors[i] = region;
+                            i++;
+                        }
+
+                        //Now do the creation
+                        EnableChildAgents(DrawDistance, neighbors, circuitData);
+
+                        //Don't send it to the client at all
+                        return true;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -447,6 +485,95 @@ namespace OpenSim.Services.CapsService
         {
             m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
             MainServer.Instance.RemovePollServiceHTTPHandler("", m_capsPath);
+        }
+
+        #endregion
+
+        #region EnableChildAgents 
+
+        public void EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
+        {
+            int count = 0;
+            foreach (GridRegion neighbor in neighbors)
+            {
+                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+
+                if (neighbor.RegionHandle != m_service.RegionHandle)
+                {
+                    InformClientOfNeighbour(circuit.Copy(), neighbor);
+                }
+                count++;
+            }
+        }
+
+        /// <summary>
+        /// Async component for informing client of which neighbours exist
+        /// </summary>
+        /// <remarks>
+        /// This needs to run asynchronously, as a network timeout may block the thread for a long while
+        /// </remarks>
+        /// <param name="remoteClient"></param>
+        /// <param name="a"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="endPoint"></param>
+        private void InformClientOfNeighbour(AgentCircuitData a, GridRegion reg)
+        {
+            m_log.Info("[EventQueueService]: Starting to inform client about neighbour " + reg.RegionName);
+
+            //Notes on this method
+            // 1) the SimulationService.CreateAgent MUST have a fixed CapsUrl for the region, so we have to create (if needed)
+            //       a new Caps handler for it.
+            // 2) Then we can call the methods (EnableSimulator and EstatablishAgentComm) to tell the client the new Urls
+            // 3) This allows us to make the Caps on the grid server without telling any other regions about what the
+            //       Urls are.
+
+            string reason = String.Empty;
+            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
+            {
+                //Make sure that we have a URL for the Caps on the grid server and one for the sim
+                string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
+                string SimSeedCap = "";
+                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(reg.RegionHandle, newSeedCap, SimSeedCap);
+                bool newAgent = false;
+                
+                //ONLY UPDATE THE SIM SEED HERE
+                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                if (otherRegionService.UrlToInform == "")
+                {
+                    //If the Url is "", then we havn't been here before, and we need to add a new Url for the client.
+                    SimSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
+                    otherRegionService.AddSEEDCap("", SimSeedCap);
+                    //We had to make a new Url, its a new agent to this other region
+                    newAgent = true;
+                }
+
+                //Fix the AgentCircuitData with the new CapsUrl
+                a.CapsPath = SimSeedCap;
+
+                bool regionAccepted = SimulationService.CreateAgent(reg, a, (uint)TeleportFlags.Default, out reason);
+                if (regionAccepted && newAgent)
+                {
+                    //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
+                    //    "and EstablishAgentCommunication with seed cap {4}",
+                    //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
+
+                    //We 'could' call Enqueue directly... but its better to just let it go and do it this way
+                    IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                    //Only do this resolving once! It's heavy!
+                    IPEndPoint endPoint = reg.ExternalEndPoint;
+                    EQService.EnableSimulator(reg.RegionHandle, endPoint, m_service.AgentID, m_service.RegionHandle);
+                    EQService.EstablishAgentCommunication(m_service.AgentID, reg.RegionHandle, endPoint, SimSeedCap, m_service.RegionHandle);
+
+                    m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
+                }
+                else if (!regionAccepted || reason != "")
+                    m_log.Info("[EntityTransferModule]: Failed to inform client about neighbour " + reg.RegionName + ", reason: " + reason);
+            }
         }
 
         #endregion

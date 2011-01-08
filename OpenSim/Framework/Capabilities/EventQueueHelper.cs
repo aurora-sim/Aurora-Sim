@@ -31,6 +31,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Framework.Capabilities
 {
@@ -94,21 +95,6 @@ namespace OpenSim.Framework.Capabilities
         }
 
         public static OSD DisableSimulator(ulong handle)
-        {
-            //OSDMap llsdSimInfo = new OSDMap(1);
-
-            //llsdSimInfo.Add("Handle", new OSDBinary(regionHandleToByteArray(handle)));
-
-            //OSDArray arr = new OSDArray(1);
-            //arr.Add(llsdSimInfo);
-
-            OSDMap llsdBody = new OSDMap(0);
-            //llsdBody.Add("SimulatorInfo", arr);
-
-            return buildEvent("DisableSimulator", llsdBody);
-        }
-
-        public static OSD EnableChildAgents(ulong handle, int AgentDrawDistance)
         {
             //OSDMap llsdSimInfo = new OSDMap(1);
 
@@ -480,6 +466,22 @@ namespace OpenSim.Framework.Capabilities
             OSD message_body = parcelPropertiesMessage.Serialize();
             message.Add("body", message_body);
             return message;
+        }
+
+        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("DrawDistance", DrawDistance);
+            OSDArray regionsArray = new OSDArray();
+            foreach (GridRegion r in neighbors)
+            {
+                regionsArray.Add(r.ToOSD());
+            }
+            llsdBody.Add("Regions", regionsArray);
+            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
+
+            return buildEvent("EnableChildAgents", llsdBody);
         }
     }
 }

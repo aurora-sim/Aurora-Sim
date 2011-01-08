@@ -8,6 +8,7 @@ using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Framework.Capabilities
 {
@@ -30,10 +31,9 @@ namespace OpenSim.Framework.Capabilities
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, ulong RegionHandle)
+        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string CapsUrl, ulong RegionHandle)
         {
-            //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
-            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), "");
+            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), CapsUrl);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -109,9 +109,9 @@ namespace OpenSim.Framework.Capabilities
         // These are NOT sent to the client under ANY circumstances!
         //
 
-        public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors)
+        public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(RegionHandle, DrawDistance);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit);
             Enqueue(item, avatarID, RegionHandle);
         }
     }
