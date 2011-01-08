@@ -561,7 +561,7 @@ namespace OpenSim.CoreApplicationPlugins
                             throw new Exception(
                                 String.Format("region UUID already in use by region {0}, UUID {1}, <{2},{3}>",
                                               scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
-                                              scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY));
+                                              scene.RegionInfo.RegionLocX / Constants.RegionSize, scene.RegionInfo.RegionLocY / Constants.RegionSize));
                     }
                     else
                     {
@@ -574,23 +574,21 @@ namespace OpenSim.CoreApplicationPlugins
 
                     region.RegionID = regionID;
                     region.RegionName = (string) requestData["region_name"];
-                    region.RegionLocX = Convert.ToUInt32(requestData["region_x"]);
-                    region.RegionLocY = Convert.ToUInt32(requestData["region_y"]);
+                    region.RegionLocX = Convert.ToInt32(requestData["region_x"]) * Constants.RegionSize;
+                    region.RegionLocY = Convert.ToInt32(requestData["region_y"]) * Constants.RegionSize;
 
                     // check for collisions: region name, region UUID,
                     // region location
                     if (manager.TryGetScene(region.RegionName, out scene))
                         throw new Exception(
-                            String.Format("region name already in use by region {0}, UUID {1}, <{2},{3}>",
-                                          scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
-                                          scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY));
+                            String.Format("region name already in use by region {0}",
+                                          scene.ToString()));
 
                     if (manager.TryGetScene(region.RegionLocX, region.RegionLocY, out scene))
                         throw new Exception(
-                            String.Format("region location <{0},{1}> already in use by region {2}, UUID {3}, <{4},{5}>",
-                                          region.RegionLocX, region.RegionLocY,
-                                          scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
-                                          scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY));
+                            String.Format("region location <{0},{1}> already in use by region {2}",
+                                          region.RegionLocX / Constants.RegionSize, region.RegionLocY / Constants.RegionSize,
+                                          scene.ToString()));
 
                     region.InternalEndPoint =
                         new IPEndPoint(IPAddress.Parse((string) requestData["listen_ip"]), 0);
@@ -600,11 +598,10 @@ namespace OpenSim.CoreApplicationPlugins
                     if (manager.TryGetScene(region.InternalEndPoint, out scene))
                         throw new Exception(
                             String.Format(
-                                "region internal IP {0} and port {1} already in use by region {2}, UUID {3}, <{4},{5}>",
+                                "region internal IP {0} and port {1} already in use by region {2}",
                                 region.InternalEndPoint.Address,
                                 region.InternalEndPoint.Port,
-                                scene.RegionInfo.RegionName, scene.RegionInfo.RegionID,
-                                scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY));
+                                scene.ToString()));
 
                     region.ExternalHostName = (string) requestData["external_address"];
 
@@ -646,8 +643,8 @@ namespace OpenSim.CoreApplicationPlugins
                                                             String.Format(
                                                                 m_config.GetString("region_file_template",
                                                                                    "{0}x{1}-{2}.ini"),
-                                                                region.RegionLocX.ToString(),
-                                                                region.RegionLocY.ToString(),
+                                                                (region.RegionLocX / Constants.RegionSize).ToString(),
+                                                                (region.RegionLocY / Constants.RegionSize).ToString(),
                                                                 regionID.ToString(),
                                                                 region.InternalEndPoint.Port.ToString(),
                                                                 region.RegionName.Replace(" ", "_").Replace(":", "_").

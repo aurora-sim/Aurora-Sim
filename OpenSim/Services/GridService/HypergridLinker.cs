@@ -87,7 +87,7 @@ namespace OpenSim.Services.GridService
                         else
                         {
                             // This shouldn't happen
-                            m_DefaultRegion = new GridRegion(1000, 1000);
+                            m_DefaultRegion = new GridRegion(1000 * Constants.RegionSize, 1000 * Constants.RegionSize);
                             m_log.Error("[HYPERGRID LINKER]: Something is wrong with this grid. It has no regions?");
                         }
                     }

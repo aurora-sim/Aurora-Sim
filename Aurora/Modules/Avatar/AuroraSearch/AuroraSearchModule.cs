@@ -514,8 +514,8 @@ namespace Aurora.Modules
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
                 DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
                 
-                uint locX = 0;
-                uint locY = 0;
+                int locX = 0;
+                int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
@@ -536,8 +536,8 @@ namespace Aurora.Modules
                         OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
                         if (r != null)
                         {
-                            locX = (uint)r.RegionLocX;
-                            locY = (uint)r.RegionLocY;
+                            locX = r.RegionLocX;
+                            locY = r.RegionLocY;
                         }
                     }
                     if (locY == 0 && locX == 0) //Couldn't find the region, don't send
@@ -569,8 +569,8 @@ namespace Aurora.Modules
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
                 DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
                 
-                uint locX = 0;
-                uint locY = 0;
+                int locX = 0;
+                int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
                 {
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
@@ -580,9 +580,8 @@ namespace Aurora.Modules
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
-                            //Global coords, so add the meters
-                            locX = scene.RegionInfo.RegionLocX * Constants.RegionSize;
-                            locY = scene.RegionInfo.RegionLocY * Constants.RegionSize;
+                            locX = scene.RegionInfo.RegionLocX;
+                            locY = scene.RegionInfo.RegionLocY;
                         }
                     }
                     if (locY == 0 && locX == 0)
@@ -591,8 +590,8 @@ namespace Aurora.Modules
                         OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
                         if (r != null)
                         {
-                            locX = (uint)r.RegionLocX;
-                            locY = (uint)r.RegionLocY;
+                            locX = r.RegionLocX;
+                            locY = r.RegionLocY;
                         }
                     }
                     if (locY == 0 && locX == 0) //Couldn't find the region, don't send

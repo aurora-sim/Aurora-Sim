@@ -381,12 +381,12 @@ namespace OpenSim.Services.Connectors
             m_LocalService.CloseAllNeighborAgents(AgentID, currentRegionID);
         }
 
-        public virtual void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
+        public virtual void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, UUID currentRegionID)
         {
             m_LocalService.CloseNeighborAgents(newRegionX, newRegionY, AgentID, currentRegionID);
         }
 
-        public virtual bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
+        public virtual bool IsOutsideView(int x, int newRegionX, int y, int newRegionY)
         {
             return m_LocalService.IsOutsideView(x, newRegionX, y, newRegionY);
         }

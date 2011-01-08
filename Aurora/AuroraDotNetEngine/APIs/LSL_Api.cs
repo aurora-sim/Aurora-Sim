@@ -6180,8 +6180,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 neighbors = service.GetNeighbors(World.RegionInfo);
             }
 
-            uint neighborX = World.RegionInfo.RegionLocX + (uint)dir.x;
-            uint neighborY = World.RegionInfo.RegionLocY + (uint)dir.y;
+            int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
+            int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;
 
             foreach (GridRegion sri in neighbors)
             {

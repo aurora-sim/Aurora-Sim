@@ -348,13 +348,13 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                            uint RegionCrossX = Scene.RegionInfo.RegionLocX * Constants.RegionSize;
-                            uint RegionCrossY = Scene.RegionInfo.RegionLocY * Constants.RegionSize;
+                            int RegionCrossX = Scene.RegionInfo.RegionLocX;
+                            int RegionCrossY = Scene.RegionInfo.RegionLocY;
 
                             if (val.X < 0f) RegionCrossX -= Constants.RegionSize;
                             if (val.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                            if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (uint)Scene.RegionInfo.RegionSizeX;
-                            if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (uint)Scene.RegionInfo.RegionSizeY;
+                            if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
+                            if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
                             GridRegion neighborRegion = null;
 
                             foreach (GridRegion region in neighbors)

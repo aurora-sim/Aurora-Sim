@@ -364,8 +364,8 @@ namespace Aurora.Modules
             string message = c.Message;
             IScene scene = c.Scene;
             Vector3 fromPos = c.Position;
-            Vector3 regionPos = scene != null ? new Vector3(scene.RegionInfo.RegionLocX * Constants.RegionSize,
-                                            scene.RegionInfo.RegionLocY * Constants.RegionSize, 0) : Vector3.Zero;
+            Vector3 regionPos = scene != null ? new Vector3(scene.RegionInfo.RegionLocX,
+                                            scene.RegionInfo.RegionLocY, 0) : Vector3.Zero;
 
             if (c.Channel == DEBUG_CHANNEL) c.Type = ChatTypeEnum.DebugChannel;
 

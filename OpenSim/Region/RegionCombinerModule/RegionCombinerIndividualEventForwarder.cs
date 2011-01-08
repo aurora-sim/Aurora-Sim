@@ -96,10 +96,10 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             int differenceX = (int)m_virtScene.RegionInfo.RegionLocX - (int)m_rootScene.RegionInfo.RegionLocX;
             int differenceY = (int)m_virtScene.RegionInfo.RegionLocY - (int)m_rootScene.RegionInfo.RegionLocY;
-            rayend.X += differenceX * (int)Constants.RegionSize;
-            rayend.Y += differenceY * (int)Constants.RegionSize;
-            raystart.X += differenceX * (int)Constants.RegionSize;
-            raystart.Y += differenceY * (int)Constants.RegionSize;
+            rayend.X += differenceX;
+            rayend.Y += differenceY;
+            raystart.X += differenceX;
+            raystart.Y += differenceY;
 
             m_rootScene.RezObject(remoteclient, itemid, rayend, raystart, raytargetid, bypassraycast,
                                   rayendisintersection, rezselected, removeitem, fromtaskid);
@@ -122,10 +122,10 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             int differenceX = (int)m_virtScene.RegionInfo.RegionLocX - (int)m_rootScene.RegionInfo.RegionLocX;
             int differenceY = (int)m_virtScene.RegionInfo.RegionLocY - (int)m_rootScene.RegionInfo.RegionLocY;
-            rayend.X += differenceX * (int)Constants.RegionSize;
-            rayend.Y += differenceY * (int)Constants.RegionSize;
-            raystart.X += differenceX * (int)Constants.RegionSize;
-            raystart.Y += differenceY * (int)Constants.RegionSize;
+            rayend.X += differenceX;
+            rayend.Y += differenceY;
+            raystart.X += differenceX;
+            raystart.Y += differenceY;
             m_rootScene.SceneGraph.AddNewPrim(ownerid, groupid, rayend, rot, shape, bypassraycast, raystart, raytargetid,
                                    rayendisintersection);
         }
@@ -151,10 +151,10 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             int differenceX = (int)m_virtScene.RegionInfo.RegionLocX - (int)m_rootScene.RegionInfo.RegionLocX;
             int differenceY = (int)m_virtScene.RegionInfo.RegionLocY - (int)m_rootScene.RegionInfo.RegionLocY;
-            RayEnd.X += differenceX * (int)Constants.RegionSize;
-            RayEnd.Y += differenceY * (int)Constants.RegionSize;
-            RayStart.X += differenceX * (int)Constants.RegionSize;
-            RayStart.Y += differenceY * (int)Constants.RegionSize;
+            RayEnd.X += differenceX;
+            RayEnd.Y += differenceY;
+            RayStart.X += differenceX;
+            RayStart.Y += differenceY;
 
             m_rootScene.SceneGraph.doObjectDuplicateOnRay(localID, dupeFlags, AgentID, GroupID, RayTargetObj,
                 RayEnd, RayStart, BypassRaycast, RayEndIsIntersection, CopyCenters, CopyRotates);

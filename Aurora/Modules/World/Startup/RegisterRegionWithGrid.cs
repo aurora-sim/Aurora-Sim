@@ -119,9 +119,9 @@ namespace Aurora.Modules
                 if (error == "Region location is reserved")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region with grid failed - The region location you specified is reserved. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
+                    int X = 0, Y = 0;
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
 
                     scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
                     scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;
@@ -135,12 +135,12 @@ namespace Aurora.Modules
                 if (error == "Region overlaps another region")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
-                    uint X = 0, Y = 0;
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    uint.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
+                    int X = 0, Y = 0;
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
 
-                    scene.RegionInfo.RegionLocX = X;
-                    scene.RegionInfo.RegionLocY = Y;
+                    scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
+                    scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;
 
                     IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
                     foreach (IRegionLoader loader in loaders)
@@ -156,8 +156,8 @@ namespace Aurora.Modules
                     {
                         string[] position = error.Split(',');
 
-                        scene.RegionInfo.RegionLocX = uint.Parse(position[1]) * Constants.RegionSize;
-                        scene.RegionInfo.RegionLocY = uint.Parse(position[2]) * Constants.RegionSize;
+                        scene.RegionInfo.RegionLocX = int.Parse(position[1]) * Constants.RegionSize;
+                        scene.RegionInfo.RegionLocY = int.Parse(position[2]) * Constants.RegionSize;
 
                         IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
                         foreach (IRegionLoader loader in loaders)

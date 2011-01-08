@@ -219,18 +219,18 @@ namespace OpenSim.Services.Interfaces
             m_internalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), (int)port);
         }
 
-        public GridRegion(uint xcell, uint ycell)
+        public GridRegion(int xcell, int ycell)
         {
-            m_regionLocX = (int)(xcell * Constants.RegionSize);
-            m_regionLocY = (int)(ycell * Constants.RegionSize);
+            m_regionLocX = xcell;
+            m_regionLocY = ycell;
         }
 
         public GridRegion(RegionInfo ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
             m_regionType = ConvertFrom.RegionType;
-            m_regionLocX = (int)(ConvertFrom.RegionLocX * Constants.RegionSize);
-            m_regionLocY = (int)(ConvertFrom.RegionLocY * Constants.RegionSize);
+            m_regionLocX = (int)ConvertFrom.RegionLocX;
+            m_regionLocY = (int)ConvertFrom.RegionLocY;
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
             m_externalHostName = ConvertFrom.ExternalHostName;
             m_httpPort = ConvertFrom.HttpPort;

@@ -99,17 +99,17 @@ namespace OpenSim.Services.Interfaces
         /// <param name="newRegionY"></param>
         /// <param name="AgentID"></param>
         /// <param name="currentRegionID"></param>
-        void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID);
+        void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, UUID currentRegionID);
 
         /// <summary>
         /// Check if the new position is outside of the range for the old position
         /// </summary>
-        /// <param name="x">old X pos</param>
-        /// <param name="newRegionX">new X pos</param>
-        /// <param name="y">old Y pos</param>
-        /// <param name="newRegionY">new Y pos</param>
+        /// <param name="x">old X pos (in meters)</param>
+        /// <param name="newRegionX">new X pos (in meters)</param>
+        /// <param name="y">old Y pos (in meters)</param>
+        /// <param name="newRegionY">new Y pos (in meters)</param>
         /// <returns></returns>
-        bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY);
+        bool IsOutsideView(int x, int newRegionX, int y, int newRegionY);
 
         /// <summary>
         /// Remove the local region from the Neighbor service

@@ -172,11 +172,11 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         private List<GridRegion> FindNewNeighbors(RegionInfo region)
         {
-            int startX = (int)(region.RegionLocX - RegionViewSize) * (int)Constants.RegionSize;
-            int startY = (int)(region.RegionLocY - RegionViewSize) * (int)Constants.RegionSize;
+            int startX = (int)(region.RegionLocX - (RegionViewSize * (int)Constants.RegionSize));
+            int startY = (int)(region.RegionLocY - (RegionViewSize * (int)Constants.RegionSize));
 
-            int endX = ((int)region.RegionLocX + RegionViewSize) * (int)Constants.RegionSize + (int)region.RegionSizeX;
-            int endY = ((int)region.RegionLocY + RegionViewSize) * (int)Constants.RegionSize + (int)region.RegionSizeY;
+            int endX = ((int)region.RegionLocX + (RegionViewSize * (int)Constants.RegionSize) + (int)region.RegionSizeX);
+            int endY = ((int)region.RegionLocY + (RegionViewSize * (int)Constants.RegionSize) + (int)region.RegionSizeY);
 
             List<GridRegion> neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
             //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
@@ -283,17 +283,25 @@ namespace OpenSim.Services.Connectors
             });
         }
 
-        public bool IsOutsideView(uint x, uint newRegionX, uint y, uint newRegionY)
+        /// <summary>
+        /// Check if the new position is outside of the range for the old position
+        /// </summary>
+        /// <param name="x">old X pos (in meters)</param>
+        /// <param name="newRegionX">new X pos (in meters)</param>
+        /// <param name="y">old Y pos (in meters)</param>
+        /// <param name="newRegionY">new Y pos (in meters)</param>
+        /// <returns></returns>
+        public bool IsOutsideView(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY)
         {
-            Scene scene = FindSceneByPosition(x, y);
+            Scene scene = FindSceneByPosition(newRegionX, newRegionY);
             //Check whether it is a local region
             if (!CloseLocalRegions && scene != null)
                 return false;
 
-            return ((Math.Abs((int)x - (int)newRegionX) > RegionViewSize) || (Math.Abs((int)y - (int)newRegionY) > RegionViewSize));
+            return ((Math.Abs(oldRegionX - newRegionX) > RegionViewSize) || (Math.Abs(oldRegionY - newRegionY) > RegionViewSize));
         }
 
-        public void CloseNeighborAgents(uint newRegionX, uint newRegionY, UUID AgentID, UUID currentRegionID)
+        public void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, UUID currentRegionID)
         {
             if (!m_KnownNeighbors.ContainsKey(currentRegionID))
                 return;
@@ -305,11 +313,7 @@ namespace OpenSim.Services.Connectors
 
             foreach (GridRegion region in NeighborsOfCurrentRegion)
             {
-                uint x, y;
-                x = (uint)region.RegionLocX / (uint)Constants.RegionSize;
-                y = (uint)region.RegionLocY / (uint)Constants.RegionSize;
-
-                if (IsOutsideView(x, newRegionX, y, newRegionY))
+                if (IsOutsideView(region.RegionLocX, newRegionX, region.RegionLocY, newRegionY))
                 {
                     byebyeRegions.Add(region);
                 }
@@ -395,7 +399,7 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        private Scene FindSceneByPosition(uint x, uint y)
+        private Scene FindSceneByPosition(int x, int y)
         {
             foreach (Scene scene in m_Scenes)
             {

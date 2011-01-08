@@ -243,7 +243,7 @@ namespace OpenSim.Region.Framework.Scenes
         public override string ToString()
         {
             return "Name: " + m_regInfo.RegionName + ", Loc: " +
-                m_regInfo.RegionLocX + "," + m_regInfo.RegionLocY + ", Port: " + m_regInfo.InternalEndPoint.Port;
+                m_regInfo.RegionLocX / Constants.RegionSize + "," + m_regInfo.RegionLocY / Constants.RegionSize + ", Port: " + m_regInfo.InternalEndPoint.Port;
         }
 
         #region Services
@@ -540,53 +540,53 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>True after all operations complete, throws exceptions otherwise.</returns>
         public void OtherRegionUp(GridRegion otherRegion)
         {
-            uint xcell = (uint)((int)otherRegion.RegionLocX / (int)Constants.RegionSize);
-            uint ycell = (uint)((int)otherRegion.RegionLocY / (int)Constants.RegionSize);
+            int xcell = otherRegion.RegionLocX;
+            int ycell = otherRegion.RegionLocY;
             //m_log.InfoFormat("[SCENE]: (on region {0}): Region {1} up in coords {2}-{3}", 
             //    RegionInfo.RegionName, otherRegion.RegionName, xcell, ycell);
 
             if (RegionInfo.RegionHandle != otherRegion.RegionHandle)
             {
-
                 // If these are cast to INT because long + negative values + abs returns invalid data
-                int resultX = Math.Abs((int)xcell - (int)RegionInfo.RegionLocX);
-                int resultY = Math.Abs((int)ycell - (int)RegionInfo.RegionLocY);
-                if (resultX <= 1 && resultY <= 1)
+                INeighborService neighborService = RequestModuleInterface<INeighborService>();
+                if (neighborService != null)
                 {
-                    // Let the grid service module know, so this can be cached
-                    m_eventManager.TriggerOnRegionUp(otherRegion);
-
-                    try
+                    if(!neighborService.IsOutsideView(xcell, RegionInfo.RegionLocX, ycell, RegionInfo.RegionLocY))
                     {
-                        ForEachScenePresence(delegate(ScenePresence agent)
+                        // Let the grid service module know, so this can be cached
+                        m_eventManager.TriggerOnRegionUp(otherRegion);
+
+                        try
                         {
-                            // If agent is a root agent.
-                            if (!agent.IsChildAgent)
+                            ForEachScenePresence(delegate(ScenePresence agent)
                             {
-                                //Fix its neighbor settings and add this new region
-                                List<ulong> old = new List<ulong>();
-                                old.Add(otherRegion.RegionHandle);
-                                agent.DropOldNeighbors(old);
-                                //Now add the agent to the reigon that is coming up
-                                IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-                                if (transferModule != null)
-                                    transferModule.EnableChildAgent(agent, otherRegion);
-                            }
-                        });
+                                // If agent is a root agent.
+                                if (!agent.IsChildAgent)
+                                {
+                                    //Fix its neighbor settings and add this new region
+                                    List<ulong> old = new List<ulong>();
+                                    old.Add(otherRegion.RegionHandle);
+                                    agent.DropOldNeighbors(old);
+                                    //Now add the agent to the reigon that is coming up
+                                    IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
+                                    if (transferModule != null)
+                                        transferModule.EnableChildAgent(agent, otherRegion);
+                                }
+                            });
+                        }
+                        catch (NullReferenceException)
+                        {
+                            // This means that we're not booted up completely yet.
+                            // This shouldn't happen too often anymore.
+                            m_log.Error("[SCENE]: Couldn't inform client of regionup because we got a null reference exception");
+                        }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        // This means that we're not booted up completely yet.
-                        // This shouldn't happen too often anymore.
-                        m_log.Error("[SCENE]: Couldn't inform client of regionup because we got a null reference exception");
+                        m_log.Info("[INTERGRID]: Got notice about far away Region: " + otherRegion.RegionName.ToString() +
+                                   " at  (" + otherRegion.RegionLocX.ToString() + ", " +
+                                   otherRegion.RegionLocY.ToString() + ")");
                     }
-
-                }
-                else
-                {
-                    m_log.Info("[INTERGRID]: Got notice about far away Region: " + otherRegion.RegionName.ToString() +
-                               " at  (" + otherRegion.RegionLocX.ToString() + ", " +
-                               otherRegion.RegionLocY.ToString() + ")");
                 }
             }
         }
@@ -1851,12 +1851,15 @@ namespace OpenSim.Region.Framework.Scenes
                 // however to avoid a race condition crossing borders..
                 if (childAgentUpdate.IsChildAgent)
                 {
-                    uint rRegionX = (uint)(cAgentData.RegionHandle >> 40);
-                    uint rRegionY = (((uint)(cAgentData.RegionHandle)) >> 8);
-                    uint tRegionX = RegionInfo.RegionLocX;
-                    uint tRegionY = RegionInfo.RegionLocY;
+                    uint rRegionX = 0;
+                    uint rRegionY = 0;
+                    //In meters
+                    Utils.LongToUInts(cAgentData.RegionHandle, out rRegionX, out rRegionY);
+                    //In meters
+                    int tRegionX = RegionInfo.RegionLocX;
+                    int tRegionY = RegionInfo.RegionLocY;
                     //Send Data to ScenePresence
-                    childAgentUpdate.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, rRegionX, rRegionY);
+                    childAgentUpdate.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, (int)rRegionX, (int)rRegionY);
                 }
 
                 return true;

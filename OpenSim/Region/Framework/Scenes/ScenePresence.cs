@@ -612,9 +612,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 uint x, y;
                 Utils.LongToUInts(handle, out x, out y);
-                x = x / Constants.RegionSize;
-                y = y / Constants.RegionSize;
-                if (neighborService.IsOutsideView(x, Scene.RegionInfo.RegionLocX, y, Scene.RegionInfo.RegionLocY))
+                if (neighborService.IsOutsideView((int)x, Scene.RegionInfo.RegionLocX, (int)y, Scene.RegionInfo.RegionLocY))
                 {
                     old.Add(handle);
                 }
@@ -2756,13 +2754,13 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
-                        uint RegionCrossX = Scene.RegionInfo.RegionLocX * Constants.RegionSize;
-                        uint RegionCrossY = Scene.RegionInfo.RegionLocY * Constants.RegionSize;
+                        int RegionCrossX = Scene.RegionInfo.RegionLocX;
+                        int RegionCrossY = Scene.RegionInfo.RegionLocY;
 
                         if (pos2.X < 0f) RegionCrossX -= Constants.RegionSize;
                         if (pos2.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (uint)Scene.RegionInfo.RegionSizeX;
-                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (uint)Scene.RegionInfo.RegionSizeY;
+                        if (pos2.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
+                        if (pos2.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
                         GridRegion neighborRegion = null;
 
                         foreach (GridRegion region in neighbors)
@@ -2869,14 +2867,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// This updates important decision making data about a child agent
         /// The main purpose is to figure out what objects to send to a child agent that's in a neighboring region
         /// </summary>
-        public void ChildAgentDataUpdate(AgentPosition cAgentData, uint tRegionX, uint tRegionY, uint rRegionX, uint rRegionY)
+        public void ChildAgentDataUpdate(AgentPosition cAgentData, int tRegionX, int tRegionY, int rRegionX, int rRegionY)
         {
             if (!IsChildAgent)
                 return;
 
             //m_log.Debug("   >>> ChildAgentPositionUpdate <<< " + rRegionX + "-" + rRegionY);
-            int shiftx = ((int)rRegionX - (int)tRegionX) * (int)Constants.RegionSize;
-            int shifty = ((int)rRegionY - (int)tRegionY) * (int)Constants.RegionSize;
+            int shiftx = rRegionX - tRegionX;
+            int shifty = rRegionY - tRegionY;
 
             Vector3 offset = new Vector3(shiftx, shifty, 0f);
 

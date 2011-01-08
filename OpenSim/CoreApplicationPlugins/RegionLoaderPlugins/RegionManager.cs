@@ -60,8 +60,8 @@ namespace Aurora.Modules.RegionLoader
             RegionInfo region = new RegionInfo();
             region.RegionName = RName.Text;
             region.RegionID = UUID.Random();
-            region.RegionLocX = uint.Parse(LocX.Text);
-            region.RegionLocY = uint.Parse(LocY.Text);
+            region.RegionLocX = int.Parse(LocX.Text) * Constants.RegionSize;
+            region.RegionLocY = int.Parse(LocY.Text) * Constants.RegionSize;
             
             IPAddress address = IPAddress.Parse("0.0.0.0");
             int port = port = Convert.ToInt32(Port.Text);
@@ -127,8 +127,8 @@ namespace Aurora.Modules.RegionLoader
             DisabledEdit.Checked = region.Disabled;
             textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.HttpPort.ToString();
-            textBox3.Text = region.RegionLocX.ToString();
-            textBox5.Text = region.RegionLocY.ToString();
+            textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
+            textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
             textBox1.Text = region.RegionName;
         }
 
@@ -142,8 +142,8 @@ namespace Aurora.Modules.RegionLoader
             RegionInfo region = new RegionInfo();
             region.RegionName = textBox1.Text;
             region.RegionID = CurrentRegionID;
-            region.RegionLocX = uint.Parse(textBox3.Text);
-            region.RegionLocY = uint.Parse(textBox5.Text);
+            region.RegionLocX = int.Parse(textBox3.Text) * Constants.RegionSize;
+            region.RegionLocY = int.Parse(textBox5.Text) * Constants.RegionSize;
 
             IPAddress address = IPAddress.Parse("0.0.0.0");
             int port = port = Convert.ToInt32(textBox7.Text);
@@ -202,8 +202,8 @@ namespace Aurora.Modules.RegionLoader
             DisabledEdit.Checked = region.Disabled;
             textBox9.Text = region.ExternalHostName;
             textBox7.Text = region.InternalEndPoint.Port.ToString();
-            textBox3.Text = region.RegionLocX.ToString();
-            textBox5.Text = region.RegionLocY.ToString();
+            textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
+            textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
             textBox1.Text = region.RegionName;
             StartupNumberBox.Text = region.NumberStartup.ToString();
         }

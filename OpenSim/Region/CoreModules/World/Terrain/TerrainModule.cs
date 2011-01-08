@@ -593,8 +593,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="fileStartY">Where to begin our slice</param>
         public void LoadFromFile(string filename, int fileWidth, int fileHeight, int fileStartX, int fileStartY)
         {
-            int offsetX = (int) m_scene.RegionInfo.RegionLocX - fileStartX;
-            int offsetY = (int) m_scene.RegionInfo.RegionLocY - fileStartY;
+            int offsetX = (int) (m_scene.RegionInfo.RegionLocX / Constants.RegionSize) - fileStartX;
+            int offsetY = (int) (m_scene.RegionInfo.RegionLocY / Constants.RegionSize) - fileStartY;
 
             if (offsetX >= 0 && offsetX < fileWidth && offsetY >= 0 && offsetY < fileHeight)
             {

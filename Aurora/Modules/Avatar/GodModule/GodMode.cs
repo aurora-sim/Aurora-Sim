@@ -175,9 +175,9 @@ namespace Aurora.Modules
             
             //Set the region loc X and Y
             if(RedirectX != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocX = (uint)RedirectX * Constants.RegionSize;
+                ((Scene)client.Scene).RegionInfo.RegionLocX = RedirectX * (int)Constants.RegionSize;
             if (RedirectY != 0)
-                ((Scene)client.Scene).RegionInfo.RegionLocY = (uint)RedirectY * Constants.RegionSize;
+                ((Scene)client.Scene).RegionInfo.RegionLocY = RedirectY * (int)Constants.RegionSize;
 
             //Update the estate ID
             if (((Scene)client.Scene).RegionInfo.EstateSettings.EstateID != EstateID)

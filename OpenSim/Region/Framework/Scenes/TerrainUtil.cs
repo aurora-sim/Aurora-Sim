@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
@@ -53,7 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (x > w - 2)
             {
-                scene = FindScene(map, scenes, 1, 0);
+                scene = FindScene(map, scenes, Constants.RegionSize, 0);
                 if(scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -65,7 +66,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (y > h - 2)
             {
-                scene = FindScene(map, scenes, 0, 1);
+                scene = FindScene(map, scenes, 0, Constants.RegionSize);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -77,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (x < 0.0)
             {
-                scene = FindScene(map, scenes, -1, 0);
+                scene = FindScene(map, scenes, -Constants.RegionSize, 0);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -89,7 +90,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (y < 0.0)
             {
-                scene = FindScene(map, scenes, 0, -1);
+                scene = FindScene(map, scenes, 0, -Constants.RegionSize);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -130,8 +131,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static Scene FindScene(ITerrainChannel map, List<Scene> scenes, int X, int Y)
         {
-            uint RegX = (uint)(map.Scene.RegionInfo.RegionLocX + X);
-            uint RegY = (uint)(map.Scene.RegionInfo.RegionLocY + Y);
+            int RegX = map.Scene.RegionInfo.RegionLocX + X;
+            int RegY = map.Scene.RegionInfo.RegionLocY + Y;
             foreach (Scene scene in scenes)
             {
                 if (scene.RegionInfo.RegionLocX == RegX &&

@@ -369,7 +369,14 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public bool TryGetScene(uint locX, uint locY, out Scene scene)
+        /// <summary>
+        /// Try to find a current scene at the given location
+        /// </summary>
+        /// <param name="locX">In meters</param>
+        /// <param name="locY">In meters</param>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        public bool TryGetScene(int locX, int locY, out Scene scene)
         {
             foreach (Scene mscene in m_localScenes)
             {
@@ -1169,8 +1176,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 case "regions":
                     ForEachScene(delegate(Scene scene) 
-                    { 
-                        MainConsole.Instance.Output(String.Format("Region Name: {0}, Region XLoc: {1}, Region YLoc: {2}, Region Port: {3}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionLocX, scene.RegionInfo.RegionLocY, scene.RegionInfo.InternalEndPoint.Port));
+                    {
+                        MainConsole.Instance.Output(scene.ToString());
                     });
                     break;
 

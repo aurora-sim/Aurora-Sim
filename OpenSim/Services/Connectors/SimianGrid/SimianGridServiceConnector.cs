@@ -430,8 +430,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>()
             {
-                new MultipartForm.Parameter("X", scene.RegionInfo.RegionLocX.ToString()),
-                new MultipartForm.Parameter("Y", scene.RegionInfo.RegionLocY.ToString()),
+                new MultipartForm.Parameter("X", (scene.RegionInfo.RegionLocX / Constants.RegionSize).ToString()),
+                new MultipartForm.Parameter("Y", (scene.RegionInfo.RegionLocY / Constants.RegionSize).ToString()),
                 new MultipartForm.File("Tile", "tile.png", "image/png", pngData)
             };
 

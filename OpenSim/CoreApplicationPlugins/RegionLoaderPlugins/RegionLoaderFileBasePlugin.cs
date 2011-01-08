@@ -228,8 +228,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             string[] locationElements = location.Split(new char[] { ',' });
 
-            region.RegionLocX = Convert.ToUInt32(locationElements[0]);
-            region.RegionLocY = Convert.ToUInt32(locationElements[1]);
+            region.RegionLocX = Convert.ToInt32(locationElements[0]) * Constants.RegionSize;
+            region.RegionLocY = Convert.ToInt32(locationElements[1]) * Constants.RegionSize;
 
             // Internal IP
             IPAddress address;
@@ -399,7 +399,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     try
                     {
                         source.Configs.Remove(cnf);
-                        cnf.Set("Location", regionInfo.RegionLocX + "," + regionInfo.RegionLocY);
+                        cnf.Set("Location", regionInfo.RegionLocX / Constants.RegionSize + "," + regionInfo.RegionLocY / Constants.RegionSize);
                         cnf.Set("RegionType", regionInfo.RegionType);
                         cnf.Name = regionInfo.RegionName;
                         source.Configs.Add(cnf);

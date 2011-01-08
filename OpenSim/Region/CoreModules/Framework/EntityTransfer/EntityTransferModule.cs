@@ -156,8 +156,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
 
-                long XShift = (reg.RegionLocX - (int)(sp.Scene.RegionInfo.RegionLocX * Constants.RegionSize));
-                long YShift = (reg.RegionLocY - (int)(sp.Scene.RegionInfo.RegionLocY * Constants.RegionSize));
+                long XShift = (reg.RegionLocX - sp.Scene.RegionInfo.RegionLocX);
+                long YShift = (reg.RegionLocY - sp.Scene.RegionInfo.RegionLocY);
                 if (regionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
                     (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
@@ -273,10 +273,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}:{2}/{3}",
                 reg.ExternalHostName, reg.HttpPort, finalDestination.RegionName, position);
 
-            uint newRegionX = (uint)(reg.RegionHandle >> 40);
-            uint newRegionY = (((uint)(reg.RegionHandle)) >> 8);
-            uint oldRegionX = (uint)(sp.Scene.RegionInfo.RegionHandle >> 40);
-            uint oldRegionY = (((uint)(sp.Scene.RegionInfo.RegionHandle)) >> 8);
+            int newRegionX = (int)(reg.RegionHandle >> 40);
+            int newRegionY = (((int)(reg.RegionHandle)) >> 8);
+            int oldRegionX = (int)(sp.Scene.RegionInfo.RegionHandle >> 40);
+            int oldRegionY = (((int)(sp.Scene.RegionInfo.RegionHandle)) >> 8);
 
             ulong destinationHandle = finalDestination.RegionHandle;
 
@@ -604,7 +604,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return region;
         }
 
-        protected virtual bool NeedsNewAgent(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY)
+        protected virtual bool NeedsNewAgent(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY)
         {
             INeighborService neighborService = m_scenes[0].RequestModuleInterface<INeighborService>();
             if (neighborService != null)
@@ -612,7 +612,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        protected virtual bool NeedsClosing(uint oldRegionX, uint newRegionX, uint oldRegionY, uint newRegionY, GridRegion reg)
+        protected virtual bool NeedsClosing(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY, GridRegion reg)
         {
             INeighborService neighborService = m_scenes[0].RequestModuleInterface<INeighborService>();
             if (neighborService != null)
@@ -807,12 +807,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
             Scene scene = agent.Scene;
-            uint neighbourx = scene.RegionInfo.RegionLocX;
-            uint neighboury = scene.RegionInfo.RegionLocY;
             //Add the offset as its needed
             Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
-            newposition.X += (scene.RegionInfo.RegionLocX * Constants.RegionSize) - crossingRegion.RegionLocX;
-            newposition.Y += (scene.RegionInfo.RegionLocY * Constants.RegionSize) - crossingRegion.RegionLocY;
+            newposition.X += scene.RegionInfo.RegionLocX - crossingRegion.RegionLocX;
+            newposition.Y += scene.RegionInfo.RegionLocY - crossingRegion.RegionLocY;
 
             CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
             d.BeginInvoke(agent, newposition, crossingRegion, isFlying, CrossAgentToNewRegionCompleted, d);
@@ -900,7 +898,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Next, let's close the child agent connections that are too far away.
                 INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
-                    neighborService.CloseNeighborAgents((uint)crossingRegion.RegionLocX / Constants.RegionSize, (uint)crossingRegion.RegionLocX / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
+                    neighborService.CloseNeighborAgents(crossingRegion.RegionLocX / Constants.RegionSize, crossingRegion.RegionLocX / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 agent.MakeChildAgent();
                 // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
@@ -955,7 +953,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Next, let's close the child agent connections that are too far away.
                 INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
-                    neighborService.CloseNeighborAgents((uint)neighbourRegion.RegionLocX / 256, (uint)neighbourRegion.RegionLocY / 256, agent.UUID, agent.Scene.RegionInfo.RegionID);
+                    neighborService.CloseNeighborAgents(neighbourRegion.RegionLocX / Constants.RegionSize, neighbourRegion.RegionLocY / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 string agentcaps;
                 ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
@@ -1091,10 +1089,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if (Util.VariableRegionSight && sp.DrawDistance != 0)
                 {
-                    int xMin = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) - (int)sp.DrawDistance;
-                    int xMax = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) + (int)sp.DrawDistance;
-                    int yMin = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) - (int)sp.DrawDistance;
-                    int yMax = (int)(m_regionInfo.RegionLocX * (int)Constants.RegionSize) + (int)sp.DrawDistance;
+                    int xMin = (int)(m_regionInfo.RegionLocX) - (int)sp.DrawDistance;
+                    int xMax = (int)(m_regionInfo.RegionLocX) + (int)sp.DrawDistance;
+                    int yMin = (int)(m_regionInfo.RegionLocX) - (int)sp.DrawDistance;
+                    int yMax = (int)(m_regionInfo.RegionLocX) + (int)sp.DrawDistance;
                     
                     neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
                         xMin, xMax, yMin, yMax);
@@ -1342,8 +1340,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             List<ulong> handles = new List<ulong>();
             foreach (GridRegion reg in neighbours)
             {
-                int x = (int)currentScene.RegionInfo.RegionLocX - reg.RegionLocX;
-                int y = (int)currentScene.RegionInfo.RegionLocY - reg.RegionLocY;
+                int x = currentScene.RegionInfo.RegionLocX - reg.RegionLocX;
+                int y = currentScene.RegionInfo.RegionLocY - reg.RegionLocY;
                 if ((x < 2 && x > -2) && (x < 2 && x > -2)) //We only check in the nearby regions for now
                 {
                     if (!currentScene.DirectionsToBlockChildAgents[x, y]) //Not blocked, so false

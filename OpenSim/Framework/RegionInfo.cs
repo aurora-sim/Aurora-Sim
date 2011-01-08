@@ -70,8 +70,8 @@ namespace OpenSim.Framework
         public bool m_allow_alternate_ports;
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
-        protected uint m_regionLocX;
-        protected uint m_regionLocY;
+        protected int m_regionLocX;
+        protected int m_regionLocY;
         protected uint m_remotingPort;
         public UUID RegionID = UUID.Zero;
         public UUID Password = UUID.Random();
@@ -272,13 +272,13 @@ namespace OpenSim.Framework
             set { m_internalEndPoint = value; }
         }
 
-        public uint RegionLocX
+        public int RegionLocX
         {
             get { return m_regionLocX; }
             set { m_regionLocX = value; }
         }
 
-        public uint RegionLocY
+        public int RegionLocY
         {
             get { return m_regionLocY; }
             set { m_regionLocY = value; }
@@ -286,7 +286,7 @@ namespace OpenSim.Framework
 
         public ulong RegionHandle
         {
-            get { return Util.UIntsToLong((RegionLocX * (uint) Constants.RegionSize), (RegionLocY * (uint) Constants.RegionSize)); }
+            get { return Util.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
         }
 
         public void SetEndPoint(string ipaddr, int port)
@@ -428,14 +428,14 @@ namespace OpenSim.Framework
                 ServerURI = args["server_uri"].AsString();
             if (args["region_xloc"] != null)
             {
-                uint locx;
-                UInt32.TryParse(args["region_xloc"].AsString(), out locx);
+                int locx;
+                Int32.TryParse(args["region_xloc"].AsString(), out locx);
                 RegionLocX = locx;
             }
             if (args["region_yloc"] != null)
             {
-                uint locy;
-                UInt32.TryParse(args["region_yloc"].AsString(), out locy);
+                int locy;
+                Int32.TryParse(args["region_yloc"].AsString(), out locy);
                 RegionLocY = locy;
             }
             IPAddress ip_addr = null;

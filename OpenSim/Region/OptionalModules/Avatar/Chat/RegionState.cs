@@ -81,8 +81,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.Chat
 
             Region = scene.RegionInfo.RegionName;
             Host   = scene.RegionInfo.ExternalHostName;
-            LocX   = Convert.ToString(scene.RegionInfo.RegionLocX);
-            LocY   = Convert.ToString(scene.RegionInfo.RegionLocY);
+            LocX   = Convert.ToString(scene.RegionInfo.RegionLocX / Constants.RegionSize);
+            LocY   = Convert.ToString(scene.RegionInfo.RegionLocY / Constants.RegionSize);
             IDK    = Convert.ToString(_idk_++);
 
             // OpenChannel conditionally establishes a connection to the

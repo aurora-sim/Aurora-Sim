@@ -366,10 +366,10 @@ namespace OpenSim.Region.RegionCombinerModule
                     //xxx
 
 
-                    if ((((int)conn.X * (int)Constants.RegionSize) + conn.XEnd
-                        >= (regionConnections.X * (int)Constants.RegionSize))
-                        && (((int)conn.Y * (int)Constants.RegionSize)
-                        >= (regionConnections.Y * (int)Constants.RegionSize)))
+                    if ((int)conn.X + conn.XEnd
+                        >= (regionConnections.X)
+                        && ((int)conn.Y)
+                        >= (regionConnections.Y))
                     {
                         connectedYN = DoWorkForOneRegionOverPlusXY(conn, regionConnections, scene);
                         break;
@@ -379,10 +379,10 @@ namespace OpenSim.Region.RegionCombinerModule
                     //xyx
                     //xxx
                     //xxx
-                    if ((((int)conn.X * (int)Constants.RegionSize)
-                        >= (regionConnections.X * (int)Constants.RegionSize))
-                        && (((int)conn.Y * (int)Constants.RegionSize) + conn.YEnd
-                        >= (regionConnections.Y * (int)Constants.RegionSize)))
+                    if ((((int)conn.X)
+                        >= (regionConnections.X))
+                        && (((int)conn.Y) + conn.YEnd
+                        >= (regionConnections.Y)))
                     {
                         connectedYN = DoWorkForOneRegionOverXPlusY(conn, regionConnections, scene);
                         break;
@@ -392,10 +392,10 @@ namespace OpenSim.Region.RegionCombinerModule
                     //xxy
                     //xxx
                     //xxx
-                    if ((((int)conn.X * (int)Constants.RegionSize) + conn.YEnd
-                        >= (regionConnections.X * (int)Constants.RegionSize))
-                        && (((int)conn.Y * (int)Constants.RegionSize) + conn.YEnd
-                        >= (regionConnections.Y * (int)Constants.RegionSize)))
+                    if ((((int)conn.X) + conn.YEnd
+                        >= (regionConnections.X))
+                        && (((int)conn.Y) + conn.YEnd
+                        >= (regionConnections.Y)))
                     {
                         connectedYN = DoWorkForOneRegionOverPlusXPlusY(conn, regionConnections, scene);
                         break;
@@ -416,10 +416,10 @@ namespace OpenSim.Region.RegionCombinerModule
         private bool DoWorkForOneRegionOverPlusXY(RegionConnections conn, RegionConnections regionConnections, Scene scene)
         {
             Vector3 offset = Vector3.Zero;
-            offset.X = (((regionConnections.X * (int)Constants.RegionSize)) -
-                        ((conn.X * (int)Constants.RegionSize)));
-            offset.Y = (((regionConnections.Y * (int)Constants.RegionSize)) -
-                        ((conn.Y * (int)Constants.RegionSize)));
+            offset.X = (((regionConnections.X)) -
+                        ((conn.X)));
+            offset.Y = (((regionConnections.Y)) -
+                        ((conn.Y)));
 
             Vector3 extents = Vector3.Zero;
             extents.Y = conn.YEnd;
@@ -459,10 +459,10 @@ namespace OpenSim.Region.RegionCombinerModule
         private bool DoWorkForOneRegionOverXPlusY(RegionConnections conn, RegionConnections regionConnections, Scene scene)
         {
             Vector3 offset = Vector3.Zero;
-            offset.X = (((regionConnections.X * (int)Constants.RegionSize)) -
-                        ((conn.X * (int)Constants.RegionSize)));
-            offset.Y = (((regionConnections.Y * (int)Constants.RegionSize)) -
-                        ((conn.Y * (int)Constants.RegionSize)));
+            offset.X = (((regionConnections.X)) -
+                        ((conn.X)));
+            offset.Y = (((regionConnections.Y)) -
+                        ((conn.Y)));
 
             Vector3 extents = Vector3.Zero;
             extents.Y = regionConnections.YEnd + conn.YEnd;
@@ -497,10 +497,10 @@ namespace OpenSim.Region.RegionCombinerModule
         private bool DoWorkForOneRegionOverPlusXPlusY(RegionConnections conn, RegionConnections regionConnections, Scene scene)
         {
             Vector3 offset = Vector3.Zero;
-            offset.X = (((regionConnections.X * (int)Constants.RegionSize)) -
-                        ((conn.X * (int)Constants.RegionSize)));
-            offset.Y = (((regionConnections.Y * (int)Constants.RegionSize)) -
-                        ((conn.Y * (int)Constants.RegionSize)));
+            offset.X = (((regionConnections.X)) -
+                        ((conn.X)));
+            offset.Y = (((regionConnections.Y)) -
+                        ((conn.Y)));
 
             Vector3 extents = Vector3.Zero;
             extents.Y = regionConnections.YEnd + conn.YEnd;
