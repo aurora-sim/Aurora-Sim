@@ -128,9 +128,6 @@ namespace OpenSim.Framework
             args["service_session_id"] = OSD.FromString(ServiceSessionID);
             args["start_pos"] = OSD.FromString(startpos.ToString());
             args["client_ip"] = OSD.FromString(IPAddress);
-            args["channel"] = OSD.FromString("");
-            args["mac"] = OSD.FromString("");
-            args["id0"] = OSD.FromString("");
 
             if (Appearance != null)
             {
@@ -153,6 +150,26 @@ namespace OpenSim.Framework
             }
 
             return args;
+        }
+
+        public AgentCircuitData Copy()
+        {
+            AgentCircuitData Copy = new AgentCircuitData();
+
+            Copy.AgentID = AgentID;
+            Copy.Appearance = Appearance;
+            Copy.CapsPath = CapsPath;
+            Copy.child = child;
+            Copy.circuitcode = circuitcode;
+            Copy.IPAddress = IPAddress;
+            Copy.SecureSessionID = SecureSessionID;
+            Copy.ServiceSessionID = ServiceSessionID;
+            Copy.ServiceURLs = ServiceURLs;
+            Copy.SessionID = SessionID;
+            Copy.startpos = startpos;
+            Copy.teleportFlags = teleportFlags;
+
+            return Copy;
         }
 
         /// <summary>

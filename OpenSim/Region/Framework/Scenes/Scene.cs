@@ -1196,14 +1196,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void AddNewClient(IClientAPI client)
         {
-            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.CircuitCode);
+            System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
+            AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
             bool vialogin = false;
 
             if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
                 return;
 
+            
             // Do the verification here
-            System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
             if (!VerifyClient(aCircuit, ep, out vialogin))
             {
                 // uh-oh, this is fishy

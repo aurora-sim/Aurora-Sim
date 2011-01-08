@@ -155,8 +155,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_List osGetRegionStats();
 
         int osGetSimulatorMemory();
-        void osKickAvatar(string FirstName,string SurName,string alert);
-        void osSetSpeed(string UUID, float SpeedModifier);
+        void osKickAvatar(LSL_String FirstName, LSL_String SurName, LSL_String alert);
+        void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier);
         LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb);

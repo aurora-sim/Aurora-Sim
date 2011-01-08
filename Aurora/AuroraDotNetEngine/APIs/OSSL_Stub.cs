@@ -696,11 +696,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             return m_OSSL_Functions.osGetSimulatorMemory();
         }
-        public void osKickAvatar(string FirstName,string SurName,string alert)
+        public void osKickAvatar(LSL_String FirstName, LSL_String SurName, LSL_String alert)
         {
             m_OSSL_Functions.osKickAvatar(FirstName, SurName, alert);
         }
-        public void osSetSpeed(string UUID, float SpeedModifier)
+        public void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier)
         {
             m_OSSL_Functions.osSetSpeed(UUID, SpeedModifier);
         }

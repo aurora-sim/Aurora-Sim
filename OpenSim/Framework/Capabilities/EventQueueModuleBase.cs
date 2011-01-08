@@ -111,7 +111,7 @@ namespace OpenSim.Framework.Capabilities
 
         public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(RegionHandle);
+            OSD item = EventQueueHelper.EnableChildAgents(RegionHandle, DrawDistance);
             Enqueue(item, avatarID, RegionHandle);
         }
     }
