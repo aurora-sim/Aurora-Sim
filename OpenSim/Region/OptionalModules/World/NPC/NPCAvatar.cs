@@ -594,8 +594,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             agentData.SecureSessionID = SecureSessionId;
             agentData.circuitcode = m_circuitCode;
             agentData.child = false;
-            agentData.firstname = FirstName;
-            agentData.lastname = LastName;
 
             //ICapabilitiesModule capsModule = m_scene.RequestModuleInterface<ICapabilitiesModule>();
 

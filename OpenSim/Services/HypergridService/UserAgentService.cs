@@ -144,8 +144,8 @@ namespace OpenSim.Services.HypergridService
 
         public bool LoginAgentToGrid(AgentCircuitData agentCircuit, GridRegion gatekeeper, GridRegion finalDestination, IPEndPoint clientIP, out string reason)
         {
-            m_log.DebugFormat("[USER AGENT SERVICE]: Request to login user {0} {1} (@{2}) to grid {3}", 
-                agentCircuit.firstname, agentCircuit.lastname, ((clientIP == null) ? "stored IP" : clientIP.Address.ToString()), 
+            m_log.DebugFormat("[USER AGENT SERVICE]: Request to login user {0} (@{1}) to grid {2}", 
+                agentCircuit.AgentID, ((clientIP == null) ? "stored IP" : clientIP.Address.ToString()), 
                 gatekeeper.ExternalHostName +":"+ gatekeeper.HttpPort);
 
             // Take the IP address + port of the gatekeeper (reg) plus the info of finalDestination
@@ -169,8 +169,8 @@ namespace OpenSim.Services.HypergridService
 
             if (!success)
             {
-                m_log.DebugFormat("[USER AGENT SERVICE]: Unable to login user {0} {1} to grid {2}, reason: {3}", 
-                    agentCircuit.firstname, agentCircuit.lastname, region.ExternalHostName + ":" + region.HttpPort, reason);
+                m_log.DebugFormat("[USER AGENT SERVICE]: Unable to login user {0} to grid {1}, reason: {2}", 
+                    agentCircuit.AgentID, region.ExternalHostName + ":" + region.HttpPort, reason);
 
                 // restore the old travel info
                 lock (m_TravelingAgents)
