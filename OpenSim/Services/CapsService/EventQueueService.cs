@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using log4net;
 using Nini.Config;
 using Aurora.Simulation.Base;
@@ -191,10 +192,11 @@ namespace OpenSim.Services.CapsService
                             neighbors[i] = region;
                             i++;
                         }
+                        uint TeleportFlags = body["TeleportFlags"].AsUInteger();
 
                         //Now do the creation
                         //Don't send it to the client at all, so return here
-                        return EnableChildAgents(DrawDistance, neighbors, circuitData);
+                        return EnableChildAgents(DrawDistance, neighbors, circuitData, TeleportFlags);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -494,7 +496,7 @@ namespace OpenSim.Services.CapsService
 
         #region EnableChildAgents 
 
-        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
+        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags)
         {
             int count = 0;
             bool informed = true;
@@ -504,7 +506,7 @@ namespace OpenSim.Services.CapsService
 
                 if (neighbor.RegionHandle != m_service.RegionHandle)
                 {
-                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor))
+                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor, TeleportFlags))
                         informed = false;
                 }
                 count++;
@@ -522,7 +524,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor)
+        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor, uint TeleportFlags)
         {
             m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
@@ -576,7 +578,7 @@ namespace OpenSim.Services.CapsService
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
 
-                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, (uint)TeleportFlags.Default, out reason);
+                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, out reason);
                 if (regionAccepted && newAgent)
                 {
                     //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
@@ -589,6 +591,10 @@ namespace OpenSim.Services.CapsService
                     //Only do this resolving once! It's heavy!
                     IPEndPoint endPoint = neighbor.ExternalEndPoint;
                     EQService.EnableSimulator(neighbor.RegionHandle, endPoint, m_service.AgentID, m_service.RegionHandle);
+                    // ES makes the client send a UseCircuitCode message to the destination, 
+                    // which triggers a bunch of things there.
+                    // So let's wait
+                    Thread.Sleep(300);
                     EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, endPoint, otherRegionService.UrlToInform, m_service.RegionHandle);
 
                     m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);

@@ -305,7 +305,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
                 agentCircuit.startpos = position;
-                agentCircuit.child = true;
+                agentCircuit.child = false;
                 agentCircuit.Appearance = sp.Appearance;
 
                 //Start new style
@@ -317,7 +317,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
                     //  messages if they need to be called
                     if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
-                        new GridRegion[1] { finalDestination }, agentCircuit))
+                        new GridRegion[1] { finalDestination }, agentCircuit, teleportFlags))
                     {
                         sp.ControllingClient.SendTeleportFailed("Destination refused");
                         return;
@@ -930,7 +930,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent);
+                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, (uint)TeleportFlags.Default);
                 return;
             }
         }
@@ -975,7 +975,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, neighbors.ToArray(), agent);
+                    (int)sp.DrawDistance, neighbors.ToArray(), agent, (uint)TeleportFlags.Default);
                 return;
             }
         }
