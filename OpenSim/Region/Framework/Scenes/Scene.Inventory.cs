@@ -33,11 +33,14 @@ using System.Text;
 using System.Timers;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using log4net;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;
+using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -2192,6 +2195,246 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_sceneGraph.LinkObjects(root, children);
+        }
+
+        private void EventManagerOnRegisterCaps(UUID agentID, Caps caps)
+        {
+            string capsBase = "/CAPS/" + UUID.Random() + "/";
+            //Region Server bound
+            IRequestHandler handler = new RestStreamHandler("POST", capsBase,
+                delegate(string request, string path, string param,
+                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                          {
+                                              return ScriptTaskInventory(agentID, request, path, param,
+                                                  httpRequest, httpResponse);
+                                          });
+            caps.RegisterHandler("UpdateScriptTaskInventory",
+                handler);
+            caps.RegisterHandler("UpdateScriptTask",
+                handler);
+
+            capsBase = "/CAPS/" + UUID.Random() + "/";
+            //Unless the script engine goes, region server bound
+            handler = new RestStreamHandler("POST", capsBase, delegate(string request, string path, string param,
+                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                          {
+                                              return NoteCardAgentInventory(agentID, request, path, param,
+                                                  httpRequest, httpResponse);
+                                          });
+            caps.RegisterHandler("UpdateNotecardAgentInventory",
+                handler);
+            caps.RegisterHandler("UpdateScriptAgentInventory",
+                handler);
+            caps.RegisterHandler("UpdateScriptAgent",
+                handler);
+        }
+
+        /// <summary>
+        /// Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="param"></param>
+        /// <param name="httpRequest">HTTP request header object</param>
+        /// <param name="httpResponse">HTTP response header object</param>
+        /// <returns></returns>
+        public string ScriptTaskInventory(UUID AgentID, string request, string path, string param,
+                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            try
+            {
+                m_log.Debug("[Scene]: ScriptTaskInventory Request in region: " + RegionInfo.RegionName);
+                //m_log.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                UUID item_id = map["item_id"].AsUUID();
+                UUID task_id = map["task_id"].AsUUID();
+                int is_script_running = map["is_script_running"].AsInteger();
+                string capsBase = "/CAPS/" + UUID.Random();
+                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+                TaskInventoryScriptUpdater uploader =
+                    new TaskInventoryScriptUpdater(
+                        this,
+                        item_id,
+                        task_id,
+                        is_script_running,
+                        capsBase + uploaderPath,
+                        MainServer.Instance,
+                        AgentID);
+
+                MainServer.Instance.AddStreamHandler(
+                    new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
+
+                string Protocol = "http://";
+                if (MainServer.Instance.UseSSL)
+                    Protocol = "https://";
+                string uploaderURL = Protocol + RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+                                     uploaderPath;
+
+                map = new OSDMap();
+                map["uploader"] = uploaderURL;
+                map["state"] = "upload";
+                return OSDParser.SerializeLLSDXmlString(map);
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[CAPS]: " + e.ToString());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Called by the notecard update handler.  Provides a URL to which the client can upload a new asset.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        public string NoteCardAgentInventory(UUID AgentID, string request, string path, string param,
+                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            //m_log.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
+            //m_log.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
+
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+
+            string capsBase = "/CAPS/" + UUID.Random();
+            string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+            ItemUpdater uploader =
+                new ItemUpdater(AgentID, this, map["item_id"].AsUUID(), capsBase + uploaderPath, MainServer.Instance);
+
+            MainServer.Instance.AddStreamHandler(
+                new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
+
+            string Protocol = "http://";
+            if (MainServer.Instance.UseSSL)
+                Protocol = "https://";
+            string uploaderURL = Protocol + RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+                                 uploaderPath;
+
+            map = new OSDMap();
+            map["uploader"] = uploaderURL;
+            map["state"] = "upload";
+            return OSDParser.SerializeLLSDXmlString(map);
+        }
+
+        /// <summary>
+        /// This class is a callback invoked when a client sends asset data to
+        /// an agent inventory notecard update url
+        /// </summary>
+        public class ItemUpdater
+        {
+            private string uploaderPath = String.Empty;
+            private UUID inventoryItemID;
+            private IHttpServer httpListener;
+            private UUID agentID;
+            private Scene m_scene;
+
+            public ItemUpdater(UUID AgentID, Scene scene, UUID inventoryItem, string path, IHttpServer httpServer)
+            {
+                inventoryItemID = inventoryItem;
+                uploaderPath = path;
+                httpListener = httpServer;
+                agentID = AgentID;
+                m_scene = scene;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                UUID inv = inventoryItemID;
+                string res = m_scene.CapsUpdateInventoryItemAsset(agentID, inv, data).ToString();
+
+                httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                return res;
+            }
+        }
+
+        /// <summary>
+        /// This class is a callback invoked when a client sends asset data to
+        /// a task inventory script update url
+        /// </summary>
+        public class TaskInventoryScriptUpdater
+        {
+            private string uploaderPath = String.Empty;
+            private UUID inventoryItemID;
+            private UUID primID;
+            private bool isScriptRunning;
+            private IHttpServer httpListener;
+            private Scene m_scene;
+            private UUID AgentID;
+
+            public TaskInventoryScriptUpdater(Scene scene, UUID inventoryItemID, UUID primID, int isScriptRunning,
+                                              string path, IHttpServer httpServer, UUID agentID)
+            {
+
+                this.inventoryItemID = inventoryItemID;
+                this.primID = primID;
+                AgentID = agentID;
+                m_scene = scene;
+
+                // This comes in over the packet as an integer, but actually appears to be treated as a bool
+                this.isScriptRunning = (0 == isScriptRunning ? false : true);
+
+                uploaderPath = path;
+                httpListener = httpServer;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                try
+                {
+                    //                    m_log.InfoFormat("[CAPS]: " +
+                    //                                     "TaskInventoryScriptUpdater received data: {0}, path: {1}, param: {2}",
+                    //                                     data, path, param));
+
+                    string res = String.Empty;
+                    IClientAPI client;
+                    m_scene.TryGetClient(AgentID, out client);
+                    ArrayList errors = m_scene.CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data);
+                   
+                    OSDMap map = new OSDMap();
+                    map["new_asset"] = inventoryItemID;
+                    map["compiled"] = errors.Count > 0 ? false : true;
+                    map["state"] = "complete";
+                    OSDArray array = new OSDArray();
+                    foreach (object o in errors)
+                    {
+                        array.Add(OSD.FromObject(o));
+                    }
+                    map["errors"] = array;
+                    res = OSDParser.SerializeLLSDXmlString(map);
+
+                    httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                    //                    m_log.InfoFormat("[CAPS]: TaskInventoryScriptUpdater.uploaderCaps res: {0}", res);
+
+                    return res;
+                }
+                catch (Exception e)
+                {
+                    m_log.Error("[CAPS]: " + e.ToString());
+                }
+
+                // XXX Maybe this should be some meaningful error packet
+                return null;
+            }
         }
     }
 }

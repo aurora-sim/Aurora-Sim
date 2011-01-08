@@ -522,6 +522,8 @@ namespace OpenSim.Region.Framework.Scenes
             AddToStartupQueue("Startup");
 
             #endregion
+
+            EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
         }
 
         #endregion Constructors
@@ -617,13 +619,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!avatar.IsChildAgent)
                     avatar.ControllingClient.Kick("The simulator is going down.");
 
+                avatar.ControllingClient.SendShutdownConnectionNotice();
                 IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.DisableSimulator(RegionInfo.RegionHandle, avatar.UUID, RegionInfo.RegionHandle);
                 }
-                else
-                    avatar.ControllingClient.SendShutdownConnectionNotice();
             });
 
             // Wait here, or the kick messages won't actually get to the agents before the scene terminates.
@@ -1892,13 +1893,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (presence.IsChildAgent)
                 {
                     // Tell a single agent to disconnect from the region.
+                    presence.ControllingClient.SendShutdownConnectionNotice();
                     IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
                     if (eq != null)
                     {
                         eq.DisableSimulator(RegionInfo.RegionHandle, agentID, RegionInfo.RegionHandle);
                     }
-                    else
-                        presence.ControllingClient.SendShutdownConnectionNotice();
                 }
 
                 presence.ControllingClient.Close();

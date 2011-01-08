@@ -162,8 +162,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             UUID parentFolder = map["folder_id"].AsUUID();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000") + "/";
 
-            Caps.AssetUploader uploader =
-                new Caps.AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
+            AssetUploader uploader =
+                new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
                                   asset_type, capsBase + uploaderPath, MainServer.Instance);
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
@@ -258,6 +258,88 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             item.CreationDate = Util.UnixTimeSinceEpoch();
             m_scene.AddInventoryItem(item);
             
+        }
+
+        public class AssetUploader
+        {
+            public event UpLoadedAsset OnUpLoad;
+            private UpLoadedAsset handlerUpLoad = null;
+
+            private string uploaderPath = String.Empty;
+            private UUID newAssetID;
+            private UUID inventoryItemID;
+            private UUID parentFolder;
+            private IHttpServer httpListener;
+            private string m_assetName = String.Empty;
+            private string m_assetDes = String.Empty;
+
+            private string m_invType = String.Empty;
+            private string m_assetType = String.Empty;
+
+            public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
+                                 UUID parentFolderID, string invType, string assetType, string path,
+                                 IHttpServer httpServer)
+            {
+                m_assetName = assetName;
+                m_assetDes = description;
+                newAssetID = assetID;
+                inventoryItemID = inventoryItem;
+                uploaderPath = path;
+                httpListener = httpServer;
+                parentFolder = parentFolderID;
+                m_assetType = assetType;
+                m_invType = invType;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                UUID inv = inventoryItemID;
+                string res = String.Empty;
+                OSDMap map = new OSDMap();
+                map["new_asset"] = newAssetID.ToString();
+                map["new_inventory_item"] = inv;
+                map["state"] = "complete";
+                res = OSDParser.SerializeLLSDXmlString(map);
+
+                httpListener.RemoveStreamHandler("POST", uploaderPath);
+
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
+                }
+
+                return res;
+            }
+            ///Left this in and commented in case there are unforseen issues
+            //private void SaveAssetToFile(string filename, byte[] data)
+            //{
+            //    FileStream fs = File.Create(filename);
+            //    BinaryWriter bw = new BinaryWriter(fs);
+            //    bw.Write(data);
+            //    bw.Close();
+            //    fs.Close();
+            //}
+            private static void SaveAssetToFile(string filename, byte[] data)
+            {
+                string assetPath = "UserAssets";
+                if (!Directory.Exists(assetPath))
+                {
+                    Directory.CreateDirectory(assetPath);
+                }
+                FileStream fs = File.Create(Path.Combine(assetPath, Util.safeFileName(filename)));
+                BinaryWriter bw = new BinaryWriter(fs);
+                bw.Write(data);
+                bw.Close();
+                fs.Close();
+            }
         }
     }
 }

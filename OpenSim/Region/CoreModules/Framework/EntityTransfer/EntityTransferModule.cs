@@ -271,8 +271,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}:{2}/{3}",
                 reg.ExternalHostName, reg.HttpPort, finalDestination.RegionName, position);
 
-            int newRegionX = (int)(reg.RegionHandle >> 40);
-            int newRegionY = (((int)(reg.RegionHandle)) >> 8);
+            int newRegionX = (int)(reg.RegionHandle >> 40) * Constants.RegionSize;
+            int newRegionY = (((int)(reg.RegionHandle)) >> 8) * Constants.RegionSize;
             int oldRegionX = (int)(sp.Scene.RegionInfo.RegionHandle >> 40) * Constants.RegionSize;
             int oldRegionY = (((int)(sp.Scene.RegionInfo.RegionHandle)) >> 8) * Constants.RegionSize;
 

@@ -90,12 +90,9 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
                 = new Caps(m_scene,
                     MainServer.Instance, agentId);
 
-            caps.RegisterHandlers("");
+            caps.RegisterHandlers(capsPaths[agentId]);
 
             m_scene.EventManager.TriggerOnRegisterCaps(agentId, caps);
-
-            caps.ItemUpdatedCall = m_scene.CapsUpdateInventoryItemAsset;
-            caps.TaskScriptUpdatedCall = m_scene.CapsUpdateTaskInventoryScriptAsset;
             
             m_capsHandlers[agentId] = caps;
         }
