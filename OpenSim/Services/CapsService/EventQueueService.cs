@@ -516,9 +516,9 @@ namespace OpenSim.Services.CapsService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private void InformClientOfNeighbour(AgentCircuitData a, GridRegion reg)
+        private void InformClientOfNeighbour(AgentCircuitData circuitData, GridRegion neighbor)
         {
-            m_log.Info("[EventQueueService]: Starting to inform client about neighbour " + reg.RegionName);
+            m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
             //Notes on this method
             // 1) the SimulationService.CreateAgent MUST have a fixed CapsUrl for the region, so we have to create (if needed)
@@ -535,7 +535,7 @@ namespace OpenSim.Services.CapsService
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                 //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
                 string SimSeedCap = "";
-                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(reg.RegionHandle, newSeedCap, SimSeedCap);
+                IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
                 bool newAgent = false;
                 
                 //ONLY UPDATE THE SIM SEED HERE
@@ -547,18 +547,34 @@ namespace OpenSim.Services.CapsService
                 {
                     CapsBase = CapsUtil.GetRandomCapsObjectPath();
                     //If the Url is "", then we havn't been here before, and we need to add a new Url for the client.
-                    SimSeedCap = CapsUtil.GetCapsSeedPath(CapsBase);
+                    SimSeedCap
+                        = "http://"
+                      + neighbor.ExternalHostName
+                      + ":"
+                      + neighbor.HttpPort
+                      + CapsUtil.GetCapsSeedPath(CapsBase);
                     otherRegionService.AddSEEDCap("", SimSeedCap);
                     //We had to make a new Url, its a new agent to this other region
                     newAgent = true;
                 }
                 else
-                    CapsBase = CapsUtil.GetCapsPathFromCapsSeed(otherRegionService.CapsPath);
+                {
+                    //The otherRegionService.UrlToInform is a full URL, not a CapsSeed, so we need to remove the http:// parts
+                    string CapsSeed = otherRegionService.UrlToInform;
+                    CapsSeed = CapsSeed.Split(new string[1]{"/CAPS/"}, StringSplitOptions.RemoveEmptyEntries)[1];
+                    //Readd the /CAPS/ so it is a CapsSeed again
+                    CapsSeed = "/CAPS/" + CapsSeed;
+                    //Now we can find the CapsBase
+                    CapsBase = CapsUtil.GetCapsPathFromCapsSeed(CapsSeed);
+                    //Remove the 0000 at the end
+                    CapsBase = CapsBase.Remove(CapsBase.Length - 4, 4);
+                    SimSeedCap = otherRegionService.UrlToInform;
+                }
 
                 //Fix the AgentCircuitData with the new CapsUrl
-                a.CapsPath = SimSeedCap;
+                circuitData.CapsPath = CapsBase;
 
-                bool regionAccepted = SimulationService.CreateAgent(reg, a, (uint)TeleportFlags.Default, out reason);
+                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, (uint)TeleportFlags.Default, out reason);
                 if (regionAccepted && newAgent)
                 {
                     //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
@@ -569,14 +585,14 @@ namespace OpenSim.Services.CapsService
                     IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                     //Only do this resolving once! It's heavy!
-                    IPEndPoint endPoint = reg.ExternalEndPoint;
-                    EQService.EnableSimulator(reg.RegionHandle, endPoint, m_service.AgentID, m_service.RegionHandle);
-                    EQService.EstablishAgentCommunication(m_service.AgentID, reg.RegionHandle, endPoint, SimSeedCap, m_service.RegionHandle);
+                    IPEndPoint endPoint = neighbor.ExternalEndPoint;
+                    EQService.EnableSimulator(neighbor.RegionHandle, endPoint, m_service.AgentID, m_service.RegionHandle);
+                    EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, endPoint, otherRegionService.UrlToInform, m_service.RegionHandle);
 
-                    m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
+                    m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
                 else if (!regionAccepted || reason != "")
-                    m_log.Info("[EntityTransferModule]: Failed to inform client about neighbour " + reg.RegionName + ", reason: " + reason);
+                    m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
             }
         }
 
