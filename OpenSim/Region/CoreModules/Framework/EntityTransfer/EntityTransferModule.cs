@@ -1344,6 +1344,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 int y = currentScene.RegionInfo.RegionLocY - reg.RegionLocY;
                 if ((x < 2 && x > -2) && (x < 2 && x > -2)) //We only check in the nearby regions for now
                 {
+                    //Offset for the array so that it fixes
+                    x += 2;
+                    y += 2;
                     if (!currentScene.DirectionsToBlockChildAgents[x, y]) //Not blocked, so false
                         handles.Add(reg.RegionHandle);
                 }

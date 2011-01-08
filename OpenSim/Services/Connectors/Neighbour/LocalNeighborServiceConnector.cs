@@ -58,6 +58,7 @@ namespace OpenSim.Services.Connectors
             if (neighborService != null)
             {
                 RegionViewSize = neighborService.GetInt("RegionSightSize", RegionViewSize);
+                RegionViewSize *= Constants.RegionSize;
                 //This option is the opposite of the config to make it easier on the user
                 CloseLocalRegions = !neighborService.GetBoolean("SeeIntoAllLocalRegions", CloseLocalRegions);
             }
@@ -172,11 +173,11 @@ namespace OpenSim.Services.Connectors
         /// <returns></returns>
         private List<GridRegion> FindNewNeighbors(RegionInfo region)
         {
-            int startX = (int)(region.RegionLocX - (RegionViewSize * (int)Constants.RegionSize));
-            int startY = (int)(region.RegionLocY - (RegionViewSize * (int)Constants.RegionSize));
+            int startX = (int)(region.RegionLocX - RegionViewSize);
+            int startY = (int)(region.RegionLocY - RegionViewSize);
 
-            int endX = ((int)region.RegionLocX + (RegionViewSize * (int)Constants.RegionSize) + (int)region.RegionSizeX);
-            int endY = ((int)region.RegionLocY + (RegionViewSize * (int)Constants.RegionSize) + (int)region.RegionSizeY);
+            int endX = ((int)region.RegionLocX + RegionViewSize + (int)region.RegionSizeX);
+            int endY = ((int)region.RegionLocY + RegionViewSize + (int)region.RegionSizeY);
 
             List<GridRegion> neighbors = m_gridService.GetRegionRange(region.ScopeID, startX, endX, startY, endY);
             //If we arn't supposed to close local regions, add all of the scene ones if they are not already there
