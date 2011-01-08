@@ -1320,9 +1320,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 m_log.Info("[EntityTransferModule]: Completed inform client about neighbour " + reg.RegionName);
-
             }
-
         }
 
         private List<ulong> NewNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)

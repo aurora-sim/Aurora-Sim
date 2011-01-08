@@ -122,6 +122,7 @@ namespace OpenSim.Services.CapsService
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
             clientService.AddSEEDCap("", "");
+            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent" + AgentID);
             return clientService.CapsUrl;
         }
 

@@ -93,18 +93,18 @@ namespace OpenSim.Framework.Capabilities
         /// <summary>
         /// Register all CAPS http service handlers
         /// </summary>
-        public void RegisterHandlers()
+        public void RegisterHandlers(string capsObjectPath)
         {
             DeregisterHandlers();
 
-            RegisterRegionServiceHandlers();
+            RegisterRegionServiceHandlers(capsObjectPath);
         }
 
-        public void RegisterRegionServiceHandlers()
+        public void RegisterRegionServiceHandlers(string capsObjectPath)
         {
             try
             {
-                string capsBase = "/CAPS/" + UUID.Random();
+                string capsBase = "/CAPS/" + capsObjectPath;
                 // the root of all evil
                 RegisterHandler("SEED", 
                     new RestStreamHandler("POST", capsBase + m_seedRequestPath, CapsRequest));

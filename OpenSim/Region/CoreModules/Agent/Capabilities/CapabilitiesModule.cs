@@ -107,7 +107,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
                 = new Caps(m_scene,
                     MainServer.Instance, agentId);
 
-            caps.RegisterHandlers();
+            caps.RegisterHandlers(capsObjectPath);
 
             m_scene.EventManager.TriggerOnRegisterCaps(agentId, caps);
 
