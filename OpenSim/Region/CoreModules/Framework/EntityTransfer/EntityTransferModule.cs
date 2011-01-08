@@ -308,7 +308,26 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agentCircuit.child = true;
                 agentCircuit.Appearance = sp.Appearance;
 
-                string reason = String.Empty;
+                //Start new style
+
+                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
+
+                if (eq != null)
+                {
+                    //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
+                    //  messages if they need to be called
+                    if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
+                        new GridRegion[1] { finalDestination }, agentCircuit))
+                    {
+                        sp.ControllingClient.SendTeleportFailed("Destination refused");
+                        return;
+                    }
+                }
+
+
+                //End new style
+
+                /*string reason = String.Empty;
                 // Let's create an agent there if one doesn't exist yet. 
                 bool logout = false;
                 if (!CreateAgent(sp, reg, finalDestination, agentCircuit, teleportFlags, out reason, out logout))
@@ -316,16 +335,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     sp.ControllingClient.SendTeleportFailed(String.Format("Destination refused: {0}",
                                                                               reason));
                     return;
-                }
+                }*/
 
                 // OK, it got this agent. Let's close some child agents
                 INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
-                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-
-                if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
+                /*if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
                 {
                     //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Creating agent...");
 
@@ -340,7 +357,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                         eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, "", sp.Scene.RegionInfo.RegionHandle);
                     }
-                }
+                }*/
 
                 if (m_cancelingAgents.Contains(sp.UUID))
                 {
@@ -424,7 +441,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 KillEntity(sp.Scene, sp);
 
                 // May need to logout or other cleanup
-                AgentHasMovedAway(sp.ControllingClient.SessionId, logout);
+                AgentHasMovedAway(sp.ControllingClient.SessionId, false);
 
                 // Now let's make it officially a child agent
                 sp.MakeChildAgent();

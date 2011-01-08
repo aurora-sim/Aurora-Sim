@@ -174,11 +174,7 @@ namespace OpenSim.Framework.Capabilities
             OSDMap body = new OSDMap();
             body.Add("Info", infoArr);
 
-            OSDMap llsdEvent = new OSDMap(2);
-            llsdEvent.Add("body", body);
-            llsdEvent.Add("message", new OSDString("TeleportFinish"));
-
-            return llsdEvent;
+            return buildEvent("TeleportFinish", body);
         }
 
         public static OSD ScriptRunningReplyEvent(UUID objectID, UUID itemID, bool running, bool mono)

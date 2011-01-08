@@ -82,6 +82,11 @@ namespace OpenSim.Services.CapsService
             return eventQueueService.Enqueue(o);
         }
 
+        public override bool TryEnqueue(OSD o, UUID agentID, ulong regionHandle)
+        {
+            return Enqueue(o, agentID, regionHandle);
+        }
+
         public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
         {
             //Find the CapsService for the user and check their authentication
@@ -188,10 +193,8 @@ namespace OpenSim.Services.CapsService
                         }
 
                         //Now do the creation
-                        EnableChildAgents(DrawDistance, neighbors, circuitData);
-
-                        //Don't send it to the client at all
-                        return true;
+                        //Don't send it to the client at all, so return here
+                        return EnableChildAgents(DrawDistance, neighbors, circuitData);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -491,23 +494,26 @@ namespace OpenSim.Services.CapsService
 
         #region EnableChildAgents 
 
-        public void EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
+        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
         {
             int count = 0;
+            bool informed = true;
             foreach (GridRegion neighbor in neighbors)
             {
                 //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
                 if (neighbor.RegionHandle != m_service.RegionHandle)
                 {
-                    InformClientOfNeighbour(circuit.Copy(), neighbor);
+                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor))
+                        informed = false;
                 }
                 count++;
             }
+            return informed;
         }
 
         /// <summary>
-        /// Async component for informing client of which neighbours exist
+        /// Async component for informing client of which neighbors exist
         /// </summary>
         /// <remarks>
         /// This needs to run asynchronously, as a network timeout may block the thread for a long while
@@ -516,7 +522,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private void InformClientOfNeighbour(AgentCircuitData circuitData, GridRegion neighbor)
+        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor)
         {
             m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
@@ -588,8 +594,14 @@ namespace OpenSim.Services.CapsService
                     m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
                 else if (!regionAccepted || reason != "")
+                {
                     m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
-            }
+                    return false;
+                }
+                return true;
+            } 
+            m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: SimulationService does not exist!");
+            return false;
         }
 
         #endregion

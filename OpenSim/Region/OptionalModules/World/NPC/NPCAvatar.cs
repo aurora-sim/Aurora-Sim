@@ -582,10 +582,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public virtual void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
-        {
-        }
-
         public virtual AgentCircuitData RequestClientInfo()
         {
             AgentCircuitData agentData = new AgentCircuitData();
@@ -604,11 +600,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             //agentData.ChildrenCapSeeds = new Dictionary<ulong, string>(capsModule.GetChildrenSeeds(m_agentId));
 
             //return agentData;
-        }
-
-        public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
-                                        IPEndPoint newRegionExternalEndPoint, string capsURL)
-        {
         }
 
         public virtual void SendMapBlock(List<MapBlockData> mapBlocks, uint flag)

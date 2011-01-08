@@ -1307,31 +1307,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(layerpack, ThrottleOutPacketType.Cloud);
         }
 
-        /// <summary>
-        /// Tell the client that the given neighbor region is ready to receive a child agent.
-        /// </summary>
-        public virtual void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourEndPoint)
-        {
-            IPAddress neighbourIP = neighbourEndPoint.Address;
-            ushort neighbourPort = (ushort)neighbourEndPoint.Port;
-
-            EnableSimulatorPacket enablesimpacket = (EnableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.EnableSimulator);
-            // TODO: don't create new blocks if recycling an old packet
-            enablesimpacket.SimulatorInfo = new EnableSimulatorPacket.SimulatorInfoBlock();
-            enablesimpacket.SimulatorInfo.Handle = neighbourHandle;
-
-            byte[] byteIP = neighbourIP.GetAddressBytes();
-            enablesimpacket.SimulatorInfo.IP = (uint)byteIP[3] << 24;
-            enablesimpacket.SimulatorInfo.IP += (uint)byteIP[2] << 16;
-            enablesimpacket.SimulatorInfo.IP += (uint)byteIP[1] << 8;
-            enablesimpacket.SimulatorInfo.IP += (uint)byteIP[0];
-            enablesimpacket.SimulatorInfo.Port = neighbourPort;
-
-            enablesimpacket.Header.Reliable = true; // ESP's should be reliable.
-
-            OutPacket(enablesimpacket, ThrottleOutPacketType.Unknown);
-        }
-
         public AgentCircuitData RequestClientInfo()
         {
             AgentCircuitData agentData = new AgentCircuitData();
@@ -1349,34 +1324,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             return agentData;
-        }
-
-        public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt, IPEndPoint externalIPEndPoint,
-                                string capsURL)
-        {
-            Vector3 look = new Vector3(lookAt.X * 10, lookAt.Y * 10, lookAt.Z * 10);
-
-            //CrossedRegionPacket newSimPack = (CrossedRegionPacket)PacketPool.Instance.GetPacket(PacketType.CrossedRegion);
-            CrossedRegionPacket newSimPack = new CrossedRegionPacket();
-            // TODO: don't create new blocks if recycling an old packet
-            newSimPack.AgentData = new CrossedRegionPacket.AgentDataBlock();
-            newSimPack.AgentData.AgentID = AgentId;
-            newSimPack.AgentData.SessionID = m_sessionId;
-            newSimPack.Info = new CrossedRegionPacket.InfoBlock();
-            newSimPack.Info.Position = pos;
-            newSimPack.Info.LookAt = look;
-            newSimPack.RegionData = new CrossedRegionPacket.RegionDataBlock();
-            newSimPack.RegionData.RegionHandle = newRegionHandle;
-            byte[] byteIP = externalIPEndPoint.Address.GetAddressBytes();
-            newSimPack.RegionData.SimIP = (uint)byteIP[3] << 24;
-            newSimPack.RegionData.SimIP += (uint)byteIP[2] << 16;
-            newSimPack.RegionData.SimIP += (uint)byteIP[1] << 8;
-            newSimPack.RegionData.SimIP += (uint)byteIP[0];
-            newSimPack.RegionData.SimPort = (ushort)externalIPEndPoint.Port;
-            newSimPack.RegionData.SeedCapability = Util.StringToBytes256(capsURL);
-
-            // Hack to get this out immediately and skip throttles
-            OutPacket(newSimPack, ThrottleOutPacketType.Unknown);
         }
 
         internal void SendMapBlockSplit(List<MapBlockData> mapBlocks, uint flag)

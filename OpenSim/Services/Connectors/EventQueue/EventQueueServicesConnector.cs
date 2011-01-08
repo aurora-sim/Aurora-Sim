@@ -161,6 +161,44 @@ namespace OpenSim.Services.Connectors
             return true;
         }
 
+        /// <summary>
+        /// Add an EQ message into the queue on the remote EventQueueService 
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
+        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        {
+            //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
+            try
+            {
+                FindAndPopulateEQMPassword(avatarID, regionHandle);
+
+                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
+                    return false;
+
+                Dictionary<string, object> request = new Dictionary<string, object>();
+                request.Add("AGENTID", avatarID.ToString());
+                request.Add("REGIONHANDLE", regionHandle.ToString());
+                request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
+                request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
+
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST", m_serverURL, WebUtils.BuildQueryString(request));
+
+                if (reply != "")
+                {
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
+                return false;
+            }
+
+            return true;
+        }
+
         public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
         {
             //Remote connectors do not get to deal with authentication

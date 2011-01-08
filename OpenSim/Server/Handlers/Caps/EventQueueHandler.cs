@@ -116,9 +116,9 @@ namespace OpenSim.Server.Handlers
             }
             else
             {
-                m_eventQueueService.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID, regionHandle);
+                bool enqueueResult = m_eventQueueService.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID, regionHandle);
                 Dictionary<string, object> result = new Dictionary<string, object>();
-                result.Add("result", "true");
+                result.Add("result", enqueueResult);
                 string xmlString = WebUtils.BuildXmlResponse(result);
                 UTF8Encoding encoding = new UTF8Encoding();
                 return encoding.GetBytes(xmlString);

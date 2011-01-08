@@ -84,17 +84,20 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
 
         public void AddCapsHandler(AgentCircuitData agent)
         {
-            if (!m_capsHandlers.ContainsKey(agent.AgentID))
+            lock (m_capsHandlers)
             {
-                Caps caps
-                    = new Caps(m_scene,
-                        MainServer.Instance, agent.AgentID);
+                if (!m_capsHandlers.ContainsKey(agent.AgentID))
+                {
+                    Caps caps
+                        = new Caps(m_scene,
+                            MainServer.Instance, agent.AgentID);
 
-                caps.RegisterHandlers(agent.CapsPath);
+                    caps.RegisterHandlers(agent.CapsPath);
 
-                m_scene.EventManager.TriggerOnRegisterCaps(agent.AgentID, caps);
+                    m_scene.EventManager.TriggerOnRegisterCaps(agent.AgentID, caps);
 
-                m_capsHandlers[agent.AgentID] = caps;
+                    m_capsHandlers[agent.AgentID] = caps;
+                }
             }
         }
 

@@ -476,18 +476,9 @@ namespace Aurora.BotManager
         {
         }
 
-        public virtual void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
-        {
-        }
-
         public virtual AgentCircuitData RequestClientInfo()
         {
             return new AgentCircuitData();
-        }
-
-        public virtual void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt,
-                                        IPEndPoint newRegionExternalEndPoint, string capsURL)
-        {
         }
 
         public virtual void SendMapBlock(List<MapBlockData> mapBlocks, uint flag)

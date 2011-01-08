@@ -180,6 +180,11 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             return true;
         }
 
+        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        {
+            return Enqueue(ev, avatarID, regionHandle);
+        }
+
         #endregion
 
         private void ClientClosed(UUID AgentID, Scene scene)

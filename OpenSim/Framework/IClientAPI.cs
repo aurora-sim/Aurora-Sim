@@ -1134,16 +1134,12 @@ namespace OpenSim.Framework
         void SendCloudData(float[] cloudCover);
 
         void MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look);
-        void InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint);
         
         /// <summary>
         /// Return circuit information for this client.
         /// </summary>
         /// <returns></returns>
         AgentCircuitData RequestClientInfo();
-
-        void CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt, IPEndPoint newRegionExternalEndPoint,
-                         string capsURL);
 
         void SendMapBlock(List<MapBlockData> mapBlocks, uint flag);
         void SendLocalTeleport(Vector3 position, Vector3 lookAt, uint flags);

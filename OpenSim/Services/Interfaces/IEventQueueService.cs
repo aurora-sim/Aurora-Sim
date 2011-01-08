@@ -45,6 +45,16 @@ namespace OpenSim.Services.Interfaces
         /// <returns>Whether it was added successfully</returns>
         bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle);
 
+        /// <summary>
+        /// This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        /// Returns the result of the enqueue of the event, not just whether it was posted to the service
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
+        bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle);
+
         // These are required to decouple Scenes from EventQueueHelper
         void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
         void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle);
@@ -79,6 +89,17 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
+            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit);
+
+        /// <summary>
+        /// This is a region > CapsService message ONLY, this should never be sent to the client.
+        /// </summary>
+        /// <param name="avatarID"></param>
+        /// <param name="RegionHandle"></param>
+        /// <param name="DrawDistance"></param>
+        /// <param name="neighbors"></param>
+        /// <param name="circuit"></param>
+        bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle,
             int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit);
     }
 }

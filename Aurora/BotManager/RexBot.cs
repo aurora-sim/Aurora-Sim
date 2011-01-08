@@ -2268,20 +2268,9 @@ namespace Aurora.BotManager
         {
             
         }
-
-        void IClientAPI.InformClientOfNeighbor(ulong neighbourHandle, IPEndPoint neighbourExternalEndPoint)
-        {
-            
-        }
-
         AgentCircuitData IClientAPI.RequestClientInfo()
         {
             return null;
-        }
-
-        void IClientAPI.CrossRegion(ulong newRegionHandle, Vector3 pos, Vector3 lookAt, IPEndPoint newRegionExternalEndPoint, string capsURL)
-        {
-            
         }
 
         void IClientAPI.SendMapBlock(List<MapBlockData> mapBlocks, uint flag)

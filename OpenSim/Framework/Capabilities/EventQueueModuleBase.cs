@@ -19,6 +19,11 @@ namespace OpenSim.Framework.Capabilities
             return false;
         }
 
+        public virtual bool TryEnqueue(OSD item, UUID avatarID, ulong regionHandle)
+        {
+            return false;
+        }
+
         public void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.DisableSimulator(handle);
@@ -113,6 +118,12 @@ namespace OpenSim.Framework.Capabilities
         {
             OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit);
             Enqueue(item, avatarID, RegionHandle);
+        }
+
+        public bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit)
+        {
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit);
+            return TryEnqueue(item, avatarID, RegionHandle);
         }
     }
 }
