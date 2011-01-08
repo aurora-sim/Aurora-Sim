@@ -578,14 +578,14 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             // This means that we're not booted up completely yet.
                             // This shouldn't happen too often anymore.
-                            m_log.Error("[SCENE]: Couldn't inform client of regionup because we got a null reference exception");
+                            m_log.Error("[Scene]: Couldn't inform client of regionup because we got a null reference exception");
                         }
                     }
                     else
                     {
-                        m_log.Info("[INTERGRID]: Got notice about far away Region: " + otherRegion.RegionName.ToString() +
-                                   " at  (" + otherRegion.RegionLocX.ToString() + ", " +
-                                   otherRegion.RegionLocY.ToString() + ")");
+                        m_log.Info("[Scene]: Got notice about far away Region: " + otherRegion.RegionName.ToString() +
+                                   " at  (" + (otherRegion.RegionLocX / Constants.RegionSize).ToString() + ", " +
+                                   (otherRegion.RegionLocY / Constants.RegionSize).ToString() + ")");
                     }
                 }
             }

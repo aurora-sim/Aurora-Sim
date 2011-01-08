@@ -898,7 +898,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Next, let's close the child agent connections that are too far away.
                 INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
-                    neighborService.CloseNeighborAgents(crossingRegion.RegionLocX / Constants.RegionSize, crossingRegion.RegionLocX / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
+                    neighborService.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 agent.MakeChildAgent();
                 // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
@@ -953,7 +953,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Next, let's close the child agent connections that are too far away.
                 INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
-                    neighborService.CloseNeighborAgents(neighbourRegion.RegionLocX / Constants.RegionSize, neighbourRegion.RegionLocY / Constants.RegionSize, agent.UUID, agent.Scene.RegionInfo.RegionID);
+                    neighborService.CloseNeighborAgents(neighbourRegion.RegionLocX, neighbourRegion.RegionLocY, agent.UUID, agent.Scene.RegionInfo.RegionID);
 
                 string agentcaps;
                 ICapabilitiesModule module = m_scene.RequestModuleInterface<ICapabilitiesModule>();
@@ -1089,10 +1089,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if (Util.VariableRegionSight && sp.DrawDistance != 0)
                 {
-                    int xMin = (int)(m_regionInfo.RegionLocX) - (int)sp.DrawDistance;
-                    int xMax = (int)(m_regionInfo.RegionLocX) + (int)sp.DrawDistance;
-                    int yMin = (int)(m_regionInfo.RegionLocX) - (int)sp.DrawDistance;
-                    int yMax = (int)(m_regionInfo.RegionLocX) + (int)sp.DrawDistance;
+                    int xMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
+                    int xMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
+                    int yMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
+                    int yMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
                     
                     neighbours = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
                         xMin, xMax, yMin, yMax);

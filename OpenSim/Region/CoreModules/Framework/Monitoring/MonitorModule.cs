@@ -417,8 +417,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
                     rb.RegionFlags = regionFlags;
-                    rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX;
-                    rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY;
+                    rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
+                    rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
 
                     ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
                     ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor("Time Dilation");
