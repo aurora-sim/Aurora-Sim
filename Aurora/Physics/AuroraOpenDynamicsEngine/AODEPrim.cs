@@ -1,5 +1,5 @@
 /*
- *Copyright (c) Contributors, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -404,9 +404,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.RfromQ(out mymat, ref myrot);
             d.MassRotate(ref objdmass, ref mymat);
 
-            rcm.X = _position.X + objdmass.c.X;
-            rcm.Y = _position.Y + objdmass.c.Y;
-            rcm.Z = _position.Z + objdmass.c.Z;
+            
 
                         
             // set the body rotation and position
@@ -415,6 +413,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // recompute full object inertia if needed
             if (childrenPrim.Count > 0)
                 {
+
+                rcm.X = _position.X + objdmass.c.X;
+                rcm.Y = _position.Y + objdmass.c.Y;
+                rcm.Z = _position.Z + objdmass.c.Z;
+
                 lock (childrenPrim)
                     {
                     foreach (AuroraODEPrim prm in childrenPrim)
@@ -461,17 +464,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // associate root geom with body
             d.GeomSetBody(prim_geom, Body);
 
-            dvtmp = d.GeomGetPosition(prim_geom);
-            dbtmp = d.BodyGetPosition(Body);
-//            d.GeomSetOffsetPosition(prim_geom, -objdmass.c.X, -objdmass.c.Y, -objdmass.c.Z);
             d.BodySetPosition(Body, _position.X + objdmass.c.X, _position.Y + objdmass.c.Y, _position.Z + objdmass.c.Z);
-            dvtmp = d.GeomGetPosition(prim_geom);
-            dbtmp = d.BodyGetPosition(Body);
             d.GeomSetOffsetWorldPosition(prim_geom, _position.X, _position.Y, _position.Z);
-
-//            d.GeomSetRotation(prim_geom, ref mymat);
-            dvtmp = d.GeomGetPosition(prim_geom);
-            dbtmp = d.BodyGetPosition(Body);
 
             d.MassTranslate(ref objdmass, -objdmass.c.X, -objdmass.c.Y, -objdmass.c.Z); // ode wants inertia at center of body
             d.BodySetMass(Body, ref objdmass);
@@ -524,13 +518,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_vehicle.Enable(Body, this, _parent_scene);
                 }
             _parent_scene.addActivePrim(this);
-
+/*
             d.Mass mtmp;
             d.BodyGetMass(Body, out mtmp);
             d.Matrix3 mt = d.GeomGetRotation(prim_geom);
             d.Matrix3 mt2 = d.BodyGetRotation(Body);
             dvtmp = d.GeomGetPosition(prim_geom);
             dbtmp = d.BodyGetPosition(Body);
+ */
             }
 
         public void DestroyBody()  // for now removes all colisions etc from childs, full body reconstruction is needed after this
@@ -1228,84 +1223,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public void CreateGeom(IntPtr m_targetSpace, IMesh _mesh)
-        {
-//Console.WriteLine("CreateGeom:");
+            {
+            //Console.WriteLine("CreateGeom:");
             if (_mesh != null)
-            {
-                setMesh(_parent_scene, _mesh);
-            }
-            else
-            {
-                if (_pbs.ProfileShape == ProfileShape.HalfCircle && _pbs.PathCurve == (byte)Extrusion.Curve1)
                 {
-                    if (_size.X == _size.Y && _size.Y == _size.Z && _size.X == _size.Z)
-                    {
-                        if (((_size.X / 2f) > 0f))
-                        {
-                            _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                            try
-                            {
-//Console.WriteLine(" CreateGeom 1");
-                                SetGeom(d.CreateSphere(m_targetSpace, _size.X / 2));
-                            }
-                            catch (AccessViolationException)
-                            {
-                                m_log.Warn("[PHYSICS]: Unable to create physics proxy for object");
-                                ode.dunlock(_parent_scene.world);
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                            try
-                            {
-//Console.WriteLine(" CreateGeom 2");
-                                SetGeom(d.CreateBox(m_targetSpace, _size.X, _size.Y, _size.Z));
-                            }
-                            catch (AccessViolationException)
-                            {
-                                m_log.Warn("[PHYSICS]: Unable to create physics proxy for object");
-                                ode.dunlock(_parent_scene.world);
-                                return;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                        try
-                        {
-//Console.WriteLine("  CreateGeom 3");
-                            SetGeom(d.CreateBox(m_targetSpace, _size.X, _size.Y, _size.Z));
-                        }
-                        catch (AccessViolationException)
-                        {
-                            m_log.Warn("[PHYSICS]: Unable to create physics proxy for object");
-                            ode.dunlock(_parent_scene.world);
-                            return;
-                        }
-                    }
+                setMesh(_parent_scene, _mesh); // this will give a mesh to non trivial known prims
                 }
-
-                else
+            else
                 {
+                if (_pbs.ProfileShape == ProfileShape.HalfCircle && _pbs.PathCurve == (byte)Extrusion.Curve1
+                    && _size.X == _size.Y && _size.Y == _size.Z)
+                    { // it's a sphere
                     _parent_scene.waitForSpaceUnlock(m_targetSpace);
                     try
-                    {
-//Console.WriteLine("  CreateGeom 4");
-                        SetGeom(d.CreateBox(m_targetSpace, _size.X, _size.Y, _size.Z));
-                    }
+                        {                       
+                        SetGeom(d.CreateSphere(m_targetSpace, _size.X / 2));
+                        }
                     catch (AccessViolationException)
-                    {
+                        {
                         m_log.Warn("[PHYSICS]: Unable to create physics proxy for object");
                         ode.dunlock(_parent_scene.world);
                         return;
+                        }
+                    }
+                else
+                    {
+                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                    try
+                        {
+                        //Console.WriteLine("  CreateGeom 4");
+                        SetGeom(d.CreateBox(m_targetSpace, _size.X, _size.Y, _size.Z));
+                        }
+                    catch (AccessViolationException)
+                        {
+                        m_log.Warn("[PHYSICS]: Unable to create physics proxy for object");
+                        ode.dunlock(_parent_scene.world);
+                        return;
+                        }
                     }
                 }
             }
-        }
-
         public void changeadd(float timestep)
             {
             int[] iprimspaceArrItem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
