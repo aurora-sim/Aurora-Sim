@@ -705,7 +705,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 bool callWasCanceled = false;
-                if (!WaitForCallback(agent.UUID, callWasCanceled))
+                if (!WaitForCallback(agent.UUID, out callWasCanceled))
                 {
                     m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + agent.Name + ". Resetting.");
                     ResetFromTransit(agent.UUID);
