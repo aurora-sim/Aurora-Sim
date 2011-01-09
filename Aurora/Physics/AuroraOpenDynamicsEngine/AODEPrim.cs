@@ -387,7 +387,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 d.BodySetAutoDisableFlag(Body, true);
                 d.BodySetAutoDisableSteps(Body, body_autodisable_frames);
-                d.BodySetDamping(Body, 1, 0.5f);
+                d.BodySetDamping(Body, 1, 0.995f);
                 //d.BodySetAngularDampingThreshold(Body, 0.5f);
                 
                 // disconnect from world gravity so we can apply buoyancy
@@ -1600,7 +1600,7 @@ Console.WriteLine(" JointCreateFixed");
                         {
                             fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
                             fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = (_parent_scene.gravityz * 3) * (1.0f - m_buoyancy) * m_mass;
+                            fz = (_parent_scene.gravityz * 7) * (1.0f - m_buoyancy) * m_mass;
                         }
                         else
                         {
@@ -2905,8 +2905,8 @@ Console.WriteLine(" JointCreateFixed");
                                     _velocity = Vector3.Zero;
                                     _zeroFlag = true;
                                     m_lastUpdateSent = 1;
-                                    d.BodySetLinearDamping(Body, 10000);
-                                    d.BodySetAngularDamping(Body, 10000);
+                                    d.BodySetDamping(Body, 1, 0.995f);
+                                    d.BodySetAngularDamping(Body, 0.995f);
                                     d.BodySetForce(Body, 0, 0, 0);
                                 }
                                 else
