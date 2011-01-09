@@ -1118,10 +1118,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_log.Error("[LLUDPSERVER]: Error in the incoming packet handler loop: " + ex.Message, ex);
                 return;
             }
-
-            if (packetInbox.Count > 0)
-                m_log.Warn("[LLUDPSERVER]: IncomingPacketHandler is shutting down, dropping " + packetInbox.Count + " packets");
-            packetInbox.Clear();
         }
 
         private void ProcessInPacket(object state)

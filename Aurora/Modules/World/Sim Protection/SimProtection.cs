@@ -21,7 +21,7 @@ namespace Aurora.Modules
             = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         //Normal Sim FPS
-        private float BaseRateFramesPerSecond = 60;
+        private float BaseRateFramesPerSecond = 45;
         // When BaseRate / current FPS is less than this percent, begin shutting down services
         protected float PercentToBeginShutDownOfServices = 50;
         protected Scene m_scene;
