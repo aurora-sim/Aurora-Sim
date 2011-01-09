@@ -568,15 +568,15 @@ namespace OpenSim.Services.CapsService
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                 //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
                 string SimSeedCap = "";
+                bool newAgent = m_service.ClientCaps.GetCapsService(neighbor.RegionHandle) == null;
                 IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
-                bool newAgent = false;
-                
+               
                 //ONLY UPDATE THE SIM SEED HERE
                 //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                 // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                 // AND FORCE UPDATING IT HERE WILL BREAK IT.
                 string CapsBase = "";
-                if (otherRegionService.UrlToInform == "")
+                if (newAgent)
                 {
                     //If the Url is "", then we havn't been here before, 
                     //  and we need to add a new Url for the client.
@@ -590,8 +590,6 @@ namespace OpenSim.Services.CapsService
                       + CapsUtil.GetCapsSeedPath(CapsBase);
                     //Add the new Seed for this region
                     otherRegionService.AddSEEDCap("", SimSeedCap);
-                    //We had to make a new Url, its a new agent to this other region
-                    newAgent = true;
                 }
                 else
                 {
@@ -614,6 +612,7 @@ namespace OpenSim.Services.CapsService
                     IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                     EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
+                    
                     // ES makes the client send a UseCircuitCode message to the destination, 
                     // which triggers a bunch of things there.
                     // So let's wait
