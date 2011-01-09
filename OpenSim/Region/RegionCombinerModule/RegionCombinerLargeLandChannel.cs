@@ -155,10 +155,8 @@ namespace OpenSim.Region.RegionCombinerModule
 
         public bool Tainted(int x, int y)
         {
-            int offsetX = (int)(x / (int)Constants.RegionSize);
-            int offsetY = (int)(y / (int)Constants.RegionSize);
-            offsetX *= (int)Constants.RegionSize;
-            offsetY *= (int)Constants.RegionSize;
+            int offsetX = (x / Constants.RegionSize);
+            int offsetY = (y / Constants.RegionSize);
 
             foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
             {
@@ -170,39 +168,19 @@ namespace OpenSim.Region.RegionCombinerModule
             return false;
         }
 
-        public ITerrainChannel MakeCopy(IScene scene)
+        public ITerrainChannel MakeCopy()
         {
-            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
-            {
-                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
-                {
-                    return kvp.Value.MakeCopy(scene);
-                }
-            }
-            return null;
+            return RegionConnections[RegData].MakeCopy();
         }
 
-        public string SaveToXmlString(IScene scene)
+        public string SaveToXmlString()
         {
-            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
-            {
-                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
-                {
-                    return kvp.Value.SaveToXmlString(scene);
-                }
-            }
-            return null;
+            return RegionConnections[RegData].SaveToXmlString();
         }
 
-        public void LoadFromXmlString(IScene scene, string data)
+        public void LoadFromXmlString(string data)
         {
-            foreach (KeyValuePair<RegionData, ITerrainChannel> kvp in RegionConnections)
-            {
-                if (kvp.Key.RegionId == scene.RegionInfo.RegionID)
-                {
-                    kvp.Value.LoadFromXmlString(scene, data);
-                }
-            }
+            RegionConnections[RegData].LoadFromXmlString(data);
         }
 
         public float GetNormalizedGroundHeight(float x, float y)

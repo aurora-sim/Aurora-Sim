@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene = scene;
             m_scenes.Add(scene);
 
-            LoadWorldMap();
+            LoadWorldHeightmap();
             scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
             scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
 
@@ -209,7 +209,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <summary>
         /// Loads the World heightmap
         /// </summary>
-        public void LoadWorldMap()
+        public void LoadWorldHeightmap()
         {
             try
             {
@@ -362,10 +362,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         try
                         {
                             ITerrainChannel channel = loader.Value.LoadStream(stream);
-                            channel.Scene = m_scene;
-                            m_channel = channel;
-                            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-                            UpdateRevertMap();
+                            if (channel != null)
+                            {
+                                channel.Scene = m_scene;
+                                m_channel = channel;
+                                m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+                                UpdateRevertMap();
+                            }
                         }
                         catch (NotImplementedException)
                         {
@@ -571,15 +574,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void UpdateRevertMap()
         {
-            int x;
-            for (x = 0; x < m_channel.Width; x++)
-            {
-                int y;
-                for (y = 0; y < m_channel.Height; y++)
-                {
-                    m_revert[x, y] = m_channel[x, y];
-                }
-            }
+            m_revert = m_channel.MakeCopy();
             SaveRevertTerrain(m_revert);
         }
 

@@ -42,9 +42,9 @@ namespace OpenSim.Region.Framework.Interfaces
 
         double[,] GetDoubles(IScene scene);
         bool Tainted(int x, int y);
-        ITerrainChannel MakeCopy(IScene scene);
-        string SaveToXmlString(IScene scene);
-        void LoadFromXmlString(IScene scene, string data);
+        ITerrainChannel MakeCopy();
+        string SaveToXmlString();
+        void LoadFromXmlString(string data);
 
         /// <summary>
         /// Gets the average height of the area +2 in both the X and Y directions from the given position

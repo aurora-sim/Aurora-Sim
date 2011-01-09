@@ -41,7 +41,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// </summary>
     public class TerrainChannel : ITerrainChannel
     {
-        private readonly bool[,] taint;
+        private bool[,] taint;
         private double[,] map;
         private IScene m_scene;
 
@@ -132,14 +132,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_scene = value; }
         }
 
-        public ITerrainChannel MakeCopy(IScene scene)
-        {
-            TerrainChannel copy = new TerrainChannel(false, scene);
-            copy.map = (double[,]) map.Clone();
-
-            return copy;
-        }
-
         public float[] GetFloatsSerialised(IScene scene)
         {
             // Move the member variables into local variables, calling
@@ -195,15 +187,20 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        public ITerrainChannel MakeCopy()
+        {
+            return Copy();
+        }
+
         public TerrainChannel Copy()
         {
             TerrainChannel copy = new TerrainChannel(false, m_scene);
             copy.map = (double[,]) map.Clone();
-
+            copy.taint = (bool[,])taint.Clone();
             return copy;
         }
 
-        public string SaveToXmlString(IScene scene)
+        public string SaveToXmlString()
         {
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = Util.UTF8;
@@ -225,7 +222,7 @@ namespace OpenSim.Region.Framework.Scenes
             writer.WriteEndElement();
         }
 
-        public void LoadFromXmlString(IScene scene, string data)
+        public void LoadFromXmlString(string data)
         {
             StringReader sr = new StringReader(data);
             XmlTextReader reader = new XmlTextReader(sr);
