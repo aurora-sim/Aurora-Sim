@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public TimeDilationMonitor(Scene scene)
         {
             m_scene = scene;
-            basePhysicsFPS = scene.Config.Configs["Physics"].GetFloat("BasePhysicsFPS", basePhysicsFPS);
+            basePhysicsFPS = scene.BaseSimPhysFPS;
         }
 
         #region Implementation of IMonitor
