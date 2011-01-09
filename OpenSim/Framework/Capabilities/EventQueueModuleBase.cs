@@ -114,15 +114,15 @@ namespace OpenSim.Framework.Capabilities
         // These are NOT sent to the client under ANY circumstances!
         //
 
-        public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags)
+        public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data);
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags)
+        public bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data);
             return TryEnqueue(item, avatarID, RegionHandle);
         }
     }

@@ -172,7 +172,7 @@ namespace OpenSim.Services.HypergridService
         }
 
         #region Login Agent
-        public bool LoginAgent(AgentCircuitData aCircuit, GridRegion destination, out string reason)
+        public bool LoginAgent(AgentCircuitData aCircuit, GridRegion destination, AgentData data, out string reason)
         {
             reason = string.Empty;
 
@@ -256,7 +256,7 @@ namespace OpenSim.Services.HypergridService
             //
             Constants.TeleportFlags loginFlag = isFirstLogin ? Constants.TeleportFlags.ViaLogin : Constants.TeleportFlags.ViaHGLogin;
             m_log.DebugFormat("[GATEKEEPER SERVICE]: launching agent {0}", loginFlag);
-            return m_SimulationService.CreateAgent(destination, aCircuit, (uint)loginFlag, out reason);
+            return m_SimulationService.CreateAgent(destination, aCircuit, (uint)loginFlag, data, out reason);
         }
 
         protected bool Authenticate(AgentCircuitData aCircuit)

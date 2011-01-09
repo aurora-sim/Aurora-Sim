@@ -41,7 +41,7 @@ namespace OpenSim.Services.Interfaces
 
         #region Agents
 
-        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint flags, out string reason);
+        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint flags, AgentData data, out string reason);
 
         /// <summary>
         /// Full child agent update.

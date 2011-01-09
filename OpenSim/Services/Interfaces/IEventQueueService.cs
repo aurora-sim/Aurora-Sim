@@ -89,7 +89,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags);
+            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags);
 
         /// <summary>
         /// This is a region > CapsService message ONLY, this should never be sent to the client.
@@ -100,6 +100,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags);
+            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags);
     }
 }

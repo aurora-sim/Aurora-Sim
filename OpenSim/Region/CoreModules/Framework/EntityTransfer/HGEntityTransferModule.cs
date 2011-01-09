@@ -154,12 +154,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_scenes[0].PresenceService.LogoutAgent(sessionID);
         }
 
-        protected override bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool logout)
+        /*protected override bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool logout)
         {
             reason = string.Empty;
             logout = false;
             int flags = sp.Scene.GridService.GetRegionFlags(sp.Scene.RegionInfo.ScopeID, reg.RegionID);
-            if (flags == -1 /* no region in DB */ || (flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
+            if (flags == -1 /* no region in DB *//* || (flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
             {
                 // this user is going to another grid
                 if (agentCircuit.ServiceURLs.ContainsKey("HomeURI"))
@@ -179,7 +179,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
 
             return sp.Scene.SimulationService.CreateAgent(reg, agentCircuit, teleportFlags, out reason);
-        }
+        }*/
 
         public override void TeleportHome(UUID id, IClientAPI client)
         {

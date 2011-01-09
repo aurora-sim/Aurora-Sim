@@ -1143,7 +1143,7 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)
         {
-            return simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, out reason);
+            return simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
         }
 
         protected bool LaunchAgentIndirectly(GridRegion gatekeeper, GridRegion destination, AgentCircuitData aCircuit, IPEndPoint clientIP, out string reason)

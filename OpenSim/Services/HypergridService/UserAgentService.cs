@@ -163,7 +163,7 @@ namespace OpenSim.Services.HypergridService
             string myExternalIP = string.Empty;
             string gridName = "http://" + gatekeeper.ExternalHostName + ":" + gatekeeper.HttpPort;
             if (m_GridName == gridName)
-                success = m_GatekeeperService.LoginAgent(agentCircuit, finalDestination, out reason);
+                success = m_GatekeeperService.LoginAgent(agentCircuit, finalDestination, null, out reason);
             else
                 success = m_GatekeeperConnector.CreateAgent(region, agentCircuit, (uint)Constants.TeleportFlags.ViaLogin, out myExternalIP, out reason);
 

@@ -308,73 +308,33 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agentCircuit.child = false;
                 agentCircuit.Appearance = sp.Appearance;
 
-                //Start new style
-
                 IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
 
+                AgentData agent = new AgentData();
+                sp.CopyTo(agent);
+                agent.Position = position;
+                SetCallbackURL(agent, sp.Scene.RegionInfo);
+                
                 if (eq != null)
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
                     //  messages if they need to be called
                     if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
-                        new GridRegion[1] { finalDestination }, agentCircuit, teleportFlags))
+                        new GridRegion[1] { finalDestination }, agentCircuit, agent, teleportFlags))
                     {
                         sp.ControllingClient.SendTeleportFailed("Destination refused");
                         return;
                     }
                 }
 
-
-                //End new style
-
-                /*string reason = String.Empty;
-                // Let's create an agent there if one doesn't exist yet. 
-                bool logout = false;
-                if (!CreateAgent(sp, reg, finalDestination, agentCircuit, teleportFlags, out reason, out logout))
-                {
-                    sp.ControllingClient.SendTeleportFailed(String.Format("Destination refused: {0}",
-                                                                              reason));
-                    return;
-                }*/
-
                 // OK, it got this agent. Let's close some child agents
                 INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                     neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
-                /*if (NeedsNewAgent(oldRegionX, newRegionX, oldRegionY, newRegionY))
-                {
-                    //sp.ControllingClient.SendTeleportProgress(teleportFlags, "Creating agent...");
-
-                    if (eq != null)
-                    {
-                        eq.EnableSimulator(destinationHandle, endPoint, sp.UUID, sp.Scene.RegionInfo.RegionHandle);
-
-                        // ES makes the client send a UseCircuitCode message to the destination, 
-                        // which triggers a bunch of things there.
-                        // So let's wait
-                        Thread.Sleep(400);
-
-                        eq.EstablishAgentCommunication(sp.UUID, destinationHandle, endPoint, "", sp.Scene.RegionInfo.RegionHandle);
-                    }
-                }*/
-
                 if (m_cancelingAgents.Contains(sp.UUID))
                 {
                     Cancel(sp);
-                    return;
-                }
-
-                // Let's send a full update of the agent. This is a synchronous call.
-                AgentData agent = new AgentData();
-                sp.CopyTo(agent);
-                agent.Position = position;
-                SetCallbackURL(agent, sp.Scene.RegionInfo);
-
-                if (!UpdateAgent(reg, finalDestination, agent))
-                {
-                    // Region doesn't take it
-                    Fail(sp, finalDestination);
                     return;
                 }
 
@@ -414,23 +374,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                             m_cancelingAgents.Remove(sp.UUID);
                         return;
                     }
-                }
-
-                //Make sure the client hasn't TPed back in this time.
-                ScenePresence newSP = sp.Scene.GetScenePresence(sp.UUID);
-                if (newSP != null && !newSP.IsChildAgent)
-                {
-                    //They are root again, don't cross them!
-                    return;
-                }
-                else if (newSP == null)
-                {
-                    //Err.. this happens somehow.
-
-                    //If they canceled too late, remove them so the next tp does not fail.
-                    if (m_cancelingAgents.Contains(sp.UUID))
-                        m_cancelingAgents.Remove(sp.UUID);
-                    return;
                 }
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
@@ -506,13 +449,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             //Don't do this right now since we are killing way too many legitimate agents whose callbacks failed
             //m_aScene.SimulationService.CloseAgent(finalDestination, sp.UUID);
 
-        }
-
-        protected virtual bool CreateAgent(ScenePresence sp, GridRegion reg, GridRegion finalDestination, AgentCircuitData agentCircuit, uint teleportFlags, out string reason, out bool logout)
-        {
-            logout = false;
-            //We use tryGet as we can't be completely sure that the Scene isn't null or is incorrect
-            return TryGetScene(sp.Scene.RegionInfo.RegionID).SimulationService.CreateAgent(finalDestination, agentCircuit, teleportFlags, out reason);
         }
 
         protected virtual bool UpdateAgent(GridRegion reg, GridRegion finalDestination, AgentData agent)
@@ -930,7 +866,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, (uint)TeleportFlags.Default);
+                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, null, (uint)TeleportFlags.Default);
                 return;
             }
         }
@@ -975,7 +911,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, neighbors.ToArray(), agent, (uint)TeleportFlags.Default);
+                    (int)sp.DrawDistance, neighbors.ToArray(), agent, null, (uint)TeleportFlags.Default);
                 return;
             }
         }

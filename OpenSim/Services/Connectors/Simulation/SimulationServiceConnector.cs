@@ -69,11 +69,11 @@ namespace OpenSim.Services.Connectors.Simulation
             return "/agent/";
         }
 
-        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out string reason)
+        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             reason = String.Empty;
             // Try local first
-            if (m_localBackend.CreateAgent(destination, aCircuit, teleportFlags, out reason))
+            if (m_localBackend.CreateAgent(destination, aCircuit, teleportFlags, data, out reason))
                 return true;
             // else do the remote thing
             HttpWebRequest AgentCreateRequest = null;

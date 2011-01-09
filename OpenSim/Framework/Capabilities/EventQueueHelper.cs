@@ -464,7 +464,7 @@ namespace OpenSim.Framework.Capabilities
             return message;
         }
 
-        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags)
+        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags, AgentData data)
         {
             OSDMap llsdBody = new OSDMap();
 
@@ -477,7 +477,8 @@ namespace OpenSim.Framework.Capabilities
             llsdBody.Add("Regions", regionsArray);
             llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
             llsdBody.Add("TeleportFlags", TeleportFlags);
-
+            if(data != null)
+                llsdBody.Add("AgentData", data.Pack());
             return buildEvent("EnableChildAgents", llsdBody);
         }
     }

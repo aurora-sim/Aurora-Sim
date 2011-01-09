@@ -102,7 +102,7 @@ namespace OpenSim.Services.Connectors.Simulation
          * Agent-related communications
          */
 
-        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out string reason)
+        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
         {
             if (destination == null)
             {
@@ -116,6 +116,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (s.RegionInfo.RegionID == destination.RegionID)
                 {
                     //m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
+                    if (data != null)
+                        UpdateAgent(destination, data);
                     return s.NewUserConnection(aCircuit, teleportFlags, out reason);
                 }
             }

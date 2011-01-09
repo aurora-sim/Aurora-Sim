@@ -59,9 +59,9 @@ namespace OpenSim.Server.Handlers.Hypergrid
             m_Proxy = proxy;
         }
 
-        protected override bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out string reason)
+        protected override bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out string reason)
         {
-            return m_GatekeeperService.LoginAgent(aCircuit, destination, out reason);
+            return m_GatekeeperService.LoginAgent(aCircuit, destination, agent, out reason);
         }
     }
 }

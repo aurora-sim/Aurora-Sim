@@ -293,7 +293,7 @@ namespace OpenSim.Framework
         public virtual OSDMap Pack()
         {
             // DEBUG ON
-            m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Pack data");
+            //m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Pack data");
             // DEBUG OFF
 
             OSDMap args = new OSDMap();
@@ -419,7 +419,7 @@ namespace OpenSim.Framework
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON
-            m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Unpack data");
+            //m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Unpack data");
             // DEBUG OFF
 
             if (args.ContainsKey("region_id"))

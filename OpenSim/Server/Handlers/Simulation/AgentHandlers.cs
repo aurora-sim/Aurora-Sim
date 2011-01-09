@@ -149,6 +149,24 @@ namespace OpenSim.Server.Handlers.Simulation
                 regionname = args["destination_name"].ToString();
             if (args.ContainsKey("teleport_flags") && args["teleport_flags"] != null)
                 teleportFlags = args["teleport_flags"].AsUInteger();
+            
+            AgentData agent = null;
+            if (args.ContainsKey("agent_data") && args["agent_data"] != null)
+            {
+                try
+                {
+                    OSDMap agentDataMap = (OSDMap)args["agent_data"];
+                    agent = new AgentData();
+                    agent.Unpack(args);
+                }
+                catch (Exception ex)
+                {
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.Message);
+                    responsedata["int_response_code"] = HttpStatusCode.BadRequest;
+                    responsedata["str_response_string"] = "Bad request";
+                    return;
+                }
+            }
 
             GridRegion destination = new GridRegion();
             destination.RegionID = uuid;
@@ -175,7 +193,7 @@ namespace OpenSim.Server.Handlers.Simulation
             // This is the meaning of POST agent
             //m_regionClient.AdjustUserInformation(aCircuit);
             //bool result = m_SimulationService.CreateAgent(destination, aCircuit, teleportFlags, out reason);
-            bool result = CreateAgent(destination, aCircuit, teleportFlags, out reason);
+            bool result = CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
 
             resp["reason"] = OSD.FromString(reason);
             resp["success"] = OSD.FromBoolean(result);
@@ -206,9 +224,9 @@ namespace OpenSim.Server.Handlers.Simulation
         }
 
         // subclasses can override this
-        protected virtual bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out string reason)
+        protected virtual bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out string reason)
         {
-            return m_SimulationService.CreateAgent(destination, aCircuit, teleportFlags, out reason);
+            return m_SimulationService.CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
         }
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)
