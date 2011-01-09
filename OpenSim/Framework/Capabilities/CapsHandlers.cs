@@ -45,14 +45,14 @@ namespace OpenSim.Framework.Capabilities
     /// care of adding and removing cap handlers to and from the
     /// supplied BaseHttpServer.
     /// </summary>
-    public class CapsHandlers
+    public class PerRegionClientCapsService : IRegionClientCapsService
     {
+        #region Declares
+
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
         
-        private string HostUri;
-        private IHttpServer Server;
-
         private ulong m_RegionHandle;
         public ulong RegionHandle
         {
@@ -92,6 +92,38 @@ namespace OpenSim.Framework.Capabilities
         /// This is the /CAPS/UUID 0000/ string
         /// </summary>
         protected String m_capsUrlBase;
+        
+        private UUID m_AgentID;
+        public UUID AgentID
+        {
+            get { return m_AgentID; }
+        }
+
+        protected IClientCapsService m_clientCapsService;
+        public IClientCapsService ClientCaps
+        {
+            get { return m_clientCapsService; }
+        }
+
+        #endregion
+
+        #region Properties
+
+        public String HostUri
+        {
+            get { return m_clientCapsService.HostUri; }
+        }
+
+        public IRegistryCore Registry
+        {
+            get { return m_clientCapsService.Registry; }
+        }
+
+        protected IHttpServer Server
+        {
+            get { return m_clientCapsService.Server; }
+        }
+
         /// <summary>
         /// This is the full URL to the Caps SEED request
         /// </summary>
@@ -99,19 +131,22 @@ namespace OpenSim.Framework.Capabilities
         {
             get { return HostUri + m_capsUrlBase; }
         }
-        private UUID m_AgentID;
-        public UUID AgentID
-        {
-            get { return m_AgentID; }
-        }
 
-        public void Initialize(string hostUri, IHttpServer httpServer, ulong RegionHandle, UUID AgentID)
+        #endregion
+
+        #region Initialize
+
+        public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform)
         {
-            Server = httpServer;
-            HostUri = hostUri;
+            m_clientCapsService = clientCapsService;
             m_AgentID = AgentID;
             m_RegionHandle = RegionHandle;
+            AddSEEDCap(capsBase, urlToInform);
+
+            AddCAPS();
         }
+
+        #endregion
 
         #region Add/Remove Caps from the known caps OSDMap
 
@@ -174,7 +209,7 @@ namespace OpenSim.Framework.Capabilities
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
         }
 
-        public void RemoveSEEDCap()
+        public void Close()
         {
             //Remove our SEED cap
             RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
@@ -214,6 +249,38 @@ namespace OpenSim.Framework.Capabilities
             {
             }
             return OSDParser.SerializeLLSDXmlString(registeredCAPS);
+        }
+
+        #endregion
+
+        #region Add/Remove known caps
+
+        protected void AddCAPS()
+        {
+            List<ICapsServiceConnector> connectors = GetServiceConnectors();
+            foreach (ICapsServiceConnector connector in connectors)
+            {
+                connector.RegisterCaps(this);
+            }
+        }
+
+        protected void RemoveCAPS()
+        {
+            List<ICapsServiceConnector> connectors = GetServiceConnectors();
+            foreach (ICapsServiceConnector connector in connectors)
+            {
+                connector.DeregisterCaps();
+            }
+            Close();
+        }
+
+        public List<ICapsServiceConnector> GetServiceConnectors()
+        {
+            if (m_connectors.Count == 0)
+            {
+                m_connectors = AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
+            }
+            return m_connectors;
         }
 
         #endregion

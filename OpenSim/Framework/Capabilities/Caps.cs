@@ -40,60 +40,22 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework.Capabilities
 {
-    public class Caps : CapsHandlers
+    public class Caps : PerRegionClientCapsService
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly string m_seedRequestPath = "0000/";
-        private IScene m_Scene;
 
         public void Initialize(IScene scene, IHttpServer httpServer, UUID agentID, string CapsPath)
         {
-            m_Scene = scene;
-            
             //Find the full URL to our CapsService
             string Protocol = "http://";
             if (httpServer.UseSSL)
                 Protocol = "https://";
             string HostUri = Protocol + scene.RegionInfo.ExternalHostName + ":" + httpServer.Port;
 
-            Initialize(HostUri, httpServer, scene.RegionInfo.RegionHandle, agentID);
-
-            AddSEEDCap("/CAPS/" + CapsPath + m_seedRequestPath, "");
-        }
-
-        /// <summary>
-        /// Remove all CAPS service handlers.
-        ///
-        /// </summary>
-        /// <param name="httpListener"></param>
-        /// <param name="path"></param>
-        /// <param name="restMethod"></param>
-        public void Close()
-        {
-            RemoveSEEDCap();
-        }
-
-        /// <summary>
-        /// Construct a client response detailing all the capabilities this server can provide.
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <param name="httpRequest">HTTP request header object</param>
-        /// <param name="httpResponse">HTTP response header object</param>
-        /// <returns></returns>
-        public override string CapsRequest(string request, string path, string param,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            if (!m_Scene.CheckClient(AgentID, httpRequest.RemoteIPEndPoint))
-            {
-                m_log.Error("[RegionCaps]: Unauthorized CAPS client");
-                return string.Empty;
-            }
-
-            return base.CapsRequest(request, path, param, httpRequest, httpResponse);
+            Initialise(null, scene.RegionInfo.RegionHandle, "/CAPS/" + CapsPath + m_seedRequestPath, "");
         }
     }
 }
