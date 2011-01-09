@@ -285,12 +285,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (endPoint.Address != null)
             {
                 sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
-                    
-                if (m_cancelingAgents.Contains(sp.UUID))
+
+                if (CheckForCancelingAgent(sp.UUID))
                 {
                     Cancel(sp);
                     return;
                 }
+                
                 // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
                 // both regions
                 if (sp.ParentID != UUID.Zero)
@@ -327,12 +328,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                 }
 
-                // OK, it got this agent. Let's close some child agents
-                INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                    neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
-
-                if (m_cancelingAgents.Contains(sp.UUID))
+                if (CheckForCancelingAgent(sp.UUID))
                 {
                     Cancel(sp);
                     return;
@@ -354,12 +350,23 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                 // that the client contacted the destination before we send the attachments and close things here.
 
-                //OpenSim sucks at callbacks, disable it for now
-                if (!WaitForCallback(sp.UUID))
+                bool callWasCanceled = false;
+                if (!WaitForCallback(sp.UUID, out callWasCanceled))
                 {
-                    Fail(sp, finalDestination);
+                    if (!callWasCanceled)
+                    {
+                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
+                        Fail(sp, finalDestination);
+                    }
+                    else
+                        Cancel(sp);
                     return;
                 }
+
+                // OK, it got this agent. Let's close some child agents
+                INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
+                if (neighborService != null)
+                    neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
                 CrossAttachmentsIntoNewRegion(finalDestination, sp);
@@ -387,10 +394,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 else
                     // now we have a child agent in this region. 
                     sp.Reset();
-
-                //If they canceled too late, remove them so the next tp does not fail.
-                if (m_cancelingAgents.Contains(sp.UUID))
-                    m_cancelingAgents.Remove(sp.UUID);
             }
             else
             {
@@ -400,8 +403,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         private void Cancel(ScenePresence sp)
         {
-            m_cancelingAgents.Remove(sp.UUID);
-
             // Client never contacted destination. Let's restore everything back
             sp.ControllingClient.SendTeleportFailed("You canceled the tp.");
 
@@ -425,18 +426,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             EnableChildAgents(sp);
 
-            //If they canceled too late, remove them so the next tp does not fail.
-            if (m_cancelingAgents.Contains(sp.UUID))
-                m_cancelingAgents.Remove(sp.UUID);
-
             // Finally, kill the agent we just created at the destination.
             sp.Scene.SimulationService.CloseAgent(finalDestination, sp.UUID);
-
-        }
-
-        protected virtual bool UpdateAgent(GridRegion reg, GridRegion finalDestination, AgentData agent)
-        {
-            return TryGetScene(reg.RegionID).SimulationService.UpdateAgent(finalDestination, agent);
         }
 
         protected virtual void SetCallbackURL(AgentData agent, RegionInfo region)
@@ -469,14 +460,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected virtual GridRegion GetFinalDestination(GridRegion region)
         {
             return region;
-        }
-
-        protected virtual bool NeedsNewAgent(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY)
-        {
-            INeighborService neighborService = m_scenes[0].RequestModuleInterface<INeighborService>();
-            if (neighborService != null)
-                return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
-            return false;
         }
 
         protected virtual bool NeedsClosing(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY, GridRegion reg)
@@ -705,9 +688,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 cAgent.Position = pos;
                 if (isFlying)
                     cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-                cAgent.CallbackURI = "http://" + m_scene.RegionInfo.ExternalHostName + ":" + m_scene.RegionInfo.HttpPort +
-                    "/agent/" + agent.UUID.ToString() + "/" + m_scene.RegionInfo.RegionID.ToString() + "/release/";
-
+                SetCallbackURL(cAgent, m_scene.RegionInfo);
+                
                 if (!m_scene.SimulationService.UpdateAgent(crossingRegion, cAgent))
                 {
                     // region doesn't take it
@@ -722,9 +704,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                    agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
                 }
 
-                if (!WaitForCallback(agent.UUID))
+                bool callWasCanceled = false;
+                if (!WaitForCallback(agent.UUID, callWasCanceled))
                 {
-                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent. Resetting.");
+                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + agent.Name + ". Resetting.");
                     ResetFromTransit(agent.UUID);
 
                     // Yikes! We should just have a ref to scene here.
@@ -1316,15 +1299,24 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Misc
 
-        protected bool WaitForCallback(UUID id)
+        protected bool WaitForCallback(UUID id, out bool callWasCanceled)
         {
             int count = 200;
             while (m_agentsInTransit.Contains(id) && count-- > 0)
             {
                 //m_log.Debug("  >>> Waiting... " + count);
+                if (CheckForCancelingAgent(id))
+                {
+                    //If the call was canceled, we need to break here 
+                    //   now and tell the code that called us about it
+                    callWasCanceled = true;
+                    return true;
+                }
                 Thread.Sleep(100);
             }
-
+            //If we made it through the whole loop, we havn't been canceled,
+            //    as we either have timed out or made it, so no checks are needed
+            callWasCanceled = false;
             if (count > 0)
                 return true;
             else
@@ -1342,6 +1334,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected bool ResetFromTransit(UUID id)
         {
+            RemoveCancelingAgent(id);
             lock (m_agentsInTransit)
             {
                 if (m_agentsInTransit.Contains(id))
@@ -1355,7 +1348,36 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public void CancelTeleport(UUID AgentID)
         {
-            m_cancelingAgents.Add(AgentID);
+            AddCancelingAgent(AgentID);
+        }
+
+        private bool CheckForCancelingAgent(UUID AgentID)
+        {
+            lock (m_cancelingAgents)
+            {
+                if (m_cancelingAgents.Contains(AgentID))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void RemoveCancelingAgent(UUID AgentID)
+        {
+            lock (m_cancelingAgents)
+            {
+                m_cancelingAgents.Remove(AgentID);
+            }
+        }
+
+        private void AddCancelingAgent(UUID AgentID)
+        {
+            lock (m_cancelingAgents)
+            {
+                if (!m_cancelingAgents.Contains(AgentID))
+                    m_cancelingAgents.Add(AgentID);
+            }
         }
 
         /// <summary>

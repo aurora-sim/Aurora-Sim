@@ -2755,6 +2755,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
+                //Crossings are much nastier if this code is enabled
                 /*RemoveFromPhysicalScene();
                 // This constant has been inferred from experimentation
                 // I'm not sure what this value should be, so I tried a few values.
