@@ -108,7 +108,7 @@ namespace Aurora.Modules.World.SimConsole
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("SimConsole",
+            caps.AddStreamHandler("SimConsole",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

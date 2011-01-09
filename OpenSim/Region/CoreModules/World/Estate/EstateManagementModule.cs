@@ -156,7 +156,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("DispatchRegionInfo",
+            caps.AddStreamHandler("DispatchRegionInfo",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
@@ -164,7 +164,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                                       }));
             capuuid = UUID.Random();
 
-            caps.RegisterHandler("EstateChangeInfo",
+            caps.AddStreamHandler("EstateChangeInfo",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

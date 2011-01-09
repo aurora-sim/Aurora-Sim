@@ -158,7 +158,7 @@ namespace Aurora.Modules
             UUID capuuid = UUID.Random();
 
             //Sets the windlight settings
-            caps.RegisterHandler("DispatchWindLightSettings",
+            caps.AddStreamHandler("DispatchWindLightSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
@@ -167,7 +167,7 @@ namespace Aurora.Modules
 
             capuuid = UUID.Random();
             //Retrieves the windlight settings for a specifc parcel or region
-            caps.RegisterHandler("RetrieveWindLightSettings",
+            caps.AddStreamHandler("RetrieveWindLightSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

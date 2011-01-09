@@ -242,7 +242,7 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("SendUserReportWithScreenshot",
+            caps.AddStreamHandler("SendUserReportWithScreenshot",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

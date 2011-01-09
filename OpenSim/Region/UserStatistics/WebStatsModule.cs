@@ -295,7 +295,7 @@ namespace OpenSim.Region.UserStatistics
         {
             m_log.DebugFormat("[VC]: OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
             string capsPath = "/CAPS/VS/" + UUID.Random();
-            caps.RegisterHandler("ViewerStats",
+            caps.AddStreamHandler("ViewerStats",
                                  new RestStreamHandler("POST", capsPath,
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)

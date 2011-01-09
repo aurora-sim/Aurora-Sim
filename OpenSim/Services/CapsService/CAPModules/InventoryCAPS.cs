@@ -437,12 +437,11 @@ namespace OpenSim.Services.CapsService
                 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service);
+                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this);
             m_service.AddStreamHandler("Upload" + uploaderPath,
                 new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
             string uploaderURL = m_service.HostUri + uploadpath;
-            uploader.OnUpLoad += UploadCompleteHandler;
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
@@ -451,9 +450,6 @@ namespace OpenSim.Services.CapsService
 
         public class AssetUploader
         {
-            public event UpLoadedAsset OnUpLoad;
-            private UpLoadedAsset handlerUpLoad = null;
-
             private string uploaderPath = String.Empty;
             private string uploadMethod = String.Empty;
             private UUID newAssetID;
@@ -467,10 +463,11 @@ namespace OpenSim.Services.CapsService
 
             private string m_invType = String.Empty;
             private string m_assetType = String.Empty;
+            private InventoryCAPS m_invCaps;
 
             public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
                                  UUID parentFolderID, string invType, string assetType, string path,
-                                 string method, IRegionClientCapsService caps)
+                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps)
             {
                 m_assetName = assetName;
                 m_assetDes = description;
@@ -482,6 +479,7 @@ namespace OpenSim.Services.CapsService
                 m_invType = invType;
                 clientCaps = caps;
                 uploadMethod = method;
+                m_invCaps = invCaps;
             }
 
             /// <summary>
@@ -503,12 +501,8 @@ namespace OpenSim.Services.CapsService
 
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
-                handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
-                }
-
+                m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
+                
                 return res;
             }
         }

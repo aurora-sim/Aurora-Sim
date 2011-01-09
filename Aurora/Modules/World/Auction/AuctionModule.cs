@@ -85,7 +85,7 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("ViewerStartAuction",
+            caps.AddStreamHandler("ViewerStartAuction",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

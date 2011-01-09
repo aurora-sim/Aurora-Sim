@@ -632,7 +632,7 @@ namespace Aurora.Modules
             UUID capuuid = UUID.Random();
             
             //Sets the OpenRegionSettings
-            caps.RegisterHandler("DispatchOpenRegionSettings",
+            caps.AddStreamHandler("DispatchOpenRegionSettings",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             UUID capID = UUID.Random();
 
             //m_log.Info("[GETMESH]: /CAPS/" + capID);
-            caps.RegisterHandler("NewFileAgentInventoryVariablePrice",
+            caps.AddStreamHandler("NewFileAgentInventoryVariablePrice",
 
                     new RestStreamHandler("POST", "/CAPS/" + capID.ToString(), delegate(string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -164,7 +164,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, capsBase + uploaderPath, MainServer.Instance);
+                                  asset_type, capsBase + uploaderPath, MainServer.Instance, agentID, this);
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
@@ -181,18 +181,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             map["state"] = "upload";
             map["resource_cost"] = 0;
             map["upload_price"] = 0;
-
-            uploader.OnUpLoad += //UploadCompleteHandler;
-
-                delegate(
-                string passetName, string passetDescription, UUID passetID,
-                UUID pinventoryItem, UUID pparentFolder, byte[] pdata, string pinventoryType,
-                string passetType)
-                {
-                    UploadCompleteHandler(passetName, passetDescription, passetID,
-                                           pinventoryItem, pparentFolder, pdata, pinventoryType,
-                                           passetType, agentID);
-                };
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
@@ -262,9 +250,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         public class AssetUploader
         {
-            public event UpLoadedAsset OnUpLoad;
-            private UpLoadedAsset handlerUpLoad = null;
-
             private string uploaderPath = String.Empty;
             private UUID newAssetID;
             private UUID inventoryItemID;
@@ -272,13 +257,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             private IHttpServer httpListener;
             private string m_assetName = String.Empty;
             private string m_assetDes = String.Empty;
+            private NewFileAgentInventoryVariablePriceModule m_mod;
+            private UUID m_agentID;
 
             private string m_invType = String.Empty;
             private string m_assetType = String.Empty;
 
             public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
                                  UUID parentFolderID, string invType, string assetType, string path,
-                                 IHttpServer httpServer)
+                                 IHttpServer httpServer, UUID AgentID, NewFileAgentInventoryVariablePriceModule mod)
             {
                 m_assetName = assetName;
                 m_assetDes = description;
@@ -289,6 +276,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
                 parentFolder = parentFolderID;
                 m_assetType = assetType;
                 m_invType = invType;
+                m_agentID = AgentID;
+                m_mod = mod;
             }
 
             /// <summary>
@@ -310,11 +299,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
-                handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
-                }
+                m_mod.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType, m_agentID);
 
                 return res;
             }

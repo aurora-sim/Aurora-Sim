@@ -140,7 +140,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 m_omCapUrls[agentID] = omCapUrl;
                 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                caps.RegisterHandler(
+                caps.AddStreamHandler(
                     "ObjectMedia", new RestStreamHandler("POST", omCapUrl, HandleObjectMediaMessage));
             }
             
@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 m_omuCapUrls[agentID] = omuCapUrl;
                 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                caps.RegisterHandler(
+                caps.AddStreamHandler(
                     "ObjectMediaNavigate", new RestStreamHandler("POST", omuCapUrl, HandleObjectMediaNavigateMessage));
             }
         }

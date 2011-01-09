@@ -310,7 +310,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             m_log.DebugFormat("[FreeSwitchVoice] OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
 
             string capsBase = "/CAPS/" + UUID.Random();
-            caps.RegisterHandler("ProvisionVoiceAccountRequest",
+            caps.AddStreamHandler("ProvisionVoiceAccountRequest",
                                  new RestStreamHandler("POST", capsBase + m_provisionVoiceAccountRequestPath,
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -318,7 +318,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                                                            return ProvisionVoiceAccountRequest(scene, request, path, param,
                                                                                                agentID, caps);
                                                        }));
-            caps.RegisterHandler("ParcelVoiceInfoRequest",
+            caps.AddStreamHandler("ParcelVoiceInfoRequest",
                                  new RestStreamHandler("POST", capsBase + m_parcelVoiceInfoRequestPath,
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -326,7 +326,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                                                            return ParcelVoiceInfoRequest(scene, request, path, param,
                                                                                          agentID, caps);
                                                        }));
-            caps.RegisterHandler("ChatSessionRequest",
+            caps.AddStreamHandler("ChatSessionRequest",
                                  new RestStreamHandler("POST", capsBase + m_chatSessionRequestPath,
                                                        delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)

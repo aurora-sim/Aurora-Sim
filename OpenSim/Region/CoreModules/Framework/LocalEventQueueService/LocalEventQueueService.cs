@@ -283,7 +283,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             }
 
             // Register this as a caps handler
-            caps.RegisterHandler("EventQueueGet",
+            caps.AddStreamHandler("EventQueueGet",
                                  new RestHTTPHandler("POST", capsBase + EventQueueGetUUID.ToString() + "/",
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {

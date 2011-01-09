@@ -711,7 +711,7 @@ namespace Aurora.Modules
         {
             string capsBase = "/CAPS/" + UUID.Random() + "/";
 
-            caps.RegisterHandler("ChatSessionRequest",
+            caps.AddStreamHandler("ChatSessionRequest",
                                 new RestHTTPHandler("POST", capsBase,
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

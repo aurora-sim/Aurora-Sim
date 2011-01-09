@@ -78,14 +78,14 @@ namespace Aurora.Modules.World.Auction
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("ServerReleaseNotes",
+            caps.AddStreamHandler("ServerReleaseNotes",
                                 new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return ProcessServerReleaseNotes(m_dhttpMethod, agentID, capuuid);
                                                       }));
 
-            caps.RegisterHandler("CopyInventoryFromNotecard",
+            caps.AddStreamHandler("CopyInventoryFromNotecard",
                                 new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

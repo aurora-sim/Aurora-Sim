@@ -91,11 +91,9 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             {
                 if (!m_capsHandlers.ContainsKey(agent.AgentID))
                 {
-                    Caps caps
-                        = new Caps(m_scene,
-                            MainServer.Instance, agent.AgentID);
-
-                    caps.RegisterHandlers(agent.CapsPath);
+                    Caps caps = new Caps();
+                    caps.Initialize(m_scene, MainServer.Instance,
+                        agent.AgentID, agent.CapsPath);
 
                     m_scene.EventManager.TriggerOnRegisterCaps(agent.AgentID, caps);
 
@@ -110,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             {
                 if (m_capsHandlers.ContainsKey(agentId))
                 {
-                    m_capsHandlers[agentId].DeregisterHandlers();
+                    m_capsHandlers[agentId].Close();
                     m_scene.EventManager.TriggerOnDeregisterCaps(agentId, m_capsHandlers[agentId]);
                     m_capsHandlers.Remove(agentId);
                 }

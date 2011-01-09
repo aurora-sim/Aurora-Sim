@@ -195,7 +195,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         void EventManager_OnRegisterCaps(UUID agentID, Caps caps)
         {
             string capsBase = "/CAPS/" + UUID.Random();
-            caps.RegisterHandler("GroupProposalBallot",
+            caps.AddStreamHandler("GroupProposalBallot",
                                 new RestStreamHandler("POST", capsBase + "/",
                                                       delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -203,7 +203,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                           return GroupProposalBallot(request, agentID);
                                                       }));
             capsBase = "/CAPS/" + UUID.Random();
-            caps.RegisterHandler("StartGroupProposal",
+            caps.AddStreamHandler("StartGroupProposal",
                                 new RestStreamHandler("POST", capsBase + "/",
                                                       delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)

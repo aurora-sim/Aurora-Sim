@@ -85,14 +85,14 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             UUID capuuid = UUID.Random();
             
-            caps.RegisterHandler("ObjectAdd",
+            caps.AddStreamHandler("ObjectAdd",
                                  new RestHTTPHandler("POST", "/CAPS/OA/" + capuuid + "/",
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
                                                            return ProcessAdd(m_dhttpMethod, agentID, caps);
                                                        }));
 
-            caps.RegisterHandler("ServerReleaseNotes",
+            caps.AddStreamHandler("ServerReleaseNotes",
                                 new RestHTTPHandler("POST", "/CAPS/ServerReleaseNotes/" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

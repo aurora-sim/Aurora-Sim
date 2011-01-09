@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             UUID capID = UUID.Random();
 
             //m_log.Info("[UploadObjectAssetModule]: /CAPS/" + capID);
-            caps.RegisterHandler("UploadObjectAsset",
+            caps.AddStreamHandler("UploadObjectAsset",
                                  new RestHTTPHandler("POST", "/CAPS/OA/" + capID + "/",
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {

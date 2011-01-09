@@ -83,7 +83,7 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
-            caps.RegisterHandler("SetDisplayName",
+            caps.AddStreamHandler("SetDisplayName",
                                 new RestHTTPHandler("POST", "/CAPS" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
@@ -92,7 +92,7 @@ namespace Aurora.Modules
 
             capuuid = UUID.Random();
 
-            caps.RegisterHandler("GetDisplayNames",
+            caps.AddStreamHandler("GetDisplayNames",
                                 new RestHTTPHandler("POST", "/CAPS" + capuuid + "/",
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {

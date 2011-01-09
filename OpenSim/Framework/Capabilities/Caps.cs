@@ -40,10 +40,6 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework.Capabilities
 {
-    public delegate void UpLoadedAsset(
-        string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
-        byte[] data, string inventoryType, string assetType);
-
     public class Caps
     {
         private static readonly ILog m_log =
@@ -61,7 +57,7 @@ namespace OpenSim.Framework.Capabilities
 
         public OSDMap RequestMap = new OSDMap();
         
-        public Caps(IScene scene, IHttpServer httpServer, UUID agent)
+        public void Initialize(IScene scene, IHttpServer httpServer, UUID agent, string CapsPath)
         {
             m_Scene = scene;
 
@@ -72,14 +68,15 @@ namespace OpenSim.Framework.Capabilities
 
             m_agentID = agent;
             m_capsHandlers = new CapsHandlers(httpServer, m_httpBase);
+            RegisterHandlers(CapsPath);
         }
 
         public void RegisterHandlers(string capsObjectPath)
         {
-            string capsBase = "/CAPS/" + capsObjectPath;
+            string capsBase = "/CAPS/" + capsObjectPath + m_seedRequestPath;
             // the root of all evil
-            RegisterHandler("SEED",
-                new RestStreamHandler("POST", capsBase + m_seedRequestPath, CapsRequest));
+            AddStreamHandler("SEED",
+                new RestStreamHandler("POST", capsBase, CapsRequest));
         }
 
         /// <summary>
@@ -87,9 +84,9 @@ namespace OpenSim.Framework.Capabilities
         /// </summary>
         /// <param name="capName"></param>
         /// <param name="handler"></param>
-        public void RegisterHandler(string capName, IRequestHandler handler)
+        public void AddStreamHandler(string method, IRequestHandler handler)
         {
-            m_capsHandlers[capName] = handler;
+            m_capsHandlers[method] = handler;
         }
 
         /// <summary>
@@ -99,7 +96,7 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="httpListener"></param>
         /// <param name="path"></param>
         /// <param name="restMethod"></param>
-        public void DeregisterHandlers()
+        public void Close()
         {
             foreach (string capsName in m_capsHandlers.Caps)
             {
@@ -116,7 +113,7 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="httpRequest">HTTP request header object</param>
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
-        public string CapsRequest(string request, string path, string param,
+        private string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             m_log.Debug("[RegionCaps]: Seed Caps Request in region " + m_Scene.RegionInfo.RegionName + " @ " + path);

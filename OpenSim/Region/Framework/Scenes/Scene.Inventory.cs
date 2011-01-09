@@ -2208,9 +2208,9 @@ namespace OpenSim.Region.Framework.Scenes
                                               return ScriptTaskInventory(agentID, request, path, param,
                                                   httpRequest, httpResponse);
                                           });
-            caps.RegisterHandler("UpdateScriptTaskInventory",
+            caps.AddStreamHandler("UpdateScriptTaskInventory",
                 handler);
-            caps.RegisterHandler("UpdateScriptTask",
+            caps.AddStreamHandler("UpdateScriptTask",
                 handler);
 
             capsBase = "/CAPS/" + UUID.Random() + "/";
@@ -2221,11 +2221,11 @@ namespace OpenSim.Region.Framework.Scenes
                                               return NoteCardAgentInventory(agentID, request, path, param,
                                                   httpRequest, httpResponse);
                                           });
-            caps.RegisterHandler("UpdateNotecardAgentInventory",
+            caps.AddStreamHandler("UpdateNotecardAgentInventory",
                 handler);
-            caps.RegisterHandler("UpdateScriptAgentInventory",
+            caps.AddStreamHandler("UpdateScriptAgentInventory",
                 handler);
-            caps.RegisterHandler("UpdateScriptAgent",
+            caps.AddStreamHandler("UpdateScriptAgent",
                 handler);
         }
 
