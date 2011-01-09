@@ -25,11 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using OpenSim.Framework.Servers;
+using System.IO;
+using System.Reflection;
+using log4net;
+using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework.Capabilities
 {
@@ -40,113 +47,162 @@ namespace OpenSim.Framework.Capabilities
     /// </summary>
     public class CapsHandlers
     {
-        private Dictionary <string, IRequestHandler> m_capsHandlers = new Dictionary<string, IRequestHandler>();
-        private IHttpServer m_httpListener;
-        private string m_httpAddress = "";
+        private static readonly ILog m_log =
+            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
+        private string HostUri;
+        private IHttpServer Server;
 
-        /// <summary></summary>
-        /// CapsHandlers is a cap handler container but also takes
-        /// care of adding and removing cap handlers to and from the
-        /// supplied BaseHttpServer.
+        private string m_UrlToInform = "";
+        /// <summary>
+        /// An optional Url that will be called to retrieve more Caps for the client.
         /// </summary>
-        /// <param name="httpListener">base HTTP server</param>
-        /// <param name="httpListenerHostname">host name of the HTTP
-        /// server</param>
-        /// <param name="httpListenerPort">HTTP port</param>
-        public CapsHandlers(IHttpServer httpListener, string httpListenerHostname)
+        public string UrlToInform
         {
-            m_httpListener = httpListener;
-            m_httpAddress = httpListenerHostname;
+            get { return m_UrlToInform; }
+            set { m_UrlToInform = value; }
+        }
+
+        protected OSDMap m_InfoToSendToUrl = new OSDMap();
+        /// <summary>
+        /// This OSDMap is sent to the url set in UrlToInform below when telling it about the new Cap request
+        /// </summary>
+        public OSDMap InfoToSendToUrl
+        {
+            get { return m_InfoToSendToUrl; }
+            set { m_InfoToSendToUrl = value; }
+        }
+        protected OSDMap m_RequestMap = new OSDMap();
+        /// <summary>
+        /// This OSDMap is recieved from the caller of the Caps SEED request
+        /// </summary>
+        public OSDMap RequestMap
+        {
+            get { return m_RequestMap; }
+            set { m_RequestMap = value; }
         }
 
         /// <summary>
-        /// Remove the cap handler for a capability.
+        /// This is the /CAPS/UUID 0000/ string
         /// </summary>
-        /// <param name="capsName">name of the capability of the cap
-        /// handler to be removed</param>
-        public void Remove(string capsName)
-        {
-            // This line must be here, or caps will break!
-            m_httpListener.RemoveStreamHandler("POST", m_capsHandlers[capsName].Path);
-            m_capsHandlers.Remove(capsName);
-        }
-
-        public bool ContainsCap(string cap)
-        {
-            return m_capsHandlers.ContainsKey(cap);
-        }
-
+        protected String m_capsUrlBase;
         /// <summary>
-        /// The indexer allows us to treat the CapsHandlers object
-        /// in an intuitive dictionary like way.
+        /// This is the full URL to the Caps SEED request
         /// </summary>
-        /// <Remarks>
-        /// The indexer will throw an exception when you try to
-        /// retrieve a cap handler for a cap that is not contained in
-        /// CapsHandlers.
-        /// </Remarks>
-        public IRequestHandler this[string idx]
+        public String CapsUrl
         {
-            get
-            {
-                return m_capsHandlers[idx];
-            }
+            get { return HostUri + m_capsUrlBase; }
+        }
 
-            set
+        public void Initialize(string hostUri, IHttpServer httpServer)
+        {
+            Server = httpServer;
+            HostUri = hostUri;
+        }
+
+        #region Add/Remove Caps from the known caps OSDMap
+
+        //X cap name to path
+        protected OSDMap registeredCAPS = new OSDMap();
+        //Paths to X cap
+        protected OSDMap registeredCAPSPath = new OSDMap();
+
+        public string CreateCAPS(string method, string appendedPath)
+        {
+            string caps = "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
+            return caps;
+        }
+
+        protected void AddCAPS(string method, string caps)
+        {
+            if (method == null || caps == null)
+                return;
+            string CAPSPath = HostUri + caps;
+            registeredCAPS[method] = CAPSPath;
+            registeredCAPSPath[CAPSPath] = method;
+        }
+
+        protected void RemoveCaps(string method)
+        {
+            OSD CapsPath = "";
+            if (!registeredCAPS.TryGetValue(method, out CapsPath))
+                return;
+            registeredCAPS.Remove(method);
+            registeredCAPSPath.Remove(CapsPath.AsString());
+        }
+
+        #endregion
+
+        #region Overriden Http Server methods
+
+        public void AddStreamHandler(string method, IRequestHandler handler)
+        {
+            Server.AddStreamHandler(handler);
+            AddCAPS(method, handler.Path);
+        }
+
+        public void RemoveStreamHandler(string method, string httpMethod, string path)
+        {
+            Server.RemoveStreamHandler(httpMethod, path);
+            RemoveCaps(method);
+        }
+
+        #endregion
+
+        #region SEED cap handling
+
+        public void AddSEEDCap(string CapsUrl, string UrlToInform)
+        {
+            if (CapsUrl != "")
+                m_capsUrlBase = CapsUrl;
+            if (UrlToInform != "")
+                m_UrlToInform = UrlToInform;
+            //Add our SEED cap
+            AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
+        }
+
+        public void RemoveSEEDCap()
+        {
+            //Remove our SEED cap
+            RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
+        }
+
+        public string CapsRequest(string request, string path, string param,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            try
             {
-                if (m_capsHandlers.ContainsKey(idx))
+                if (request != "")
                 {
-                    m_httpListener.RemoveStreamHandler("POST", m_capsHandlers[idx].Path);
-                    m_capsHandlers.Remove(idx);
+                    OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
+                    if (osdRequest is OSDMap)
+                        RequestMap = (OSDMap)osdRequest;
                 }
-
-                if (null == value) return;
-
-                m_capsHandlers[idx] = value;
-                m_httpListener.AddStreamHandler(value);
-            }
-        }
-
-        /// <summary>
-        /// Return the list of cap names for which this CapsHandlers
-        /// object contains cap handlers.
-        /// </summary>
-        public string[] Caps
-        {
-            get
-            {
-                string[] __keys = new string[m_capsHandlers.Keys.Count];
-                m_capsHandlers.Keys.CopyTo(__keys, 0);
-                return __keys;
-            }
-        }
-
-        /// <summary>
-        /// Return an LLSD-serializable Hashtable describing the
-        /// capabilities and their handler details.
-        /// </summary>
-        public OSDMap CapsDetails
-        {
-            get
-            {
-                OSDMap caps = new OSDMap();
-                
-                foreach (string capsName in m_capsHandlers.Keys)
+                if (UrlToInform != "")
                 {
-                    // skip SEED cap
-                    if ("SEED" == capsName) continue;
-                    if (m_capsHandlers[capsName].Path.Contains(":"))
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            UrlToInform,
+                            OSDParser.SerializeLLSDXmlString(m_InfoToSendToUrl));
+                    m_log.Debug("[CapsHandlers]: Seed request was added for region " + UrlToInform + " at " + path);
+                    if (reply != "")
                     {
-                        //Should allow for external CAPS paths
-                        caps[capsName] = m_capsHandlers[capsName].Path;
-                    }
-                    else
-                    {
-                        caps[capsName] = m_httpAddress + m_capsHandlers[capsName].Path;
+                        OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(reply));
+                        foreach (string key in hash.Keys)
+                        {
+                            if (key == null || hash[key] == null)
+                                continue;
+                            if (!registeredCAPS.ContainsKey(key))
+                                registeredCAPS[key] = hash[key].AsString();
+                        }
                     }
                 }
-                return caps;
             }
+            catch
+            {
+            }
+            return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
+
+        #endregion
     }
 }

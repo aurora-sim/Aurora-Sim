@@ -33,10 +33,10 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework.Capabilities
 {
@@ -45,8 +45,6 @@ namespace OpenSim.Framework.Capabilities
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private CapsHandlers m_capsHandlers;
-
         private static readonly string m_seedRequestPath = "0000/";
         private IScene m_Scene;
         public ulong RegionHandle
@@ -54,39 +52,30 @@ namespace OpenSim.Framework.Capabilities
             get { return m_Scene.RegionInfo.RegionHandle; }
         }
         private UUID m_agentID;
+        private IHttpServer Server;
+        private CapsHandlers m_CapsHandlers = new CapsHandlers();
 
-        public OSDMap RequestMap = new OSDMap();
+        public OSDMap RequestMap
+        {
+            get { return m_CapsHandlers.RequestMap; }
+        }
+
         
         public void Initialize(IScene scene, IHttpServer httpServer, UUID agent, string CapsPath)
         {
             m_Scene = scene;
-
+            Server = httpServer;
+            m_agentID = agent;
+            
+            //Find the full URL to our CapsService
             string Protocol = "http://";
             if (httpServer.UseSSL)
                 Protocol = "https://";
-            string m_httpBase = Protocol + scene.RegionInfo.ExternalHostName + ":" + httpServer.Port;
+            string HostUri = Protocol + scene.RegionInfo.ExternalHostName + ":" + httpServer.Port;
 
-            m_agentID = agent;
-            m_capsHandlers = new CapsHandlers(httpServer, m_httpBase);
-            RegisterHandlers(CapsPath);
-        }
+            m_CapsHandlers.Initialize(HostUri, httpServer);
 
-        public void RegisterHandlers(string capsObjectPath)
-        {
-            string capsBase = "/CAPS/" + capsObjectPath + m_seedRequestPath;
-            // the root of all evil
-            AddStreamHandler("SEED",
-                new RestStreamHandler("POST", capsBase, CapsRequest));
-        }
-
-        /// <summary>
-        /// Register a handler.  This allows modules to register handlers.
-        /// </summary>
-        /// <param name="capName"></param>
-        /// <param name="handler"></param>
-        public void AddStreamHandler(string method, IRequestHandler handler)
-        {
-            m_capsHandlers[method] = handler;
+            m_CapsHandlers.AddSEEDCap("/CAPS/" + CapsPath + m_seedRequestPath, "");
         }
 
         /// <summary>
@@ -98,10 +87,7 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="restMethod"></param>
         public void Close()
         {
-            foreach (string capsName in m_capsHandlers.Caps)
-            {
-                m_capsHandlers.Remove(capsName);
-            }
+            m_CapsHandlers.RemoveSEEDCap();
         }
 
         /// <summary>
@@ -116,21 +102,27 @@ namespace OpenSim.Framework.Capabilities
         private string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            m_log.Debug("[RegionCaps]: Seed Caps Request in region " + m_Scene.RegionInfo.RegionName + " @ " + path);
-
             if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
             {
                 m_log.Error("[RegionCaps]: Unauthorized CAPS client");
                 return string.Empty;
             }
-            if (request != "")
-            {
-                OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
-                if (osdRequest is OSDMap)
-                    RequestMap = (OSDMap)osdRequest;
-            }
 
-            return OSDParser.SerializeLLSDXmlString(m_capsHandlers.CapsDetails);
+            return m_CapsHandlers.CapsRequest(request, path, param, httpRequest, httpResponse);
         }
+
+        #region Overriden Http Server methods
+
+        public void AddStreamHandler(string method, IRequestHandler handler)
+        {
+            m_CapsHandlers.AddStreamHandler(method, handler);
+        }
+
+        public void RemoveStreamHandler(string method, string httpMethod, string path)
+        {
+            m_CapsHandlers.RemoveStreamHandler(method, httpMethod, path);
+        }
+
+        #endregion
     }
 }
