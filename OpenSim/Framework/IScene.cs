@@ -58,7 +58,6 @@ namespace OpenSim.Framework
         IConfigSource Config { get; }
 
         void AddNewClient(IClientAPI client);
-        void RemoveClient(UUID agentID);
 
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
 

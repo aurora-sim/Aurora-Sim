@@ -57,6 +57,7 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<ICapabilitiesModule>(this);
+            m_scene.EventManager.OnClientClosed += OnClientClosed;
         }
 
         public void RegionLoaded(Scene scene)
@@ -66,6 +67,8 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
         public void RemoveRegion(Scene scene)
         {
             m_scene.UnregisterModuleInterface<ICapabilitiesModule>(this);
+            m_scene.EventManager.OnClientClosed -= OnClientClosed;
+            m_scene = null;
         }
         
         public void PostInitialise() {}
@@ -131,6 +134,11 @@ namespace OpenSim.Region.CoreModules.Agent.Capabilities
             }
             
             return null;
+        }
+
+        private void OnClientClosed(UUID clientID, Scene scene)
+        {
+            RemoveCapsHandler(clientID);
         }
     }
 }

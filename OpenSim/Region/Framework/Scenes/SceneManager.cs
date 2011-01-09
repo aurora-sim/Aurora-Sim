@@ -824,7 +824,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (alert != null)
                             presence.ControllingClient.Kick(alert);
                         else
-                            presence.ControllingClient.Kick("\nThe OpenSim manager kicked you out.\n");
+                            presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                         // ...and close on our side
                         presence.Scene.IncomingCloseAgent(presence.UUID);
@@ -847,7 +847,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (alert != null)
                         presence.ControllingClient.Kick(alert);
                     else
-                        presence.ControllingClient.Kick("\nThe OpenSim manager kicked you out.\n");
+                        presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                     // ...and close on our side
                     presence.Scene.IncomingCloseAgent(presence.UUID);

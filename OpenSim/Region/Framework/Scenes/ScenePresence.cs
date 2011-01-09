@@ -647,8 +647,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_sendCourseLocationsMethod = SendCoarseLocationsDefault;
         }
-        
-        private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo) : this()
+
+        public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
+            : this()
         {
             m_rootRegionHandle = reginfo.RegionHandle;
             m_controllingClient = client;

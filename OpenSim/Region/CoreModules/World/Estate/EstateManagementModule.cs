@@ -524,7 +524,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                             else
                             {
                                 //Close them in the sim
-                                SP.ControllingClient.Close();
+                                SP.Scene.IncomingCloseAgent(SP.UUID);
                             }
                         }
                     }

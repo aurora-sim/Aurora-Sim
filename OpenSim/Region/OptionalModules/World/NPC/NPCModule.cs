@@ -131,7 +131,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             {
                 if (m_avatars.ContainsKey(agentID))
                 {
-                    scene.RemoveClient(agentID);
+                    scene.IncomingCloseAgent(agentID);
                     m_avatars.Remove(agentID);
                 }
             }

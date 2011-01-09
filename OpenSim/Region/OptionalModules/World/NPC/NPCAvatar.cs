@@ -499,8 +499,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
 
         public virtual void Kick(string message)
         {
-            // Remove ourselves from the scene
-            m_scene.RemoveClient(AgentId);
             if (OnConnectionClosed != null)
                 OnConnectionClosed(this);
         }

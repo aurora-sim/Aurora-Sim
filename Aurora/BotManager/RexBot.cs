@@ -198,8 +198,6 @@ namespace Aurora.BotManager
 
             m_frames.Stop();
             m_walkTime.Stop();
-
-            m_scene.RemoveClient(AgentId);
         }
 
         #endregion

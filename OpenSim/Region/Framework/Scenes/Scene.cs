@@ -657,12 +657,13 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             });
 
-            // Wait here, or the kick messages won't actually get to the agents before the scene terminates.
-            Thread.Sleep(500);
-
-            // Stop all client threads.
-            ForEachScenePresence(delegate(ScenePresence avatar) { avatar.ControllingClient.Close(); });
-
+            ScenePresence[] Presences = new ScenePresence[ScenePresences.Count];
+            ScenePresences.CopyTo(Presences, 0);
+            foreach (ScenePresence avatar in Presences)
+            {
+                IncomingCloseAgent(avatar.UUID);
+            }
+                
             if (PhysicsScene != null)
             {
                 PhysicsScene.Dispose();
@@ -933,14 +934,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (grp.RootPart.Shape.PCode == 0 && grp.RootPart.Shape.State != 0 && (!objectsToDelete.Contains(grp)))
                     {
-                        UUID agentID = grp.OwnerID;
-                        if (agentID == UUID.Zero)
-                        {
-                            objectsToDelete.Add(grp);
-                            return;
-                        }
-
-                        ScenePresence sp = GetScenePresence(agentID);
+                        ScenePresence sp = GetScenePresence(grp.OwnerID);
                         if (sp == null)
                         {
                             objectsToDelete.Add(grp);
@@ -994,14 +988,19 @@ namespace OpenSim.Region.Framework.Scenes
 
             //m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
 
-            ScenePresence sp = CreateAndAddScenePresence(client);
+            ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
+            if (m_incomingChildAgentData.ContainsKey(sp.UUID))
+            {
+                sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
+                m_incomingChildAgentData.Remove(sp.UUID);
+            }
             if (aCircuit != null)
                 sp.Appearance = aCircuit.Appearance;
 
+            m_eventManager.TriggerOnNewPresence(sp);
+
             // HERE!!! Do the initial attachments right here
-            // first agent upon login is a root agent by design.
-            // All other AddNewClient calls find aCircuit.child to be true
-            if (!aCircuit.child)
+            if (vialogin)
             {
                 sp.IsChildAgent = false;
                 Util.FireAndForget(delegate(object o) { sp.RezAttachments(); });
@@ -1018,7 +1017,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
-            if (!sp.IsChildAgent && monitor != null)
+            if (vialogin && monitor != null)
             {
                 monitor.AddSuccessfulLogin();
             }
@@ -1076,6 +1075,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_log.Warn("[Scene]: Could not verify client " + sp.Name + " in region " + RegionInfo.RegionName + ", logging them out of the grid");
                             PresenceService.LogoutAgent(sp.ControllingClient.SessionId);
                             sp.ControllingClient.Close();
+                            IncomingCloseAgent(sp.UUID);
                         }
 
                         // BANG! SLASH!
@@ -1289,122 +1289,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        /// <summary>
-        /// Create a child agent scene presence and add it to this scene.
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        protected virtual ScenePresence CreateAndAddScenePresence(IClientAPI client)
-        {
-            AvatarAppearance appearance = null;
-            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(client.CircuitCode);
-
-            if (aCircuit == null)
-            {
-                m_log.ErrorFormat("[APPEARANCE] Client did not supply a circuit. Non-Linden? Creating default appearance.");
-                appearance = new AvatarAppearance(client.AgentId);
-            }
-
-            appearance = aCircuit.Appearance;
-            if (appearance == null)
-            {
-                m_log.ErrorFormat("[APPEARANCE]: Appearance not found in {0}, returning default", RegionInfo.RegionName);
-                appearance = new AvatarAppearance(client.AgentId);
-            }
-
-            ScenePresence avatar = m_sceneGraph.CreateAndAddChildScenePresence(client, appearance);
-            if (m_incomingChildAgentData.ContainsKey(avatar.UUID))
-            {
-                avatar.ChildAgentDataUpdate(m_incomingChildAgentData[avatar.UUID]);
-                m_incomingChildAgentData.Remove(avatar.UUID);
-            }
-
-            m_eventManager.TriggerOnNewPresence(avatar);
-
-            return avatar;
-        }
-
-        /// <summary>
-        /// Remove the given client from the scene.
-        /// </summary>
-        /// <param name="agentID"></param>
-        public void RemoveClient(UUID agentID)
-        {
-            ScenePresence avatar = GetScenePresence(agentID);
-            if (avatar != null)
-            {
-                if (avatar.ParentID != UUID.Zero)
-                {
-                    avatar.StandUp(true);
-                }
-
-                try
-                {
-                    if (!avatar.IsChildAgent)
-                        m_log.DebugFormat(
-                            "[SCENE]: Removing {0} agent {1} from region {2}",
-                            (avatar.IsChildAgent ? "child" : "root"), agentID, RegionInfo.RegionName);
-
-                    m_sceneGraph.removeUserCount(!avatar.IsChildAgent);
-                    ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
-                    if (module != null)
-                        module.RemoveCapsHandler(agentID);
-
-                    if (!avatar.IsChildAgent)
-                    {
-                        INeighborService service = RequestModuleInterface<INeighborService>();
-                        if (service != null)
-                            service.CloseAllNeighborAgents(agentID, RegionInfo.RegionID);
-                    }
-                    m_eventManager.TriggerClientClosed(agentID, this);
-                    m_eventManager.TriggerOnClosingClient(avatar.ControllingClient);
-                }
-                catch (NullReferenceException)
-                {
-                    // We don't know which count to remove it from
-                    // Avatar is already disposed :/
-                }
-
-                m_eventManager.TriggerOnRemovePresence(agentID);
-                ForEachClient(
-                    delegate(IClientAPI client)
-                    {
-                        //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                        try { client.SendKillObject(avatar.RegionHandle, new ISceneEntity[] { avatar }); }
-                        catch (NullReferenceException) { }
-                    });
-
-                CleanDroppedAttachments();
-
-                IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
-                if (agentTransactions != null)
-                {
-                    agentTransactions.RemoveAgentAssetTransactions(agentID);
-                }
-
-                try
-                {
-                    avatar.Close();
-                }
-                catch (NullReferenceException)
-                {
-                    //We can safely ignore null reference exceptions.  It means the avatar are dead and cleaned up anyway.
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());
-                }
-
-                // Remove the avatar from the scene
-                m_sceneGraph.RemoveScenePresence(agentID);
-                m_clientManager.Remove(agentID);
-
-                AuthenticateHandler.RemoveCircuit(avatar.ControllingClient.CircuitCode);
-                //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
-                //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
-            }
-        }
-
         #endregion
 
         #region RegionComms
@@ -1478,14 +1362,13 @@ namespace OpenSim.Region.Framework.Scenes
                 // Or the same user is trying to be root twice here, won't work.
                 // Kill it.
                 m_log.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
-                sp.ControllingClient.Close();
+                IncomingCloseAgent(sp.UUID);
                 sp = null;
             }
 
             ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
             if (module != null)
                 module.AddCapsHandler(agent);
-
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
@@ -1495,9 +1378,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 CleanDroppedAttachments();
                 //Make sure that users are not logging into bad positions in the sim
-                ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
-                float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
-                if (agent.startpos.X < 0f || agent.startpos.Y < 0f || agent.startpos.Z < groundHeight ||
+                if (agent.startpos.X < 0f || agent.startpos.Y < 0f ||
                     agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
                 {
                     m_log.WarnFormat(
@@ -1509,14 +1390,13 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
                     if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
-
-                    //Keep users from being underground
-                    // Not good to get it twice, but we need to, because the X,Y might have changed
-                    groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
-                    if (agent.startpos.Z < groundHeight)
-                    {
-                        agent.startpos.Z = groundHeight;
-                    }
+                }
+                ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
+                float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
+                //Keep users from being underground
+                if (agent.startpos.Z < groundHeight)
+                {
+                    agent.startpos.Z = groundHeight;
                 }
             }
 
@@ -1646,14 +1526,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (presence != null)
             {
                 // Nothing is removed here, so down count it as such
-                if (presence.IsChildAgent)
-                {
-                    m_sceneGraph.removeUserCount(false);
-                }
-                else
-                {
-                    m_sceneGraph.removeUserCount(true);
-                }
+                m_sceneGraph.removeUserCount(!presence.IsChildAgent);
 
                 // Don't do this to root agents on logout, it's not nice for the viewer
                 if (presence.IsChildAgent)
@@ -1668,6 +1541,65 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 presence.ControllingClient.Close();
+                if (presence.ParentID != UUID.Zero)
+                {
+                    presence.StandUp(true);
+                }
+
+                try
+                {
+                    m_sceneGraph.removeUserCount(!presence.IsChildAgent);
+
+                    if (!presence.IsChildAgent)
+                    {
+                        m_log.DebugFormat(
+                            "[SCENE]: Removing {0} from region {1}",
+                            presence.Name, RegionInfo.RegionName);
+                        INeighborService service = RequestModuleInterface<INeighborService>();
+                        if (service != null)
+                            service.CloseAllNeighborAgents(agentID, RegionInfo.RegionID);
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    // We don't know which count to remove it from
+                    // Avatar is already disposed :/
+                }
+
+                m_eventManager.TriggerClientClosed(agentID, this);
+                m_eventManager.TriggerOnClosingClient(presence.ControllingClient);
+                m_eventManager.TriggerOnRemovePresence(agentID);
+
+                ForEachClient(
+                    delegate(IClientAPI client)
+                    {
+                        //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
+                        try { client.SendKillObject(presence.RegionHandle, new ISceneEntity[] { presence }); }
+                        catch (NullReferenceException) { }
+                    });
+
+                CleanDroppedAttachments();
+
+                try
+                {
+                    presence.Close();
+                }
+                catch (NullReferenceException)
+                {
+                    //We can safely ignore null reference exceptions.  It means the avatar are dead and cleaned up anyway.
+                }
+                catch (Exception e)
+                {
+                    m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());
+                }
+
+                // Remove the avatar from the scene
+                m_sceneGraph.RemoveScenePresence(agentID);
+                m_clientManager.Remove(agentID);
+
+                AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
+                //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
+                //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
                 return true;
             }
 

@@ -525,13 +525,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_udpServer != null)
                 m_udpServer.Flush(m_udpClient);
 
-            // Remove ourselves from the scene
-            m_scene.RemoveClient(AgentId);
-
-            // We can't reach into other scenes and close the connection
-            // We need to do this over grid communications
-            //m_scene.CloseAllAgents(CircuitCode);
-
             // Disable UDP handling for this client
             m_udpClient.Shutdown();
             
@@ -9489,7 +9482,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         m_scene.TryGetClient(Prey, out client);
                         if (client == null)
                             return true;
-                        client.Kick("The OpenSim Manager has kicked you");
+                        client.Kick("The Aurora Manager has kicked you");
                         m_scene.IncomingCloseAgent(Prey);
                     }
                     return true;
@@ -12153,7 +12146,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             Kick(reason);
             Thread.Sleep(1000);
-            Close();
+            Disconnect();
         }
 
         public void Disconnect()
