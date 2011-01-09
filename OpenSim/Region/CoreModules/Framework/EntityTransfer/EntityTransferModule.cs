@@ -357,23 +357,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 //OpenSim sucks at callbacks, disable it for now
                 if (!WaitForCallback(sp.UUID))
                 {
-                    //Make sure the client hasn't TPed back in this time.
-                    ScenePresence SP = sp.Scene.GetScenePresence(sp.UUID);
-                    if (SP != null && SP.IsChildAgent)
-                    {
-                        //Disabling until this actually helps and doesn't kill clients
-                        Fail(sp, finalDestination);
-                        return;
-                    }
-                    else if (SP == null)
-                    {
-                        //Err.. this happens somehow.
-
-                        //If they canceled too late, remove them so the next tp does not fail.
-                        if (m_cancelingAgents.Contains(sp.UUID))
-                            m_cancelingAgents.Remove(sp.UUID);
-                        return;
-                    }
+                    Fail(sp, finalDestination);
+                    return;
                 }
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
@@ -445,9 +430,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_cancelingAgents.Remove(sp.UUID);
 
             // Finally, kill the agent we just created at the destination.
-
-            //Don't do this right now since we are killing way too many legitimate agents whose callbacks failed
-            //m_aScene.SimulationService.CloseAgent(finalDestination, sp.UUID);
+            sp.Scene.SimulationService.CloseAgent(finalDestination, sp.UUID);
 
         }
 

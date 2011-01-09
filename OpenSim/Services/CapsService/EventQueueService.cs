@@ -613,11 +613,6 @@ namespace OpenSim.Services.CapsService
                     //We 'could' call Enqueue directly... but its better to just let it go and do it this way
                     IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
-                    //Only do this resolving once! It's heavy!
-                    //string endPoint = "http://"
-                    //  + neighbor.ExternalHostName
-                    //  + ":"
-                    //  + neighbor.HttpPort
                     EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
                     // ES makes the client send a UseCircuitCode message to the destination, 
                     // which triggers a bunch of things there.

@@ -57,7 +57,6 @@ namespace OpenSim.Framework.Capabilities
         {
             get { return m_Scene.RegionInfo.RegionHandle; }
         }
-        private IHttpServer m_httpListener;
         private UUID m_agentID;
 
         public OSDMap RequestMap = new OSDMap();
@@ -65,7 +64,6 @@ namespace OpenSim.Framework.Capabilities
         public Caps(IScene scene, IHttpServer httpServer, UUID agent)
         {
             m_Scene = scene;
-            m_httpListener = httpServer;
 
             string Protocol = "http://";
             if (httpServer.UseSSL)
@@ -76,29 +74,12 @@ namespace OpenSim.Framework.Capabilities
             m_capsHandlers = new CapsHandlers(httpServer, m_httpBase);
         }
 
-        /// <summary>
-        /// Register all CAPS http service handlers
-        /// </summary>
         public void RegisterHandlers(string capsObjectPath)
         {
-            DeregisterHandlers();
-
-            RegisterRegionServiceHandlers(capsObjectPath);
-        }
-
-        public void RegisterRegionServiceHandlers(string capsObjectPath)
-        {
-            try
-            {
-                string capsBase = "/CAPS/" + capsObjectPath;
-                // the root of all evil
-                RegisterHandler("SEED", 
-                    new RestStreamHandler("POST", capsBase + m_seedRequestPath, CapsRequest));
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[CAPS]: " + e.ToString());
-            }
+            string capsBase = "/CAPS/" + capsObjectPath;
+            // the root of all evil
+            RegisterHandler("SEED",
+                new RestStreamHandler("POST", capsBase + m_seedRequestPath, CapsRequest));
         }
 
         /// <summary>
@@ -145,23 +126,14 @@ namespace OpenSim.Framework.Capabilities
                 m_log.Error("[RegionCaps]: Unauthorized CAPS client");
                 return string.Empty;
             }
-            try
+            if (request != "")
             {
-                if (request != "")
-                {
-                    OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
-                    if (osdRequest is OSDMap)
-                        RequestMap = (OSDMap)osdRequest;
-                }
+                OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
+                if (osdRequest is OSDMap)
+                    RequestMap = (OSDMap)osdRequest;
             }
-            catch
-            {
-            }
-            string result = OSDParser.SerializeLLSDXmlString(m_capsHandlers.CapsDetails);
 
-            //m_log.DebugFormat("[CAPS] CapsRequest {0}", result);
-
-            return result;
+            return OSDParser.SerializeLLSDXmlString(m_capsHandlers.CapsDetails);
         }
     }
 }
