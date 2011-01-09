@@ -78,7 +78,7 @@ namespace OpenSim.Services.Interfaces
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle);
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
-            UUID avatarID, ulong RegionHandle)
+            UUID avatarID, ulong RegionHandle);
 
         bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
 

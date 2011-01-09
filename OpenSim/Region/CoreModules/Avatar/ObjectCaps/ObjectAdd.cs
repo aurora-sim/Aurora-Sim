@@ -114,7 +114,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             return responsedata;
         }
 
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, Caps cap)
+        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;

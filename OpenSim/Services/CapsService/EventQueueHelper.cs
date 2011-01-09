@@ -36,12 +36,6 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
-    public struct QueueItem
-    {
-        public int id;
-        public OSDMap body;
-    }
-
     public class EventQueueHelper
     {
         private static byte[] ulongToByteArray(ulong uLongValue)
