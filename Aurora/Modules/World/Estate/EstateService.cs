@@ -551,7 +551,7 @@ namespace Aurora.Modules
 
             if (ILO == null) // Can't teleport into a parcel that doesn't exist
             {
-                reason = "Failed authentication.";
+                reason = "No land in this region that you can teleport into.";
                 return false;
             }
 

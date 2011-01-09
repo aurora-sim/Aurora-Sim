@@ -600,6 +600,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScenePresence presence = World.GetScenePresence(agentID);
             if (presence != null)
             {
+                Vector3 tmp = presence.AbsolutePosition;
                 // agent must be over owners land to avoid abuse
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
@@ -1295,7 +1296,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
             
-
+            Vector3 tmp = m_host.AbsolutePosition;
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -1315,8 +1316,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
 
-            
 
+            Vector3 tmp = m_host.AbsolutePosition;
 
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)

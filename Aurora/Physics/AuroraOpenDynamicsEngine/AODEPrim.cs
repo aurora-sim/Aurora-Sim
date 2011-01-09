@@ -888,19 +888,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                  if (m_taintrot != _orientation)
                  {
-                    if (childPrim && IsPhysical)    // For physical child prim...
-                    {
+//                    if (childPrim && IsPhysical)    // For physical child prim...
+//                    {
                         rotate(timestep);
                         // KF: ODE will also rotate the parent prim!
                         // so rotate the root back to where it was
-                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                        parent.rotate(timestep);
-                    }
-                    else
-                    {
+//                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
+//                       parent.rotate(timestep);
+//                    }
+//                    else
+//                    {
                         //Just rotate the prim
-                        rotate(timestep);
-                    }
+//                        rotate(timestep);
+//                    }
                 }
                 //
             
@@ -1953,19 +1953,29 @@ Console.WriteLine(" JointCreateFixed");
             myrot.Y = _orientation.Y;
             myrot.Z = _orientation.Z;
             myrot.W = _orientation.W;
+
             if (Body != IntPtr.Zero)
             {
                 // KF: If this is a root prim do BodySet
+            if (childPrim)
+                {
+                d.GeomSetOffsetWorldQuaternion(prim_geom, ref myrot);
+                }
+            else
+                {
                 d.BodySetQuaternion(Body, ref myrot);
                 if (m_isphysical)
-                {
+                    {
                     if (!m_angularlock.ApproxEquals(Vector3.One, 0f))
                         createAMotor(m_angularlock);
+                    }
                 }
             }
             else
             {
                 // daughter prim, do Geom set
+ 
+
                 d.GeomSetQuaternion(prim_geom, ref myrot);
             }
             

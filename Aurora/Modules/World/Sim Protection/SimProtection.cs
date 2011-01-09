@@ -48,7 +48,7 @@ namespace Aurora.Modules
                 return;
             IConfig config = source.Configs["Protection"];
             m_Enabled = config.GetBoolean("Enabled", false);
-            BaseRateFramesPerSecond = config.GetFloat("BaseRateFramesPerSecond", 60);
+            BaseRateFramesPerSecond = config.GetFloat("BaseRateFramesPerSecond", 45);
             PercentToBeginShutDownOfServices = config.GetFloat("PercentToBeginShutDownOfServices", 50);
             TimeAfterToReenablePhysics = config.GetFloat("TimeAfterToReenablePhysics", 20);
             AllowDisableScripts = config.GetBoolean("AllowDisableScripts", true);
@@ -92,6 +92,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
             m_scene = scene;
+            BaseRateFramesPerSecond = scene.BaseSimFPS;
             m_statsReporter =  (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
             if (m_statsReporter == null)
             {

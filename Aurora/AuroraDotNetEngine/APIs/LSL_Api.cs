@@ -1357,9 +1357,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IOpenRegionSettingsModule WSModule = m_host.ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (WSModule != null)
                         {
-                            if (part.Scale.X > WSModule.MaximumPhysPrimScale ||
-                                part.Scale.Y > WSModule.MaximumPhysPrimScale ||
-                                part.Scale.Z > WSModule.MaximumPhysPrimScale)
+                            Vector3 tmp = part.Scale;
+                            if (tmp.X > WSModule.MaximumPhysPrimScale ||
+                                tmp.Y > WSModule.MaximumPhysPrimScale ||
+                                tmp.Z > WSModule.MaximumPhysPrimScale)
                             {
                                 allow = false;
                                 break;
@@ -1590,8 +1591,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetScale()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Vector(m_host.Scale.X, m_host.Scale.Y, m_host.Scale.Z);
+            Vector3 tmp = m_host.Scale;
+            return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
         }
 
         public void llSetClickAction(int action)
@@ -1846,7 +1847,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.Shape.FlexiGravity = gravity;
                 part.Shape.FlexiDrag = friction;
                 part.Shape.FlexiWind = wind;
-                part.Shape.FlexiTension = tension;
+                part.Shape.FlexiTension = tension; 
                 part.Shape.FlexiForceX = (float)Force.x;
                 part.Shape.FlexiForceY = (float)Force.y;
                 part.Shape.FlexiForceZ = (float)Force.z;
@@ -1904,11 +1905,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Primitive.TextureEntry tex = part.Shape.Textures;
             Color4 texcolor;
             LSL_Vector rgb = new LSL_Vector();
+            int ns = GetNumberOfSides(part);
             if (face == ScriptBaseClass.ALL_SIDES)
             {
-                int i;
+                int i;               
 
-                for (i = 0 ; i < GetNumberOfSides(part); i++)
+                for (i = 0 ; i < ns ; i++)
                 {
                     texcolor = tex.GetFace((uint)i).RGBA;
                     rgb.x += texcolor.R;
@@ -1916,13 +1918,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     rgb.z += texcolor.B;
                 }
 
-                rgb.x /= (float)GetNumberOfSides(part);
-                rgb.y /= (float)GetNumberOfSides(part);
-                rgb.z /= (float)GetNumberOfSides(part);
+                float tmp = 1f / (float)ns;
+                rgb.x *= tmp;
+                rgb.y *= tmp;
+                rgb.z *= tmp;
 
                 return rgb;
             }
-            if (face >= 0 && face < GetNumberOfSides(part))
+            if (face >= 0 && face < ns)
             {
                 texcolor = tex.GetFace((uint)face).RGBA;
                 rgb.x = texcolor.R;
@@ -1960,6 +1963,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected void SetTexture(SceneObjectPart part, string texture, int face)
         {
             UUID textureID=new UUID();
+            int ns = GetNumberOfSides(part);
 
             if (!UUID.TryParse(texture, out textureID))
             {
@@ -1971,7 +1975,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Primitive.TextureEntry tex = part.Shape.Textures;
 
-            if (face >= 0 && face < GetNumberOfSides(part))
+            if (face >= 0 && face < ns)
             {
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.TextureID = textureID;
@@ -1981,7 +1985,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
             {
-                for (uint i = 0; i < GetNumberOfSides(part); i++)
+                for (uint i = 0; i < ns; i++)
                 {
                     if (tex.FaceTextures[i] != null)
                     {
@@ -2006,7 +2010,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected void ScaleTexture(SceneObjectPart part, double u, double v, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
-            if (face >= 0 && face < GetNumberOfSides(part))
+            int ns = GetNumberOfSides(part);
+            if (face >= 0 && face < ns)
             {
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.RepeatU = (float)u;
@@ -2017,7 +2022,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             if (face == ScriptBaseClass.ALL_SIDES)
             {
-                for (int i = 0; i < GetNumberOfSides(part); i++)
+                for (int i = 0; i < ns; i++)
                 {
                     if (tex.FaceTextures[i] != null)
                     {
@@ -2043,7 +2048,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected void OffsetTexture(SceneObjectPart part, double u, double v, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
-            if (face >= 0 && face < GetNumberOfSides(part))
+            int ns = GetNumberOfSides(part);
+            if (face >= 0 && face < ns)
             {
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.OffsetU = (float)u;
@@ -2054,7 +2060,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             if (face == ScriptBaseClass.ALL_SIDES)
             {
-                for (int i = 0; i < GetNumberOfSides(part); i++)
+                for (int i = 0; i < ns; i++)
                 {
                     if (tex.FaceTextures[i] != null)
                     {
@@ -2080,7 +2086,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected void RotateTexture(SceneObjectPart part, double rotation, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
-            if (face >= 0 && face < GetNumberOfSides(part))
+            int ns = GetNumberOfSides(part);
+            if (face >= 0 && face < ns)
             {
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.Rotation = (float)rotation;
@@ -2090,7 +2097,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             if (face == ScriptBaseClass.ALL_SIDES)
             {
-                for (int i = 0; i < GetNumberOfSides(part); i++)
+                for (int i = 0; i < ns; i++)
                 {
                     if (tex.FaceTextures[i] != null)
                     {
@@ -2113,6 +2120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected LSL_String GetTexture(SceneObjectPart part, int face)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
+            
             if (face == ScriptBaseClass.ALL_SIDES)
             {
                 face = 0;
@@ -2194,25 +2202,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected LSL_Vector GetPartLocalPos(SceneObjectPart part)
         {
+            Vector3 tmp;
             if (part.ParentID == 0)
             {
-                return new LSL_Vector(part.AbsolutePosition.X,
-                                      part.AbsolutePosition.Y,
-                                      part.AbsolutePosition.Z);
+                tmp = part.AbsolutePosition;
+                return new LSL_Vector(tmp.X,
+                                      tmp.Y,
+                                      tmp.Z);
             }
             else
             {
                 if (m_host.IsRoot)
                 {
-                    return new LSL_Vector(m_host.AttachedPos.X,
-                                          m_host.AttachedPos.Y,
-                                          m_host.AttachedPos.Z);
+                    tmp = m_host.AttachedPos;
+                    return new LSL_Vector(tmp.X,
+                                          tmp.Y,
+                                          tmp.Z);
                 }
                 else
                 {
-                    return new LSL_Vector(part.OffsetPosition.X,
-                                          part.OffsetPosition.Y,
-                                          part.OffsetPosition.Z);
+                    tmp = part.OffsetPosition;
+                    return new LSL_Vector(tmp.X,
+                                          tmp.Y,
+                                          tmp.Z);
                 }
             }
         }
@@ -2228,18 +2240,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetLocalPos()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+            Vector3 tmp;
             if (m_host.ParentID != 0)
             {
-                return new LSL_Vector(m_host.OffsetPosition.X,
-                                      m_host.OffsetPosition.Y,
-                                      m_host.OffsetPosition.Z);
+                tmp = m_host.OffsetPosition;
+                return new LSL_Vector(tmp.X,
+                                      tmp.Y,
+                                      tmp.Z);
             }
             else
             {
-                return new LSL_Vector(m_host.AbsolutePosition.X,
-                                      m_host.AbsolutePosition.Y,
-                                      m_host.AbsolutePosition.Z);
+                tmp = m_host.AbsolutePosition;
+                return new LSL_Vector(tmp.X,
+                                      tmp.Y,
+                                      tmp.Z);
             }
         }
 
@@ -2435,10 +2449,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             //No energy force yet
             Vector3 v = new Vector3((float)force.x, (float)force.y, (float)force.z);
-            if (v.Length() > 20000.0f)
+            float len = v.Length();
+            if (len > 20000.0f)
             {
-                v.Normalize();
-                v = v * 20000.0f;
+//                v.Normalize();
+                v = v * 20000.0f/len;
             }
             m_host.ApplyImpulse(v, local != 0);
         }
@@ -2476,25 +2491,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetVel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Vector(m_host.Velocity.X, m_host.Velocity.Y, m_host.Velocity.Z);
+            Vector3 tmp = m_host.Velocity;
+            return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
         }
 
         public LSL_Vector llGetAccel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Vector(m_host.Acceleration.X, m_host.Acceleration.Y, m_host.Acceleration.Z);
+            Vector3 tmp = m_host.Acceleration;
+            return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
         }
 
         public LSL_Vector llGetOmega()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Vector(m_host.AngularVelocity.X, m_host.AngularVelocity.Y, m_host.AngularVelocity.Z);
+            Vector3 tmp = m_host.AngularVelocity;
+            return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
         }
 
-        public LSL_Float llGetTimeOfDay()
+        public LSL_Float llGetTimeOfDay() // this is not sl compatible see wiki
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
@@ -5286,12 +5301,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 double length = Math.Sqrt(rot.x * rot.x + rot.y * rot.y +
                         rot.z * rot.z + rot.s * rot.s);
-
-                rot.x /= length;
-                rot.y /= length;
-                rot.z /= length;
-                rot.s /= length;
-
+                if (length == 0)
+                    return new LSL_Vector(0, 0, 0);
+                length = 1 / length;
+                rot.x *= length;
+                rot.y *= length;
+                rot.z *= length;
+                rot.s *= length;
             }
 
             // double angle = 2 * Math.Acos(rot.s);
@@ -5303,9 +5319,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                x = rot.x / s; // normalise axis
-                y = rot.y / s;
-                z = rot.z / s;
+                s = 1 / s;
+                x = rot.x * s; // normalise axis
+                y = rot.y * s;
+                z = rot.z * s;
             }
 
             return new LSL_Vector(x,y,z);
@@ -5323,9 +5340,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 double length = Math.Sqrt(rot.x * rot.x + rot.y * rot.y +
                         rot.z * rot.z + rot.s * rot.s);
 
-                rot.x /= length;
-                rot.y /= length;
-                rot.z /= length;
+                if (length == 0)
+                    return 0;
+//                rot.x /= length;
+//                rot.y /= length;
+//                rot.z /= length;
                 rot.s /= length;
             }
 
@@ -6642,8 +6661,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //Find normalized vectors from p0 to p1 and p0 to p2
             Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
             Vector3 v1 = new Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
-            v0.Normalize();
-            v1.Normalize();
+//            v0.Normalize();
+//            v1.Normalize();
 
             //Find the cross product of the vectors (the slope normal).
             Vector3 vsn = new Vector3();
@@ -6653,6 +6672,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             vsn.Normalize();
             //I believe the crossproduct of two normalized vectors is a normalized vector so
             //this normalization may be overkill
+            // then don't normalize them just the result
 
             return new LSL_Vector(vsn.X, vsn.Y, vsn.Z);
         }
@@ -8547,7 +8567,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Currently only works for single prims without a sitting avatar
             if (part != null)
             {
-                Vector3 halfSize = part.Scale / 2.0f;
+                Vector3 halfSize = part.Scale * 0.5f;
                 LSL_Vector lower = new LSL_Vector(halfSize.X * -1.0f, halfSize.Y * -1.0f, halfSize.Z * -1.0f);
                 LSL_Vector upper = new LSL_Vector(halfSize.X, halfSize.Y, halfSize.Z);
                 result.Add(lower);
@@ -8566,22 +8586,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
             Vector3 MinPos = new Vector3(100000, 100000, 100000);
-            Vector3 MaxPos = Vector3.Zero;
+            Vector3 MaxPos = new Vector3(-100000, -100000, -100000);
             foreach (SceneObjectPart child in m_host.ParentGroup.ChildrenList)
             {
-                if (child.AbsolutePosition.X < MinPos.X)
-                    MinPos.X = child.AbsolutePosition.X;
-                if (child.AbsolutePosition.Y < MinPos.Y)
-                    MinPos.Y = child.AbsolutePosition.Y;
-                if (child.AbsolutePosition.Z < MinPos.Z)
-                    MinPos.Z = child.AbsolutePosition.Z;
+                Vector3 tmp = child.AbsolutePosition;
+                if (tmp.X < MinPos.X)
+                    MinPos.X = tmp.X;
+                if (tmp.Y < MinPos.Y)
+                    MinPos.Y = tmp.Y;
+                if (tmp.Z < MinPos.Z)
+                    MinPos.Z = tmp.Z;
 
-                if (child.AbsolutePosition.X > MaxPos.X)
-                    MaxPos.X = child.AbsolutePosition.X;
-                if (child.AbsolutePosition.Y > MaxPos.Y)
-                    MaxPos.Y = child.AbsolutePosition.Y;
-                if (child.AbsolutePosition.Z > MaxPos.Z)
-                    MaxPos.Z = child.AbsolutePosition.Z;
+                if (tmp.X > MaxPos.X)
+                    MaxPos.X = tmp.X;
+                if (tmp.Y > MaxPos.Y)
+                    MaxPos.Y = tmp.Y;
+                if (tmp.Z > MaxPos.Z)
+                    MaxPos.Z = tmp.Z;
             }
             Vector3 GroupAvg = ((MaxPos + MinPos) / 2);
             return new LSL_Vector(GroupAvg.X, GroupAvg.Y, GroupAvg.Z);
@@ -8671,24 +8692,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (code == (int)ScriptBaseClass.PRIM_POSITION)
                 {
-                    LSL_Vector v = new LSL_Vector(part.AbsolutePosition.X,
-                                                  part.AbsolutePosition.Y,
-                                                  part.AbsolutePosition.Z);
+                    Vector3 tmp = part.AbsolutePosition;
+                    LSL_Vector v = new LSL_Vector(tmp.X,
+                                                  tmp.Y,
+                                                  tmp.Z);
                     // For some reason, the part.AbsolutePosition.* values do not change if the
                     // linkset is rotated; they always reflect the child prim's world position
                     // as though the linkset is unrotated. This is incompatible behavior with SL's
                     // implementation, so will break scripts imported from there (not to mention it
                     // makes it more difficult to determine a child prim's actual inworld position).
                     if (part.ParentID != 0)
-                        v = ((v - llGetRootPosition()) * llGetRootRotation()) + llGetRootPosition();
+                        {
+                        LSL_Rotation rtmp = llGetRootRotation();
+                        LSL_Vector rpos = llGetRootPosition();
+                        v = ((v - rpos) * rtmp) + rpos;
+                        }
                     res.Add(v);
                 }
 
                 if (code == (int)ScriptBaseClass.PRIM_SIZE)
                 {
-                    res.Add(new LSL_Vector(part.Scale.X,
-                                                  part.Scale.Y,
-                                                  part.Scale.Z));
+                    Vector3 tmp = part.Scale;
+                    res.Add(new LSL_Vector(tmp.X,
+                                                  tmp.Y,
+                                                  tmp.Z));
                 }
 
                 if (code == (int)ScriptBaseClass.PRIM_ROTATION)
@@ -8990,7 +9017,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
                 {
-                    res.Add(new LSL_Rotation(part.RotationOffset.X, part.RotationOffset.Y, part.RotationOffset.Z, part.RotationOffset.W));
+                    Quaternion rtmp = part.RotationOffset;
+                    res.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                 }
             }
             return res;
@@ -11155,15 +11183,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_POS)
                         {
-                            ret.Add(new LSL_Vector((double)av.AbsolutePosition.X, (double)av.AbsolutePosition.Y, (double)av.AbsolutePosition.Z));
+                            Vector3 tmp = av.AbsolutePosition;
+                            ret.Add(new LSL_Vector((double)tmp.X, (double)tmp.Y, (double)tmp.Z));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_ROT)
                         {
-                            ret.Add(new LSL_Rotation((double)av.Rotation.X, (double)av.Rotation.Y, (double)av.Rotation.Z, (double)av.Rotation.W));
+                            Quaternion rtmp = av.Rotation;
+                            ret.Add(new LSL_Rotation((double)rtmp.X, (double)rtmp.Y, (double)rtmp.Z, (double)rtmp.W));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
                         {
-                            ret.Add(new LSL_Vector(av.Velocity.X, av.Velocity.Y, av.Velocity.Z));
+                            Vector3 tmp = av.Velocity;
+                            ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
                         {
@@ -11219,15 +11250,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_POS)
                         {
-                            ret.Add(new LSL_Vector(obj.AbsolutePosition.X, obj.AbsolutePosition.Y, obj.AbsolutePosition.Z));
+                            Vector3 tmp = obj.AbsolutePosition;
+                            ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_ROT)
                         {
-                            ret.Add(new LSL_Rotation(obj.RotationOffset.X, obj.RotationOffset.Y, obj.RotationOffset.Z, obj.RotationOffset.W));
+                            Quaternion rtmp = obj.RotationOffset;
+                            ret.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
                         {
-                            ret.Add(new LSL_Vector(obj.Velocity.X, obj.Velocity.Y, obj.Velocity.Z));
+                            Vector3 tmp = obj.Velocity;
+                            ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
                         else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
                         {
