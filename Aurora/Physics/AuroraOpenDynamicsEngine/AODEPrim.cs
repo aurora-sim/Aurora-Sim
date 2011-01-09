@@ -403,10 +403,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.RfromQ(out mymat, ref myrot);
             d.MassRotate(ref objdmass, ref mymat);
-
-            
-
-                        
+                                   
             // set the body rotation and position
             d.BodySetRotation(Body, ref mymat);
 
@@ -468,6 +465,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetOffsetWorldPosition(prim_geom, _position.X, _position.Y, _position.Z);
 
             d.MassTranslate(ref objdmass, -objdmass.c.X, -objdmass.c.Y, -objdmass.c.Z); // ode wants inertia at center of body
+            myrot.W = -myrot.W;
+            d.RfromQ(out mymat, ref myrot);
+            d.MassRotate(ref objdmass, ref mymat);
             d.BodySetMass(Body, ref objdmass);
             _mass = objdmass.mass;
 
@@ -874,7 +874,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         
 
         // very aproximated handling of tortured prims
-
+        
         s.X = aabb.MaxX - aabb.MinX;
         s.Y = aabb.MaxY - aabb.MinY;
         s.Z = aabb.MaxZ - aabb.MinZ;
