@@ -23,7 +23,12 @@ namespace Aurora.Modules
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        Scene m_scene;
+        private Scene m_scene;
+        private IUserAccountService UserAccountService
+        {
+            get { return m_scene.UserAccountService; }
+        }
+
         public void Initialise(Nini.Config.IConfigSource source)
         {
         }
@@ -75,8 +80,10 @@ namespace Aurora.Modules
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
-
             string document = reader.ReadToEnd();
+            reader.Close();
+            reader.Dispose();
+
             string[] lines = document.Split('\n');
             List<string> file = new List<string>(lines);
             Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
@@ -89,7 +96,7 @@ namespace Aurora.Modules
             UDA.ScopeID = UUID.Zero;
             UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
             UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
-            UDA.UserTitle = "";
+            UDA.UserTitle = results["UserTitle"].ToString();
             UDA.Email = results["Email"].ToString();
             UDA.Created = int.Parse(results["Created"].ToString());
             if (results.ContainsKey("ServiceURLs") && results["ServiceURLs"] != null)
@@ -99,6 +106,7 @@ namespace Aurora.Modules
                 if (str != string.Empty)
                 {
                     string[] parts = str.Split(new char[] { ';' });
+                    Dictionary<string, object> dic = new Dictionary<string, object>();
                     foreach (string s in parts)
                     {
                         string[] parts2 = s.Split(new char[] { '*' });
@@ -107,8 +115,7 @@ namespace Aurora.Modules
                     }
                 }
             }
-            m_scene.UserAccountService.StoreUserAccount(UDA);
-
+            UserAccountService.StoreUserAccount(UDA);
 
             replyData = WebUtils.ParseXmlResponse(file[2]);
             IUserProfileInfo UPI = new IUserProfileInfo();
@@ -116,15 +123,11 @@ namespace Aurora.Modules
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             if (profileData.GetUserProfile(UPI.PrincipalID) == null)
                 profileData.CreateNewProfile(UPI.PrincipalID);
 
             profileData.UpdateUserProfile(UPI);
-
-
-            reader.Close();
-            reader.Dispose();
 
             m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
@@ -135,17 +138,26 @@ namespace Aurora.Modules
                 m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            IProfileConnector data = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
-
+            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            if (account == null)
+            {
+                m_log.Info("Account could not be found, stopping now.");
+                return;
+            }
+            IProfileConnector data = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            string UPIxmlString = "";
             Dictionary<string, object> result = new Dictionary<string, object>();
-            if(profile != null)
-                result["result"] = profile.ToKeyValuePairs();
-            string UPIxmlString = WebUtils.BuildXmlResponse(result);
+            if (data != null)
+            {
+                IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
+                if (profile != null)
+                {
+                    result["result"] = profile.ToKeyValuePairs();
+                    UPIxmlString = WebUtils.BuildXmlResponse(result);
+                }
+            }
 
-            if(account != null)
-                result["result"] = account.ToKeyValuePairs();
+            result["result"] = account.ToKeyValuePairs();
             string UDAxmlString = WebUtils.BuildXmlResponse(result);
 
             StreamWriter writer = new StreamWriter(cmdparams[5]);
@@ -153,9 +165,9 @@ namespace Aurora.Modules
             writer.Write(UDAxmlString + "\n");
             writer.Write(UPIxmlString + "\n");
             writer.Write("</profile>\n");
-            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
             writer.Close();
             writer.Dispose();
+            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
         }
     }
 }

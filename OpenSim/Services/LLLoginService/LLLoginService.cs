@@ -1619,8 +1619,10 @@ namespace AvatarArchives
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
-
             string document = reader.ReadToEnd();
+            reader.Close();
+            reader.Dispose();
+
             string[] lines = document.Split('\n');
             List<string> file = new List<string>(lines);
             Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
@@ -1654,7 +1656,6 @@ namespace AvatarArchives
             }
             UserAccountService.StoreUserAccount(UDA);
 
-
             replyData = WebUtils.ParseXmlResponse(file[2]);
             IUserProfileInfo UPI = new IUserProfileInfo();
             UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
@@ -1667,10 +1668,6 @@ namespace AvatarArchives
 
             profileData.UpdateUserProfile(UPI);
 
-
-            reader.Close();
-            reader.Dispose();
-
             m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
         protected void HandleSaveAvatarProfile(string module, string[] cmdparams)
@@ -1681,12 +1678,23 @@ namespace AvatarArchives
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
+            if (account == null)
+            {
+                m_log.Info("Account could not be found, stopping now.");
+                return;
+            }
             IProfileConnector data = DataManager.RequestPlugin<IProfileConnector>();
-            IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
-
+            string UPIxmlString = "";
             Dictionary<string, object> result = new Dictionary<string, object>();
-            result["result"] = profile.ToKeyValuePairs();
-            string UPIxmlString = WebUtils.BuildXmlResponse(result);
+            if (data != null)
+            {
+                IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
+                if (profile != null)
+                {
+                    result["result"] = profile.ToKeyValuePairs();
+                    UPIxmlString = WebUtils.BuildXmlResponse(result);
+                }
+            }
 
             result["result"] = account.ToKeyValuePairs();
             string UDAxmlString = WebUtils.BuildXmlResponse(result);
@@ -1696,9 +1704,9 @@ namespace AvatarArchives
             writer.Write(UDAxmlString + "\n");
             writer.Write(UPIxmlString + "\n");
             writer.Write("</profile>\n");
-            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
             writer.Close();
             writer.Dispose();
+            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
         }
     }
 }
