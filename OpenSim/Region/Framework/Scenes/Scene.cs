@@ -1332,7 +1332,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 const string seedRequestPath = "0000/";
                 string CapsSeed = "/CAPS/" + agent.CapsPath + seedRequestPath;
-                capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
+                string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
+                m_log.Info("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
+                     " @" + capsUrl + " for agent " + agent.AgentID);
             }
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags

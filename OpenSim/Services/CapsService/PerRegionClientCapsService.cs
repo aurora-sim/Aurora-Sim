@@ -95,10 +95,9 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         protected String m_capsUrlBase;
         
-        private UUID m_AgentID;
         public UUID AgentID
         {
-            get { return m_AgentID; }
+            get { return m_clientCapsService.AgentID; }
         }
 
         protected IClientCapsService m_clientCapsService;
@@ -141,8 +140,7 @@ namespace OpenSim.Services.CapsService
         public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform)
         {
             m_clientCapsService = clientCapsService;
-            m_AgentID = AgentID;
-            m_RegionHandle = RegionHandle;
+            m_RegionHandle = regionHandle;
             AddSEEDCap(capsBase, urlToInform);
 
             AddCAPS();
@@ -222,6 +220,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
+                m_log.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl + ", informing URL " + UrlToInform);
                 if (request != "")
                 {
                     OSD osdRequest = OSDParser.DeserializeLLSDXml(request);
@@ -233,7 +232,6 @@ namespace OpenSim.Services.CapsService
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             UrlToInform,
                             OSDParser.SerializeLLSDXmlString(m_InfoToSendToUrl));
-                    m_log.Debug("[CapsHandlers]: Seed request was added for region " + UrlToInform + " at " + path);
                     if (reply != "")
                     {
                         OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(reply));

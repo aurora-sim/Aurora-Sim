@@ -703,8 +703,10 @@ namespace OpenSim.Services.LLLoginService
             if(m_CapsService != null)
             {
                 //Remove any previous users
-                m_CapsService.RemoveCAPS(AgentID);
-                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(aCircuit.CapsPath), destination.RegionHandle);
+                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
+                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle);
+                m_log.Info("[NewAgentConnection]: Adding Caps Url for grid" +
+                     " @" + capsSeedPath + " calling URL " + SimcapsSeedPath + " for agent " + aCircuit.AgentID);
             }
             else
             {

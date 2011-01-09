@@ -142,7 +142,7 @@ namespace OpenSim.Services.CapsService
                     scene.EventManager.TriggerOnRegisterCaps(AgentID, clientService);
                 }
             }
-            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent" + AgentID);
+            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent " + AgentID);
             return clientService.CapsUrl;
         }
 
