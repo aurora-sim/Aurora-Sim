@@ -903,8 +903,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if ((x < 2 && x > -2) && (x < 2 && x > -2)) //We only check in the nearby regions for now
                 {
                     //Offset for the array so that it fixes
-                    x += 2;
-                    y += 2;
+                    //One offset from what it should be, as the DirectionsToBlockChildAgents starts at 0
+                    x = x > 1 ? 2 : x == 0 ? 1 : 0;
+                    y = y > 1 ? 2 : y == 0 ? 1 : 0;
                     if (!currentScene.DirectionsToBlockChildAgents[x, y]) //Not blocked, so false
                         handles.Add(reg.RegionHandle);
                 }
