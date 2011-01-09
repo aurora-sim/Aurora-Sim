@@ -2053,7 +2053,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         prim.ResetTaints();
 
-                        prim.disableBody();
+                        prim.DestroyBody();
                         prim.IsPhysical = false;
 
                         // we don't want to remove the main space
@@ -2516,7 +2516,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name="timeStep"></param>
         /// <returns></returns>
-        public override float Simulate(float timeStep)
+        public override float Simulate(float timeElapsed)
         {
             if (framecount >= int.MaxValue)
                 framecount = 0;
@@ -2528,7 +2528,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             float fps = 0;
             //m_log.Info(timeStep.ToString());
-            step_time += timeStep;
+            step_time += timeElapsed;
 
             // If We're loaded down by something else,
             // or debugging with the Visual Studio project on pause
@@ -2597,7 +2597,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODECharacter character in _taintedActors)
                                 {
 
-                                    character.ProcessTaints(timeStep);
+                                    character.ProcessTaints(timeElapsed);
 
                                     processedtaints = true;
                                     //character.m_collisionscore = 0;
@@ -2615,16 +2615,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             foreach (AuroraODEPrim prim in _taintedPrimL)
                             {
-                                if (prim.m_taintremove)
-                                {
-                                    //Console.WriteLine("Simulate calls RemovePrimThreadLocked");
+                                if (prim.ProcessTaints(timeElapsed))
                                     RemovePrimThreadLocked(prim);
-                                }
-                                else
-                                {
-                                    //Console.WriteLine("Simulate calls ProcessTaints");
-                                    prim.ProcessTaints(timeStep);
-                                }
                                 processedtaints = true;
                                 prim.m_collisionscore = 0;
                             }
@@ -2831,7 +2823,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODECharacter actor in _characters)
                                 {
                                     if (actor != null)
-                                        actor.Move(timeStep, defects);
+                                        actor.Move(timeElapsed, defects);
                                 }
                                 if (0 != defects.Count)
                                 {
@@ -2853,7 +2845,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODEPrim prim in _activeprims)
                                 {
                                     prim.m_collisionscore = 0;
-                                    prim.Move(timeStep);
+                                    prim.Move(timeElapsed);
                                 }
                             }
 
@@ -2868,7 +2860,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
 
-                        collision_optimized(timeStep);
+                        collision_optimized(timeElapsed);
 
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
