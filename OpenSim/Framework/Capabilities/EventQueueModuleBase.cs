@@ -30,14 +30,15 @@ namespace OpenSim.Framework.Capabilities
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle)
+        public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.EnableSimulator(handle, endPoint);
+            OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port);
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string CapsUrl, ulong RegionHandle)
+        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, ulong RegionHandle)
         {
+            IPEndPoint endPoint = new IPEndPoint(new IPAddress(IPAddress), Port);
             OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), CapsUrl);
             Enqueue(item, avatarID, RegionHandle);
         }
@@ -116,13 +117,13 @@ namespace OpenSim.Framework.Capabilities
 
         public void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data, null, 0);
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags)
+        public bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion region, AgentCircuitData circuit, AgentData data, uint TeleportFlags, byte[] IPAddress, int Port)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, new GridRegion[1]{region}, circuit, TeleportFlags, data, IPAddress, Port);
             return TryEnqueue(item, avatarID, RegionHandle);
         }
     }

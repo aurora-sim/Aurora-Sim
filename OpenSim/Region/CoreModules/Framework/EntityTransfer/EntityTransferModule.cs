@@ -320,7 +320,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
                     //  messages if they need to be called
                     if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
-                        new GridRegion[1] { finalDestination }, agentCircuit, agent, teleportFlags))
+                        finalDestination, agentCircuit, agent, teleportFlags, endPoint.Address.GetAddressBytes(), endPoint.Port))
                     {
                         sp.ControllingClient.SendTeleportFailed("Destination refused");
                         return;
@@ -866,7 +866,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, null, (uint)TeleportFlags.Default);
+                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, null,
+                    (uint)TeleportFlags.Default);
                 return;
             }
         }

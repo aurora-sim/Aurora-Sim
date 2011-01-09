@@ -57,13 +57,12 @@ namespace OpenSim.Services.Connectors
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IGridService m_GridService = null;
-        protected Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         protected Dictionary<UUID, List<NeighborPassword>> m_KnownNeighborsPass = new Dictionary<UUID, List<NeighborPassword>>();
         private LocalNeighborServiceConnector m_LocalService;
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
         {
-            get { return m_KnownNeighbors; }
+            get { return m_LocalService.Neighbors; }
         }
 
         public INeighborService InnerService
@@ -77,10 +76,7 @@ namespace OpenSim.Services.Connectors
         {
             List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsUp(incomingRegion);
 
-            //Get the known regions from the local connector, as it queried the grid service to find them all
-            m_KnownNeighbors = m_LocalService.Neighbors;
-
-            int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+            int RegionsNotInformed = Neighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
 
             //We informed all of them locally, so quit early
             if (RegionsNotInformed == 0)
@@ -90,7 +86,7 @@ namespace OpenSim.Services.Connectors
             nowInformedRegions.AddRange(InformNeighborsRegionIsUp(incomingRegion, nowInformedRegions));
 
             //Now check to see if we informed everyone
-            RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
+            RegionsNotInformed = Neighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
             if (RegionsNotInformed != 0)
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors remotely about a new neighbor.");
@@ -115,7 +111,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -183,7 +179,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoGoodbyeNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -241,7 +237,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual List<GridRegion> InformNeighborsThatRegionIsDown(RegionInfo closingRegion)
         {
-            List<GridRegion> neighbors = m_KnownNeighbors[closingRegion.RegionID];
+            List<GridRegion> neighbors = Neighbors[closingRegion.RegionID];
             List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsDown(closingRegion);
 
             int RegionsNotInformed = neighbors.Count - nowInformedRegions.Count;
@@ -267,16 +263,16 @@ namespace OpenSim.Services.Connectors
             bool RetVal = false;
             List<GridRegion> NotifiedRegions = m_LocalService.SendChatMessageToNeighbors(message, type, region, out RetVal);
 
-            if (m_KnownNeighbors.ContainsKey(region.RegionID))
+            if (Neighbors.ContainsKey(region.RegionID))
             {
-                int RegionsNotInformed = m_KnownNeighbors[region.RegionID].Count - NotifiedRegions.Count;
+                int RegionsNotInformed = Neighbors[region.RegionID].Count - NotifiedRegions.Count;
 
                 //We informed all of them locally, so quit early
                 if (RegionsNotInformed == 0)
                     return RetVal;
 
                 //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
-                InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, m_KnownNeighbors[region.RegionID]);
+                InformNeighborsOfChatMessage(message, type, region, NotifiedRegions, Neighbors[region.RegionID]);
             }
             //This tells the chat module whether we should send the message in the region it originated from, and if it 
             return RetVal;
@@ -353,7 +349,7 @@ namespace OpenSim.Services.Connectors
 
         protected void InformNeighborOfChatMessage(OSChatMessage message, ChatSourceType type, GridRegion region, RegionInfo thisRegion)
         {
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in

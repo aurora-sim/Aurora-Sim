@@ -57,8 +57,8 @@ namespace OpenSim.Services.Interfaces
 
         // These are required to decouple Scenes from EventQueueHelper
         void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
-        void EnableSimulator(ulong handle, IPEndPoint endPoint, UUID avatarID, ulong RegionHandle);
-        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, IPEndPoint endPoint, string CapsUrl, ulong RegionHandle);
+        void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, ulong RegionHandle);
+        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
                                  uint locationID, uint flags,
@@ -89,7 +89,8 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags);
+            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, 
+            AgentData data, uint TeleportFlags);
 
         /// <summary>
         /// This is a region > CapsService message ONLY, this should never be sent to the client.
@@ -100,6 +101,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags);
+            int DrawDistance, GridRegion region, AgentCircuitData circuit,
+            AgentData data, uint TeleportFlags, byte[] IPAddress, int Port);
     }
 }

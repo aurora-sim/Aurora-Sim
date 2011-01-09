@@ -77,13 +77,13 @@ namespace OpenSim.Framework.Capabilities
             return llsdEvent;
         }
 
-        public static OSD EnableSimulator(ulong handle, IPEndPoint endPoint)
+        public static OSD EnableSimulator(ulong handle, byte[] IPAddress, int Port)
         {
             OSDMap llsdSimInfo = new OSDMap(3);
 
             llsdSimInfo.Add("Handle", new OSDBinary(ulongToByteArray(handle)));
-            llsdSimInfo.Add("IP", new OSDBinary(endPoint.Address.GetAddressBytes()));
-            llsdSimInfo.Add("Port", new OSDInteger(endPoint.Port));
+            llsdSimInfo.Add("IP", new OSDBinary(IPAddress));
+            llsdSimInfo.Add("Port", new OSDInteger(Port));
 
             OSDArray arr = new OSDArray(1);
             arr.Add(llsdSimInfo);
@@ -464,7 +464,8 @@ namespace OpenSim.Framework.Capabilities
             return message;
         }
 
-        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags, AgentData data)
+        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
+            AgentCircuitData circuit, uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
         {
             OSDMap llsdBody = new OSDMap();
 
@@ -475,6 +476,10 @@ namespace OpenSim.Framework.Capabilities
                 regionsArray.Add(r.ToOSD());
             }
             llsdBody.Add("Regions", regionsArray);
+            if(IPAddress != null)
+                llsdBody.Add("IPAddress", IPAddress);
+            if(Port != 0) //0 is the eqivilent of null
+                llsdBody.Add("Port", Port);
             llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
             llsdBody.Add("TeleportFlags", TeleportFlags);
             if(data != null)

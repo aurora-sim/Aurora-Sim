@@ -110,7 +110,7 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 try
                 {
-                    uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + aCircuit.AgentID + "/";
+                    uri = destination.ServerURI + AgentPath() + aCircuit.AgentID + "/";
                 }
                 catch (Exception e)
                 {
@@ -296,7 +296,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 string uri = string.Empty;
                 try
                 {
-                    uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + cAgentData.AgentID + "/";
+                    uri = destination.ServerURI + AgentPath() + cAgentData.AgentID + "/";
                 }
                 catch (Exception e)
                 {
@@ -421,7 +421,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 // Eventually, we want to use a caps url instead of the agentID
-                string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
+                string uri = destination.ServerURI + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
                 //Console.WriteLine("   >>> DoRetrieveRootAgentCall <<< " + uri);
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
@@ -535,7 +535,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 string uri = string.Empty;
                 try
                 {
-                    uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
+                    uri = destination.ServerURI + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
                 }
                 catch (Exception e)
                 {
@@ -604,7 +604,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 string uri
-                = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + ObjectPath() + sog.UUID + "/";
+                = "http://" + destination.ServerURI + ObjectPath() + sog.UUID + "/";
                 //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 WebRequest ObjectCreateRequest = WebRequest.Create(uri);
@@ -707,7 +707,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 string uri
-                    = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + ObjectPath() + itemID + "/";
+                    = "http://" + destination.ServerURI + ObjectPath() + itemID + "/";
                 //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 WebRequest ObjectCreateRequest = WebRequest.Create(uri);

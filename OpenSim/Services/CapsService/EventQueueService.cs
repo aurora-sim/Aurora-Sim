@@ -201,9 +201,17 @@ namespace OpenSim.Services.CapsService
                             data.Unpack((OSDMap)body["AgentData"]);
                         }
 
+                        byte[] IPAddress = null;
+                        if(body.ContainsKey("IPAddress"))
+                            IPAddress = body["IPAddress"].AsBinary();
+                        int Port = 0;
+                        if (body.ContainsKey("Port"))
+                            Port = body["Port"].AsInteger();
+
                         //Now do the creation
                         //Don't send it to the client at all, so return here
-                        return EnableChildAgents(DrawDistance, neighbors, circuitData, TeleportFlags, data);
+                        return EnableChildAgents(DrawDistance, neighbors, circuitData, TeleportFlags, data,
+                            IPAddress, Port);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -503,7 +511,8 @@ namespace OpenSim.Services.CapsService
 
         #region EnableChildAgents 
 
-        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, uint TeleportFlags, AgentData data)
+        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
+            AgentCircuitData circuit, uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
         {
             int count = 0;
             bool informed = true;
@@ -513,7 +522,15 @@ namespace OpenSim.Services.CapsService
 
                 if (neighbor.RegionHandle != m_service.RegionHandle)
                 {
-                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor, TeleportFlags, data))
+                    if (IPAddress == null)
+                    {
+                        //We need to find the IP then
+                        IPEndPoint endPoint = neighbor.ExternalEndPoint;
+                        IPAddress = endPoint.Address.GetAddressBytes();
+                        Port = endPoint.Port;
+                    }
+                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor, TeleportFlags, data,
+                        IPAddress, Port))
                         informed = false;
                 }
                 count++;
@@ -531,7 +548,8 @@ namespace OpenSim.Services.CapsService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor, uint TeleportFlags, AgentData data)
+        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor, 
+            uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
         {
             m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
@@ -596,13 +614,16 @@ namespace OpenSim.Services.CapsService
                     IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                     //Only do this resolving once! It's heavy!
-                    IPEndPoint endPoint = neighbor.ExternalEndPoint;
-                    EQService.EnableSimulator(neighbor.RegionHandle, endPoint, m_service.AgentID, m_service.RegionHandle);
+                    //string endPoint = "http://"
+                    //  + neighbor.ExternalHostName
+                    //  + ":"
+                    //  + neighbor.HttpPort
+                    EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
                     // ES makes the client send a UseCircuitCode message to the destination, 
                     // which triggers a bunch of things there.
                     // So let's wait
                     Thread.Sleep(300);
-                    EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, endPoint, otherRegionService.UrlToInform, m_service.RegionHandle);
+                    EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
 
                     m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
