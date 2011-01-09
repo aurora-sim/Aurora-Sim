@@ -68,17 +68,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_rotationalVelocity;
         private Vector3 m_lastRotationalVelocity;
         private float m_mass = 80f;
-        public float m_density = 60f;
         private bool m_pidControllerActive = true;
-        public float PID_D = 800.0f;
-        public float PID_P = 900.0f;
         //private static float POSTURE_SERVO = 10000.0f;
         public float CAPSULE_RADIUS = 0.37f;
         public float CAPSULE_LENGTH = 2.140599f;
-        public float m_tensor = 3800000f;
-        public float heightFudgeFactor = 0.52f;
-        public float walkDivisor = 1.3f;
-        public float runDivisor = 0.8f;
         private bool flying = false;
         private bool m_iscolliding = false;
         private bool m_iscollidingGround = false;
@@ -142,7 +135,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Constructor
 
-        public AuroraODECharacter(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, CollisionLocker dode, Vector3 size, float pid_d, float pid_p, float capsule_radius, float tensor, float density, float height_fudge_factor, float walk_divisor, float rundivisor)
+        public AuroraODECharacter(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Vector3 size)
         {
             m_uuid = UUID.Random();
 
@@ -172,14 +165,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             _parent_scene = parent_scene;
 
-            PID_D = pid_d;
-            PID_P = pid_p;
-            CAPSULE_RADIUS = capsule_radius;
-            m_tensor = tensor;
-            m_density = density;
-            heightFudgeFactor = height_fudge_factor;
-            walkDivisor = walk_divisor;
-            runDivisor = rundivisor;
+            CAPSULE_RADIUS = parent_scene.avCapRadius;
 
             // m_StandUpRotation =
             //     new d.Matrix3(0.5f, 0.7071068f, 0.5f, -0.7071068f, 0f, 0.7071068f, 0.5f, -0.7071068f,
@@ -904,9 +890,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float movementdivisor = 1f;
 
             if (!m_alwaysRun)
-                movementdivisor = walkDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
+                movementdivisor = _parent_scene.avMovementDivisorWalk * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
             else
-                movementdivisor = runDivisor * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
+                movementdivisor = _parent_scene.avMovementDivisorRun * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&
@@ -932,12 +918,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //NOTE: THIS WILL CAUSE BENDING KNEE
                     //if (!velocity.ApproxEquals(Vector3.Zero, 0.2f))
                     //{
-                    vec.X = (float)((_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2));
-                    vec.Y = (float)((_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2));
+                    vec.X = (float)((_target_velocity.X - vel.X) * (_parent_scene.PID_D) + (_zeroPosition.X - pos.X) * (_parent_scene.PID_P * 2));
+                    vec.Y = (float)((_target_velocity.Y - vel.Y) * (_parent_scene.PID_D) + (_zeroPosition.Y - pos.Y) * (_parent_scene.PID_P * 2));
                     //if(!Flying)
                     //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
                     //if (flying)
-                    //    vec.Z = (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
+                    //    vec.Z = (_target_velocity.Z - vel.Z) * (_parent_scene.PID_D) + (_zeroPosition.Z - pos.Z) * _parent_scene.PID_P;
                     //}
                 }
             }
@@ -948,8 +934,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_iscolliding && !flying)
                 {
                     // We're standing or walking on something
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D);
+                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D);
+                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D);
                     //Stop pushing down if we are just standing
                     //if (_target_velocity.Z < -0.3)
                     //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
@@ -959,25 +945,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else if (m_iscolliding && flying)
                 {
                     // We're flying and colliding with something
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D / 16);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D / 16);
+                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D / 16);
+                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D / 16);
                 }
                 else if (!m_iscolliding && flying)
                 {
                     // we're in mid air suspended
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (PID_D / 6);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (PID_D / 6);
+                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D / 6);
+                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D / 6);
                 }
                 if (m_iscolliding && !flying && _target_velocity.Z > 0.0f)
                 {
                     // We're colliding with something and we're not flying but we're moving
                     // This means we're walking or running.
                     d.Vector3 pos = d.BodyGetPosition(Body);
-                    vec.Z = (float)((_target_velocity.Z - vel.Z) * PID_D + (_zeroPosition.Z - pos.Z) * PID_P);
+                    vec.Z = (float)((_target_velocity.Z - vel.Z) * _parent_scene.PID_D + (_zeroPosition.Z - pos.Z) * _parent_scene.PID_P);
                     if (_target_velocity.X > 0)
-                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * PID_D;
+                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * _parent_scene.PID_D;
                     if (_target_velocity.Y > 0)
-                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * PID_D;
+                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * _parent_scene.PID_D;
                 }
                 else if (!m_iscolliding && !flying)
                 {
@@ -986,9 +972,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     // d.Vector3 pos = d.BodyGetPosition(Body);
                     if (_target_velocity.X > 0)
-                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * PID_D;
+                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * _parent_scene.PID_D;
                     if (_target_velocity.Y > 0)
-                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * PID_D;
+                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * _parent_scene.PID_D;
                 }
 
                 if (flying)
@@ -1024,7 +1010,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     #endregion
 
-                    vec.Z = (_target_velocity.Z - oldVelZ) * (PID_P);
+                    vec.Z = (_target_velocity.Z - oldVelZ) * (_parent_scene.PID_P);
                     if (_parent_scene.AllowAvGravity && tempPos.Z > _parent_scene.AvGravityHeight)
                         //Add extra gravity
                         vec.Z += ((25 * _parent_scene.gravityz) * Mass);
@@ -1058,11 +1044,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     //We cheat a bit and do a bit lower than normal
                     if ((_position.Z - CAPSULE_LENGTH) < target_altitude)
-                        vec.Z += (target_altitude - _position.Z) * PID_D;
+                        vec.Z += (target_altitude - _position.Z) * _parent_scene.PID_D;
                     //Check in the direction we are going as well
                     target_altitude = _parent_scene.GetTerrainHeightAtXY(_position.X + forwardVel.X, _position.Y + forwardVel.Y) + MinimumGroundFlightOffset;
                     if ((_position.Z - CAPSULE_LENGTH) < target_altitude)
-                        vec.Z += (target_altitude - _position.Z) * PID_D / 2;
+                        vec.Z += (target_altitude - _position.Z) * _parent_scene.PID_D / 2;
                 }
                 else
                 {
@@ -1073,10 +1059,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if ((_position.Z - CAPSULE_LENGTH) < target_altitude + 1)
                         {
-                            vec.Z += ((target_altitude + 4) - (_position.Z - CAPSULE_LENGTH)) * PID_D;
+                            vec.Z += ((target_altitude + 4) - (_position.Z - CAPSULE_LENGTH)) * _parent_scene.PID_D;
                         }
                         else
-                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (_position.Z - CAPSULE_LENGTH)) * PID_D / 2;
+                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (_position.Z - CAPSULE_LENGTH)) * _parent_scene.PID_D / 2;
                     }
                 }
 
@@ -1568,7 +1554,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             + (Body!=IntPtr.Zero ? "Body ":"")
                             + (Amotor!=IntPtr.Zero ? "Amotor ":""));
                     }
-                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z, m_tensor);
+                    AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z, _parent_scene.avStandupTensor);
                     
                     _parent_scene.geom_name_map[Shell] = m_name;
                     _parent_scene.actor_name_map[Shell] = (PhysicsActor)this;
@@ -1621,7 +1607,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyDestroy(Body);
                     d.GeomDestroy(Shell);
                     AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                      _position.Z + (CAPSULE_LENGTH - prevCapsule), m_tensor);
+                                      _position.Z + (CAPSULE_LENGTH - prevCapsule), _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
 
                     _parent_scene.geom_name_map[Shell] = m_name;

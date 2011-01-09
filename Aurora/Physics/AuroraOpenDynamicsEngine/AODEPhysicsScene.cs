@@ -89,16 +89,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float mAvatarObjectContactFriction = 75f;
         private float mAvatarObjectContactBounce = 0.1f;
 
-        private float avPIDD = 3200f;
-        private float avPIDP = 1400f;
-        private float avCapRadius = 0.37f;
-        private float avStandupTensor = 2000000f;
+        public float PID_D = 3200f;
+        public float PID_P = 1400f;
+        public float avCapRadius = 0.37f;
+        public float avStandupTensor = 2000000f;
         private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
         public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
-        private float avDensity = 80f;
-        private float avHeightFudgeFactor = 0.52f;
-        private float avMovementDivisorWalk = 1.3f;
-        private float avMovementDivisorRun = 0.8f;
+        public float avMovementDivisorWalk = 1.3f;
+        public float avMovementDivisorRun = 0.8f;
         private float minimumGroundFlightOffset = 3f;
         public float maximumMassObject = 10000.01f;
 
@@ -369,14 +367,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
-                avPIDD = 3200.0f;
-                avPIDP = 1400.0f;
+                PID_D = 3200.0f;
+                PID_P = 1400.0f;
                 avStandupTensor = 2000000f;
             }
             else
             {
-                avPIDD = 2200.0f;
-                avPIDP = 900.0f;
+                PID_D = 2200.0f;
+                PID_P = 900.0f;
                 avStandupTensor = 550000f;
             }
 
@@ -428,10 +426,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     ODE_STEPSIZE = physicsconfig.GetFloat("world_stepsize", 0.020f);
                     m_physicsiterations = physicsconfig.GetInt("world_internal_steps_without_collisions", 10);
 
-                    avDensity = physicsconfig.GetFloat("av_density", 80f);
-                    avHeightFudgeFactor = physicsconfig.GetFloat("av_height_fudge_factor", 0.52f);
-                    avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
-                    avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
+                    avMovementDivisorWalk = physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f);
+                    avMovementDivisorRun = physicsconfig.GetFloat("av_movement_divisor_run", 0.8f);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
                     avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", false);
 
@@ -455,15 +451,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (Environment.OSVersion.Platform == PlatformID.Unix)
                     {
-                        avPIDD = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
-                        avPIDP = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
+                        PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
+                        PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 5f);
                     }
                     else
                     {
-                        avPIDD = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
-                        avPIDP = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
+                        PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
+                        PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
@@ -1557,7 +1553,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             pos.X = position.X;
             pos.Y = position.Y;
             pos.Z = position.Z;
-            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, ode, size, avPIDD, avPIDP, avCapRadius, avStandupTensor, avDensity, avHeightFudgeFactor, avMovementDivisorWalk, avMovementDivisorRun);
+            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, size);
             newAv.Flying = isFlying;
             newAv.MinimumGroundFlightOffset = minimumGroundFlightOffset;
 
