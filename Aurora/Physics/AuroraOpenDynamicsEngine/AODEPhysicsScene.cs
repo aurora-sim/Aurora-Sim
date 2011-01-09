@@ -1,5 +1,5 @@
 /*
- *Copyright (c) Contributors, http://opensimulator.org/
+ * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2398,6 +2398,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 iPropertiesNotSupportedDefault++;
 
             if ((pbs.ProfileBegin != 0) || pbs.ProfileEnd != 0)
+                iPropertiesNotSupportedDefault++;
+
+            if(pbs.PathBegin != 0 || pbs.PathEnd != 0)
                 iPropertiesNotSupportedDefault++;
 
             if ((pbs.PathScaleX != 100) || (pbs.PathScaleY != 100))
