@@ -53,6 +53,12 @@ namespace OpenSim.Framework.Capabilities
         private string HostUri;
         private IHttpServer Server;
 
+        private ulong m_RegionHandle;
+        public ulong RegionHandle
+        {
+            get { return m_RegionHandle; }
+        }
+
         private string m_UrlToInform = "";
         /// <summary>
         /// An optional Url that will be called to retrieve more Caps for the client.
@@ -93,11 +99,18 @@ namespace OpenSim.Framework.Capabilities
         {
             get { return HostUri + m_capsUrlBase; }
         }
+        private UUID m_AgentID;
+        public UUID AgentID
+        {
+            get { return m_AgentID; }
+        }
 
-        public void Initialize(string hostUri, IHttpServer httpServer)
+        public void Initialize(string hostUri, IHttpServer httpServer, ulong RegionHandle, UUID AgentID)
         {
             Server = httpServer;
             HostUri = hostUri;
+            m_AgentID = AgentID;
+            m_RegionHandle = RegionHandle;
         }
 
         #region Add/Remove Caps from the known caps OSDMap
@@ -167,7 +180,7 @@ namespace OpenSim.Framework.Capabilities
             RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
         }
 
-        public string CapsRequest(string request, string path, string param,
+        public virtual string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             try

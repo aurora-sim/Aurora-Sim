@@ -260,19 +260,13 @@ namespace OpenSim.Services.CapsService
         }
     }
 
-    public class PerRegionClientCapsService : IRegionClientCapsService
+    public class PerRegionClientCapsService : CapsHandlers, IRegionClientCapsService
     {
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
-        private CapsHandlers m_CapsHandlers = new CapsHandlers();
-
-        protected ulong m_regionHandle;
-        public ulong RegionHandle
-        {
-            get { return m_regionHandle; }
-        }
+        
         protected IClientCapsService m_clientCapsService;
         public IClientCapsService ClientCaps
         {
@@ -287,36 +281,6 @@ namespace OpenSim.Services.CapsService
         {
             get { return m_clientCapsService.Server; }
         }
-        public UUID AgentID
-        {
-            get { return m_clientCapsService.AgentID; }
-        }
-
-        /// <summary>
-        /// This OSDMap is sent to the url set in UrlToInform below when telling it about the new Cap request
-        /// </summary>
-        public OSDMap InfoToSendToUrl
-        {
-            get { return m_CapsHandlers.InfoToSendToUrl; }
-            set { m_CapsHandlers.InfoToSendToUrl = value; }
-        }
-
-        /// <summary>
-        /// An optional Url that will be called to retrieve more Caps for the client.
-        /// </summary>
-        public string UrlToInform
-        {
-            get { return m_CapsHandlers.UrlToInform; }
-            set { m_CapsHandlers.UrlToInform = value; }
-        }
-
-        /// <summary>
-        /// This is the full URL to the Caps SEED request
-        /// </summary>
-        public String CapsUrl
-        {
-            get { return m_CapsHandlers.CapsUrl; }
-        }
 
         public String HostUri
         {
@@ -329,11 +293,10 @@ namespace OpenSim.Services.CapsService
 
         public void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform)
         {
-            m_CapsHandlers.Initialize(HostUri, Server);
-            m_CapsHandlers.AddSEEDCap(capsBase, urlToInform);
+            Initialize(HostUri, Server, regionHandle, clientCapsService.AgentID);
+            AddSEEDCap(capsBase, urlToInform);
 
             m_clientCapsService = clientCapsService;
-            m_regionHandle = regionHandle;
 
             AddCAPS();
         }
@@ -363,7 +326,7 @@ namespace OpenSim.Services.CapsService
             {
                 connector.DeregisterCaps();
             }
-            m_CapsHandlers.RemoveSEEDCap();
+            RemoveSEEDCap();
         }
 
         public List<ICapsServiceConnector> GetServiceConnectors()
@@ -373,30 +336,6 @@ namespace OpenSim.Services.CapsService
                 m_connectors = AuroraModuleLoader.PickupModules<ICapsServiceConnector>();
             }
             return m_connectors;
-        }
-
-        public void AddSEEDCap(string CapsUrl, string UrlToInform)
-        {
-            m_CapsHandlers.AddSEEDCap(CapsUrl, UrlToInform);
-        }
-
-        public string CreateCAPS(string method, string appendedPath)
-        {
-            return m_CapsHandlers.CreateCAPS(method, appendedPath);
-        }
-
-        #endregion
-
-        #region Overriden Http Server methods
-
-        public void AddStreamHandler(string method, IRequestHandler handler)
-        {
-            m_CapsHandlers.AddStreamHandler(method, handler);
-        }
-
-        public void RemoveStreamHandler(string method, string httpMethod, string path)
-        {
-            m_CapsHandlers.RemoveStreamHandler(method, httpMethod, path);
         }
 
         #endregion

@@ -40,32 +40,17 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework.Capabilities
 {
-    public class Caps
+    public class Caps : CapsHandlers
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly string m_seedRequestPath = "0000/";
         private IScene m_Scene;
-        public ulong RegionHandle
-        {
-            get { return m_Scene.RegionInfo.RegionHandle; }
-        }
-        private UUID m_agentID;
-        private IHttpServer Server;
-        private CapsHandlers m_CapsHandlers = new CapsHandlers();
 
-        public OSDMap RequestMap
-        {
-            get { return m_CapsHandlers.RequestMap; }
-        }
-
-        
-        public void Initialize(IScene scene, IHttpServer httpServer, UUID agent, string CapsPath)
+        public void Initialize(IScene scene, IHttpServer httpServer, UUID agentID, string CapsPath)
         {
             m_Scene = scene;
-            Server = httpServer;
-            m_agentID = agent;
             
             //Find the full URL to our CapsService
             string Protocol = "http://";
@@ -73,9 +58,9 @@ namespace OpenSim.Framework.Capabilities
                 Protocol = "https://";
             string HostUri = Protocol + scene.RegionInfo.ExternalHostName + ":" + httpServer.Port;
 
-            m_CapsHandlers.Initialize(HostUri, httpServer);
+            Initialize(HostUri, httpServer, scene.RegionInfo.RegionHandle, agentID);
 
-            m_CapsHandlers.AddSEEDCap("/CAPS/" + CapsPath + m_seedRequestPath, "");
+            AddSEEDCap("/CAPS/" + CapsPath + m_seedRequestPath, "");
         }
 
         /// <summary>
@@ -87,7 +72,7 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="restMethod"></param>
         public void Close()
         {
-            m_CapsHandlers.RemoveSEEDCap();
+            RemoveSEEDCap();
         }
 
         /// <summary>
@@ -99,30 +84,16 @@ namespace OpenSim.Framework.Capabilities
         /// <param name="httpRequest">HTTP request header object</param>
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
-        private string CapsRequest(string request, string path, string param,
+        public override string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            if (!m_Scene.CheckClient(m_agentID, httpRequest.RemoteIPEndPoint))
+            if (!m_Scene.CheckClient(AgentID, httpRequest.RemoteIPEndPoint))
             {
                 m_log.Error("[RegionCaps]: Unauthorized CAPS client");
                 return string.Empty;
             }
 
-            return m_CapsHandlers.CapsRequest(request, path, param, httpRequest, httpResponse);
+            return base.CapsRequest(request, path, param, httpRequest, httpResponse);
         }
-
-        #region Overriden Http Server methods
-
-        public void AddStreamHandler(string method, IRequestHandler handler)
-        {
-            m_CapsHandlers.AddStreamHandler(method, handler);
-        }
-
-        public void RemoveStreamHandler(string method, string httpMethod, string path)
-        {
-            m_CapsHandlers.RemoveStreamHandler(method, httpMethod, path);
-        }
-
-        #endregion
     }
 }
