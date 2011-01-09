@@ -701,17 +701,17 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (tracker == null)
                 tracker = new AuroraThreadTracker();
-            if (UseOneHeartbeat)
-            {
+            //if (UseOneHeartbeat)
+            //{
 //                ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
                 SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
                 tracker.AddSceneHeartbeat(suhb);
 //                tracker.AddSceneHeartbeat(shb);
-            }
-            else
-            {
-                tracker.AddSceneHeartbeat(new SceneHeartbeat(this));
-            }
+            //}
+            //else
+            //{
+            //    tracker.AddSceneHeartbeat(new SceneHeartbeat(this));
+            //}
             //Start this after the threads are started.
             tracker.Init(this);
             tracker.OnNeedToAddThread += NeedsNewThread;
@@ -739,7 +739,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             public SceneUpdateHeartbeat(Scene scene)
             {
-                type = "SceneBackupHeartbeat";
+                type = "SceneUpdateHeartbeat";
                 m_scene = scene;
             }
 
@@ -799,34 +799,32 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     maintc = Util.EnvironmentTickCount();
                     int BeginningFrameTime = maintc;
-                    
+
                     // Increment the frame counter
                     ++m_scene.m_frame;
 
-                    
-
                     try
-                        {
+                    {
                         int OtherFrameTime = Util.EnvironmentTickCount();
                         if (m_scene.PhysicsReturns.Count != 0)
-                            {
+                        {
                             lock (m_scene.PhysicsReturns)
-                                {
+                            {
                                 m_scene.returnObjects(m_scene.PhysicsReturns.ToArray(), UUID.Zero);
                                 m_scene.PhysicsReturns.Clear();
-                                }
                             }
+                        }
                         if (m_scene.m_frame % m_scene.m_update_coarse_locations == 0)
-                            {
+                        {
                             List<Vector3> coarseLocations;
                             List<UUID> avatarUUIDs;
                             m_scene.SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
                             // Send coarse locations to clients 
                             foreach (ScenePresence presence in m_scene.ScenePresences)
-                                {
+                            {
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                                }
                             }
+                        }
 
                         if (m_scene.m_frame % m_scene.m_update_presences == 0)
                             m_scene.m_sceneGraph.UpdatePresences();
@@ -834,7 +832,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (m_scene.m_frame % m_scene.m_update_events == 0)
                             m_scene.UpdateEvents();
 
-         // merged back physH
+                        // merged back physH
                         int PhysicsSyncTime = Util.EnvironmentTickCount();
                         TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastphysupdate;
 
@@ -846,13 +844,13 @@ namespace OpenSim.Region.Framework.Scenes
                         int PhysicsUpdateTime = Util.EnvironmentTickCount();
 
                         if (m_scene.m_frame % m_scene.m_update_physics == 0)
-                            {
+                        {
                             if (!m_scene.RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_scene.m_physicstimespan)
-                                {
+                            {
                                 m_scene.m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
                                 m_scene.m_lastphysupdate = DateTime.UtcNow;
-                                }
                             }
+                        }
 
                         int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
 
@@ -873,35 +871,36 @@ namespace OpenSim.Region.Framework.Scenes
 
                         simFrameMonitor.AddFPS(1);
                         lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
-                        otherFrameMonitor.AddTime(MonitorOtherFrameTime);                      
+                        otherFrameMonitor.AddTime(MonitorOtherFrameTime);
 
                         maintc = Util.EnvironmentTickCountSubtract(maintc);
-                        maintc = (int)(m_scene.m_updatetimespan * 1000) - maintc;                      
+                        maintc = (int)(m_scene.m_updatetimespan * 1000) - maintc;
 
                         CheckExit();
-                        }
+                    }
                     catch (Exception e)
-                        {
+                    {
                         if (e.Message != "Closing")
                             m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
                         break;
-                        }  
+                    }
 
                     int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
 
                     if (maintc > 0 && shouldSleep)
                         Thread.Sleep(maintc);
 
-                    if(shouldSleep)
+                    if (shouldSleep)
                         sleepFrameMonitor.AddTime(maintc);
-                    
+
                     totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
             }
 
             #endregion
         }
-/* not in use, merged back into updateH
+
+        /* not in use, merged back into updateH
  
         protected class ScenePhysicsHeartbeat : IThread
         {
@@ -1027,7 +1026,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             #endregion
         }
-*/
+
         protected class SceneHeartbeat : IThread
         {
             #region Constructor and IThread
@@ -1088,7 +1087,7 @@ namespace OpenSim.Region.Framework.Scenes
 //                int maintc;
 
                 updateH.Update(true);
-/*
+
                 while (!ShouldExit)
                 {
                     maintc = Util.EnvironmentTickCount();
@@ -1103,11 +1102,11 @@ namespace OpenSim.Region.Framework.Scenes
                     int MonitorSleepFrameTime = maintc;
                     sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
                 }
- */
             }
 
             #endregion
         }
+*/
 
         #endregion
 
