@@ -207,34 +207,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void AddPreviouslyCompiled(string source, ScriptData ID)
             {
-            string key = source.Length.ToString() + source.GetHashCode().ToString();
+//            string key = source.Length.ToString() + source.GetHashCode().ToString();
             lock (PreviouslyCompiled)
                 {
 
-                if (!PreviouslyCompiled.ContainsKey(key))
+                if (!PreviouslyCompiled.ContainsKey(source))
                     {
-                    PreviouslyCompiled.Add(key, ID.AssemblyName);
+                    PreviouslyCompiled.Add(source, ID.AssemblyName);
                     }
                 }
             }
 
         public void RemovePreviouslyCompiled(string source)
             {
-            string key = source.Length.ToString() + source.GetHashCode().ToString();
+//            string key = source.Length.ToString() + source.GetHashCode().ToString();
             lock (PreviouslyCompiled)
                 {
-                if (PreviouslyCompiled.ContainsKey(key))
+                if (PreviouslyCompiled.ContainsKey(source))
                     {
-                    PreviouslyCompiled.Remove(key);
+                    PreviouslyCompiled.Remove(source);
                     }
                 }
             }
 
         public string TryGetPreviouslyCompiledScript(string source)
             {
-            string key = source.Length.ToString() + source.GetHashCode().ToString();
+//            string key = source.Length.ToString() + source.GetHashCode().ToString();
             string assemblyName = "";
-            PreviouslyCompiled.TryGetValue(key,out assemblyName);
+            PreviouslyCompiled.TryGetValue(source,out assemblyName);
 
             return assemblyName;
             }
