@@ -12,6 +12,7 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
+using OpenSim.Region.Framework.Scenes;
 
 using OpenMetaverse;
 using Aurora.DataManager;
@@ -63,10 +64,13 @@ namespace OpenSim.Services.CapsService
                 throw new Exception(String.Format("No section CAPSService in config file"));
 
             m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
-            //Sanitize the results, remove / and :
-            m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
-            
-            m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
+            if (m_hostName != "")
+            {
+                //Sanitize the results, remove / and :
+                m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
+
+                m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
+            }
             m_registry = registry;
             registry.RegisterModuleInterface<ICapsService>(this);
         }
@@ -81,6 +85,12 @@ namespace OpenSim.Services.CapsService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
+            SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
+            if (regionManager != null)
+            {
+                m_hostName = regionManager.Scenes[0].RegionInfo.ExternalHostName;
+                m_port = MainServer.Instance.Port;
+            }
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
         }
@@ -122,6 +132,16 @@ namespace OpenSim.Services.CapsService
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
             clientService.AddSEEDCap("", "");
+
+            SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
+            if (regionManager != null)
+            {
+                Scene scene;
+                if (regionManager.TryGetScene(regionHandle, out scene))
+                {
+                    scene.EventManager.TriggerOnRegisterCaps(AgentID, clientService);
+                }
+            }
             m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " informing region " + UrlToInform + " for agent" + AgentID);
             return clientService.CapsUrl;
         }

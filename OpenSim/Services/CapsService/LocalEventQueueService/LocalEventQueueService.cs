@@ -46,7 +46,7 @@ using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.Structur
 using OpenSim.Framework.Capabilities;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Region.CoreModules.Framework.EventQueue
+namespace OpenSim.Services.CapsService
 {
     public struct QueueItem
     {
