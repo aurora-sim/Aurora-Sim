@@ -19,6 +19,7 @@ namespace Aurora.Framework
         protected Object m_lock = new Object();
         protected List<InternalHeartbeat> m_heartbeats = new List<InternalHeartbeat>();
         protected int m_timesToIterate = 0;
+        private int m_sleepTime = 0;
 
         /// <summary>
         /// Add this delegate to the tracker so that it can run.
@@ -38,9 +39,13 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="timesToIterate">The number of times to run the delegate.
         /// <remarks>If you set this parameter to 0, it will loop infinitely.</remarks></param>
-        public void StartMonitor(int timesToIterate)
+        /// <param name="sleepTime">The sleep time between each iteration.
+        /// <remarks>If you set this parameter to 0, it will loop without sleeping at all.
+        /// The sleeping will have to be deal with in the delegates.</remarks></param>
+        public void StartMonitor(int timesToIterate, int sleepTime)
         {
             m_timesToIterate = timesToIterate;
+            m_sleepTime = sleepTime;
 
             Thread thread = new Thread(Run);
             thread.IsBackground = true;
@@ -75,6 +80,8 @@ namespace Aurora.Framework
                     if (m_timesToIterate == 0)
                         break;
                 }
+                if (m_sleepTime != 0)
+                    Thread.Sleep(m_sleepTime);
             }
         }
 
