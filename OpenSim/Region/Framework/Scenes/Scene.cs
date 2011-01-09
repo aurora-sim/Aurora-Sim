@@ -440,7 +440,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
                 if (aurorastartupConfig != null)
                 {
-                    UseOneHeartbeat = aurorastartupConfig.GetBoolean("RunWithMultipleHeartbeats", true);
                     RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
@@ -664,13 +663,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Stop all client threads.
             ForEachScenePresence(delegate(ScenePresence avatar) { avatar.ControllingClient.Close(); });
 
-            if (tracker != null)
-            {
-                tracker.OnNeedToAddThread -= NeedsNewThread;
-                tracker.Close();
-                tracker = null;
-            }
-
             if (PhysicsScene != null)
             {
                 PhysicsScene.Dispose();
@@ -692,37 +684,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Tracker
 
-        public AuroraThreadTracker tracker = null;
-        private bool UseOneHeartbeat = true;
         /// <summary>
         /// Start the timer which triggers regular scene updates
         /// </summary>
         public void StartTimer()
         {
-            if (tracker == null)
-                tracker = new AuroraThreadTracker();
-            //if (UseOneHeartbeat)
-            //{
-//                ScenePhysicsHeartbeat shb = new ScenePhysicsHeartbeat(this);
-                SceneUpdateHeartbeat suhb = new SceneUpdateHeartbeat(this);
-                tracker.AddSceneHeartbeat(suhb);
-//                tracker.AddSceneHeartbeat(shb);
-            //}
-            //else
-            //{
-            //    tracker.AddSceneHeartbeat(new SceneHeartbeat(this));
-            //}
-            //Start this after the threads are started.
-            tracker.Init(this);
-            tracker.OnNeedToAddThread += NeedsNewThread;
-        }
-
-        protected void NeedsNewThread(string type)
-        {
-            if (type == "SceneUpdateHeartbeat")
-                tracker.AddSceneHeartbeat(new SceneUpdateHeartbeat(this));
-//            else if (type == "ScenePhysicsHeartbeat")
-//                tracker.AddSceneHeartbeat(new ScenePhysicsHeartbeat(this));
+            ThreadMonitor monitor = new ThreadMonitor();
+            //Give it the heartbeat delegate with an infinite timeout
+            monitor.StartTrackingThread(0, Update);
+            //Then start the thread for it with an infinite loop time and no 
+            //  sleep overall as the Update delete does it on it's own
+            monitor.StartMonitor(0, 0);
         }
 
         #endregion
@@ -733,380 +705,112 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat parts
 
-        protected class SceneUpdateHeartbeat : IThread
+        public void Update()
         {
-            #region Constructor and IThread
+            ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
+            ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");
+            ISetMonitor lastFrameMonitor = (ISetMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Last Completed Frame At");
+            ITimeMonitor otherFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Other Frame Time");
+            ITimeMonitor sleepFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Sleep Frame Time");
+            IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
+            ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
+            ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
+            int maintc;
 
-            public SceneUpdateHeartbeat(Scene scene)
-            {
-                type = "SceneUpdateHeartbeat";
-                m_scene = scene;
-            }
+            maintc = Util.EnvironmentTickCount();
+            int BeginningFrameTime = maintc;
 
-            public override void Restart()
-            {
-                ShouldExit = true;
-                SceneUpdateHeartbeat heartbeat = new SceneUpdateHeartbeat(m_scene);
-                m_scene.tracker.AddSceneHeartbeat(heartbeat);
-            }
+            // Increment the frame counter
+            ++m_frame;
 
-            /// <summary>
-            /// Performs per-frame updates regularly
-            /// </summary>
-            public override void Start()
+            try
             {
-                try
+                int OtherFrameTime = Util.EnvironmentTickCount();
+                if (PhysicsReturns.Count != 0)
                 {
-                    Update(true);
-                }
-                catch (ThreadAbortException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Scene]: Failed with " + ex);
-                }
-                FireThreadClosing(this);
-                Thread.CurrentThread.Abort();
-            }
-
-            private void CheckExit()
-            {
-                LastUpdate = DateTime.Now;
-                if (!ShouldExit && !shuttingdown)
-                    return;
-                //Lets kill this thing
-                throw new Exception("Closing");
-            }
-
-            #endregion
-
-            #region Update
-
-            public void Update(bool shouldSleep)
-            {
-                ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
-                ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
-                ISetMonitor lastFrameMonitor = (ISetMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Last Completed Frame At");
-                ITimeMonitor otherFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Other Frame Time");
-                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
-                IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
-                ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
-                ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
-                int maintc;
-
-                while (!ShouldExit)
-                {
-                    maintc = Util.EnvironmentTickCount();
-                    int BeginningFrameTime = maintc;
-
-                    // Increment the frame counter
-                    ++m_scene.m_frame;
-
-                    try
+                    lock (PhysicsReturns)
                     {
-                        int OtherFrameTime = Util.EnvironmentTickCount();
-                        if (m_scene.PhysicsReturns.Count != 0)
-                        {
-                            lock (m_scene.PhysicsReturns)
-                            {
-                                m_scene.returnObjects(m_scene.PhysicsReturns.ToArray(), UUID.Zero);
-                                m_scene.PhysicsReturns.Clear();
-                            }
-                        }
-                        if (m_scene.m_frame % m_scene.m_update_coarse_locations == 0)
-                        {
-                            List<Vector3> coarseLocations;
-                            List<UUID> avatarUUIDs;
-                            m_scene.SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
-                            // Send coarse locations to clients 
-                            foreach (ScenePresence presence in m_scene.ScenePresences)
-                            {
-                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                            }
-                        }
-
-                        if (m_scene.m_frame % m_scene.m_update_presences == 0)
-                            m_scene.m_sceneGraph.UpdatePresences();
-
-                        if (m_scene.m_frame % m_scene.m_update_events == 0)
-                            m_scene.UpdateEvents();
-
-                        // merged back physH
-                        int PhysicsSyncTime = Util.EnvironmentTickCount();
-                        TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastphysupdate;
-
-                        if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                            m_scene.m_sceneGraph.UpdatePreparePhysics();
-
-                        int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
-
-                        int PhysicsUpdateTime = Util.EnvironmentTickCount();
-
-                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
-                        {
-                            if (!m_scene.RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_scene.m_physicstimespan)
-                            {
-                                m_scene.m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
-                                m_scene.m_lastphysupdate = DateTime.UtcNow;
-                            }
-                        }
-
-                        int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
-
-                        physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
-                        physicsFrameMonitor.AddFPS(1);
-                        physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
-
-                        IPhysicsMonitor monitor = m_scene.RequestModuleInterface<IPhysicsMonitor>();
-                        if (monitor != null)
-                            monitor.AddPhysicsStats(m_scene.RegionInfo.RegionID, m_scene.m_sceneGraph.PhysicsScene);
-
-                        // Check if any objects have reached their targets
-                        m_scene.CheckAtTargets();
-
-                        //Now fix the sim stats
-                        int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
-                        int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
-
-                        simFrameMonitor.AddFPS(1);
-                        lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
-                        otherFrameMonitor.AddTime(MonitorOtherFrameTime);
-
-                        maintc = Util.EnvironmentTickCountSubtract(maintc);
-                        maintc = (int)(m_scene.m_updatetimespan * 1000) - maintc;
-
-                        CheckExit();
+                        returnObjects(PhysicsReturns.ToArray(), UUID.Zero);
+                        PhysicsReturns.Clear();
                     }
-                    catch (Exception e)
-                    {
-                        if (e.Message != "Closing")
-                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                        break;
-                    }
-
-                    int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
-
-                    if (maintc > 0 && shouldSleep)
-                        Thread.Sleep(maintc);
-
-                    if (shouldSleep)
-                        sleepFrameMonitor.AddTime(maintc);
-
-                    totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
                 }
+                if (m_frame % m_update_coarse_locations == 0)
+                {
+                    List<Vector3> coarseLocations;
+                    List<UUID> avatarUUIDs;
+                    SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60);
+                    // Send coarse locations to clients 
+                    foreach (ScenePresence presence in ScenePresences)
+                    {
+                        presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                    }
+                }
+
+                if (m_frame % m_update_presences == 0)
+                    m_sceneGraph.UpdatePresences();
+
+                if (m_frame % m_update_events == 0)
+                    UpdateEvents();
+
+                // merged back physH
+                int PhysicsSyncTime = Util.EnvironmentTickCount();
+                TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
+
+                if ((m_frame % m_update_physics == 0) && !RegionInfo.RegionSettings.DisablePhysics)
+                    m_sceneGraph.UpdatePreparePhysics();
+
+                int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
+
+                int PhysicsUpdateTime = Util.EnvironmentTickCount();
+
+                if (m_frame % m_update_physics == 0)
+                {
+                    if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalSeconds > m_physicstimespan)
+                    {
+                        m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
+                        m_lastphysupdate = DateTime.UtcNow;
+                    }
+                }
+
+                int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
+
+                physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
+                physicsFrameMonitor.AddFPS(1);
+                physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
+
+                IPhysicsMonitor monitor = RequestModuleInterface<IPhysicsMonitor>();
+                if (monitor != null)
+                    monitor.AddPhysicsStats(RegionInfo.RegionID, m_sceneGraph.PhysicsScene);
+
+                // Check if any objects have reached their targets
+                CheckAtTargets();
+
+                //Now fix the sim stats
+                int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
+                int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
+
+                simFrameMonitor.AddFPS(1);
+                lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
+                otherFrameMonitor.AddTime(MonitorOtherFrameTime);
+
+                maintc = Util.EnvironmentTickCountSubtract(maintc);
+                maintc = (int)(m_updatetimespan * 1000) - maintc;
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[REGION]: Failed with exception " + e.ToString() + " in region: " + RegionInfo.RegionName);
+                return;
             }
 
-            #endregion
+            int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
+
+            if (maintc > 0)
+                Thread.Sleep(maintc);
+
+            sleepFrameMonitor.AddTime(maintc);
+
+            totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
         }
-
-        /* not in use, merged back into updateH
- 
-        protected class ScenePhysicsHeartbeat : IThread
-        {
-            #region Constructor and IThread
-
-            public ScenePhysicsHeartbeat(Scene scene)
-            {
-                type = "ScenePhysicsHeartbeat";
-                m_scene = scene;
-            }
-
-            public override void Restart()
-            {
-                ShouldExit = true;
-                ScenePhysicsHeartbeat heartbeat = new ScenePhysicsHeartbeat(m_scene);
-                m_scene.tracker.AddSceneHeartbeat(heartbeat);
-            }
-
-            /// <summary>
-            /// Performs per-frame updates regularly
-            /// </summary>
-            public override void Start()
-            {
-                try
-                {
-                    Update(true);
-                }
-                catch (ThreadAbortException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Scene]: Failed with " + ex);
-                }
-                FireThreadClosing(this);
-                Thread.CurrentThread.Abort();
-            }
-
-            private void CheckExit()
-            {
-                LastUpdate = DateTime.Now;
-                if (!ShouldExit && !shuttingdown)
-                    return;
-                //Lets kill this thing
-                throw new Exception("Closing");
-            }
-
-            #endregion
-
-            #region Update
-
-            public void Update(bool shouldSleep)
-            {
-                IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
-                ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Total Frame Time");
-                ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
-                ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
-                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
-                int maintc;
-
-                while (!ShouldExit)
-                {
-                    TimeSpan SinceLastFrame = DateTime.UtcNow - m_scene.m_lastupdate;
-
-                    maintc = Util.EnvironmentTickCount();
-                    int BeginningFrameTime = maintc;
-                    
-                    try
-                    {
-                        int PhysicsSyncTime = Util.EnvironmentTickCount();
-
-                        if ((m_scene.m_frame % m_scene.m_update_physics == 0) && !m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                            m_scene.m_sceneGraph.UpdatePreparePhysics();
-
-                        int MonitorPhysicsSyncTime = Util.EnvironmentTickCountSubtract(PhysicsSyncTime);
-
-                        int PhysicsUpdateTime = Util.EnvironmentTickCount();
-
-                        if (m_scene.m_frame % m_scene.m_update_physics == 0)
-                        {
-                            if (!m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                                m_scene.m_sceneGraph.UpdatePhysics(Math.Max(SinceLastFrame.TotalSeconds, m_scene.m_physicstimespan));
-                        }
-
-                        int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime) + MonitorPhysicsSyncTime;
-
-                        physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
-                        physicsFrameMonitor.AddFPS(1);
-                        physicsSyncFrameMonitor.AddTime(MonitorPhysicsSyncTime);
-
-                        IPhysicsMonitor monitor = m_scene.RequestModuleInterface<IPhysicsMonitor>();
-                        if(monitor != null)
-                            monitor.AddPhysicsStats(m_scene.RegionInfo.RegionID, m_scene.m_sceneGraph.PhysicsScene);
-                        
-                        CheckExit();
-                    }
-                    catch (Exception e)
-                    {
-                        if (e.Message != "Closing")
-                            m_log.Error("[REGION]: Failed with exception " + e.ToString() + " On Region: " + m_scene.RegionInfo.RegionName);
-                        break;
-                    }
-                    finally
-                    {
-                        m_scene.m_lastupdate = DateTime.UtcNow;
-                    }
-
-                    maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)((m_scene.m_physicstimespan * 1000) - maintc) / Scene.m_timeToSlowThePhysHeartbeat;
-
-                    int MonitorEndFrameTime = Util.EnvironmentTickCountSubtract(BeginningFrameTime) + maintc;
-
-                    if (maintc > 0 && shouldSleep)
-                        Thread.Sleep(maintc);
-
-                    int MonitorSleepFrameTime = maintc;
-                    if(shouldSleep)
-                        sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
-                    
-                    totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
-                }
-            }
-
-            #endregion
-        }
-
-        protected class SceneHeartbeat : IThread
-        {
-            #region Constructor and IThread
-
-//            ScenePhysicsHeartbeat physH;
-            SceneUpdateHeartbeat updateH;
-
-            public SceneHeartbeat(Scene scene)
-            {
-//                physH = new ScenePhysicsHeartbeat(scene);
-                updateH = new SceneUpdateHeartbeat(scene);
-                type = "SceneHeartbeat";
-                m_scene = scene;
-            }
-
-            public override void Restart()
-            {
-                ShouldExit = true;
-                SceneHeartbeat heartbeat = new SceneHeartbeat(m_scene);
-                m_scene.tracker.AddSceneHeartbeat(heartbeat);
-            }
-
-            /// <summary>
-            /// Performs per-frame updates regularly
-            /// </summary>
-            public override void Start()
-            {
-                try
-                {
-                    Update();
-                }
-                catch (ThreadAbortException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    m_log.Error("[Scene]: Failed with " + ex);
-                }
-                FireThreadClosing(this);
-                Thread.CurrentThread.Abort();
-            }
-
-            private void CheckExit()
-            {
-                LastUpdate = DateTime.Now;
-                if (!ShouldExit && !shuttingdown)
-                    return;
-                throw new Exception("Closing");
-            }
-
-            #endregion
-
-            #region Update
-
-            public void Update()
-            {
-//                ITimeMonitor sleepFrameMonitor = (ITimeMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Sleep Frame Time");
-//                int maintc;
-
-                updateH.Update(true);
-
-                while (!ShouldExit)
-                {
-                    maintc = Util.EnvironmentTickCount();
-                    //Update all of the threads without sleeping, then sleep down at the bottom
-                    updateH.Update(true);
-                    physH.Update(false);
-                    maintc = Util.EnvironmentTickCountSubtract(maintc);
-                    maintc = (int)(0.086 * 1000) - maintc;
-
-                    if (maintc > 0)
-                        Thread.Sleep(maintc);
-                    int MonitorSleepFrameTime = maintc;
-                    sleepFrameMonitor.AddTime(MonitorSleepFrameTime);
-                }
-            }
-
-            #endregion
-        }
-*/
 
         #endregion
 

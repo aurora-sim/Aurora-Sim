@@ -59,7 +59,7 @@ namespace Aurora.Framework
         /// </summary>
         protected internal void Run()
         {
-            while (m_timesToIterate > 0)
+            while (m_timesToIterate >= 0)
             {
                 InternalHeartbeat[] heartbeats = new InternalHeartbeat[m_heartbeats.Count];
                 //Pull them out so we don't have issues with locking this the whole time we are doing the async pieces
@@ -103,7 +103,7 @@ namespace Aurora.Framework
 
             //Async the action (yeah, this is bad, but otherwise we can't abort afaik)
             IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
-            if (((timeout != -1) && !result.IsCompleted) &&
+            if (((timeout != 0) && !result.IsCompleted) &&
                 (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
             {
                 return false;
