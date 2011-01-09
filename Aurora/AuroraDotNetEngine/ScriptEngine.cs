@@ -836,7 +836,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else
             {
-                eq.Enqueue(EventQueueHelper.ScriptRunningReplyEvent(objectID, itemID, id.Running, true),
+                eq.ScriptRunningReply(objectID, itemID, id.Running, true,
                            controllingClient.AgentId, controllingClient.Scene.RegionInfo.RegionHandle);
             }
         }

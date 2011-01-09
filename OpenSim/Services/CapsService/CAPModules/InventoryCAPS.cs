@@ -12,7 +12,6 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 
 using OpenMetaverse;
 using Aurora.DataManager;

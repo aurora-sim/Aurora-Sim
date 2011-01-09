@@ -7,7 +7,6 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
@@ -627,7 +626,7 @@ namespace Aurora.Modules
 
         #region CAPS
 
-        public void OnRegisterCaps(UUID agentID, Caps caps)
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capuuid = UUID.Random();
             

@@ -1056,45 +1056,6 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        // Called by Caps, on the first HTTP contact from the client
-        public bool CheckClient(UUID agentID, System.Net.IPEndPoint ep)
-        {
-            AgentCircuitData aCircuit = AuthenticateHandler.GetAgentCircuitData(agentID);
-            if (aCircuit != null)
-            {
-                bool vialogin = false;
-                if (!VerifyClient(aCircuit, ep, out vialogin))
-                {
-                    // if it doesn't pass, we remove the agentcircuitdata altogether
-                    // and the scene presence and the client, if they exist
-                    try
-                    {
-                        ScenePresence sp = GetScenePresence(agentID);
-                        if (sp != null)
-                        {
-                            m_log.Warn("[Scene]: Could not verify client " + sp.Name + " in region " + RegionInfo.RegionName + ", logging them out of the grid");
-                            PresenceService.LogoutAgent(sp.ControllingClient.SessionId);
-                            sp.ControllingClient.Close();
-                            IncomingCloseAgent(sp.UUID);
-                        }
-
-                        // BANG! SLASH!
-                        AuthenticateHandler.RemoveCircuit(agentID);
-
-                        return false;
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.DebugFormat("[SCENE]: Exception while closing aborted client: {0}", e.StackTrace);
-                    }
-                }
-                else
-                    return true;
-            }
-
-            return false;
-        }
-
         #region Subscribing and Unsubscribing to client events
 
         /// <summary>
@@ -1366,9 +1327,13 @@ namespace OpenSim.Region.Framework.Scenes
                 sp = null;
             }
 
-            ICapabilitiesModule module = RequestModuleInterface<ICapabilitiesModule>();
-            if (module != null)
-                module.AddCapsHandler(agent);
+            ICapsService capsService = RequestModuleInterface<ICapsService>();
+            if (capsService != null)
+            {
+                const string seedRequestPath = "0000/";
+                string CapsSeed = "/CAPS/" + agent.CapsPath + seedRequestPath;
+                capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
+            }
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;

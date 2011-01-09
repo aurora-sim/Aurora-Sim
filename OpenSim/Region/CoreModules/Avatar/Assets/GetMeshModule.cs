@@ -41,7 +41,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.CoreModules.Avatar.Assets
 {
@@ -96,7 +95,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         public string Name { get { return "GetMeshModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, Caps caps)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capID = UUID.Random();
 
@@ -112,7 +111,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
 
         #endregion
 
-        public Hashtable ProcessGetMesh(Hashtable request, UUID AgentId, Caps cap)
+        public Hashtable ProcessGetMesh(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
         {
             
             Hashtable responsedata = new Hashtable();

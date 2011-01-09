@@ -392,6 +392,28 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Try to find a current scene at the given location
+        /// </summary>
+        /// <param name="locX">In meters</param>
+        /// <param name="locY">In meters</param>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        public bool TryGetScene(ulong RegionHandle, out Scene scene)
+        {
+            foreach (Scene mscene in m_localScenes)
+            {
+                if (mscene.RegionInfo.RegionHandle == RegionHandle)
+                {
+                    scene = mscene;
+                    return true;
+                }
+            }
+
+            scene = null;
+            return false;
+        }
+
         public bool TryGetScene(IPEndPoint ipEndPoint, out Scene scene)
         {
             foreach (Scene mscene in m_localScenes)

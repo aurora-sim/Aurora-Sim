@@ -45,7 +45,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using DirFindFlags = OpenMetaverse.DirectoryManager.DirFindFlags;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
@@ -185,14 +184,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += EventManager_OnClientLogin;
-            scene.EventManager.OnRegisterCaps += new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
+            scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             // The InstantMessageModule itself doesn't do this, 
             // so lets see if things explode if we don't do it
             // scene.EventManager.OnClientClosed += OnClientClosed;
 
         }
 
-        void EventManager_OnRegisterCaps(UUID agentID, Caps caps)
+        void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             string capsBase = "/CAPS/" + UUID.Random();
             caps.AddStreamHandler("GroupProposalBallot",
@@ -227,7 +226,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
             scene.EventManager.OnClientLogin -= EventManager_OnClientLogin;
-            scene.EventManager.OnRegisterCaps -= new EventManager.RegisterCapsEvent(EventManager_OnRegisterCaps);
+            scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
         }
 
         public void Close()

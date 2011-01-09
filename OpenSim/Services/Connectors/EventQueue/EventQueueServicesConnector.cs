@@ -45,7 +45,6 @@ using OpenSim.Region.Framework.Scenes;
 using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Capabilities;
 
 namespace OpenSim.Services.Connectors
@@ -56,7 +55,7 @@ namespace OpenSim.Services.Connectors
         
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private string m_serverURL = "";
-        private List<ICapabilitiesModule> m_capsModules = new List<ICapabilitiesModule>();
+        private ICapsService m_capsService;
 
         #region IService Members
 
@@ -88,7 +87,7 @@ namespace OpenSim.Services.Connectors
             //Clean it up a bit
             url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
             m_serverURL = url + "/CAPS/EQMPOSTER";
-            m_capsModules.Add(registry.RequestModuleInterface<ICapabilitiesModule>());
+            m_capsService = registry.RequestModuleInterface<ICapsService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -98,7 +97,6 @@ namespace OpenSim.Services.Connectors
                 return;
 
             registry.RegisterModuleInterface<IEventQueueService>(this);
-            m_capsModules.Add(registry.RequestModuleInterface<ICapabilitiesModule>());
         }
 
         #endregion
@@ -109,16 +107,17 @@ namespace OpenSim.Services.Connectors
         /// <param name="agentID"></param>
         private void FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle)
         {
-            if (m_capsModules.Count != 0)
+            if (m_capsService != null)
             {
-                foreach (ICapabilitiesModule m in m_capsModules)
+                IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
+                if (clientCaps != null)
                 {
-                    Caps caps = m.GetCapsHandlerForUser(agentID);
-                    if (caps != null && caps.RegionHandle == RegionHandle)
+                    IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(RegionHandle);
+                    if (regionClientCaps != null)
                     {
-                        if (caps.RequestMap.ContainsKey("EventQueuePass"))
+                        if (regionClientCaps.RequestMap.ContainsKey("EventQueuePass"))
                         {
-                            UUID Password = caps.RequestMap["EventQueuePass"].AsUUID();
+                            UUID Password = regionClientCaps.RequestMap["EventQueuePass"].AsUUID();
                             m_AvatarPasswordMap[agentID] = Password;
                         }
                     }

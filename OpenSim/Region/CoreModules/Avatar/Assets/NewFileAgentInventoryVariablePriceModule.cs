@@ -41,7 +41,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Capabilities;
 
 namespace OpenSim.Region.CoreModules.Avatar.Assets
@@ -97,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
         public string Name { get { return "NewFileAgentInventoryVariablePriceModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, Caps caps)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capID = UUID.Random();
 

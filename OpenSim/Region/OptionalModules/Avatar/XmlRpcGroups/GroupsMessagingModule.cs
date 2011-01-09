@@ -39,8 +39,6 @@ using OpenSim.Region.Framework.Scenes;
 using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
-using Caps = OpenSim.Framework.Capabilities.Caps;
-
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
     public class GroupsMessagingModule : ISharedRegionModule, IGroupsMessagingModule
@@ -484,27 +482,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         void ChatterBoxSessionStartReplyViaCaps(IClientAPI remoteClient, string groupName, UUID groupID)
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
-
-            OSDMap moderatedMap = new OSDMap(4);
-            moderatedMap.Add("voice", OSD.FromBoolean(false));
-
-            OSDMap sessionMap = new OSDMap(4);
-            sessionMap.Add("moderated_mode", moderatedMap);
-            sessionMap.Add("session_name", OSD.FromString(groupName));
-            sessionMap.Add("type", OSD.FromInteger(0));
-            sessionMap.Add("voice_enabled", OSD.FromBoolean(false));
-
-            OSDMap bodyMap = new OSDMap(4);
-            bodyMap.Add("session_id", OSD.FromUUID(groupID));
-            bodyMap.Add("temp_session_id", OSD.FromUUID(groupID));
-            bodyMap.Add("success", OSD.FromBoolean(true));
-            bodyMap.Add("session_info", sessionMap);
-
             IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
 
             if (queue != null)
             {
-                queue.Enqueue(EventQueueHelper.buildEvent("ChatterBoxSessionStartReply", bodyMap), remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
+                queue.ChatterBoxSessionStartReply(groupName, groupID,
+                    remoteClient.AgentId, remoteClient.Scene.RegionInfo.RegionHandle);
             }
         }
 

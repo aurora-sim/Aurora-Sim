@@ -44,8 +44,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Mono.Data.SqliteClient;
 using Aurora.Framework;
-
-using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.UserStatistics
 {
@@ -291,7 +290,7 @@ namespace OpenSim.Region.UserStatistics
             get { return true; }
         }
 
-        public void OnRegisterCaps(UUID agentID, Caps caps)
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             m_log.DebugFormat("[VC]: OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
             string capsPath = "/CAPS/VS/" + UUID.Random();
@@ -305,7 +304,7 @@ namespace OpenSim.Region.UserStatistics
                                                        }));
         }
 
-        public void OnDeRegisterCaps(UUID agentID, Caps caps)
+        public void OnDeRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             
         }
@@ -433,7 +432,7 @@ namespace OpenSim.Region.UserStatistics
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ViewerStatsReport(string request, string path, string param,
-                                      UUID agentID, Caps caps)
+                                      UUID agentID, IRegionClientCapsService caps)
         {
             //m_log.Debug(request);
 

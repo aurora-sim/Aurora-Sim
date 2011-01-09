@@ -48,7 +48,6 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using System.Text.RegularExpressions;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
@@ -230,7 +229,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 m_FreeswitchService = scene.RequestModuleInterface<IFreeswitchService>();
                 // we need to capture scene in an anonymous method
                 // here as we need it later in the callbacks
-                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, Caps caps)
+                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IRegionClientCapsService caps)
                 {
                     OnRegisterCaps(scene, agentID, caps);
                 };
@@ -305,7 +304,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         // delegate containing the scene of the respective region (see
         // Initialise()).
         // </summary>
-        public void OnRegisterCaps(Scene scene, UUID agentID, Caps caps)
+        public void OnRegisterCaps(Scene scene, UUID agentID, IRegionClientCapsService caps)
         {
             m_log.DebugFormat("[FreeSwitchVoice] OnRegisterCaps: agentID {0} caps {1}", agentID, caps);
 
@@ -347,7 +346,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ProvisionVoiceAccountRequest(Scene scene, string request, string path, string param,
-                                                   UUID agentID, Caps caps)
+                                                   UUID agentID, IRegionClientCapsService caps)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             if (avatar == null)
@@ -418,7 +417,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ParcelVoiceInfoRequest(Scene scene, string request, string path, string param,
-                                             UUID agentID, Caps caps)
+                                             UUID agentID, IRegionClientCapsService caps)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             string avatarName = avatar.Name;
@@ -498,7 +497,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         /// <param name="caps"></param>
         /// <returns></returns>
         public string ChatSessionRequest(Scene scene, string request, string path, string param,
-                                         UUID agentID, Caps caps)
+                                         UUID agentID, IRegionClientCapsService caps)
         {
             ScenePresence avatar = scene.GetScenePresence(agentID);
             string avatarName = avatar.Name;

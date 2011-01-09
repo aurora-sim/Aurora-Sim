@@ -78,6 +78,7 @@ namespace OpenSim.Services.Interfaces
         ulong RegionHandle { get; }
         UUID AgentID { get; }
         OSDMap InfoToSendToUrl { get; set; }
+        OSDMap RequestMap { get; set; }
         string UrlToInform { get; }
         String HostUri { get; }
         String CapsUrl { get; }

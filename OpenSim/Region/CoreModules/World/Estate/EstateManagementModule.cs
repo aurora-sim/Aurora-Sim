@@ -37,7 +37,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse.StructuredData;
@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             sendRegionInfoPacketToAll();
         }
 
-        public void OnRegisterCaps(UUID agentID, Caps caps)
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capuuid = UUID.Random();
 

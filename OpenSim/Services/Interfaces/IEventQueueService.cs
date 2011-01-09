@@ -66,6 +66,7 @@ namespace OpenSim.Services.Interfaces
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPEndPoint newRegionExternalEndPoint,
                          UUID avatarID, UUID sessionID, ulong RegionHandle);
+        void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle);
         void ChatterboxInvitation(UUID sessionID, string sessionName,
                                   UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                   uint timeStamp, bool offline, int parentEstateID, Vector3 position,
@@ -76,6 +77,8 @@ namespace OpenSim.Services.Interfaces
         void ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message, UUID toAgent, string Transition, ulong RegionHandle);
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle);
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
+        void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
+            UUID avatarID, ulong RegionHandle)
 
         bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
 

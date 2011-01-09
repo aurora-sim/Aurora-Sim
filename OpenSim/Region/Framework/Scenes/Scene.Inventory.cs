@@ -40,7 +40,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -2197,7 +2197,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneGraph.LinkObjects(root, children);
         }
 
-        private void EventManagerOnRegisterCaps(UUID agentID, Caps caps)
+        private void EventManagerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             string capsBase = "/CAPS/" + UUID.Random() + "/";
             //Region Server bound

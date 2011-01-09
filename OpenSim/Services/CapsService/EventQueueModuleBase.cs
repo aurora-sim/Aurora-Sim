@@ -10,7 +10,7 @@ using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Framework.Capabilities
+namespace OpenSim.Services.CapsService
 {
     public class EventQueueModuleBase
     {
@@ -63,6 +63,12 @@ namespace OpenSim.Framework.Capabilities
             Enqueue(item, avatarID, RegionHandle);
         }
 
+        public void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle)
+        {
+            OSD Item = EventQueueHelper.ChatterBoxSessionStartReply(groupName, groupID);
+            Enqueue(Item, AgentID, RegionHandle);
+        }
+
         public void ChatterboxInvitation(UUID sessionID, string sessionName,
                                          UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                          uint timeStamp, bool offline, int parentEstateID, Vector3 position,
@@ -108,6 +114,13 @@ namespace OpenSim.Framework.Capabilities
         {
             OSD item = EventQueueHelper.PlacesQuery(groupUpdate, info);
             Enqueue(item, avatarID, RegionHandle);
+        }
+
+        public void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
+            UUID avatarID, ulong RegionHandle)
+        {
+            OSD Item = EventQueueHelper.ScriptRunningReplyEvent(objectID, itemID, running, true);
+            Enqueue(Item, avatarID, RegionHandle);
         }
 
         //

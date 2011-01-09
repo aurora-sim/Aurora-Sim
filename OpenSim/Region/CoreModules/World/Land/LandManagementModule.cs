@@ -42,7 +42,6 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.Framework;
 
@@ -1748,7 +1747,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region CAPS handler
 
-        private void EventManagerOnRegisterCaps(UUID agentID, Caps caps)
+        private void EventManagerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             string capsBase = "/CAPS/" + UUID.Random();
             caps.AddStreamHandler("RemoteParcelRequest",
@@ -1768,7 +1767,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                        }));
         }
 
-        private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID, Caps caps)
+        private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID, IRegionClientCapsService caps)
         {
             IClientAPI client;
             if (!m_scene.TryGetClient(agentID, out client))
@@ -1838,7 +1837,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         //     <uuid>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</uuid>
         //   </map>
         // </llsd>
-        private string RemoteParcelRequest(string request, string path, string param, UUID agentID, Caps caps)
+        private string RemoteParcelRequest(string request, string path, string param, UUID agentID, IRegionClientCapsService caps)
         {
             UUID parcelID = UUID.Zero;
             try

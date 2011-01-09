@@ -43,7 +43,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Services.Interfaces;
 
@@ -65,6 +64,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
         private Dictionary<UUID, UUID> m_QueueUUIDAvatarMapping = new Dictionary<UUID, UUID>();
         private Dictionary<UUID, UUID> m_AvatarQueueUUIDMapping = new Dictionary<UUID, UUID>();
         private bool m_enabled = false;
+
         #region IRegionModule methods
 
         public virtual void Initialise(IConfigSource config)
@@ -241,7 +241,7 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             }
         }
 
-        public void OnRegisterCaps(UUID agentID, Caps caps)
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             // Register an event queue for the client
 
@@ -339,8 +339,12 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             OSDArray array = new OSDArray();
             if (element == null) // didn't have an event in 15s
             {
+                OSDMap keepAliveEvent = new OSDMap(2);
+                keepAliveEvent.Add("body", new OSDMap());
+                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+
                 // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                array.Add(EventQueueHelper.KeepAliveEvent());
+                array.Add(keepAliveEvent);
                 //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
             }
             else
@@ -435,8 +439,12 @@ namespace OpenSim.Region.CoreModules.Framework.EventQueue
             OSDArray array = new OSDArray();
             if (element == null) // didn't have an event in 15s
             {
+                OSDMap keepAliveEvent = new OSDMap(2);
+                keepAliveEvent.Add("body", new OSDMap());
+                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+
                 // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                array.Add(EventQueueHelper.KeepAliveEvent());
+                array.Add(keepAliveEvent);
                 //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", agentID, m_scene.RegionInfo.RegionName);
             }
             else

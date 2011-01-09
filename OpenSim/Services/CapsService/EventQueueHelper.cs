@@ -27,13 +27,14 @@
 
 using System;
 using System.Net;
+using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Framework.Capabilities
+namespace OpenSim.Services.CapsService
 {
     public struct QueueItem
     {
@@ -205,11 +206,6 @@ namespace OpenSim.Framework.Capabilities
             return buildEvent("EstablishAgentCommunication", body);
         }
 
-        public static OSD KeepAliveEvent()
-        {
-            return buildEvent("FAKEEVENT", new OSDMap());
-        }
-
         public static OSD AgentParams(UUID agentID, bool checkEstate, int godLevel, bool limitedToEstate)
         {
             OSDMap body = new OSDMap(4);
@@ -270,6 +266,25 @@ namespace OpenSim.Framework.Capabilities
             return im;
         }
 
+        public static OSD ChatterBoxSessionStartReply(string groupName, UUID groupID)
+        {
+            OSDMap moderatedMap = new OSDMap(4);
+            moderatedMap.Add("voice", OSD.FromBoolean(false));
+
+            OSDMap sessionMap = new OSDMap(4);
+            sessionMap.Add("moderated_mode", moderatedMap);
+            sessionMap.Add("session_name", OSD.FromString(groupName));
+            sessionMap.Add("type", OSD.FromInteger(0));
+            sessionMap.Add("voice_enabled", OSD.FromBoolean(false));
+
+            OSDMap bodyMap = new OSDMap(4);
+            bodyMap.Add("session_id", OSD.FromUUID(groupID));
+            bodyMap.Add("temp_session_id", OSD.FromUUID(groupID));
+            bodyMap.Add("success", OSD.FromBoolean(true));
+            bodyMap.Add("session_info", sessionMap);
+
+            return buildEvent("ChatterBoxSessionStartReply", bodyMap);
+        }
 
         public static OSD ChatterboxInvitation(UUID sessionID, string sessionName,
             UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,

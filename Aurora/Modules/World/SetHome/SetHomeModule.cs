@@ -11,7 +11,7 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 using Aurora.DataManager;
 using Aurora.Framework;
 
@@ -74,7 +74,7 @@ namespace Aurora.Modules.World.Auction
             client.OnSetStartLocationRequest -= SetHomeRezPoint;
         }
 
-        public void RegisterCaps(UUID agentID, Caps caps)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capuuid = UUID.Random();
 

@@ -42,7 +42,6 @@ using System.Collections;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
@@ -707,7 +706,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="agentID"></param>
         /// <param name="caps"></param>
-        public void RegisterCaps(UUID agentID, Caps caps)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             string capsBase = "/CAPS/" + UUID.Random() + "/";
 

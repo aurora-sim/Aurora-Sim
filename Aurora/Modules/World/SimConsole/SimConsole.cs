@@ -104,7 +104,7 @@ namespace Aurora.Modules.World.SimConsole
 
         #region CAPS
 
-        public void OnRegisterCaps(UUID agentID, OpenSim.Framework.Capabilities.Caps caps)
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capuuid = UUID.Random();
 

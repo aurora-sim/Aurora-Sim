@@ -60,7 +60,5 @@ namespace OpenSim.Framework
         void AddNewClient(IClientAPI client);
 
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
-
-        bool CheckClient(UUID agentID, IPEndPoint ep);
     }
 }

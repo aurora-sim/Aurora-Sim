@@ -43,6 +43,7 @@ using Aurora.Framework;
 using Aurora.Modules.AbuseReportsGUI;
 using OpenSim.Framework.Console;
 using System.Windows.Forms;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -238,7 +239,7 @@ namespace Aurora.Modules
 
         #region Disabled CAPS code
 
-        private void OnRegisterCaps(UUID agentID, OpenSim.Framework.Capabilities.Caps caps)
+        private void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capuuid = UUID.Random();
 

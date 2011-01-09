@@ -45,7 +45,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 
 namespace OpenSim.Region.CoreModules.Media.Moap
 {
@@ -126,8 +125,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             m_scene.EventManager.OnDeregisterCaps -= OnDeregisterCaps;
             m_scene.EventManager.OnSceneObjectPartCopy -= OnSceneObjectPartCopy;
         }
-        
-        public void OnRegisterCaps(UUID agentID, Caps caps)
+
+        public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
 //            m_log.DebugFormat(
 //                "[MOAP]: Registering ObjectMedia and ObjectMediaNavigate capabilities for agent {0}", agentID);
@@ -156,8 +155,8 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                     "ObjectMediaNavigate", new RestStreamHandler("POST", omuCapUrl, HandleObjectMediaNavigateMessage));
             }
         }
-        
-        public void OnDeregisterCaps(UUID agentID, Caps caps)
+
+        public void OnDeregisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             lock (m_omCapUsers)
             {

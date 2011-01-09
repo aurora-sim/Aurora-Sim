@@ -42,7 +42,6 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
 using OpenSim.Framework.Capabilities;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
 
@@ -97,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         public string Name { get { return "UploadObjectAssetModuleModule"; } }
 
 
-        public void RegisterCaps(UUID agentID, Caps caps)
+        public void RegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             UUID capID = UUID.Random();
 
@@ -131,7 +130,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         /// <param name="AgentId"></param>
         /// <param name="cap"></param>
         /// <returns></returns>
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, Caps cap)
+        public Hashtable ProcessAdd(Hashtable request, UUID AgentId, IRegionClientCapsService cap)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;

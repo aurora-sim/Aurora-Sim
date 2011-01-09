@@ -33,7 +33,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Client;
 using OpenSim.Region.Framework.Interfaces;
-using Caps = OpenSim.Framework.Capabilities.Caps;
+using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
@@ -249,14 +249,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// has been instantiated and before it is return to the
         /// client and provides region modules to add their caps.
         /// </summary>
-        public delegate void RegisterCapsEvent(UUID agentID, Caps caps);
+        public delegate void RegisterCapsEvent(UUID agentID, IRegionClientCapsService caps);
         public event RegisterCapsEvent OnRegisterCaps;
         
         /// <summary>
         /// DeregisterCapsEvent is called by Scene when the caps
         /// handler for an agent are removed.
         /// </summary>
-        public delegate void DeregisterCapsEvent(UUID agentID, Caps caps);
+        public delegate void DeregisterCapsEvent(UUID agentID, IRegionClientCapsService caps);
         public event DeregisterCapsEvent OnDeregisterCaps;
         
         /// <summary>
@@ -1227,7 +1227,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnRegisterCaps(UUID agentID, Caps caps)
+        public void TriggerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             RegisterCapsEvent handlerRegisterCaps = OnRegisterCaps;
             if (handlerRegisterCaps != null)
@@ -1248,7 +1248,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnDeregisterCaps(UUID agentID, Caps caps)
+        public void TriggerOnDeregisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             DeregisterCapsEvent handlerDeregisterCaps = OnDeregisterCaps;
             if (handlerDeregisterCaps != null)
