@@ -2261,7 +2261,7 @@ namespace OpenSim.Region.Framework.Scenes
             //memberwiseclone means it also clones the physics actor reference
             // This will make physical prim 'bounce' if not set to null.
 
-            if(clonePhys)
+            if(!clonePhys)
                 dupe.PhysActor = null;
 
             dupe._groupID = GroupID;

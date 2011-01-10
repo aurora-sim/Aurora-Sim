@@ -1367,9 +1367,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_scene = Scene;
 
-            if (!clonePhys)
-                dupe.RootPart.PhysActor = null;
-
             // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
             // attachments do not bordercross while they're being duplicated.  This is hacktastic!
             // Normally, setting AbsolutePosition will bordercross a prim if it's outside the region!
@@ -1379,6 +1376,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             // This is only necessary when userExposed is false!
 
+            dupe.ClearChildren();
+
+            dupe.AddChild(m_rootPart.Copy(dupe, clonePhys), m_rootPart.LinkNum);
+
             bool previousAttachmentStatus = dupe.RootPart.IsAttachment;
 
             dupe.RootPart.IsAttachment = true;
@@ -1386,10 +1387,6 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AbsolutePosition = AbsolutePosition;
 
             dupe.RootPart.IsAttachment = previousAttachmentStatus;
-
-            dupe.ClearChildren();
-
-            dupe.AddChild(m_rootPart.Copy(dupe, clonePhys), m_rootPart.LinkNum);
 
             dupe.m_rootPart.TrimPermissions();
 
@@ -1425,6 +1422,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public override void RebuildPhysicalRepresentation()
         {
+           
+            /*
             foreach (SceneObjectPart part in m_partsList)
             {
                 if (part.PhysActor != null)
@@ -1463,6 +1462,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
                 }
             }
+             */
         }
 
         #endregion
