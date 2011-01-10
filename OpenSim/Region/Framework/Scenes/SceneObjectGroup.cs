@@ -1961,12 +1961,20 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add the root part to our group!
                 m_scene.SceneGraph.LinkPartToSOG(this, linkPart, linkNum++);
                 linkPart.CreateSelected = true;
+                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
+                    {
+                    linkPart.PhysActor.link(m_rootPart.PhysActor);
+                    }
                 //rest of parts
                 foreach (SceneObjectPart part in objectGroupChildren)
                 {
-                    if (part.UUID != objectGroup.m_rootPart.UUID)
+                if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
                         LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
+                        if (part.PhysActor != null && m_rootPart.PhysActor != null)
+                            {
+                            part.PhysActor.link(m_rootPart.PhysActor);
+                            }
                     }
                 }
             }
@@ -2038,6 +2046,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             linkPart.Rezzed = RootPart.Rezzed;
 
+ 
+
             //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
             //We need to send this so that we don't have issues with the client not realizing that the prims were unlinked
@@ -2076,6 +2086,8 @@ namespace OpenSim.Region.Framework.Scenes
             oldRot = part.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             part.RotationOffset = newRot;
+
+
         }
 
         #endregion

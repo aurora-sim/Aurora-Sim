@@ -301,7 +301,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // through it while it's selected
                 m_collisionscore = 0;
                 m_taintselected = value;
-                if ((m_isphysical && !_zeroFlag) || !value)
+                if ((IsPhysical && !_zeroFlag) || !value)
                 {
                     _parent_scene.AddPhysicsActorTaint(this);
                 }
@@ -358,12 +358,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void disableBodySoft()
         {
-            m_disabled = true;
-
-            m_vehicle.Disable(this);
-            if (m_isphysical && Body != IntPtr.Zero)
+        if (!childPrim)
             {
+            m_disabled = true;
+            m_vehicle.Disable(this);
+            if (IsPhysical && Body != IntPtr.Zero)
+                {
                 d.BodyDisable(Body);
+                }
             }
         }
 
@@ -964,7 +966,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //Console.WriteLine("ProcessTaints for " + m_primName);
         if (m_taintremove)
             {
-            if (m_isphysical)
+            if (IsPhysical)
                 {
                 if(_parent != null)
                     {
@@ -1096,13 +1098,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
  
             _parent = m_taintparent;
-            m_taintPhysics = m_isphysical;
         }
 
         // I'm the parent
         // prim is the child
         public void ParentPrim(AuroraODEPrim prim)
             {
+            if (!m_isphysical) // we only link if we are physical
+                {
+                if (prim.m_isphysical)
+                    prim.DestroyBody(); // if parent is not physical then childs can't be also
+                return;
+                }
+
+
             //Console.WriteLine("ParentPrim  " + m_primName);
             if (this.m_localID != prim.m_localID)
                 {
@@ -1235,8 +1244,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void changeSelectedStatus()
         {
+            bool isphys = IsPhysical;
+
             if (m_taintselected)
             {
+
                 m_collisionCategories = CollisionCategories.Selected;
                 m_collisionFlags = (CollisionCategories.Sensor | CollisionCategories.Space);
 
@@ -1262,7 +1274,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // first 50 again. then the last 50 are disabled. then the first 50, which were just woken
                 // up, start simulating again, which in turn wakes up the last 50.
 
-                if (m_isphysical)
+                if (isphys)
                 {
                     disableBodySoft();
                 }
@@ -1273,7 +1285,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
                 }
 
-                if (m_isphysical)
+                if (isphys)
                 {
                     disableBodySoft();
                 }
@@ -1282,7 +1294,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_collisionCategories = CollisionCategories.Geom;
 
-                if (m_isphysical)
+                if (isphys)
                     m_collisionCategories |= CollisionCategories.Body;
 
                 m_collisionFlags = m_default_collisionFlags;
@@ -1297,7 +1309,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomSetCategoryBits(prim_geom, (int)m_collisionCategories);
                     d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
                 }
-                if (m_isphysical)
+                if (isphys)
                 {
                     if (Body != IntPtr.Zero)
                     {
@@ -1426,9 +1438,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changemove(float timestep)
             {
-            if (m_isphysical)
+            if (IsPhysical)
                 {
-
                 if (!m_taintremove)
                     {
                     //Prim auto disable after 20 frames,
@@ -1914,59 +1925,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changePhysicsStatus()
             {
-            if (m_isphysical == true)
+            if (!childPrim)
                 {
-                if (Body == IntPtr.Zero)
+                if (m_isphysical == true)
                     {
-                    if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                    if (Body == IntPtr.Zero)
                         {
-                        changeshape();
-                        }
-                    else
-                        {
-                        MakeBody();
-                        }
-                    }
-                }
-            else
-                {
-                if (Body != IntPtr.Zero)
-                    {
-                    if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
-                        {
-                        if (prim_geom != IntPtr.Zero)
+                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
                             {
-                            try
-                                {
-                                d.GeomDestroy(prim_geom);
-                                prim_geom = IntPtr.Zero;
-                                _mesh = null;
-                                }
-                            catch (System.AccessViolationException)
-                                {
-                                prim_geom = IntPtr.Zero;
-                                m_log.Error("[PHYSICS]: PrimGeom dead");
-                                }
+                            changeshape();
                             }
-                        //Console.WriteLine("changePhysicsStatus for " + m_primName);
-                        changeadd();
-                        }
-                    if (childPrim)
-                        {
-                        if (_parent != null)
+                        else
                             {
-                            AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                            parent.ChildDelink(this);
+                            MakeBody();
                             }
                         }
-                    else
+                    }
+                else
+                    {
+                    if (Body != IntPtr.Zero)
                         {
-                        DestroyBody();
+                        if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
+                            {
+                            changeshape();
+                            }
+                        else
+                            DestroyBody();
                         }
                     }
-                }
 
-            changeSelectedStatus();
+                changeSelectedStatus();              
+                }
 
             resetCollisionAccounting();
             m_taintPhysics = m_isphysical;
@@ -2194,7 +2183,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool IsPhysical
         {
-            get { return m_isphysical; }
+            get {
+                if (childPrim && _parent != null)  // root prim defines if is physical or not
+                    return ((AuroraODEPrim)_parent).m_isphysical;
+                else
+                    return m_isphysical;
+                }
             set { 
                   m_isphysical = value;
                   if (!m_isphysical) // Zero the remembered last velocity
@@ -2346,7 +2340,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override Vector3 CenterOfMass
         {
-            get { return Vector3.Zero; }
+            get {
+                
+                d.Vector3 dtmp;
+
+                if (!childPrim)
+                    {
+                    if (Body != IntPtr.Zero)
+                        {
+                        dtmp = d.BodyGetPosition(Body);
+                        return new Vector3(dtmp.X,dtmp.Y,dtmp.Z);
+                        }
+                    }
+
+                return Vector3.Zero;
+                }
         }
 
         public override Vector3 GeometricCenter
@@ -2398,7 +2406,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get
             {
-                if (!m_isphysical || Body == IntPtr.Zero)
+                if (childPrim || !m_isphysical || Body == IntPtr.Zero)
                     return Vector3.Zero;
 
                 return _torque;
