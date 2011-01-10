@@ -1367,7 +1367,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_scene = Scene;
 
-           
+            if (!clonePhys)
+                dupe.RootPart.PhysActor = null;
+
             // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
             // attachments do not bordercross while they're being duplicated.  This is hacktastic!
             // Normally, setting AbsolutePosition will bordercross a prim if it's outside the region!
@@ -1381,7 +1383,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.RootPart.IsAttachment = true;
 
-//            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
             dupe.AbsolutePosition = AbsolutePosition;
 
             dupe.RootPart.IsAttachment = previousAttachmentStatus;
@@ -3208,7 +3209,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
-            SceneObjectGroup sog = (SceneObjectGroup)Copy(false);
+            SceneObjectGroup sog = (SceneObjectGroup)Copy(true);
             sog.m_isDeleted = false;
             return sog;
         }
