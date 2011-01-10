@@ -103,6 +103,12 @@ namespace OpenSim.Services.LLLoginService
         protected GridAvatarArchiver archiver;
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
         protected bool allowExportPermission = true;
+
+        public int MinLoginLevel
+        {
+            get { return m_MinLoginLevel; }
+        }
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_config = config;

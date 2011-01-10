@@ -53,5 +53,6 @@ namespace OpenSim.Services.Interfaces
         LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession);
         Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);
+        int MinLoginLevel { get; }
     }
 }
