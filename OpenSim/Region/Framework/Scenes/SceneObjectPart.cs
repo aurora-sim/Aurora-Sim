@@ -2251,7 +2251,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return dupe;
                 }
         */
-        public SceneObjectPart Copy(SceneObjectGroup parent)
+        public SceneObjectPart Copy(SceneObjectGroup parent,bool clonePhys)
         {
             SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
             dupe.m_parentGroup = parent;
@@ -2260,6 +2260,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             //memberwiseclone means it also clones the physics actor reference
             // This will make physical prim 'bounce' if not set to null.
+
+            if(clonePhys)
+                dupe.PhysActor = null;
+
             dupe._groupID = GroupID;
             dupe.m_groupPosition = m_groupPosition;
             dupe.m_offsetPosition = m_offsetPosition;

@@ -1355,7 +1355,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This does NOT reset any UUIDs, localIDs, or anything, as this is an EXACT copy.
         /// </summary>
         /// <returns></returns>
-        public override EntityBase Copy()
+        public override EntityBase Copy(bool clonePhys)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
 
@@ -1367,6 +1367,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_scene = Scene;
 
+           
             // Warning, The following code related to previousAttachmentStatus is needed so that clones of 
             // attachments do not bordercross while they're being duplicated.  This is hacktastic!
             // Normally, setting AbsolutePosition will bordercross a prim if it's outside the region!
@@ -1380,13 +1381,14 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.RootPart.IsAttachment = true;
 
-            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
+//            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
+            dupe.AbsolutePosition = AbsolutePosition;
 
             dupe.RootPart.IsAttachment = previousAttachmentStatus;
 
             dupe.ClearChildren();
 
-            dupe.AddChild(m_rootPart.Copy(dupe), m_rootPart.LinkNum);
+            dupe.AddChild(m_rootPart.Copy(dupe, clonePhys), m_rootPart.LinkNum);
 
             dupe.m_rootPart.TrimPermissions();
 
@@ -1404,7 +1406,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID != m_rootPart.UUID)
                 {
-                    SceneObjectPart copy = part.Copy(dupe);
+                    SceneObjectPart copy = part.Copy(dupe, clonePhys);
                     copy.LinkNum = part.LinkNum;
                     dupe.LinkChild(copy);
                 }
@@ -2011,6 +2013,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (linkPart.PhysActor != null)
             {
                 m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
+//            linkPart.PhysActor.delink();
             }
 
             // We need to reset the child part's position
@@ -2813,7 +2816,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Quaternion primsRot = childPrim.RotationOffset;
 
                     Quaternion newRot = primsRot * old_global_group_rot;
-                    newRot *= Quaternion.Inverse(new_global_group_rot);
+                    newRot *= Quaternion.Inverse(new_global_group_rot);                   
                     childPrim.RotationOffset = newRot;
                     childPrim.ScheduleTerseUpdate();
                     childPrim.IgnoreUndoUpdate = false;
@@ -3205,7 +3208,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
-            SceneObjectGroup sog = (SceneObjectGroup)Copy();
+            SceneObjectGroup sog = (SceneObjectGroup)Copy(false);
             sog.m_isDeleted = false;
             return sog;
         }
