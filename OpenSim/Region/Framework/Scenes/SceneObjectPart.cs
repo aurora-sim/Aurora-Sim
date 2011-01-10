@@ -751,7 +751,7 @@ namespace OpenSim.Region.Framework.Scenes
             _salePrice = 0;
             _category = 0;
             _lastOwnerID = _creatorID;
-            GroupPosition = groupPosition;
+            m_groupPosition=groupPosition;
             OffsetPosition = offsetPosition;
             RotationOffset = rotationOffset;
             Velocity = Vector3.Zero;
@@ -1144,7 +1144,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// The position of the entire group that this prim belongs to.
         /// </summary>
         public Vector3 GroupPosition
-        {
+            {
             get
             {
                 // If this is a linkset, we don't want the physics engine mucking up our group position here.
@@ -1163,62 +1163,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                 return m_groupPosition;
             }
-            set
-            {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
-                bool TriggerMoving_End = false;
-                if (m_groupPosition != value)
-                {
-                    TriggerMoving_End = true;
-                    TriggerScriptMovingStartEvent();
-                }
-                m_groupPosition = value;
-
-                PhysicsActor actor = PhysActor;
-                if (actor != null)
-                {
-                    try
-                    {
-                        // Root prim actually goes at Position
-                        if (_parentID == 0)
-                        {
-                            actor.Position = value;
-                        }
-                        else
-                        {
-                            // To move the child prim in respect to the group position and rotation we have to calculate
-                            actor.Position = GetWorldPosition();
-                            actor.Orientation = GetWorldRotation();
-                        }
-
-                        // Tell the physics engines that this prim changed.
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
-                    }
-                }
-                
-                if (m_sitTargetAvatar.Count != 0)
-                {
-                    foreach (UUID avID in m_sitTargetAvatar)
-                    {
-                        if (m_parentGroup != null)
-                        {
-                            ScenePresence avatar;
-                            if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
-                            {
-                                avatar.ParentPosition = GetWorldPosition();
-                            }
-                        }
-                    }
-                }
-                if(TriggerMoving_End)
-                    TriggerScriptMovingEndEvent();
             }
-        }
+
+
 
         public Vector3 OffsetPosition
         {
@@ -1910,6 +1857,63 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion Private Methods
 
         #region Public Methods
+
+        public void SetGroupPosition(Vector3 value, bool single)
+            {
+            if (ParentGroup != null)
+                ParentGroup.HasGroupChanged = true;
+            bool TriggerMoving_End = false;
+            if (m_groupPosition != value)
+                {
+                TriggerMoving_End = true;
+                TriggerScriptMovingStartEvent();
+                }
+
+            m_groupPosition = value;
+
+            PhysicsActor actor = PhysActor;
+            if (actor != null)
+                {
+                try
+                    {
+                    // Root prim actually goes at Position
+                    if (_parentID == 0)
+                        {
+                        actor.Position = value;
+                        }
+                    else if(single || !actor.IsPhysical)
+                        {
+                        // To move the child prim in respect to the group position and rotation we have to calculate
+                        actor.Position = GetWorldPosition();
+                        actor.Orientation = GetWorldRotation();
+                        }
+
+                    // Tell the physics engines that this prim changed.
+                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                    }
+                catch (Exception e)
+                    {
+                    m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                    }
+                }
+
+            if (m_sitTargetAvatar.Count != 0)
+                {
+                foreach (UUID avID in m_sitTargetAvatar)
+                    {
+                    if (m_parentGroup != null)
+                        {
+                        ScenePresence avatar;
+                        if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
+                            {
+                            avatar.ParentPosition = GetWorldPosition();
+                            }
+                        }
+                    }
+                }
+            if (TriggerMoving_End)
+                TriggerScriptMovingEndEvent();
+            }
 
         public void ResetExpire()
         {
@@ -4878,7 +4882,7 @@ namespace OpenSim.Region.Framework.Scenes
                 (pos.Z != GroupPosition.Z))
             {
 //                Vector3 newPos = new Vector3(pos.X, pos.Y, pos.Z);
-                GroupPosition = pos;
+                SetGroupPosition(pos,false);
                 ScheduleTerseUpdate();
             }
         }

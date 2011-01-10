@@ -370,7 +370,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.GroupPosition = val;
+                    part.SetGroupPosition(val,false);
                 }
 
                 //if (m_rootPart.PhysActor != null)
@@ -1931,7 +1931,7 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion oldRootRotation = linkPart.RotationOffset;
 
             linkPart.OffsetPosition = linkPart.GroupPosition - AbsolutePosition;
-            linkPart.GroupPosition = AbsolutePosition;
+            linkPart.SetGroupPosition(AbsolutePosition,false);
             Vector3 axPos = linkPart.OffsetPosition;
 
             Quaternion parentRot = m_rootPart.RotationOffset;
@@ -2033,7 +2033,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             axPos *= parentRot;
             linkPart.OffsetPosition = new Vector3(axPos.X, axPos.Y, axPos.Z);
-            linkPart.GroupPosition = AbsolutePosition + linkPart.OffsetPosition;
+            linkPart.SetGroupPosition(AbsolutePosition + linkPart.OffsetPosition,false);
             linkPart.OffsetPosition = new Vector3(0, 0, 0);
 
             linkPart.RotationOffset = worldRot;
@@ -2068,7 +2068,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             axPos *= parentRot;
             part.OffsetPosition = axPos;
-            part.GroupPosition = oldGroupPosition + part.OffsetPosition;
+            part.SetGroupPosition(oldGroupPosition + part.OffsetPosition,false);
             part.OffsetPosition = Vector3.Zero;
             part.RotationOffset = worldRot;
 

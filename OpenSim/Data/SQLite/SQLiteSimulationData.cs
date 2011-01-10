@@ -1530,7 +1530,7 @@ namespace OpenSim.Data.SQLite
 
             prim.Color = Color.FromArgb(ColorA, ColorR, ColorG, ColorB);
             prim.OffsetPosition = new Vector3(PositionX, PositionY, PositionZ);
-            prim.GroupPosition = new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ);
+            prim.SetGroupPosition(new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ),false);
             prim.Velocity = new Vector3(VelocityX, VelocityY, VelocityZ);
             prim.AngularVelocity = new Vector3(AngularVelocityX, AngularVelocityY, AngularVelocityZ);
             prim.RotationOffset = new Quaternion(RotationX, RotationY, RotationZ, RotationW);

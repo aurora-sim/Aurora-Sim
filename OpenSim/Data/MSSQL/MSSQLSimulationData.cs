@@ -1096,10 +1096,11 @@ VALUES
                                     Convert.ToSingle(primRow["PositionY"]),
                                     Convert.ToSingle(primRow["PositionZ"]));
 
-            prim.GroupPosition = new Vector3(
+            prim.SetGroupPosition (new Vector3(
                                     Convert.ToSingle(primRow["GroupPositionX"]),
                                     Convert.ToSingle(primRow["GroupPositionY"]),
-                                    Convert.ToSingle(primRow["GroupPositionZ"]));
+                                    Convert.ToSingle(primRow["GroupPositionZ"]))
+                                    ,false);
 
             prim.Velocity = new Vector3(
                                 Convert.ToSingle(primRow["VelocityX"]),
