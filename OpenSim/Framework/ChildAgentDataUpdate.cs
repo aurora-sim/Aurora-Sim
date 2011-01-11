@@ -244,7 +244,6 @@ namespace OpenSim.Framework
         public Vector3 AtAxis;
         public Vector3 LeftAxis;
         public Vector3 UpAxis;
-        public bool ChangedGrid;
 
         public float Far;
         public float Aspect;
@@ -312,8 +311,6 @@ namespace OpenSim.Framework
             args["left_axis"] = OSD.FromString(LeftAxis.ToString());
             args["up_axis"] = OSD.FromString(UpAxis.ToString());
 
-
-            args["changed_grid"] = OSD.FromBoolean(ChangedGrid);
             args["far"] = OSD.FromReal(Far);
             args["aspect"] = OSD.FromReal(Aspect);
 
@@ -355,46 +352,6 @@ namespace OpenSim.Framework
             if (Appearance != null)
                 args["packed_appearance"] = Appearance.Pack();
 
-            //if ((AgentTextures != null) && (AgentTextures.Length > 0))
-            //{
-            //    OSDArray textures = new OSDArray(AgentTextures.Length);
-            //    foreach (UUID uuid in AgentTextures)
-            //        textures.Add(OSD.FromUUID(uuid));
-            //    args["agent_textures"] = textures;
-            //}
-
-            // The code to pack textures, visuals, wearables and attachments
-            // should be removed; packed appearance contains the full appearance
-            // This is retained for backward compatibility only
-            if (Appearance.Texture != null)
-            {
-                byte[] rawtextures = Appearance.Texture.GetBytes();
-                args["texture_entry"] = OSD.FromBinary(rawtextures);
-            }
-
-            if ((Appearance.VisualParams != null) && (Appearance.VisualParams.Length > 0))
-                args["visual_params"] = OSD.FromBinary(Appearance.VisualParams);
-
-            // We might not pass this in all cases...
-            if ((Appearance.Wearables != null) && (Appearance.Wearables.Length > 0))
-            {
-                OSDArray wears = new OSDArray(Appearance.Wearables.Length);
-                foreach (AvatarWearable awear in Appearance.Wearables)
-                    wears.Add(awear.Pack());
-
-                args["wearables"] = wears;
-            }
-
-            List<AvatarAttachment> attachments = Appearance.GetAttachments();
-            if ((attachments != null) && (attachments.Count > 0))
-            {
-                OSDArray attachs = new OSDArray(attachments.Count);
-                foreach (AvatarAttachment att in attachments)
-                    attachs.Add(att.Pack());
-                args["attachments"] = attachs;
-            }
-            // End of code to remove
-
             if ((Controllers != null) && (Controllers.Length > 0))
             {
                 OSDArray controls = new OSDArray(Controllers.Length);
@@ -403,10 +360,8 @@ namespace OpenSim.Framework
                 args["controllers"] = controls;
             }
 
-
             if ((CallbackURI != null) && (!CallbackURI.Equals("")))
                 args["callback_uri"] = OSD.FromString(CallbackURI);
-
 
             return args;
         }
@@ -454,9 +409,6 @@ namespace OpenSim.Framework
 
             if (args["up_axis"] != null)
                 Vector3.TryParse(args["up_axis"].AsString(), out AtAxis);
-
-            if (args["changed_grid"] != null)
-                ChangedGrid = args["changed_grid"].AsBoolean();
 
             if (args["far"] != null)
                 Far = (float)(args["far"].AsReal());
@@ -544,15 +496,6 @@ namespace OpenSim.Framework
                     }
                 }
             }
-
-            //if ((args["agent_textures"] != null) && (args["agent_textures"]).Type == OSDType.Array)
-            //{
-            //    OSDArray textures = (OSDArray)(args["agent_textures"]);
-            //    AgentTextures = new UUID[textures.Count];
-            //    int i = 0;
-            //    foreach (OSD o in textures)
-            //        AgentTextures[i++] = o.AsUUID();
-            //}
 
             Appearance = new AvatarAppearance(AgentID);
 

@@ -157,7 +157,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 {
                     OSDMap agentDataMap = (OSDMap)args["agent_data"];
                     agent = new AgentData();
-                    agent.Unpack(args);
+                    agent.Unpack(agentDataMap);
                 }
                 catch (Exception ex)
                 {
