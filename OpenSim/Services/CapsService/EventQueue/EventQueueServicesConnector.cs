@@ -49,13 +49,16 @@ using OpenSim.Framework.Capabilities;
 
 namespace OpenSim.Services.CapsService
 {
-    public class EventQueueServicesConnector : EventQueueModuleBase, IEventQueueService, IService
+    public class EventQueueServicesConnector : EventQueueMasterService, IEventQueueService, IService
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private string m_serverURL = "";
-        private ICapsService m_capsService;
+        
+        #endregion
 
         #region IService Members
 
@@ -87,7 +90,7 @@ namespace OpenSim.Services.CapsService
             //Clean it up a bit
             url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
             m_serverURL = url + "/CAPS/EQMPOSTER";
-            m_capsService = registry.RequestModuleInterface<ICapsService>();
+            m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -101,15 +104,17 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
+        #region Find EQM Password
+
         /// <summary>
         /// Find the password of the user that we may have recieved in the CAPS seed request.
         /// </summary>
         /// <param name="agentID"></param>
         private void FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle)
         {
-            if (m_capsService != null)
+            if (m_service != null)
             {
-                IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
+                IClientCapsService clientCaps = m_service.GetClientCapsService(agentID);
                 if (clientCaps != null)
                 {
                     IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(RegionHandle);
@@ -124,6 +129,8 @@ namespace OpenSim.Services.CapsService
                 }
             }
         }
+
+        #endregion
 
         #region IEventQueue Members
 
@@ -201,10 +208,22 @@ namespace OpenSim.Services.CapsService
             return false;
         }
 
-        public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
+        public override bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
         {
             //Remote connectors do not get to deal with authentication
             return true;
+        }
+
+        #endregion
+
+        #region Overrides
+
+        public override void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.DisableSimulator(handle);
+            Enqueue(item, avatarID, RegionHandle);
+            //ALSO, do the base.Enqueue so the region Caps get the kill request as well
+            base.Enqueue(item, avatarID, RegionHandle);
         }
 
         #endregion

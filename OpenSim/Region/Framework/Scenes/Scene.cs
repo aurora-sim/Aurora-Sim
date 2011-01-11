@@ -648,13 +648,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!avatar.IsChildAgent)
                     avatar.ControllingClient.Kick("The simulator is going down.");
-
-                avatar.ControllingClient.SendShutdownConnectionNotice();
-                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
-                {
-                    eq.DisableSimulator(RegionInfo.RegionHandle, avatar.UUID, RegionInfo.RegionHandle);
-                }
             });
 
             ScenePresence[] Presences = new ScenePresence[ScenePresences.Count];
