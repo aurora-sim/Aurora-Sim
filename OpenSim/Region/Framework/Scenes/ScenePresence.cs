@@ -3096,8 +3096,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool CopyAgent(out IAgentData agent)
         {
-            agent = new CompleteAgentData();
-            CopyTo((AgentData)agent);
+            agent = new AgentData();
+            CopyTo(agent);
             return true;
         }
 

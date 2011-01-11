@@ -60,16 +60,16 @@ namespace OpenSim.Services.CapsService
         {
             m_log.Debug("[AuroraCAPSService]: Starting...");
             IConfig m_CAPSServerConfig = config.Configs["CAPSService"];
-            if (m_CAPSServerConfig == null)
-                throw new Exception(String.Format("No section CAPSService in config file"));
-
-            m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
-            if (m_hostName != "")
+            if (m_CAPSServerConfig != null)
             {
-                //Sanitize the results, remove / and :
-                m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
+                m_hostName = m_CAPSServerConfig.GetString("HostName", String.Empty);
+                if (m_hostName != "")
+                {
+                    //Sanitize the results, remove / and :
+                    m_hostName = m_hostName.EndsWith("/") ? m_hostName.Remove(m_hostName.Length - 1) : m_hostName;
 
-                m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
+                    m_port = m_CAPSServerConfig.GetUInt("Port", m_port);
+                }
             }
             m_registry = registry;
             registry.RegisterModuleInterface<ICapsService>(this);

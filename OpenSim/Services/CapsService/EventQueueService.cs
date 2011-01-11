@@ -578,8 +578,6 @@ namespace OpenSim.Services.CapsService
                 string CapsBase = "";
                 if (newAgent)
                 {
-                    //If the Url is "", then we havn't been here before, 
-                    //  and we need to add a new Url for the client.
                     CapsBase = CapsUtil.GetRandomCapsObjectPath();
                     //Build the full URL
                     SimSeedCap

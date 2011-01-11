@@ -111,7 +111,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -179,7 +179,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoGoodbyeNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -349,7 +349,7 @@ namespace OpenSim.Services.Connectors
 
         protected void InformNeighborOfChatMessage(OSChatMessage message, ChatSourceType type, GridRegion region, RegionInfo thisRegion)
         {
-            string uri = region.ServerURI + "/region/" + thisRegion.RegionID + "/";
+            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in

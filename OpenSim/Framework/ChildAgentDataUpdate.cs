@@ -638,17 +638,4 @@ namespace OpenSim.Framework
             System.Console.WriteLine("Position: " + Position);
         }
     }
-
-    public class CompleteAgentData : AgentData
-    {
-        public override OSDMap Pack()
-        {
-            return base.Pack();
-        }
-
-        public override void Unpack(OSDMap map)
-        {
-            base.Unpack(map);
-        }
-    }
 }

@@ -1536,6 +1536,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             reader.ReadStartElement(name, String.Empty);
 
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return tinv;
+            }
+
             while (reader.Name == "TaskInventoryItem")
             {
                 reader.ReadStartElement("TaskInventoryItem", String.Empty); // TaskInventory
@@ -1566,6 +1572,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         static PrimitiveBaseShape ReadShape(XmlTextReader reader, string name)
         {
             PrimitiveBaseShape shape = new PrimitiveBaseShape();
+
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return shape;
+            }
 
             reader.ReadStartElement(name, String.Empty); // Shape
 
