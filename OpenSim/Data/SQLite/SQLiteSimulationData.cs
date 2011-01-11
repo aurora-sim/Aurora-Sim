@@ -1529,8 +1529,8 @@ namespace OpenSim.Data.SQLite
             prim.SoundFlags = 1; // If it's persisted at all, it's looped
 
             prim.Color = Color.FromArgb(ColorA, ColorR, ColorG, ColorB);
-            prim.OffsetPosition = new Vector3(PositionX, PositionY, PositionZ);
-            prim.GroupPosition = new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ);
+            prim.FixOffsetPosition ( new Vector3(PositionX, PositionY, PositionZ),true);
+            prim.FixGroupPosition(new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ),true);
             prim.Velocity = new Vector3(VelocityX, VelocityY, VelocityZ);
             prim.AngularVelocity = new Vector3(AngularVelocityX, AngularVelocityY, AngularVelocityZ);
             prim.RotationOffset = new Quaternion(RotationX, RotationY, RotationZ, RotationW);

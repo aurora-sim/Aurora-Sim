@@ -262,7 +262,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
             {
                 if (CanEdit())
                 {
-                    GetSOP().OffsetPosition = value;
+                    GetSOP().FixOffsetPosition(value,false);
                 }
             }
         }

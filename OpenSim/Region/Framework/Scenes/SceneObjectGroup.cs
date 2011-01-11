@@ -23,8 +23,9 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
-
+//
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -396,7 +397,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.GroupPosition = val;
+                    part.FixGroupPosition(val,false);
                 }
 
                 //if (m_rootPart.PhysActor != null)
@@ -1381,7 +1382,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This does NOT reset any UUIDs, localIDs, or anything, as this is an EXACT copy.
         /// </summary>
         /// <returns></returns>
-        public override EntityBase Copy()
+        public override EntityBase Copy(bool clonePhys)
         {
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
 
@@ -1402,17 +1403,17 @@ namespace OpenSim.Region.Framework.Scenes
 
             // This is only necessary when userExposed is false!
 
+            dupe.ClearChildren();
+
+            dupe.AddChild(m_rootPart.Copy(dupe, clonePhys), m_rootPart.LinkNum);
+
             bool previousAttachmentStatus = dupe.RootPart.IsAttachment;
 
             dupe.RootPart.IsAttachment = true;
 
-            dupe.AbsolutePosition = new Vector3(AbsolutePosition.X, AbsolutePosition.Y, AbsolutePosition.Z);
+            dupe.AbsolutePosition = AbsolutePosition;
 
             dupe.RootPart.IsAttachment = previousAttachmentStatus;
-
-            dupe.ClearChildren();
-
-            dupe.AddChild(m_rootPart.Copy(dupe), m_rootPart.LinkNum);
 
             dupe.m_rootPart.TrimPermissions();
 
@@ -1430,7 +1431,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID != m_rootPart.UUID)
                 {
-                    SceneObjectPart copy = part.Copy(dupe);
+                    SceneObjectPart copy = part.Copy(dupe, clonePhys);
                     copy.LinkNum = part.LinkNum;
                     dupe.LinkChild(copy);
                 }
@@ -1448,6 +1449,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public override void RebuildPhysicalRepresentation()
         {
+           
+            /*
             foreach (SceneObjectPart part in m_partsList)
             {
                 if (part.PhysActor != null)
@@ -1486,6 +1489,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.ScriptSetPhysicsStatus(oldActor.IsPhysical);
                 }
             }
+             */
         }
 
         #endregion
@@ -1953,14 +1957,14 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 oldGroupPosition = linkPart.GroupPosition;
             Quaternion oldRootRotation = linkPart.RotationOffset;
 
-            linkPart.OffsetPosition = linkPart.GroupPosition - AbsolutePosition;
-            linkPart.GroupPosition = AbsolutePosition;
+            linkPart.SetOffsetPosition(linkPart.GroupPosition - AbsolutePosition);
+            linkPart.SetGroupPosition(AbsolutePosition); // just change it without doing anything else
             Vector3 axPos = linkPart.OffsetPosition;
 
             Quaternion parentRot = m_rootPart.RotationOffset;
             axPos *= Quaternion.Inverse(parentRot);
 
-            linkPart.OffsetPosition = axPos;
+            linkPart.SetOffsetPosition(axPos);
             Quaternion oldRot = linkPart.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             linkPart.RotationOffset = newRot;
@@ -1984,12 +1988,24 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add the root part to our group!
                 m_scene.SceneGraph.LinkPartToSOG(this, linkPart, linkNum++);
                 linkPart.CreateSelected = true;
+                linkPart.FixOffsetPosition(linkPart.OffsetPosition, true);
+                if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
+                    {
+                    linkPart.PhysActor.link(m_rootPart.PhysActor);
+                    this.Scene.PhysicsScene.AddPhysicsActorTaint(linkPart.PhysActor);
+                    }
                 //rest of parts
                 foreach (SceneObjectPart part in objectGroupChildren)
                 {
-                    if (part.UUID != objectGroup.m_rootPart.UUID)
+                if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
                         LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
+                        part.FixOffsetPosition(part.OffsetPosition, true);
+                        if (part.PhysActor != null && m_rootPart.PhysActor != null)
+                            {
+                            part.PhysActor.link(m_rootPart.PhysActor);
+                            this.Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                            }
                     }
                 }
             }
@@ -2037,6 +2053,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (linkPart.PhysActor != null)
             {
                 m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
+//            linkPart.PhysActor.delink();
             }
 
             // We need to reset the child part's position
@@ -2046,9 +2063,9 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 axPos = linkPart.OffsetPosition;
 
             axPos *= parentRot;
-            linkPart.OffsetPosition = new Vector3(axPos.X, axPos.Y, axPos.Z);
-            linkPart.GroupPosition = AbsolutePosition + linkPart.OffsetPosition;
-            linkPart.OffsetPosition = new Vector3(0, 0, 0);
+            linkPart.SetOffsetPosition(axPos);
+            linkPart.FixGroupPosition(AbsolutePosition + linkPart.OffsetPosition,false);
+            linkPart.FixOffsetPosition(Vector3.Zero, false);
 
             linkPart.RotationOffset = worldRot;
 
@@ -2059,6 +2076,8 @@ namespace OpenSim.Region.Framework.Scenes
                 linkPart.TriggerScriptChangedEvent(Changed.LINK);
 
             linkPart.Rezzed = RootPart.Rezzed;
+
+ 
 
             //This is already set multiple places, no need to do it again
             //HasGroupChanged = true;
@@ -2079,25 +2098,25 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 axPos = part.OffsetPosition;
 
             axPos *= parentRot;
-            part.OffsetPosition = axPos;
-            part.GroupPosition = oldGroupPosition + part.OffsetPosition;
-            part.OffsetPosition = Vector3.Zero;
+            part.SetOffsetPosition(axPos);
+            part.SetGroupPosition(oldGroupPosition + part.OffsetPosition);
+            part.SetOffsetPosition(Vector3.Zero);
             part.RotationOffset = worldRot;
 
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
-
-            part.OffsetPosition = part.GroupPosition - AbsolutePosition;
-
+            part.CreateSelected = true;
             Quaternion rootRotation = m_rootPart.RotationOffset;
 
-            Vector3 pos = part.OffsetPosition;
+            Vector3 pos = part.GroupPosition - AbsolutePosition;
             pos *= Quaternion.Inverse(rootRotation);
-            part.OffsetPosition = pos;
+            part.SetOffsetPosition(pos);
 
             parentRot = m_rootPart.RotationOffset;
             oldRot = part.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             part.RotationOffset = newRot;
+
+
         }
 
         #endregion
@@ -2692,7 +2711,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (obPart.UUID != m_rootPart.UUID)
                 {
-                    obPart.OffsetPosition = obPart.OffsetPosition + diff;
+                    obPart.FixOffsetPosition((obPart.OffsetPosition + diff),false);
                 }
             }
 
@@ -2704,15 +2723,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void OffsetForNewRegion(Vector3 offset)
         {
-            if (offset.X < 0)
-                offset.X = Scene.RegionInfo.RegionSizeX + offset.X;
-            if (offset.Y < 0)
-                offset.Y = Scene.RegionInfo.RegionSizeX + offset.Y;
-            if (offset.X > Scene.RegionInfo.RegionSizeX)
-                offset.X = offset.X - Scene.RegionInfo.RegionSizeX;
-            if (offset.Y > Scene.RegionInfo.RegionSizeY)
-                offset.X = offset.Y - Scene.RegionInfo.RegionSizeY;
-            m_rootPart.GroupPosition = offset;
+            m_rootPart.FixGroupPosition(offset,false);
         }
 
         #endregion
@@ -2812,7 +2823,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.StoreUndoState();
                     part.IgnoreUndoUpdate = true;
                     part.UpdateRotation(rot);
-                    part.OffsetPosition = pos;
+                    part.FixOffsetPosition(pos,true);
                     part.IgnoreUndoUpdate = false;
                 }
             }
@@ -2843,11 +2854,11 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 axPos = childPrim.OffsetPosition;
                     axPos *= old_global_group_rot;
                     axPos *= Quaternion.Inverse(new_global_group_rot);
-                    childPrim.OffsetPosition = axPos;
+                    childPrim.FixOffsetPosition(axPos,true);
                     Quaternion primsRot = childPrim.RotationOffset;
 
                     Quaternion newRot = primsRot * old_global_group_rot;
-                    newRot *= Quaternion.Inverse(new_global_group_rot);
+                    newRot *= Quaternion.Inverse(new_global_group_rot);                   
                     childPrim.RotationOffset = newRot;
                     childPrim.ScheduleTerseUpdate();
                     childPrim.IgnoreUndoUpdate = false;
@@ -3249,7 +3260,7 @@ namespace OpenSim.Region.Framework.Scenes
         
         public virtual ISceneObject CloneForNewScene(IScene scene)
         {
-            SceneObjectGroup sog = (SceneObjectGroup)Copy();
+            SceneObjectGroup sog = (SceneObjectGroup)Copy(true);
             sog.m_isDeleted = false;
             return sog;
         }

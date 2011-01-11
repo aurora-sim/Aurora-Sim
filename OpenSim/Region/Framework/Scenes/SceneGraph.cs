@@ -1737,11 +1737,11 @@ namespace OpenSim.Region.Framework.Scenes
         public EntityBase DuplicateEntity(EntityBase entity)
         {
             //Make an exact copy of the entity
-            EntityBase copiedEntity = entity.Copy();
+            EntityBase copiedEntity = entity.Copy(false);
             //Add the entity to the scene and back it up
             AddPrimToScene(copiedEntity);
             //Fix physics representation now
-            entity.RebuildPhysicalRepresentation();
+//            entity.RebuildPhysicalRepresentation();
             return copiedEntity;
         }
 

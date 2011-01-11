@@ -491,12 +491,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessGroupPosition(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.GroupPosition = ReadVector(reader, "GroupPosition");
+            obj.FixGroupPosition(ReadVector(reader, "GroupPosition"),false);
         }
 
         private static void ProcessOffsetPosition(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.OffsetPosition = ReadVector(reader, "OffsetPosition"); ;
+            obj.FixOffsetPosition(ReadVector(reader, "OffsetPosition"),true);
         }
 
         private static void ProcessRotationOffset(SceneObjectPart obj, XmlTextReader reader)
@@ -1398,42 +1398,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static SceneObjectPart Xml2ToSOP(XmlTextReader reader, IRegistryCore scene)
         {
-            /*SceneObjectPart obj = new SceneObjectPart(scene);
-            obj.IsLoading = true;
-            reader.ReadStartElement("SceneObjectPart");
-
-            string nodeName = string.Empty;
-            while (reader.NodeType != XmlNodeType.None)
-            {
-                nodeName = reader.Name;
-                SOPXmlProcessor p = null;
-                if (m_SOPXmlProcessors.TryGetValue(nodeName, out p))
-                {
-                    //m_log.DebugFormat("[XXX] Processing: {0}", reader.Name);
-                    try
-                    {
-                        p(obj, reader);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}", nodeName, e);
-                        if (reader.NodeType == XmlNodeType.EndElement)
-                            reader.Read();
-                    }
-                }
-                else
-                {
-                    //                    m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element {0}", nodeName);
-                    string value = reader.ReadOuterXml(); // ignore
-                }
-            }
-
-            //reader.ReadEndElement(); // SceneObjectPart
-            obj.IsLoading = false;
-
-            //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
-            return obj;*/
-
             SceneObjectPart obj = new SceneObjectPart(scene);
 
             reader.ReadStartElement("SceneObjectPart");

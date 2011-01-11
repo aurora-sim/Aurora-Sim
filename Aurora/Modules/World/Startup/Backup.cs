@@ -579,7 +579,7 @@ namespace Aurora.Modules
                 // don't backup while it's selected or you're asking for changes mid stream.
                 DateTime startTime = DateTime.Now;
 
-                SceneObjectGroup backup_group = (SceneObjectGroup)grp.Copy();
+                SceneObjectGroup backup_group = (SceneObjectGroup)grp.Copy(true);
                 //Do this we don't try to re-persist to the DB
                 backup_group.m_isLoaded = false;
                 m_scene.SimulationDataService.StoreObject(backup_group, m_scene.RegionInfo.RegionID);

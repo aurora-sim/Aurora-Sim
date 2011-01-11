@@ -158,7 +158,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Copies the entity
         /// </summary>
         /// <returns></returns>
-        public virtual EntityBase Copy()
+        public virtual EntityBase Copy(bool clonePhys)
         {
             return (EntityBase) MemberwiseClone();
         }

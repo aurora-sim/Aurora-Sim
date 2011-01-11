@@ -23,7 +23,9 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
+
  
 using System;
 using System.Collections;
@@ -2193,7 +2195,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
-                part.OffsetPosition = new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z);
+                part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)),true);
                 SceneObjectGroup parent = part.ParentGroup;
                 parent.HasGroupChanged = true;
                 parent.ScheduleGroupTerseUpdate();
