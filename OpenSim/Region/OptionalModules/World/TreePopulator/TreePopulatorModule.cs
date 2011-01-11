@@ -236,7 +236,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeActive(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             if (Boolean.Parse(cmd[2]) && !m_active_trees)
             {
@@ -258,7 +258,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeFreeze(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             string copsename = cmd[2].Trim();
             Boolean freezeState = Boolean.Parse(cmd[3]);
@@ -289,7 +289,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeLoad(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             Copse copse;
 
@@ -311,7 +311,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreePlant(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             string copsename = cmd[0].Trim();
 
@@ -340,7 +340,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeRate(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             m_update_ms = double.Parse(cmd[2]);
             if (m_update_ms >= 1000.0)
@@ -360,7 +360,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeReload(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             if (m_active_trees)
             {
@@ -377,7 +377,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeRemove(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             string copsename = (cmd[2]).Trim();
             Copse copseIdentity = null;
@@ -392,24 +392,18 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
             if (copseIdentity != null)
             {
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                 foreach (UUID tree in copseIdentity.m_trees)
                 {
                     if (m_scene.Entities.ContainsKey(tree))
                     {
-                        SceneObjectPart selectedTree = ((SceneObjectGroup)m_scene.Entities[tree]).RootPart;
-
-
-                        m_scene.DeleteSceneObject(selectedTree.ParentGroup, true);
-                        m_scene.ForEachClient(delegate(IClientAPI controller)
-                        {
-                            controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                      new ISceneEntity[] { selectedTree });
-                        });
+                        groups.Add((SceneObjectGroup)m_scene.Entities[tree]);
                     }
-                    else
-                    {
-                        m_log.DebugFormat("[TREES]: Tree not in scene {0}", tree);
-                    }
+                }
+                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                if (backup != null)
+                {
+                    backup.DeleteSceneObjects(groups.ToArray(), true);
                 }
                 copseIdentity.m_trees = new List<UUID>();
                 m_copse.Remove(copseIdentity);
@@ -423,7 +417,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeStatistics(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             m_log.InfoFormat("[TREES]: Activity State: {0};  Update Rate: {1}", m_active_trees, m_update_ms);
             foreach (Copse cp in m_copse)
@@ -434,7 +428,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         private void HandleTreeHelp(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             m_log.Info("tree active <activeTF> - Change activity state for the trees module. "
                                + "\n activeTF: The required activity state");
@@ -723,6 +717,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             {
                 if (!copse.m_frozen && copse.m_trees.Count >= copse.m_tree_quantity)
                 {
+                    List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                     foreach (UUID tree in copse.m_trees)
                     {
                         double killLikelyhood = 0.0;
@@ -752,15 +747,8 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
                             if (Util.RandomClass.NextDouble() < killLikelyhood)
                             {
-
-                                m_scene.DeleteSceneObject(selectedTree.ParentGroup, true);
+                                groups.Add(selectedTree.ParentGroup);
                                 copse.m_trees.Remove(selectedTree.ParentGroup.UUID);
-
-                                m_scene.ForEachClient(delegate(IClientAPI controller)
-                                                          {
-                                                              controller.SendKillObject(m_scene.RegionInfo.RegionHandle,
-                                                                                        new ISceneEntity[] { selectedTree });
-                                                          });
 
                                 break;
                             }
@@ -769,6 +757,11 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                         {
                             m_log.DebugFormat("[TREES]: Tree not in scene {0}", tree);
                         }
+                    }
+                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                    {
+                        backup.DeleteSceneObjects(groups.ToArray(), true);
                     }
                 }
             }

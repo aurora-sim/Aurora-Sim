@@ -112,7 +112,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool LoginsDisabled = true;
 
-        protected ISimulationDataStore m_SimulationDataService;
         protected IAssetService m_AssetService;
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;
@@ -186,7 +185,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ISimulationDataStore SimulationDataService
         {
-            get { return m_SimulationDataService; }
+            get { return m_sceneManager.SimulationDataService; }
         }
 
         public bool ShuttingDown
@@ -412,10 +411,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_eventManager = new EventManager();
             m_permissions = new ScenePermissions(this);
 
-            m_SimulationDataService = manager.SimulationDataService;
-
             // Load region settings
-            m_regInfo.RegionSettings = m_SimulationDataService.LoadRegionSettings(m_regInfo.RegionID);
+            m_regInfo.RegionSettings = m_sceneManager.SimulationDataService.LoadRegionSettings(m_regInfo.RegionID);
 
             //Bind Storage Manager functions to some land manager functions for this scene
             IParcelServiceConnector conn = DataManager.RequestPlugin<IParcelServiceConnector>();
@@ -547,8 +544,6 @@ namespace OpenSim.Region.Framework.Scenes
             EventManager.OnFinishedStartup += FinishedStartup;
             EventManager.OnStartupFullyComplete += StartupComplete;
 
- 
-
             AddToStartupQueue("Startup");
 
             #endregion
@@ -560,17 +555,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Startup / Close Methods
 
-        /// <summary>
-        /// Another region is up. 
-        ///
-        /// We only add it to the neighbor list if it's within 1 region from here.
-        /// Agents may have draw distance values that cross two regions though, so
-        /// we add it to the notify list regardless of distance. We'll check
-        /// the agent's draw distance before notifying them though.
-        /// </summary>
-        /// <param name="otherRegion">RegionInfo handle for the new region.</param>
-        /// <returns>True after all operations complete, throws exceptions otherwise.</returns>
-        public void OtherRegionUp(GridRegion otherRegion)
+        public void IncomingHelloNeighbor(GridRegion otherRegion)
         {
             int xcell = otherRegion.RegionLocX;
             int ycell = otherRegion.RegionLocY;
@@ -583,7 +568,7 @@ namespace OpenSim.Region.Framework.Scenes
                 INeighborService neighborService = RequestModuleInterface<INeighborService>();
                 if (neighborService != null)
                 {
-                    if(!neighborService.IsOutsideView(xcell, RegionInfo.RegionLocX, ycell, RegionInfo.RegionLocY))
+                    if (!neighborService.IsOutsideView(xcell, RegionInfo.RegionLocX, ycell, RegionInfo.RegionLocY))
                     {
                         // Let the grid service module know, so this can be cached
                         m_eventManager.TriggerOnRegionUp(otherRegion);
@@ -619,21 +604,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private void regInfo_OnRegionUp(object otherRegion)
+        public void IncomingClosingNeighbor(GridRegion neighbor)
         {
-            EventManager.TriggerOnRegionUp((GridRegion)otherRegion);
-        }
-
-        // Alias IncomingHelloNeighbor OtherRegionUp, for now
-        public void IncomingHelloNeighbor(RegionInfo neighbor)
-        {
-            OtherRegionUp(new GridRegion(neighbor));
-        }
-
-        public void IncomingClosingNeighbor(RegionInfo neighbor)
-        {
-            //OtherRegionUp(new GridRegion(neighbor));
-            //return new GridRegion(RegionInfo);
+            //OtherRegionDown(new GridRegion(neighbor));
         }
 
         /// <summary>
@@ -658,9 +631,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
                 
             if (PhysicsScene != null)
-            {
                 PhysicsScene.Dispose();
-            }
 
             //Tell the neighbors that this region is now down
             INeighborService service = RequestModuleInterface<INeighborService>();
@@ -671,9 +642,6 @@ namespace OpenSim.Region.Framework.Scenes
             shuttingdown = true;
 
             m_sceneGraph.Close();
-
-            //Trigger the last event
-            EventManager.TriggerShutdown();
         }
 
         #region Tracker
@@ -841,81 +809,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Primitives Methods
 
-        /// <summary>
-        /// Synchronously delete the given object from the scene.
-        /// </summary>
-        /// <param name="group">Object Id</param>
-        /// <param name="silent">Suppress broadcasting changes to other clients.</param>
-        public bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts)
-        {
-            //            m_log.DebugFormat("[SCENE]: Deleting scene object {0} {1}", group.Name, group.UUID);
-
-            // Serialise calls to RemoveScriptInstances to avoid
-            // deadlocking on m_parts inside SceneObjectGroup
-            lock (group.RootPart.SitTargetAvatar)
-            {
-                if (group.RootPart.SitTargetAvatar.Count != 0)
-                {
-                    foreach (UUID avID in group.RootPart.SitTargetAvatar)
-                    {
-                        ScenePresence SP = GetScenePresence(avID);
-                        if (SP != null)
-                            SP.StandUp(false);
-                    }
-                }
-            }
-
-            if (DeleteScripts)
-            {
-                group.RemoveScriptInstances(true);
-            }
-            foreach (SceneObjectPart part in group.ChildrenList)
-            {
-                if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
-                {
-                    PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
-                }
-                else if (part.PhysActor != null)
-                {
-                    PhysicsScene.RemovePrim(part.PhysActor);
-                    part.PhysActor = null;
-                }
-            }
-
-            if (m_sceneGraph.DeleteEntity(group))
-            {
-                IBackupModule backup = RequestModuleInterface<IBackupModule>();
-                if (backup != null)
-                    backup.DeleteFromStorage(group.UUID);
-
-                // We need to keep track of this state in case this group is still queued for backup.
-                group.IsDeleted = true;
-                //Clear the update schedule HERE so that IsDeleted will not have to fire as well
-                lock (group.ChildrenListLock)
-                {
-                    foreach (SceneObjectPart part in group.ChildrenList)
-                    {
-                        //Make sure it isn't going to be updated again
-                        part.ClearUpdateSchedule();
-                        //If it is the root part, kill the object in the client
-                        if (part == group.RootPart)
-                        {
-                            ForEachScenePresence(delegate(ScenePresence avatar)
-                            {
-                                avatar.ControllingClient.SendKillObject(RegionInfo.RegionHandle, new ISceneEntity[] { part });
-                            });
-                        }
-                    }
-                }
-                EventManager.TriggerParcelPrimCountTainted();
-                EventManager.TriggerObjectBeingRemovedFromScene(group);
-                return true;
-            }
-
-            //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
-            return false;
-        }
-
         public void CleanDroppedAttachments()
         {
             List<SceneObjectGroup> objectsToDelete =
@@ -939,9 +832,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (SceneObjectGroup grp in objectsToDelete)
             {
-                m_log.WarnFormat("[SCENE]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
-                DeleteSceneObject(grp, true);
+                m_log.WarnFormat("[Scene]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
             }
+            IBackupModule backup = RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+                backup.DeleteSceneObjects(objectsToDelete.ToArray(), true);
         }
 
         #endregion
@@ -1700,19 +1595,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void ForEachSOG(Action<SceneObjectGroup> action)
         {
             m_sceneGraph.ForEachSOG(action);
-        }
-
-        #endregion
-
-        #region Console
-
-        public Scene ConsoleScene()
-        {
-            if (MainConsole.Instance == null)
-                return null;
-            if (MainConsole.Instance.ConsoleScene is Scene)
-                return (Scene)MainConsole.Instance.ConsoleScene;
-            return null;
         }
 
         #endregion

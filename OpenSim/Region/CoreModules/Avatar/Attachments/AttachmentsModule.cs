@@ -303,7 +303,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     catch
                     {
                         // Make sure the object doesn't stick around and bail
-                        m_scene.DeleteSceneObject(objatt, true);
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if(backup != null)
+                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { objatt }, true);
                         return null;
                     }
 
@@ -502,9 +504,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                                 group.HasGroupChanged = true;
 
                         UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
-                        
-                        m_scene.DeleteSceneObject(group, true);
-                        return;
+
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { group }, true);
                     }
                 }
             }

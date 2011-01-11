@@ -33,6 +33,7 @@ using System.Reflection;
 using System.Threading;
 using log4net;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using Aurora.Framework;
@@ -956,8 +957,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (ex is SelfDeleteException)
                     {
                         if (QIS.ID.part != null && QIS.ID.part.ParentGroup != null)
-                            QIS.ID.part.ParentGroup.Scene.DeleteSceneObject(
-                                QIS.ID.part.ParentGroup, true);
+                        {
+                            IBackupModule backup = QIS.ID.part.ParentGroup.Scene.RequestModuleInterface<IBackupModule>();
+                            if (backup != null)
+                                backup.DeleteSceneObjects(
+                                    new SceneObjectGroup[1]{QIS.ID.part.ParentGroup}, true);
+                        }
                     }
                     else if (ex is ScriptDeleteException)
                     {

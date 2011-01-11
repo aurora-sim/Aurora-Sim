@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -12,12 +13,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Update the grid server with new info about this region
         /// </summary>
         /// <param name="scene"></param>
-        void UpdateGridRegion(Scene scene);
+        void UpdateGridRegion(IScene scene);
 
         /// <summary>
         /// Register this region with the grid service
         /// </summary>
         /// <param name="scene"></param>
-        void RegisterRegionWithGrid(Scene scene);
+        void RegisterRegionWithGrid(IScene scene);
     }
 }

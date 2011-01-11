@@ -148,7 +148,7 @@ namespace Aurora.Modules
 
         protected void SetRegionInfoOption(string module, string[] cmdparams)
         {
-            Scene scene = m_scene.ConsoleScene();
+            IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)
                 scene = m_scene;
             #region 3 Params needed

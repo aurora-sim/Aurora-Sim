@@ -967,7 +967,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceLoadFile(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             LoadFromFile(cmd[2]);
             CheckForTerrainUpdates();
@@ -975,7 +975,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceLoadTileFile(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             LoadFromFile((string)cmd[2],
                          int.Parse(cmd[3]),
@@ -987,21 +987,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceSaveFile(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             SaveToFile((string)cmd[2]);
         }
 
         private void InterfaceBakeTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             UpdateRevertMap();
         }
 
         private void InterfaceRevertTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
@@ -1013,7 +1013,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceFlipTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             String direction = cmd[2];
 
@@ -1056,7 +1056,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceRescaleTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             double desiredMin = double.Parse(cmd[2]);
             double desiredMax = double.Parse(cmd[3]);
@@ -1118,7 +1118,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceElevateTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
@@ -1129,7 +1129,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceMultiplyTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
@@ -1140,7 +1140,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceLowerTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             int x, y;
             for (x = 0; x < m_channel.Width; x++)
@@ -1151,7 +1151,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceFillTerrain(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             int x, y;
 
@@ -1163,7 +1163,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceShowDebugStats(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             double max = Double.MinValue;
             double min = double.MaxValue;
@@ -1191,7 +1191,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceEnableExperimentalBrushes(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             if (bool.Parse(cmd[2]))
             {
@@ -1207,7 +1207,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceRunPluginEffect(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             if (cmd[2] == "list")
             {
@@ -1236,7 +1236,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         private void InterfaceHelp(string module, string[] cmd)
         {
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             string supportedFileExtensions = "";
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)

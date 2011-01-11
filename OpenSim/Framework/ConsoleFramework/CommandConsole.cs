@@ -792,8 +792,8 @@ namespace OpenSim.Framework
                 m_Commands = value;
             }
         }
-        
-        public object ConsoleScene
+
+        public IScene ConsoleScene
         {
             get
             {
@@ -804,7 +804,7 @@ namespace OpenSim.Framework
                 m_ConsoleScene = value;
             }
         }
-        public object m_ConsoleScene = null;
+        public IScene m_ConsoleScene = null;
         
         public void Dispose()
         {

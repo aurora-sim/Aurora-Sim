@@ -53,7 +53,7 @@ namespace OpenSim.Framework
         string PasswdPrompt(string p);
         string ReadLine(string p, bool isCommand, bool e);
         void RunCommand(string cmd);
-        object ConsoleScene { get; set; }
+        IScene ConsoleScene { get; set; }
         void Prompt();
         /// <summary>
         /// Starts the prompt for the console. This will never stop until the region is closed.

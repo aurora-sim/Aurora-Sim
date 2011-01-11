@@ -298,34 +298,71 @@ namespace Aurora.Modules
             }
 
             /// <summary>
+            /// Remove all prims in the queue to be deleted
+            /// </summary>
+            /// <param name="uuid"></param>
+            public void ClearDeleteFromStorage()
+            {
+                lock (m_needsDeleted)
+                {
+                    m_needsDeleted.Clear();
+                }
+            }
+
+            /// <summary>
             /// Delete every object from the scene.  This does not include attachments worn by avatars.
             /// </summary>
             public void DeleteAllSceneObjects()
             {
-                EntityBase[] entities;
+                //We are doing a heavy operation, suspend backup
+                m_backingup = true;
+
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
                 lock (m_scene.Entities)
                 {
-                    entities = m_scene.Entities.GetEntities();
-                }
-                List<ISceneEntity> ObjectsToDelete = new List<ISceneEntity>();
-                foreach (EntityBase e in entities)
-                {
-                    if (e is SceneObjectGroup)
+                    EntityBase[] entities = m_scene.Entities.GetEntities();
+                    foreach(EntityBase entity in entities)
                     {
-                        SceneObjectGroup group = (SceneObjectGroup)e;
-                        if (group.IsAttachment)
-                            continue;
-
-                        m_scene.DeleteSceneObject(group, true);
-                        ObjectsToDelete.Add(group.RootPart);
+                        if(entity is SceneObjectGroup)
+                            groups.Add((SceneObjectGroup)entity);
                     }
+                }
+                //Delete all the groups now
+                DeleteSceneObjects(groups.ToArray(), true);
+
+                //Clear the queue so that we don't try to remove the prims twice
+                ClearDeleteFromStorage();
+
+                //Now remove the entire region at once
+                m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
+
+                //All clear, let backup go
+                m_backingup = false;
+            }
+
+            /// <summary>
+            /// Synchronously delete the objects from the scene.
+            /// This does send kill object updates and resets the parcel prim counts.
+            /// </summary>
+            /// <param name="groups"></param>
+            /// <param name="DeleteScripts"></param>
+            /// <returns></returns>
+            public bool DeleteSceneObjects(SceneObjectGroup[] groups, bool DeleteScripts)
+            {
+                foreach (SceneObjectGroup group in groups)
+                {
+                    if (group.IsAttachment)
+                        continue;
+
+                    DeleteSceneObject(group, true);
                 }
                 m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
                 {
-                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, ObjectsToDelete.ToArray());
+                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, groups);
                 });
 
-                m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
+                m_scene.EventManager.TriggerParcelPrimCountTainted();
+                return true;
             }
 
             /// <summary>
@@ -472,7 +509,7 @@ namespace Aurora.Modules
 
             #endregion
 
-            #region Per Object Backup
+            #region Per Object Methods
 
             /// <summary>
             /// Returns whether it is time to backup or not
@@ -561,6 +598,71 @@ namespace Aurora.Modules
                 grp.HasGroupChanged = false;
                 backup_group = null;
                 return true;
+            }
+
+            /// <summary>
+            /// Synchronously delete the given object from the scene.
+            /// </summary>
+            /// <param name="group">Object Id</param>
+            /// <param name="DeleteScripts">Remove the scripts from the ScriptEngine as well</param>
+            protected bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts)
+            {
+                //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
+
+                lock (group.RootPart.SitTargetAvatar)
+                {
+                    if (group.RootPart.SitTargetAvatar.Count != 0)
+                    {
+                        foreach (UUID avID in group.RootPart.SitTargetAvatar)
+                        {
+                            ScenePresence SP = m_scene.GetScenePresence(avID);
+                            if (SP != null)
+                                SP.StandUp(false);
+                        }
+                    }
+                }
+
+                // Serialise calls to RemoveScriptInstances to avoid
+                // deadlocking on m_parts inside SceneObjectGroup
+                if (DeleteScripts)
+                {
+                    group.RemoveScriptInstances(true);
+                }
+
+                foreach (SceneObjectPart part in group.ChildrenList)
+                {
+                    if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
+                    {
+                        m_scene.PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
+                    }
+                    else if (part.PhysActor != null)
+                    {
+                        m_scene.PhysicsScene.RemovePrim(part.PhysActor);
+                        part.PhysActor = null;
+                    }
+                }
+
+                if (m_scene.SceneGraph.DeleteEntity(group))
+                {
+                    DeleteFromStorage(group.UUID);
+
+                    // We need to keep track of this state in case this group is still queued for backup.
+                    group.IsDeleted = true;
+                    //Clear the update schedule HERE so that IsDeleted will not have to fire as well
+                    lock (group.ChildrenListLock)
+                    {
+                        foreach (SceneObjectPart part in group.ChildrenList)
+                        {
+                            //Make sure it isn't going to be updated again
+                            part.ClearUpdateSchedule();
+                        }
+                    }
+                    m_scene.EventManager.TriggerObjectBeingRemovedFromScene(group);
+                    return true;
+                }
+
+                //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
+                return false;
             }
 
             #endregion

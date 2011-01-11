@@ -1522,7 +1522,9 @@ namespace OpenSim.Region.Framework.Scenes
             //            {
             proxyObjectGroup.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
             remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
-            m_scene.DeleteSceneObject(proxyObjectGroup, true);
+            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+            if (backup != null)
+                backup.DeleteSceneObjects(new SceneObjectGroup[1] { proxyObjectGroup }, true);
             //            }
             //            else
             //            {
@@ -2457,10 +2459,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.ErrorFormat("[SCENEPRESENCE]: baked textures are NOT in the cache for {0}", Name);
                 }
             }
-            else
-            {
-                m_log.WarnFormat("[SCENEPRESENCE]: AvatarFactory not set for {0}", Name);
-            }
         }
 
         /// <summary>
@@ -2796,11 +2794,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // Don't try to save, as this thread won't live long
                 // enough to complete the save. This would cause no copy
                 // attachments to poof!
-                //
-                foreach (SceneObjectGroup grp in m_attachments)
-                {
-                    m_scene.DeleteSceneObject(grp, true);
-                }
+                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                if (backup != null)
+                    backup.DeleteSceneObjects(m_attachments.ToArray(), true);
                 m_attachments.Clear();
             }
             //Reset the parcel UUID for the user
@@ -3194,11 +3190,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // Don't try to save, as this thread won't live long
                 // enough to complete the save. This would cause no copy
                 // attachments to poof!
-                //
-                foreach (SceneObjectGroup grp in m_attachments)
-                {
-                    m_scene.DeleteSceneObject(grp, true);
-                }
+                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                if (backup != null)
+                    backup.DeleteSceneObjects(m_attachments.ToArray(), true);
                 m_attachments.Clear();
             }
 

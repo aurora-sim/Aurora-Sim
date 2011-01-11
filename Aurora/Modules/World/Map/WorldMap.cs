@@ -755,16 +755,7 @@ namespace Aurora.Modules
         /// <param name="fileName"></param>
         public void HandleExportWorldMapConsoleCommand(string module, string[] cmdparams)
         {
-            if (m_scene.ConsoleScene() == null)
-            {
-                // FIXME: If console region is root then this will be printed by every module.  Currently, there is no
-                // way to prevent this, short of making the entire module shared (which is complete overkill).
-                // One possibility is to return a bool to signal whether the module has completely handled the command
-                m_log.InfoFormat("[WORLD MAP]: Please change to a specific region in order to export its world map");
-                return;
-            }
-
-            if (m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
 
             string exportPath;

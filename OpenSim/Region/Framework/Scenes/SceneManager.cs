@@ -1338,7 +1338,9 @@ namespace OpenSim.Region.Framework.Scenes
                     MainConsole.Instance.Output(String.Format("[KillUUID]: Found UUID {0} in scene {1}", id, sc.RegionInfo.RegionName));
                     try
                     {
-                        sc.DeleteSceneObject(grp, true);
+                        IBackupModule backup = sc.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
                     }
                     catch (Exception e)
                     {

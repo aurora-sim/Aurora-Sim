@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         /// <param name="cmdparams"></param>
         public void HandleAlertConsoleCommand(string module, string[] cmdparams)
         {
-            if (m_scene.ConsoleScene() != null && m_scene.ConsoleScene() != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
             
             bool isGeneral = false;

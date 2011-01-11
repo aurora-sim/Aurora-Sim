@@ -152,14 +152,9 @@ namespace OpenSim.Region.CoreModules
 
         private void DeleteGroups(List<SceneObjectGroup> objectGroups)
         {
-            List<ISceneEntity> DeleteGroups = new List<ISceneEntity>();
-            foreach (SceneObjectGroup g in objectGroups)
-            {
-                DeleteGroups.Add(g.RootPart);
-            }
             m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
             {
-                avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, DeleteGroups.ToArray());
+                avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, objectGroups.ToArray());
             });
         }
 
@@ -211,15 +206,9 @@ namespace OpenSim.Region.CoreModules
 
                     if (x.permissionToDelete)
                     {
-                        foreach (SceneObjectGroup g in x.objectGroups)
-                        {
-                            // Force a database backup/update on this SceneObjectGroup
-                            // So that we know the database is upto date,
-                            // for when deleting the object from it
-                            // Why????? If there is a good reason, put this back
-                            //m_scene.ForceSceneObjectBackup(g);
-                            m_scene.DeleteSceneObject(g, true);
-                        }
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.DeleteSceneObjects(x.objectGroups.ToArray(), true);
                     }
                     return true;
                 }

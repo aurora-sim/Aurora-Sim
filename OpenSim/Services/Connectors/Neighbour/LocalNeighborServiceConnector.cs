@@ -148,10 +148,11 @@ namespace OpenSim.Services.Connectors
                         m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
                             incomingRegion.RegionName, n.RegionName);
 
+                        GridRegion incomingneighbor = new GridRegion(incomingRegion);
                         //Tell this region about the original region
-                        s.IncomingHelloNeighbor(incomingRegion);
+                        s.IncomingHelloNeighbor(incomingneighbor);
                         //Tell the original region about this new region
-                        s.EventManager.TriggerOnRegionUp(n);
+                        s.EventManager.TriggerOnRegionUp(incomingneighbor);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
                     }
@@ -239,8 +240,10 @@ namespace OpenSim.Services.Connectors
                         m_log.DebugFormat("[NeighborConnector]: Neighbor is closing from {0} to {1}.",
                             closingRegion.RegionName, n.RegionName);
 
+                        GridRegion closingNeighbor = new GridRegion(closingRegion);
                         //Tell this region about the original region
-                        s.IncomingClosingNeighbor(closingRegion);
+                        s.IncomingClosingNeighbor(closingNeighbor);
+                        s.EventManager.TriggerOnRegionDown(closingNeighbor);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
                     }

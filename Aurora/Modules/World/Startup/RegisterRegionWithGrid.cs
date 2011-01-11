@@ -61,7 +61,8 @@ namespace Aurora.Modules
             m_log.InfoFormat("[RegisterRegionWithGrid]: Deregistering region {0} from the grid...", scene.RegionInfo.RegionName);
 
             //Deregister from the grid server
-            if (!scene.GridService.DeregisterRegion(scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
+            IGridService GridService = scene.RequestModuleInterface<IGridService>();
+            if (!GridService.DeregisterRegion(scene.RegionInfo.RegionID, scene.RegionInfo.GridSecureSessionID))
                 m_log.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}", scene.RegionInfo.RegionName);
         }
 
@@ -73,23 +74,25 @@ namespace Aurora.Modules
         /// Update the grid server with new info about this region
         /// </summary>
         /// <param name="scene"></param>
-        public void UpdateGridRegion(Scene scene)
+        public void UpdateGridRegion(IScene scene)
         {
-            scene.GridService.UpdateMap(scene.RegionInfo.ScopeID, new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
+            IGridService GridService = scene.RequestModuleInterface<IGridService>();
+            GridService.UpdateMap(scene.RegionInfo.ScopeID, new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
         }
 
         /// <summary>
         /// Register this region with the grid service
         /// </summary>
         /// <param name="scene"></param>
-        public void RegisterRegionWithGrid(Scene scene)
+        public void RegisterRegionWithGrid(IScene scene)
         {
             GridRegion region = new GridRegion(scene.RegionInfo);
 
             IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridSessionID s = null;
+            IGridService GridService = scene.RequestModuleInterface<IGridService>();
             if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", scene.GridService.GridServiceURL, new GridSessionID());
+                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, new GridSessionID());
 
             if (s == null)
             {
@@ -99,14 +102,14 @@ namespace Aurora.Modules
             }
 
             //Tell the grid service about us
-            string error = scene.GridService.RegisterRegion(scene.RegionInfo.ScopeID, region, s.SessionID, out s.SessionID);
+            string error = GridService.RegisterRegion(scene.RegionInfo.ScopeID, region, s.SessionID, out s.SessionID);
             if (error == String.Empty)
             {
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it
                 scene.RegionInfo.GridSecureSessionID = s.SessionID;
 
                 //Save the new SessionID to the database
-                g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", scene.GridService.GridServiceURL, s.ToOSD());
+                g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
 
                 //Tell the neighbor service about it
                 INeighborService service = scene.RequestModuleInterface<INeighborService>();

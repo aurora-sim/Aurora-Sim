@@ -89,10 +89,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnPluginConsoleDelegate OnPluginConsole;
 
-        public delegate void OnShutdownDelegate();
-
-        public event OnShutdownDelegate OnShutdown;
-
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
 
         public event ParcelPropertiesUpdateRequest OnParcelPropertiesUpdateRequest;
@@ -346,6 +342,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void RegionUp(GridRegion region);
         public event RegionUp OnRegionUp;
+        public event RegionUp OnRegionDown;
 
         public class MoneyTransferArgs : EventArgs
         {
@@ -786,27 +783,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerObjectBeingRemovedFromScene failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerShutdown()
-        {
-            OnShutdownDelegate handlerShutdown = OnShutdown;
-            if (handlerShutdown != null)
-            {
-                foreach (OnShutdownDelegate d in handlerShutdown.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerShutdown failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
                     }
                 }
@@ -1892,6 +1868,27 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnRegionUp failed - continuing.  {0} {1}", 
+                            e.Message, e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerOnRegionDown(GridRegion otherRegion)
+        {
+            RegionUp handlerOnRegionDown = OnRegionDown;
+            if (handlerOnRegionDown != null)
+            {
+                foreach (RegionUp d in handlerOnRegionDown.GetInvocationList())
+                {
+                    try
+                    {
+                        d(otherRegion);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerOnRegionUp failed - continuing.  {0} {1}",
                             e.Message, e.StackTrace);
                     }
                 }

@@ -946,7 +946,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // We remove the object here
                 try
                 {
-                    grp.Scene.DeleteSceneObject(grp, true);
+                    IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
                 }
                 catch (Exception)
                 {
@@ -1008,7 +1010,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // We remove the object here
                     try
                     {
-                        grp.Scene.DeleteSceneObject(grp, false);
+                        IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false);
                     }
                     catch (Exception e)
                     {
@@ -1080,7 +1084,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 part.SitTargetAvatar.Clear();
                             }
                         }
-                        return grp.Scene.DeleteSceneObject(grp, false);
+                        IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false);
                     }
                     catch (Exception e)
                     {
@@ -1278,7 +1284,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     m_log.Info("[EntityTransferModule]: Denied prim crossing " +
                             "because of parcel settings");
 
-                    scene.DeleteSceneObject(sceneObject, true);
+                    IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { sceneObject }, true);
 
                     return false;
                 }
