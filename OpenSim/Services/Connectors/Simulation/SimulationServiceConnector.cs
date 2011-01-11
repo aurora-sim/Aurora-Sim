@@ -47,9 +47,6 @@ namespace OpenSim.Services.Connectors.Simulation
     public class SimulationServiceConnector : ISimulationService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        //Keeps track of bad sends and will refuse to send child agent updates to them until the DateTime is later than the time accessed
-        private static Dictionary<string, DateTime> FailedSends = new Dictionary<string, DateTime>();
-        private int TimeBeforeNextCheck = 3000 * 60; //3 mins
         protected LocalSimulationServiceConnector m_localBackend;
         
         public IScene GetScene(ulong regionHandle)
