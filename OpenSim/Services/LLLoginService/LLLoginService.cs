@@ -488,6 +488,13 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 //
+                // Clear out any existing CAPS the user may have
+                if (m_CapsService != null)
+                {
+                    m_CapsService.RemoveCAPS(account.PrincipalID);
+                }
+
+                //
                 // Change Online status and get the home region
                 //
                 GridRegion home = null;

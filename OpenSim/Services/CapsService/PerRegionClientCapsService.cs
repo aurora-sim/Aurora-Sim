@@ -244,12 +244,12 @@ namespace OpenSim.Services.CapsService
                         }
                     }
                     else
-                        m_log.Warn("[PerRegionCapsService]: Failed to get info for SEED caps from " + UrlToInform);
+                        m_log.Error("[PerRegionCapsService]: Failed to get info for SEED caps from " + UrlToInform);
                 }
             }
             catch(Exception ex)
             {
-                m_log.Warn("[PerRegionCapsService]: Exception getting info for SEED caps from " + UrlToInform + ", " + ex.ToString());
+                m_log.Error("[PerRegionCapsService]: Exception getting info for SEED caps from " + UrlToInform + ", " + ex.ToString());
             }
             return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
