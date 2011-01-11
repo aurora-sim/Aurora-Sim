@@ -1091,16 +1091,17 @@ VALUES
             prim.EveryoneMask = Convert.ToUInt32(primRow["EveryoneMask"]);
             prim.BaseMask = Convert.ToUInt32(primRow["BaseMask"]);
             // vectors
-            prim.OffsetPosition = new Vector3(
+            prim.FixOffsetPosition ( new Vector3(
                                     Convert.ToSingle(primRow["PositionX"]),
                                     Convert.ToSingle(primRow["PositionY"]),
-                                    Convert.ToSingle(primRow["PositionZ"]));
+                                    Convert.ToSingle(primRow["PositionZ"]))
+                                    ,true);
 
-            prim.SetGroupPosition (new Vector3(
+            prim.FixGroupPosition (new Vector3(
                                     Convert.ToSingle(primRow["GroupPositionX"]),
                                     Convert.ToSingle(primRow["GroupPositionY"]),
                                     Convert.ToSingle(primRow["GroupPositionZ"]))
-                                    ,false);
+                                    ,true);
 
             prim.Velocity = new Vector3(
                                 Convert.ToSingle(primRow["VelocityX"]),

@@ -474,12 +474,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessGroupPosition(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.SetGroupPosition(ReadVector(reader, "GroupPosition"),false);
+            obj.FixGroupPosition(ReadVector(reader, "GroupPosition"),false);
         }
 
         private static void ProcessOffsetPosition(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.OffsetPosition = ReadVector(reader, "OffsetPosition"); ;
+            obj.FixOffsetPosition(ReadVector(reader, "OffsetPosition"),true);
         }
 
         private static void ProcessRotationOffset(SceneObjectPart obj, XmlTextReader reader)

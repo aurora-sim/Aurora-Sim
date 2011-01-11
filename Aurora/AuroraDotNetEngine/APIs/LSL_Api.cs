@@ -2191,7 +2191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
-                part.OffsetPosition = new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z);
+                part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)),true);
                 SceneObjectGroup parent = part.ParentGroup;
                 parent.HasGroupChanged = true;
                 parent.ScheduleGroupTerseUpdate();

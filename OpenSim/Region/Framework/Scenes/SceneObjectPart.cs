@@ -752,7 +752,7 @@ namespace OpenSim.Region.Framework.Scenes
             _category = 0;
             _lastOwnerID = _creatorID;
             m_groupPosition=groupPosition;
-            OffsetPosition = offsetPosition;
+            m_offsetPosition = offsetPosition;
             RotationOffset = rotationOffset;
             Velocity = Vector3.Zero;
             AngularVelocity = Vector3.Zero;
@@ -1162,7 +1162,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 return m_groupPosition;
-            }
+            }            
             }
 
 
@@ -1170,33 +1170,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
-            set
-            {
-                bool triggerMoving_End = false;
-                if (m_offsetPosition != value)
-                {
-                    triggerMoving_End = true;
-                    TriggerScriptMovingStartEvent();
-                }
-                StoreUndoState();
-                m_offsetPosition = value;
-
-                if (ParentGroup != null && !ParentGroup.IsDeleted)
-                {
-                    ParentGroup.HasGroupChanged = true;
-                    PhysicsActor actor = PhysActor;
-                    if (_parentID != 0 && actor != null)
-                    {
-                        actor.Position = GetWorldPosition();
-                        actor.Orientation = GetWorldRotation();
-
-                        // Tell the physics engines that this prim changed.
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
-                    }
-                }
-                if(triggerMoving_End)
-                    TriggerScriptMovingEndEvent();
-            }
+  
         }
 
         public Vector3 RelativePosition
@@ -1858,7 +1832,47 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Public Methods
 
-        public void SetGroupPosition(Vector3 value, bool single)
+
+        public void SetOffsetPosition(Vector3 value)
+            {
+            m_offsetPosition = value;
+            }
+
+        public void FixOffsetPosition(Vector3 value, bool single)
+            {
+            bool triggerMoving_End = false;
+            if (m_offsetPosition != value)
+                {
+                triggerMoving_End = true;
+                TriggerScriptMovingStartEvent();
+                }
+            StoreUndoState();
+            m_offsetPosition = value;
+
+            if (ParentGroup != null && !ParentGroup.IsDeleted)
+                {
+                ParentGroup.HasGroupChanged = true;
+                PhysicsActor actor = PhysActor;
+                if (_parentID != 0 && actor != null &&(single || !actor.IsPhysical))
+                    {
+                    actor.Position = GetWorldPosition();
+                    actor.Orientation = GetWorldRotation();
+
+                    // Tell the physics engines that this prim changed.
+                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                    }
+                }
+            if (triggerMoving_End)
+                TriggerScriptMovingEndEvent();
+            }
+        
+
+        public void SetGroupPosition(Vector3 value)
+            {
+            m_groupPosition = value;
+            }
+
+        public void FixGroupPosition(Vector3 value, bool single)
             {
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
@@ -1880,16 +1894,18 @@ namespace OpenSim.Region.Framework.Scenes
                     if (_parentID == 0)
                         {
                         actor.Position = value;
+                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
                     else if(single || !actor.IsPhysical)
                         {
                         // To move the child prim in respect to the group position and rotation we have to calculate
                         actor.Position = GetWorldPosition();
                         actor.Orientation = GetWorldRotation();
+                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
 
                     // Tell the physics engines that this prim changed.
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                    
                     }
                 catch (Exception e)
                     {
@@ -4882,7 +4898,7 @@ namespace OpenSim.Region.Framework.Scenes
                 (pos.Z != GroupPosition.Z))
             {
 //                Vector3 newPos = new Vector3(pos.X, pos.Y, pos.Z);
-                SetGroupPosition(pos,false);
+                FixGroupPosition(pos,false);
                 ScheduleTerseUpdate();
             }
         }
@@ -4910,7 +4926,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                OffsetPosition = newPos;
+                FixOffsetPosition(newPos,false);
                 ScheduleTerseUpdate();
             }
         }

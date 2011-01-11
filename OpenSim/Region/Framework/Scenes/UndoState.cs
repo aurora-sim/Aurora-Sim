@@ -115,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (Position != Vector3.Zero)
                     {
                         ChangedPos = true;
-                        part.OffsetPosition = Position;
+                        part.FixOffsetPosition(Position,false);
                     }
                     ChangedRot = true;
                     part.UpdateRotation(Rotation);
@@ -169,7 +169,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (Position != Vector3.Zero)
                     {
                         ChangedPos = true;
-                        part.OffsetPosition = Position;
+                        part.FixOffsetPosition(Position,false);
                     }
                     if (Rotation != Quaternion.Identity)
                     {
