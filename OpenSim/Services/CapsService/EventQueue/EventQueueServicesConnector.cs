@@ -176,7 +176,11 @@ namespace OpenSim.Services.CapsService
             {
                 UUID Password;
                 if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
+                {
+                    m_log.Warn("[EventQueueServiceConnector]: Could not find password for agent " + avatarID + 
+                        ", all Caps will fail!");
                     return false;
+                }
 
                 OSDMap request = new OSDMap();
                 request.Add("AgentID", avatarID);
