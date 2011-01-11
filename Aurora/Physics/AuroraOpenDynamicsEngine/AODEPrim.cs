@@ -1447,7 +1447,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
             if (prim_geom != IntPtr.Zero && !m_taintremove)
                 {
-                if (IsPhysical && !m_disabled)
+                if (IsPhysical)
                     {
                     //Prim auto disable after 20 frames,
                     //if you move it, re-enable the prim manually.
