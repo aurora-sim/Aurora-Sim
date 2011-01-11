@@ -432,13 +432,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         quat.X = prm._orientation.X;
                         quat.Y = prm._orientation.Y;
                         quat.Z = prm._orientation.Z;
-                        d.RfromQ(out mat, ref quat);
-
+                        d.RfromQ(out mat, ref quat);                       
                         d.MassRotate(ref tmpdmass, ref mat);
+
                         Vector3 ppos = prm._position;
                         ppos.X += tmpdmass.c.X - rcm.X;
                         ppos.Y += tmpdmass.c.Y - rcm.Y;
-                        ppos.Z += tmpdmass.c.Z - rcm.Z;
+                        ppos.Z += tmpdmass.c.Z - rcm.Z; 
+
                         // refer inertia to root prim center of mass position
                         d.MassTranslate(ref tmpdmass,
                             ppos.X,
@@ -964,42 +965,39 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public bool ProcessTaints(float timestep)
-        {
-//Console.WriteLine("ProcessTaints for " + m_primName);
-        if (m_taintremove)
             {
-            if (IsPhysical)
+            //Console.WriteLine("ProcessTaints for " + m_primName);
+            if (m_taintremove)
                 {
-                if(_parent != null)
+                if (_parent != null)
                     {
                     AuroraODEPrim parent = (AuroraODEPrim)_parent;
                     parent.ChildRemove(this);
                     }
                 else
                     ChildRemove(this);
+                return true;
                 }
-            return true;
-            }
 
             if (m_taintadd)
-            {
+                {
                 changeadd();
-            }
+                }
 
             if (m_frozen)
                 return false;
-            
+
             if (prim_geom != IntPtr.Zero)
                 {
                 if (!_position.ApproxEquals(m_taintposition, 0f) || m_taintrot != _orientation)
-                        changemoveandrotate(timestep);
+                    changemoveandrotate(timestep);
 
 
-            
+
                 if (m_taintPhysics != m_isphysical && !(m_taintparent != _parent))
                     changePhysicsStatus();
 
-                if (!_size.ApproxEquals(m_taintsize,0f))
+                if (!_size.ApproxEquals(m_taintsize, 0f))
                     changesize();
 
                 if (m_taintshape)
@@ -1031,15 +1029,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (m_needsTaintAngularLock)
                     changeAngularLock();
- 
-            }
+
+                }
             else
-            {
+                {
                 m_frozen = true;
                 m_log.Error("[PHYSICS]: The scene reused a disposed PhysActor! *waves finger*, Don't be evil.  A couple of things can cause this.   An improper prim breakdown(be sure to set prim_geom to zero after d.GeomDestroy!   An improper buildup (creating the geom failed).   Or, the Scene Reused a physics actor after disposing it.)");
-            }
+                }
             return false;
-        }
+            }
 
         private void changeAngularLock()
         {
@@ -1418,10 +1416,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
 
                     CalculatePrimMass();
-
+/* let this be done by set physicsstate sent later
                     if (m_isphysical)
                         MakeBody();
                     else
+ */
                         {                       
                         d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
                         d.Quaternion myrot = new d.Quaternion();
@@ -1879,7 +1878,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
                 //Console.WriteLine("Nothing " +  m_primName);
 
-                }
+                }           
             }
 
         private d.Quaternion ConvertTodQuat(Quaternion q)

@@ -23,8 +23,9 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
-
+//
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -1937,7 +1938,7 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion parentRot = m_rootPart.RotationOffset;
             axPos *= Quaternion.Inverse(parentRot);
 
-            linkPart.FixOffsetPosition(axPos,false);
+            linkPart.SetOffsetPosition(axPos);
             Quaternion oldRot = linkPart.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
             linkPart.RotationOffset = newRot;
@@ -1961,6 +1962,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add the root part to our group!
                 m_scene.SceneGraph.LinkPartToSOG(this, linkPart, linkNum++);
                 linkPart.CreateSelected = true;
+                linkPart.FixOffsetPosition(linkPart.OffsetPosition, true);
                 if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                     {
                     linkPart.PhysActor.link(m_rootPart.PhysActor);
@@ -1972,6 +1974,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.UUID != objectGroup.m_rootPart.UUID)
                     {
                         LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
+                        part.FixOffsetPosition(part.OffsetPosition, true);
                         if (part.PhysActor != null && m_rootPart.PhysActor != null)
                             {
                             part.PhysActor.link(m_rootPart.PhysActor);
@@ -2034,7 +2037,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 axPos = linkPart.OffsetPosition;
 
             axPos *= parentRot;
-            linkPart.FixOffsetPosition(axPos,false);
+            linkPart.SetOffsetPosition(axPos);
             linkPart.FixGroupPosition(AbsolutePosition + linkPart.OffsetPosition,false);
             linkPart.FixOffsetPosition(Vector3.Zero, false);
 
@@ -2075,12 +2078,12 @@ namespace OpenSim.Region.Framework.Scenes
             part.RotationOffset = worldRot;
 
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
-
+            part.CreateSelected = true;
             Quaternion rootRotation = m_rootPart.RotationOffset;
 
             Vector3 pos = part.GroupPosition - AbsolutePosition;
             pos *= Quaternion.Inverse(rootRotation);
-            part.FixOffsetPosition(pos,false);
+            part.SetOffsetPosition(pos);
 
             parentRot = m_rootPart.RotationOffset;
             oldRot = part.RotationOffset;
@@ -2825,7 +2828,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 axPos = childPrim.OffsetPosition;
                     axPos *= old_global_group_rot;
                     axPos *= Quaternion.Inverse(new_global_group_rot);
-                    childPrim.FixOffsetPosition(axPos,false);
+                    childPrim.FixOffsetPosition(axPos,true);
                     Quaternion primsRot = childPrim.RotationOffset;
 
                     Quaternion newRot = primsRot * old_global_group_rot;
