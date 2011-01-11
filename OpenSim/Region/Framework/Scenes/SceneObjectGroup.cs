@@ -1312,7 +1312,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_targets)
                     m_targets.Clear();
-                m_scene.RemoveGroupTarget(this);
+                RemoveGroupTarget(this);
             }
             m_scriptListens_atRotTarget = ((aggregateScriptEvents & scriptEvents.at_rot_target) != 0);
             m_scriptListens_notAtRotTarget = ((aggregateScriptEvents & scriptEvents.not_at_rot_target) != 0);
@@ -1321,7 +1321,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_rotTargets)
                     m_rotTargets.Clear();
-                m_scene.RemoveGroupTarget(this);
+                RemoveGroupTarget(this);
             }
 
             ScheduleGroupUpdate(PrimUpdateFlags.PrimFlags);
@@ -2902,7 +2902,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_rotTargets.Add(handle, waypoint);
             }
-            m_scene.AddGroupTarget(this);
+            AddGroupTarget(this);
             return (int)handle;
         }
 
@@ -2912,7 +2912,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_rotTargets.Remove((uint)handle);
                 if (m_targets.Count == 0)
-                    m_scene.RemoveGroupTarget(this);
+                    RemoveGroupTarget(this);
             }
         }
 
@@ -2927,7 +2927,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_targets.Add(handle, waypoint);
             }
-            m_scene.AddGroupTarget(this);
+            AddGroupTarget(this);
             return (int)handle;
         }
         
@@ -2937,8 +2937,18 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_targets.Remove((uint)handle);
                 if (m_targets.Count == 0)
-                    m_scene.RemoveGroupTarget(this);
+                    RemoveGroupTarget(this);
             }
+        }
+
+        public void AddGroupTarget(SceneObjectGroup grp)
+        {
+            m_scene.EventManager.OnFrame += checkAtTargets;
+        }
+
+        public void RemoveGroupTarget(SceneObjectGroup grp)
+        {
+            m_scene.EventManager.OnFrame -= checkAtTargets;
         }
 
         public void checkAtTargets()

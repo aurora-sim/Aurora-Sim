@@ -49,6 +49,50 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public virtual void SubscribeToClientInventoryEvents(IClientAPI client)
+        {
+            client.OnCreateNewInventoryItem += CreateNewInventoryItem;
+            client.OnLinkInventoryItem += HandleLinkInventoryItem;
+            client.OnCreateNewInventoryFolder += HandleCreateInventoryFolder;
+            client.OnUpdateInventoryFolder += HandleUpdateInventoryFolder;
+            client.OnMoveInventoryFolder += HandleMoveInventoryFolder; // 2; //!!
+            client.OnFetchInventoryDescendents += HandleFetchInventoryDescendents;
+            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents; // 2; //!!
+            client.OnFetchInventory += HandleFetchInventory;
+            client.OnUpdateInventoryItem += UpdateInventoryItemAsset;
+            client.OnChangeInventoryItemFlags += ChangeInventoryItemFlags;
+            client.OnCopyInventoryItem += CopyInventoryItem;
+            client.OnMoveInventoryItem += MoveInventoryItem;
+            client.OnRemoveInventoryItem += RemoveInventoryItem;
+            client.OnRemoveInventoryFolder += RemoveInventoryFolder;
+            client.OnRezScript += RezScript;
+            client.OnRequestTaskInventory += RequestTaskInventory;
+            client.OnRemoveTaskItem += RemoveTaskInventory;
+            client.OnUpdateTaskInventory += UpdateTaskInventory;
+            client.OnMoveTaskItem += ClientMoveTaskInventoryItem;
+        }
+
+        public virtual void UnSubscribeToClientInventoryEvents(IClientAPI client)
+        {
+            client.OnCreateNewInventoryItem -= CreateNewInventoryItem;
+            client.OnCreateNewInventoryFolder -= HandleCreateInventoryFolder;
+            client.OnUpdateInventoryFolder -= HandleUpdateInventoryFolder;
+            client.OnMoveInventoryFolder -= HandleMoveInventoryFolder; // 2; //!!
+            client.OnFetchInventoryDescendents -= HandleFetchInventoryDescendents;
+            client.OnPurgeInventoryDescendents -= HandlePurgeInventoryDescendents; // 2; //!!
+            client.OnFetchInventory -= HandleFetchInventory;
+            client.OnUpdateInventoryItem -= UpdateInventoryItemAsset;
+            client.OnCopyInventoryItem -= CopyInventoryItem;
+            client.OnMoveInventoryItem -= MoveInventoryItem;
+            client.OnRemoveInventoryItem -= RemoveInventoryItem;
+            client.OnRemoveInventoryFolder -= RemoveInventoryFolder;
+            client.OnRezScript -= RezScript;
+            client.OnRequestTaskInventory -= RequestTaskInventory;
+            client.OnRemoveTaskItem -= RemoveTaskInventory;
+            client.OnUpdateTaskInventory -= UpdateTaskInventory;
+            client.OnMoveTaskItem -= ClientMoveTaskInventoryItem;
+        }
+
         public bool AddInventoryItemReturned(UUID AgentId, InventoryItemBase item)
         {
             if (AddInventoryItem(item))

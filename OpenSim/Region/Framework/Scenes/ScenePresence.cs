@@ -2658,7 +2658,9 @@ namespace OpenSim.Region.Framework.Scenes
                 agentpos.UpAxis = CameraUpAxis;
                 agentpos.Velocity = Velocity;
 
-                m_scene.SendOutChildAgentUpdates(agentpos, this);
+                INeighborService service = m_scene.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                    service.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID);
             }
 
             //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.

@@ -104,8 +104,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_permissions; }
         }
 
-        protected Dictionary<UUID, SceneObjectGroup> m_groupsWithTargets = new Dictionary<UUID, SceneObjectGroup>();
-
         protected IConfigSource m_config;
 
         protected AgentCircuitManager m_authenticateHandler;
@@ -744,9 +742,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (monitor != null)
                     monitor.AddPhysicsStats(RegionInfo.RegionID, m_sceneGraph.PhysicsScene);
 
-                // Check if any objects have reached their targets
-                CheckAtTargets();
-
                 //Now fix the sim stats
                 int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
                 int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
@@ -775,27 +770,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        public void AddGroupTarget(SceneObjectGroup grp)
-        {
-            lock (m_groupsWithTargets)
-                m_groupsWithTargets[grp.UUID] = grp;
-        }
-
-        public void RemoveGroupTarget(SceneObjectGroup grp)
-        {
-            lock (m_groupsWithTargets)
-                m_groupsWithTargets.Remove(grp.UUID);
-        }
-
-        private void CheckAtTargets()
-        {
-            Dictionary<UUID, SceneObjectGroup>.ValueCollection objs;
-            lock (m_groupsWithTargets)
-                objs = m_groupsWithTargets.Values;
-            foreach (SceneObjectGroup entry in objs)
-                entry.checkAtTargets();
-        }
 
         /// <summary>
         /// Sends out the OnFrame event to the modules
@@ -873,7 +847,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            //m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
+            m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
 
             ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
             lock (m_incomingChildAgentData)
@@ -935,11 +909,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_log.DebugFormat("[SCENE]: User Client Verification for {0} in {1} returned true", aCircuit.AgentID, RegionInfo.RegionName);
                 }
             }
-
             else if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
             {
-                //m_log.DebugFormat("[SCENE]: Incoming client {0} {1} in region {2} via regular login. Client IP verification not performed.",
-                //    aCircuit.firstname, aCircuit.lastname, RegionInfo.RegionName);
                 vialogin = true;
             }
 
@@ -1008,29 +979,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnAddPrim += m_sceneGraph.AddNewPrim;
             client.OnRezObject += RezObject;
             client.OnObjectDuplicateOnRay += m_sceneGraph.doObjectDuplicateOnRay;
-        }
-
-        public virtual void SubscribeToClientInventoryEvents(IClientAPI client)
-        {
-            client.OnCreateNewInventoryItem += CreateNewInventoryItem;
-            client.OnLinkInventoryItem += HandleLinkInventoryItem;
-            client.OnCreateNewInventoryFolder += HandleCreateInventoryFolder;
-            client.OnUpdateInventoryFolder += HandleUpdateInventoryFolder;
-            client.OnMoveInventoryFolder += HandleMoveInventoryFolder; // 2; //!!
-            client.OnFetchInventoryDescendents += HandleFetchInventoryDescendents;
-            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents; // 2; //!!
-            client.OnFetchInventory += HandleFetchInventory;
-            client.OnUpdateInventoryItem += UpdateInventoryItemAsset;
-            client.OnChangeInventoryItemFlags += ChangeInventoryItemFlags;
-            client.OnCopyInventoryItem += CopyInventoryItem;
-            client.OnMoveInventoryItem += MoveInventoryItem;
-            client.OnRemoveInventoryItem += RemoveInventoryItem;
-            client.OnRemoveInventoryFolder += RemoveInventoryFolder;
-            client.OnRezScript += RezScript;
-            client.OnRequestTaskInventory += RequestTaskInventory;
-            client.OnRemoveTaskItem += RemoveTaskInventory;
-            client.OnUpdateTaskInventory += UpdateTaskInventory;
-            client.OnMoveTaskItem += ClientMoveTaskInventoryItem;
         }
 
         public virtual void SubscribeToClientGridEvents(IClientAPI client)
@@ -1103,27 +1051,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnAddPrim -= m_sceneGraph.AddNewPrim;
             client.OnRezObject -= RezObject;
             client.OnObjectDuplicateOnRay -= m_sceneGraph.doObjectDuplicateOnRay;
-        }
-
-        public virtual void UnSubscribeToClientInventoryEvents(IClientAPI client)
-        {
-            client.OnCreateNewInventoryItem -= CreateNewInventoryItem;
-            client.OnCreateNewInventoryFolder -= HandleCreateInventoryFolder;
-            client.OnUpdateInventoryFolder -= HandleUpdateInventoryFolder;
-            client.OnMoveInventoryFolder -= HandleMoveInventoryFolder; // 2; //!!
-            client.OnFetchInventoryDescendents -= HandleFetchInventoryDescendents;
-            client.OnPurgeInventoryDescendents -= HandlePurgeInventoryDescendents; // 2; //!!
-            client.OnFetchInventory -= HandleFetchInventory;
-            client.OnUpdateInventoryItem -= UpdateInventoryItemAsset;
-            client.OnCopyInventoryItem -= CopyInventoryItem;
-            client.OnMoveInventoryItem -= MoveInventoryItem;
-            client.OnRemoveInventoryItem -= RemoveInventoryItem;
-            client.OnRemoveInventoryFolder -= RemoveInventoryFolder;
-            client.OnRezScript -= RezScript;
-            client.OnRequestTaskInventory -= RequestTaskInventory;
-            client.OnRemoveTaskItem -= RemoveTaskInventory;
-            client.OnUpdateTaskInventory -= UpdateTaskInventory;
-            client.OnMoveTaskItem -= ClientMoveTaskInventoryItem;
         }
 
         public virtual void UnSubscribeToClientGridEvents(IClientAPI client)
@@ -1472,13 +1399,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Agent not here
             return false;
-        }
-
-        public void SendOutChildAgentUpdates(AgentPosition cadu, ScenePresence presence)
-        {
-            INeighborService service = RequestModuleInterface<INeighborService>();
-            if (service != null)
-                service.SendChildAgentUpdate(cadu, presence.Scene.RegionInfo.RegionID);
         }
 
         #endregion
