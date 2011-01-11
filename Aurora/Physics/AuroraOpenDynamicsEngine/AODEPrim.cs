@@ -436,12 +436,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         d.MassRotate(ref tmpdmass, ref mat);
                         Vector3 ppos = prm._position;
-
+                        ppos.X += tmpdmass.c.X - rcm.X;
+                        ppos.Y += tmpdmass.c.Y - rcm.Y;
+                        ppos.Z += tmpdmass.c.Z - rcm.Z;
                         // refer inertia to root prim center of mass position
                         d.MassTranslate(ref tmpdmass,
-                            ppos.X + tmpdmass.c.X - rcm.X,
-                            ppos.Y + tmpdmass.c.Y - rcm.Y,
-                            ppos.Z + tmpdmass.c.Z - rcm.Z);
+                            ppos.X,
+                            ppos.Y,
+                            ppos.Z);
 
                         d.MassAdd(ref objdmass, ref tmpdmass); // add to total object inertia
 
@@ -988,8 +990,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return false;
             
             if (prim_geom != IntPtr.Zero)
-            {
-            if (!_position.ApproxEquals(m_taintposition, 0f) || m_taintrot != _orientation)
+                {
+                if (!_position.ApproxEquals(m_taintposition, 0f) || m_taintrot != _orientation)
                         changemoveandrotate(timestep);
 
 
@@ -1127,6 +1129,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             DestroyBody();
             MakeBody();
         }
+
+
+        private void UpdateChildsfromgeom()
+            {
+            if(childrenPrim.Count >0)
+                {
+                foreach (AuroraODEPrim prm in childrenPrim)
+                    prm.UpdateDataFromGeom();
+                }
+            }
 
         private void UpdateDataFromGeom()
             {
@@ -1433,72 +1445,69 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changemoveandrotate(float timestep)
             {
-
-            if (prim_geom != IntPtr.Zero)
+            if (prim_geom != IntPtr.Zero && !m_taintremove)
                 {
-                if (IsPhysical)
+                if (IsPhysical && !m_disabled)
                     {
-                    if (!m_taintremove)
+                    //Prim auto disable after 20 frames,
+                    //if you move it, re-enable the prim manually.
+                    if (childPrim)  // inertia is messed, must rebuild
                         {
-                        //Prim auto disable after 20 frames,
-                        //if you move it, re-enable the prim manually.
-                        if (childPrim)  // inertia is messed, must rebuild
-                            {
-                            AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                            parent.DestroyBody();
-                            parent.MakeBody();
-                            }
-                        else
-                            {
-                            if (m_taintrot != _orientation)
-                                {
-                                d.Quaternion myrot = new d.Quaternion();
-                                myrot.X = _orientation.X;
-                                myrot.Y = _orientation.Y;
-                                myrot.Z = _orientation.Z;
-                                myrot.W = _orientation.W;
-                                d.GeomSetQuaternion(prim_geom, ref myrot);
-                                if (!m_angularlock.ApproxEquals(Vector3.One, 0f))
-                                    createAMotor(m_angularlock);
-                                }
-                            d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-                            }
-                        if (Body != IntPtr.Zero)
-                            d.BodyEnable(Body);
+                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                        parent.DestroyBody();
+                        parent.MakeBody();
                         }
+                    else
+                        {
+                        if (m_taintrot != _orientation)
+                            {
+                            d.Quaternion myrot = new d.Quaternion();
+                            myrot.X = _orientation.X;
+                            myrot.Y = _orientation.Y;
+                            myrot.Z = _orientation.Z;
+                            myrot.W = _orientation.W;
+                            d.GeomSetQuaternion(prim_geom, ref myrot);
+                            if (Body != IntPtr.Zero && !m_angularlock.ApproxEquals(Vector3.One, 0f))
+                                createAMotor(m_angularlock);
+                            }
+                        d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+                        }
+                    if (Body != IntPtr.Zero)
+                        d.BodyEnable(Body);
                     }
-                else if (!m_taintremove)
+                }
+            else
+                {
+                // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
+                // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, _position, m_targetSpace);
+                m_targetSpace = tempspace;
+
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                if (m_taintrot != _orientation)
                     {
-                    // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
-                    // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-
-                    IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, _position, m_targetSpace);
-                    m_targetSpace = tempspace;
-
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                    if (m_taintrot != _orientation)
-                        {
-                        d.Quaternion myrot = new d.Quaternion();
-                        myrot.X = _orientation.X;
-                        myrot.Y = _orientation.Y;
-                        myrot.Z = _orientation.Z;
-                        myrot.W = _orientation.W;
-                        d.GeomSetQuaternion(prim_geom, ref myrot);
-                        }
-
-                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                    d.SpaceAdd(m_targetSpace, prim_geom);
+                    d.Quaternion myrot = new d.Quaternion();
+                    myrot.X = _orientation.X;
+                    myrot.Y = _orientation.Y;
+                    myrot.Z = _orientation.Z;
+                    myrot.W = _orientation.W;
+                    d.GeomSetQuaternion(prim_geom, ref myrot);
                     }
+
+                d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                d.SpaceAdd(m_targetSpace, prim_geom);
                 }
             changeSelectedStatus();
 
             resetCollisionAccounting();
             m_taintrot = _orientation;
             m_taintposition = _position;
-        }
+            }
 
         public void Move(float timestep)
             {
@@ -1883,46 +1892,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return dq;
         }
 
-        public void rotate()
-        {
-            d.Quaternion myrot = new d.Quaternion();
-            myrot.X = _orientation.X;
-            myrot.Y = _orientation.Y;
-            myrot.Z = _orientation.Z;
-            myrot.W = _orientation.W;
-
-            if (Body != IntPtr.Zero)
-            {
-                // KF: If this is a root prim do BodySet
-            if (childPrim)
-                {
-                if (_parent != null)  // inertia is messed, must rebuild
-                    {
-                    AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                    parent.DestroyBody();
-                    parent.MakeBody();
-                    }
-                }
-            else
-                {
-                d.GeomSetQuaternion(prim_geom, ref myrot);
-                if (m_isphysical)
-                    {
-                    if (!m_angularlock.ApproxEquals(Vector3.One, 0f))
-                        createAMotor(m_angularlock);
-                    }
-                }
-            }
-            else
-            {
-                // daughter prim, do Geom set
-            d.GeomSetQuaternion(prim_geom, ref myrot);
-            }
-            
-            resetCollisionAccounting();
-            m_taintrot = _orientation;
-        }
-
         private void resetCollisionAccounting()
         {
             m_collisionscore = 0;
@@ -1964,6 +1933,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                     if (Body != IntPtr.Zero)
                         {
+                        UpdateChildsfromgeom();
                         if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
                             {
                             changeshape();
@@ -1974,6 +1944,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                 }
+
+                
 
             changeSelectedStatus();
             resetCollisionAccounting();
