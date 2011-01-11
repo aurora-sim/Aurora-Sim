@@ -431,7 +431,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             agent.CallbackURI = "http://" + region.ExternalHostName + ":" + region.HttpPort +
                 "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
-
+            m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
         }
 
         protected virtual void AgentHasMovedAway(UUID sessionID, bool logout)
@@ -757,11 +757,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = grp.AbsolutePosition;
-                    
 
-                cAgent.CallbackURI = "http://" + m_scene.RegionInfo.ExternalHostName + ":" + m_scene.RegionInfo.HttpPort +
-                    "/agent/" + agent.UUID.ToString() + "/" + m_scene.RegionInfo.RegionID.ToString() + "/release/";
-
+                //Set the callback URL
+                SetCallbackURL(cAgent, m_scene.RegionInfo);
+                
                 if (!m_scene.SimulationService.UpdateAgent(neighbourRegion, cAgent))
                 {
                     // region doesn't take it

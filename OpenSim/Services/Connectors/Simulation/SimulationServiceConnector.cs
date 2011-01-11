@@ -84,6 +84,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
                 args["teleport_flags"] = OSD.FromString(teleportFlags.ToString());
+                if(data != null)
+                    args["agent_data"] = data.Pack();
 
                 OSDMap result = WebUtils.PostToService(uri, args);
                 if (result["Success"].AsBoolean())

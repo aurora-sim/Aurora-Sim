@@ -1069,21 +1069,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                 Scene.SimulationService.ReleaseAgent(m_originRegionID, UUID, m_callbackURI);
-                m_callbackURI = null;
             }
             else
                 m_log.Warn("[ScenePresence]: Callback URI was null or \"\"! Cannot complete the callback!");
 
             IsChildAgent = false;
 
+            bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+            MakeRootAgent(AbsolutePosition, m_flying);
+
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
             // Create child agents in neighbouring regions
             SendInitialData();
-
-            bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-            MakeRootAgent(AbsolutePosition, m_flying);
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -2904,61 +2903,13 @@ namespace OpenSim.Region.Framework.Scenes
             //else 
             //    cAgent.GodLevel = (byte) 0;
 
-                cAgent.Speed = SpeedModifier;
-                cAgent.DrawDistance = DrawDistance;
+            cAgent.Speed = SpeedModifier;
+            cAgent.DrawDistance = DrawDistance;
             cAgent.AlwaysRun = m_setAlwaysRun;
             cAgent.SentInitialWearables = m_InitialHasWearablesBeenSent;
             
             cAgent.Appearance = new AvatarAppearance(m_appearance);
-            
-            /*
-            try
-            {
-                // We might not pass the Wearables in all cases...
-                // They're only needed so that persistent changes to the appearance
-                // are preserved in the new region where the user is moving to.
-                // But in Hypergrid we might not let this happen.
-                int i = 0;
-                UUID[] wears = new UUID[m_appearance.Wearables.Length * 2];
-                foreach (AvatarWearable aw in m_appearance.Wearables)
-                {
-                    if (aw != null)
-                    {
-                        wears[i++] = aw.ItemID;
-                        wears[i++] = aw.AssetID;
-                    }
-                    else
-                    {
-                        wears[i++] = UUID.Zero;
-                        wears[i++] = UUID.Zero;
-                    }
-                }
-                cAgent.Wearables = wears;
 
-                cAgent.VisualParams = m_appearance.VisualParams;
-
-                if (m_appearance.Texture != null)
-                    cAgent.AgentTextures = m_appearance.Texture.GetBytes();
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[SCENE PRESENCE]: exception in CopyTo " + e.Message);
-            }
-
-            //Attachments
-            List<int> attPoints = m_appearance.GetAttachedPoints();
-            if (attPoints != null)
-            {
-                //m_log.DebugFormat("[SCENE PRESENCE]: attachments {0}", attPoints.Count);
-                int i = 0;
-                AttachmentData[] attachs = new AttachmentData[attPoints.Count];
-                foreach (int point in attPoints)
-                {
-                    attachs[i++] = new AttachmentData(point, m_appearance.GetAttachedItem(point), m_appearance.GetAttachedAsset(point));
-                }
-                cAgent.Attachments = attachs;
-            }
-            */
             lock (scriptedcontrols)
             {
                 ControllerData[] controls = new ControllerData[scriptedcontrols.Count];
@@ -2981,7 +2932,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // cAgent.GroupID = ??
             // Groups???
-
         }
 
         public void CopyFrom(AgentData cAgent)
@@ -3015,54 +2965,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
             m_appearance = new AvatarAppearance(cAgent.Appearance);
             
-/*
-            uint i = 0;
-            try
-            {
-                if (cAgent.Wearables == null)
-                   cAgent.Wearables  = new UUID[0];
-                AvatarWearable[] wears = new AvatarWearable[Math.Max(AvatarAppearance.MAX_WEARABLES, cAgent.Wearables.Length /2)];//make the larger array
-                for (uint n = 0; n < cAgent.Wearables.Length; n += 2)
-                {
-                    UUID itemId = cAgent.Wearables[n];
-                    UUID assetId = cAgent.Wearables[n + 1];
-                    wears[i++] = new AvatarWearable(itemId, assetId);
-                }
-                //Check for nulls
-                for (i = 0; i < wears.Length; i++)
-                {
-                    if (wears[i] == null)
-                        wears[i] = new AvatarWearable();
-                }
-                m_appearance.Wearables = wears;
-                Primitive.TextureEntry te;
-                if (cAgent.AgentTextures != null && cAgent.AgentTextures.Length > 1)
-                    te = new Primitive.TextureEntry(cAgent.AgentTextures, 0, cAgent.AgentTextures.Length);
-                else
-                    te = AvatarAppearance.GetDefaultTexture();
-                if ((cAgent.VisualParams == null) || (cAgent.VisualParams.Length < AvatarAppearance.VISUALPARAM_COUNT))
-                    cAgent.VisualParams = AvatarAppearance.GetDefaultVisualParams();
-                m_appearance.SetAppearance(te, (byte[])cAgent.VisualParams.Clone());
-            }
-            catch (Exception e)
-            {
-                m_log.Warn("[SCENE PRESENCE]: exception in CopyFrom " + e.Message);
-            }
-
-            // Attachments
-            try
-            {
-                if (cAgent.Attachments != null)
-                {
-                    m_appearance.ClearAttachments();
-                    foreach (AttachmentData att in cAgent.Attachments)
-                    {
-                        m_appearance.SetAttachment(att.AttachPoint, att.ItemID, att.AssetID);
-                    }
-                }
-            }
-            catch { } 
-            */
             try
             {
                 lock (scriptedcontrols)
