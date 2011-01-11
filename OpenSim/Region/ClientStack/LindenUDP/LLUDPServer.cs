@@ -161,8 +161,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public Socket Server { get { return null; } }
 
-        public List<UUID> m_handlingCircuitCodes = new List<UUID>();
-
         public LLUDPServer(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
             : base(listenIP, (int)port)
         {
@@ -860,9 +858,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Acknowledge the UseCircuitCode packet
                 SendAckImmediate(remoteEndPoint, packet.Header.Sequence);
 
-                m_log.DebugFormat(
+                m_log.InfoFormat(
                     "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
-                    buffer.RemoteEndPoint, (DateTime.Now - startTime).Milliseconds);
+                    remoteEndPoint, (DateTime.Now - startTime).Milliseconds);
             }
         }
 
@@ -931,14 +929,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Start the IClientAPI
                 m_scene.AddNewClient(client);
-                //Remove it from the check
-                m_handlingCircuitCodes.Remove(agentID);
                 return true;
             }
             else
             {
-                m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
-                    agentID, remoteEndPoint, circuitCode);
+                m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
+                    circuitCode, agentID, remoteEndPoint);
             }
             return false;
         }

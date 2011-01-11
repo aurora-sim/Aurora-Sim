@@ -90,8 +90,9 @@ namespace OpenSim.Services.Connectors.Simulation
                 OSDMap result = WebUtils.PostToService(uri, args);
                 if (result["Success"].AsBoolean())
                 {
+                    OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
                     //Pull out the result and set it as the reason
-                    reason = result["reason"] != null ? result["reason"].AsString() : "";
+                    reason = results["reason"] != null ? results["reason"].AsString() : "";
                     return true;
                 }
 

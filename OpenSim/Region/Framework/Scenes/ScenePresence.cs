@@ -1070,8 +1070,6 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                 Scene.SimulationService.ReleaseAgent(m_originRegionID, UUID, m_callbackURI);
             }
-            else
-                m_log.Warn("[ScenePresence]: Callback URI was null or \"\"! Cannot complete the callback!");
 
             IsChildAgent = false;
 

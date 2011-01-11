@@ -431,7 +431,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             agent.CallbackURI = "http://" + region.ExternalHostName + ":" + region.HttpPort +
                 "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
-            m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
+            //m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
         }
 
         protected virtual void AgentHasMovedAway(UUID sessionID, bool logout)
