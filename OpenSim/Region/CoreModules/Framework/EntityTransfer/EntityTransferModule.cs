@@ -1068,7 +1068,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     }
                 }
 
-                SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy();
+                SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
                 if (grp.Scene != null && grp.Scene.SimulationService != null)
                     successYN = grp.Scene.SimulationService.CreateObject(destination, copiedGroup);
 

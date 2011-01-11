@@ -127,34 +127,38 @@ namespace OpenSim.Services.Connectors
 
         public List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
+            GridRegion incomingGridRegion = new GridRegion(incomingRegion);
+
             List<GridRegion> m_informedRegions = new List<GridRegion>();
             m_KnownNeighbors[incomingRegion.RegionID] = FindNewNeighbors(incomingRegion);
 
             //We need to inform all the regions around us that our region now exists
 
+            //First run through the scenes that we have here locally, 
+            //   as we don't inform remote regions in this module
             foreach (Scene s in m_Scenes)
             {
                 //Don't tell ourselves about us
                 if (s.RegionInfo.RegionID == incomingRegion.RegionID)
                     continue;
 
-                foreach (GridRegion n in m_KnownNeighbors[incomingRegion.RegionID])
+                //Make sure we don't already have this region in the neighbors
+                if (!m_KnownNeighbors[incomingRegion.RegionID].Contains(incomingGridRegion))
                 {
-                    if (n.RegionID == s.RegionInfo.RegionID)
+                    //Now check to see whether the incoming region should be a neighbor of this Scene
+                    if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX,
+                        s.RegionInfo.RegionLocY, incomingRegion.RegionLocY))
                     {
                         //Fix this regions neighbors now that it has a new one
-                        m_KnownNeighbors[s.RegionInfo.RegionID] = FindNewNeighbors(s.RegionInfo);
+                        m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
 
                         m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
-                            incomingRegion.RegionName, n.RegionName);
+                            incomingRegion.RegionName, s.RegionInfo.RegionName);
 
-                        GridRegion incomingneighbor = new GridRegion(incomingRegion);
                         //Tell this region about the original region
-                        s.IncomingHelloNeighbor(incomingneighbor);
-                        //Tell the original region about this new region
-                        s.EventManager.TriggerOnRegionUp(incomingneighbor);
+                        IncomingHelloNeighbor(s, incomingGridRegion);
                         //This region knows now, so add it to the list
-                        m_informedRegions.Add(n);
+                        m_informedRegions.Add(new GridRegion(s.RegionInfo));
                     }
                 }
             }
@@ -166,6 +170,44 @@ namespace OpenSim.Services.Connectors
 
             return m_informedRegions;
         }
+
+        #region Inform scenes about incoming/outgoing neighbors
+
+        /// <summary>
+        /// The Scene is being informed of the new region 'otherRegion'
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="otherRegion"></param>
+        private void IncomingHelloNeighbor(Scene scene, GridRegion otherRegion)
+        {
+            // Let the grid service module know, so this can be cached
+            scene.EventManager.TriggerOnRegionUp(otherRegion);
+
+            //Add this new region to all the clients so that they can see it as well
+            scene.ForEachScenePresence(delegate(ScenePresence agent)
+            {
+                // If agent is a root agent.
+                if (!agent.IsChildAgent)
+                {
+                    //Now add the agent to the reigon that is coming up
+                    IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.EnableChildAgent(agent, otherRegion);
+                }
+            });
+        }
+
+        /// <summary>
+        /// The Scene is being informed of the closing region 'closingNeighbor'
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="closingNeighbor"></param>
+        private void IncomingClosingNeighbor(Scene scene, GridRegion closingNeighbor)
+        {
+            scene.EventManager.TriggerOnRegionDown(closingNeighbor);
+        }
+
+        #endregion
 
         /// <summary>
         /// Get all the neighboring regions of the given region
@@ -242,8 +284,7 @@ namespace OpenSim.Services.Connectors
 
                         GridRegion closingNeighbor = new GridRegion(closingRegion);
                         //Tell this region about the original region
-                        s.IncomingClosingNeighbor(closingNeighbor);
-                        s.EventManager.TriggerOnRegionDown(closingNeighbor);
+                        IncomingClosingNeighbor(s, closingNeighbor);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
                     }

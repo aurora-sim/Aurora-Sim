@@ -65,7 +65,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_lastVelocity;
         private Vector3 m_lastRotationalVelocity;
         private Vector3 m_lastposition;
-        private Vector3 m_lastSignificantPosition;
+        //private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();
         private Vector3 m_rotationalVelocity;
         private Vector3 _size;
@@ -164,7 +164,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_throttleUpdates;
         private int throttleCounter;
-        private int _updatesPerThrottledUpdate;
+        //private int _updatesPerThrottledUpdate;
         public int m_interpenetrationcount;
         public float m_collisionscore;
         private int m_crossingfailures;

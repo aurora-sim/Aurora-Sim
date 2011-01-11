@@ -551,61 +551,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion Constructors
 
-        #region Startup / Close Methods
-
-        public void IncomingHelloNeighbor(GridRegion otherRegion)
-        {
-            int xcell = otherRegion.RegionLocX;
-            int ycell = otherRegion.RegionLocY;
-            //m_log.InfoFormat("[SCENE]: (on region {0}): Region {1} up in coords {2}-{3}", 
-            //    RegionInfo.RegionName, otherRegion.RegionName, xcell, ycell);
-
-            if (RegionInfo.RegionHandle != otherRegion.RegionHandle)
-            {
-                // If these are cast to INT because long + negative values + abs returns invalid data
-                INeighborService neighborService = RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                {
-                    if (!neighborService.IsOutsideView(xcell, RegionInfo.RegionLocX, ycell, RegionInfo.RegionLocY))
-                    {
-                        // Let the grid service module know, so this can be cached
-                        m_eventManager.TriggerOnRegionUp(otherRegion);
-
-                        try
-                        {
-                            ForEachScenePresence(delegate(ScenePresence agent)
-                            {
-                                // If agent is a root agent.
-                                if (!agent.IsChildAgent)
-                                {
-                                    //Now add the agent to the reigon that is coming up
-                                    IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
-                                    if (transferModule != null)
-                                        transferModule.EnableChildAgent(agent, otherRegion);
-                                }
-                            });
-                        }
-                        catch (NullReferenceException)
-                        {
-                            // This means that we're not booted up completely yet.
-                            // This shouldn't happen too often anymore.
-                            m_log.Error("[Scene]: Couldn't inform client of regionup because we got a null reference exception");
-                        }
-                    }
-                    else
-                    {
-                        m_log.Info("[Scene]: Got notice about far away Region: " + otherRegion.RegionName.ToString() +
-                                   " at  (" + (otherRegion.RegionLocX / Constants.RegionSize).ToString() + ", " +
-                                   (otherRegion.RegionLocY / Constants.RegionSize).ToString() + ")");
-                    }
-                }
-            }
-        }
-
-        public void IncomingClosingNeighbor(GridRegion neighbor)
-        {
-            //OtherRegionDown(new GridRegion(neighbor));
-        }
+        #region Close
 
         /// <summary>
         /// This is the method that shuts down the scene.
@@ -661,9 +607,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Update Methods
-
-        #region Scene Heartbeat parts
+        #region Scene Heartbeat Methods
 
         public void Update()
         {
@@ -710,7 +654,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_sceneGraph.UpdatePresences();
 
                 if (m_frame % m_update_events == 0)
-                    UpdateEvents();
+                    m_eventManager.TriggerOnFrame();
 
                 // merged back physH
                 int PhysicsSyncTime = Util.EnvironmentTickCount();
@@ -767,16 +711,6 @@ namespace OpenSim.Region.Framework.Scenes
             sleepFrameMonitor.AddTime(maintc);
 
             totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Sends out the OnFrame event to the modules
-        /// </summary>
-        private void UpdateEvents()
-        {
-            m_eventManager.TriggerOnFrame();
         }
 
         #endregion
