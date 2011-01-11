@@ -1279,7 +1279,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// take proper notice of it let, we allowed banned users in still.
         /// </summary>
         /// <param name="agent">CircuitData of the agent who is connecting</param>
-        /// <param name="reason">Outputs the reason for the false response on this string</param>
+        /// <param name="reason">Outputs the reason for the false response on this string,
+        /// If the agent was accepted, this will be the Caps SEED for the region</param>
         /// <param name="requirePresenceLookup">True for normal presence. False for NPC
         /// or other applications where a full grid/Hypergrid presence may not be required.</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
@@ -1335,6 +1336,7 @@ namespace OpenSim.Region.Framework.Scenes
                 string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
                 m_log.Info("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
                      " @" + capsUrl + " for agent " + agent.AgentID);
+                reason = capsUrl;
             }
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags

@@ -587,7 +587,6 @@ namespace OpenSim.Services.CapsService
                       + neighbor.HttpPort
                       + CapsUtil.GetCapsSeedPath(CapsBase);
                     //Add the new Seed for this region
-                    otherRegionService.AddSEEDCap("", SimSeedCap);
                 }
                 else
                 {
@@ -600,26 +599,35 @@ namespace OpenSim.Services.CapsService
                 circuitData.CapsPath = CapsBase;
 
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, data, out reason);
-                if (regionAccepted && newAgent)
+                if (regionAccepted)
                 {
-                    //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
-                    //    "and EstablishAgentCommunication with seed cap {4}",
-                    //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
+                    //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
+                    if (reason != "")
+                    {
+                        SimSeedCap = reason;
+                    }
+                    otherRegionService.AddSEEDCap("", SimSeedCap);
+                    if (newAgent)
+                    {
+                        //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
+                        //    "and EstablishAgentCommunication with seed cap {4}",
+                        //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
 
-                    //We 'could' call Enqueue directly... but its better to just let it go and do it this way
-                    IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+                        //We 'could' call Enqueue directly... but its better to just let it go and do it this way
+                        IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
-                    EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
-                    
-                    // ES makes the client send a UseCircuitCode message to the destination, 
-                    // which triggers a bunch of things there.
-                    // So let's wait
-                    Thread.Sleep(300);
-                    EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
+                        EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
 
-                    m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
+                        // ES makes the client send a UseCircuitCode message to the destination, 
+                        // which triggers a bunch of things there.
+                        // So let's wait
+                        Thread.Sleep(300);
+                        EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
+
+                        m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
+                    }
                 }
-                else if (!regionAccepted || reason != "")
+                else
                 {
                     m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                     return false;
