@@ -31,6 +31,8 @@ using System.Reflection;
 using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 
 using OpenSim.Services.Interfaces;
 
@@ -244,7 +246,8 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             item.Flags = (uint) wearableType;
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
-            if (m_userTransactions.Manager.MyScene.AddInventoryItem(item))
+            ILLClientInventory inventoryModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<ILLClientInventory>();
+            if(inventoryModule != null && inventoryModule.AddInventoryItem(item))
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             else
                 remoteClient.SendAlertMessage("Unable to create inventory item");

@@ -161,7 +161,9 @@ namespace Aurora.Modules
             item.Owner = client.AgentId;
             item.SalePrice = 10;
             item.SaleType = (byte)SaleType.Not;
-            ((Scene)client.Scene).AddInventoryItem(client, item);
+            ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
+            if(inventory != null)
+                inventory.AddInventoryItem(client, item);
         }
 
         /// <summary>

@@ -47,5 +47,9 @@ namespace OpenSim.Region.Framework.Interfaces
 
         // Must be here because of textures in user's inventory
         bool IsForeignUser(UUID userID, out string assetServerURL);
+
+        //For mega-regions... after they are fixed, this can be removed
+        void OnNewClient(IClientAPI client);
+        void OnClosingClient(IClientAPI client);
     }
 }

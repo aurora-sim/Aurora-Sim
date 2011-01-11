@@ -54,6 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         protected bool m_Enabled = false;
         protected Scene m_Scene;
+        protected ILLClientInventory m_LLCLientInventoryModule;
 
         #region INonSharedRegionModule
 
@@ -91,22 +92,26 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 return;
 
             m_Scene = scene;
+            m_LLCLientInventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
 
             scene.RegisterModuleInterface<IInventoryAccessModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        protected virtual void OnNewClient(IClientAPI client)
+        public virtual void OnNewClient(IClientAPI client)
         {
-            
+            client.OnRezObject += RezObject;
+        }
+
+        public virtual void OnClosingClient(IClientAPI client)
+        {
+            client.OnRezObject -= RezObject;
         }
 
         public virtual void Close()
         {
-            if (!m_Enabled)
-                return;
         }
-
 
         public virtual void RemoveRegion(Scene scene)
         {
@@ -117,14 +122,20 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
         public virtual void RegionLoaded(Scene scene)
         {
-            if (!m_Enabled)
-                return;
-
         }
 
         #endregion
 
         #region Inventory Access
+
+        public void RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
+                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                                    bool RezSelected, bool RemoveItem, UUID fromTaskID)
+        {
+            RezObject(
+                    remoteClient, itemID, RayEnd, RayStart, RayTargetID, BypassRayCast, RayEndIsIntersection,
+                    RezSelected, RemoveItem, fromTaskID, false);
+        }
 
         #region CAPS update
 
@@ -519,7 +530,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 item.Name = asset.Name;
                 item.AssetType = asset.Type;
 
-                m_Scene.AddInventoryItem(item);
+                m_LLCLientInventoryModule.AddInventoryItem(item);
 
                 if (SP != null && SP.ControllingClient != null && item.Owner == SP.ControllingClient.AgentId)
                 {

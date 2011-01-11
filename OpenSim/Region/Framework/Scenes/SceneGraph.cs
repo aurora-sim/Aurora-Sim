@@ -977,6 +977,63 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        protected internal void ObjectOwner(IClientAPI remoteClient, UUID ownerID, UUID groupID, List<uint> localIDs)
+        {
+            if (!m_parentScene.Permissions.IsGod(remoteClient.AgentId))
+            {
+                if (ownerID != UUID.Zero)
+                    return;
+
+                if (!m_parentScene.Permissions.CanDeedObject(remoteClient.AgentId, groupID))
+                    return;
+            }
+
+            List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
+
+            foreach (uint localID in localIDs)
+            {
+                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+                if (!groups.Contains(part.ParentGroup))
+                    groups.Add(part.ParentGroup);
+            }
+
+            foreach (SceneObjectGroup sog in groups)
+            {
+                if (ownerID != UUID.Zero)
+                {
+                    sog.SetOwnerId(ownerID);
+                    sog.SetGroup(groupID, remoteClient);
+                    sog.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+
+                    foreach (SceneObjectPart child in sog.ChildrenList)
+                        child.Inventory.ChangeInventoryOwner(ownerID);
+                }
+                else
+                {
+                    if (!m_parentScene.Permissions.CanEditObject(sog.UUID, remoteClient.AgentId))
+                        continue;
+
+                    if (sog.GroupID != groupID)
+                        continue;
+
+                    foreach (SceneObjectPart child in sog.ChildrenList)
+                    {
+                        child.LastOwnerID = child.OwnerID;
+                        child.Inventory.ChangeInventoryOwner(groupID);
+                    }
+
+                    sog.SetOwnerId(groupID);
+                    sog.ApplyNextOwnerPermissions();
+                }
+            }
+
+            foreach (uint localID in localIDs)
+            {
+                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+                part.GetProperties(remoteClient);
+            }
+        }
+
         /// <summary>
         ///
         /// </summary>
@@ -1505,6 +1562,102 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #region Linking and Delinking
+
+        public void DelinkObjects(List<uint> primIds, IClientAPI client)
+        {
+            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+
+            foreach (uint localID in primIds)
+            {
+                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+
+                if (part == null)
+                    continue;
+
+                if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentGroup.RootPart.UUID))
+                    parts.Add(part);
+            }
+
+            DelinkObjects(parts);
+        }
+
+        public void LinkObjects(IClientAPI client, uint parentPrimId, List<uint> childPrimIds)
+        {
+            List<UUID> owners = new List<UUID>();
+
+            List<SceneObjectPart> children = new List<SceneObjectPart>();
+            SceneObjectPart root = m_parentScene.GetSceneObjectPart(parentPrimId);
+
+            if (root == null)
+            {
+                m_log.DebugFormat("[LINK]: Can't find linkset root prim {0}", parentPrimId);
+                return;
+            }
+
+            if (!m_parentScene.Permissions.CanLinkObject(client.AgentId, root.ParentGroup.RootPart.UUID))
+            {
+                m_log.DebugFormat("[LINK]: Refusing link. No permissions on root prim");
+                return;
+            }
+
+            foreach (uint localID in childPrimIds)
+            {
+                SceneObjectPart part = m_parentScene.GetSceneObjectPart(localID);
+
+                if (part == null)
+                    continue;
+
+                if (!owners.Contains(part.OwnerID))
+                    owners.Add(part.OwnerID);
+
+                if (m_parentScene.Permissions.CanLinkObject(client.AgentId, part.ParentGroup.RootPart.UUID))
+                    children.Add(part);
+            }
+
+            // Must be all one owner
+            //
+            if (owners.Count > 1)
+            {
+                m_log.DebugFormat("[LINK]: Refusing link. Too many owners");
+                client.SendAlertMessage("Permissions: Cannot link, too many owners.");
+                return;
+            }
+
+            if (children.Count == 0)
+            {
+                m_log.DebugFormat("[LINK]: Refusing link. No permissions to link any of the children");
+                client.SendAlertMessage("Permissions: Cannot link, not enough permissions.");
+                return;
+            }
+            int LinkCount = 0;
+            foreach (SceneObjectPart part in children)
+            {
+                LinkCount += part.ParentGroup.ChildrenList.Count;
+            }
+
+            IOpenRegionSettingsModule module = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
+            if (module != null)
+            {
+                if (LinkCount > module.MaximumLinkCount &&
+                    module.MaximumLinkCount != -1)
+                {
+                    client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCount + " prims. Please try again with fewer prims.");
+                    return;
+                }
+                if ((root.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                {
+                    //We only check the root here because if the root is physical, it will be applied to all during the link
+                    if (LinkCount > module.MaximumLinkCountPhys &&
+                        module.MaximumLinkCountPhys != -1)
+                    {
+                        client.SendAlertMessage("You cannot link more than " + module.MaximumLinkCountPhys + " physical prims. Please try again with fewer prims.");
+                        return;
+                    }
+                }
+            }
+
+            LinkObjects(root, children);
+        }
 
         /// <summary>
         /// Initial method invoked when we receive a link objects request from the client.

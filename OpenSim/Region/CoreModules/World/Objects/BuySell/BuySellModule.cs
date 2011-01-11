@@ -120,7 +120,8 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 return false;
 
             SceneObjectGroup group = part.ParentGroup;
-
+            ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+                
             switch (saleType)
             {
             case 1: // Sell as original (in-place sale)
@@ -184,12 +185,10 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                     return false;
                 }
 
-                AssetBase asset = m_scene.CreateAsset(
-                    group.GetPartName(localID),
-                    group.GetPartDescription(localID),
-                    (sbyte)AssetType.Object,
-                    Utils.StringToBytes(sceneObjectXml),
-                    group.OwnerID);
+                AssetBase asset = new AssetBase(UUID.Random(), group.GetPartName(localID),
+                    (sbyte)AssetType.Object, group.OwnerID.ToString());
+                asset.Description = group.GetPartDescription(localID);
+                asset.Data = Utils.StringToBytes(sceneObjectXml);
                 m_scene.AssetService.Store(asset);
 
                 InventoryItemBase item = new InventoryItemBase();
@@ -222,15 +221,18 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 item.CurrentPermissions |= 16; // Slam!
                 item.CreationDate = Util.UnixTimeSinceEpoch();
 
-                if (m_scene.AddInventoryItem(item))
+                if (inventoryModule != null)
                 {
-                    remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                }
-                else
-                {
-                    if (m_dialogModule != null)
-                        m_dialogModule.SendAlertToUser(remoteClient, "Cannot buy now. Your inventory is unavailable");
-                    return false;
+                    if (inventoryModule.AddInventoryItem(item))
+                    {
+                        remoteClient.SendInventoryItemCreateUpdate(item, 0);
+                    }
+                    else
+                    {
+                        if (m_dialogModule != null)
+                            m_dialogModule.SendAlertToUser(remoteClient, "Cannot buy now. Your inventory is unavailable");
+                        return false;
+                    }
                 }
                 break;
 
@@ -259,7 +261,10 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 }
 
                 if (invList.Count > 0)
-                    m_scene.MoveTaskInventoryItems(remoteClient.AgentId, part.Name, part, invList);
+                {
+                    if (inventoryModule != null)
+                        inventoryModule.MoveTaskInventoryItems(remoteClient.AgentId, part.Name, part, invList);
+                }
                 break;
             }
 

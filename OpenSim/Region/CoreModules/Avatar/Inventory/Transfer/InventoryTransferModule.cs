@@ -185,9 +185,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                     m_log.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} "+
                             "into agent {1}'s inventory",
                             folderID, new UUID(im.toAgentID));
-                    
-                    InventoryFolderBase folderCopy 
-                        = scene.GiveInventoryFolder(receipientID, client.AgentId, folderID, UUID.Zero);
+
+                    InventoryFolderBase folderCopy = null;
+                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
+                    if (inventoryModule != null)
+                        folderCopy = inventoryModule.GiveInventoryFolder(receipientID, client.AgentId, folderID, UUID.Zero);
                     
                     if (folderCopy == null)
                     {
@@ -221,9 +223,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                             "into agent {1}'s inventory",
                             itemID, new UUID(im.toAgentID));
 
-                    InventoryItemBase itemCopy = scene.GiveInventoryItem(
+                    InventoryItemBase itemCopy = null;
+                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
+                    if(inventoryModule != null)
+                        itemCopy = inventoryModule.GiveInventoryItem(
                             new UUID(im.toAgentID),
-                            client.AgentId, itemID);
+                            client.AgentId, itemID, UUID.Zero);
 
                     if (itemCopy == null)
                     {
@@ -300,7 +305,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                     List<UUID> uuids = new List<UUID>();
                     uuids.Add(item.ID);
                     invService.DeleteItems(item.Owner, uuids);
-                    scene.AddInventoryItem(client, item);
+                    ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
+                    if (inventory != null)
+                        inventory.AddInventoryItem(client, item);
                 }
                 else
                 {

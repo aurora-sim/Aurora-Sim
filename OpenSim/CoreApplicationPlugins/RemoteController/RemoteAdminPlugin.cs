@@ -1632,8 +1632,9 @@ namespace OpenSim.CoreApplicationPlugins
                         destinationItem.Flags = item.Flags;
                         destinationItem.CreationDate = item.CreationDate;
                         destinationItem.Folder = destinationFolder.ID;
-
-                        manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                        ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                        if (inventoryModule != null)
+                            inventoryModule.AddInventoryItem(destinationItem);
                         m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 
                         // Wear item
@@ -1684,8 +1685,9 @@ namespace OpenSim.CoreApplicationPlugins
                         destinationItem.Flags = item.Flags;
                         destinationItem.CreationDate = item.CreationDate;
                         destinationItem.Folder = destinationFolder.ID;
-
-                        manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                        ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                        if (inventoryModule != null)
+                            inventoryModule.AddInventoryItem(destinationItem);
                         m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 
                         // Attach item
@@ -1790,7 +1792,9 @@ namespace OpenSim.CoreApplicationPlugins
                     destinationItem.CreationDate = item.CreationDate;
                     destinationItem.Folder = extraFolder.ID;
 
-                    manager.CurrentOrFirstScene.AddInventoryItem(destinationItem);
+                    ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                    if (inventoryModule != null)
+                        inventoryModule.AddInventoryItem(destinationItem);
                     inventoryMap.Add(item.ID, destinationItem.ID);
                     m_log.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, extraFolder.ID);
 
@@ -2075,7 +2079,9 @@ namespace OpenSim.CoreApplicationPlugins
                                             inventoryItem.CreationDate = GetIntegerAttribute(item,"creationdate",Util.UnixTimeSinceEpoch());
                                             inventoryItem.Folder = extraFolder.ID; // Parent folder
 
-                                            manager.CurrentOrFirstScene.AddInventoryItem(inventoryItem);
+                                            ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                                            if (inventoryModule != null)
+                                                inventoryModule.AddInventoryItem(inventoryItem);
                                             m_log.DebugFormat("[RADMIN] Added item {0} to folder {1}", inventoryItem.ID, extraFolder.ID);
                                         }
 

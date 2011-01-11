@@ -1059,7 +1059,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                             prims.AddRange(selectedParcel.GetPrimsOverByOwner(targetID, (int)SimWideDeletesFlags.ScriptedPrimsOnly));
                     }
                 }
-                m_scene.returnObjects(prims.ToArray(), client.AgentId);
+                ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+                if (inventoryModule != null)
+                    inventoryModule.returnObjects(prims.ToArray(), client.AgentId);
             }
             else
             {

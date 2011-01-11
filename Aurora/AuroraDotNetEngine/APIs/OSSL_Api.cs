@@ -318,7 +318,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 foreach (List<SceneObjectGroup> ol in returns.Values)
                 {
                     if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
-                        World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                    {
+                        ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+                        if (inventoryModule != null)
+                            inventoryModule.returnObjects(ol.ToArray(), m_host.OwnerID);
+                    }
                 }
             }
         }
@@ -346,7 +350,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 foreach (List<SceneObjectGroup> ol in returns.Values)
                 {
                     if (World.Permissions.CanReturnObjects(LO, m_host.OwnerID, ol))
-                        World.returnObjects(ol.ToArray(), m_host.OwnerID);
+                    {
+                        ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+                        if (inventoryModule != null)
+                            inventoryModule.returnObjects(ol.ToArray(), m_host.OwnerID);
+                    }
                 }
             }
         }

@@ -243,8 +243,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             item.EveryOnePermissions = 0;
             item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
             item.CreationDate = Util.UnixTimeSinceEpoch();
-            m_scene.AddInventoryItem(item);
-            
+            ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+            if(inventoryModule != null)
+                inventoryModule.AddInventoryItem(item);
         }
 
         public class AssetUploader

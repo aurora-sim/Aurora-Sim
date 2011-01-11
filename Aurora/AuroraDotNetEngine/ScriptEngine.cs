@@ -383,9 +383,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string Dir = Path.Combine(Path.Combine(Environment.CurrentDirectory, ScriptEnginesPath), "default.lsl");
             if (File.Exists(Dir))
             {
+                string defaultScript = File.ReadAllText(Dir);
                 foreach (Scene scene in m_Scenes)
                 {
-                    scene.DefaultLSLScript = File.ReadAllText(Dir);
+                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
+                    if (inventoryModule != null)
+                        inventoryModule.DefaultLSLScript = defaultScript;
                 }
             }
         }

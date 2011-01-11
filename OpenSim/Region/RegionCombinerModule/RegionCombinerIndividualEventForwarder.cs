@@ -50,18 +50,21 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             m_virtScene.UnSubscribeToClientPrimEvents(client);
             m_virtScene.UnSubscribeToClientPrimRezEvents(client);
-            m_virtScene.UnSubscribeToClientInventoryEvents(client);
             
             m_virtScene.UnSubscribeToClientNetworkEvents(client);
 
             m_rootScene.SubscribeToClientPrimEvents(client);
             m_rootScene.UnSubscribeToClientPrimRezEvents(client);
             m_virtScene.UnSubscribeToClientPrimRezEvents(client);
+
+            IInventoryAccessModule module = m_virtScene.RequestModuleInterface<IInventoryAccessModule>();
+            if (module != null) //Remove OnRezObject
+                module.OnClosingClient(client);
+
             client.OnAddPrim += LocalAddNewPrim;
             client.OnRezObject += LocalRezObject;
-            client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
             
-            m_rootScene.SubscribeToClientInventoryEvents(client);
+            client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
             
             m_rootScene.SubscribeToClientNetworkEvents(client);
         }
@@ -101,8 +104,10 @@ namespace OpenSim.Region.RegionCombinerModule
             raystart.X += differenceX;
             raystart.Y += differenceY;
 
-            m_rootScene.RezObject(remoteclient, itemid, rayend, raystart, raytargetid, bypassraycast,
-                                  rayendisintersection, rezselected, removeitem, fromtaskid);
+            IInventoryAccessModule module = m_rootScene.RequestModuleInterface<IInventoryAccessModule>();
+            if(module != null)
+                module.RezObject(remoteclient, itemid, rayend, raystart, raytargetid, bypassraycast,
+                                  rayendisintersection, rezselected, removeitem, fromtaskid, false);
         }
         /// <summary>
         /// Fixes position based on the region the AddPrimShape event came in on

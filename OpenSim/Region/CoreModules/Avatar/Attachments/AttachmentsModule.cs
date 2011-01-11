@@ -206,7 +206,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 if (group.GetFromItemID() == UUID.Zero)
                 {
-                    m_scene.attachObjectAssetStore(remoteClient, group, remoteClient.AgentId, out itemID);
+                    ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+                                if(inventoryModule != null)
+                                    inventoryModule.attachObjectAssetStore(remoteClient, group, remoteClient.AgentId, out itemID);
                 }
                 else
                 {
@@ -564,12 +566,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 if (item != null)
                 {
-                    AssetBase asset = m_scene.CreateAsset(
-                        grp.GetPartName(grp.LocalId),
-                        grp.GetPartDescription(grp.LocalId),
-                        (sbyte)AssetType.Object,
-                        Utils.StringToBytes(sceneObjectXml),
-                        remoteClient.AgentId);
+                    AssetBase asset = new AssetBase(UUID.Random(), grp.GetPartName(grp.LocalId),
+                        (sbyte)AssetType.Object, remoteClient.AgentId.ToString());
+                    asset.Description = grp.GetPartDescription(grp.LocalId);
+                    asset.Data = Utils.StringToBytes(sceneObjectXml);
                     m_scene.AssetService.Store(asset);
 
                     item.AssetID = asset.FullID;

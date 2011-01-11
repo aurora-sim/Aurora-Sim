@@ -117,8 +117,10 @@ namespace Aurora.Modules.World.Auction
             
             //TODO: Check notecard for this
             //SLUtil.ParseNotecardToList
-
-            InventoryItemBase item = m_scene.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
+            InventoryItemBase item = null;
+            ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
+            if (inventoryModule != null)
+                 item = inventoryModule.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
 
             IClientAPI client;
             m_scene.TryGetClient(agentID, out client);

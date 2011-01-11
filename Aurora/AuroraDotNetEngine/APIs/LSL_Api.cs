@@ -46,6 +46,7 @@ using OpenSim.Region.CoreModules.World.Land;
 using OpenSim.Region.CoreModules.World.Terrain;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Region.Framework.Scenes.Animation;
 using OpenSim.Region.Physics.Manager;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
@@ -3335,7 +3336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // need the magnitude later
                         float velmag = (float)Util.GetMagnitude(llvel);
 
-                        SceneObjectGroup new_group = World.RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
+                        SceneObjectGroup new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
 
                         // If either of these are null, then there was an unknown error.
                         if (new_group == null)
@@ -3383,6 +3384,162 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 llSay(0, "Could not find object " + inventory);
             }
             return DateTime.Now;
+        }
+
+        /// <summary>
+        /// Rez an object into the scene from a prim's inventory.
+        /// </summary>
+        /// <param name="sourcePart"></param>
+        /// <param name="item"></param>
+        /// <param name="pos"></param>
+        /// <param name="rot"></param>
+        /// <param name="vel"></param>
+        /// <param name="param"></param>
+        /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful</returns>
+        public SceneObjectGroup RezObject(
+            SceneObjectPart sourcePart, TaskInventoryItem item,
+            Vector3 pos, Quaternion rot, Vector3 vel, int param, UUID RezzedFrom, bool RezObjectAtRoot)
+        {
+            if (item != null)
+            {
+                UUID ownerID = item.OwnerID;
+
+                AssetBase rezAsset = World.AssetService.Get(item.AssetID.ToString());
+
+                if (rezAsset != null)
+                {
+                    string xmlData = Utils.BytesToString(rezAsset.Data);
+                    SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(xmlData, World);
+                    if (group == null)
+                        return null;
+
+                    group.IsDeleted = false;
+                    group.m_isLoaded = true;
+                    foreach (SceneObjectPart part in group.ChildrenList)
+                    {
+                        part.IsLoading = false;
+                    }
+                    string reason;
+                    if (!World.Permissions.CanRezObject(group.ChildrenList.Count, ownerID, pos, out reason))
+                    {
+                        World.GetScenePresence(ownerID).ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
+                        return null;
+                    }
+
+                    World.SceneGraph.AddPrimToScene(group);
+
+                    SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+                    List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
+
+                    // we set it's position in world.
+                    // llRezObject sets the whole group at the position, while llRezAtRoot rezzes the group based on the root prim's position
+                    // See: http://lslwiki.net/lslwiki/wakka.php?wakka=llRezAtRoot
+                    // Shorthand: llRezAtRoot rezzes the root prim of the group at the position
+                    //            llRezObject rezzes the center of group at the position
+                    if (RezObjectAtRoot)
+                        //This sets it right...
+                        group.AbsolutePosition = pos;
+                    else
+                    {
+                        //TODO: Make sure this still works
+                        /*
+                        //Find the 'center' of the group
+                        //  Note: In SL, this is based on max - min
+                        Vector3 MinPos = new Vector3(100000, 100000, 100000);
+                        Vector3 MaxPos = Vector3.Zero;
+                        foreach (SceneObjectPart child in partList)
+                        {
+                            if (child.AbsolutePosition.X < MinPos.X)
+                                MinPos.X = child.AbsolutePosition.X;
+                            if (child.AbsolutePosition.Y < MinPos.Y)
+                                MinPos.Y = child.AbsolutePosition.Y;
+                            if (child.AbsolutePosition.Z < MinPos.Z)
+                                MinPos.Z = child.AbsolutePosition.Z;
+
+                            if (child.AbsolutePosition.X > MaxPos.X)
+                                MaxPos.X = child.AbsolutePosition.X;
+                            if (child.AbsolutePosition.Y > MaxPos.Y)
+                                MaxPos.Y = child.AbsolutePosition.Y;
+                            if (child.AbsolutePosition.Z > MaxPos.Z)
+                                MaxPos.Z = child.AbsolutePosition.Z;
+                        }
+                        Vector3 GroupAvg = ((MaxPos + MinPos) / 2);*/
+                        Vector3 GroupAvg = group.GroupScale();
+                        Vector3 offset = group.AbsolutePosition - GroupAvg;
+                        offset += pos;
+                        group.AbsolutePosition = offset;
+                    }
+
+                    // Since renaming the item in the inventory does not affect the name stored
+                    // in the serialization, transfer the correct name from the inventory to the
+                    // object itself before we rez.
+                    rootPart.Name = item.Name;
+                    rootPart.Description = item.Description;
+
+
+                    group.SetGroup(sourcePart.GroupID, null);
+
+                    if (rootPart.OwnerID != item.OwnerID)
+                    {
+                        if (World.Permissions.PropagatePermissions())
+                        {
+                            if ((item.CurrentPermissions & 8) != 0)
+                            {
+                                foreach (SceneObjectPart part in partList)
+                                {
+                                    part.EveryoneMask = item.EveryonePermissions;
+                                    part.NextOwnerMask = item.NextPermissions;
+                                }
+                            }
+                            group.ApplyNextOwnerPermissions();
+                        }
+                    }
+
+                    foreach (SceneObjectPart part in partList)
+                    {
+                        if (part.OwnerID != item.OwnerID)
+                        {
+                            part.LastOwnerID = part.OwnerID;
+                            part.OwnerID = item.OwnerID;
+                            part.Inventory.ChangeInventoryOwner(item.OwnerID);
+                        }
+                        else if ((item.CurrentPermissions & 8) != 0) // Slam!
+                        {
+                            part.EveryoneMask = item.EveryonePermissions;
+                            part.NextOwnerMask = item.NextPermissions;
+                        }
+                    }
+
+                    rootPart.TrimPermissions();
+
+                    if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
+                    {
+                        group.ClearPartAttachmentData();
+                    }
+
+                    group.UpdateGroupRotationR(rot);
+
+                    //group.ApplyPhysics(m_physicalPrim);
+                    if (group.RootPart.PhysActor != null && group.RootPart.PhysActor.IsPhysical && vel != Vector3.Zero)
+                    {
+                        group.RootPart.ApplyImpulse((vel * group.GetMass()), false);
+                        group.Velocity = vel;
+                    }
+                    group.CreateScriptInstances(param, true, World.DefaultScriptEngine, 2, RezzedFrom);
+
+                    if (!World.Permissions.BypassPermissions())
+                    {
+                        if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                            sourcePart.Inventory.RemoveInventoryItem(item.ItemID);
+                    }
+
+                    group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+
+                    return rootPart.ParentGroup;
+                }
+            }
+
+            return null;
         }
 
         public DateTime llRezObject(string inventory, LSL_Vector pos, LSL_Vector vel, LSL_Rotation rot, int param)
@@ -3978,7 +4135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     AssetBase asset = World.AssetService.Get(inventory);
                     SceneObjectGroup group
-                                        = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
+                                        = SceneObjectSerializer.FromOriginalXmlFormat(UUID.Zero, Utils.BytesToString(asset.Data), World);
                     if (group == null)
                         return;
 
@@ -4619,7 +4776,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if ((info != null && info.Online) || World.GetScenePresence(destId) != null)
             {
                 // destination is an avatar
-                InventoryItemBase agentItem = World.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
+                InventoryItemBase agentItem = null;
+                ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+                if(inventoryModule != null)
+                    agentItem = inventoryModule.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
 
                 if (agentItem == null)
                     return DateTime.Now;
@@ -4645,7 +4805,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 // destination is an object
-                World.MoveTaskInventoryItem(destId, m_host, objId);
+                ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+                if (inventoryModule != null)
+                    inventoryModule.MoveTaskInventoryItem(destId, m_host, objId);
             }
             return PScriptSleep(3000);
         }
@@ -7075,8 +7237,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (itemList.Count == 0)
                 return;
-
-            UUID folderID = World.MoveTaskInventoryItems(destID, category, m_host, itemList);
+            UUID folderID = UUID.Zero;
+            ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+            if (inventoryModule != null)
+                folderID = inventoryModule.MoveTaskInventoryItems(destID, category, m_host, itemList);
 
             if (folderID == UUID.Zero)
                 return;
@@ -7420,7 +7584,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
-            World.RezScript(srcId, m_host, destId, pin, running, start_param);
+            ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
+            if (inventoryModule != null)
+                inventoryModule.RezScript(srcId, m_host, destId, pin, running, start_param);
             // this will cause the delay even if the script pin or permissions were wrong - seems ok
             return PScriptSleep(3000); 
         }

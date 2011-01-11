@@ -378,7 +378,9 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 //The group should have crossed a region, but no region was found so return it instead
                                 m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
-                                Scene.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                                ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
+                                if(inventoryModule != null)
+                                    inventoryModule.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
                                 return;
                             }
                         }
