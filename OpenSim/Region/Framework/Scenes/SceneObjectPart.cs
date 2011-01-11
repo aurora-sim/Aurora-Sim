@@ -4926,7 +4926,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                FixOffsetPosition(newPos,false);
+                FixOffsetPosition(newPos,true);
                 ScheduleTerseUpdate();
             }
         }
