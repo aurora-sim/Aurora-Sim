@@ -604,7 +604,8 @@ namespace OpenSim.Services.CapsService
                     //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
                     if (reason != "")
                     {
-                        SimSeedCap = reason;
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                        SimSeedCap = responseMap["CapsUrl"].AsString();
                     }
                     otherRegionService.AddSEEDCap("", SimSeedCap);
                     if (newAgent)

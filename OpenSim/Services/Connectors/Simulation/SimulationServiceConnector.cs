@@ -89,7 +89,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (result["Success"].AsBoolean())
                 {
                     //Pull out the result and set it as the reason
-                    reason = result["Message"] != null ? result["Message"].AsString() : "";
+                    reason = result["reason"] != null ? result["reason"].AsString() : "";
                     return true;
                 }
 

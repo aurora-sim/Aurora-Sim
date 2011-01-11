@@ -1328,6 +1328,8 @@ namespace OpenSim.Region.Framework.Scenes
                 sp = null;
             }
 
+            OSDMap responseMap = new OSDMap();
+
             ICapsService capsService = RequestModuleInterface<ICapsService>();
             if (capsService != null)
             {
@@ -1336,7 +1338,7 @@ namespace OpenSim.Region.Framework.Scenes
                 string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
                 m_log.Info("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
                      " @" + capsUrl + " for agent " + agent.AgentID);
-                reason = capsUrl;
+                responseMap["CapsUrl"] = capsUrl;
             }
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
@@ -1375,6 +1377,7 @@ namespace OpenSim.Region.Framework.Scenes
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                     agent.circuitcode);
 
+            reason = OSDParser.SerializeJsonString(responseMap);
             return true;
         }
 

@@ -351,6 +351,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat(
                     "[SCENE]: Tried to remove non-existent scene presence with agent ID {0} from scene Entities list",
                     agentID);
+                return;
             }
 
             lock (m_presenceLock)
