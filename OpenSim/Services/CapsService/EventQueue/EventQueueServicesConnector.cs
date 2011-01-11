@@ -186,13 +186,10 @@ namespace OpenSim.Services.CapsService
                 request.Add("Event", OSDParser.SerializeLLSDXmlString(ev));
 
                 OSDMap reply = WebUtils.PostToService(m_serverURL, request);
-
-                if (reply != "")
+                if (reply != null)
                 {
-
                     OSDMap result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
-                    if (result["success"].AsBoolean())
-                        return true;
+                    return result["success"].AsBoolean();
                 }
             }
             catch (Exception e)
