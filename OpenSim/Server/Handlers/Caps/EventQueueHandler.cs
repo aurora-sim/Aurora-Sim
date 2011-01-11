@@ -76,55 +76,35 @@ namespace OpenSim.Server.Handlers
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
-            string method = string.Empty;
-            try
-            {
-                Dictionary<string, object> request = new Dictionary<string, object>();
-                request = WebUtils.ParseQueryString(body);
-                if (request.Count == 1)
-                    request = WebUtils.ParseXmlResponse(body);
-                object value = null;
-                request.TryGetValue("<?xml version", out value);
-                if (value != null)
-                    request = WebUtils.ParseXmlResponse(body);
+            OSDMap request = WebUtils.GetOSDMap(body);
+            if (request == null)
+                return null;
 
-                return ProcessEnqueueEQMMessage(request);
-            }
-            catch (Exception)
-            {
-            }
-
-            return null;
-
+            return ProcessEnqueueEQMMessage(request);
         }
 
-        private byte[] ProcessEnqueueEQMMessage(Dictionary<string, object> m_dhttpMethod)
+        private byte[] ProcessEnqueueEQMMessage(OSDMap request)
         {
-            UUID agentID = UUID.Parse((string)m_dhttpMethod["AGENTID"]);
-            ulong regionHandle = ulong.Parse((string)m_dhttpMethod["REGIONHANDLE"]);
-            UUID password = UUID.Parse((string)m_dhttpMethod["PASS"]);
-            string llsd = (string)m_dhttpMethod["LLSD"];
+            UUID agentID = request["AgentID"].AsUUID();
+            ulong regionHandle = request["RegionHandle"].AsULong();
+            UUID password = request["Password"].AsUUID();
+            OSDMap Event = (OSDMap)OSDParser.DeserializeLLSDXml(request["Event"].AsString());
 
+            OSDMap response = new OSDMap();
             if (!m_eventQueueService.AuthenticateRequest(agentID, password, regionHandle))
             {
                 m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
                     agentID + " calling with password " + password + " in region " + regionHandle);
-                Dictionary<string, object> result = new Dictionary<string, object>();
-                result.Add("result", "false");
-                string xmlString = WebUtils.BuildXmlResponse(result);
-                UTF8Encoding encoding = new UTF8Encoding();
-                return encoding.GetBytes(xmlString);
+                response["success"] = false;
             }
             else
             {
-                bool enqueueResult = m_eventQueueService.Enqueue(OSDParser.DeserializeLLSDXml(llsd), agentID, regionHandle);
-                Dictionary<string, object> result = new Dictionary<string, object>();
-                result.Add("result", enqueueResult);
-                string xmlString = WebUtils.BuildXmlResponse(result);
-                UTF8Encoding encoding = new UTF8Encoding();
-                return encoding.GetBytes(xmlString);
+                bool enqueueResult = m_eventQueueService.Enqueue(Event, agentID, regionHandle);
+                response["success"] = enqueueResult;
             }
+
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(OSDParser.SerializeJsonString(response));
         }
     }
 }

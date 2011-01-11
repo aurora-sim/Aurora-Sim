@@ -55,7 +55,6 @@ namespace OpenSim.Services.CapsService
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
-        private Dictionary<UUID, UUID> m_AvatarPasswordMap = new Dictionary<UUID, UUID>();
         private string m_serverURL = "";
         
         #endregion
@@ -110,7 +109,7 @@ namespace OpenSim.Services.CapsService
         /// Find the password of the user that we may have recieved in the CAPS seed request.
         /// </summary>
         /// <param name="agentID"></param>
-        private void FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle)
+        private bool FindAndPopulateEQMPassword(UUID agentID, ulong RegionHandle, out UUID Password)
         {
             if (m_service != null)
             {
@@ -122,12 +121,14 @@ namespace OpenSim.Services.CapsService
                     {
                         if (regionClientCaps.RequestMap.ContainsKey("EventQueuePass"))
                         {
-                            UUID Password = regionClientCaps.RequestMap["EventQueuePass"].AsUUID();
-                            m_AvatarPasswordMap[agentID] = Password;
+                            Password = regionClientCaps.RequestMap["EventQueuePass"].AsUUID();
+                            return true;
                         }
                     }
                 }
             }
+            Password = UUID.Zero;
+            return false;
         }
 
         #endregion
@@ -143,20 +144,14 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
         {
-            //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
-                FindAndPopulateEQMPassword(avatarID, regionHandle);
-
-                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
-                    return false;
-
-                Dictionary<string, object> request = new Dictionary<string,object>();
-                request.Add("AGENTID", avatarID.ToString());
-                request.Add("REGIONHANDLE", regionHandle.ToString());
-                request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
-                request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
-                AsynchronousRestObjectRequester.MakeRequest("POST", m_serverURL, WebUtils.BuildQueryString(request));
+                //Do this async so that we don't kill the sim while waiting for this to be sent
+                //TODO: Maybe have a thread that runs through this and sends them off instead of doing fire and forget?
+                Util.FireAndForget(delegate(object o)
+                {
+                    TryEnqueue(ev, avatarID, regionHandle);
+                });
             } 
             catch(Exception e)
             {
@@ -179,24 +174,27 @@ namespace OpenSim.Services.CapsService
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
-                FindAndPopulateEQMPassword(avatarID, regionHandle);
-
-                if (!m_AvatarPasswordMap.ContainsKey(avatarID))
+                UUID Password;
+                if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
                     return false;
 
-                Dictionary<string, object> request = new Dictionary<string, object>();
-                request.Add("AGENTID", avatarID.ToString());
-                request.Add("REGIONHANDLE", regionHandle.ToString());
-                request.Add("PASS", m_AvatarPasswordMap[avatarID].ToString());
-                request.Add("LLSD", OSDParser.SerializeLLSDXmlString(ev));
+                OSDMap request = new OSDMap();
+                request.Add("AgentID", avatarID);
+                request.Add("RegionHandle", regionHandle);
+                request.Add("Password", Password);
+                //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
+                request.Add("Event", OSDParser.SerializeLLSDXmlString(ev));
 
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST", m_serverURL, WebUtils.BuildQueryString(request));
+                OSDMap reply = WebUtils.PostToService(m_serverURL, request);
 
                 if (reply != "")
                 {
-                    Dictionary<string, object> response = WebUtils.ParseXmlResponse(reply);
-                    if (response.ContainsKey("result") && response["result"].ToString() == "True")
-                        return true;
+                    if (reply["_Result"] is OSDMap)
+                    {
+                        OSDMap result = (OSDMap)reply["_Result"];
+                        if (result["success"].AsBoolean())
+                            return true;
+                    }
                 }
             }
             catch (Exception e)
