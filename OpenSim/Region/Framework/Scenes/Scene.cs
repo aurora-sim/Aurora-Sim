@@ -968,7 +968,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
                 return;
 
-            
             // Do the verification here
             if (!VerifyClient(aCircuit, ep, out vialogin))
             {
@@ -989,10 +988,13 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
 
             ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
-            if (m_incomingChildAgentData.ContainsKey(sp.UUID))
+            lock (m_incomingChildAgentData)
             {
-                sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
-                m_incomingChildAgentData.Remove(sp.UUID);
+                if (m_incomingChildAgentData.ContainsKey(sp.UUID))
+                {
+                    sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
+                    m_incomingChildAgentData.Remove(sp.UUID);
+                }
             }
             if (aCircuit != null)
                 sp.Appearance = aCircuit.Appearance;
@@ -1431,11 +1433,16 @@ namespace OpenSim.Region.Framework.Scenes
             // We have to wait until the viewer contacts this region after receiving EAC.
             // That calls AddNewClient, which finally creates the ScenePresence and then this gets set up
 
+            //No null updates!
+            if (cAgentData == null)
+                return false;
+
             ScenePresence SP = GetScenePresence(cAgentData.AgentID);
             if (SP != null)
                 SP.ChildAgentDataUpdate(cAgentData);
             else
-                m_incomingChildAgentData[cAgentData.AgentID] = cAgentData;
+                lock(m_incomingChildAgentData)
+                    m_incomingChildAgentData[cAgentData.AgentID] = cAgentData;
             return true;
         }
 

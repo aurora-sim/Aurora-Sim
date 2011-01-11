@@ -161,10 +161,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.Message);
-                    responsedata["int_response_code"] = HttpStatusCode.BadRequest;
-                    responsedata["str_response_string"] = "Bad request";
-                    return;
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.Message);
                 }
             }
 
@@ -187,12 +184,10 @@ namespace OpenSim.Server.Handlers.Simulation
                 return;
             }
 
-            OSDMap resp = new OSDMap(2);
+            OSDMap resp = new OSDMap(3);
             string reason = String.Empty;
 
             // This is the meaning of POST agent
-            //m_regionClient.AdjustUserInformation(aCircuit);
-            //bool result = m_SimulationService.CreateAgent(destination, aCircuit, teleportFlags, out reason);
             bool result = CreateAgent(destination, aCircuit, teleportFlags, agent, out reason);
 
             resp["reason"] = OSD.FromString(reason);

@@ -556,52 +556,18 @@ namespace OpenSim.Framework
 
             Appearance = new AvatarAppearance(AgentID);
 
-            // The code to unpack textures, visuals, wearables and attachments
-            // should be removed; packed appearance contains the full appearance
-            // This is retained for backward compatibility only
-            if (args["texture_entry"] != null)
+            try
             {
-                byte[] rawtextures = args["texture_entry"].AsBinary();
-                Primitive.TextureEntry textures = new Primitive.TextureEntry(rawtextures, 0, rawtextures.Length);
-                List<UUID> changed = new List<UUID>();
-                Appearance.SetTextureEntries(textures, out changed);
+                if (args.ContainsKey("packed_appearance") && (args["packed_appearance"]).Type == OSDType.Map)
+                    Appearance = new AvatarAppearance(AgentID, (OSDMap)args["packed_appearance"]);
+                // DEBUG ON
+                else
+                    m_log.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
+                // DEBUG OFF
             }
-
-            if (args["visual_params"] != null)
-                Appearance.SetVisualParams(args["visual_params"].AsBinary());
-
-            if ((args["wearables"] != null) && (args["wearables"]).Type == OSDType.Array)
+            catch
             {
-                OSDArray wears = (OSDArray)(args["wearables"]);
-                for (int i = 0; i < wears.Count / 2; i++)
-                {
-                    AvatarWearable awear = new AvatarWearable((OSDArray)wears[i]);
-                    Appearance.SetWearable(i, awear);
-                }
             }
-
-            if ((args["attachments"] != null) && (args["attachments"]).Type == OSDType.Array)
-            {
-                OSDArray attachs = (OSDArray)(args["attachments"]);
-                foreach (OSD o in attachs)
-                {
-                    if (o.Type == OSDType.Map)
-                    {
-                        // We know all of these must end up as attachments so we
-                        // append rather than replace to ensure multiple attachments
-                        // per point continues to work
-                        Appearance.AppendAttachment(new AvatarAttachment((OSDMap)o));
-                    }
-                }
-            }
-            // end of code to remove
-
-            if (args.ContainsKey("packed_appearance") && (args["packed_appearance"]).Type == OSDType.Map)
-                Appearance = new AvatarAppearance(AgentID, (OSDMap)args["packed_appearance"]);
-            // DEBUG ON
-            else
-                m_log.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
-            // DEBUG OFF
 
             if ((args["controllers"] != null) && (args["controllers"]).Type == OSDType.Array)
             {

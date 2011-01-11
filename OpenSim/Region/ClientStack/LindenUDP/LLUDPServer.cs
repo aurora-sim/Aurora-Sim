@@ -918,15 +918,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected virtual bool AddClient(uint circuitCode, UUID agentID, UUID sessionID, IPEndPoint remoteEndPoint, AgentCircuitData sessionInfo)
         {
-            //Check to make sure we arn't handling two or more circuit codes from the client if we are lagging badly.
-            // The block below this (TryGetClient) works as well, but if it gets locked up before the client is added to the scene, it will break
-            //  So we do this check here as well.
-            lock (m_handlingCircuitCodes)
-            {
-                if (m_handlingCircuitCodes.Contains(agentID))
-                    return false;
-                m_handlingCircuitCodes.Add(agentID);
-            }
             ScenePresence SP;
             if (!m_scene.TryGetScenePresence(agentID, out SP))
             {
@@ -939,7 +930,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 client.DisableFacelights = m_disableFacelights;
 
                 // Start the IClientAPI
-                client.Start();
+                m_scene.AddNewClient(client);
                 //Remove it from the check
                 m_handlingCircuitCodes.Remove(agentID);
                 return true;
@@ -949,8 +940,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode from {0} at {1} for circuit {2}",
                     agentID, remoteEndPoint, circuitCode);
             }
-            //Remove it from the check
-            m_handlingCircuitCodes.Remove(agentID);
             return false;
         }
 
