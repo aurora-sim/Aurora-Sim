@@ -36,6 +36,7 @@ using System.Text.RegularExpressions;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
@@ -69,8 +70,7 @@ namespace OpenSim.Services.LLLoginService
         protected IInventoryService m_InventoryService;
         protected IGridService m_GridService;
         protected IPresenceService m_PresenceService;
-        protected ISimulationService m_LocalSimulationService;
-        protected ISimulationService m_RemoteSimulationService;
+        protected ISimulationService m_SimulationService;
         protected ILibraryService m_LibraryService;
         protected IFriendsService m_FriendsService;
         protected IAvatarService m_AvatarService;
@@ -162,7 +162,7 @@ namespace OpenSim.Services.LLLoginService
             m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
             m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
             m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
-            m_RemoteSimulationService = registry.RequestModuleInterface<ISimulationService>();
+            m_SimulationService = registry.RequestModuleInterface<ISimulationService>();
             m_UserAgentService = registry.RequestModuleInterface<IUserAgentService>();
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
@@ -969,10 +969,8 @@ namespace OpenSim.Services.LLLoginService
                 // HG standalones have both a localSimulatonDll and a remoteSimulationDll
                 // non-HG standalones have just a localSimulationDll
                 // independent login servers have just a remoteSimulationDll
-                if (m_LocalSimulationService != null)
-                    simConnector = m_LocalSimulationService;
-                else if (m_RemoteSimulationService != null)
-                    simConnector = m_RemoteSimulationService;
+                if (m_SimulationService != null)
+                    simConnector = m_SimulationService;
             }
             else // User Agent Service is on
             {
@@ -993,6 +991,8 @@ namespace OpenSim.Services.LLLoginService
 
             bool success = false;
 
+            #region Launch Agent Directly (No HG)
+
             if (m_UserAgentService == null && simConnector != null)
             {
                 circuitCode = (uint)Util.RandomClass.Next(); ;
@@ -1001,45 +1001,46 @@ namespace OpenSim.Services.LLLoginService
                 if (!success && m_GridService != null)
                 {
                     m_GridService.SetRegionUnsafe(destination.RegionID);
-                    // Try the fallback regions
-                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
-                    if (fallbacks != null)
-                    {
-                        foreach (GridRegion r in fallbacks)
-                        {
-                            success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
-                            if (success)
-                            {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
-                                where = "safe";
-                                destination = r;
-                                break;
-                            }
-                            else
-                                m_GridService.SetRegionUnsafe(r.RegionID);
-                        }
-                    }
 
-                    //Try to find any safe region
-                    List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
-                    if (safeRegions != null)
+                    // Make sure the client knows this isn't where they wanted to land
+                    where = "safe";
+
+                    // Try the default regions
+                    List<GridRegion> defaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
+                    if (defaultRegions != null)
                     {
-                        foreach (GridRegion r in safeRegions)
+                        success = TryFindGridRegionForAgentLogin(defaultRegions, account,
+                            appearance, session, secureSession, circuitCode, position,
+                            clientIP, aCircuit, out destination);
+                    }
+                    if (!success)
+                    {
+                        // Try the fallback regions
+                        List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
+                        if (fallbacks != null)
                         {
-                            success = LaunchAgentDirectly(simConnector, r, aCircuit, out reason);
-                            if (success)
+                            success = TryFindGridRegionForAgentLogin(fallbacks, account,
+                                appearance, session, secureSession, circuitCode, position,
+                                clientIP, aCircuit, out destination);
+                        }
+                        if (!success)
+                        {
+                            //Try to find any safe region
+                            List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
+                            if (safeRegions != null)
                             {
-                                aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
-                                where = "safe";
-                                destination = r;
-                                break;
+                                success = TryFindGridRegionForAgentLogin(safeRegions, account,
+                                    appearance, session, secureSession, circuitCode, position,
+                                    clientIP, aCircuit, out destination);
                             }
-                            else
-                                m_GridService.SetRegionUnsafe(r.RegionID);
                         }
                     }
                 }
             }
+
+            #endregion
+
+            #region Launch Agent Indirectly (HG)
 
             if (m_UserAgentService != null)
             {
@@ -1088,11 +1089,35 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
             }
+
+            #endregion
+
             dest = destination;
             if (success)
                 return aCircuit;
             else
                 return null;
+        }
+
+        protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
+            AvatarAppearance appearance, UUID session, UUID secureSession, uint circuitCode, Vector3 position,
+            IPEndPoint clientIP, AgentCircuitData aCircuit, out GridRegion destination)
+        {
+            foreach (GridRegion r in regions)
+            {
+                string reason;
+                bool success = LaunchAgentDirectly(m_SimulationService, r, aCircuit, out reason);
+                if (success)
+                {
+                    aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP.Address.ToString());
+                    destination = r;
+                    return true;
+                }
+                else
+                    m_GridService.SetRegionUnsafe(r.RegionID);
+            }
+            destination = null;
+            return false;
         }
 
         protected AgentCircuitData MakeAgent(GridRegion region, UserAccount account,
@@ -1159,7 +1184,26 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)
         {
-            return simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
+            // As we are creating the agent, we must also initialize the CapsService for the agent
+            bool success = simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
+            if (!success) // If it failed, do not set up any CapsService for the client
+                return success;
+
+            // The client is in the region, we need to make sure it gets the right Caps
+            // If CreateAgent is successful, it passes back a OSDMap of params that the client 
+            //    wants to inform us about, and it includes the Caps SEED url for the region
+            if (m_CapsService != null && reason != "")
+            {
+                OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                string SimcapsSeedPath = responseMap["CapsUrl"].AsString();
+                //Remove any previous users
+                string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
+                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle);
+                m_log.Info("[NewAgentConnection]: Adding Caps Url for grid" +
+                     " @" + ServerCapsSeedPath + " calling URL " + SimcapsSeedPath + " for agent " + aCircuit.AgentID);
+            }
+
+            return success;
         }
 
         protected bool LaunchAgentIndirectly(GridRegion gatekeeper, GridRegion destination, AgentCircuitData aCircuit, IPEndPoint clientIP, out string reason)

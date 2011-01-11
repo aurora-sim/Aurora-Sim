@@ -875,7 +875,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
                     (int)sp.DrawDistance, neighbors.ToArray(), agent, null, (uint)TeleportFlags.Default);
-                return;
             }
         }
 
