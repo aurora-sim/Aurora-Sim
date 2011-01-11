@@ -370,7 +370,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 CrossAttachmentsIntoNewRegion(finalDestination, sp);
 
                 // Well, this is it. The agent is over there.
-
                 KillEntity(sp.Scene, sp);
 
                 // May need to logout or other cleanup
@@ -379,10 +378,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Now let's make it officially a child agent
                 sp.MakeChildAgent();
 
+                // Clean up any dropped attachments
                 sp.Scene.CleanDroppedAttachments();
 
                 // Finally, let's close this previously-known-as-root agent, when the jump is outside the view zone
-
                 if (NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
                 {
                     Thread.Sleep(5000);

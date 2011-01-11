@@ -36,12 +36,49 @@ namespace OpenSim.Services.Interfaces
 {
     public interface ISimulationService
     {
+        #region Local Initalization
+
+        /// <summary>
+        /// Add and set up the scene for the simulation module
+        /// </summary>
+        /// <param name="scene"></param>
+        void Init(IScene scene);
+
+        /// <summary>
+        /// Remove the scene from the list of known scenes
+        /// </summary>
+        /// <param name="scene"></param>
+        void RemoveScene(IScene scene);
+
+        /// <summary>
+        /// Try to find a scene with the given region handle
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
         IScene GetScene(ulong regionHandle);
+
+        /// <summary>
+        /// Get the 'inner' simulation service.
+        /// For the remote simulation service, this gives the local simulation service.
+        /// For the local simulation service. this gives the same service as it is already the local service.
+        /// </summary>
+        /// <returns></returns>
         ISimulationService GetInnerService();
+
+        #endregion
 
         #region Agents
 
-        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint flags, AgentData data, out string reason);
+        /// <summary>
+        /// Create an agent at the given destination
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="aCircuit"></param>
+        /// <param name="teleportFlags"></param>
+        /// <param name="data"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason);
 
         /// <summary>
         /// Full child agent update.
@@ -59,6 +96,13 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool UpdateAgent(GridRegion destination, AgentPosition data);
 
+        /// <summary>
+        /// Pull the root agent info from the given destination
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="id"></param>
+        /// <param name="agent"></param>
+        /// <returns></returns>
         bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent);
 
         /// <summary>
@@ -102,12 +146,5 @@ namespace OpenSim.Services.Interfaces
         bool CreateObject(GridRegion destination, UUID userID, UUID itemID);
 
         #endregion Objects
-
-        #region Local Initalization
-
-        void RemoveScene(IScene scene);
-        void Init(IScene scene);
-
-        #endregion
     }
 }

@@ -192,7 +192,7 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 if (s.RegionInfo.RegionID == origin)
                 {
-                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
                     if (AgentTransferModule != null)
                     {
                         //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
@@ -236,7 +236,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
                     //m_log.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
-                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
                     if (AgentTransferModule != null)
                     {
                         return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
@@ -256,13 +256,14 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
-                    IEntityTransferModule AgentTransferModule = GetScene(s.RegionInfo.RegionHandle).RequestModuleInterface<IEntityTransferModule>();
+                    IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
                     if (AgentTransferModule != null)
                     {
                         return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, userID, itemID);
                     }
                 }
             }
+            m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in CreateObject");
             return false;
         }
 
