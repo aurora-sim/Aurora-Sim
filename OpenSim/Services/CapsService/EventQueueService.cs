@@ -630,12 +630,12 @@ namespace OpenSim.Services.CapsService
                 }
                 else
                 {
-                    m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
+                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                     return false;
                 }
                 return true;
-            } 
-            m_log.Info("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: SimulationService does not exist!");
+            }
+            m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: SimulationService does not exist!");
             return false;
         }
 

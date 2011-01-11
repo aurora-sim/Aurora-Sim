@@ -187,6 +187,9 @@ namespace OpenSim.Services.CapsService
 
                 if (reply != "")
                 {
+                    Dictionary<string, object> response = WebUtils.ParseXmlResponse(reply);
+                    if (response.ContainsKey("result") && response["result"].ToString() == "True")
+                        return true;
                 }
             }
             catch (Exception e)
@@ -195,7 +198,7 @@ namespace OpenSim.Services.CapsService
                 return false;
             }
 
-            return true;
+            return false;
         }
 
         public bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
