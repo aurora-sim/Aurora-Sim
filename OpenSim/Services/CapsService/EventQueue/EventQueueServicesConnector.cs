@@ -189,12 +189,10 @@ namespace OpenSim.Services.CapsService
 
                 if (reply != "")
                 {
-                    if (reply["_Result"] is OSDMap)
-                    {
-                        OSDMap result = (OSDMap)reply["_Result"];
-                        if (result["success"].AsBoolean())
-                            return true;
-                    }
+
+                    OSDMap result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
+                    if (result["success"].AsBoolean())
+                        return true;
                 }
             }
             catch (Exception e)
