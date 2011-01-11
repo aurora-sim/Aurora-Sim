@@ -35,12 +35,12 @@ namespace OpenSim.Services.CapsService
 
         #region IService Members
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
@@ -48,20 +48,20 @@ namespace OpenSim.Services.CapsService
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        public virtual void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)

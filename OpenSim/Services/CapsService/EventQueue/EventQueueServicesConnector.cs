@@ -62,16 +62,16 @@ namespace OpenSim.Services.CapsService
 
         #region IService Members
 
-        public string Name
+        public override string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        public override void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
@@ -80,11 +80,11 @@ namespace OpenSim.Services.CapsService
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public override void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public override void PostStart(IConfigSource config, IRegistryCore registry)
         {
             string url = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
             //Clean it up a bit
@@ -93,7 +93,7 @@ namespace OpenSim.Services.CapsService
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        public override void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
@@ -206,12 +206,6 @@ namespace OpenSim.Services.CapsService
             }
 
             return false;
-        }
-
-        public override bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
-        {
-            //Remote connectors do not get to deal with authentication
-            return true;
         }
 
         #endregion

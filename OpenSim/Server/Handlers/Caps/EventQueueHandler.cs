@@ -108,6 +108,8 @@ namespace OpenSim.Server.Handlers
 
             if (!m_eventQueueService.AuthenticateRequest(agentID, password, regionHandle))
             {
+                m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
+                    agentID + " calling with password " + password + " in region " + regionHandle);
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 result.Add("result", "false");
                 string xmlString = WebUtils.BuildXmlResponse(result);
