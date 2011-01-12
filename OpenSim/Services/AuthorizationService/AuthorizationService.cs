@@ -75,7 +75,6 @@ namespace OpenSim.Services.AuthorizationService
 
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
-            newPosition = agent.startpos;
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
@@ -83,7 +82,7 @@ namespace OpenSim.Services.AuthorizationService
                 {
                     if (scene.RegionInfo.RegionID == region.RegionID)
                     {
-                        
+                        return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
                     }
                 }
             }

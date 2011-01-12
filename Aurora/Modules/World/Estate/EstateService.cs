@@ -69,7 +69,8 @@ namespace Aurora.Modules
             m_scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.Permissions.OnAllowIncomingAgent += AllowTeleport;
+            scene.Permissions.OnAllowIncomingAgent += OnAllowedIncomingAgent;
+            scene.Permissions.OnAllowedIncomingTeleport += OnAllowedIncomingTeleport;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
             MainConsole.Instance.Commands.AddCommand(this.Name, true,
@@ -84,7 +85,8 @@ namespace Aurora.Modules
                 return;
 
             scene.EventManager.OnNewClient -= OnNewClient;
-            scene.Permissions.OnAllowIncomingAgent -= AllowTeleport;
+            scene.Permissions.OnAllowIncomingAgent -= OnAllowedIncomingAgent;
+            scene.Permissions.OnAllowedIncomingTeleport -= OnAllowedIncomingTeleport;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
@@ -334,9 +336,257 @@ namespace Aurora.Modules
 
         #region Can Teleport
 
-        public bool AllowTeleport(Scene scene, AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason)
+        private bool OnAllowedIncomingTeleport(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason)
         {
-            newPosition = agent.startpos;
+            newPosition = Position;
+            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
+
+            ScenePresence Sp = scene.GetScenePresence(userID);
+            if (account == null)
+            {
+                reason = "Failed authentication.";
+                return false; //NO!
+            }
+
+            //Make sure that this user is inside the region as well
+            if (Position.X < 0f || Position.Y < 0f || Position.Z < 0f ||
+                Position.X > scene.RegionInfo.RegionSizeX || Position.Y > scene.RegionInfo.RegionSizeY)
+            {
+                m_log.WarnFormat(
+                    "[EstateService]: AllowedIncomingTeleport was given an illegal position of {0} for avatar {1}, {2}. Clamping",
+                    Position, Name, userID);
+
+                if (Position.X < 0f) Position.X = 0f;
+                if (Position.Y < 0f) Position.Y = 0f;
+                if (Position.Z < 0f) Position.Z = 0f;
+
+                if (Position.X > scene.RegionInfo.RegionSizeX) Position.X = scene.RegionInfo.RegionSizeX / 2;
+                if (Position.Y > scene.RegionInfo.RegionSizeY) Position.Y = scene.RegionInfo.RegionSizeY / 2;
+            }
+
+            //Check that we are not underground as well
+            float posZLimit = (float)m_scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y];
+
+            if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
+            {
+                Position.Z = posZLimit;
+            }
+
+            IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentInfo agentInfo = null;
+            if (AgentConnector != null)
+            {
+                agentInfo = AgentConnector.GetAgent(userID);
+                if (agentInfo == null)
+                {
+                    AgentConnector.CreateNewAgent(userID);
+                    agentInfo = AgentConnector.GetAgent(userID);
+                }
+            }
+
+            ILandObject ILO = null;
+            IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+                ILO = parcelManagement.GetLandObject(Position.X, Position.Y);
+
+            if (ILO == null) // Can't teleport into a parcel that doesn't exist
+            {
+                reason = "No land in this region that you can teleport into.";
+                return false;
+            }
+
+            //parcel permissions
+            if (ILO.IsBannedFromLand(userID)) //Note: restricted is dealt with in the next block
+            {
+                if (Sp == null)
+                {
+                    reason = "Banned from this parcel.";
+                    return true;
+                }
+
+                if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                {
+                    //We found a place for them, but we don't need to check any further
+                    return true;
+                }
+            }
+            //Move them out of banned parcels
+            ParcelFlags parcelflags = (ParcelFlags)ILO.LandData.Flags;
+            if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup &&
+                (parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList &&
+                (parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
+            {
+                //One of these is in play then
+                if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup)
+                {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
+                    if (Sp.ControllingClient.ActiveGroupId != ILO.LandData.GroupID)
+                    {
+                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                            //We found a place for them, but we don't need to check any further
+                            return true;
+                    }
+                }
+                else if ((parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList)
+                {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
+                    //All but the people on the access list are banned
+                    if (ILO.IsRestrictedFromLand(userID))
+                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                            //We found a place for them, but we don't need to check any further
+                            return true;
+                }
+                else if ((parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
+                {
+                    if (Sp == null)
+                    {
+                        reason = "Banned from this parcel.";
+                        return true;
+                    }
+                    //All but the people on the pass/access list are banned
+                    if (ILO.IsRestrictedFromLand(Sp.UUID))
+                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                            //We found a place for them, but we don't need to check any further
+                            return true;
+                }
+            }
+
+            EstateSettings ES = scene.RegionInfo.EstateSettings;
+
+            //Move them to the nearest landing point
+            if (!ES.AllowDirectTeleport)
+            {
+                Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
+                if (telehub != null)
+                {
+                    if (telehub.SpawnPos.Count == 0)
+                    {
+                        newPosition = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                    }
+                    else
+                    {
+                        int LastTelehubNum = 0;
+                        if (!LastTelehub.TryGetValue(scene.RegionInfo.RegionID, out LastTelehubNum))
+                            LastTelehubNum = 0;
+                        newPosition = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
+                        LastTelehubNum++;
+                        if (LastTelehubNum == telehub.SpawnPos.Count)
+                            LastTelehubNum = 0;
+                        LastTelehub[scene.RegionInfo.RegionID] = LastTelehubNum;
+                    }
+                }
+                else
+                {
+                    reason = "Teleport has been blocked for this region.";
+                    return false;
+                }
+            }
+            else
+            {
+                //If they are owner, they don't have to have permissions checked
+                if (!m_scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+                {
+                    if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
+                    {
+                        //Find a new parcel for them
+                        List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
+                        if (Parcels.Count == 0)
+                        {
+                            ScenePresence SP;
+                            scene.TryGetScenePresence(userID, out SP);
+                            newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
+                        }
+                        else
+                        {
+                            bool found = false;
+                            //We need to check here as well for bans, can't toss someone into a parcel they are banned from
+                            foreach (ILandObject Parcel in Parcels)
+                            {
+                                if (!Parcel.IsBannedFromLand(userID))
+                                {
+                                    //Now we have to check their userloc
+                                    if (ILO.LandData.LandingType == 2)
+                                        continue; //Blocked, check next one
+                                    else if (ILO.LandData.LandingType == 1) //Use their landing spot
+                                        newPosition = Parcel.LandData.UserLocation;
+                                    else //They allow for anywhere, so dump them in the center at the ground
+                                        newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
+                                    found = true;
+                                }
+                            }
+                            if (!found) //Dump them at the edge
+                            {
+                                if (Sp != null)
+                                    newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
+                                else
+                                {
+                                    reason = "Banned from this parcel.";
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    else if (ILO.LandData.LandingType == 1) //Move to tp spot
+                        newPosition = ILO.LandData.UserLocation;
+                }
+            }
+
+            //Can only enter prelude regions once!
+            int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
+            //We assume that our own region isn't null....
+            if (agentInfo != null)
+            {
+                if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
+                {
+                    if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + m_scene.RegionInfo.RegionID))
+                    {
+                        reason = "You may not enter this region as you have already been to this prelude region.";
+                        return false;
+                    }
+                    else
+                    {
+                        agentInfo.OtherAgentInformation.Add("Prelude" + m_scene.RegionInfo.RegionID, OSD.FromInteger((int)IAgentFlags.PastPrelude));
+                        AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
+                    }
+                }
+            }
+
+
+            if ((ILO.LandData.Flags & (int)ParcelFlags.DenyAnonymous) != 0)
+            {
+                if ((account.UserFlags & (int)ProfileFlags.NoPaymentInfoOnFile) == (int)ProfileFlags.NoPaymentInfoOnFile)
+                {
+                    reason = "You may not enter this region.";
+                    return false;
+                }
+            }
+
+            if ((ILO.LandData.Flags & (uint)ParcelFlags.DenyAgeUnverified) != 0 && agentInfo != null)
+            {
+                if ((agentInfo.Flags & IAgentFlags.Minor) == IAgentFlags.Minor)
+                {
+                    reason = "You may not enter this region.";
+                    return false;
+                }
+            }
+
+            newPosition = Position;
+            reason = "";
+            return true;
+        }
+
+        private bool OnAllowedIncomingAgent(Scene scene, AgentCircuitData agent, bool isRootAgent, out string reason)
+        {
+            #region Incoming Agent Checks
+
             Vector3 Position = agent.startpos;
             
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
@@ -551,197 +801,7 @@ namespace Aurora.Modules
                 return false;
             }
 
-            ILandObject ILO = null;
-            IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
-                ILO = parcelManagement.GetLandObject(Position.X, Position.Y);
-
-            if (ILO == null) // Can't teleport into a parcel that doesn't exist
-            {
-                reason = "No land in this region that you can teleport into.";
-                return false;
-            }
-
-            //parcel permissions
-            if (ILO.IsBannedFromLand(agent.AgentID)) //Note: restricted is dealt with in the next block
-            {
-                if (Sp == null)
-                {
-                    reason = "Banned from this parcel.";
-                    return true;
-                }
-
-                if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
-                {
-                    //We found a place for them, but we don't need to check any further
-                    return true;
-                }
-            }
-            //Move them out of banned parcels
-            ParcelFlags parcelflags = (ParcelFlags)ILO.LandData.Flags;
-            if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup &&
-                (parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList &&
-                (parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
-            {
-                //One of these is in play then
-                if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup)
-                {
-                    if (Sp == null)
-                    {
-                        reason = "Banned from this parcel.";
-                        return true;
-                    }
-                    if (Sp.ControllingClient.ActiveGroupId != ILO.LandData.GroupID)
-                    {
-                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
-                    }
-                }
-                else if ((parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList)
-                {
-                    if (Sp == null)
-                    {
-                        reason = "Banned from this parcel.";
-                        return true;
-                    }
-                    //All but the people on the access list are banned
-                    if (ILO.IsRestrictedFromLand(Sp.UUID))
-                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
-                }
-                else if ((parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
-                {
-                    if (Sp == null)
-                    {
-                        reason = "Banned from this parcel.";
-                        return true;
-                    }
-                    //All but the people on the pass/access list are banned
-                    if (ILO.IsRestrictedFromLand(Sp.UUID))
-                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
-                            //We found a place for them, but we don't need to check any further
-                            return true;
-                }
-            }
-
-            //Move them to the nearest landing point
-            if (!ES.AllowDirectTeleport)
-            {
-                Telehub telehub = RegionConnector.FindTelehub(scene.RegionInfo.RegionID);
-                if (telehub != null)
-                {
-                    if (telehub.SpawnPos.Count == 0)
-                    {
-                        newPosition = new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
-                    }
-                    else
-                    {
-                        int LastTelehubNum = 0;
-                        if (!LastTelehub.TryGetValue(scene.RegionInfo.RegionID, out LastTelehubNum))
-                            LastTelehubNum = 0;
-                        newPosition = telehub.SpawnPos[LastTelehubNum] + new Vector3(telehub.TelehubLocX, telehub.TelehubLocY, telehub.TelehubLocZ);
-                        LastTelehubNum++;
-                        if (LastTelehubNum == telehub.SpawnPos.Count)
-                            LastTelehubNum = 0;
-                        LastTelehub[scene.RegionInfo.RegionID] = LastTelehubNum;
-                    }
-                }
-                else
-                {
-                    reason = "Teleport has been blocked for this region.";
-                    return false;
-                }
-            }
-            else
-            {
-                //If they are owner, they don't have to have permissions checked
-                if (!m_scene.Permissions.GenericParcelPermission(agent.AgentID, ILO, (ulong)GroupPowers.None))
-                {
-                    if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
-                    {
-                        //Find a new parcel for them
-                        List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
-                        if (Parcels.Count == 0)
-                        {
-                            ScenePresence SP;
-                            scene.TryGetScenePresence(agent.AgentID, out SP);
-                            newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
-                        }
-                        else
-                        {
-                            bool found = false;
-                            //We need to check here as well for bans, can't toss someone into a parcel they are banned from
-                            foreach (ILandObject Parcel in Parcels)
-                            {
-                                if (!Parcel.IsBannedFromLand(agent.AgentID))
-                                {
-                                    //Now we have to check their userloc
-                                    if (ILO.LandData.LandingType == 2)
-                                        continue; //Blocked, check next one
-                                    else if (ILO.LandData.LandingType == 1) //Use their landing spot
-                                        newPosition = Parcel.LandData.UserLocation;
-                                    else //They allow for anywhere, so dump them in the center at the ground
-                                        newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
-                                    found = true;
-                                }
-                            }
-                            if (!found) //Dump them at the edge
-                            {
-                                if(Sp != null)
-                                    newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
-                                else
-                                {
-                                    reason = "Banned from this parcel.";
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    else if (ILO.LandData.LandingType == 1) //Move to tp spot
-                        newPosition = ILO.LandData.UserLocation;
-                }
-            }
-
-            //Can only enter prelude regions once!
-            int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
-            //We assume that our own region isn't null....
-            if (agentInfo != null)
-            {
-                if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
-                {
-                    if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + m_scene.RegionInfo.RegionID))
-                    {
-                        reason = "You may not enter this region as you have already been to this prelude region.";
-                        return false;
-                    }
-                    else
-                    {
-                        agentInfo.OtherAgentInformation.Add("Prelude" + m_scene.RegionInfo.RegionID, OSD.FromInteger((int)IAgentFlags.PastPrelude));
-                        AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
-                    }
-                }
-            }
-
-
-            if ((ILO.LandData.Flags & (int)ParcelFlags.DenyAnonymous) != 0)
-            {
-                if ((account.UserFlags & (int)ProfileFlags.NoPaymentInfoOnFile) == (int)ProfileFlags.NoPaymentInfoOnFile)
-                {
-                    reason = "You may not enter this region.";
-                    return false;
-                }
-            }
-
-            if ((ILO.LandData.Flags & (uint)ParcelFlags.DenyAgeUnverified) != 0 && agentInfo != null)
-            {
-                if ((agentInfo.Flags & IAgentFlags.Minor) == IAgentFlags.Minor)
-                {
-                    reason = "You may not enter this region.";
-                    return false;
-                }
-            }
+            #endregion
 
             reason = "";
             return true;

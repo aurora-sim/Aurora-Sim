@@ -43,7 +43,7 @@ namespace OpenSim.Services.Interfaces
         // whether or not a user has access to the region
         //
         bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
-            out Vector3 newPosition, out string reason);
+            out string reason);
     }
     
     public class AuthorizationRequest

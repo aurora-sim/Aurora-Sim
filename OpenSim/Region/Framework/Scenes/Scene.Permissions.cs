@@ -83,7 +83,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason);
-    public delegate bool IncomingAgentHandler(Scene scene, AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason);
+    public delegate bool IncomingAgentHandler(Scene scene, AgentCircuitData agent, bool isRootAgent, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
     public delegate bool GenericParcelHandler(UUID user, ILandObject parcel, ulong groupPowers);
@@ -152,6 +152,7 @@ namespace OpenSim.Region.Framework.Scenes
         public event TeleportHandler OnAllowedOutgoingLocalTeleport;
         public event TeleportHandler OnAllowedOutgoingRemoteTeleport;
         public event IncomingAgentHandler OnAllowIncomingAgent;
+        public event TeleportHandler OnAllowedIncomingTeleport;
         public event PushObjectHandler OnPushObject;
         public event PushObjectHandler OnViewObjectOwners;
         public event EditParcelAccessListHandler OnEditParcelAccessList;
@@ -1018,7 +1019,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason)
+        public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out string reason)
         {
             IncomingAgentHandler handler = OnAllowIncomingAgent;
             if (handler != null)
@@ -1026,12 +1027,28 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handler.GetInvocationList();
                 foreach (IncomingAgentHandler h in list)
                 {
-                    if (h(m_scene, agent, isRootAgent, out newPosition, out reason) == false)
+                    if (h(m_scene, agent, isRootAgent, out reason) == false)
                         return false;
                 }
             }
-            newPosition = agent.startpos;
             reason = "";
+            return true;
+        }
+
+        public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        {
+            newPosition = Position;
+            reason = "";
+            TeleportHandler handler = OnAllowedIncomingTeleport;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList();
+                foreach (TeleportHandler h in list)
+                {
+                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                        return false;
+                }
+            }
             return true;
         }
 

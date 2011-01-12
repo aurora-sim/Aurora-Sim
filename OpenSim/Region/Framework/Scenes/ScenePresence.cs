@@ -786,30 +786,13 @@ namespace OpenSim.Region.Framework.Scenes
             // related to the handling of attachments
             //m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
 
-            float posZLimit = 0;
-
-            if (pos.X < Constants.RegionSize && pos.Y < Constants.RegionSize)
-                posZLimit = (float)m_scene.RequestModuleInterface<ITerrainChannel>()[(int)pos.X, (int)pos.Y];
-
-            float newPosZ = posZLimit + m_avHeight / 2;
-            if (posZLimit >= (pos.Z - (m_avHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
+            string reason;
+            //Get a good position and make sure that we exist in the grid
+            if (!Scene.Permissions.AllowedIncomingTeleport(UUID, pos, out pos, out reason))
             {
-                pos.Z = newPosZ;
-            }
-
-            if (pos.X < 0f || pos.Y < 0f || pos.Z < 0f ||
-                pos.X > Scene.RegionInfo.RegionSizeX || pos.Y > Scene.RegionInfo.RegionSizeY)
-            {
-                m_log.WarnFormat(
-                    "[SCENE PRESENCE]: MakeRootAgent() was given an illegal position of {0} for avatar {1}, {2}. Clamping",
-                    pos, Name, UUID);
-
-                if (pos.X < 0f) pos.X = 0f;
-                if (pos.Y < 0f) pos.Y = 0f;
-                if (pos.Z < 0f) pos.Z = 0f;
-
-                if (pos.X > Scene.RegionInfo.RegionSizeX) pos.X = Scene.RegionInfo.RegionSizeX / 2;
-                if (pos.Y > Scene.RegionInfo.RegionSizeY) pos.Y = Scene.RegionInfo.RegionSizeY / 2;
+                m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
+                    ", reason: " + reason);
+                return;
             }
 
             AbsolutePosition = pos;

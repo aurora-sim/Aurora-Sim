@@ -114,9 +114,8 @@ namespace OpenSim.Services.Connectors
         #region IAuthorizationService Members
 
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
-            out Vector3 newPosition, out string reason)
+            out string reason)
         {
-            newPosition = agent.startpos;
             reason = "";
             return true;
         }
