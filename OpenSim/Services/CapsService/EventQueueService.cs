@@ -561,6 +561,16 @@ namespace OpenSim.Services.CapsService
                     m_ids++;
                 }
             }
+            //Look for disable Simulator EQMs so that we can disable ourselves safely
+            foreach (OSD ev in array)
+            {
+                OSDMap map = (OSDMap)ev;
+                if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                {
+                    //This will be the last bunch of EQMs that go through, so we can safely die now
+                    m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                }
+            }
             //Nothing to process... don't confuse the client
             if (array.Count == 0)
             {

@@ -508,8 +508,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //    Name, m_scene.RegionInfo.RegionName);
 
             // Send the STOP packet
-            DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
-            OutPacket(disable, ThrottleOutPacketType.Unknown);
+            //DisableSimulatorPacket disable = (DisableSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.DisableSimulator);
+            //OutPacket(disable, ThrottleOutPacketType.Unknown);
 
             IsActive = false;
 

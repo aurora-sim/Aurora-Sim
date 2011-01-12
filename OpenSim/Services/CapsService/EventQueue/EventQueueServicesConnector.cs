@@ -252,8 +252,19 @@ namespace OpenSim.Services.CapsService
         {
             OSD item = EventQueueHelper.DisableSimulator(handle);
             Enqueue(item, avatarID, RegionHandle);
+
+            //WRONG, COMMENTS LEFT FOR FUTURE PEOPLE TO UNDERSTAND WHY IT IS WRONG
             //ALSO, do the base.Enqueue so the region Caps get the kill request as well
-            base.Enqueue(item, avatarID, RegionHandle);
+            //END WRONG COMMENTS
+
+            //This is wrong because the client doesn't call the EventQueueHandler on the sim, 
+            //  and we can be sure this is a sim, not the grid, as its the connector that posts 
+            //  to the grid service. Instead, we must do the killing manually so
+            //  that this region gets cleaned up.
+            //base.Enqueue(item, avatarID, RegionHandle);
+            IClientCapsService clientCaps = m_service.GetClientCapsService(avatarID);
+            if(clientCaps != null)
+                clientCaps.RemoveCAPS(RegionHandle); // DIE!!!
         }
 
         #endregion
