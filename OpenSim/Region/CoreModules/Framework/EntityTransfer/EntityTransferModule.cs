@@ -193,7 +193,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
                 {
                     //First check whether the user is allowed to move at all
-                    if (!sp.Scene.Permissions.AllowedOutgoingLocalTeleport(sp.UUID, position, out position, out reason))
+                    if (!sp.Scene.Permissions.AllowedOutgoingLocalTeleport(sp.UUID, out reason))
                     {
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;
@@ -227,7 +227,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else // Another region possibly in another simulator
                 {
-                    if (!sp.Scene.Permissions.AllowedOutgoingRemoteTeleport(sp.UUID, position, out position, out reason))
+                    // Make sure the user is allowed to leave this region
+                    if (!sp.Scene.Permissions.AllowedOutgoingRemoteTeleport(sp.UUID, out reason))
                     {
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;

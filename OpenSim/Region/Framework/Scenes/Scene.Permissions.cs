@@ -83,6 +83,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason);
+    public delegate bool OutgoingRemoteTeleport(UUID userID, Scene scene, out string reason);
     public delegate bool IncomingAgentHandler(Scene scene, AgentCircuitData agent, bool isRootAgent, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
@@ -149,8 +150,8 @@ namespace OpenSim.Region.Framework.Scenes
         public event EditUserInventoryHandler OnEditUserInventory;
         public event CopyUserInventoryHandler OnCopyUserInventory;
         public event DeleteUserInventoryHandler OnDeleteUserInventory;
-        public event TeleportHandler OnAllowedOutgoingLocalTeleport;
-        public event TeleportHandler OnAllowedOutgoingRemoteTeleport;
+        public event OutgoingRemoteTeleport OnAllowedOutgoingLocalTeleport;
+        public event OutgoingRemoteTeleport OnAllowedOutgoingRemoteTeleport;
         public event IncomingAgentHandler OnAllowIncomingAgent;
         public event TeleportHandler OnAllowedIncomingTeleport;
         public event PushObjectHandler OnPushObject;
@@ -985,40 +986,60 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool AllowedOutgoingLocalTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        /// <summary>
+        /// Check to make sure the user is allowed to teleport within this region
+        /// </summary>
+        /// <param name="userID">The user that is attempting to leave</param>
+        /// <param name="reason">If this check fails, this is the reason why</param>
+        /// <returns>Whether the user is allowed to teleport locally</returns>
+        public bool AllowedOutgoingLocalTeleport(UUID userID, out string reason)
         {
-            newPosition = Position;
             reason = "";
-            TeleportHandler handler = OnAllowedOutgoingLocalTeleport;
+            OutgoingRemoteTeleport handler = OnAllowedOutgoingLocalTeleport;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-                foreach (TeleportHandler h in list)
+                foreach (OutgoingRemoteTeleport h in list)
                 {
-                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                    if (h(userID, m_scene, out reason) == false)
                         return false;
                 }
             }
             return true;
         }
 
-        public bool AllowedOutgoingRemoteTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        /// <summary>
+        /// Check to make sure the user can be teleporting out of the region to a remote region.l
+        /// If this is false, the user is denied the ability to leave the region at all.
+        /// </summary>
+        /// <param name="userID">The user that is attempting to leave the region</param>
+        /// <param name="reason">If this fails, this explains why it failed</param>
+        /// <returns>Whether the user is allowed to teleport to remote regions</returns>
+        public bool AllowedOutgoingRemoteTeleport(UUID userID, out string reason)
         {
-            newPosition = Position;
             reason = "";
-            TeleportHandler handler = OnAllowedOutgoingRemoteTeleport;
+            OutgoingRemoteTeleport handler = OnAllowedOutgoingRemoteTeleport;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
-                foreach (TeleportHandler h in list)
+                foreach (OutgoingRemoteTeleport h in list)
                 {
-                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                    if (h(userID, m_scene, out reason) == false)
                         return false;
                 }
             }
             return true;
         }
 
+        /// <summary>
+        /// Check to make sure this user has the ability to have an agent in this region.
+        /// This checks whether they exist in the grid, whether they are banned from the region and more.
+        /// It is called by the SimulationService in CreateAgent mainly.
+        /// </summary>
+        /// <param name="agent">The Agent that is coming in</param>
+        /// <param name="isRootAgent">Whether this agent will be a root agent</param>
+        /// <param name="reason">If it fails, this explains why they cannot enter</param>
+        /// <returns>Whether this user is allowed to have an agent in this region</returns>
         public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out string reason)
         {
             IncomingAgentHandler handler = OnAllowIncomingAgent;
@@ -1035,6 +1056,15 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
+        /// <summary>
+        /// Check to see whether the user is actually in this region 
+        /// and then figure out if they can be where they want to be
+        /// </summary>
+        /// <param name="userID">The user who is teleporting (can be either incoming from a remote region, or a local teleport)</param>
+        /// <param name="Position">The position the user has requested</param>
+        /// <param name="newPosition">The position the user is going to get</param>
+        /// <param name="reason">If the check fails, this will tell why</param>
+        /// <returns>Whether this user can teleport into/around this region</returns>
         public bool AllowedIncomingTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
