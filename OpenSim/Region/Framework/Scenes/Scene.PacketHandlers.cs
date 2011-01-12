@@ -455,20 +455,20 @@ namespace OpenSim.Region.Framework.Scenes
                 effect.TypeData = args[i].TypeData;
                 effectBlockArray[i] = effect;
                 //Save the color
-                if (effect.Type == 7 || effect.Type == 9)
+                if (effect.Type == (int)EffectType.Beam || effect.Type == (int)EffectType.Point 
+                    || effect.Type == (int)EffectType.Sphere)
                 {
-                    if(SP != null)
+                    Color4 color = new Color4(effect.Color, 0, false);
+                    if (SP != null && !(color.R == 0 && color.G == 0 && color.B == 0))
                         SP.EffectColor = args[i].Color;
                 }
             }
 
-            ForEachClient(
-                delegate(IClientAPI client)
-                {
-                    if (client.AgentId != remoteClient.AgentId)
-                        client.SendViewerEffect(effectBlockArray);
-                }
-            );
+            foreach (ScenePresence client in ScenePresences)
+            {
+                if (client.ControllingClient.AgentId != remoteClient.AgentId)
+                    client.ControllingClient.SendViewerEffect(effectBlockArray);
+            }
         }
 
         public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)

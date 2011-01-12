@@ -135,7 +135,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected internal void UpdatePresences()
+        protected internal void UpdateEntities()
         {
             ForEachScenePresence(delegate(ScenePresence presence)
             {

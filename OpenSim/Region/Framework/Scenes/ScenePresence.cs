@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Timers;
 using OpenMetaverse;
+using OpenMetaverse.Packets;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Framework.Client;
@@ -2336,19 +2337,19 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
             
-            OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[] effectBlockArray = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock[1];
+            ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[1];
             
-            OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock effect = new OpenMetaverse.Packets.ViewerEffectPacket.EffectBlock();
+            ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
             effect.AgentID = UUID;
             effect.Color = EffectColor;
             effect.Duration = 0.9f;
             effect.ID = UUID.Random(); //This seems to be what is passed by SL when its send from the server
             effect.Type = (int)EffectType.Beam; //Bean is the line from hand to object
-           
+
             byte[] part = new byte[56];
             UUID.ToBytes(part, 0);//UUID of av first
             SOP.UUID.ToBytes(part, 16);//UUID of object
-            new Vector3d(SOP.AbsolutePosition).ToBytes(part, 32);//position of object first
+            SOP.AbsolutePosition.ToBytes(part, 32);//position of object first
             
             effect.TypeData = part;
             effectBlockArray[0] = effect;

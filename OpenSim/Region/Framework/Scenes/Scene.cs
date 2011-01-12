@@ -137,7 +137,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected DateTime m_lastphysupdate = DateTime.UtcNow;
 
         private int m_update_physics = 1; //Trigger the physics update
-        private int m_update_presences = 5; // Send prim updates for clients
+        private int m_update_entities = 5; // Send prim updates for clients
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
         private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
 
@@ -153,7 +153,6 @@ namespace OpenSim.Region.Framework.Scenes
         public bool CheckForObjectCulling = false;
         public bool[,] DirectionsToBlockChildAgents;
         private string m_DefaultObjectName = "Primitive";
-        public bool RunScriptsInAttachments = false;
         public bool m_usePreJump = true;
         public bool m_useSplatAnimation = true;
         public float MaxLowValue = -1000;
@@ -435,7 +434,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
                 if (aurorastartupConfig != null)
                 {
-                    RunScriptsInAttachments = aurorastartupConfig.GetBoolean("AllowRunningOfScriptsInAttachments", false);
                     m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                     MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
                     Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
@@ -650,8 +648,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                if (m_frame % m_update_presences == 0)
-                    m_sceneGraph.UpdatePresences();
+                if (m_frame % m_update_entities == 0)
+                    m_sceneGraph.UpdateEntities();
 
                 if (m_frame % m_update_events == 0)
                     m_eventManager.TriggerOnFrame();

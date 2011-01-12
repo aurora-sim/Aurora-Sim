@@ -93,7 +93,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public IConfig ScriptConfigSource;
 
         private bool m_enabled = false;
-
+        
+        public bool RunScriptsInAttachments = false;
+        
         public bool DisplayErrorsOnConsole = true;
 
         public bool ChatCompileErrorsToDebugChannel = true;
@@ -213,6 +215,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             m_enabled = ScriptConfigSource.GetBoolean("Enabled", false);
 
+            RunScriptsInAttachments = ScriptConfigSource.GetBoolean("AllowRunningOfScriptsInAttachments", false);
             ScriptEnginesPath = ScriptConfigSource.GetString("PathToLoadScriptsFrom", ScriptEnginesPath);
             ShowWarnings = ScriptConfigSource.GetBoolean("ShowWarnings", ShowWarnings);
             DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", DisplayErrorsOnConsole);
@@ -1334,7 +1337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool ScriptDanger(SceneObjectPart part, Vector3 pos)
         {
             Scene scene = part.ParentGroup.Scene;
-            if (part.IsAttachment && scene.RunScriptsInAttachments)
+            if (part.IsAttachment && RunScriptsInAttachments)
                 return true; //Always run as in SL
 
             IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();
