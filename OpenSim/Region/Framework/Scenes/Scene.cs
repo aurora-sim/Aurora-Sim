@@ -1036,10 +1036,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             reason = String.Empty;
 
-            GridRegion ourRegion = new GridRegion(RegionInfo);
             IAuthorizationService AuthorizationService = RequestModuleInterface<IAuthorizationService>();
             if (AuthorizationService != null)
             {
+                GridRegion ourRegion = new GridRegion(RegionInfo);
                 if (!AuthorizationService.IsAuthorizedForRegion(ourRegion, agent, !agent.child, out reason))
                 {
                     m_log.WarnFormat("[ConnectionBegin]: Denied access to {0} at {1} because the user does not have access to the region, reason: {2}",

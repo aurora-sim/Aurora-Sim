@@ -334,7 +334,7 @@ namespace Aurora.Modules
 
         #endregion
 
-        #region Can Teleport
+        #region Teleport Permissions
 
         private bool OnAllowedIncomingTeleport(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason)
         {

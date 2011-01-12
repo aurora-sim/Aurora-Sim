@@ -116,6 +116,7 @@ namespace OpenSim.Services.Connectors
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
             out string reason)
         {
+            //Not completed yet
             reason = "";
             return true;
         }

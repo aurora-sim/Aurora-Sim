@@ -192,33 +192,25 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
                 {
+                    //First check whether the user is allowed to move at all
                     if (!sp.Scene.Permissions.AllowedOutgoingLocalTeleport(sp.UUID, position, out position, out reason))
                     {
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;
                     }
-                    // m_log.DebugFormat(
-                    //    "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
-                    //    position, sp.Scene.RegionInfo.RegionName);
+                    //Now respect things like parcel bans with this
+                    if (!sp.Scene.Permissions.AllowedIncomingTeleport(sp.UUID, position, out position, out reason))
+                    {
+                        sp.ControllingClient.SendTeleportFailed(reason);
+                        return;
+                    }
+                    m_log.DebugFormat(
+                        "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
+                        position, sp.Scene.RegionInfo.RegionName);
 
                     //We have to add the shift as it is brought into this as well in regions that have larger RegionSizes
                     position.X += XShift;
                     position.Y += YShift;
-
-                    // Teleport within the same region
-                    if (position.X < 0f || position.Y < 0f ||
-                        position.X > sp.Scene.RegionInfo.RegionSizeX || position.Y > sp.Scene.RegionInfo.RegionSizeY)
-                    {
-                        m_log.WarnFormat(
-                            "[EntityTransferModule]: Given an illegal position of {0} for avatar {1}. Clamping",
-                            position, sp.Name);
-
-                        if (position.X < 0f) position.X = 0f;
-                        if (position.Y < 0f) position.Y = 0f;
-
-                        if (position.X > sp.Scene.RegionInfo.RegionSizeX) position.X = sp.Scene.RegionInfo.RegionSizeX;
-                        if (position.Y > sp.Scene.RegionInfo.RegionSizeY) position.Y = sp.Scene.RegionInfo.RegionSizeY;
-                    }
 
                     //Keep users from being underground
                     ITerrainChannel channel = sp.Scene.RequestModuleInterface<ITerrainChannel>();

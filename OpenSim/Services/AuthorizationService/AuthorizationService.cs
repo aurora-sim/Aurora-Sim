@@ -82,12 +82,13 @@ namespace OpenSim.Services.AuthorizationService
                 {
                     if (scene.RegionInfo.RegionID == region.RegionID)
                     {
+                        //Found the region, check permissions
                         return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
                     }
                 }
             }
-            reason = "Authorized";
-            return true;
+            reason = "Not Authorized as region does not exist.";
+            return false;
         }
     }
 }
