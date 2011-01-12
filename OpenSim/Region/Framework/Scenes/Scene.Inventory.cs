@@ -46,6 +46,10 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public interface ILLClientInventory
     {
+        /// <summary>
+        /// The default LSL script that will be added when a client creates
+        /// a new script in inventory or in the task object inventory
+        /// </summary>
         string DefaultLSLScript { get; set; }
 
         /// <summary>
@@ -155,6 +159,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected string m_DefaultLSLScript = "default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running.\");\n    }\n    touch_start(integer number)\n    {\n        llSay(0,\"Touched.\");\n    }\n}\n";
 
+        /// <summary>
+        /// The default LSL script that will be added when a client creates
+        /// a new script in inventory or in the task object inventory
+        /// </summary>
         public string DefaultLSLScript
         {
             get { return m_DefaultLSLScript; }
@@ -213,6 +221,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Client events
 
+        /// <summary>
+        /// Hook up to the client inventory events
+        /// </summary>
+        /// <param name="client"></param>
         protected void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnCreateNewInventoryItem += CreateNewInventoryItem;
@@ -233,10 +245,14 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnRequestTaskInventory += RequestTaskInventory;
             client.OnRemoveTaskItem += RemoveTaskInventory;
             client.OnUpdateTaskInventory += UpdateTaskInventory;
-            client.OnMoveTaskItem += ClientMoveTaskInventoryItem;
+            client.OnMoveTaskItem += ClientMoveTaskInventoryItemToUserInventory;
             client.OnDeRezObject += DeRezObjects;
         }
 
+        /// <summary>
+        /// Remove ourselves from the inventory events
+        /// </summary>
+        /// <param name="client"></param>
         protected void EventManager_OnClosingClient(IClientAPI client)
         {
             client.OnCreateNewInventoryItem -= CreateNewInventoryItem;
@@ -255,7 +271,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnRequestTaskInventory -= RequestTaskInventory;
             client.OnRemoveTaskItem -= RemoveTaskInventory;
             client.OnUpdateTaskInventory -= UpdateTaskInventory;
-            client.OnMoveTaskItem -= ClientMoveTaskInventoryItem;
+            client.OnMoveTaskItem -= ClientMoveTaskInventoryItemToUserInventory;
             client.OnDeRezObject -= DeRezObjects;
         }
 
@@ -370,6 +386,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Move the inventory folder to another place in the user's inventory
+        /// </summary>
+        /// <param name="remoteClient">The client that requested the change</param>
+        /// <param name="folderID">The folder UUID to move</param>
+        /// <param name="parentID">The folder to move the folder (folderID) into</param>
         protected void HandleMoveInventoryFolder(IClientAPI remoteClient, UUID folderID, UUID parentID)
         {
             InventoryFolderBase folder = new InventoryFolderBase(folderID, remoteClient.AgentId);
@@ -407,6 +429,14 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", ((InventoryFolderBase)folder).ID, ((InventoryFolderBase)folder).Owner);
         }
 
+        /// <summary>
+        /// Delete the given objects from the Scene and move them into the client's inventory
+        /// </summary>
+        /// <param name="remoteClient">The client requesting the change (can be null if returning objects)</param>
+        /// <param name="localIDs">A list of all the localIDs of the groups to delete</param>
+        /// <param name="groupID">the GroupID of the objects</param>
+        /// <param name="action">What type of action is causing this</param>
+        /// <param name="destinationID">The folder ID to put the inventory items in</param>
         protected void DeRezObjects(IClientAPI remoteClient, List<uint> localIDs,
                 UUID groupID, DeRezAction action, UUID destinationID)
         {
@@ -682,6 +712,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Create a new 'link' to another inventory item
+        /// Used in Viewer 2 for appearance.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="transActionID"></param>
+        /// <param name="folderID"></param>
+        /// <param name="callbackID"></param>
+        /// <param name="description"></param>
+        /// <param name="name"></param>
+        /// <param name="invType"></param>
+        /// <param name="type"></param>
+        /// <param name="olditemID"></param>
         protected void HandleLinkInventoryItem(IClientAPI remoteClient, UUID transActionID, UUID folderID,
                                              uint callbackID, string description, string name,
                                              sbyte invType, sbyte type, UUID olditemID)
@@ -730,6 +773,15 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("[AGENT INVENTORY]: Failed to move items for user " + remoteClient.AgentId);
         }
 
+        /// <summary>
+        /// Copy an inventory item in the user's inventory
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="callbackID"></param>
+        /// <param name="oldAgentID"></param>
+        /// <param name="oldItemID"></param>
+        /// <param name="newFolderID"></param>
+        /// <param name="newName"></param>
         protected void CopyInventoryItem(IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID,
                                       UUID newFolderID, string newName)
         {
@@ -852,6 +904,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Change an inventory items flags
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <param name="Flags"></param>
         protected void ChangeInventoryItemFlags(IClientAPI remoteClient, UUID itemID, uint Flags)
         {
             InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
@@ -944,13 +1002,13 @@ namespace OpenSim.Region.Framework.Scenes
         #region Move
 
         /// <summary>
-        /// <see>ClientMoveTaskInventoryItem</see>
+        /// Move the inventory folder to another place in the user's inventory
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="folderID"></param>
-        /// <param name="primLocalID"></param>
-        /// <param name="itemID"></param>
-        protected void ClientMoveTaskInventoryItem(IClientAPI remoteClient, UUID folderId, uint primLocalId, UUID itemId)
+        /// <param name="remoteClient">The client that requested the change</param>
+        /// <param name="folderID">The folderID that the task (object) item will be moved into</param>
+        /// <param name="primLocalID">The localID of the prim the item is in</param>
+        /// <param name="itemID">The UUID of the item to move</param>
+        protected void ClientMoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, uint primLocalId, UUID itemId)
         {
             SceneObjectPart part = m_scene.GetSceneObjectPart(primLocalId);
 
@@ -1023,6 +1081,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        /// <summary>
+        /// Send an update to the client about the given folder
+        /// </summary>
+        /// <param name="client">The client to send the update to</param>
+        /// <param name="folder">The folder that we need to send</param>
+        /// <param name="fetchFolders">Should we fetch folders inside of this folder</param>
+        /// <param name="fetchItems">Should we fetch items inside of this folder</param>
         protected void SendInventoryUpdate(IClientAPI client, InventoryFolderBase folder, bool fetchFolders, bool fetchItems)
         {
             if (folder == null)
@@ -1268,6 +1333,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        /// <summary>
+        /// Change a task inventory item to a user inventory item
+        /// </summary>
+        /// <param name="destAgent">The agent who will own the inventory item</param>
+        /// <param name="part">The object that the item is in</param>
+        /// <param name="itemId">The item to convert</param>
+        /// <returns></returns>
         private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
