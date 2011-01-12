@@ -60,6 +60,11 @@ namespace OpenSim.Region.Framework.Scenes
         private readonly Mutex _versionAllocateMutex = new Mutex(false);
         protected int m_lastVersion = 0;
 
+        public Prioritizer Prioritizer
+        {
+            get { return m_prioritizer; }
+        }
+
         #endregion
 
         #region Constructor

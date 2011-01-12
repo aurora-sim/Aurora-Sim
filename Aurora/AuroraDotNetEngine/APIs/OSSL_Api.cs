@@ -48,6 +48,7 @@ using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using System.Text.RegularExpressions;
+using Aurora.Framework;
 
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
@@ -144,8 +145,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(message,
-                          ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(message, ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, 
+                m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);

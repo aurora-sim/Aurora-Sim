@@ -34,6 +34,11 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface ISceneViewer
     {
         /// <summary>
+        /// The instance of the prioritizer the SceneViewer uses
+        /// </summary>
+        Prioritizer Prioritizer { get; }
+
+        /// <summary>
         /// Add the objects to the queue for which we need to send an update to the client
         /// </summary>
         /// <param name="part"></param>

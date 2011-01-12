@@ -124,6 +124,9 @@ namespace OpenSim.Region.Framework.Scenes
         // Central Update Loop
 
         protected uint m_frame;
+        /// <summary>
+        /// The current frame #
+        /// </summary>
         public uint Frame
         {
             get { return m_frame; }
@@ -141,17 +144,12 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_update_events = 1; //Trigger the OnFrame event and tell any modules about the new frame
         private int m_update_coarse_locations = 30; //Trigger the sending of coarse location updates (minimap updates)
 
-        private string m_defaultScriptEngine;
-        private static volatile bool shuttingdown = false;
+        private volatile bool shuttingdown = false;
 
         private object m_cleaningAttachments = new object();
 
-        private double m_rootReprioritizationDistance = 10.0;
-        private double m_childReprioritizationDistance = 20.0;
-
         private bool m_UseSelectionParticles = true;
         public bool CheckForObjectCulling = false;
-        public bool[,] DirectionsToBlockChildAgents;
         private string m_DefaultObjectName = "Primitive";
         public bool m_usePreJump = true;
         public bool m_useSplatAnimation = true;
@@ -161,9 +159,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Properties
-
-        public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
-        public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
 
         public float BaseSimFPS
         {
@@ -214,11 +209,6 @@ namespace OpenSim.Region.Framework.Scenes
         public object SyncRoot
         {
             get { return m_sceneGraph.m_syncRoot; }
-        }
-
-        public string DefaultScriptEngine
-        {
-            get { return m_defaultScriptEngine; }
         }
 
         public EntityManager Entities
@@ -394,11 +384,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo = regInfo;
         }
 
-        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager) : this(regInfo)
+        public Scene(RegionInfo regInfo, AgentCircuitManager authen, SceneManager manager)
+            : this(regInfo)
         {
-            //THIS NEEDS RESET TO FIX RESTARTS
-            shuttingdown = false;
-
             m_sceneManager = manager;
 
             m_config = manager.ConfigSource;
@@ -427,95 +415,34 @@ namespace OpenSim.Region.Framework.Scenes
 
             #region Region Config
 
-            try
+            IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
+            if (aurorastartupConfig != null)
             {
-                DirectionsToBlockChildAgents = new bool[3, 3];
-                DirectionsToBlockChildAgents.Initialize();
-                IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
-                if (aurorastartupConfig != null)
-                {
-                    m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
-                    MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
-                    Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
-                    m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
-                    CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
-                    //Region specific is still honored here, the RegionInfo checks for it
-                    RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
-                }
-
-                IConfig regionConfig = m_config.Configs[this.RegionInfo.RegionName];
-                if (regionConfig != null)
-                {
-                    #region Block Child Agents config
-
-                    //   [{0,2}, {1, 2}, {2,2}]
-                    //   [{0,1}, {1, 1}, {2,1}]  1,1 is the current region
-                    //   [{0,0}, {1, 0}, {2,0}]
-
-                    //SouthWest
-                    DirectionsToBlockChildAgents[0, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthWest", false);
-                    //South
-                    DirectionsToBlockChildAgents[1, 0] = regionConfig.GetBoolean("BlockChildAgentsSouth", false);
-                    //SouthEast
-                    DirectionsToBlockChildAgents[2, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthEast", false);
-
-
-                    //West
-                    DirectionsToBlockChildAgents[0, 1] = regionConfig.GetBoolean("BlockChildAgentsWest", false);
-                    //East
-                    DirectionsToBlockChildAgents[2, 1] = regionConfig.GetBoolean("BlockChildAgentsEast", false);
-
-
-                    //NorthWest
-                    DirectionsToBlockChildAgents[0, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthWest", false);
-                    //North
-                    DirectionsToBlockChildAgents[1, 2] = regionConfig.GetBoolean("BlockChildAgentsNorth", false);
-                    //NorthEast
-                    DirectionsToBlockChildAgents[2, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthEast", false);
-
-                    #endregion
-                }
-
-                //Animation states
-                IConfig animationConfig = m_config.Configs["Animations"];
-                if (animationConfig != null)
-                {
-                    m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
-                    m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
-                }
-                IConfig scriptEngineConfig = m_config.Configs["ScriptEngines"];
-                if (scriptEngineConfig != null)
-                    m_defaultScriptEngine = scriptEngineConfig.GetString("DefaultScriptEngine", "AuroraDotNetEngine");
-
-                IConfig packetConfig = m_config.Configs["PacketPool"];
-                if (packetConfig != null)
-                {
-                    PacketPool.Instance.RecyclePackets = packetConfig.GetBoolean("RecyclePackets", true);
-                    PacketPool.Instance.RecycleDataBlocks = packetConfig.GetBoolean("RecycleDataBlocks", true);
-                }
+                m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
+                MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
+                Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
+                m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
+                CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
+                //Region specific is still honored here, the RegionInfo checks for it
+                RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
             }
-            catch
+
+            //Animation states
+            IConfig animationConfig = m_config.Configs["Animations"];
+            if (animationConfig != null)
             {
-                m_log.Warn("[SCENE]: Failed to load StartupConfig");
+                m_usePreJump = animationConfig.GetBoolean("enableprejump", m_usePreJump);
+                m_useSplatAnimation = animationConfig.GetBoolean("enableSplatAnimation", m_useSplatAnimation);
+            }
+
+            IConfig packetConfig = m_config.Configs["PacketPool"];
+            if (packetConfig != null)
+            {
+                PacketPool.Instance.RecyclePackets = packetConfig.GetBoolean("RecyclePackets", true);
+                PacketPool.Instance.RecycleDataBlocks = packetConfig.GetBoolean("RecycleDataBlocks", true);
             }
 
             #endregion Region Config
-
-            #region Interest Management
-
-            if (m_config != null)
-            {
-                IConfig interestConfig = m_config.Configs["InterestManagement"];
-                if (interestConfig != null)
-                {
-                    m_rootReprioritizationDistance = interestConfig.GetDouble("RootReprioritizationDistance", 10.0);
-                    m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
-                }
-            }
-
-            //m_log.Info("[SCENE]: Using the " + m_priorityScheme + " prioritization scheme");
-
-            #endregion Interest Management
 
             m_basesimfps = 45f;
             m_basesimphysfps = 45f;
@@ -524,7 +451,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_basesimphysfps > 45f)
                 m_basesimphysfps = 45f;
 
-            m_basesimfps=Config.Configs["Protection"].GetFloat("BaseRateFramesPerSecond", 45f);
+            m_basesimfps = Config.Configs["Protection"].GetFloat("BaseRateFramesPerSecond", 45f);
             if (m_basesimfps > 45f)
                 m_basesimfps = 45f;
 
@@ -589,7 +516,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start the timer which triggers regular scene updates
         /// </summary>
-        public void StartTimer()
+        public void StartHeartbeat()
         {
             ThreadMonitor monitor = new ThreadMonitor();
             //Give it the heartbeat delegate with an infinite timeout
@@ -605,7 +532,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat Methods
 
-        public void Update()
+        private void Update()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "SimFrameStats");
             ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Frame Time");
@@ -615,9 +542,7 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Total Physics Frame Time");
             ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Sync Frame Time");
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), "Physics Update Frame Time");
-            int maintc;
-
-            maintc = Util.EnvironmentTickCount();
+            int maintc = Util.EnvironmentTickCount();
             int BeginningFrameTime = maintc;
 
             // Increment the frame counter
@@ -654,7 +579,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_frame % m_update_events == 0)
                     m_eventManager.TriggerOnFrame();
 
-                // merged back physH
                 int PhysicsSyncTime = Util.EnvironmentTickCount();
                 TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
 

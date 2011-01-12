@@ -39,6 +39,7 @@ using OpenSim.Region.Framework.Scenes.Animation;
 using OpenSim.Region.Physics.Manager;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Services.Interfaces;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -1244,10 +1245,10 @@ namespace OpenSim.Region.Framework.Scenes
                 //! Note: we use last absolute position instead of camera pos as camera pos is updated far too often.
                 //! If you put your mouse on an object, it would reprioritize updates for over at the objects position, then again when you lifted the mouse off of the object if the object is more than 10 meters away.
                 //! So we only do AbsolutePosition for now until we can find a better way.
-                if (Vector3.Distance(m_lastAbsolutePosition, AbsolutePosition) >= Scene.RootReprioritizationDistance)
+                if (Vector3.Distance(m_lastAbsolutePosition, AbsolutePosition) >= m_sceneViewer.Prioritizer.RootReprioritizationDistance)
                 {
                     m_lastAbsolutePosition = AbsolutePosition;
-                    SceneViewer.Reprioritize();
+                    m_sceneViewer.Reprioritize();
                 }
 
                 if (agentData.UseClientAgentPosition)
@@ -2637,8 +2638,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Minimum Draw distance is 64 meters, the Radius of the draw distance sphere is 32m
-            if (Util.GetDistanceTo(AbsolutePosition, m_lastChildAgentUpdatePosition) >= Scene.ChildReprioritizationDistance ||
-                Util.GetDistanceTo(CameraPosition, m_lastChildAgentUpdateCamPosition) >= Scene.ChildReprioritizationDistance)
+            if (Util.GetDistanceTo(AbsolutePosition, m_lastChildAgentUpdatePosition) >= m_sceneViewer.Prioritizer.ChildReprioritizationDistance ||
+                Util.GetDistanceTo(CameraPosition, m_lastChildAgentUpdateCamPosition) >= m_sceneViewer.Prioritizer.ChildReprioritizationDistance)
             {
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
@@ -2853,7 +2854,7 @@ namespace OpenSim.Region.Framework.Scenes
             if ((cAgentData.Throttles != null) && cAgentData.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
-            SceneViewer.Reprioritize();
+            m_sceneViewer.Reprioritize();
 
             //cAgentData.AVHeight;
             m_rootRegionHandle = cAgentData.RegionHandle;
@@ -3206,6 +3207,16 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             m_animator.Close();
             m_animator = null;
+        }
+
+        /// <summary>
+        /// Tell the SceneViewer for the given client about the update
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
+        public void AddUpdateToAvatar(SceneObjectPart part, PrimUpdateFlags flags)
+        {
+            m_sceneViewer.QueuePartForUpdate(part, flags);
         }
 
         #region Attachments

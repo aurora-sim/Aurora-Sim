@@ -56,6 +56,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected List<Scene> m_scenes = new List<Scene>();
         protected List<UUID> m_agentsInTransit;
         protected List<UUID> m_cancelingAgents;
+        public Dictionary<Scene, bool[,]> DirectionsToBlockChildAgents = new Dictionary<Scene,bool[,]>();
 
         #endregion
 
@@ -101,6 +102,41 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+
+            DirectionsToBlockChildAgents[scene] = new bool[3, 3];
+            DirectionsToBlockChildAgents[scene].Initialize();
+            IConfig regionConfig = scene.Config.Configs[scene.RegionInfo.RegionName];
+            if (regionConfig != null)
+            {
+                #region Block Child Agents config
+
+                //   [{0,2}, {1, 2}, {2,2}]
+                //   [{0,1}, {1, 1}, {2,1}]  1,1 is the current region
+                //   [{0,0}, {1, 0}, {2,0}]
+
+                //SouthWest
+                DirectionsToBlockChildAgents[scene][0, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthWest", false);
+                //South
+                DirectionsToBlockChildAgents[scene][1, 0] = regionConfig.GetBoolean("BlockChildAgentsSouth", false);
+                //SouthEast
+                DirectionsToBlockChildAgents[scene][2, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthEast", false);
+
+
+                //West
+                DirectionsToBlockChildAgents[scene][0, 1] = regionConfig.GetBoolean("BlockChildAgentsWest", false);
+                //East
+                DirectionsToBlockChildAgents[scene][2, 1] = regionConfig.GetBoolean("BlockChildAgentsEast", false);
+
+
+                //NorthWest
+                DirectionsToBlockChildAgents[scene][0, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthWest", false);
+                //North
+                DirectionsToBlockChildAgents[scene][1, 2] = regionConfig.GetBoolean("BlockChildAgentsNorth", false);
+                //NorthEast
+                DirectionsToBlockChildAgents[scene][2, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthEast", false);
+
+                #endregion
+            }
         }
 
         public virtual void Close()
@@ -901,7 +937,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //One offset from what it should be, as the DirectionsToBlockChildAgents starts at 0
                     x = x > 1 ? 2 : x == 0 ? 1 : 0;
                     y = y > 1 ? 2 : y == 0 ? 1 : 0;
-                    if (!currentScene.DirectionsToBlockChildAgents[x, y]) //Not blocked, so false
+                    if (!DirectionsToBlockChildAgents[currentScene][x, y]) //Not blocked, so false
                         handles.Add(reg.RegionHandle);
                 }
                 else
@@ -1206,7 +1242,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return false;
             }
 
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, scene.DefaultScriptEngine, 1, UUID.Zero);
+            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, 1, UUID.Zero);
             newObject.RootPart.ParentGroup.ResumeScripts();
 
             // Do this as late as possible so that listeners have full access to the incoming object

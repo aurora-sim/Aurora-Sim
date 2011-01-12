@@ -161,8 +161,6 @@ namespace Aurora.Modules
                 m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += OnNewClient;
                 scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnChatFromWorld += OnChatFromWorld;
-                scene.EventManager.OnChatBroadcast += OnChatBroadcast;
                 scene.EventManager.OnRegisterCaps += RegisterCaps;
                 scene.EventManager.OnClientConnect += OnClientConnect;
                 scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
@@ -205,12 +203,14 @@ namespace Aurora.Modules
             if (m_scenes.Contains(scene))
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
-                scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
-                scene.EventManager.OnRegisterCaps -= RegisterCaps;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
                 scene.EventManager.OnClientConnect -= OnClientConnect;
+                scene.EventManager.OnRegisterCaps -= RegisterCaps;
+                scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+
                 m_scenes.Remove(scene);
                 scene.UnregisterModuleInterface<IMuteListModule>(this);
+                scene.UnregisterModuleInterface<IChatModule>(this);
             }
         }
 
@@ -354,6 +354,67 @@ namespace Aurora.Modules
 
             if (!Sent)
                 DeliverChatToAvatars(ChatSourceType.Object, c);
+        }
+
+        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, Scene scene)
+        {
+            OSChatMessage args = new OSChatMessage();
+
+            args.Message = message;
+            args.Channel = channel;
+            args.Type = type;
+            args.Position = fromPos;
+            args.Range = range;
+            args.SenderUUID = fromID;
+            args.Scene = scene;
+            args.ToAgentID = ToAgentID;
+
+            if (fromAgent)
+            {
+                ScenePresence user = scene.GetScenePresence(fromID);
+                if (user != null)
+                    args.Sender = user.ControllingClient;
+            }
+            else
+            {
+                SceneObjectPart obj = scene.GetSceneObjectPart(fromID);
+                args.SenderObject = obj;
+            }
+
+            args.From = fromName;
+            //args.
+
+            if (broadcast)
+            {
+                OnChatBroadcast(scene, args);
+                scene.EventManager.TriggerOnChatBroadcast(scene, args);
+            }
+            else
+            {
+                OnChatFromWorld(scene, args);
+                scene.EventManager.TriggerOnChatFromWorld(scene, args);
+            }
+        }
+
+        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                            UUID fromID, bool fromAgent, Scene scene)
+        {
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, -1, UUID.Zero, scene);
+        }
+
+        /// <summary>
+        /// Say this message directly to a single person
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="type"></param>
+        /// <param name="fromPos"></param>
+        /// <param name="fromName"></param>
+        /// <param name="fromAgentID"></param>
+        public void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                                     UUID fromID, bool fromAgent, UUID ToAgentID, Scene scene)
+        {
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID, scene);
         }
 
         public virtual void DeliverChatToAvatars(ChatSourceType sourceType, OSChatMessage c)

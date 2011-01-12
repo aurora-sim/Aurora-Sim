@@ -245,7 +245,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             groupsToBackup.Add(sceneObject);
                             sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                             sceneObjectsLoadedCount++;
-                            sceneObject.CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                            sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
                             sceneObject.ResumeScripts();
                         }
                         sceneObjectsLoadedCount++;

@@ -779,7 +779,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
         public void rez_script(SceneObjectPart part, UUID itemID, string script,
-                int startParam, bool postOnRez, string engine, int stateSource)
+                int startParam, bool postOnRez, int stateSource)
         {
             if (script.StartsWith("//MRM:"))
                 return;
@@ -806,35 +806,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     if (names.Contains(engineName))
                     {
-                        engine = engineName;
                         script = "//" + script.Substring(script.IndexOf(':') + 1);
                     }
                     else
                     {
-                        if (engine == m_scriptEngine.ScriptEngineName)
-                        {
-                            TaskInventoryItem item =
+                        TaskInventoryItem item =
                                     part.Inventory.GetInventoryItem(itemID);
 
-                            ScenePresence presence =
-                                    part.ParentGroup.Scene.GetScenePresence(
-                                    item.OwnerID);
+                        ScenePresence presence =
+                                part.ParentGroup.Scene.GetScenePresence(
+                                item.OwnerID);
 
-                            if (presence != null)
-                            {
-                                presence.ControllingClient.SendAgentAlertMessage(
-                                         "Selected engine unavailable. " +
-                                         "Running script on " +
-                                         m_scriptEngine.ScriptEngineName,
-                                         false);
-                            }
+                        if (presence != null)
+                        {
+                            presence.ControllingClient.SendAgentAlertMessage(
+                                     "Selected engine unavailable. " +
+                                     "Running script on " +
+                                     m_scriptEngine.ScriptEngineName,
+                                     false);
                         }
                     }
                 }
             }
-
-            if (engine != m_scriptEngine.ScriptEngineName)
-                return;
 
             LUStruct itemToQueue = m_scriptEngine.StartScript(part, itemID, script,
                     startParam, postOnRez, (StateSource)stateSource, UUID.Zero);
@@ -853,7 +846,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="stateSource"></param>
         /// <param name="RezzedFrom"></param>
         public void rez_scripts(SceneObjectPart part, TaskInventoryItem[] items,
-                int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
+                int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
         {
             List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
             foreach (TaskInventoryItem item in items)
@@ -894,32 +887,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                         if (names.Contains(engineName))
                         {
-                            engine = engineName;
                             script = "//" + script.Substring(script.IndexOf(':') + 1);
                         }
                         else
                         {
-                            if (engine == m_scriptEngine.ScriptEngineName)
-                            {
-                                ScenePresence presence =
+                            ScenePresence presence =
                                         part.ParentGroup.Scene.GetScenePresence(
                                         item.OwnerID);
 
-                                if (presence != null)
-                                {
-                                    presence.ControllingClient.SendAgentAlertMessage(
-                                             "Selected engine '" + engineName +"' is unavailable. " +
-                                             "Running script on " +
-                                             m_scriptEngine.ScriptEngineName,
-                                             false);
-                                }
+                            if (presence != null)
+                            {
+                                presence.ControllingClient.SendAgentAlertMessage(
+                                         "Selected engine '" + engineName + "' is unavailable. " +
+                                         "Running script on " +
+                                         m_scriptEngine.ScriptEngineName,
+                                         false);
                             }
                         }
                     }
                 }
 
-                if (engine != m_scriptEngine.ScriptEngineName)
-                    return;
                 ItemsToStart.Add(item);
             }
 

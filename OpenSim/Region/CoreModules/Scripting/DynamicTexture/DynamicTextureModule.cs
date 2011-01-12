@@ -37,6 +37,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 {
@@ -301,8 +302,10 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 {
                     string msg = 
                         String.Format("DynamicTextureModule: Error preparing image using URL {0}", Url);
-                    scene.SimChat(msg, ChatTypeEnum.Say,
-                                  0, part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false);
+                    IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
+                    if (chatModule != null)
+                        chatModule.SimChat(msg, ChatTypeEnum.Say, 0, 
+                            part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false, scene);
                     return;
                 }
 

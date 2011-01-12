@@ -81,9 +81,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Start all the scripts contained in this entity's inventory
         /// </summary>
-        void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom);
+        void CreateScriptInstances(int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
 
-        ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine);
+        ArrayList GetScriptErrors(UUID itemID);
         void ResumeScripts();
 
         /// <summary>
@@ -100,10 +100,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="item"></param>
         /// <param name="postOnRez"></param>
-        /// <param name="engine"></param>
         /// <param name="stateSource"></param>
         void CreateScriptInstance(
-            TaskInventoryItem item, int startParam, bool postOnRez, string engine, int stateSource);
+            TaskInventoryItem item, int startParam, bool postOnRez, int stateSource);
 
         /// <summary>
         /// Start a script which is in this entity's inventory.
@@ -113,7 +112,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="postOnRez"></param>
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
-        void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource);
+        void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource);
 
         /// <summary>
         /// Updates a script instance in this prim's inventory.
@@ -121,9 +120,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="itemId"></param>
         /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
-        /// <param name="engine"></param>
         /// <param name="stateSource"></param>
-        void UpdateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource);
+        void UpdateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource);
+        
         /// <summary>
         /// Stop a script which is in this prim's inventory.
         /// </summary>

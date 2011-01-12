@@ -681,7 +681,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         {
                             if (ent is SceneObjectGroup)
                             {
-                                ((SceneObjectGroup)ent).CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                                ((SceneObjectGroup)ent).CreateScriptInstances(0, false, 0, UUID.Zero);
                                 ((SceneObjectGroup)ent).ResumeScripts();
                             }
                         }
@@ -945,14 +945,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             else if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopScripts)
             {
-                IScriptModule[] scriptModules = m_scene.RequestModuleInterfaces<IScriptModule>();
-                foreach (IScriptModule module in scriptModules)
-                {
-                    if (module.Name == m_scene.DefaultScriptEngine)
-                    {
-                        SceneData = module.GetTopScripts(m_scene.RegionInfo.RegionID);
-                    }
-                }
+                IScriptModule scriptModule = m_scene.RequestModuleInterface<IScriptModule>();
+                SceneData = scriptModule.GetTopScripts(m_scene.RegionInfo.RegionID);
             }
 
             List<LandStatReportItem> SceneReport = new List<LandStatReportItem>();

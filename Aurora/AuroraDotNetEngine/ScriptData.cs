@@ -422,8 +422,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 inworldtext = inworldtext.Substring(0, 1099);
 
             if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)
-                World.SimChat(inworldtext, ChatTypeEnum.DebugChannel, 2147483647, part.AbsolutePosition, part.Name, part.UUID, false);
-
+            {
+                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                if (chatModule != null)
+                    chatModule.SimChat(inworldtext, ChatTypeEnum.DebugChannel,
+                        2147483647, part.AbsolutePosition, part.Name, part.UUID, false, World);
+            }
             m_ScriptEngine.ScriptFailCount++;
             m_ScriptEngine.ScriptErrorMessages += inworldtext;
         }

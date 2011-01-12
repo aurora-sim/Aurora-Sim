@@ -9,6 +9,7 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {
@@ -241,25 +242,28 @@ namespace Aurora.Modules
                 SceneObjectPart jointProxyObject = m_scene.SceneGraph.GetSceneObjectPart(joint.ObjectNameInScene);
                 if (jointProxyObject != null)
                 {
-                    m_scene.SimChat("[NINJA]: " + message,
+                    IChatModule chatModule = m_scene.RequestModuleInterface<IChatModule>();
+                    if (chatModule != null)
+                        chatModule.SimChat("[NINJA]: " + message,
                         ChatTypeEnum.DebugChannel,
                         2147483647,
                         jointProxyObject.AbsolutePosition,
                         jointProxyObject.Name,
                         jointProxyObject.UUID,
-                        false);
+                        false, m_scene);
 
                     joint.ErrorMessageCount++;
 
                     if (joint.ErrorMessageCount > PhysicsJoint.maxErrorMessages)
                     {
-                        m_scene.SimChat("[NINJA]: Too many messages for this joint, suppressing further messages.",
+                        if (chatModule != null)
+                            chatModule.SimChat("[NINJA]: Too many messages for this joint, suppressing further messages.",
                             ChatTypeEnum.DebugChannel,
                             2147483647,
                             jointProxyObject.AbsolutePosition,
                             jointProxyObject.Name,
                             jointProxyObject.UUID,
-                            false);
+                            false, m_scene);
                     }
                 }
                 else

@@ -43,6 +43,7 @@ using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Region.Framework.Scenes.Components;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse.StructuredData;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -3407,8 +3408,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void PhysicsOutOfBounds(Vector3 pos)
         {
-            m_log.Error("[PHYSICS]: Physical Object went out of bounds.");
-            //ScriptSetPhantomStatus(true);
+            m_log.Error("[Physics]: Physical Object " + Name + " @ " + AbsolutePosition + " went out of bounds.");
             if(!ParentGroup.Scene.PhysicsReturns.Contains(ParentGroup))
                 ParentGroup.Scene.PhysicsReturns.Add(ParentGroup);
         }
@@ -3572,16 +3572,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Tell the SceneViewer for the given client about the update
-        /// </summary>
-        /// <param name="presence"></param>
-        /// <param name="flags"></param>
-        private void AddUpdateToAvatar(ScenePresence presence, PrimUpdateFlags flags)
-        {
-            presence.SceneViewer.QueuePartForUpdate(this, flags);
-        }
-
-        /// <summary>
         /// Schedule a terse update for this prim.  Terse updates only send position,
         /// rotation, velocity, and rotational velocity information.
         /// </summary>
@@ -3619,7 +3609,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_parentGroup.Scene.ForEachScenePresence(delegate(ScenePresence avatar)
                 {
-                    AddUpdateToAvatar(avatar, PostUpdateFlags);
+                    avatar.AddUpdateToAvatar(this, PostUpdateFlags);
                 });
             }
         }
@@ -3634,7 +3624,7 @@ namespace OpenSim.Region.Framework.Scenes
             PrimUpdateFlags PostUpdateFlags;
             if (ShouldScheduleUpdate(UpdateFlags, out PostUpdateFlags))
             {
-                AddUpdateToAvatar(avatar, PostUpdateFlags);
+                avatar.AddUpdateToAvatar(this, PostUpdateFlags);
             }
         }
 
@@ -4889,8 +4879,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ParentGroup.RootPart.ScriptSetPhysicsStatus(false);
                         newPos = OffsetPosition;
-                        ParentGroup.Scene.SimChat("Hit Sandbox Limit",
-                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, ParentGroup.RootPart.AbsolutePosition, Name, UUID, false);
+                        IChatModule chatModule = ParentGroup.Scene.RequestModuleInterface<IChatModule>();
+                        if (chatModule != null)
+                            chatModule.SimChat("Hit Sandbox Limit", ChatTypeEnum.DebugChannel, 0x7FFFFFFF,
+                                ParentGroup.RootPart.AbsolutePosition, Name, UUID, false, ParentGroup.Scene);
                     }
                 }
 

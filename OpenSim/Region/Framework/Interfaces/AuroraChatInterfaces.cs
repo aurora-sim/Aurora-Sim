@@ -35,5 +35,12 @@ namespace Aurora.Framework
         void OnChatFromWorld(Object sender, OSChatMessage c);
 
         void DeliverChatToAvatars(ChatSourceType chatSourceType, OSChatMessage message);
+
+        void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                                     UUID fromID, bool fromAgent, UUID ToAgentID, Scene scene);
+        void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                            UUID fromID, bool fromAgent, Scene scene);
+        void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
+                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID, Scene scene);
     }
 }

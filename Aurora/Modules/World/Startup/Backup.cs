@@ -263,7 +263,7 @@ namespace Aurora.Modules
                 {
                     if (group is SceneObjectGroup)
                     {
-                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, m_scene.DefaultScriptEngine, 0, UUID.Zero);
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, 0, UUID.Zero);
                         ((SceneObjectGroup)group).ResumeScripts();
                     }
                 }

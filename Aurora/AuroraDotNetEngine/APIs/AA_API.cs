@@ -312,12 +312,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "AASayDistance", m_host, "AA");
             
-
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(text,
-                          ChatTypeEnum.Custom, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, false, (float)Distance.value, UUID.Zero);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if(chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Custom, channelID,
+                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name,
+                    m_host.UUID, false, false, (float)Distance.value, UUID.Zero, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
@@ -332,8 +334,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID;
             if(UUID.TryParse(userID, out AgentID))
             {
-                World.SimChatBroadcast(text, ChatTypeEnum.SayTo, 0,
-                                       m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, AgentID);
+                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                if(chatModule != null)
+                    chatModule.SimChatBroadcast(text, ChatTypeEnum.SayTo, 0,
+                                       m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, AgentID, World);
             }
         }
 

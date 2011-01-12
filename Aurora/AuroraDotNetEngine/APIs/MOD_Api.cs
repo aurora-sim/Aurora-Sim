@@ -120,8 +120,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
 
-            World.SimChat(message,
-                          ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(message, ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, 
+                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);

@@ -274,7 +274,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, string engine, int stateSource, UUID RezzedFrom)
+        public void CreateScriptInstances(int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
         {
             List<TaskInventoryItem> LSLItems = GetInventoryScripts();
             if (LSLItems.Count == 0)
@@ -284,7 +284,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
-                                    m_part, LSLItems.ToArray(), startParam, postOnRez, engine, stateSource, RezzedFrom);
+                                    m_part, LSLItems.ToArray(), startParam, postOnRez, stateSource, RezzedFrom);
             if(SendUpdate)
                 m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
         }
@@ -309,35 +309,16 @@ namespace OpenSim.Region.Framework.Scenes
             return ret;
         }
 
-        public ArrayList GetScriptErrors(UUID itemID, string DefaultScriptEngine)
+        public ArrayList GetScriptErrors(UUID itemID)
         {
-            ArrayList ret = new ArrayList();
-
-            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-            if (engines == null) // No engine at all
+            IScriptModule engine = m_part.ParentGroup.Scene.RequestModuleInterface<IScriptModule>();
+            if (engine == null) // No engine at all
             {
+                ArrayList ret = new ArrayList();
                 ret.Add("No Script Engines available at this time.");
                 return ret;
             }
-
-            bool Found = false;
-            foreach (IScriptModule e in engines)
-            {
-                if (e != null)
-                {
-                    if (e.ScriptEngineName == DefaultScriptEngine)
-                    {
-                        Found = true;
-                        ret = e.GetScriptErrors(itemID);
-                    }
-                }
-            }
-            if (!Found)
-            {
-                ret.Add("The Script Engine you requested is not available at this time.");
-            }
-
-            return ret;
+            return engine.GetScriptErrors(itemID);
         }
 
         /// <summary>
@@ -361,7 +342,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public void CreateScriptInstance(TaskInventoryItem item, int startParam, bool postOnRez, string engine, int stateSource)
+        public void CreateScriptInstance(TaskInventoryItem item, int startParam, bool postOnRez, int stateSource)
         {
             // m_log.InfoFormat(
             //     "[PRIM INVENTORY]: " +
@@ -385,7 +366,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, String.Empty, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, String.Empty, startParam, postOnRez, stateSource);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
                     if (SendUpdate)
@@ -416,7 +397,7 @@ namespace OpenSim.Region.Framework.Scenes
                     bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
                     string script = Utils.BytesToString(asset.Data);
                     m_part.ParentGroup.Scene.EventManager.TriggerRezScript(
-                        m_part, item.ItemID, script, startParam, postOnRez, engine, stateSource);
+                        m_part, item.ItemID, script, startParam, postOnRez, stateSource);
                     if (SendUpdate)
                         m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
                 }
@@ -430,7 +411,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, string engine, int stateSource)
+        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, int stateSource)
         {
             TaskInventoryItem item = m_items[itemID];
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
@@ -461,10 +442,7 @@ namespace OpenSim.Region.Framework.Scenes
                     IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
                     foreach (IScriptModule module in modules)
                     {
-                        if (module.ScriptEngineName == engine)
-                        {
-                            module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
-                        }
+                        module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
                     }
                 }
             }
@@ -533,11 +511,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="itemId">
         /// A <see cref="UUID"/>
         /// </param>
-        public void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, string engine, int stateSource)
+        public void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource)
         {
             TaskInventoryItem item = GetInventoryItem(itemId);
             if (item != null)
-                CreateScriptInstance(item, startParam, postOnRez, engine, stateSource);
+                CreateScriptInstance(item, startParam, postOnRez, stateSource);
             else
                 m_log.ErrorFormat(
                     "[PRIM INVENTORY]: " +

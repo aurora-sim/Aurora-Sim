@@ -49,6 +49,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Region.Framework.Scenes.Animation;
 using OpenSim.Region.Physics.Manager;
+using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
@@ -924,8 +925,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(text,
-                          ChatTypeEnum.Whisper, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Whisper, channelID,
+                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
 
             if (m_comms != null)
                 m_comms.DeliverMessage(ChatTypeEnum.Whisper, channelID, m_host.Name, m_host.UUID, text);
@@ -946,8 +949,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (text.Length > 1023)
                     text = text.Substring(0, 1023);
 
-                World.SimChat(text,
-                              ChatTypeEnum.Say, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                if (chatModule != null)
+                    chatModule.SimChat(text, ChatTypeEnum.Say, channelID, 
+                        m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
 
                 if (m_comms != null)
                     m_comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
@@ -962,8 +967,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            World.SimChat(text,
-                          ChatTypeEnum.Shout, channelID, m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true);
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Shout, channelID, 
+                    m_host.ParentGroup.RootPart.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             if (m_comms != null)
                 m_comms.DeliverMessage(ChatTypeEnum.Shout, channelID, m_host.Name, m_host.UUID, text);
@@ -3525,7 +3532,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.RootPart.ApplyImpulse((vel * group.GetMass()), false);
                         group.Velocity = vel;
                     }
-                    group.CreateScriptInstances(param, true, World.DefaultScriptEngine, 2, RezzedFrom);
+                    group.CreateScriptInstances(param, true, 2, RezzedFrom);
 
                     if (!World.Permissions.BypassPermissions())
                     {
@@ -4039,7 +4046,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             bool RetVal = presence.Animator.AddAnimation(anim, m_host.UUID);
                             if (!RetVal)
-                                World.SimChat("Could not find animation '" + anim + "'.", ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                            {
+                                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                                if (chatModule != null)
+                                    chatModule.SimChat("Could not find animation '" + anim + "'.",
+                                        ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, 
+                                        m_host.Name, m_host.UUID, false, World);
+                            }
                         }
                     }
                     else
@@ -4091,7 +4104,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             bool RetVal = presence.Animator.RemoveAnimation(anim);
                             if (!RetVal)
-                                World.SimChat("Could not find animation '" + anim + "'.", ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                            {
+                                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                                if (chatModule != null)
+                                    chatModule.SimChat("Could not find animation '" + anim + "'.", 
+                                        ChatTypeEnum.DebugChannel, 2147483647, m_host.AbsolutePosition, 
+                                        m_host.Name, m_host.UUID, false, World);
+                            }
                         }
                     }
                     else
@@ -4172,7 +4191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
 
                     // Fire on_rez
-                    group.CreateScriptInstances(0, true, World.DefaultScriptEngine, 0, UUID.Zero);
+                    group.CreateScriptInstances(0, true, 0, UUID.Zero);
                     rootPart.ParentGroup.ResumeScripts();
                 }
             }
@@ -9830,10 +9849,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llOwnerSay(string msg)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            
-            World.SimChatBroadcast(msg, ChatTypeEnum.Owner, 0,
-                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, UUID.Zero);
+
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChatBroadcast(msg, ChatTypeEnum.Owner, 0,
+                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, UUID.Zero, World);
         }
 
         public LSL_String llRequestSecureURL()

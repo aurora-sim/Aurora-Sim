@@ -564,7 +564,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             clientServer.Start();
 
-            scene.StartTimer();
+            //Start the heartbeats
+            scene.StartHeartbeat();
             //Tell the scene that the startup is complete 
             // Note: this event is added in the scene constructor
             scene.FinishedStartup("Startup", new List<string>());

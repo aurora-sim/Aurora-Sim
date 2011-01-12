@@ -75,6 +75,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Scene m_scene;
 
+        private double m_rootReprioritizationDistance = 10.0;
+        private double m_childReprioritizationDistance = 20.0;
+
+        public double RootReprioritizationDistance { get { return m_rootReprioritizationDistance; } }
+        public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
+
         public Prioritizer(Scene scene)
         {
             m_scene = scene;
@@ -82,17 +88,20 @@ namespace OpenSim.Region.Framework.Scenes
             if (interestConfig != null)
             {
                 string update_prioritization_scheme = interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
-
+                m_rootReprioritizationDistance = interestConfig.GetDouble("RootReprioritizationDistance", 10.0);
+                m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
                 try
                 {
                     UpdatePrioritizationScheme = (UpdatePrioritizationSchemes)Enum.Parse(typeof(UpdatePrioritizationSchemes), update_prioritization_scheme, true);
                 }
                 catch (Exception)
                 {
-                    m_log.Warn("[PRIORITIZER]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
+                    m_log.Warn("[Prioritizer]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
                     UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
                 }
             }
+
+            //m_log.Info("[Prioritizer]: Using the " + UpdatePrioritizationScheme + " prioritization scheme");
         }
 
         public double GetUpdatePriority(IClientAPI client, ISceneEntity entity)

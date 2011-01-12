@@ -37,6 +37,7 @@ using OpenSim.Region.OptionalModules.Scripting.Minimodule.Object;
 using OpenSim.Region.Physics.Manager;
 using PrimType=OpenSim.Region.OptionalModules.Scripting.Minimodule.Object.PrimType;
 using SculptType=OpenSim.Region.OptionalModules.Scripting.Minimodule.Object.SculptType;
+using Aurora.Framework;
 
 namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
 {
@@ -392,7 +393,10 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 return;
 
             SceneObjectPart sop = GetSOP();
-            m_rootScene.SimChat(msg, ChatTypeEnum.Say, 0, sop.AbsolutePosition, sop.Name, sop.UUID, false);
+            IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(msg, ChatTypeEnum.Say, 0, sop.AbsolutePosition,
+                    sop.Name, sop.UUID, false, m_rootScene);
         }
 
         public void Say(string msg,int channel)
@@ -401,7 +405,10 @@ namespace OpenSim.Region.OptionalModules.Scripting.Minimodule
                 return;
 
             SceneObjectPart sop = GetSOP();
-            m_rootScene.SimChat(msg, ChatTypeEnum.Say,channel, sop.AbsolutePosition, sop.Name, sop.UUID, false);
+            IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(msg, ChatTypeEnum.Say, channel, sop.AbsolutePosition,
+                    sop.Name, sop.UUID, false, m_rootScene);
         }
          
         public void Dialog(UUID avatar, string message, string[] buttons, int chat_channel)

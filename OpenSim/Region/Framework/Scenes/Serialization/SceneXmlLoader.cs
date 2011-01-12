@@ -200,7 +200,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
                     sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                    sceneObject.CreateScriptInstances(0, false, scene.DefaultScriptEngine, 0, UUID.Zero);
+                    sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
                     sceneObject.ResumeScripts();
                 }
             }

@@ -42,61 +42,6 @@ namespace OpenSim.Region.Framework.Scenes
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID)
-        {
-            OSChatMessage args = new OSChatMessage();
-
-            args.Message = message;
-            args.Channel = channel;
-            args.Type = type;
-            args.Position = fromPos;
-            args.Range = range;
-            args.SenderUUID = fromID;
-            args.Scene = this;
-            args.ToAgentID = ToAgentID;
-
-            if (fromAgent)
-            {
-                ScenePresence user = GetScenePresence(fromID);
-                if (user != null)
-                    args.Sender = user.ControllingClient;
-            }
-            else
-            {
-                SceneObjectPart obj = GetSceneObjectPart(fromID);
-                args.SenderObject = obj;
-            }
-
-            args.From = fromName;
-            //args.
-
-            if (broadcast)
-                EventManager.TriggerOnChatBroadcast(this, args);
-            else
-                EventManager.TriggerOnChatFromWorld(this, args);
-        }
-        
-        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, -1,  UUID.Zero);
-        }
-
-        /// <summary>
-        /// Say this message directly to a single person
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="type"></param>
-        /// <param name="fromPos"></param>
-        /// <param name="fromName"></param>
-        /// <param name="fromAgentID"></param>
-        public void SimChatBroadcast(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID ToAgentID)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, -1, ToAgentID);
-        }
-
         /// <summary>
         /// Invoked when the client requests a prim.
         /// </summary>

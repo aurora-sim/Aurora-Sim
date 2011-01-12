@@ -42,6 +42,7 @@ using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -392,8 +393,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if (Util.GetDistanceTo(RootPart.StatusSandboxPos, value) > 10)
                     {
                         RootPart.ScriptSetPhysicsStatus(false);
-                        Scene.SimChat("Hit Sandbox Limit",
-                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, RootPart.AbsolutePosition, Name, UUID, false);
+                        IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
+                        if (chatModule != null)
+                            chatModule.SimChat("Hit Sandbox Limit",
+                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, RootPart.AbsolutePosition, Name, UUID,
+                              false, Scene);
                         return;
                     }
                 }
@@ -2635,8 +2639,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         RootPart.ScriptSetPhysicsStatus(false);
                         pos = AbsolutePosition;
-                        Scene.SimChat("Hit Sandbox Limit",
-                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, RootPart.AbsolutePosition, Name, UUID, false);
+                        IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
+                        if (chatModule != null)
+                            chatModule.SimChat("Hit Sandbox Limit", ChatTypeEnum.DebugChannel, 0x7FFFFFFF,
+                                RootPart.AbsolutePosition, Name, UUID, false, Scene);
                     }
                 }
                 AbsolutePosition = pos;
