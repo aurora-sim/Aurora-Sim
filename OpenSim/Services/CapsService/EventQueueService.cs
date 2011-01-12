@@ -698,14 +698,13 @@ namespace OpenSim.Services.CapsService
                 //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                 // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                 // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                string CapsBase = "";
+                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
                 if (newAgent)
                 {
-                    CapsBase = CapsUtil.GetRandomCapsObjectPath();
                     //Build the full URL
                     SimSeedCap
                         = "http://"
-                      + neighbor.ExternalHostName
+                      + neighbor.ExternalEndPoint.Address.ToString()
                       + ":"
                       + neighbor.HttpPort
                       + CapsUtil.GetCapsSeedPath(CapsBase);
@@ -713,9 +712,7 @@ namespace OpenSim.Services.CapsService
                 }
                 else
                 {
-                    //If the agent is still in this region, 
-                    //  we have already set up the CAPS on the region side, 
-                    //  and can safely send a blank CapsBase as its already ready
+                    
                 }
 
                 //Fix the AgentCircuitData with the new CapsUrl

@@ -231,7 +231,7 @@ namespace OpenSim.Services.CapsService
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             UrlToInform,
-                            OSDParser.SerializeLLSDXmlString(m_InfoToSendToUrl));
+                            OSDParser.SerializeLLSDXmlString(InfoToSendToUrl));
                     if (reply != "")
                     {
                         OSDMap hash = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(reply));

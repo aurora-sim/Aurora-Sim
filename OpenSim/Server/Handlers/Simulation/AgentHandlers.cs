@@ -117,7 +117,6 @@ namespace OpenSim.Server.Handlers.Simulation
 
                 return responsedata;
             }
-
         }
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)

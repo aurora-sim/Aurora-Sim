@@ -88,11 +88,13 @@ namespace OpenSim.Services.Connectors.Simulation
                     args["agent_data"] = data.Pack();
 
                 OSDMap result = WebUtils.PostToService(uri, args);
+                OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
+                //Pull out the result and set it as the reason
+                if (results == null)
+                    return false;
+                reason = results["reason"] != null ? results["reason"].AsString() : "";
                 if (result["Success"].AsBoolean())
                 {
-                    OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
-                    //Pull out the result and set it as the reason
-                    reason = results["reason"] != null ? results["reason"].AsString() : "";
                     return true;
                 }
 
