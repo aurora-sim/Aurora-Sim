@@ -208,7 +208,7 @@ namespace OpenSim.Services.CapsService
         {
             if (CapsUrl != "")
                 m_capsUrlBase = CapsUrl;
-            if (UrlToInform != "")
+            if (UrlToInform != "" && UrlToInform != this.CapsUrl)
                 m_UrlToInform = UrlToInform;
             if (password != UUID.Zero)
                 m_Password = password;
