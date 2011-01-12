@@ -743,9 +743,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_OSSL_Functions.osReturnObjects(parameter);
         }
 
-        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID)
+        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_String RequestedRole)
         {
-            return m_OSSL_Functions.osAddAgentToGroup(AgentID, GroupID, RequestedRoleID);
+            return m_OSSL_Functions.osAddAgentToGroup(AgentID, GroupID, RequestedRole);
         }
 
         public LSL_String osUnixTimeToTimestamp(long time)
