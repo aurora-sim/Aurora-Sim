@@ -71,6 +71,10 @@ namespace OpenSim.Services.CapsService
                                                         UploadBakedTexture));
         }
 
+        public void EnteringRegion()
+        {
+        }
+
         public void DeregisterCaps()
         {
         }

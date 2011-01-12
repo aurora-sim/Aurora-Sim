@@ -48,6 +48,7 @@ namespace OpenSim.Services.Interfaces
     {
         void RegisterCaps(IRegionClientCapsService service);
         void DeregisterCaps();
+        void EnteringRegion();
     }
 
     /// <summary>
@@ -92,5 +93,7 @@ namespace OpenSim.Services.Interfaces
         List<ICapsServiceConnector> GetServiceConnectors();
         void AddStreamHandler(string method, IRequestHandler handler);
         void RemoveStreamHandler(string method, string httpMethod, string path);
+
+        void InformModulesOfRequest();
     }
 }

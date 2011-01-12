@@ -80,6 +80,10 @@ namespace OpenSim.Services.CapsService
                                                       NewAgentInventoryRequest));
         }
 
+        public void EnteringRegion()
+        {
+        }
+
         public void DeregisterCaps()
         {
         }

@@ -102,7 +102,10 @@ namespace OpenSim.Services.CapsService
         {
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
+            {
+                m_RegionCapsServices[regionID].InformModulesOfRequest();
                 return m_RegionCapsServices[regionID];
+            }
             //Create a new one, and then call Get to find it
             AddCapsServiceForRegion(regionID, CAPSBase, UrlToInform);
             return GetCapsService(regionID);

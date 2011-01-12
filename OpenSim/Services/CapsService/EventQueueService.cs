@@ -268,6 +268,11 @@ namespace OpenSim.Services.CapsService
 
         #region Enqueue a message/Create/Remove handlers
 
+        public void DumpEventQueue()
+        {
+            queue.Clear();
+        }
+
         /// <summary>
         /// Add the given event into the client's queue so that it is sent on the next 
         /// </summary>
@@ -644,6 +649,11 @@ namespace OpenSim.Services.CapsService
 
             m_AvatarPassword = UUID.Random();
             service.InfoToSendToUrl["EventQueuePass"] = OSD.FromUUID(m_AvatarPassword);
+        }
+
+        public void EnteringRegion()
+        {
+            DumpEventQueue();
         }
 
         public void DeregisterCaps()

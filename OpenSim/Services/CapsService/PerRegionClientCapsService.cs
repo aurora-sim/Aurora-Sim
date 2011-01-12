@@ -277,6 +277,15 @@ namespace OpenSim.Services.CapsService
             Close();
         }
 
+        public void InformModulesOfRequest()
+        {
+            List<ICapsServiceConnector> connectors = GetServiceConnectors();
+            foreach (ICapsServiceConnector connector in connectors)
+            {
+                connector.EnteringRegion();
+            }
+        }
+
         public List<ICapsServiceConnector> GetServiceConnectors()
         {
             if (m_connectors.Count == 0)

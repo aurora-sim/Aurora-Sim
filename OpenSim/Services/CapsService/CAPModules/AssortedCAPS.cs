@@ -57,6 +57,10 @@ namespace OpenSim.Services.CapsService
                                                       method));
         }
 
+        public void EnteringRegion()
+        {
+        }
+
         public void DeregisterCaps()
         {
         }
