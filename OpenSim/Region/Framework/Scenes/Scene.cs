@@ -1158,7 +1158,7 @@ namespace OpenSim.Region.Framework.Scenes
                     IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
                     if (eq != null)
                     {
-                        eq.DisableSimulator(RegionInfo.RegionHandle, agentID, RegionInfo.RegionHandle);
+                        eq.DisableSimulator(agentID, RegionInfo.RegionHandle);
                     }
                 }
 

@@ -166,6 +166,20 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
+        /// Remove all events that have not been sent yet
+        /// </summary>
+        /// <param name="avatarID"></param>
+        /// <param name="RegionHandle"></param>
+        public void ClearEventQueue(UUID avatarID, ulong RegionHandle)
+        {
+            if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new Dictionary<ulong, List<OSD>>());
+            if (!m_eventsNotSentPasswordDoesNotExist[avatarID].ContainsKey(RegionHandle))
+                m_eventsNotSentPasswordDoesNotExist[avatarID].Add(RegionHandle, new List<OSD>());
+            m_eventsNotSentPasswordDoesNotExist[avatarID][RegionHandle].Clear();
+        }
+
+        /// <summary>
         /// Add an EQ message into the queue on the remote EventQueueService 
         /// </summary>
         /// <param name="ev"></param>
@@ -207,7 +221,15 @@ namespace OpenSim.Services.CapsService
                     //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
                     foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle])
                     {
-                        events.Add(EQMessage);
+                        //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
+                        //  because we can't
+                        OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
+                        if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
+                            events.Add(EQMessage);
+                        else
+                        {
+                            m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
+                        }
                     }
                 }
                 //Clear it for now... we'll readd if it fails
@@ -253,10 +275,10 @@ namespace OpenSim.Services.CapsService
 
         #region Overrides
 
-        public override void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle)
+        public override void DisableSimulator(UUID avatarID, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.DisableSimulator(handle);
-            Enqueue(item, avatarID, RegionHandle);
+            OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
+            TryEnqueue(item, avatarID, RegionHandle);
 
             //WRONG, COMMENTS LEFT FOR FUTURE PEOPLE TO UNDERSTAND WHY IT IS WRONG
             //ALSO, do the base.Enqueue so the region Caps get the kill request as well
@@ -270,6 +292,9 @@ namespace OpenSim.Services.CapsService
             IClientCapsService clientCaps = m_service.GetClientCapsService(avatarID);
             if(clientCaps != null)
                 clientCaps.RemoveCAPS(RegionHandle); // DIE!!!
+
+            //Remove all things in the queue as well as we can't have them staying around
+            ClearEventQueue(avatarID, RegionHandle);
         }
 
         #endregion

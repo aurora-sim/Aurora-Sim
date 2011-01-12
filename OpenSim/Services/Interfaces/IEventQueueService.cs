@@ -56,7 +56,7 @@ namespace OpenSim.Services.Interfaces
         bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle);
 
         // These are required to decouple Scenes from EventQueueHelper
-        void DisableSimulator(ulong handle, UUID avatarID, ulong RegionHandle);
+        void DisableSimulator(UUID avatarID, ulong RegionHandle);
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, ulong RegionHandle);
         void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
