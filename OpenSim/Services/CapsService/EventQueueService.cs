@@ -284,7 +284,8 @@ namespace OpenSim.Services.CapsService
                     OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
-                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                        //Let this pass through, after the next event queue pass we can remove it
+                        //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EnableChildAgents")
                     {
@@ -465,6 +466,17 @@ namespace OpenSim.Services.CapsService
                         array.Add(queue.Dequeue());
                         m_ids++;
                     }
+                }
+            }
+
+            //Look for disable Simulator EQMs so that we can disable ourselves safely
+            foreach (OSD ev in array)
+            {
+                OSDMap map = (OSDMap)ev;
+                if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                {
+                    //This will be the last bunch of EQMs that go through, so we can safely die now
+                    m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                 }
             }
 

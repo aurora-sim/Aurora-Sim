@@ -229,7 +229,7 @@ namespace OpenSim.Services.CapsService
                         //We need to save the EQMs so that we can try again later
                         foreach (OSD o in events)
                         {
-                            m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
+                            //m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
                         }
                     }
                     return success;
