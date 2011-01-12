@@ -61,7 +61,7 @@ namespace OpenSim.Services.CapsService
         /// This holds events that havn't been sent yet as the client hasn't called the CapsHandler and sent the EventQueue password.
         /// Note: these already have been converted to LLSDXML, so do not duplicate this!
         /// </summary>
-        private Dictionary<UUID, List<OSD>> m_eventsNotSentPasswordDoesNotExist = new Dictionary<UUID, List<OSD>>();
+        private Dictionary<UUID, Dictionary<ulong, List<OSD>>> m_eventsNotSentPasswordDoesNotExist = new Dictionary<UUID, Dictionary<ulong, List<OSD>>>();
         
         #endregion
 
@@ -180,14 +180,17 @@ namespace OpenSim.Services.CapsService
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
+                //Make sure these exist
+                if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                    m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new Dictionary<ulong, List<OSD>>());
+                if (!m_eventsNotSentPasswordDoesNotExist[avatarID].ContainsKey(regionHandle))
+                    m_eventsNotSentPasswordDoesNotExist[avatarID].Add(regionHandle, new List<OSD>());
+
                 UUID Password;
                 if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
                 {
-                    if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                        m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new List<OSD>());
-                    m_eventsNotSentPasswordDoesNotExist[avatarID].Add(OSDParser.SerializeLLSDXmlString(ev));
-
-                    m_log.Info("[EventQueueServiceConnector]: Could not find password for agent " + avatarID + 
+                    m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(OSDParser.SerializeLLSDXmlString(ev));
+                    m_log.Info("[EventQueueServiceConnector]: Could not find password for agent " + avatarID +
                         ", all Caps will fail if this is not resolved!");
                     return false;
                 }
@@ -202,19 +205,16 @@ namespace OpenSim.Services.CapsService
                 events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event
 
                 //Clear the queue above if the password was just found now
-                if (m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                if (m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Count > 0)
                 {
-                    if (m_eventsNotSentPasswordDoesNotExist[avatarID].Count > 0)
+                    //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
+                    foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle])
                     {
-                        //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
-                        foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID])
-                        {
-                            events.Add(EQMessage);
-                        }
+                        events.Add(EQMessage);
                     }
-                    //Clear it for now... we'll readd if it fails
-                    m_eventsNotSentPasswordDoesNotExist[avatarID].Clear(); 
                 }
+                //Clear it for now... we'll readd if it fails
+                m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Clear();
 
                 request.Add("Events", events);
 
@@ -227,11 +227,9 @@ namespace OpenSim.Services.CapsService
                     if (!success)
                     {
                         //We need to save the EQMs so that we can try again later
-                        if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                            m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new List<OSD>());
                         foreach (OSD o in events)
                         {
-                            m_eventsNotSentPasswordDoesNotExist[avatarID].Add(o);
+                            m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
                         }
                     }
                     return success;
