@@ -42,7 +42,6 @@ namespace OpenSim.Services.Interfaces
         // whether or not a user has access to the region
         //
         bool IsAuthorizedForRegion(string userID, string regionID, out string message);
-
     }
     
     public class AuthorizationRequest

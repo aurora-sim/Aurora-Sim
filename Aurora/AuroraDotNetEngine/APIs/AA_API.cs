@@ -698,7 +698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AASetCenterOfGravity", m_host, "AA");
             if (m_host.ParentGroup.Scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, true))
-                m_host.ParentGroup.Scene.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
+                m_host.ParentGroup.Scene.SceneGraph.PhysicsScene.PointOfGravity = new Vector3((float)position.x, (float)position.y, (float)position.z);
         }
 
         #region Helpers

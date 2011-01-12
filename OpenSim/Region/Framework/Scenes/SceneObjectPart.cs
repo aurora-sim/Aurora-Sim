@@ -1238,7 +1238,7 @@ namespace OpenSim.Region.Framework.Scenes
                             actor.Orientation = resultingrotation;
                             //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
                         }
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                         //}
                     }
                     catch (Exception ex)
@@ -1275,7 +1275,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (actor.IsPhysical)
                     {
                         actor.Velocity = value;
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                     }
                 }
             }
@@ -1487,10 +1487,10 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (m_parentGroup.Scene != null)
                             {
-                                if (m_parentGroup.Scene.PhysicsScene != null)
+                                if (m_parentGroup.Scene.SceneGraph.PhysicsScene != null)
                                 {
                                     actor.Size = m_shape.Scale;
-                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                                    m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                                 }
                             }
                         }
@@ -1861,7 +1861,7 @@ namespace OpenSim.Region.Framework.Scenes
                     actor.Orientation = GetWorldRotation();
 
                     // Tell the physics engines that this prim changed.
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                    m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                     }
                 }
             if (triggerMoving_End)
@@ -1896,14 +1896,14 @@ namespace OpenSim.Region.Framework.Scenes
                     if (_parentID == 0)
                         {
                         actor.Position = value;
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
                     else if(single || !actor.IsPhysical)
                         {
                         // To move the child prim in respect to the group position and rotation we have to calculate
                         actor.Position = GetWorldPosition();
                         actor.Orientation = GetWorldRotation();
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
 
                     // Tell the physics engines that this prim changed.
@@ -2115,7 +2115,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // or flexible
                 if (!isPhantom && !IsAttachment && !(Shape.PathCurve == (byte) Extrusion.Flexible))
                 {
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
+                    PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
                         AbsolutePosition,
@@ -2372,7 +2372,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                     {
                         // here we turn off the joint object, so remove the joint from the physics scene
-                        m_parentGroup.Scene.PhysicsScene.RequestJointDeletion(Name); // FIXME: what if the name changed?
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.RequestJointDeletion(Name); // FIXME: what if the name changed?
 
                         // make sure client isn't interpolating the joint proxy object
                         Velocity = Vector3.Zero;
@@ -2397,10 +2397,10 @@ namespace OpenSim.Region.Framework.Scenes
                             PhysActor.OnOutOfBounds -= PhysicsOutOfBounds;
                             PhysActor.delink();
 
-                            if (ParentGroup.Scene.PhysicsScene.SupportsNINJAJoints && (!isNew))
+                            if (ParentGroup.Scene.SceneGraph.PhysicsScene.SupportsNINJAJoints && (!isNew))
                             {
                                 // destroy all joints connected to this now deactivated body
-                                m_parentGroup.Scene.PhysicsScene.RemoveAllJointsConnectedToActorThreadLocked(PhysActor);
+                                m_parentGroup.Scene.SceneGraph.PhysicsScene.RemoveAllJointsConnectedToActorThreadLocked(PhysActor);
                             }
 
                             if(OnRemovePhysics != null)
@@ -2449,7 +2449,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
                     }
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                    m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(PhysActor);
                 }
             }
         }
@@ -3780,7 +3780,7 @@ namespace OpenSim.Region.Framework.Scenes
                         PhysActor.Shape = m_newshape;
                         m_shape = m_newshape;
 
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(PhysActor);
                     }
                 }
             }
@@ -4229,7 +4229,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (PhysActor != null)
             {
                 PhysActor.LockAngularMotion(RotationAxis);
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
         }
 
@@ -4957,7 +4957,7 @@ namespace OpenSim.Region.Framework.Scenes
             // For now, we use the NINJA naming scheme for identifying joints.
             // In the future, we can support other joint specification schemes such as a 
             // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
+            if (m_parentGroup.Scene.SceneGraph.PhysicsScene.SupportsNINJAJoints)
             {
                 string hingeString = "hingejoint";
                 return (Name.Length >= hingeString.Length && Name.Substring(0, hingeString.Length) == hingeString);
@@ -4973,7 +4973,7 @@ namespace OpenSim.Region.Framework.Scenes
             // For now, we use the NINJA naming scheme for identifying joints.
             // In the future, we can support other joint specification schemes such as a 
             // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
+            if (m_parentGroup.Scene.SceneGraph.PhysicsScene.SupportsNINJAJoints)
             {
                 string ballString = "balljoint";
                 return (Name.Length >= ballString.Length && Name.Substring(0, ballString.Length) == ballString);
@@ -4989,7 +4989,7 @@ namespace OpenSim.Region.Framework.Scenes
             // For now, we use the NINJA naming scheme for identifying joints.
             // In the future, we can support other joint specification schemes such as a 
             // custom checkbox in the viewer GUI.
-            if (m_parentGroup.Scene.PhysicsScene.SupportsNINJAJoints)
+            if (m_parentGroup.Scene.SceneGraph.PhysicsScene.SupportsNINJAJoints)
             {
                 return IsHingeJoint() || IsBallJoint();
             }
@@ -5087,7 +5087,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AddFlag(PrimFlags.Phantom);
                 if (PhysActor != null)
                 {
-                    m_parentGroup.Scene.PhysicsScene.RemovePrim(PhysActor);
+                    m_parentGroup.Scene.SceneGraph.PhysicsScene.RemovePrim(PhysActor);
                     /// that's not wholesome.  Had to make Scene public
                     PhysActor = null;
                 }
@@ -5100,7 +5100,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pa == null)
                 {
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
+                    PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
                         AbsolutePosition,
@@ -5248,7 +5248,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (PhysActor != null)
             {
                 PhysActor.Shape = m_shape;
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
 
             // This is what makes vehicle trailers work

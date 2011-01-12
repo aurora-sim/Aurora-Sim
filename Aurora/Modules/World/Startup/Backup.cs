@@ -633,11 +633,11 @@ namespace Aurora.Modules
                 {
                     if (part.IsJoint() && ((part.Flags & PrimFlags.Physics) != 0))
                     {
-                        m_scene.PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
+                        m_scene.SceneGraph.PhysicsScene.RequestJointDeletion(part.Name); // FIXME: what if the name changed?
                     }
                     else if (part.PhysActor != null)
                     {
-                        m_scene.PhysicsScene.RemovePrim(part.PhysActor);
+                        m_scene.SceneGraph.PhysicsScene.RemovePrim(part.PhysActor);
                         part.PhysActor = null;
                     }
                 }

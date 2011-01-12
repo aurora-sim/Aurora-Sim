@@ -1568,7 +1568,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (rootpart.PhysActor != null)
                     {
                         rootpart.PhysActor.AddForce(impulse, true);
-                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -1587,7 +1587,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!IsAttachment)
                     {
                         rootpart.PhysActor.AddAngularForce(impulse, true);
-                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -1606,7 +1606,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!IsAttachment)
                     {
                         rootpart.PhysActor.Torque = impulse;
-                        m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+                        m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
                     }
                 }
             }
@@ -1998,7 +1998,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                     {
                     linkPart.PhysActor.link(m_rootPart.PhysActor);
-                    this.Scene.PhysicsScene.AddPhysicsActorTaint(linkPart.PhysActor);
+                    this.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(linkPart.PhysActor);
                     }
                 //rest of parts
                 foreach (SceneObjectPart part in objectGroupChildren)
@@ -2010,7 +2010,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (part.PhysActor != null && m_rootPart.PhysActor != null)
                             {
                             part.PhysActor.link(m_rootPart.PhysActor);
-                            this.Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                            this.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                             }
                     }
                 }
@@ -2058,7 +2058,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (linkPart.PhysActor != null)
             {
-                m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
+                m_scene.SceneGraph.PhysicsScene.RemovePrim(linkPart.PhysActor);
 //            linkPart.PhysActor.delink();
             }
 
@@ -2147,7 +2147,7 @@ namespace OpenSim.Region.Framework.Scenes
                             Vector3 grabforce = pos - AbsolutePosition;
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
-                            m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                            m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                             // This is outside the above permissions condition
                             // so that if the object is locked the client moving the object
                             // get's it's position on the simulator even if it was the same as before
@@ -2258,7 +2258,7 @@ namespace OpenSim.Region.Framework.Scenes
                           Vector3 spinforce = new Vector3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z);
                           spinforce = (spinforce/8) * m_rootPart.PhysActor.Mass; // 8 is an arbitrary torque scaling factor
                           m_rootPart.PhysActor.AddAngularForce(spinforce,true);
-                          m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                          m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
                         }
                     }
                     else
@@ -2446,7 +2446,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.UpdateShape(shapeBlock);
 
                 if (part.PhysActor != null)
-                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
             }
         }
 
@@ -2503,7 +2503,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.Size = scale;
-                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                 }
                 //if (part.UUID != m_rootPart.UUID)
 
@@ -2600,7 +2600,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.Size = prevScale;
-                    m_scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                    m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                 }
 
                 part.IgnoreUndoUpdate = false;
@@ -2754,7 +2754,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;
-                m_scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
             }
 
             HasGroupChanged = true;
@@ -2778,7 +2778,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (actor != null)
             {
                 actor.Orientation = m_rootPart.RotationOffset;
-                m_scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
             }
 
             AbsolutePosition = pos;
@@ -2850,7 +2850,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_rootPart.PhysActor != null)
             {
                 m_rootPart.PhysActor.Orientation = m_rootPart.RotationOffset;
-                m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
             foreach (SceneObjectPart childPrim in m_partsList)

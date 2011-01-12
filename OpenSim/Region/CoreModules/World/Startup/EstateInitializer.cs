@@ -26,9 +26,10 @@ namespace OpenSim.Region.CoreModules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (scene.EstateService != null)
+            IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
+            if (EstateConnector != null)
             {
-                EstateSettings ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                EstateSettings ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
                 if (ES != null && ES.EstateID == 0) // No record at all, new estate required
                 {
                     m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
@@ -40,7 +41,7 @@ namespace OpenSim.Region.CoreModules
                     while (true)
                     {
                         MainConsole.Instance.CmdPrompt("Press enter to try again.");
-                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                        ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
                         if (ES != null && ES.EstateID == 0)
                             ES = CreateEstateInfo(scene);
                         else if (ES == null)
@@ -65,6 +66,7 @@ namespace OpenSim.Region.CoreModules
             EstateSettings ES = null;
             while (true)
             {
+                IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
                 string response = MainConsole.Instance.CmdPrompt("Do you wish to join an existing estate for " + scene.RegionInfo.RegionName + "? (Options are {yes, no, find})", LastEstateChoise, new List<string>() { "yes", "no", "find" });
                 LastEstateChoise = response;
                 if (response == "no")
@@ -79,8 +81,8 @@ namespace OpenSim.Region.CoreModules
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
                     ES.EstatePass = Password;
-                    
-                    ES = scene.EstateService.CreateEstate(ES, scene.RegionInfo.RegionID);
+
+                    ES = EstateConnector.CreateEstate(ES, scene.RegionInfo.RegionID);
                     if (ES == null)
                     {
                         m_log.Warn("The connection to the server was broken, please try again soon.");
@@ -107,7 +109,7 @@ namespace OpenSim.Region.CoreModules
                         continue;
                     LastEstateName = response;
 
-                    List<int> estateIDs = scene.EstateService.GetEstates(response);
+                    List<int> estateIDs = EstateConnector.GetEstates(response);
                     if (estateIDs == null)
                     {
                         m_log.Warn("The connection to the server was broken, please try again soon.");
@@ -123,9 +125,9 @@ namespace OpenSim.Region.CoreModules
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password for the estate", "")));
                     //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
-                    if (scene.EstateService.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
+                    if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
                     {
-                        ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID); //We could do by EstateID now, but we need to completely make sure that it fully is set up
+                        ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID); //We could do by EstateID now, but we need to completely make sure that it fully is set up
                         if (ES == null)
                         {
                             m_log.Warn("The connection to the server was broken, please try again soon.");
@@ -146,7 +148,7 @@ namespace OpenSim.Region.CoreModules
                 }
                 else if (response == "find")
                 {
-                    ES = scene.EstateService.LoadEstateSettings(scene.RegionInfo.RegionID);
+                    ES = EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID);
                     if (ES == null)
                     {
                         m_log.Warn("The connection to the estate service was broken, please try again soon.");

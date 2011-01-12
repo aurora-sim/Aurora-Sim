@@ -106,8 +106,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scenes.Add(scene);
 
             LoadWorldHeightmap();
-            scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
-            scene.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
+            scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -626,7 +626,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 if (m_tainted)
                 {
                     m_tainted = false;
-                    m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
+                    m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
                     SaveTerrain();
                 }
             }

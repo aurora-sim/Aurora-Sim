@@ -25,14 +25,14 @@ namespace Aurora.Modules
 
         public void AddRegion(Scene scene)
         {
-            if (scene.PhysicsScene != null && scene.PhysicsScene.SupportsNINJAJoints)
+            if (scene.SceneGraph.PhysicsScene != null && scene.SceneGraph.PhysicsScene.SupportsNINJAJoints)
             {
                 m_scene = scene;
                 scene.RegisterModuleInterface<INinjaPhysicsModule>(this);
                 // register event handlers to respond to joint movement/deactivation
-                scene.PhysicsScene.OnJointMoved += jointMoved;
-                scene.PhysicsScene.OnJointDeactivated += jointDeactivated;
-                scene.PhysicsScene.OnJointErrorMessage += jointErrorMessage;
+                scene.SceneGraph.PhysicsScene.OnJointMoved += jointMoved;
+                scene.SceneGraph.PhysicsScene.OnJointDeactivated += jointDeactivated;
+                scene.SceneGraph.PhysicsScene.OnJointErrorMessage += jointErrorMessage;
             }
         }
 
@@ -42,14 +42,14 @@ namespace Aurora.Modules
 
         public void RemoveRegion(Scene scene)
         {
-            if (scene.PhysicsScene != null && scene.PhysicsScene.SupportsNINJAJoints)
+            if (scene.SceneGraph.PhysicsScene != null && scene.SceneGraph.PhysicsScene.SupportsNINJAJoints)
             {
                 m_scene = null;
                 scene.UnregisterModuleInterface<INinjaPhysicsModule>(this);
                 // register event handlers to respond to joint movement/deactivation
-                scene.PhysicsScene.OnJointMoved -= jointMoved;
-                scene.PhysicsScene.OnJointDeactivated -= jointDeactivated;
-                scene.PhysicsScene.OnJointErrorMessage -= jointErrorMessage;
+                scene.SceneGraph.PhysicsScene.OnJointMoved -= jointMoved;
+                scene.SceneGraph.PhysicsScene.OnJointDeactivated -= jointDeactivated;
+                scene.SceneGraph.PhysicsScene.OnJointErrorMessage -= jointErrorMessage;
             }
         }
 
@@ -98,7 +98,7 @@ namespace Aurora.Modules
             {
                 case PhysicsJointType.Ball:
                     {
-                        Vector3 jointAnchor = m_scene.PhysicsScene.GetJointAnchor(joint);
+                        Vector3 jointAnchor = m_scene.SceneGraph.PhysicsScene.GetJointAnchor(joint);
                         Vector3 proxyPos = new Vector3(jointAnchor.X, jointAnchor.Y, jointAnchor.Z);
                         jointProxyObject.ParentGroup.UpdateGroupPosition(proxyPos, true); // schedules the entire group for a terse update
                     }
@@ -106,7 +106,7 @@ namespace Aurora.Modules
 
                 case PhysicsJointType.Hinge:
                     {
-                        Vector3 jointAnchor = m_scene.PhysicsScene.GetJointAnchor(joint);
+                        Vector3 jointAnchor = m_scene.SceneGraph.PhysicsScene.GetJointAnchor(joint);
 
                         // Normally, we would just ask the physics scene to return the axis for the joint.
                         // Unfortunately, ODE sometimes returns <0,0,0> for the joint axis, which should
@@ -186,7 +186,7 @@ namespace Aurora.Modules
 
             PhysicsJoint joint;
 
-            joint = m_scene.PhysicsScene.RequestJointCreation(part.Name, jointType,
+            joint = m_scene.SceneGraph.PhysicsScene.RequestJointCreation(part.Name, jointType,
                 part.AbsolutePosition,
                 part.RotationOffset,
                 part.Description,

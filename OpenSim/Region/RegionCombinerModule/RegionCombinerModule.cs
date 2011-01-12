@@ -438,15 +438,15 @@ namespace OpenSim.Region.RegionCombinerModule
             conn.ConnectedRegions.Add(ConnectedRegion);
 
             // Inform root region Physics about the extents of this region
-            conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
+            conn.RegionScene.SceneGraph.PhysicsScene.Combine(null, Vector3.Zero, extents);
 
             // Inform Child region that it needs to forward it's terrain to the root region
-            scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
+            scene.SceneGraph.PhysicsScene.Combine(conn.RegionScene.SceneGraph.PhysicsScene, offset, Vector3.Zero);
 
             // Reset Terrain..  since terrain loads before we get here, we need to load 
             // it again so it loads in the root region
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
 
             // Create a client event forwarder and add this region's events to the root region.
             if (conn.ClientEventForwarder != null)
@@ -479,13 +479,13 @@ namespace OpenSim.Region.RegionCombinerModule
                              conn.RegionScene.RegionInfo.RegionName,
                              regionConnections.RegionScene.RegionInfo.RegionName, offset, extents);
 
-            conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
-            scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
+            conn.RegionScene.SceneGraph.PhysicsScene.Combine(null, Vector3.Zero, extents);
+            scene.SceneGraph.PhysicsScene.Combine(conn.RegionScene.SceneGraph.PhysicsScene, offset, Vector3.Zero);
 
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
 
             if (conn.ClientEventForwarder != null)
@@ -518,13 +518,13 @@ namespace OpenSim.Region.RegionCombinerModule
                              conn.RegionScene.RegionInfo.RegionName,
                              regionConnections.RegionScene.RegionInfo.RegionName, offset, extents);
 
-            conn.RegionScene.PhysicsScene.Combine(null, Vector3.Zero, extents);
-            scene.PhysicsScene.Combine(conn.RegionScene.PhysicsScene, offset, Vector3.Zero);
+            conn.RegionScene.SceneGraph.PhysicsScene.Combine(null, Vector3.Zero, extents);
+            scene.SceneGraph.PhysicsScene.Combine(conn.RegionScene.SceneGraph.PhysicsScene, offset, Vector3.Zero);
             
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             
             if (conn.ClientEventForwarder != null)

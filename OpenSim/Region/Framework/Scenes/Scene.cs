@@ -195,16 +195,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_regInfo; }
         }
 
-        // an instance to the physics plugin's Scene object.
-        public PhysicsScene PhysicsScene
-        {
-            get { return m_sceneGraph.PhysicsScene; }
-            set
-            {
-                m_sceneGraph.PhysicsScene = value;
-            }
-        }
-
         // This gets locked so things stay thread safe.
         public object SyncRoot
         {
@@ -281,19 +271,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_AvatarService == null)
                     m_AvatarService = RequestModuleInterface<IAvatarService>();
                 return m_AvatarService;
-            }
-        }
-
-        protected IEstateConnector m_EstateService;
-        public IEstateConnector EstateService
-        {
-            get
-            {
-                if (m_EstateService == null)
-                {
-                    m_EstateService = DataManager.RequestPlugin<IEstateConnector>();
-                }
-                return m_EstateService;
             }
         }
 
@@ -496,9 +473,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 IncomingCloseAgent(avatar.UUID);
             }
-                
-            if (PhysicsScene != null)
-                PhysicsScene.Dispose();
+
+            if (SceneGraph.PhysicsScene != null)
+                SceneGraph.PhysicsScene.Dispose();
 
             //Tell the neighbors that this region is now down
             INeighborService service = RequestModuleInterface<INeighborService>();
@@ -510,6 +487,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_sceneGraph.Close();
         }
+
+        #endregion
 
         #region Tracker
 
@@ -525,8 +504,6 @@ namespace OpenSim.Region.Framework.Scenes
             //  sleep overall as the Update delete does it on it's own
             monitor.StartMonitor(0, 0);
         }
-
-        #endregion
 
         #endregion
 
@@ -952,7 +929,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// or other applications where a full grid/Hypergrid presence may not be required.</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason, bool requirePresenceLookup)
+        protected bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason, bool requirePresenceLookup)
         {
             bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 ||
                              (teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0);
@@ -1055,7 +1032,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="reason">outputs the reason to this string</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        protected virtual bool AuthorizeUser(AgentCircuitData agent, out string reason)
+        protected bool AuthorizeUser(AgentCircuitData agent, out string reason)
         {
             reason = String.Empty;
 

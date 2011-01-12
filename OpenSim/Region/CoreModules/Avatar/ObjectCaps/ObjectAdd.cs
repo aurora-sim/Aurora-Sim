@@ -366,10 +366,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             rootpart.GroupMask = group_mask;
             rootpart.NextOwnerMask = next_owner_mask;
             rootpart.Material = (byte)material;
-            
-            
-            
-            m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
+
+
+
+            m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
             
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";

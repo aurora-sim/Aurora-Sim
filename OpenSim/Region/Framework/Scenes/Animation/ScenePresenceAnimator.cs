@@ -266,7 +266,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     if (move.Z == 0)
                     {
-                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                        if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         {
                             return "SWIM_FORWARD";
@@ -284,13 +284,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     }
                     else if (move.Z > 0)
                     {
-                        if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                        if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                             return "SWIM_UP";
                         else
                             return "FLYSLOW";
                     }
-                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_DOWN";
                     else
@@ -300,7 +300,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_UP";
                     else
@@ -310,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_DOWN";
                     else
@@ -327,7 +327,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     //This is for the slow fly timer
                     m_timesBeforeSlowFlyIsOff = 0;
-                    if (m_scenePresence.Scene.PhysicsScene.UseUnderWaterPhysics &&
+                    if (m_scenePresence.Scene.SceneGraph.PhysicsScene.UseUnderWaterPhysics &&
                             actor.Position.Z < m_scenePresence.Scene.RegionInfo.RegionSettings.WaterHeight)
                         return "SWIM_HOVER";
                     else

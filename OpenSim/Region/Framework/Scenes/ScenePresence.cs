@@ -933,8 +933,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (OnRemovePhysics != null)
                         OnRemovePhysics();
-                    if (m_physicsActor != null) 
-                        m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
+                    if (m_physicsActor != null)
+                        m_scene.SceneGraph.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                     if (m_physicsActor != null)
@@ -946,7 +946,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (m_physicsActor != null)
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
-                        m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
+                        m_scene.SceneGraph.PhysicsScene.RemoveAvatar(PhysicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.UnSubscribeEvents();
                     m_physicsActor = null;
@@ -1198,12 +1198,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             //m_log.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
             // Raycast from the avatar's head to the camera to see if there's anything blocking the view
-            if ((m_movementUpdateCount % NumMovementsBetweenRayCast) == 0 && m_scene.PhysicsScene.SupportsRayCast())
+            if ((m_movementUpdateCount % NumMovementsBetweenRayCast) == 0 && m_scene.SceneGraph.PhysicsScene.SupportsRayCast())
             {
                 if (m_followCamAuto)
                 {
                     Vector3 posAdjusted = m_pos + HEAD_ADJUSTMENT;
-                    m_scene.PhysicsScene.RaycastWorld(m_pos, Vector3.Normalize(m_CameraCenter - posAdjusted), Vector3.Distance(m_CameraCenter, posAdjusted) + 0.3f, RayCastCameraCallback);
+                    m_scene.SceneGraph.PhysicsScene.RaycastWorld(m_pos, Vector3.Normalize(m_CameraCenter - posAdjusted), Vector3.Distance(m_CameraCenter, posAdjusted) + 0.3f, RayCastCameraCallback);
                 }
             }
             if (!m_CameraCenter.IsFinite())
@@ -1884,7 +1884,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 StartRayCastPosition = AbsolutePosition;
             Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
             float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastAvatarPositionResponse);
+            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastAvatarPositionResponse);
         }
 
         public void SitRayCastAvatarPositionResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
@@ -1925,7 +1925,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 StartRayCastPosition = AbsolutePosition; StartRayCastPosition.Z = CameraPosition.Z;
             Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
             float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
+            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
         }
 
         public void SitRayCastAvatarPositionCameraZResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
@@ -1966,7 +1966,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 StartRayCastPosition = CameraPosition;
             Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
             float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
+            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
         }
 
         public void SitRayCastCameraPositionResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
@@ -2007,7 +2007,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 StartRayCastPosition = CameraPosition;
             Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
             float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastHorizontalResponse);
+            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastHorizontalResponse);
         }
 
         public void SitRayCastHorizontalResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
@@ -3028,7 +3028,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Set this so we don't do it multiple times
             m_creatingPhysicalRepresentation = true;
 
-            PhysicsScene scene = m_scene.PhysicsScene;
+            PhysicsScene scene = m_scene.SceneGraph.PhysicsScene;
 
             Vector3 pVec = AbsolutePosition;
 

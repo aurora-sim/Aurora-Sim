@@ -200,7 +200,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    bool changed = ((Scene)client.Scene).EstateService.LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, Util.Md5Hash(Password));
+                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, Util.Md5Hash(Password));
                     if (!changed)
                         client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     else
@@ -284,7 +284,7 @@ namespace Aurora.Modules
 
                     string Password = Util.Md5Hash(e.Message);
                     //Try to switch estates
-                    bool changed = ((Scene)((IClientAPI)sender).Scene).EstateService.LinkRegion(((Scene)((IClientAPI)sender).Scene).RegionInfo.RegionID, (int)Change.EstateID, Password);
+                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((Scene)((IClientAPI)sender).Scene).RegionInfo.RegionID, (int)Change.EstateID, Password);
                     if (!changed)
                     {
                         //Revert it, it didn't work

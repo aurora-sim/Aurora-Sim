@@ -194,7 +194,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnControlPrimMedia += CanControlPrimMedia;
             m_scene.Permissions.OnInteractWithPrimMedia += CanInteractWithPrimMedia;
 
-            m_scene.Permissions.OnTeleport += CanTeleport;
             m_scene.Permissions.OnPushObject += CanPushObject;
             m_scene.Permissions.OnViewObjectOwners += CanViewObjectOwners;
             m_scene.Permissions.OnEditParcelAccessList += CanEditParcelAccessList;
@@ -1918,15 +1917,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return true;
-        }
-
-        private bool CanTeleport(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
-        {
-            newPosition = Position;
-            reason = "";
-            DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
-            if (m_bypassPermissions) return m_bypassPermissionsValue;
             return true;
         }
 
