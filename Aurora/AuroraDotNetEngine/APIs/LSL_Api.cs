@@ -4779,7 +4779,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 InventoryItemBase agentItem = null;
                 ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                 if(inventoryModule != null)
-                    agentItem = inventoryModule.MoveTaskInventoryItem(destId, UUID.Zero, m_host, objId);
+                    agentItem = inventoryModule.MoveTaskInventoryItemToUserInventory(destId, UUID.Zero, m_host, objId);
 
                 if (agentItem == null)
                     return DateTime.Now;
@@ -4807,7 +4807,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // destination is an object
                 ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                 if (inventoryModule != null)
-                    inventoryModule.MoveTaskInventoryItem(destId, m_host, objId);
+                    inventoryModule.MoveTaskInventoryItemToObject(destId, m_host, objId);
             }
             return PScriptSleep(3000);
         }
@@ -7240,7 +7240,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID folderID = UUID.Zero;
             ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
             if (inventoryModule != null)
-                folderID = inventoryModule.MoveTaskInventoryItems(destID, category, m_host, itemList);
+                folderID = inventoryModule.MoveTaskInventoryItemsToUserInventory(destID, category, m_host, itemList);
 
             if (folderID == UUID.Zero)
                 return;

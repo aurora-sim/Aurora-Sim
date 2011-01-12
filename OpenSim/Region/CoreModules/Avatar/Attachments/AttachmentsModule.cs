@@ -206,9 +206,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 if (group.GetFromItemID() == UUID.Zero)
                 {
-                    ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
-                                if(inventoryModule != null)
-                                    inventoryModule.attachObjectAssetStore(remoteClient, group, remoteClient.AgentId, out itemID);
+                    List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
+                    groups.Add(group);
+                    IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                    if(inventoryAccess != null)
+                        inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
+                            groups, remoteClient.AgentId);
                 }
                 else
                 {

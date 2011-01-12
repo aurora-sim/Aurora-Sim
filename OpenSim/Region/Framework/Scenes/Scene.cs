@@ -636,7 +636,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            inventoryModule.returnObjects(PhysicsReturns.ToArray(), UUID.Zero);
+                            inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
                         PhysicsReturns.Clear();
                     }
                 }

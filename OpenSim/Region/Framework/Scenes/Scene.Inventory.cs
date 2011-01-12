@@ -48,26 +48,102 @@ namespace OpenSim.Region.Framework.Scenes
     {
         string DefaultLSLScript { get; set; }
 
+        /// <summary>
+        /// Add the given inventory item to a user's inventory.
+        /// </summary>
+        /// <param name="item">The item to add</param>
         bool AddInventoryItem(InventoryItemBase item);
 
+        /// <summary>
+        /// Add an inventory item to an avatar's inventory.
+        /// </summary>
+        /// <param name="remoteClient">The remote client controlling the avatar</param>
+        /// <param name="item">The item.  This structure contains all the item metadata, including the folder
+        /// in which the item is to be placed.</param>
         void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item);
 
+        /// <summary>
+        /// Give an inventory item from one user to another
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="itemId"></param>
+        /// <param name="recipientFolderId">
+        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
+        /// appropriate default folder.
+        /// </param>
+        /// <returns>
+        /// The inventory item copy given, null if the give was unsuccessful
+        /// </returns>
         InventoryItemBase GiveInventoryItem(
             UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId);
 
+        /// <summary>
+        /// Give an entire inventory folder from one user to another.  The entire contents (including all descendent
+        /// folders) is given.
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="folderId"></param>
+        /// <param name="recipientParentFolderId">
+        /// The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
+        /// recipient folder is the root folder
+        /// </param>
+        /// <returns>
+        /// The inventory folder copy given, null if the copy was unsuccessful
+        /// </returns>
         InventoryFolderBase GiveInventoryFolder(
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId);
 
-        InventoryItemBase MoveTaskInventoryItem(UUID destId, UUID uUID, SceneObjectPart m_host, UUID objId);
+        /// <summary>
+        /// Return the given objects to the agent given
+        /// </summary>
+        /// <param name="returnobjects">The objects to return</param>
+        /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
+        /// <returns></returns>
+        bool ReturnObjects(SceneObjectGroup[] sceneObjectGroup, UUID uUID);
 
-        bool returnObjects(SceneObjectGroup[] sceneObjectGroup, UUID uUID);
+        /// <summary>
+        /// Move the given item from the object task inventory to the agent's inventory
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="folderID">
+        /// The user inventory folder to move (or copy) the item to.  If null, then the most
+        /// suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
+        /// the item is placed in the user's root inventory folder
+        /// </param>
+        /// <param name="part"></param>
+        /// <param name="itemID"></param>
+        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uUID, SceneObjectPart m_host, UUID objId);
 
-        UUID MoveTaskInventoryItems(UUID uUID, string p, SceneObjectPart part, List<UUID> invList);
+        /// <summary>
+        /// Move the given items from the object task inventory to the agent's inventory
+        /// </summary>
+        /// <param name="destID"></param>
+        /// <param name="name"></param>
+        /// <param name="host"></param>
+        /// <param name="items"></param>
+        /// <returns></returns>
+        UUID MoveTaskInventoryItemsToUserInventory(UUID uUID, string p, SceneObjectPart part, List<UUID> invList);
 
-        UUID attachObjectAssetStore(IClientAPI remoteClient, SceneObjectGroup group, UUID uUID, out UUID itemID);
+        /// <summary>
+        /// Copy a task (prim) inventory item to another task (prim)
+        /// </summary>
+        /// <param name="destId"></param>
+        /// <param name="part"></param>
+        /// <param name="itemId"></param>
+        void MoveTaskInventoryItemToObject(UUID destId, SceneObjectPart m_host, UUID objId);
 
-        void MoveTaskInventoryItem(UUID destId, SceneObjectPart m_host, UUID objId);
-
+        /// <summary>
+        /// Rez a script into a prim's inventory from another prim
+        /// This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
+        /// </summary>
+        /// <param name="srcId">The UUID of the script that is going to be copied</param>
+        /// <param name="srcPart">The prim that the script that is going to be copied from</param>
+        /// <param name="destId">The UUID of the prim that the </param>
+        /// <param name="pin">The ScriptAccessPin of the prim</param>
+        /// <param name="running">Whether the script should be running when it is started</param>
+        /// <param name="start_param">The start param to pass to the script</param>
         void RezScript(UUID srcId, SceneObjectPart m_host, UUID destId, int pin, int running, int start_param);
     }
 
@@ -868,33 +944,6 @@ namespace OpenSim.Region.Framework.Scenes
         #region Move
 
         /// <summary>
-        /// Move the given item in the given prim to a folder in the client's inventory
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="folderID"></param>
-        /// <param name="part"></param>
-        /// <param name="itemID"></param>
-        protected InventoryItemBase MoveTaskInventoryItem(IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId)
-        {
-            m_log.DebugFormat(
-                "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
-                itemId, part.Name, folderId, remoteClient.Name);
-
-            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
-            if (m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
-            {
-
-                if (agentItem == null)
-                    return null;
-
-                agentItem.Folder = folderId;
-                AddInventoryItem(remoteClient, agentItem);
-                return agentItem;
-            }
-            return null;
-        }
-
-        /// <summary>
         /// <see>ClientMoveTaskInventoryItem</see>
         /// </summary>
         /// <param name="remoteClient"></param>
@@ -942,180 +991,34 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
             }
 
-            MoveTaskInventoryItem(remoteClient, folderId, part, itemId);
+            MoveTaskInventoryItemToUserInventory(remoteClient, folderId, part, itemId);
         }
 
         /// <summary>
-        /// <see>MoveTaskInventoryItem</see>
+        /// Move the given item in the given prim to a folder in the client's inventory
         /// </summary>
         /// <param name="remoteClient"></param>
-        /// <param name="folderID">
-        /// The user inventory folder to move (or copy) the item to.  If null, then the most
-        /// suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
-        /// the item is placed in the user's root inventory folder
-        /// </param>
+        /// <param name="folderID"></param>
         /// <param name="part"></param>
         /// <param name="itemID"></param>
-        protected InventoryItemBase MoveTaskInventoryItem(UUID avatarId, UUID folderId, SceneObjectPart part, UUID itemId)
+        protected InventoryItemBase MoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId)
         {
-            ScenePresence avatar;
+            m_log.DebugFormat(
+                "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
+                itemId, part.Name, folderId, remoteClient.Name);
 
-            if (m_scene.TryGetScenePresence(avatarId, out avatar))
+            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
+            if (m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
             {
-                return MoveTaskInventoryItem(avatar.ControllingClient, folderId, part, itemId);
-            }
-            else
-            {
-                InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(avatarId, part, itemId);
 
                 if (agentItem == null)
                     return null;
 
                 agentItem.Folder = folderId;
-
-                AddInventoryItem(agentItem);
-
+                AddInventoryItem(remoteClient, agentItem);
                 return agentItem;
             }
-        }
-
-        /// <summary>
-        /// Copy a task (prim) inventory item to another task (prim)
-        /// </summary>
-        /// <param name="destId"></param>
-        /// <param name="part"></param>
-        /// <param name="itemId"></param>
-        protected void MoveTaskInventoryItem(UUID destId, SceneObjectPart part, UUID itemId)
-        {
-            TaskInventoryItem srcTaskItem = part.Inventory.GetInventoryItem(itemId);
-
-            if (srcTaskItem == null)
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for moving"
-                        + " but the item does not exist in this inventory",
-                    itemId, part.Name, part.UUID);
-
-                return;
-            }
-
-            SceneObjectPart destPart = m_scene.GetSceneObjectPart(destId);
-
-            if (destPart == null)
-            {
-                m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Could not find prim for ID {0}",
-                        destId);
-                return;
-            }
-
-            // Can't transfer this
-            //
-            if ((part.OwnerID != destPart.OwnerID) && ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
-                return;
-
-            if (part.OwnerID != destPart.OwnerID && (part.GetEffectiveObjectFlags() & (uint)PrimFlags.AllowInventoryDrop) == 0)
-            {
-                // object cannot copy items to an object owned by a different owner
-                // unless llAllowInventoryDrop has been called
-
-                return;
-            }
-
-            // must have both move and modify permission to put an item in an object
-            if ((part.OwnerMask & ((uint)PermissionMask.Move | (uint)PermissionMask.Modify)) == 0)
-            {
-                return;
-            }
-
-            TaskInventoryItem destTaskItem = new TaskInventoryItem();
-
-            destTaskItem.ItemID = UUID.Random();
-            destTaskItem.CreatorID = srcTaskItem.CreatorID;
-            destTaskItem.AssetID = srcTaskItem.AssetID;
-            destTaskItem.GroupID = destPart.GroupID;
-            destTaskItem.OwnerID = destPart.OwnerID;
-            destTaskItem.ParentID = destPart.UUID;
-            destTaskItem.ParentPartID = destPart.UUID;
-
-            destTaskItem.BasePermissions = srcTaskItem.BasePermissions;
-            destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions;
-            destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions;
-            destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions;
-            destTaskItem.NextPermissions = srcTaskItem.NextPermissions;
-            destTaskItem.Flags = srcTaskItem.Flags;
-            destTaskItem.SalePrice = srcTaskItem.SalePrice;
-            destTaskItem.SaleType = srcTaskItem.SaleType;
-
-            if (destPart.OwnerID != part.OwnerID)
-            {
-                if (m_scene.Permissions.PropagatePermissions())
-                {
-                    destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
-                    destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
-                    destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
-                    destTaskItem.BasePermissions = srcTaskItem.BasePermissions &
-                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
-                    destTaskItem.CurrentPermissions |= 16; // Slam!
-                }
-            }
-
-            destTaskItem.Description = srcTaskItem.Description;
-            destTaskItem.Name = srcTaskItem.Name;
-            destTaskItem.InvType = srcTaskItem.InvType;
-            destTaskItem.Type = srcTaskItem.Type;
-
-            destPart.Inventory.AddInventoryItem(destTaskItem, part.OwnerID != destPart.OwnerID);
-
-            if ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                part.Inventory.RemoveInventoryItem(itemId);
-
-            ScenePresence avatar;
-
-            if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
-            {
-                destPart.GetProperties(avatar.ControllingClient);
-            }
-        }
-
-        protected UUID MoveTaskInventoryItems(UUID destID, string category, SceneObjectPart host, List<UUID> items)
-        {
-            InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
-
-            UUID newFolderID = UUID.Random();
-
-            InventoryFolderBase newFolder = new InventoryFolderBase(newFolderID, category, destID, -1, rootFolder.ID, rootFolder.Version);
-            m_scene.InventoryService.AddFolder(newFolder);
-
-            foreach (UUID itemID in items)
-            {
-                InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(destID, host, itemID);
-
-                if (agentItem != null)
-                {
-                    agentItem.Folder = newFolderID;
-
-                    AddInventoryItem(agentItem);
-                }
-            }
-
-            ScenePresence avatar = null;
-            if (m_scene.TryGetScenePresence(destID, out avatar))
-            {
-                //profile.SendInventoryDecendents(avatar.ControllingClient,
-                //        profile.RootFolder.ID, true, false);
-                //profile.SendInventoryDecendents(avatar.ControllingClient,
-                //        newFolderID, false, true);
-
-                SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
-                SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
-            }
-
-            return newFolderID;
+            return null;
         }
 
         #endregion
@@ -1265,6 +1168,104 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        /// <summary>
+        /// Rez a script into a prim's inventory, either ex nihilo or from an existing avatar inventory
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"> </param>
+        /// <param name="localID"></param>
+        protected void RezScript(IClientAPI remoteClient, InventoryItemBase itemBase, UUID transactionID, uint localID)
+        {
+            UUID itemID = itemBase.ID;
+            UUID copyID = UUID.Random();
+
+            if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
+            {
+                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                item = m_scene.InventoryService.GetItem(item);
+
+                if (item != null)
+                {
+                    SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
+                    if (part != null)
+                    {
+                        if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, remoteClient.AgentId))
+                            return;
+
+                        part.ParentGroup.AddInventoryItem(remoteClient, localID, item, copyID);
+                        part.Inventory.CreateScriptInstance(copyID, 0, false, m_scene.DefaultScriptEngine, 0);
+
+                        //                        m_log.InfoFormat("[PRIMINVENTORY]: " +
+                        //                                         "Rezzed script {0} into prim local ID {1} for user {2}",
+                        //                                         item.inventoryName, localID, remoteClient.Name);
+                        part.GetProperties(remoteClient);
+                        part.ParentGroup.ResumeScripts();
+                    }
+                    else
+                    {
+                        m_log.ErrorFormat(
+                            "[PRIM INVENTORY]: " +
+                            "Could not rez script {0} into prim local ID {1} for user {2}"
+                            + " because the prim could not be found in the region!",
+                            item.Name, localID, remoteClient.Name);
+                    }
+                }
+                else
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: Could not find script inventory item {0} to rez for {1}!",
+                        itemID, remoteClient.Name);
+                }
+            }
+            else  // script has been rezzed directly into a prim's inventory
+            {
+                SceneObjectPart part = m_scene.GetSceneObjectPart(itemBase.Folder);
+                if (part == null)
+                    return;
+
+                if (!m_scene.Permissions.CanCreateObjectInventory(
+                    itemBase.InvType, part.UUID, remoteClient.AgentId))
+                    return;
+
+                AssetBase asset = new AssetBase(UUID.Random(), itemBase.Name, (sbyte)itemBase.AssetType,
+                    remoteClient.AgentId.ToString());
+                asset.Description = itemBase.Description;
+                asset.Data = Encoding.ASCII.GetBytes(DefaultLSLScript);
+                m_scene.AssetService.Store(asset);
+
+                TaskInventoryItem taskItem = new TaskInventoryItem();
+
+                taskItem.ResetIDs(itemBase.Folder);
+                taskItem.ParentID = itemBase.Folder;
+                taskItem.CreationDate = (uint)itemBase.CreationDate;
+                taskItem.Name = itemBase.Name;
+                taskItem.Description = itemBase.Description;
+                taskItem.Type = itemBase.AssetType;
+                taskItem.InvType = itemBase.InvType;
+                taskItem.OwnerID = itemBase.Owner;
+                taskItem.CreatorID = itemBase.CreatorIdAsUuid;
+                taskItem.BasePermissions = itemBase.BasePermissions;
+                taskItem.CurrentPermissions = itemBase.CurrentPermissions;
+                taskItem.EveryonePermissions = itemBase.EveryOnePermissions;
+                taskItem.GroupPermissions = itemBase.GroupPermissions;
+                taskItem.NextPermissions = itemBase.NextPermissions;
+                taskItem.GroupID = itemBase.GroupID;
+                taskItem.GroupPermissions = 0;
+                taskItem.Flags = itemBase.Flags;
+                taskItem.PermsGranter = UUID.Zero;
+                taskItem.PermsMask = 0;
+                taskItem.AssetID = asset.FullID;
+                taskItem.SalePrice = itemBase.SalePrice;
+                taskItem.SaleType = itemBase.SaleType;
+
+                part.Inventory.AddInventoryItem(taskItem, false);
+                part.GetProperties(remoteClient);
+
+                part.Inventory.CreateScriptInstance(taskItem, 0, false, m_scene.DefaultScriptEngine, 0);
+                part.ParentGroup.ResumeScripts();
+            }
+        }
+
         #endregion
 
         private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId)
@@ -1393,8 +1394,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// in which the item is to be placed.</param>
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
-            AddInventoryItem(item);
-            remoteClient.SendInventoryItemCreateUpdate(item, 0);
+            if(AddInventoryItem(item))
+                remoteClient.SendInventoryItemCreateUpdate(item, 0);
         }
 
         /// <summary>
@@ -1615,16 +1616,16 @@ namespace OpenSim.Region.Framework.Scenes
         public InventoryFolderBase GiveInventoryFolder(
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId)
         {
-            //// Retrieve the folder from the sender
+            // Retrieve the folder from the sender
             InventoryFolderBase folder = m_scene.InventoryService.GetFolder(new InventoryFolderBase(folderId));
             if (null == folder)
             {
                 m_log.ErrorFormat(
                      "[LLClientInventory]: Could not find inventory folder {0} to give", folderId);
-
                 return null;
             }
 
+            //Find the folder for the receiver
             if (recipientParentFolderId == UUID.Zero)
             {
                 InventoryFolderBase recipientRootFolder = m_scene.InventoryService.GetRootFolder(recipientId);
@@ -1660,109 +1661,15 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Rez a script into a prim's inventory, either ex nihilo or from an existing avatar inventory
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"> </param>
-        /// <param name="localID"></param>
-        public void RezScript(IClientAPI remoteClient, InventoryItemBase itemBase, UUID transactionID, uint localID)
-        {
-            UUID itemID = itemBase.ID;
-            UUID copyID = UUID.Random();
-
-            if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
-            {
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
-
-                if (item != null)
-                {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
-                    if (part != null)
-                    {
-                        if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, remoteClient.AgentId))
-                            return;
-
-                        part.ParentGroup.AddInventoryItem(remoteClient, localID, item, copyID);
-                        part.Inventory.CreateScriptInstance(copyID, 0, false, m_scene.DefaultScriptEngine, 0);
-
-                        //                        m_log.InfoFormat("[PRIMINVENTORY]: " +
-                        //                                         "Rezzed script {0} into prim local ID {1} for user {2}",
-                        //                                         item.inventoryName, localID, remoteClient.Name);
-                        part.GetProperties(remoteClient);
-                        part.ParentGroup.ResumeScripts();
-                    }
-                    else
-                    {
-                        m_log.ErrorFormat(
-                            "[PRIM INVENTORY]: " +
-                            "Could not rez script {0} into prim local ID {1} for user {2}"
-                            + " because the prim could not be found in the region!",
-                            item.Name, localID, remoteClient.Name);
-                    }
-                }
-                else
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: Could not find script inventory item {0} to rez for {1}!",
-                        itemID, remoteClient.Name);
-                }
-            }
-            else  // script has been rezzed directly into a prim's inventory
-            {
-                SceneObjectPart part = m_scene.GetSceneObjectPart(itemBase.Folder);
-                if (part == null)
-                    return;
-
-                if (!m_scene.Permissions.CanCreateObjectInventory(
-                    itemBase.InvType, part.UUID, remoteClient.AgentId))
-                    return;
-
-                AssetBase asset = new AssetBase(UUID.Random(), itemBase.Name, (sbyte)itemBase.AssetType,
-                    remoteClient.AgentId.ToString());
-                asset.Description = itemBase.Description;
-                asset.Data = Encoding.ASCII.GetBytes(DefaultLSLScript);
-                m_scene.AssetService.Store(asset);
-
-                TaskInventoryItem taskItem = new TaskInventoryItem();
-
-                taskItem.ResetIDs(itemBase.Folder);
-                taskItem.ParentID = itemBase.Folder;
-                taskItem.CreationDate = (uint)itemBase.CreationDate;
-                taskItem.Name = itemBase.Name;
-                taskItem.Description = itemBase.Description;
-                taskItem.Type = itemBase.AssetType;
-                taskItem.InvType = itemBase.InvType;
-                taskItem.OwnerID = itemBase.Owner;
-                taskItem.CreatorID = itemBase.CreatorIdAsUuid;
-                taskItem.BasePermissions = itemBase.BasePermissions;
-                taskItem.CurrentPermissions = itemBase.CurrentPermissions;
-                taskItem.EveryonePermissions = itemBase.EveryOnePermissions;
-                taskItem.GroupPermissions = itemBase.GroupPermissions;
-                taskItem.NextPermissions = itemBase.NextPermissions;
-                taskItem.GroupID = itemBase.GroupID;
-                taskItem.GroupPermissions = 0;
-                taskItem.Flags = itemBase.Flags;
-                taskItem.PermsGranter = UUID.Zero;
-                taskItem.PermsMask = 0;
-                taskItem.AssetID = asset.FullID;
-                taskItem.SalePrice = itemBase.SalePrice;
-                taskItem.SaleType = itemBase.SaleType;
-
-                part.Inventory.AddInventoryItem(taskItem, false);
-                part.GetProperties(remoteClient);
-
-                part.Inventory.CreateScriptInstance(taskItem, 0, false, m_scene.DefaultScriptEngine, 0);
-                part.ParentGroup.ResumeScripts();
-            }
-        }
-
-        /// <summary>
         /// Rez a script into a prim's inventory from another prim
+        /// This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"> </param>
-        /// <param name="localID"></param>
+        /// <param name="srcId">The UUID of the script that is going to be copied</param>
+        /// <param name="srcPart">The prim that the script that is going to be copied from</param>
+        /// <param name="destId">The UUID of the prim that the </param>
+        /// <param name="pin">The ScriptAccessPin of the prim</param>
+        /// <param name="running">Whether the script should be running when it is started</param>
+        /// <param name="start_param">The start param to pass to the script</param>
         public void RezScript(UUID srcId, SceneObjectPart srcPart, UUID destId, int pin, int running, int start_param)
         {
             TaskInventoryItem srcTaskItem = srcPart.Inventory.GetInventoryItem(srcId);
@@ -1773,7 +1680,6 @@ namespace OpenSim.Region.Framework.Scenes
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for rezzing a script but the "
                         + " item does not exist in this inventory",
                     srcId, srcPart.Name, srcPart.UUID);
-
                 return;
             }
 
@@ -1870,88 +1776,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public UUID attachObjectAssetStore(IClientAPI remoteClient, SceneObjectGroup grp, UUID AgentId, out UUID itemID)
-        {
-            itemID = UUID.Zero;
-            if (grp != null)
-            {
-                Vector3 inventoryStoredPosition = new Vector3
-                       (((grp.AbsolutePosition.X > (int)Constants.RegionSize)
-                             ? 250
-                             : grp.AbsolutePosition.X)
-                        ,
-                        (grp.AbsolutePosition.X > (int)Constants.RegionSize)
-                            ? 250
-                            : grp.AbsolutePosition.X,
-                        grp.AbsolutePosition.Z);
-
-                Vector3 originalPosition = grp.AbsolutePosition;
-
-                grp.AbsolutePosition = inventoryStoredPosition;
-
-                string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat(grp);
-
-                grp.AbsolutePosition = originalPosition;
-
-                AssetBase asset = new AssetBase(UUID.Random(), grp.GetPartName(grp.LocalId),
-                    (sbyte)AssetType.Object, remoteClient.AgentId.ToString());
-                asset.Description = grp.GetPartDescription(grp.LocalId);
-                asset.Data = Utils.StringToBytes(sceneObjectXml);
-                m_scene.AssetService.Store(asset);
-
-                InventoryItemBase item = new InventoryItemBase();
-                item.CreatorId = grp.RootPart.CreatorID.ToString();
-                item.Owner = remoteClient.AgentId;
-                item.ID = UUID.Random();
-                item.AssetID = asset.FullID;
-                item.Description = asset.Description;
-                item.Name = asset.Name;
-                item.AssetType = asset.Type;
-                item.InvType = (int)InventoryType.Object;
-
-                InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType(remoteClient.AgentId, AssetType.Object);
-                if (folder != null)
-                    item.Folder = folder.ID;
-                else // oopsies
-                    item.Folder = UUID.Zero;
-
-                if ((remoteClient.AgentId != grp.RootPart.OwnerID) && m_scene.Permissions.PropagatePermissions())
-                {
-                    item.BasePermissions = grp.RootPart.NextOwnerMask;
-                    item.CurrentPermissions = grp.RootPart.NextOwnerMask;
-                    item.NextPermissions = grp.RootPart.NextOwnerMask;
-                    item.EveryOnePermissions = grp.RootPart.EveryoneMask & grp.RootPart.NextOwnerMask;
-                    item.GroupPermissions = grp.RootPart.GroupMask & grp.RootPart.NextOwnerMask;
-                }
-                else
-                {
-                    item.BasePermissions = grp.RootPart.BaseMask;
-                    item.CurrentPermissions = grp.RootPart.OwnerMask;
-                    item.NextPermissions = grp.RootPart.NextOwnerMask;
-                    item.EveryOnePermissions = grp.RootPart.EveryoneMask;
-                    item.GroupPermissions = grp.RootPart.GroupMask;
-                }
-                item.CreationDate = Util.UnixTimeSinceEpoch();
-
-                // sets itemID so client can show item as 'attached' in inventory
-                grp.SetFromItemID(item.ID);
-
-                if (AddInventoryItem(item))
-                    remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                else
-                {
-                    IDialogModule module = m_scene.RequestModuleInterface<IDialogModule>();
-                    if (module != null)
-                        module.SendAlertToUser(remoteClient, "Operation failed");
-                }
-
-                itemID = item.ID;
-                return item.AssetID;
-            }
-            return UUID.Zero;
-        }
-
-        public bool returnObjects(SceneObjectGroup[] returnobjects,
+        /// <summary>
+        /// Return the given objects to the agent given
+        /// </summary>
+        /// <param name="returnobjects">The objects to return</param>
+        /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
+        /// <returns></returns>
+        public bool ReturnObjects(SceneObjectGroup[] returnobjects,
                 UUID AgentId)
         {
             //AddReturns(returnobjects[0].OwnerID, returnobjects[0].Name, returnobjects.Length, returnobjects[0].AbsolutePosition, "parcel owner return");
@@ -1965,6 +1796,182 @@ namespace OpenSim.Region.Framework.Scenes
             //Its ok if the client is null, its taken care of
             DeRezObjects(client, IDs, returnobjects[0].RootPart.GroupID, DeRezAction.Return, UUID.Zero);
             return true;
+        }
+
+        /// <summary>
+        /// Copy a task (prim) inventory item to another task (prim)
+        /// </summary>
+        /// <param name="destId"></param>
+        /// <param name="part"></param>
+        /// <param name="itemId"></param>
+        public void MoveTaskInventoryItemToObject(UUID destId, SceneObjectPart part, UUID itemId)
+        {
+            TaskInventoryItem srcTaskItem = part.Inventory.GetInventoryItem(itemId);
+
+            if (srcTaskItem == null)
+            {
+                m_log.ErrorFormat(
+                    "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for moving"
+                        + " but the item does not exist in this inventory",
+                    itemId, part.Name, part.UUID);
+
+                return;
+            }
+
+            SceneObjectPart destPart = m_scene.GetSceneObjectPart(destId);
+
+            if (destPart == null)
+            {
+                m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Could not find prim for ID {0}",
+                        destId);
+                return;
+            }
+
+            // Can't transfer this
+            //
+            if ((part.OwnerID != destPart.OwnerID) && ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
+                return;
+
+            if (part.OwnerID != destPart.OwnerID && (part.GetEffectiveObjectFlags() & (uint)PrimFlags.AllowInventoryDrop) == 0)
+            {
+                // object cannot copy items to an object owned by a different owner
+                // unless llAllowInventoryDrop has been called
+
+                return;
+            }
+
+            // must have both move and modify permission to put an item in an object
+            if ((part.OwnerMask & ((uint)PermissionMask.Move | (uint)PermissionMask.Modify)) == 0)
+            {
+                return;
+            }
+
+            TaskInventoryItem destTaskItem = new TaskInventoryItem();
+
+            destTaskItem.ItemID = UUID.Random();
+            destTaskItem.CreatorID = srcTaskItem.CreatorID;
+            destTaskItem.AssetID = srcTaskItem.AssetID;
+            destTaskItem.GroupID = destPart.GroupID;
+            destTaskItem.OwnerID = destPart.OwnerID;
+            destTaskItem.ParentID = destPart.UUID;
+            destTaskItem.ParentPartID = destPart.UUID;
+
+            destTaskItem.BasePermissions = srcTaskItem.BasePermissions;
+            destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions;
+            destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions;
+            destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions;
+            destTaskItem.NextPermissions = srcTaskItem.NextPermissions;
+            destTaskItem.Flags = srcTaskItem.Flags;
+            destTaskItem.SalePrice = srcTaskItem.SalePrice;
+            destTaskItem.SaleType = srcTaskItem.SaleType;
+
+            if (destPart.OwnerID != part.OwnerID)
+            {
+                if (m_scene.Permissions.PropagatePermissions())
+                {
+                    destTaskItem.CurrentPermissions = srcTaskItem.CurrentPermissions &
+                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                    destTaskItem.GroupPermissions = srcTaskItem.GroupPermissions &
+                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                    destTaskItem.EveryonePermissions = srcTaskItem.EveryonePermissions &
+                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                    destTaskItem.BasePermissions = srcTaskItem.BasePermissions &
+                            (srcTaskItem.NextPermissions | (uint)PermissionMask.Move);
+                    destTaskItem.CurrentPermissions |= 16; // Slam!
+                }
+            }
+
+            destTaskItem.Description = srcTaskItem.Description;
+            destTaskItem.Name = srcTaskItem.Name;
+            destTaskItem.InvType = srcTaskItem.InvType;
+            destTaskItem.Type = srcTaskItem.Type;
+
+            destPart.Inventory.AddInventoryItem(destTaskItem, part.OwnerID != destPart.OwnerID);
+
+            if ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                part.Inventory.RemoveInventoryItem(itemId);
+
+            ScenePresence avatar;
+
+            if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
+            {
+                destPart.GetProperties(avatar.ControllingClient);
+            }
+        }
+
+        /// <summary>
+        /// Move the given item from the object task inventory to the agent's inventory
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="folderID">
+        /// The user inventory folder to move (or copy) the item to.  If null, then the most
+        /// suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
+        /// the item is placed in the user's root inventory folder
+        /// </param>
+        /// <param name="part"></param>
+        /// <param name="itemID"></param>
+        public InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID avatarId, UUID folderId, SceneObjectPart part, UUID itemId)
+        {
+            ScenePresence avatar;
+
+            if (m_scene.TryGetScenePresence(avatarId, out avatar))
+            {
+                return MoveTaskInventoryItemToUserInventory(avatar.ControllingClient, folderId, part, itemId);
+            }
+            else
+            {
+                InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(avatarId, part, itemId);
+
+                if (agentItem == null)
+                    return null;
+
+                agentItem.Folder = folderId;
+
+                AddInventoryItem(agentItem);
+
+                return agentItem;
+            }
+        }
+
+        /// <summary>
+        /// Move the given items from the object task inventory to the agent's inventory
+        /// </summary>
+        /// <param name="destID"></param>
+        /// <param name="name"></param>
+        /// <param name="host"></param>
+        /// <param name="items"></param>
+        /// <returns></returns>
+        public UUID MoveTaskInventoryItemsToUserInventory(UUID destID, string name, SceneObjectPart host, List<UUID> items)
+        {
+            InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
+
+            UUID newFolderID = UUID.Random();
+
+            InventoryFolderBase newFolder = new InventoryFolderBase(newFolderID, name, destID, -1, rootFolder.ID, rootFolder.Version);
+            m_scene.InventoryService.AddFolder(newFolder);
+
+            foreach (UUID itemID in items)
+            {
+                InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(destID, host, itemID);
+
+                if (agentItem != null)
+                {
+                    agentItem.Folder = newFolderID;
+
+                    AddInventoryItem(agentItem);
+                }
+            }
+
+            ScenePresence avatar = null;
+            if (m_scene.TryGetScenePresence(destID, out avatar))
+            {
+                SendInventoryUpdate(avatar.ControllingClient, rootFolder, true, false);
+                SendInventoryUpdate(avatar.ControllingClient, newFolder, false, true);
+            }
+
+            return newFolderID;
         }
 
         #endregion

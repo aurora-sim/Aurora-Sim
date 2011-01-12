@@ -420,7 +420,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // Override and put into where it came from, if it came
                 // from anywhere in inventory
                 //
-                if (action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory)
+                if (action == DeRezAction.Attachment || action == DeRezAction.Take || action == DeRezAction.AcquireToUserInventory)
                 {
                     if (objectGroups[0].RootPart.FromItemID != UUID.Zero)
                     {

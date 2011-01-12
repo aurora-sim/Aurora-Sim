@@ -1061,7 +1061,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 }
                 ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
                 if (inventoryModule != null)
-                    inventoryModule.returnObjects(prims.ToArray(), client.AgentId);
+                    inventoryModule.ReturnObjects(prims.ToArray(), client.AgentId);
             }
             else
             {

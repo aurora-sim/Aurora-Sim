@@ -321,7 +321,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            inventoryModule.returnObjects(ol.ToArray(), m_host.OwnerID);
+                            inventoryModule.ReturnObjects(ol.ToArray(), m_host.OwnerID);
                     }
                 }
             }
@@ -353,7 +353,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         ILLClientInventory inventoryModule = World.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            inventoryModule.returnObjects(ol.ToArray(), m_host.OwnerID);
+                            inventoryModule.ReturnObjects(ol.ToArray(), m_host.OwnerID);
                     }
                 }
             }

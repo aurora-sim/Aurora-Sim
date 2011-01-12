@@ -380,7 +380,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
                                 ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
                                 if(inventoryModule != null)
-                                    inventoryModule.returnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                                    inventoryModule.ReturnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
                                 return;
                             }
                         }

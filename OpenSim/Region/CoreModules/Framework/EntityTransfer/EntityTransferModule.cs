@@ -965,7 +965,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     List<SceneObjectGroup> objects = new List<SceneObjectGroup>() { grp };
                     ILLClientInventory inventoryModule = grp.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
-                        inventoryModule.returnObjects(objects.ToArray(), UUID.Zero);
+                        inventoryModule.ReturnObjects(objects.ToArray(), UUID.Zero);
                 }
                 catch (Exception)
                 {

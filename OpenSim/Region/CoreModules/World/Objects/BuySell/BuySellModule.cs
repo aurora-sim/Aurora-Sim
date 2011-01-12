@@ -263,7 +263,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 if (invList.Count > 0)
                 {
                     if (inventoryModule != null)
-                        inventoryModule.MoveTaskInventoryItems(remoteClient.AgentId, part.Name, part, invList);
+                        inventoryModule.MoveTaskInventoryItemsToUserInventory(remoteClient.AgentId, part.Name, part, invList);
                 }
                 break;
             }
