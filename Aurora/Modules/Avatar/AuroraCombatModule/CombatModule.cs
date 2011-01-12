@@ -80,7 +80,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 scene.EventManager.OnNewPresence += NewPresence;
                 scene.EventManager.OnIncomingSceneObject += IncomingSceneObject;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
-                scene.Permissions.OnCanTeleportLocally += CanTeleport;
+                scene.Permissions.OnAllowedOutgoingLocalTeleport += CanTeleport;
             }
         }
 
@@ -91,7 +91,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 scene.EventManager.OnNewPresence -= NewPresence;
                 scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
                 scene.EventManager.OnIncomingSceneObject -= IncomingSceneObject;
-                scene.Permissions.OnCanTeleportLocally -= CanTeleport;
+                scene.Permissions.OnAllowedOutgoingLocalTeleport -= CanTeleport;
             }
         }
 

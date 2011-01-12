@@ -334,13 +334,14 @@ namespace Aurora.Modules
 
         #region Can Teleport
 
-        public bool AllowTeleport(UUID userID, Scene scene, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason)
+        public bool AllowTeleport(Scene scene, AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason)
         {
-            newPosition = Position;
+            newPosition = agent.startpos;
+            Vector3 Position = agent.startpos;
             
-            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
+            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
 
-            ScenePresence Sp = scene.GetScenePresence(userID);
+            ScenePresence Sp = scene.GetScenePresence(agent.AgentID);
             if (account == null)
             {
                 reason = "Failed authentication.";
@@ -398,7 +399,7 @@ namespace Aurora.Modules
                     return false;
                 }
 
-                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(SessionID);
+                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(agent.SessionID);
 
                 if (pinfo == null)
                 {
@@ -420,68 +421,74 @@ namespace Aurora.Modules
             //Check bans
             foreach (EstateBan ban in EstateBans)
             {
-                if (ban.BannedUserID == userID)
+                if (ban.BannedUserID == agent.AgentID)
                 {
-                    string banIP = ((System.Net.IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString();
-
-                    if (ban.BannedHostIPMask != banIP) //If it changed, ban them again
+                    if (Sp != null)
                     {
-                        //Add the ban with the new hostname
-                        ES.AddBan(new EstateBan()
+                        string banIP = ((System.Net.IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString();
+
+                        if (ban.BannedHostIPMask != banIP) //If it changed, ban them again
                         {
-                            BannedHostIPMask = banIP,
-                            BannedUserID = ban.BannedUserID,
-                            EstateID = ban.EstateID,
-                            BannedHostAddress = ban.BannedHostAddress,
-                            BannedHostNameMask = ban.BannedHostNameMask
-                        });
-                        //Update the database
-                        ES.Save();
+                            //Add the ban with the new hostname
+                            ES.AddBan(new EstateBan()
+                            {
+                                BannedHostIPMask = banIP,
+                                BannedUserID = ban.BannedUserID,
+                                EstateID = ban.EstateID,
+                                BannedHostAddress = ban.BannedHostAddress,
+                                BannedHostNameMask = ban.BannedHostNameMask
+                            });
+                            //Update the database
+                            ES.Save();
+                        }
                     }
 
                     reason = "Banned from this region.";
                     return false;
                 }
-                IClientIPEndpoint ipEndpoint;
-                if (((IClientCore)Sp.ControllingClient).TryGet(out ipEndpoint))
+                if (Sp != null)
                 {
-                    IPAddress end = ipEndpoint.EndPoint;
-                    IPHostEntry rDNS = null;
-                    try
+                    IClientIPEndpoint ipEndpoint;
+                    if (((IClientCore)Sp.ControllingClient).TryGet(out ipEndpoint))
                     {
-                        rDNS = Dns.GetHostEntry(end);
-                    }
-                    catch (System.Net.Sockets.SocketException)
-                    {
-                        m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
-                        rDNS = null;
-                    }
-                    if (ban.BannedHostIPMask == IPAddress ||
-                            (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
-                                end.ToString().StartsWith(ban.BannedHostIPMask))
-                    {
-                        //Ban the new user
-                        ES.AddBan(new EstateBan()
+                        IPAddress end = ipEndpoint.EndPoint;
+                        IPHostEntry rDNS = null;
+                        try
                         {
-                            EstateID = ES.EstateID,
-                            BannedHostIPMask = IPAddress,
-                            BannedUserID = userID,
-                            BannedHostAddress = IPAddress,
-                            BannedHostNameMask = IPAddress
-                        });
-                        ES.Save();
+                            rDNS = Dns.GetHostEntry(end);
+                        }
+                        catch (System.Net.Sockets.SocketException)
+                        {
+                            m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
+                            rDNS = null;
+                        }
+                        if (ban.BannedHostIPMask == agent.IPAddress ||
+                                (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
+                                    end.ToString().StartsWith(ban.BannedHostIPMask))
+                        {
+                            //Ban the new user
+                            ES.AddBan(new EstateBan()
+                            {
+                                EstateID = ES.EstateID,
+                                BannedHostIPMask = agent.IPAddress,
+                                BannedUserID = agent.AgentID,
+                                BannedHostAddress = agent.IPAddress,
+                                BannedHostNameMask = agent.IPAddress
+                            });
+                            ES.Save();
 
-                        reason = "Banned from this region.";
-                        return false;
+                            reason = "Banned from this region.";
+                            return false;
+                        }
                     }
                 }
                 i++;
             }
             
             //Estate owners/managers/access list people/access groups tp freely as well
-            if (ES.EstateOwner == userID ||
-                new List<UUID>(ES.EstateManagers).Contains(userID) ||
-                new List<UUID>(ES.EstateAccess).Contains(userID) ||
+            if (ES.EstateOwner == agent.AgentID ||
+                new List<UUID>(ES.EstateManagers).Contains(agent.AgentID) ||
+                new List<UUID>(ES.EstateAccess).Contains(agent.AgentID) ||
                 (Sp != null && new List<UUID>(ES.EstateGroups).Contains(Sp.ControllingClient.ActiveGroupId)))
             {
                 reason = "";
@@ -523,11 +530,11 @@ namespace Aurora.Modules
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
             {
-                agentInfo = AgentConnector.GetAgent(userID);
+                agentInfo = AgentConnector.GetAgent(agent.AgentID);
                 if (agentInfo == null)
                 {
-                    AgentConnector.CreateNewAgent(userID);
-                    agentInfo = AgentConnector.GetAgent(userID);
+                    AgentConnector.CreateNewAgent(agent.AgentID);
+                    agentInfo = AgentConnector.GetAgent(agent.AgentID);
                 }
             }
             
@@ -556,7 +563,7 @@ namespace Aurora.Modules
             }
 
             //parcel permissions
-            if (ILO.IsBannedFromLand(userID)) //Note: restricted is dealt with in the next block
+            if (ILO.IsBannedFromLand(agent.AgentID)) //Note: restricted is dealt with in the next block
             {
                 if (Sp == null)
                 {
@@ -564,7 +571,7 @@ namespace Aurora.Modules
                     return true;
                 }
 
-                if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
                 {
                     //We found a place for them, but we don't need to check any further
                     return true;
@@ -586,7 +593,7 @@ namespace Aurora.Modules
                     }
                     if (Sp.ControllingClient.ActiveGroupId != ILO.LandData.GroupID)
                     {
-                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
                             //We found a place for them, but we don't need to check any further
                             return true;
                     }
@@ -600,7 +607,7 @@ namespace Aurora.Modules
                     }
                     //All but the people on the access list are banned
                     if (ILO.IsRestrictedFromLand(Sp.UUID))
-                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
                             //We found a place for them, but we don't need to check any further
                             return true;
                 }
@@ -613,7 +620,7 @@ namespace Aurora.Modules
                     }
                     //All but the people on the pass/access list are banned
                     if (ILO.IsRestrictedFromLand(Sp.UUID))
-                        if (!FindUnBannedParcel(Position, Sp, userID, out ILO, out newPosition, out reason))
+                        if (!FindUnBannedParcel(Position, Sp, agent.AgentID, out ILO, out newPosition, out reason))
                             //We found a place for them, but we don't need to check any further
                             return true;
                 }
@@ -650,7 +657,7 @@ namespace Aurora.Modules
             else
             {
                 //If they are owner, they don't have to have permissions checked
-                if (!m_scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+                if (!m_scene.Permissions.GenericParcelPermission(agent.AgentID, ILO, (ulong)GroupPowers.None))
                 {
                     if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
                     {
@@ -659,7 +666,7 @@ namespace Aurora.Modules
                         if (Parcels.Count == 0)
                         {
                             ScenePresence SP;
-                            scene.TryGetScenePresence(userID, out SP);
+                            scene.TryGetScenePresence(agent.AgentID, out SP);
                             newPosition = parcelManagement.GetNearestRegionEdgePosition(SP);
                         }
                         else
@@ -668,7 +675,7 @@ namespace Aurora.Modules
                             //We need to check here as well for bans, can't toss someone into a parcel they are banned from
                             foreach (ILandObject Parcel in Parcels)
                             {
-                                if (!Parcel.IsBannedFromLand(userID))
+                                if (!Parcel.IsBannedFromLand(agent.AgentID))
                                 {
                                     //Now we have to check their userloc
                                     if (ILO.LandData.LandingType == 2)

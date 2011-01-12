@@ -2331,8 +2331,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 OrbitalPosition = (OrbitalPosition - m_sunPainDaHalfOrbitalCutoff) * 0.6666666667f + m_sunPainDaHalfOrbitalCutoff;
             }
 
-
-
             SimulatorViewerTimeMessagePacket viewertime = (SimulatorViewerTimeMessagePacket)PacketPool.Instance.GetPacket(PacketType.SimulatorViewerTimeMessage);
             viewertime.TimeInfo.SunDirection = Position;
             viewertime.TimeInfo.SunAngVelocity = Velocity;

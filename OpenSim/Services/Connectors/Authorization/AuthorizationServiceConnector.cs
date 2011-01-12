@@ -36,6 +36,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.Simulation.Base;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors
 {
@@ -47,39 +48,6 @@ namespace OpenSim.Services.Connectors
 
         private string m_ServerURI = String.Empty;
         private bool m_ResponseOnFailure = true;
-        private IUserAccountService m_userAccountService;
-
-        public bool IsAuthorizedForRegion(string userID, string firstname, string surname, string email, string regionID, out string message)
-        {
-            // do a remote call to the authorization server specified in the AuthorizationServerURI
-            m_log.InfoFormat("[AUTHORIZATION CONNECTOR]: IsAuthorizedForRegion checking {0} at remote server {1}", userID, m_ServerURI);
-            
-            string uri = m_ServerURI;
-            
-            AuthorizationRequest req = new AuthorizationRequest(userID, firstname, surname, email, regionID);
-            
-            AuthorizationResponse response;
-            try
-            {
-                response = SynchronousRestObjectRequester.MakeRequest<AuthorizationRequest, AuthorizationResponse>("POST", uri, req);
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[AUTHORIZATION CONNECTOR]: Unable to send authorize {0} for region {1} error thrown during comms with remote server. Reason: {2}", userID, regionID, e.Message);
-                message = "";
-                return m_ResponseOnFailure;
-            }
-            if (response == null)
-            {
-                message = "Null response";
-                return m_ResponseOnFailure;
-            }
-            m_log.DebugFormat("[AUTHORIZATION CONNECTOR] response from remote service was {0}", response.Message);
-            message = response.Message;
-            
-            return response.IsAuthorized;
-        }
-
 
         #region IService Members
 
@@ -130,7 +98,6 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_userAccountService = registry.RequestModuleInterface<IUserAccountService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -146,11 +113,12 @@ namespace OpenSim.Services.Connectors
 
         #region IAuthorizationService Members
 
-        public bool IsAuthorizedForRegion(string userID, string regionID, out string message)
+        public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
+            out Vector3 newPosition, out string reason)
         {
-            UserAccount account = m_userAccountService.GetUserAccount(UUID.Zero, userID);
-            return IsAuthorizedForRegion(userID, account.FirstName, account.LastName,
-                account.Email, regionID, out message);
+            newPosition = agent.startpos;
+            reason = "";
+            return true;
         }
 
         #endregion

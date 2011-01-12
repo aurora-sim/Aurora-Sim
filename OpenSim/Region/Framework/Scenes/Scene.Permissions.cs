@@ -83,7 +83,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason);
-    public delegate bool IncomingAgentHandler(UUID userID, Scene scene, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason);
+    public delegate bool IncomingAgentHandler(Scene scene, AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
     public delegate bool GenericParcelHandler(UUID user, ILandObject parcel, ulong groupPowers);
@@ -149,8 +149,8 @@ namespace OpenSim.Region.Framework.Scenes
         public event EditUserInventoryHandler OnEditUserInventory;
         public event CopyUserInventoryHandler OnCopyUserInventory;
         public event DeleteUserInventoryHandler OnDeleteUserInventory;
-        public event TeleportHandler OnCanTeleportLocally;
-        public event TeleportHandler OnCanTeleportRemotely;
+        public event TeleportHandler OnAllowedOutgoingLocalTeleport;
+        public event TeleportHandler OnAllowedOutgoingRemoteTeleport;
         public event IncomingAgentHandler OnAllowIncomingAgent;
         public event PushObjectHandler OnPushObject;
         public event PushObjectHandler OnViewObjectOwners;
@@ -984,11 +984,11 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool CanTeleportLocally(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        public bool AllowedOutgoingLocalTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";
-            TeleportHandler handler = OnCanTeleportLocally;
+            TeleportHandler handler = OnAllowedOutgoingLocalTeleport;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
@@ -1001,11 +1001,11 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool CanTeleportRemote(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        public bool AllowedOutgoingRemoteTeleport(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";
-            TeleportHandler handler = OnCanTeleportRemotely;
+            TeleportHandler handler = OnAllowedOutgoingRemoteTeleport;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
@@ -1018,20 +1018,20 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool AllowedIncomingAgent(UUID userID, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason)
+        public bool AllowedIncomingAgent(AgentCircuitData agent, bool isRootAgent, out Vector3 newPosition, out string reason)
         {
-            newPosition = Position;
-            reason = "";
             IncomingAgentHandler handler = OnAllowIncomingAgent;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
                 foreach (IncomingAgentHandler h in list)
                 {
-                    if (h(userID, m_scene, Position, SessionID, IPAddress, out newPosition, out reason) == false)
+                    if (h(m_scene, agent, isRootAgent, out newPosition, out reason) == false)
                         return false;
                 }
             }
+            newPosition = agent.startpos;
+            reason = "";
             return true;
         }
 

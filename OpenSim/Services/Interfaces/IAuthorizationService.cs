@@ -28,6 +28,7 @@
 using System;
 using OpenSim.Framework;
 using Aurora.Simulation.Base;
+using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -41,7 +42,8 @@ namespace OpenSim.Services.Interfaces
         // This method returns a simple true false indicating 
         // whether or not a user has access to the region
         //
-        bool IsAuthorizedForRegion(string userID, string regionID, out string message);
+        bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
+            out Vector3 newPosition, out string reason);
     }
     
     public class AuthorizationRequest

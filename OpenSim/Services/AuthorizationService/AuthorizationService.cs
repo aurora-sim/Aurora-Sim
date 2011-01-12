@@ -31,11 +31,12 @@ using Nini.Config;
 using log4net;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
-using OpenSim.Data;
 using OpenSim.Services.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.AuthorizationService
 {
@@ -45,49 +46,14 @@ namespace OpenSim.Services.AuthorizationService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAssetDataPlugin m_Database;
+        private IRegistryCore m_registry;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string dllName = String.Empty;
-            string connString = String.Empty;
-
-            //
-            // Try reading the [AuthorizationService] section first, if it exists
-            //
-            IConfig assetConfig = config.Configs["AuthorizationService"];
-            if (assetConfig != null)
-            {
-                dllName = assetConfig.GetString("StorageProvider", dllName);
-                connString = assetConfig.GetString("ConnectionString", connString);
-            }
-
-            //
-            // Try reading the [DatabaseService] section, if it exists
-            //
-            IConfig dbConfig = config.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                if (dllName == String.Empty)
-                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                if (connString == String.Empty)
-                    connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            //
-            // We tried, but this doesn't exist. We can't proceed.
-            //
-            if (dllName.Equals(String.Empty))
-                throw new Exception("No StorageProvider configured");
-
-            m_Database = AuroraModuleLoader.LoadPlugin<IAssetDataPlugin>(dllName);
-            if (m_Database == null)
-                throw new Exception("Could not find a storage interface in the given module");
-
-            m_Database.Initialise(connString);
             registry.RegisterModuleInterface<IAuthorizationService>(this);
+            m_registry = registry;
 
-            m_log.Debug("[AUTHORIZATION CONNECTOR]: Local Authorization service enabled");
+            m_log.Debug("[AuthorizationService]: Local Authorization service enabled");
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -104,11 +70,24 @@ namespace OpenSim.Services.AuthorizationService
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterModuleInterface<IAuthorizationService>(this);
         }
 
-        public bool IsAuthorizedForRegion(string userID, string regionID, out string message)
+        public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
-            message = "Authorized";
+            newPosition = agent.startpos;
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (Scene scene in manager.Scenes)
+                {
+                    if (scene.RegionInfo.RegionID == region.RegionID)
+                    {
+                        
+                    }
+                }
+            }
+            reason = "Authorized";
             return true;
         }
     }
