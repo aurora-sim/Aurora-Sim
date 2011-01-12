@@ -1039,10 +1039,10 @@ namespace OpenSim.Region.Framework.Scenes
             IAuthorizationService AuthorizationService = RequestModuleInterface<IAuthorizationService>();
             if (AuthorizationService != null)
             {
-                if (!AuthorizationService.IsAuthorizedForRegion(agent.AgentID.ToString(), RegionInfo.RegionID.ToString(), out reason))
+                GridRegion ourRegion = new GridRegion(RegionInfo);
+                if (!AuthorizationService.IsAuthorizedForRegion(agent.AgentID, ourRegion,
+                    out agent.startpos, out reason))
                 {
-                    if (Permissions.IsGod(agent.AgentID)) return true;
-
                     m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} at {1} because the user does not have access to the region",
                                      agent.AgentID, RegionInfo.RegionName);
                     reason = String.Format("You do not have access to the region {0}", RegionInfo.RegionName);
@@ -1052,7 +1052,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Can we teleport into this region?
             // Note: this takes care of practically every check possible, banned from estate, banned from parcels, parcel landing locations, etc
-            if (!Permissions.CanTeleport(agent.AgentID, agent.startpos, agent, out agent.startpos, out reason))
+            if (!Permissions.AllowedIncomingAgent(agent.AgentID, agent.startpos, agent.SessionID, 
+                agent.IPAddress, true, out agent.startpos, out reason))
                 return false;
 
             return true;

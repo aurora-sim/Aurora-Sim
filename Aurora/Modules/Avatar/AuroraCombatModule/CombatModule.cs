@@ -80,7 +80,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 scene.EventManager.OnNewPresence += NewPresence;
                 scene.EventManager.OnIncomingSceneObject += IncomingSceneObject;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
-                scene.Permissions.OnTeleport += CanTeleport;
+                scene.Permissions.OnCanTeleportLocally += CanTeleport;
             }
         }
 
@@ -91,11 +91,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                 scene.EventManager.OnNewPresence -= NewPresence;
                 scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
                 scene.EventManager.OnIncomingSceneObject -= IncomingSceneObject;
-                scene.Permissions.OnTeleport -= CanTeleport;
+                scene.Permissions.OnCanTeleportLocally -= CanTeleport;
             }
         }
 
-        public bool CanTeleport(UUID userID, Scene scene, Vector3 Position, OpenSim.Framework.AgentCircuitData ACD, out Vector3 newPosition, out string reason)
+        public bool CanTeleport(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";

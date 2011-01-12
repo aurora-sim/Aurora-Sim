@@ -69,7 +69,7 @@ namespace Aurora.Modules
             m_scene = scene;
 
             scene.EventManager.OnNewClient += OnNewClient;
-            scene.Permissions.OnTeleport += AllowTeleport;
+            scene.Permissions.OnAllowIncomingAgent += AllowTeleport;
             scene.EventManager.OnClosingClient += OnClosingClient;
 
             MainConsole.Instance.Commands.AddCommand(this.Name, true,
@@ -84,7 +84,7 @@ namespace Aurora.Modules
                 return;
 
             scene.EventManager.OnNewClient -= OnNewClient;
-            scene.Permissions.OnTeleport -= AllowTeleport;
+            scene.Permissions.OnAllowIncomingAgent -= AllowTeleport;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
@@ -334,7 +334,7 @@ namespace Aurora.Modules
 
         #region Can Teleport
 
-        public bool AllowTeleport(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
+        public bool AllowTeleport(UUID userID, Scene scene, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             
@@ -394,15 +394,15 @@ namespace Aurora.Modules
                 IPresenceService presence = scene.RequestModuleInterface<IPresenceService>();
                 if (presence == null)
                 {
-                    reason = String.Format("Failed to verify user presence in the grid for {0} in region {1}. Presence service does not exist.", ACD.AgentID, scene.RegionInfo.RegionName);
+                    reason = String.Format("Failed to verify user presence in the grid for {0} in region {1}. Presence service does not exist.", account.Name, scene.RegionInfo.RegionName);
                     return false;
                 }
 
-                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(ACD.SessionID);
+                OpenSim.Services.Interfaces.PresenceInfo pinfo = presence.GetAgent(SessionID);
 
                 if (pinfo == null)
                 {
-                    reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", ACD.AgentID, scene.RegionInfo.RegionName);
+                    reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", account.Name, scene.RegionInfo.RegionName);
                     return false;
                 }
             }
@@ -456,7 +456,7 @@ namespace Aurora.Modules
                         m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
                         rDNS = null;
                     }
-                    if (ban.BannedHostIPMask == ACD.IPAddress ||
+                    if (ban.BannedHostIPMask == IPAddress ||
                             (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
                                 end.ToString().StartsWith(ban.BannedHostIPMask))
                     {
@@ -464,10 +464,10 @@ namespace Aurora.Modules
                         ES.AddBan(new EstateBan()
                         {
                             EstateID = ES.EstateID,
-                            BannedHostIPMask = ACD.IPAddress,
+                            BannedHostIPMask = IPAddress,
                             BannedUserID = userID,
-                            BannedHostAddress = ACD.IPAddress,
-                            BannedHostNameMask = ACD.IPAddress
+                            BannedHostAddress = IPAddress,
+                            BannedHostNameMask = IPAddress
                         });
                         ES.Save();
 

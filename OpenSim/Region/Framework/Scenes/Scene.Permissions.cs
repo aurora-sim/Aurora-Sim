@@ -82,7 +82,8 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool EditUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
-    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason);
+    public delegate bool TeleportHandler(UUID userID, Scene scene, Vector3 Position, out Vector3 newPosition, out string reason);
+    public delegate bool IncomingAgentHandler(UUID userID, Scene scene, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason);
     public delegate bool PushObjectHandler(UUID userID, ILandObject parcel);
     public delegate bool EditParcelAccessListHandler(UUID userID, ILandObject parcel, uint flags);
     public delegate bool GenericParcelHandler(UUID user, ILandObject parcel, ulong groupPowers);
@@ -148,7 +149,9 @@ namespace OpenSim.Region.Framework.Scenes
         public event EditUserInventoryHandler OnEditUserInventory;
         public event CopyUserInventoryHandler OnCopyUserInventory;
         public event DeleteUserInventoryHandler OnDeleteUserInventory;
-        public event TeleportHandler OnTeleport;
+        public event TeleportHandler OnCanTeleportLocally;
+        public event TeleportHandler OnCanTeleportRemotely;
+        public event IncomingAgentHandler OnAllowIncomingAgent;
         public event PushObjectHandler OnPushObject;
         public event PushObjectHandler OnViewObjectOwners;
         public event EditParcelAccessListHandler OnEditParcelAccessList;
@@ -981,17 +984,51 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool CanTeleport(UUID userID, Vector3 Position, AgentCircuitData ACD, out Vector3 newPosition, out string reason)
+        public bool CanTeleportLocally(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
             reason = "";
-            TeleportHandler handler = OnTeleport;
+            TeleportHandler handler = OnCanTeleportLocally;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();
                 foreach (TeleportHandler h in list)
                 {
-                    if (h(userID, m_scene, Position, ACD, out newPosition, out reason) == false)
+                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public bool CanTeleportRemote(UUID userID, Vector3 Position, out Vector3 newPosition, out string reason)
+        {
+            newPosition = Position;
+            reason = "";
+            TeleportHandler handler = OnCanTeleportRemotely;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList();
+                foreach (TeleportHandler h in list)
+                {
+                    if (h(userID, m_scene, Position, out newPosition, out reason) == false)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public bool AllowedIncomingAgent(UUID userID, Vector3 Position, UUID SessionID, string IPAddress, bool isRootAgent, out Vector3 newPosition, out string reason)
+        {
+            newPosition = Position;
+            reason = "";
+            IncomingAgentHandler handler = OnAllowIncomingAgent;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList();
+                foreach (IncomingAgentHandler h in list)
+                {
+                    if (h(userID, m_scene, Position, SessionID, IPAddress, out newPosition, out reason) == false)
                         return false;
                 }
             }

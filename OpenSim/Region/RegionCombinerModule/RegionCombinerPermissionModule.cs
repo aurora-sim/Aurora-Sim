@@ -264,7 +264,7 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             newPos = Position;
             reason = "";
-            return m_rootScene.Permissions.CanTeleport(userid, Vector3.Zero, ACD, out newPos, out reason);
+            return m_rootScene.Permissions.CanTeleportLocally(userid, Vector3.Zero, ACD, out newPos, out reason);
         }
 
         #endregion

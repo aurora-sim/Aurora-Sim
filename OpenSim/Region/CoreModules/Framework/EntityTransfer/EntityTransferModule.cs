@@ -169,11 +169,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             string reason = "";
-            if (!sp.Scene.Permissions.CanTeleport(sp.UUID, position, sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID), out position, out reason))
-            {
-                sp.ControllingClient.SendTeleportFailed(reason);
-                return;
-            }
 
             sp.ControllingClient.SendTeleportStart(teleportFlags);
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
@@ -197,6 +192,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
                 {
+                    if (!sp.Scene.Permissions.CanTeleportLocally(sp.UUID, position, out position, out reason))
+                    {
+                        sp.ControllingClient.SendTeleportFailed(reason);
+                        return;
+                    }
                     // m_log.DebugFormat(
                     //    "[ENTITY TRANSFER MODULE]: RequestTeleportToLocation {0} within {1}",
                     //    position, sp.Scene.RegionInfo.RegionName);
@@ -235,6 +235,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 else // Another region possibly in another simulator
                 {
+                    if (!sp.Scene.Permissions.CanTeleportRemote(sp.UUID, position, out position, out reason))
+                    {
+                        sp.ControllingClient.SendTeleportFailed(reason);
+                        return;
+                    }
                     if (reg != null)
                     {
                         GridRegion finalDestination = GetFinalDestination(reg);
