@@ -45,8 +45,10 @@ namespace OpenSim.Server.Handlers
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
+            
             IEventQueueService service = registry.RequestModuleInterface<IEventQueueService>();
-            server.AddStreamHandler(new EQMEventPoster(service));
+            ICapsService capsService = registry.RequestModuleInterface<ICapsService>();
+            server.AddStreamHandler(new EQMEventPoster(service, capsService));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -61,11 +63,13 @@ namespace OpenSim.Server.Handlers
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IEventQueueService m_eventQueueService;
+        private ICapsService m_capsService;
 
-        public EQMEventPoster(IEventQueueService handler) :
+        public EQMEventPoster(IEventQueueService handler, ICapsService capsService) :
             base("POST", "/CAPS/EQMPOSTER")
         {
             m_eventQueueService = handler;
+            m_capsService = capsService;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -108,23 +112,35 @@ namespace OpenSim.Server.Handlers
             }
 
             OSDMap response = new OSDMap();
-            if (!m_eventQueueService.AuthenticateRequest(agentID, password, regionHandle))
+            IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
+            if (clientCaps != null)
             {
-                m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
-                    agentID + " calling with password " + password + " in region " + regionHandle);
-                response["success"] = false;
+                IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
+                if (regionClient != null)
+                {
+                    if (regionClient.Password != password)
+                    {
+                        m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
+                            agentID + " calling with password " + password + " in region " + regionHandle);
+                        response["success"] = false;
+                    }
+                    else
+                    {
+                        bool enqueueResult = false;
+                        foreach (OSD ev in OSDEvents)
+                        {
+                            enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
+                            if (!enqueueResult) //Break if one fails
+                                break;
+                        }
+                        response["success"] = enqueueResult;
+                    }
+                }
+                else
+                    response["success"] = false;
             }
             else
-            {
-                bool enqueueResult = false;
-                foreach (OSD ev in OSDEvents)
-                {
-                    enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
-                    if (!enqueueResult) //Break if one fails
-                        break;
-                }
-                response["success"] = enqueueResult;
-            }
+                response["success"] = false;
 
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(OSDParser.SerializeJsonString(response));

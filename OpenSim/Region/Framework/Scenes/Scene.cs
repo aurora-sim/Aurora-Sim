@@ -980,6 +980,13 @@ namespace OpenSim.Region.Framework.Scenes
                 const string seedRequestPath = "0000/";
                 string CapsSeed = "/CAPS/" + agent.CapsPath + seedRequestPath;
                 string capsUrl = capsService.CreateCAPS(agent.AgentID, "", CapsSeed, RegionInfo.RegionHandle);
+                IRegionClientCapsService regionCaps = capsService.GetClientCapsService(agent.AgentID).GetCapsService(RegionInfo.RegionHandle);
+
+                if (agent.OtherInformation.ContainsKey("CapsPassword"))
+                {
+                    UUID Password = agent.OtherInformation["CapsPassword"].AsUUID();
+                    regionCaps.AddSEEDCap("", "", Password);
+                }
                 m_log.Info("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
                      " @" + capsUrl + " for agent " + agent.AgentID);
                 responseMap["CapsUrl"] = capsUrl;

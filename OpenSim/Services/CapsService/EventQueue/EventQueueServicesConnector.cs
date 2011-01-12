@@ -125,11 +125,8 @@ namespace OpenSim.Services.CapsService
                     IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(RegionHandle);
                     if (regionClientCaps != null)
                     {
-                        if (regionClientCaps.RequestMap.ContainsKey("EventQueuePass"))
-                        {
-                            Password = regionClientCaps.RequestMap["EventQueuePass"].AsUUID();
-                            return true;
-                        }
+                        Password = regionClientCaps.Password;
+                        return true;
                     }
                 }
             }
@@ -221,15 +218,23 @@ namespace OpenSim.Services.CapsService
                 OSDMap reply = WebUtils.PostToService(m_serverURL, request);
                 if (reply != null)
                 {
-                    OSDMap result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
+                    OSDMap result = null;
+                    try
+                    {
+                        if(reply["_RawResult"] != "")
+                            result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
+                    }
+                    catch
+                    {
+                    }
 
-                    bool success = result["success"].AsBoolean();
+                    bool success = result == null ? false : result["success"].AsBoolean();
                     if (!success)
                     {
                         //We need to save the EQMs so that we can try again later
                         foreach (OSD o in events)
                         {
-                            //m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
+                            m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
                         }
                     }
                     return success;

@@ -1184,23 +1184,33 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool LaunchAgentDirectly(ISimulationService simConnector, GridRegion region, AgentCircuitData aCircuit, out string reason)
         {
+            // The client is in the region, we need to make sure it gets the right Caps
+            // If CreateAgent is successful, it passes back a OSDMap of params that the client 
+            //    wants to inform us about, and it includes the Caps SEED url for the region
+            IRegionClientCapsService regionClientCaps = null;
+            if (m_CapsService != null)
+            {
+                //Remove any previous users
+                string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
+                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, "", CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle);
+
+                regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
+                aCircuit.OtherInformation["CapsPassword"] = regionClientCaps.Password;
+            }
+
             // As we are creating the agent, we must also initialize the CapsService for the agent
             bool success = simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
                 return success;
 
-            // The client is in the region, we need to make sure it gets the right Caps
-            // If CreateAgent is successful, it passes back a OSDMap of params that the client 
-            //    wants to inform us about, and it includes the Caps SEED url for the region
             if (m_CapsService != null && reason != "")
             {
                 OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                 string SimcapsSeedPath = responseMap["CapsUrl"].AsString();
-                //Remove any previous users
-                string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
-                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle);
+                regionClientCaps.AddSEEDCap("", SimcapsSeedPath, UUID.Zero);
                 m_log.Info("[NewAgentConnection]: Adding Caps Url for grid" +
-                     " @" + ServerCapsSeedPath + " calling URL " + SimcapsSeedPath + " for agent " + aCircuit.AgentID);
+                     " @" + regionClientCaps.CapsUrl + " calling URL " + SimcapsSeedPath +
+                     " for agent " + aCircuit.AgentID);
             }
 
             return success;

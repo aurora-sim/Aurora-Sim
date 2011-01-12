@@ -91,19 +91,6 @@ namespace OpenSim.Services.CapsService
             return Enqueue(o, agentID, regionHandle);
         }
 
-        public virtual bool AuthenticateRequest(UUID agentID, UUID password, ulong regionHandle)
-        {
-            //Find the CapsService for the user and check their authentication
-            IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionHandle);
-            if (service == null)
-                return false;
-            RegionClientEventQueueService eventQueueService = FindEventQueueConnector(service);
-            if (eventQueueService == null)
-                return false;
-
-            return eventQueueService.AuthenticateRequest(password);
-        }
-
         private IRegionClientCapsService GetRegionClientCapsService(UUID agentID, ulong RegionHandle)
         {
             IClientCapsService clientCaps = m_service.GetClientCapsService(agentID);
@@ -258,7 +245,6 @@ namespace OpenSim.Services.CapsService
         private int m_ids = 0;
 
         private Queue<OSD> queue = new Queue<OSD>();
-        private UUID m_AvatarPassword = UUID.Zero;
         private IRegionClientCapsService m_service;
         private string m_capsPath;
 
@@ -353,7 +339,7 @@ namespace OpenSim.Services.CapsService
                         //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                         // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                         // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                        otherRegionService.AddSEEDCap("", SimSeedCap);
+                        otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
                         
                         ((OSDMap)map["body"])["seed-capability"] = otherRegionService.CapsUrl;
                     }
@@ -369,7 +355,7 @@ namespace OpenSim.Services.CapsService
                         //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                         // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                         // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                        otherRegionService.AddSEEDCap("", SimSeedCap);
+                        otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
@@ -386,7 +372,7 @@ namespace OpenSim.Services.CapsService
                         //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
                         // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                         // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                        otherRegionService.AddSEEDCap("", SimSeedCap);
+                        otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
@@ -402,22 +388,6 @@ namespace OpenSim.Services.CapsService
             }
 
             return true;
-        }
-
-        #endregion
-
-        #region Register and authenticate requests
-
-        /// <summary>
-        /// Check to make sure that the password we sent to the region is the same as the one here
-        /// </summary>
-        /// <param name="Password"></param>
-        /// <returns></returns>
-        public bool AuthenticateRequest(UUID Password)
-        {
-            if (m_AvatarPassword == Password)
-                return true;
-            return false;
         }
 
         #endregion
@@ -646,9 +616,6 @@ namespace OpenSim.Services.CapsService
 
             Random rnd = new Random(Environment.TickCount);
             m_ids = rnd.Next(30000000);
-
-            m_AvatarPassword = UUID.Random();
-            service.InfoToSendToUrl["EventQueuePass"] = OSD.FromUUID(m_AvatarPassword);
         }
 
         public void EnteringRegion()
@@ -750,6 +717,8 @@ namespace OpenSim.Services.CapsService
 
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
+                //Add the password too
+                circuitData.OtherInformation["CapsPassword"] = otherRegionService.Password;
 
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, data, out reason);
                 if (regionAccepted)
@@ -760,7 +729,7 @@ namespace OpenSim.Services.CapsService
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                         SimSeedCap = responseMap["CapsUrl"].AsString();
                     }
-                    otherRegionService.AddSEEDCap("", SimSeedCap);
+                    otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
                     if (newAgent)
                     {
                         //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +

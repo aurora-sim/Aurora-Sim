@@ -54,6 +54,11 @@ namespace OpenSim.Services.CapsService
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
+        private UUID m_Password = UUID.Zero;
+        public UUID Password
+        {
+            get { return m_Password; }
+        }
         
         private ulong m_RegionHandle;
         public ulong RegionHandle
@@ -141,7 +146,7 @@ namespace OpenSim.Services.CapsService
         {
             m_clientCapsService = clientCapsService;
             m_RegionHandle = regionHandle;
-            AddSEEDCap(capsBase, urlToInform);
+            AddSEEDCap(capsBase, urlToInform, UUID.Random());
 
             AddCAPS();
         }
@@ -199,12 +204,14 @@ namespace OpenSim.Services.CapsService
 
         #region SEED cap handling
 
-        public void AddSEEDCap(string CapsUrl, string UrlToInform)
+        public void AddSEEDCap(string CapsUrl, string UrlToInform, UUID password)
         {
             if (CapsUrl != "")
                 m_capsUrlBase = CapsUrl;
             if (UrlToInform != "")
                 m_UrlToInform = UrlToInform;
+            if (password != UUID.Zero)
+                m_Password = password;
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
         }

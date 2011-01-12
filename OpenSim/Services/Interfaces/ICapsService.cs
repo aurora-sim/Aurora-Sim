@@ -85,10 +85,11 @@ namespace OpenSim.Services.Interfaces
         String CapsUrl { get; }
         IRegistryCore Registry { get; }
         IClientCapsService ClientCaps { get; }
+        UUID Password { get; }
 
         void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform);
         void Close();
-        void AddSEEDCap(string CapsUrl, string UrlToInform);
+        void AddSEEDCap(string CapsUrl, string UrlToInform, UUID Password);
         string CreateCAPS(string method, string appendedPath);
         List<ICapsServiceConnector> GetServiceConnectors();
         void AddStreamHandler(string method, IRequestHandler handler);

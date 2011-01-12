@@ -133,7 +133,7 @@ namespace OpenSim.Services.CapsService
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
-            clientService.AddSEEDCap("", "");
+            clientService.AddSEEDCap("", "", clientService.Password);
 
             SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
             if (regionManager != null)

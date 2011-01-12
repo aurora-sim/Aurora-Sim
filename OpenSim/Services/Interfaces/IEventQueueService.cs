@@ -80,8 +80,6 @@ namespace OpenSim.Services.Interfaces
         void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
             UUID avatarID, ulong RegionHandle);
 
-        bool AuthenticateRequest(UUID agentID, UUID password, ulong RegionHandle);
-
 
         /// <summary>
         /// This is a region > CapsService message ONLY, this should never be sent to the client.
