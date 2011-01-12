@@ -27,7 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
+using log4net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
@@ -37,6 +39,9 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public partial class Scene
     {
+        private static readonly ILog m_log
+            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
                                UUID fromID, bool fromAgent, bool broadcast, float range, UUID ToAgentID)
         {

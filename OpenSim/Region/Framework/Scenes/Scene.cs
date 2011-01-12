@@ -545,8 +545,6 @@ namespace OpenSim.Region.Framework.Scenes
             AddToStartupQueue("Startup");
 
             #endregion
-
-            EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
         }
 
         #endregion Constructors

@@ -44,113 +44,6 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public interface ILLClientInventory
-    {
-        /// <summary>
-        /// The default LSL script that will be added when a client creates
-        /// a new script in inventory or in the task object inventory
-        /// </summary>
-        string DefaultLSLScript { get; set; }
-
-        /// <summary>
-        /// Add the given inventory item to a user's inventory.
-        /// </summary>
-        /// <param name="item">The item to add</param>
-        bool AddInventoryItem(InventoryItemBase item);
-
-        /// <summary>
-        /// Add an inventory item to an avatar's inventory.
-        /// </summary>
-        /// <param name="remoteClient">The remote client controlling the avatar</param>
-        /// <param name="item">The item.  This structure contains all the item metadata, including the folder
-        /// in which the item is to be placed.</param>
-        void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item);
-
-        /// <summary>
-        /// Give an inventory item from one user to another
-        /// </summary>
-        /// <param name="recipient"></param>
-        /// <param name="senderId">ID of the sender of the item</param>
-        /// <param name="itemId"></param>
-        /// <param name="recipientFolderId">
-        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
-        /// appropriate default folder.
-        /// </param>
-        /// <returns>
-        /// The inventory item copy given, null if the give was unsuccessful
-        /// </returns>
-        InventoryItemBase GiveInventoryItem(
-            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId);
-
-        /// <summary>
-        /// Give an entire inventory folder from one user to another.  The entire contents (including all descendent
-        /// folders) is given.
-        /// </summary>
-        /// <param name="recipientId"></param>
-        /// <param name="senderId">ID of the sender of the item</param>
-        /// <param name="folderId"></param>
-        /// <param name="recipientParentFolderId">
-        /// The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
-        /// recipient folder is the root folder
-        /// </param>
-        /// <returns>
-        /// The inventory folder copy given, null if the copy was unsuccessful
-        /// </returns>
-        InventoryFolderBase GiveInventoryFolder(
-            UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId);
-
-        /// <summary>
-        /// Return the given objects to the agent given
-        /// </summary>
-        /// <param name="returnobjects">The objects to return</param>
-        /// <param name="AgentId">The agent UUID that will get the inventory items for these objects</param>
-        /// <returns></returns>
-        bool ReturnObjects(SceneObjectGroup[] sceneObjectGroup, UUID uUID);
-
-        /// <summary>
-        /// Move the given item from the object task inventory to the agent's inventory
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="folderID">
-        /// The user inventory folder to move (or copy) the item to.  If null, then the most
-        /// suitable system folder is used (e.g. the Objects folder for objects).  If there is no suitable folder, then
-        /// the item is placed in the user's root inventory folder
-        /// </param>
-        /// <param name="part"></param>
-        /// <param name="itemID"></param>
-        InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID destId, UUID uUID, SceneObjectPart m_host, UUID objId);
-
-        /// <summary>
-        /// Move the given items from the object task inventory to the agent's inventory
-        /// </summary>
-        /// <param name="destID"></param>
-        /// <param name="name"></param>
-        /// <param name="host"></param>
-        /// <param name="items"></param>
-        /// <returns></returns>
-        UUID MoveTaskInventoryItemsToUserInventory(UUID uUID, string p, SceneObjectPart part, List<UUID> invList);
-
-        /// <summary>
-        /// Copy a task (prim) inventory item to another task (prim)
-        /// </summary>
-        /// <param name="destId"></param>
-        /// <param name="part"></param>
-        /// <param name="itemId"></param>
-        void MoveTaskInventoryItemToObject(UUID destId, SceneObjectPart m_host, UUID objId);
-
-        /// <summary>
-        /// Rez a script into a prim's inventory from another prim
-        /// This is used for the LSL function llRemoteLoadScriptPin and requires a valid pin to be used
-        /// </summary>
-        /// <param name="srcId">The UUID of the script that is going to be copied</param>
-        /// <param name="srcPart">The prim that the script that is going to be copied from</param>
-        /// <param name="destId">The UUID of the prim that the </param>
-        /// <param name="pin">The ScriptAccessPin of the prim</param>
-        /// <param name="running">Whether the script should be running when it is started</param>
-        /// <param name="start_param">The start param to pass to the script</param>
-        void RezScript(UUID srcId, SceneObjectPart m_host, UUID destId, int pin, int running, int start_param);
-    }
-
     public class LLClientInventory : INonSharedRegionModule, ILLClientInventory
     {
         #region Declares
@@ -185,6 +78,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             scene.RegisterModuleInterface<ILLClientInventory>(this);
 
+            scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
         }
@@ -1333,6 +1227,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        #region Private members
+
         /// <summary>
         /// Change a task inventory item to a user inventory item
         /// </summary>
@@ -1404,6 +1300,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             return agentItem;
         }
+
+        #endregion
 
         #region ILLCLientInventory Members
 
@@ -2047,87 +1945,14 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-    }
-    public partial class Scene
-    {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region Caps
 
         /// <summary>
-        /// Capability originating call to update the asset of a script in a prim's (task's) inventory
+        /// Register the Caps for inventory
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
-        /// <param name="primID">The prim which contains the item to update</param>
-        /// <param name="isScriptRunning">Indicates whether the script to update is currently running</param>
-        /// <param name="data"></param>
-        public ArrayList CapsUpdateTaskInventoryScriptAsset(IClientAPI remoteClient, UUID itemId,
-                                                       UUID primId, bool isScriptRunning, byte[] data)
-        {
-            if (!Permissions.CanEditScript(itemId, primId, remoteClient.AgentId))
-            {
-                remoteClient.SendAgentAlertMessage("Insufficient permissions to edit script", false);
-                return new ArrayList();
-            }
-
-            // Retrieve group
-            SceneObjectPart part = GetSceneObjectPart(primId);
-            if (null == part.ParentGroup)
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: " +
-                    "Prim inventory update requested for item ID {0} in prim ID {1} but this prim does not exist",
-                    itemId, primId);
-
-                return new ArrayList();
-            }
-            
-            // Retrieve item
-            TaskInventoryItem item = part.Inventory.GetInventoryItem(itemId);
-
-            if (null == item)
-            {
-                m_log.ErrorFormat(
-                    "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for caps script update "
-                        + " but the item does not exist in this inventory",
-                    itemId, part.Name, part.UUID);
-
-                return new ArrayList();
-            }
-
-            AssetBase asset = new AssetBase(UUID.Random(), item.Name, (sbyte)AssetType.LSLText,
-                remoteClient.AgentId.ToString());
-            asset.Description = item.Description;
-            asset.Data = data;
-            AssetService.Store(asset);
-
-            // Update item with new asset
-            item.AssetID = asset.FullID;
-
-            if (part.ParentGroup.UpdateInventoryItem(item))
-                if(item.InvType == (int)InventoryType.LSL)
-                    remoteClient.SendAgentAlertMessage("Script saved", false);                        
-            
-            // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
-            ArrayList errors = new ArrayList();
-
-            if (isScriptRunning)
-            {
-                // Needs to determine which engine was running it and use that
-                //
-                part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, DefaultScriptEngine, 0);
-                errors = part.Inventory.GetScriptErrors(item.ItemID, DefaultScriptEngine);
-            }
-            else
-            {
-                remoteClient.SendAgentAlertMessage("Script saved", false);
-            }
-            part.GetProperties(remoteClient);
-
-            part.ParentGroup.ResumeScripts();
-            return errors;
-        }
-
+        /// <param name="agentID"></param>
+        /// <param name="caps"></param>
         private void EventManagerOnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             string capsBase = "/CAPS/" + UUID.Random() + "/";
@@ -2135,10 +1960,10 @@ namespace OpenSim.Region.Framework.Scenes
             IRequestHandler handler = new RestStreamHandler("POST", capsBase,
                 delegate(string request, string path, string param,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                          {
-                                              return ScriptTaskInventory(agentID, request, path, param,
-                                                  httpRequest, httpResponse);
-                                          });
+                {
+                    return ScriptTaskInventory(agentID, request, path, param,
+                        httpRequest, httpResponse);
+                });
             caps.AddStreamHandler("UpdateScriptTaskInventory",
                 handler);
             caps.AddStreamHandler("UpdateScriptTask",
@@ -2148,10 +1973,10 @@ namespace OpenSim.Region.Framework.Scenes
             //Unless the script engine goes, region server bound
             handler = new RestStreamHandler("POST", capsBase, delegate(string request, string path, string param,
                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                          {
-                                              return NoteCardAgentInventory(agentID, request, path, param,
-                                                  httpRequest, httpResponse);
-                                          });
+            {
+                return NoteCardAgentInventory(agentID, request, path, param,
+                    httpRequest, httpResponse);
+            });
             caps.AddStreamHandler("UpdateNotecardAgentInventory",
                 handler);
             caps.AddStreamHandler("UpdateScriptAgentInventory",
@@ -2174,7 +1999,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
-                m_log.Debug("[Scene]: ScriptTaskInventory Request in region: " + RegionInfo.RegionName);
+                m_log.Debug("[Scene]: ScriptTaskInventory Request in region: " + m_scene.RegionInfo.RegionName);
                 //m_log.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
                 UUID item_id = map["item_id"].AsUUID();
@@ -2185,7 +2010,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 TaskInventoryScriptUpdater uploader =
                     new TaskInventoryScriptUpdater(
-                        this,
+                        m_scene,
                         item_id,
                         task_id,
                         is_script_running,
@@ -2199,7 +2024,7 @@ namespace OpenSim.Region.Framework.Scenes
                 string Protocol = "http://";
                 if (MainServer.Instance.UseSSL)
                     Protocol = "https://";
-                string uploaderURL = Protocol + RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+                string uploaderURL = Protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
                                      uploaderPath;
 
                 map = new OSDMap();
@@ -2234,7 +2059,7 @@ namespace OpenSim.Region.Framework.Scenes
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
 
             ItemUpdater uploader =
-                new ItemUpdater(AgentID, this, map["item_id"].AsUUID(), capsBase + uploaderPath, MainServer.Instance);
+                new ItemUpdater(AgentID, m_scene, map["item_id"].AsUUID(), capsBase + uploaderPath, MainServer.Instance);
 
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
@@ -2242,7 +2067,7 @@ namespace OpenSim.Region.Framework.Scenes
             string Protocol = "http://";
             if (MainServer.Instance.UseSSL)
                 Protocol = "https://";
-            string uploaderURL = Protocol + RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+            string uploaderURL = Protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
                                  uploaderPath;
 
             map = new OSDMap();
@@ -2345,8 +2170,8 @@ namespace OpenSim.Region.Framework.Scenes
                     string res = String.Empty;
                     IClientAPI client;
                     m_scene.TryGetClient(AgentID, out client);
-                    ArrayList errors = m_scene.CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data);
-                   
+                    ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data);
+
                     OSDMap map = new OSDMap();
                     map["new_asset"] = inventoryItemID;
                     map["compiled"] = errors.Count > 0 ? false : true;
@@ -2373,6 +2198,83 @@ namespace OpenSim.Region.Framework.Scenes
                 // XXX Maybe this should be some meaningful error packet
                 return null;
             }
+
+            /// <summary>
+            /// Capability originating call to update the asset of a script in a prim's (task's) inventory
+            /// </summary>
+            /// <param name="remoteClient"></param>
+            /// <param name="itemID"></param>
+            /// <param name="primID">The prim which contains the item to update</param>
+            /// <param name="isScriptRunning">Indicates whether the script to update is currently running</param>
+            /// <param name="data"></param>
+            public ArrayList CapsUpdateTaskInventoryScriptAsset(IClientAPI remoteClient, UUID itemId,
+                                                           UUID primId, bool isScriptRunning, byte[] data)
+            {
+                if (!m_scene.Permissions.CanEditScript(itemId, primId, remoteClient.AgentId))
+                {
+                    remoteClient.SendAgentAlertMessage("Insufficient permissions to edit script", false);
+                    return new ArrayList();
+                }
+
+                // Retrieve group
+                SceneObjectPart part = m_scene.GetSceneObjectPart(primId);
+                if (null == part.ParentGroup)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: " +
+                        "Prim inventory update requested for item ID {0} in prim ID {1} but this prim does not exist",
+                        itemId, primId);
+
+                    return new ArrayList();
+                }
+
+                // Retrieve item
+                TaskInventoryItem item = part.Inventory.GetInventoryItem(itemId);
+
+                if (null == item)
+                {
+                    m_log.ErrorFormat(
+                        "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for caps script update "
+                            + " but the item does not exist in this inventory",
+                        itemId, part.Name, part.UUID);
+
+                    return new ArrayList();
+                }
+
+                AssetBase asset = new AssetBase(UUID.Random(), item.Name, (sbyte)AssetType.LSLText,
+                    remoteClient.AgentId.ToString());
+                asset.Description = item.Description;
+                asset.Data = data;
+                m_scene.AssetService.Store(asset);
+
+                // Update item with new asset
+                item.AssetID = asset.FullID;
+
+                if (part.ParentGroup.UpdateInventoryItem(item))
+                    if (item.InvType == (int)InventoryType.LSL)
+                        remoteClient.SendAgentAlertMessage("Script saved", false);
+
+                // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
+                ArrayList errors = new ArrayList();
+
+                if (isScriptRunning)
+                {
+                    // Needs to determine which engine was running it and use that
+                    //
+                    part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, m_scene.DefaultScriptEngine, 0);
+                    errors = part.Inventory.GetScriptErrors(item.ItemID, m_scene.DefaultScriptEngine);
+                }
+                else
+                {
+                    remoteClient.SendAgentAlertMessage("Script saved", false);
+                }
+                part.GetProperties(remoteClient);
+
+                part.ParentGroup.ResumeScripts();
+                return errors;
+            }
         }
+
+        #endregion
     }
 }
