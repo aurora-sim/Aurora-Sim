@@ -11361,42 +11361,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     foreach (object o in args.Data)
                     {
-                        if ((int)o == ScriptBaseClass.OBJECT_NAME)
+                        if ((LSL_Integer)o == ScriptBaseClass.OBJECT_NAME)
                         {
                             ret.Add(av.Firstname + " " + av.Lastname);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_DESC)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_DESC)
                         {
                             ret.Add("");
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_POS)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_POS)
                         {
                             Vector3 tmp = av.AbsolutePosition;
                             ret.Add(new LSL_Vector((double)tmp.X, (double)tmp.Y, (double)tmp.Z));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_ROT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROT)
                         {
                             Quaternion rtmp = av.Rotation;
                             ret.Add(new LSL_Rotation((double)rtmp.X, (double)rtmp.Y, (double)rtmp.Z, (double)rtmp.W));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_VELOCITY)
                         {
                             Vector3 tmp = av.Velocity;
                             ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_OWNER)
                         {
                             ret.Add(id);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_GROUP)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_GROUP)
                         {
                             ret.Add(UUID.Zero.ToString());
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_CREATOR)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_CREATOR)
                         {
                             ret.Add(UUID.Zero.ToString());
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
                             int activeScripts = 0;
@@ -11406,7 +11406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                             ret.Add(activeScripts);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
                             int totalScripts = 0;
@@ -11416,7 +11416,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                             ret.Add(totalScripts);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
                             ret.Add(0);
                         }
@@ -11428,42 +11428,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     foreach (object o in args.Data)
                     {
-                        if ((int)o == ScriptBaseClass.OBJECT_NAME)
+                        if ((LSL_Integer)o == ScriptBaseClass.OBJECT_NAME)
                         {
                             ret.Add(obj.Name);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_DESC)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_DESC)
                         {
                             ret.Add(obj.Description);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_POS)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_POS)
                         {
                             Vector3 tmp = obj.AbsolutePosition;
                             ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_ROT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROT)
                         {
                             Quaternion rtmp = obj.RotationOffset;
                             ret.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_VELOCITY)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_VELOCITY)
                         {
                             Vector3 tmp = obj.Velocity;
                             ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_OWNER)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_OWNER)
                         {
                             ret.Add(obj.OwnerID.ToString());
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_GROUP)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_GROUP)
                         {
                             ret.Add(obj.GroupID.ToString());
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_CREATOR)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_CREATOR)
                         {
                             ret.Add(obj.CreatorID.ToString());
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
                             int activeScripts = 0;
@@ -11473,7 +11473,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                             ret.Add(activeScripts);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
                             int totalScripts = 0;
@@ -11483,7 +11483,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                             ret.Add(totalScripts);
                         }
-                        else if ((int)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
                             ret.Add(0);
                         }

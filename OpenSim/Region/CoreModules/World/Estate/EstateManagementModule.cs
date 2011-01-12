@@ -196,11 +196,26 @@ namespace OpenSim.Region.CoreModules.World.Estate
             m_scene.RegionInfo.EstateSettings.DenyIdentified = deny_age_unverified;
             m_scene.RegionInfo.EstateSettings.PublicAccess = is_externally_visible;
             m_scene.RegionInfo.EstateSettings.FixedSun = is_sun_fixed;
-            m_scene.RegionInfo.EstateSettings.SunPosition = sun_hour;
             m_scene.RegionInfo.EstateSettings.AbuseEmail = owner_abuse_email;
+            if (sun_hour == 0)
+            {
+                m_scene.RegionInfo.EstateSettings.UseGlobalTime = true;
+                m_scene.RegionInfo.EstateSettings.SunPosition = 0;
+            }
+            else
+            {
+                m_scene.RegionInfo.EstateSettings.UseGlobalTime = false;
+                m_scene.RegionInfo.EstateSettings.SunPosition = sun_hour;
+            }
             m_scene.RegionInfo.EstateSettings.Save();
             TriggerEstateInfoChange();
 
+            TriggerEstateSunUpdate();
+
+            IClientAPI remoteClient;
+            m_scene.TryGetClient(agentID, out remoteClient);
+
+            sendDetailedEstateData(remoteClient, invoice);
 
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
