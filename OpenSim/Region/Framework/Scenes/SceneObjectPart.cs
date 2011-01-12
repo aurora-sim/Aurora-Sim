@@ -2115,12 +2115,15 @@ namespace OpenSim.Region.Framework.Scenes
                 // or flexible
                 if (!isPhantom && !IsAttachment && !(Shape.PathCurve == (byte) Extrusion.Flexible))
                 {
-                    PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
+  
+                    Vector3 tmp = GetWorldPosition();
+                    Quaternion qtmp = GetWorldRotation();
+                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
-                        AbsolutePosition,
+                        tmp,
                         Scale,
-                        RotationOffset,
+                        qtmp,
                         RigidBody);
 
                     // Basic Physics returns null..  joy joy joy.
@@ -2633,7 +2636,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Quaternion newRot = RotationOffset;
 
-            if (this.LinkNum != 0)
+            if (this.LinkNum > 1)
             {
                 Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
                 newRot = parentRot * newRot;

@@ -1416,11 +1416,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
 
                     CalculatePrimMass();
-/* let this be done by set physicsstate sent later
+/*
                     if (m_isphysical)
                         MakeBody();
+
                     else
- */
+*/
                         {                       
                         d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
                         d.Quaternion myrot = new d.Quaternion();
@@ -1474,32 +1475,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (Body != IntPtr.Zero)
                         d.BodyEnable(Body);
                     }
-                }
-            else
-                {
-                // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
-                // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
-                _parent_scene.waitForSpaceUnlock(m_targetSpace);
 
-                IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, _position, m_targetSpace);
-                m_targetSpace = tempspace;
-
-                _parent_scene.waitForSpaceUnlock(m_targetSpace);
-
-                if (m_taintrot != _orientation)
+                else
                     {
-                    d.Quaternion myrot = new d.Quaternion();
-                    myrot.X = _orientation.X;
-                    myrot.Y = _orientation.Y;
-                    myrot.Z = _orientation.Z;
-                    myrot.W = _orientation.W;
-                    d.GeomSetQuaternion(prim_geom, ref myrot);
+                    // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
+                    // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
+                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                    IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, _position, m_targetSpace);
+                    m_targetSpace = tempspace;
+
+                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                    if (m_taintrot != _orientation)
+                        {
+                        d.Quaternion myrot = new d.Quaternion();
+                        myrot.X = _orientation.X;
+                        myrot.Y = _orientation.Y;
+                        myrot.Z = _orientation.Z;
+                        myrot.W = _orientation.W;
+                        d.GeomSetQuaternion(prim_geom, ref myrot);
+                        }
+
+                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+
+                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                    d.SpaceAdd(m_targetSpace, prim_geom);
                     }
-
-                d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-
-                _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                d.SpaceAdd(m_targetSpace, prim_geom);
                 }
             changeSelectedStatus();
 
