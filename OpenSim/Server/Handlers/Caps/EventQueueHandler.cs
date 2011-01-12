@@ -88,7 +88,24 @@ namespace OpenSim.Server.Handlers
             UUID agentID = request["AgentID"].AsUUID();
             ulong regionHandle = request["RegionHandle"].AsULong();
             UUID password = request["Password"].AsUUID();
-            OSDMap Event = (OSDMap)OSDParser.DeserializeLLSDXml(request["Event"].AsString());
+            OSDArray events = new OSDArray();
+            if(request.ContainsKey("Events"))
+                events = (OSDArray)request["Events"];
+
+            OSD singleEventDepriated = null; //This can be removed later, was only used before 12-1-11
+            if(request.ContainsKey("Event"))
+                singleEventDepriated = request["Event"];
+
+            List<OSD> OSDEvents = new List<OSD>();
+            //Add it if it exists
+            if (singleEventDepriated != null)
+                OSDEvents.Add(singleEventDepriated);
+
+            foreach (OSD ev in events)
+            {
+                OSD Event = OSDParser.DeserializeLLSDXml(ev.AsString());
+                OSDEvents.Add(Event);
+            }
 
             OSDMap response = new OSDMap();
             if (!m_eventQueueService.AuthenticateRequest(agentID, password, regionHandle))
@@ -99,7 +116,13 @@ namespace OpenSim.Server.Handlers
             }
             else
             {
-                bool enqueueResult = m_eventQueueService.Enqueue(Event, agentID, regionHandle);
+                bool enqueueResult = false;
+                foreach (OSD ev in OSDEvents)
+                {
+                    enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
+                    if (!enqueueResult) //Break if one fails
+                        break;
+                }
                 response["success"] = enqueueResult;
             }
 

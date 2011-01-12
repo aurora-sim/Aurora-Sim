@@ -56,6 +56,12 @@ namespace OpenSim.Services.CapsService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         private string m_serverURL = "";
+
+        /// <summary>
+        /// This holds events that havn't been sent yet as the client hasn't called the CapsHandler and sent the EventQueue password.
+        /// Note: these already have been converted to LLSDXML, so do not duplicate this!
+        /// </summary>
+        private Dictionary<UUID, List<OSD>> m_eventsNotSentPasswordDoesNotExist = new Dictionary<UUID, List<OSD>>();
         
         #endregion
 
@@ -177,8 +183,12 @@ namespace OpenSim.Services.CapsService
                 UUID Password;
                 if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
                 {
-                    m_log.Warn("[EventQueueServiceConnector]: Could not find password for agent " + avatarID + 
-                        ", all Caps will fail!");
+                    if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                        m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new List<OSD>());
+                    m_eventsNotSentPasswordDoesNotExist[avatarID].Add(OSDParser.SerializeLLSDXmlString(ev));
+
+                    m_log.Info("[EventQueueServiceConnector]: Could not find password for agent " + avatarID + 
+                        ", all Caps will fail if this is not resolved!");
                     return false;
                 }
 
@@ -187,13 +197,44 @@ namespace OpenSim.Services.CapsService
                 request.Add("RegionHandle", regionHandle);
                 request.Add("Password", Password);
                 //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
-                request.Add("Event", OSDParser.SerializeLLSDXmlString(ev));
+
+                OSDArray events = new OSDArray();
+                events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event
+
+                //Clear the queue above if the password was just found now
+                if (m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                {
+                    if (m_eventsNotSentPasswordDoesNotExist[avatarID].Count > 0)
+                    {
+                        //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
+                        foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID])
+                        {
+                            events.Add(EQMessage);
+                        }
+                    }
+                    //Clear it for now... we'll readd if it fails
+                    m_eventsNotSentPasswordDoesNotExist[avatarID].Clear(); 
+                }
+
+                request.Add("Events", events);
 
                 OSDMap reply = WebUtils.PostToService(m_serverURL, request);
                 if (reply != null)
                 {
                     OSDMap result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
-                    return result["success"].AsBoolean();
+
+                    bool success = result["success"].AsBoolean();
+                    if (!success)
+                    {
+                        //We need to save the EQMs so that we can try again later
+                        if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                            m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new List<OSD>());
+                        foreach (OSD o in events)
+                        {
+                            m_eventsNotSentPasswordDoesNotExist[avatarID].Add(o);
+                        }
+                    }
+                    return success;
                 }
             }
             catch (Exception e)

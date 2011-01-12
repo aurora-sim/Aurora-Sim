@@ -701,6 +701,7 @@ namespace OpenSim.Services.CapsService
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
                 if (newAgent)
                 {
+                    //Update 21-1-11 (Revolution) It is unclear whether this code is 'really' needed now
                     //Build the full URL
                     SimSeedCap
                         = "http://"
