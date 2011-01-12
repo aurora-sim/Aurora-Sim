@@ -2118,7 +2118,7 @@ namespace OpenSim.Region.Framework.Scenes
   
                     Vector3 tmp = GetWorldPosition();
                     Quaternion qtmp = GetWorldRotation();
-                    PhysActor = m_parentGroup.Scene.PhysicsScene.AddPrimShape(
+                    PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
                         tmp,
