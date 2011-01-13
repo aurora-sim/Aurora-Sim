@@ -1124,16 +1124,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public IScriptApi[] GetAPIs()
         {
             if (m_APIs.Length == 0)
+            {
                 m_APIs = AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
+                List<IScriptApi> internalApis = new List<IScriptApi>();
+                //Only add Apis that are considered safe
+                foreach (IScriptApi api in m_APIs)
+                {
+                    if (ScriptProtection.CheckAPI(api.Name))
+                    {
+                        internalApis.Add(api);
+                    }
+                }
+                m_APIs = internalApis.ToArray();
+            }
             IScriptApi[] apis = new IScriptApi[m_APIs.Length];
             int i = 0;
-            foreach(IScriptApi api in m_APIs)
+            foreach (IScriptApi api in m_APIs)
             {
-                if (ScriptProtection.CheckAPI(api.Name))
-                {
-                    apis[i] = api.Copy();
-                    i++;
-                }
+                apis[i] = api.Copy();
+                i++;
             }
             return apis;
         }
