@@ -1194,61 +1194,27 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public Quaternion RotationOffset
-        {
-            get
             {
+            get
+                {
                 // We don't want the physics engine mucking up the rotations in a linkset
                 PhysicsActor actor = PhysActor;
-                if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0)  && actor != null)
-                {
+                if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0) && actor != null)
+                    {
                     if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
                         || actor.Orientation.Z != 0f || actor.Orientation.W != 0f)
-                    {
+                        {
                         m_rotationOffset = actor.Orientation;
+                        }
                     }
-                }
-                
+
                 return m_rotationOffset;
-            }
-            
-            set
-            {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
-                m_rotationOffset = value;
-
-                if (value.W == 0) //We have an issue here... try to normalize it
-                    value.Normalize();
-
-                PhysicsActor actor = PhysActor;
-                if (actor != null)
-                {
-                    try
-                    {
-                        // Root prim gets value directly
-                        if (_parentID == 0)
-                        {
-                            actor.Orientation = value;
-                            //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
-                        }
-                        else 
-                        {
-                            // Child prim we have to calculate it's world rotationwel
-                            Quaternion resultingrotation = GetWorldRotation();
-                            actor.Orientation = resultingrotation;
-                            //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
-                        }
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        //}
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
-                    }
                 }
-
+            set
+                {
+                SetRotationOffset(true, value, true);
+                }
             }
-        }
 
         /// <summary></summary>
         public Vector3 Velocity
@@ -1834,6 +1800,52 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Public Methods
 
+
+        public void SetRotationOffset(bool UpdatePrimActor, Quaternion value, bool single)
+            {
+            if (ParentGroup != null)
+                ParentGroup.HasGroupChanged = true;
+            m_rotationOffset = value;
+
+            if (value.W == 0) //We have an issue here... try to normalize it
+                value.Normalize();
+
+            PhysicsActor actor = PhysActor;
+            if (actor != null)
+                {
+                if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
+                    {
+                    UpdatePrimActor = true;
+                    single = false;
+                    }
+                if (UpdatePrimActor)
+                    {
+                    try
+                        {
+                        // Root prim gets value directly
+                        if (_parentID == 0)
+                            {
+                            actor.Orientation = value;
+                            //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
+                            }
+                        else if (single || !actor.IsPhysical)
+                            {
+                            // Child prim we have to calculate it's world rotationwel
+                            Quaternion resultingrotation = GetWorldRotation();
+                            actor.Orientation = resultingrotation;
+                            //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
+                            }
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                        //}
+                        }
+                    catch (Exception ex)
+                        {
+                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
+                        }
+                    }
+                }
+
+            }
 
         public void SetOffsetPosition(Vector3 value)
             {
