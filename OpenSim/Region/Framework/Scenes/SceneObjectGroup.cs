@@ -333,86 +333,9 @@ namespace OpenSim.Region.Framework.Scenes
         public override Vector3 AbsolutePosition
         {
             get { return m_rootPart.GroupPosition; }
-            set
+        set
             {
-                HasGroupChanged = true;
-                Vector3 val = value;
-                if (!IsAttachment && RootPart.Shape.State == 0)
-                {
-                    IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
-                    if ((val.X < 0f || val.Y < 0f || val.Z < m_scene.MaxLowValue ||
-                        val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
-                        && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
-                    {
-                        //If we are headed out of the region, make sure we have a region there
-                        INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
-                        if (neighborService != null)
-                        {
-                            List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
-
-                            int RegionCrossX = Scene.RegionInfo.RegionLocX;
-                            int RegionCrossY = Scene.RegionInfo.RegionLocY;
-
-                            if (val.X < 0f) RegionCrossX -= Constants.RegionSize;
-                            if (val.Y < 0f) RegionCrossY -= Constants.RegionSize;
-                            if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
-                            if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
-                            GridRegion neighborRegion = null;
-
-                            foreach (GridRegion region in neighbors)
-                            {
-                                if (region.RegionLocX == RegionCrossX &&
-                                    region.RegionLocY == RegionCrossY)
-                                {
-                                    neighborRegion = region;
-                                    break;
-                                }
-                            }
-
-                            if (neighborRegion != null)
-                            {
-                                IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
-                                if (transferModule != null)
-                                    transferModule.CrossGroupToNewRegion(this, val, neighborRegion);
-                            }
-                            else
-                            {
-                                //The group should have crossed a region, but no region was found so return it instead
-                                m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
-                                ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
-                                if(inventoryModule != null)
-                                    inventoryModule.ReturnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
-                                return;
-                            }
-                        }
-                    }
-                }
-                
-                if (RootPart.GetStatusSandbox())
-                {
-                    if (Util.GetDistanceTo(RootPart.StatusSandboxPos, value) > 10)
-                    {
-                        RootPart.ScriptSetPhysicsStatus(false);
-                        IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
-                        if (chatModule != null)
-                            chatModule.SimChat("Hit Sandbox Limit",
-                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, RootPart.AbsolutePosition, Name, UUID,
-                              false, Scene);
-                        return;
-                    }
-                }
-                foreach (SceneObjectPart part in m_partsList)
-                {
-                    part.FixGroupPosition(val,false);
-                }
-
-                //if (m_rootPart.PhysActor != null)
-                //{
-                //m_rootPart.PhysActor.Position =
-                //new PhysicsVector(m_rootPart.GroupPosition.X, m_rootPart.GroupPosition.Y,
-                //m_rootPart.GroupPosition.Z);
-                //m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
-                //}
+            SetAbsolutePosition(true, value);
             }
         }
 
@@ -2613,6 +2536,89 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Position
+
+        public void SetAbsolutePosition(bool UpdatePrimActor, Vector3 val)
+            {
+                HasGroupChanged = true;
+ 
+                if (!IsAttachment && RootPart.Shape.State == 0)
+                {
+                    IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
+                    if ((val.X < 0f || val.Y < 0f || val.Z < m_scene.MaxLowValue ||
+                        val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
+                        && !IsAttachmentCheckFull() && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
+                    {
+                        //If we are headed out of the region, make sure we have a region there
+                        INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
+                        if (neighborService != null)
+                        {
+                            List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
+
+                            int RegionCrossX = Scene.RegionInfo.RegionLocX;
+                            int RegionCrossY = Scene.RegionInfo.RegionLocY;
+
+                            if (val.X < 0f) RegionCrossX -= Constants.RegionSize;
+                            if (val.Y < 0f) RegionCrossY -= Constants.RegionSize;
+                            if (val.X > Scene.RegionInfo.RegionSizeX) RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
+                            if (val.Y > Scene.RegionInfo.RegionSizeY) RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
+                            GridRegion neighborRegion = null;
+
+                            foreach (GridRegion region in neighbors)
+                            {
+                                if (region.RegionLocX == RegionCrossX &&
+                                    region.RegionLocY == RegionCrossY)
+                                {
+                                    neighborRegion = region;
+                                    break;
+                                }
+                            }
+
+                            if (neighborRegion != null)
+                            {
+                                IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                                if (transferModule != null)
+                                    transferModule.CrossGroupToNewRegion(this, val, neighborRegion);
+                            }
+                            else
+                            {
+                                //The group should have crossed a region, but no region was found so return it instead
+                                m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
+                                ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
+                                if(inventoryModule != null)
+                                    inventoryModule.ReturnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                if (RootPart.GetStatusSandbox())
+                {
+                    if (Util.GetDistanceTo(RootPart.StatusSandboxPos, val) > 10)
+                    {
+                        RootPart.ScriptSetPhysicsStatus(false);
+                        IChatModule chatModule = Scene.RequestModuleInterface<IChatModule>();
+                        if (chatModule != null)
+                            chatModule.SimChat("Hit Sandbox Limit",
+                              ChatTypeEnum.DebugChannel, 0x7FFFFFFF, RootPart.AbsolutePosition, Name, UUID,
+                              false, Scene);
+                        return;
+                    }
+                }
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                part.FixGroupPositionComum(UpdatePrimActor,val, false);
+                }
+
+                //if (m_rootPart.PhysActor != null)
+                //{
+                //m_rootPart.PhysActor.Position =
+                //new PhysicsVector(m_rootPart.GroupPosition.X, m_rootPart.GroupPosition.Y,
+                //m_rootPart.GroupPosition.Z);
+                //m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
+                //}
+            }
+
 
         /// <summary>
         /// Move this scene object

@@ -1874,7 +1874,13 @@ namespace OpenSim.Region.Framework.Scenes
             m_groupPosition = value;
             }
 
+
         public void FixGroupPosition(Vector3 value, bool single)
+            {
+            FixGroupPositionComum(true, value, single);
+            }
+
+        public void FixGroupPositionComum(bool UpdatePrimActor,Vector3 value, bool single)
             {
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
@@ -1888,30 +1894,39 @@ namespace OpenSim.Region.Framework.Scenes
             m_groupPosition = value;
 
             PhysicsActor actor = PhysActor;
+
             if (actor != null)
                 {
-                try
+                if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
                     {
-                    // Root prim actually goes at Position
-                    if (_parentID == 0)
-                        {
-                        actor.Position = value;
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        }
-                    else if(single || !actor.IsPhysical)
-                        {
-                        // To move the child prim in respect to the group position and rotation we have to calculate
-                        actor.Position = GetWorldPosition();
-                        actor.Orientation = GetWorldRotation();
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        }
-
-                    // Tell the physics engines that this prim changed.
-                    
+                    UpdatePrimActor = true;
+                    single = false;
                     }
-                catch (Exception e)
+                if (UpdatePrimActor)
                     {
-                    m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                    try
+                        {
+                        // Root prim actually goes at Position
+                        if (_parentID == 0)
+                            {
+                            actor.Position = value;
+                            m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                            }
+                        else if (single || !actor.IsPhysical)
+                            {
+                            // To move the child prim in respect to the group position and rotation we have to calculate
+                            actor.Position = GetWorldPosition();
+                            actor.Orientation = GetWorldRotation();
+                            m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                            }
+
+                        // Tell the physics engines that this prim changed.
+
+                        }
+                    catch (Exception e)
+                        {
+                        m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                        }
                     }
                 }
 
@@ -3421,7 +3436,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (PhysActor != null)
             {
 //                Vector3 newpos = new Vector3(PhysActor.Position.GetBytes(), 0);
-                m_parentGroup.AbsolutePosition = PhysActor.Position;
+                m_parentGroup.SetAbsolutePosition(false,PhysActor.Position);
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
