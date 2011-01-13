@@ -48,6 +48,7 @@ using OpenMetaverse;
 using Ode.NET;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
+using changes = Aurora.Physics.AuroraOpenDynamicsEngine.AuroraODEPhysicsScene.changes;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -60,25 +61,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Vector3 _position;
+        private Vector3 showposition; // a temp hack for now rest of code expects position to be changed imediatly
+                                      // and now we do it delayed, so fake we changed it
+        bool fakepos = false;                 // control the use of above
         private Vector3 _velocity;
         private Vector3 _torque;
         private Vector3 m_lastVelocity;
         private Vector3 m_lastRotationalVelocity;
         private Vector3 m_lastposition;
-        //private Vector3 m_lastSignificantPosition;
+        private Vector3 m_lastSignificantPosition;
         private Quaternion m_lastorientation = new Quaternion();
         private Vector3 m_rotationalVelocity;
         private Vector3 _size;
         private Vector3 _acceleration;
         private Quaternion _orientation;
-        private Vector3 m_taintposition;
-        private Vector3 m_taintsize;
-        private Vector3 m_taintVelocity;
-        private Vector3 m_taintTorque;
-        private Quaternion m_taintrot;
+        private Quaternion showorientation; // tmp hack see showposition
+        bool fakeori = false;                 // control the use of above
+
         public Vector3 m_angularlock = Vector3.One;
-        private Vector3 m_taintAngularLock = Vector3.One;
-        private bool m_needsTaintAngularLock = false;
         public IntPtr Amotor = IntPtr.Zero;
         public d.Matrix3 AmotorRotation = new d.Matrix3();
 
@@ -109,8 +109,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                         | CollisionCategories.Body
                                                         | CollisionCategories.Character
                                                         );
-        private bool m_taintshape;
-        private bool m_taintPhysics;
         private bool m_collidesLand = true;
         private bool m_collidesWater;
         public bool m_returnCollisions;
@@ -121,13 +119,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         // Default, Collide with Other Geometries, spaces and Bodies
         private CollisionCategories m_collisionFlags = m_default_collisionFlags;
-
-        public bool m_taintremove;
-        public bool m_taintdisable;
+       
         public bool m_disabled;
-        public bool m_taintadd;
-        public bool m_taintselected;
-        public bool m_taintCollidesWater;
         //This disables the prim so that it cannot do much anything at all
         public bool m_frozen = false;
 
@@ -136,8 +129,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //public GCHandle gc;
         private CollisionLocker ode;
 
-        private bool m_taintforce = false;
-        private bool m_taintaddangularforce = false;
         private Vector3 m_force;
         private List<Vector3> m_forcelist = new List<Vector3>();
         private List<Vector3> m_angularforcelist = new List<Vector3>();
@@ -152,7 +143,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private IntPtr _linkJointGroup = IntPtr.Zero;
         private PhysicsActor _parent;
-        private PhysicsActor m_taintparent;
 
         private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
 
@@ -164,7 +154,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_throttleUpdates;
         private int throttleCounter;
-        //private int _updatesPerThrottledUpdate;
+        private int _updatesPerThrottledUpdate;
         public int m_interpenetrationcount;
         public float m_collisionscore;
         private int m_crossingfailures;
@@ -207,7 +197,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.Warn("[PHYSICS]: Got nonFinite Object create Position");
             }
             _position = pos;
-            m_taintposition = pos;
+            fakepos = false;
+
             PID_D = parent_scene.bodyPIDD;
             PID_G = parent_scene.bodyPIDG;
             m_density = parent_scene.geomDefaultDensity;
@@ -229,7 +220,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (size.Z <= 0) size.Z = 0.01f;
 
             _size = size;
-            m_taintsize = _size;
 
             if (!QuaternionIsFinite(rotation))
             {
@@ -238,7 +228,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             _orientation = rotation;
-            m_taintrot = _orientation;
+            fakeori = false;
+
             _mesh = mesh;
             _pbs = pbs;
 
@@ -256,9 +247,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_targetSpace = _parent_scene.space;
             }
             m_primName = primName;
-            m_taintadd = true;
-            _parent_scene.AddPhysicsActorTaint(this);
-            //  don't do .add() here; old geoms get recycled with the same hash
+            AddChange(changes.Add, null);
         }
 
         public override int PhysicsActorType
@@ -300,10 +289,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // without this, if an avatar selects prim, they can walk right
                 // through it while it's selected
                 m_collisionscore = 0;
-                m_taintselected = value;
                 if ((IsPhysical && !_zeroFlag) || !value)
                 {
-                    _parent_scene.AddPhysicsActorTaint(this);
+                AddChange(changes.Selected, (object)value);
                 }
                 else
                 {
@@ -964,138 +952,64 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public bool ProcessTaints(float timestep)
+        private void changeAngularLock(Object arg)
             {
-            //Console.WriteLine("ProcessTaints for " + m_primName);
-            if (m_taintremove)
-                {
-                if (_parent != null)
-                    {
-                    AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                    parent.ChildRemove(this);
-                    }
-                else
-                    ChildRemove(this);
-                return true;
-                }
-
-            if (m_taintadd)
-                {
-                changeadd();
-                }
-
-            if (m_frozen)
-                return false;
-
-            if (prim_geom != IntPtr.Zero)
-                {
-                if (!_position.ApproxEquals(m_taintposition, 0f) || m_taintrot != _orientation)
-                    changemoveandrotate(timestep);
-
-
-
-                if (m_taintPhysics != m_isphysical && !(m_taintparent != _parent))
-                    changePhysicsStatus();
-
-                if (!_size.ApproxEquals(m_taintsize, 0f))
-                    changesize();
-
-                if (m_taintshape)
-                    changeshape();
-
-                if (m_taintforce)
-                    changeAddForce();
-
-                if (m_taintaddangularforce)
-                    changeAddAngularForce();
-
-                if (!m_taintTorque.ApproxEquals(Vector3.Zero, 0.001f))
-                    changeSetTorque();
-
-                if (m_taintdisable)
-                    changedisable();
-
-                if (m_taintselected != m_isSelected)
-                    changeSelectedStatus();
-
-                if (!m_taintVelocity.ApproxEquals(Vector3.Zero, 0.001f))
-                    changevelocity();
-
-                if (m_taintparent != _parent)
-                    changelink();
-
-                if (m_taintCollidesWater != m_collidesWater)
-                    changefloatonwater();
-
-                if (m_needsTaintAngularLock)
-                    changeAngularLock();
-
-                }
-            else
-                {
-                m_frozen = true;
-                m_log.Error("[PHYSICS]: The scene reused a disposed PhysActor! *waves finger*, Don't be evil.  A couple of things can cause this.   An improper prim breakdown(be sure to set prim_geom to zero after d.GeomDestroy!   An improper buildup (creating the geom failed).   Or, the Scene Reused a physics actor after disposing it.)");
-                }
-            return false;
-            }
-
-        private void changeAngularLock()
-        {
+            Vector3 newlock = (Vector3)arg;
             // do we have a Physical object?
             if (Body != IntPtr.Zero)
-            {
+                {
                 //Check that we have a Parent
                 //If we have a parent then we're not authorative here
                 if (_parent == null)
-                {
-                    if (!m_taintAngularLock.ApproxEquals(Vector3.One, 0f))
                     {
-                        createAMotor(m_taintAngularLock);
-                    }
-                    else
-                    {
-                        if (Amotor != IntPtr.Zero)
+
+                    if (!newlock.ApproxEquals(Vector3.One, 0f))
                         {
+                        createAMotor(newlock);
+                        }
+                    else
+                        {
+                        if (Amotor != IntPtr.Zero)
+                            {
                             d.JointDestroy(Amotor);
                             Amotor = IntPtr.Zero;
+                            }
                         }
                     }
                 }
-            }
             // Store this for later in case we get turned into a separate body
-            m_angularlock = m_taintAngularLock;
-            m_needsTaintAngularLock = false;
-        }
+            m_angularlock = newlock;
+            }
 
-        private void changelink()
-        {
+        private void changelink(AuroraODEPrim newparent)
+            {
             // If the newly set parent is not null
             // create link
-            if (_parent == null && m_taintparent != null)
-            {
-                if (m_taintparent.PhysicsActorType == (int)ActorTypes.Prim)
+            if (_parent == null && newparent != null)
                 {
-                    AuroraODEPrim obj = (AuroraODEPrim)m_taintparent;
+                if (newparent.PhysicsActorType == (int)ActorTypes.Prim)
+                    {
+                    AuroraODEPrim obj = (AuroraODEPrim)newparent;
                     obj.ParentPrim(this);
+                    }
                 }
-            }
             // If the newly set parent is null
             // destroy link
-            else if (_parent != null && m_taintparent == null)
-            {
-//Console.WriteLine("  changelink B");
-            
-                if (_parent is AuroraODEPrim)
+            else if (_parent != null && newparent == null)
                 {
+                //Console.WriteLine("  changelink B");
+
+                if (_parent is AuroraODEPrim)
+                    {
                     AuroraODEPrim obj = (AuroraODEPrim)_parent;
                     obj.ChildDelink(this);
                     childPrim = false;
                     //_parent = null;
-                }               
+                    }
+                }
+
+            _parent = newparent;
             }
- 
-            _parent = m_taintparent;
-        }
 
         // I'm the parent
         // prim is the child
@@ -1247,11 +1161,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             MakeBody();
             }
 
-        private void changeSelectedStatus()
+        private void changeSelectedStatus(bool newsel)
         {
             bool isphys = IsPhysical;
 
-            if (m_taintselected)
+            if (newsel)
             {
 
                 m_collisionCategories = CollisionCategories.Selected;
@@ -1328,21 +1242,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             resetCollisionAccounting();
-            m_isSelected = m_taintselected;
+            m_isSelected = newsel;
         }//end changeSelectedStatus
 
-        public void ResetTaints()
-        {
-            m_taintposition = _position;
-            m_taintrot = _orientation;
-            m_taintPhysics = m_isphysical;
-            m_taintselected = m_isSelected;
-            m_taintsize = _size;
-            m_taintshape = false;
-            m_taintforce = false;
-            m_taintdisable = false;
-            m_taintVelocity = Vector3.Zero;
-        }
+
 
         public void CreateGeom(IntPtr m_targetSpace, IMesh _mesh)
             {
@@ -1435,79 +1338,71 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                     }
                 }
-
-            
-
-            changeSelectedStatus();
-
-            m_taintadd = false;
+            changeSelectedStatus(m_isSelected);
             }
 
-        public void changemoveandrotate(float timestep)
+        public void changemoveandrotate(float timestep, Vector3 newpos,Quaternion newrot)
             {
-            if (prim_geom != IntPtr.Zero && !m_taintremove)
+            if (IsPhysical)
                 {
-                if (IsPhysical)
+                if (childPrim)  // inertia is messed, must rebuild
                     {
-                    //Prim auto disable after 20 frames,
-                    //if you move it, re-enable the prim manually.
-                    if (childPrim)  // inertia is messed, must rebuild
-                        {
-                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                        parent.DestroyBody();
-                        parent.MakeBody();
-                        }
-                    else
-                        {
-                        if (m_taintrot != _orientation)
-                            {
-                            d.Quaternion myrot = new d.Quaternion();
-                            myrot.X = _orientation.X;
-                            myrot.Y = _orientation.Y;
-                            myrot.Z = _orientation.Z;
-                            myrot.W = _orientation.W;
-                            d.GeomSetQuaternion(prim_geom, ref myrot);
-                            if (Body != IntPtr.Zero && !m_angularlock.ApproxEquals(Vector3.One, 0f))
-                                createAMotor(m_angularlock);
-                            }
-                        d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-                        }
-                    if (Body != IntPtr.Zero)
-                        d.BodyEnable(Body);
+                    AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                    parent.DestroyBody();
+                    parent.MakeBody();
                     }
-
                 else
                     {
-                    // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
-                    // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-
-                    IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, _position, m_targetSpace);
-                    m_targetSpace = tempspace;
-
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-
-                    if (m_taintrot != _orientation)
+                    if (newrot != _orientation)
                         {
                         d.Quaternion myrot = new d.Quaternion();
-                        myrot.X = _orientation.X;
-                        myrot.Y = _orientation.Y;
-                        myrot.Z = _orientation.Z;
-                        myrot.W = _orientation.W;
+                        myrot.X = newrot.X;
+                        myrot.Y = newrot.Y;
+                        myrot.Z = newrot.Z;
+                        myrot.W = newrot.W;
                         d.GeomSetQuaternion(prim_geom, ref myrot);
+                        if (Body != IntPtr.Zero && !m_angularlock.ApproxEquals(Vector3.One, 0f))
+                            createAMotor(m_angularlock);
                         }
-
-                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
-                    d.SpaceAdd(m_targetSpace, prim_geom);
+                    d.GeomSetPosition(prim_geom, newpos.X, newpos.Y, newpos.Z);
                     }
+                if (Body != IntPtr.Zero)
+                    d.BodyEnable(Body);
                 }
-            changeSelectedStatus();
+
+            else
+                {
+                // string primScenAvatarIn = _parent_scene.whichspaceamIin(_position);
+                // int[] arrayitem = _parent_scene.calculateSpaceArrayItemFromPos(_position);
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, newpos, m_targetSpace);
+                m_targetSpace = tempspace;
+
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+
+                if (newrot != _orientation)
+                    {
+                    d.Quaternion myrot = new d.Quaternion();
+                    myrot.X = newrot.X;
+                    myrot.Y = newrot.Y;
+                    myrot.Z = newrot.Z;
+                    myrot.W = newrot.W;
+                    d.GeomSetQuaternion(prim_geom, ref myrot);
+                    }
+                d.GeomSetPosition(prim_geom, newpos.X, newpos.Y, newpos.Z);
+
+                _parent_scene.waitForSpaceUnlock(m_targetSpace);
+                d.SpaceAdd(m_targetSpace, prim_geom);
+                }
+
+            _orientation=newrot;
+            _position = newpos;
+            fakepos = false;
+            fakeori = false;
+            changeSelectedStatus(m_isSelected);
 
             resetCollisionAccounting();
-            m_taintrot = _orientation;
-            m_taintposition = _position;
             }
 
         public void Move(float timestep)
@@ -1549,7 +1444,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                             fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
                             fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = (_parent_scene.gravityz * 7) * (1.0f - m_buoyancy) * m_mass;
+                            fz = (_parent_scene.gravityz * 3) * (1.0f - m_buoyancy) * m_mass;
                             }
                         else
                             {
@@ -1851,7 +1746,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_forcelist = new List<Vector3>();
                                 m_collisionscore = 0;
                                 m_interpenetrationcount = 0;
-                                m_taintforce = false;
                                 return;
                                 }
                             catch (ArgumentOutOfRangeException)
@@ -1859,7 +1753,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_forcelist = new List<Vector3>();
                                 m_collisionscore = 0;
                                 m_interpenetrationcount = 0;
-                                m_taintforce = false;
                                 return;
                                 }
                             fx += iforce.X;
@@ -1909,20 +1802,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Body = IntPtr.Zero;
             }
 
-            m_taintdisable = false;
         }
 
-        public void changePhysicsStatus()
+        public void changePhysicsStatus(bool newphys)
             {
             if (!childPrim)
                 {
-                if (m_isphysical == true)
+                if (newphys == true)
                     {
                     if (Body == IntPtr.Zero)
                         {
                         if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
                             {
-                            changeshape();
+                            changeshape((object) _pbs);
                             }
                         else
                             {
@@ -1937,7 +1829,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         UpdateChildsfromgeom();
                         if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
                             {
-                            changeshape();
+                            changeshape((object)_pbs);
                             }
                         else
                             DestroyBody();
@@ -1946,18 +1838,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 }
 
-                
 
-            changeSelectedStatus();
+
+            changeSelectedStatus(m_isSelected);
             resetCollisionAccounting();
-            m_taintPhysics = m_isphysical;
+            m_isphysical = newphys;
             }
 
        
 
-        public void changefloatonwater()
+        public void changefloatonwater(object arg)
         {
-            m_collidesWater = m_taintCollidesWater;
+        m_collidesWater = (bool) arg;
 
             if (prim_geom != IntPtr.Zero)
             {
@@ -2054,7 +1946,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
 
-            changeSelectedStatus();
+            changeSelectedStatus(m_isSelected);
 
             if (chp)
                 {
@@ -2067,16 +1959,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             resetCollisionAccounting();
             }
 
-        public void changeshape()
+        public void changeshape(object arg)
             {
+            _pbs = (PrimitiveBaseShape) arg;
             changeprimsizeshape();
-            m_taintshape = false;
             }
 
-        public void changesize()
+        public void changesize(object arg)
             {
+            _size = (Vector3)arg;
             changeprimsizeshape();
-            m_taintsize = _size;
             }
 
 
@@ -2103,25 +1995,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
-            }
-
-            m_taintforce = false;
-
+            }       
         }
 
-
-
-        public void changeSetTorque()
+        public void changeSetTorque(Object arg)
         {
+            Vector3 newtorque = (Vector3) arg;
             if (!m_isSelected)
             {
                 if (IsPhysical && Body != IntPtr.Zero)
                 {
-                    d.BodySetTorque(Body, m_taintTorque.X, m_taintTorque.Y, m_taintTorque.Z);
+                d.BodySetTorque(Body, newtorque.X, newtorque.Y, newtorque.Z);
                 }
             }
-
-            m_taintTorque = Vector3.Zero;
         }
 
         public void changeAddAngularForce()
@@ -2151,27 +2037,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
             }
-
-            m_taintaddangularforce = false;
         }
 
-        private void changevelocity()
-        {
-            if (!m_isSelected)
+        private void changevelocity(object arg)
             {
+            _velocity = (Vector3)arg;
+            if (!m_isSelected)
+                {
                 Thread.Sleep(20);
                 if (IsPhysical)
-                {
-                    if (Body != IntPtr.Zero)
                     {
-                        d.BodySetLinearVel(Body, m_taintVelocity.X, m_taintVelocity.Y, m_taintVelocity.Z);
+                    if (Body != IntPtr.Zero)
+                        {
+                        d.BodySetLinearVel(Body, _velocity.X, _velocity.Y, _velocity.Z);
+                        }
                     }
-                }
-                
+
                 //resetCollisionAccounting();
+                }
             }
-            m_taintVelocity = Vector3.Zero;
-        }
 
         public override bool IsPhysical
         {
@@ -2181,16 +2065,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     return m_isphysical;
                 }
-            set { 
-                  m_isphysical = value;
-                  if (!m_isphysical) // Zero the remembered last velocity
+            set {
+                AddChange(changes.Physical, (object)value);
+                if (!(bool)value) // Zero the remembered last velocity
                       m_lastVelocity = Vector3.Zero;
                 }
         }
 
         public void setPrimForRemoval()
         {
-            m_taintremove = true;
+            AddChange(changes.Remove, null);
         }
 
         public override bool Flying
@@ -2230,13 +2114,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override Vector3 Position
-        {
-            get { return _position; }
+            {
+            get
+                {
+                if (fakepos)
+                    return showposition;
+                else
+                    return _position;
+                }
 
-            set { _position = value;
+            set
+                {
+                showposition = value;
+                fakepos = true;
+                AddChange(changes.Position, (object)value);
                 //m_log.Info("[PHYSICS]: " + _position.ToString());
+                }
             }
-        }
 
         public override Vector3 Size
         {
@@ -2245,7 +2139,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    _size = value;
+                    AddChange(changes.Size,(object) value);
                 }
                 else
                 {
@@ -2275,7 +2169,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    m_force = value;
+                    AddChange(changes.Force,(object) value);
                 }
                 else
                 {
@@ -2326,7 +2220,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             lock (_parent_scene.OdeLock)
             {
-                m_isVolumeDetect = (param!=0);
+            AddChange(changes.VolumeDtc, (object)param);
             }
         }
 
@@ -2358,8 +2252,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             set
             {
-                _pbs = value;
-                m_taintshape = true;
+            AddChange(changes.Shape, (object)value);
             }
         }
 
@@ -2382,10 +2275,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    _velocity = value;
-
-                    m_taintVelocity = value;
-                    _parent_scene.AddPhysicsActorTaint(this);
+                    AddChange(changes.Velocity,(object)value);
                 }
                 else
                 {
@@ -2407,10 +2297,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    m_taintTorque = value;
-                    _parent_scene.AddPhysicsActorTaint(this);
-                }
+                   AddChange(changes.Torque, (object)value);
                 else
                 {
                     m_log.Warn("[PHYSICS]: Got NaN Torque in Object");
@@ -2425,19 +2312,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override Quaternion Orientation
-        {
-            get { return _orientation; }
-            set
             {
-                if (QuaternionIsFinite(value))
+            get
                 {
-                    _orientation = value;
+                if (fakeori)
+                    return showorientation;
+                else
+                    return _orientation;
                 }
+            set
+                {
+                if (QuaternionIsFinite(value))
+                    {
+                    showorientation = value;
+                    fakeori = true;
+                    AddChange(changes.Orientation, (object)value);
+                    }
                 else
                     m_log.Warn("[PHYSICS]: Got NaN quaternion Orientation from Scene in Object");
 
+                }
             }
-        }
 
         internal static bool QuaternionIsFinite(Quaternion q)
         {
@@ -2460,7 +2355,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetAcceleration(Vector3 accel)
         {
-            _acceleration = accel;
+            AddChange(changes.Acceleration, (object)accel); 
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
@@ -2470,7 +2365,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 lock (m_forcelist)
                     m_forcelist.Add(force);
 
-                m_taintforce = true;
+                AddChange(changes.Force, null);
             }
             else
             {
@@ -2484,7 +2379,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (force.IsFinite())
             {
                 m_angularforcelist.Add(force);
-                m_taintaddangularforce = true;
+                AddChange(changes.AddAngForce, null);
             }
             else
             {
@@ -2508,7 +2403,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    m_rotationalVelocity = value;
+                AddChange(changes.AngVelocity, (object)value);
                 }
                 else
                 {
@@ -2538,13 +2433,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public override void link(PhysicsActor obj)
-        {
-            m_taintparent = obj;
-        }
+            {
+            AddChange(changes.Link, obj);
+            }
 
         public override void delink()
         {
-            m_taintparent = null;
+            AddChange(changes.DeLink, null);
         }
 
         public override void LockAngularMotion(Vector3 axis)
@@ -2556,8 +2451,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 axis.Y = (axis.Y > 0) ? 1f : 0f;
                 axis.Z = (axis.Z > 0) ? 1f : 0f;
                 m_log.DebugFormat("[axislock]: <{0},{1},{2}>", axis.X, axis.Y, axis.Z);
-                m_taintAngularLock = axis;
-                m_needsTaintAngularLock = true;
+                AddChange(changes.AngLock, (object)axis);
             }
             else
             {
@@ -2814,13 +2708,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
         public override bool FloatOnWater
-        {
-            set 
             {
-                m_taintCollidesWater = value;
-                _parent_scene.AddPhysicsActorTaint(this);
+            set
+                {
+                AddChange(changes.CollidesWater, (object)value);
+                }
             }
-        }
 
         public override void SetMomentum(Vector3 momentum)
         {
@@ -3249,5 +3142,162 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             dst.I.M22 = src.I.M22;
             }
 
+        private void changeacceleration(Object arg)
+            {
+            _acceleration = (Vector3)arg;
+            }
+
+        private void changeangvelocity(Object arg)
+            {
+            m_rotationalVelocity = (Vector3)arg;
+            }
+
+        private void changeforce(Object arg)
+            {
+            m_force = (Vector3)arg;
+            }
+
+        private void changevoldtc(Object arg)
+            {
+            m_isVolumeDetect = ((int)arg != 0);
+            }
+
+
+                        
+
+
+        private void donullchange()
+            {
+            }
+
+
+        public bool DoAChange(float timestep,changes what, object arg)
+            {
+            if (m_frozen && what != changes.Add && what != changes.Remove)
+                return false;
+
+            if (prim_geom == IntPtr.Zero && what != changes.Add && what != changes.Remove)
+                {
+                m_frozen = true;
+                return false;
+                }
+
+            
+
+            // nasty switch
+            switch (what)
+                {
+                case changes.Add:
+                    changeadd();
+                    break;
+                case changes.Remove:
+                    if (_parent != null)
+                        {
+                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                        parent.ChildRemove(this);
+                        }
+                    else
+                        ChildRemove(this);
+                    return true;                  
+
+                case changes.Link:
+                    AuroraODEPrim tmp = (AuroraODEPrim)arg;
+                    changelink(tmp);
+                    break;
+
+                case changes.DeLink:
+                    changelink(null);
+                    break;
+
+                case changes.Position:
+                    changemoveandrotate(timestep,(Vector3)arg,_orientation);
+                    break;
+
+                case changes.Orientation:
+                    changemoveandrotate(timestep,_position,(Quaternion)arg);
+                    break;
+
+                case changes.PosOffset:
+                    donullchange();
+                    break;
+
+                case changes.OriOffset:
+                    donullchange();
+                    break;
+
+                case changes.Velocity:
+                    changevelocity(arg);
+                    break;
+
+                case changes.Acceleration:
+                    changeacceleration(arg);
+                    break;
+                case changes.AngVelocity:
+                    changeangvelocity(arg);
+                    break;
+
+                case changes.Force:
+                    changeforce(arg);
+                    break;
+
+                case changes.Torque:
+                    changeSetTorque(arg);
+                    break;
+
+                case changes.AddForce:
+                    changeAddForce();
+                    break;
+
+                case changes.AddAngForce:
+                    changeAddAngularForce();
+                    break;
+
+                case changes.AngLock:
+                    changeAngularLock(arg);
+                    break;
+
+                case changes.Size:
+                    changesize(arg);
+                    break;
+
+                case changes.Shape:
+                    changeshape(arg);
+                    break;
+
+                case changes.CollidesWater:
+                    changefloatonwater(arg);
+                    break;
+
+                case changes.VolumeDtc:
+                    changevoldtc(arg);
+                    break;
+
+                case changes.Physical:
+                    changePhysicsStatus((bool)arg);
+                    break;
+
+                case changes.Selected:
+                    changeSelectedStatus((bool)arg);
+                    break;
+
+                case changes.disabled:
+                    changedisable();
+                    break;
+
+                case changes.Null:
+                    donullchange();
+                    break;
+
+                default:
+                    donullchange();
+                    break;
+                }           
+            return false;
+            }
+
+        public void AddChange(changes what, object arg)
+            {
+            _parent_scene.AddChange(this,what,arg);
+            }
     }
 }

@@ -50,6 +50,48 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     public sealed class AuroraODEPhysicsScene : PhysicsScene
     {
+        /// <summary>
+        /// this are prim change comands replace old taints
+        /// but for now use a single comand per call since argument passing still doesn't support multiple comands
+        /// </summary>
+        public enum changes : int
+            {
+            Add = 0,                // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
+            Remove,
+            Link,               // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
+                                //  or removes from a object if arg is null
+            DeLink,
+            Position,           // arg Vector3 new position in world coords. Changes prim position. Prim must know if it is root or child
+            Orientation,        // arg Quaternion new orientation in world coords. Changes prim position. Prim must know it it is root or child
+            PosOffset,          // not in use
+                                // arg Vector3 new position in local coords. Changes prim position in object
+            OriOffset,          // not in use
+                                // arg Vector3 new position in local coords. Changes prim position in object
+            Velocity,
+            AngVelocity,
+            Acceleration,
+            Force,
+            Torque,
+
+            AddForce,
+            AddAngForce,
+            AngLock,
+
+            Size,
+            Shape,
+
+            CollidesWater,
+            VolumeDtc,
+
+            Physical,
+            Selected,
+            disabled,
+
+            Null             //keep this last it use do dim the methods array. does nothing but pulsing the prim
+}
+
+
+
         private readonly ILog m_log;
 
         private CollisionLocker ode;
@@ -89,14 +131,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float mAvatarObjectContactFriction = 75f;
         private float mAvatarObjectContactBounce = 0.1f;
 
-        public float PID_D = 3200f;
-        public float PID_P = 1400f;
-        public float avCapRadius = 0.37f;
-        public float avStandupTensor = 2000000f;
+        private float avPIDD = 3200f;
+        private float avPIDP = 1400f;
+        private float avCapRadius = 0.37f;
+        private float avStandupTensor = 2000000f;
         private bool avCapsuleTilted = true; // true = old compatibility mode with leaning capsule; false = new corrected mode
         public bool IsAvCapsuleTilted { get { return avCapsuleTilted; } set { avCapsuleTilted = value; } }
-        public float avMovementDivisorWalk = 1.3f;
-        public float avMovementDivisorRun = 0.8f;
+        private float avDensity = 80f;
+        private float avHeightFudgeFactor = 0.52f;
+        private float avMovementDivisorWalk = 1.3f;
+        private float avMovementDivisorRun = 0.8f;
         private float minimumGroundFlightOffset = 3f;
         public float maximumMassObject = 10000.01f;
 
@@ -127,10 +171,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
-        private readonly HashSet<AuroraODEPrim> _taintedPrimH = new HashSet<AuroraODEPrim>();
+//        private readonly HashSet<AuroraODEPrim> _taintedPrimH = new HashSet<AuroraODEPrim>();
         private readonly Object _taintedPrimLock = new Object();
-        private readonly List<AuroraODEPrim> _taintedPrimL = new List<AuroraODEPrim>();
+//        private readonly List<AuroraODEPrim> _taintedPrimL = new List<AuroraODEPrim>();
         private readonly HashSet<AuroraODECharacter> _taintedActors = new HashSet<AuroraODECharacter>();
+        public struct AODEchangeitem
+            {
+            public AuroraODEPrim prim;
+            public changes what;
+            public Object arg;
+            }
+        public Queue<AODEchangeitem> ChangesQueue = new Queue<AODEchangeitem>(500);
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
         private readonly List<PhysicsActor> _collisionEventPrim = new List<PhysicsActor>();
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
@@ -309,6 +360,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Sets many properties that ODE requires to be stable
         /// These settings need to be tweaked 'exactly' right or weird stuff happens.
         /// </summary>
+        
+        
+
+
         public AuroraODEPhysicsScene(CollisionLocker dode, string sceneIdentifier)
         {
             m_log
@@ -367,14 +422,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
-                PID_D = 3200.0f;
-                PID_P = 1400.0f;
+                avPIDD = 3200.0f;
+                avPIDP = 1400.0f;
                 avStandupTensor = 2000000f;
             }
             else
             {
-                PID_D = 2200.0f;
-                PID_P = 900.0f;
+                avPIDD = 2200.0f;
+                avPIDP = 900.0f;
                 avStandupTensor = 550000f;
             }
 
@@ -426,8 +481,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     ODE_STEPSIZE = physicsconfig.GetFloat("world_stepsize", 0.020f);
                     m_physicsiterations = physicsconfig.GetInt("world_internal_steps_without_collisions", 10);
 
-                    avMovementDivisorWalk = physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f);
-                    avMovementDivisorRun = physicsconfig.GetFloat("av_movement_divisor_run", 0.8f);
+                    avDensity = physicsconfig.GetFloat("av_density", 80f);
+                    avHeightFudgeFactor = physicsconfig.GetFloat("av_height_fudge_factor", 0.52f);
+                    avMovementDivisorWalk = (physicsconfig.GetFloat("av_movement_divisor_walk", 1.3f) * 2);
+                    avMovementDivisorRun = (physicsconfig.GetFloat("av_movement_divisor_run", 0.8f) * 2);
                     avCapRadius = physicsconfig.GetFloat("av_capsule_radius", 0.37f);
                     avCapsuleTilted = physicsconfig.GetBoolean("av_capsule_tilted", false);
 
@@ -451,15 +508,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (Environment.OSVersion.Platform == PlatformID.Unix)
                     {
-                        PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
-                        PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
+                        avPIDD = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
+                        avPIDP = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_linux", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_linux", 5f);
                     }
                     else
                     {
-                        PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
-                        PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
+                        avPIDD = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
+                        avPIDP = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
                         avStandupTensor = physicsconfig.GetFloat("av_capsule_standup_tensor_win", 550000f);
                         bodyMotorJointMaxforceTensor = physicsconfig.GetFloat("body_motor_joint_maxforce_tensor_win", 5f);
                     }
@@ -1423,7 +1480,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             lock (chr)
                             {
-                                if (space != IntPtr.Zero && chr.prim_geom != IntPtr.Zero && chr.m_taintremove == false)
+                                if (space != IntPtr.Zero && chr.prim_geom != IntPtr.Zero)
                                 {
                                     d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, nearCallback);
                                 }
@@ -1553,7 +1610,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             pos.X = position.X;
             pos.Y = position.Y;
             pos.Z = position.Z;
-            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, size);
+            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, ode, size, avPIDD, avPIDP, avCapRadius, avStandupTensor, avDensity, avHeightFudgeFactor, avMovementDivisorWalk, avMovementDivisorRun);
             newAv.Flying = isFlying;
             newAv.MinimumGroundFlightOffset = minimumGroundFlightOffset;
 
@@ -2047,8 +2104,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     prim.m_frozen = true;
                     if (prim.prim_geom != IntPtr.Zero)
                     {
-                        prim.ResetTaints();
-
                         prim.DestroyBody();
                         prim.IsPhysical = false;
 
@@ -2469,6 +2524,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         /// <summary>
+        /// Called to queue a change to a prim
+        /// to use in place of old taint mechanism so changes do have a time sequence
+        /// </summary>
+        
+        public void AddChange(AuroraODEPrim prim,changes what,Object arg)
+            {
+            AODEchangeitem item = new AODEchangeitem();
+            item.prim = prim;
+            item.what = what;
+            item.arg = arg;
+            ChangesQueue.Enqueue(item);
+            }
+
+        private AODEchangeitem GetNextChange()
+            {
+            lock (ChangesQueue)
+                {
+                return ChangesQueue.Dequeue();
+                }
+            }
+
+        /// <summary>
         /// Called after our prim properties are set Scale, position etc.
         /// We use this event queue like method to keep changes to the physical scene occuring in the threadlocked mutex
         /// This assures us that we have no race conditions
@@ -2479,6 +2556,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (prim is AuroraODEPrim)
             {
+/* ignore taints for prims
                 AuroraODEPrim taintedprim = ((AuroraODEPrim)prim);
                 lock (_taintedPrimLock)
                 {
@@ -2489,6 +2567,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _taintedPrimL.Add(taintedprim);                    // List for ordered readout
                     }
                 }
+ */
                 return;
             }
             else if (prim is AuroraODECharacter)
@@ -2610,6 +2689,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // Modify other objects in the scene.
                         processedtaints = false;
 
+
+                        // process changes
+                        if (ChangesQueue.Count > 0)
+                            {
+                            int tlimit = ChangesQueue.Count;
+                            if (tlimit > 500)
+                                tlimit = 500;
+                            while (tlimit-- > 0)
+                                {
+                                AODEchangeitem item = GetNextChange();
+                                if (item.prim != null)
+                                    {
+                                    try
+                                        {
+                                        if (item.prim.DoAChange(timeElapsed, item.what, item.arg))
+                                            RemovePrimThreadLocked(item.prim);
+                                        }
+                                    catch { };
+                                    }
+                                }
+                            }
+/*
                         lock (_taintedPrimLock)
                         {
                             foreach (AuroraODEPrim prim in _taintedPrimL)
@@ -2619,6 +2720,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 processedtaints = true;
                                 prim.m_collisionscore = 0;
                             }
+                            
+
                             #region NINJA
                             if (SupportsNINJAJoints)
                             {
@@ -2808,7 +2911,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _taintedPrimH.Clear();
                             _taintedPrimL.Clear();
                         }
-
+*/
                         m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
