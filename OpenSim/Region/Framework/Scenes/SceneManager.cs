@@ -217,11 +217,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Util.XmlRpcCommand(proxyUrl, "Stop");
             }
+            Scene[] scenes = new Scene[m_localScenes.Count];
+            m_localScenes.CopyTo(scenes, 0);
             // collect known shared modules in sharedModules
-            for (int i = 0; i < m_localScenes.Count; i++)
+            for (int i = 0; i < scenes.Length; i++)
             {
                 // close scene/region
-                CloseRegion(m_localScenes[i]);
+                CloseRegion(scenes[i]);
             }
         }
 
