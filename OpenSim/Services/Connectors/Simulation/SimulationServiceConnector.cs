@@ -73,6 +73,8 @@ namespace OpenSim.Services.Connectors.Simulation
             if (m_localBackend.CreateAgent(destination, aCircuit, teleportFlags, data, out reason))
                 return true;
 
+            reason = String.Empty;
+            
             string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + aCircuit.AgentID + "/";
 
             try

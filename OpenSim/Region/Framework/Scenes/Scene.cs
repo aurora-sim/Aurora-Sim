@@ -1101,12 +1101,12 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual bool IncomingChildAgentDataUpdate(AgentPosition cAgentData)
         {
             //m_log.Debug(" XXX Scene IncomingChildAgentDataUpdate POSITION in " + RegionInfo.RegionName);
-            ScenePresence childAgentUpdate = GetScenePresence(cAgentData.AgentID);
-            if (childAgentUpdate != null)
+            ScenePresence presence = GetScenePresence(cAgentData.AgentID);
+            if (presence != null)
             {
                 // I can't imagine *yet* why we would get an update if the agent is a root agent..
                 // however to avoid a race condition crossing borders..
-                if (childAgentUpdate.IsChildAgent)
+                if (presence.IsChildAgent)
                 {
                     uint rRegionX = 0;
                     uint rRegionY = 0;
@@ -1116,7 +1116,7 @@ namespace OpenSim.Region.Framework.Scenes
                     int tRegionX = RegionInfo.RegionLocX;
                     int tRegionY = RegionInfo.RegionLocY;
                     //Send Data to ScenePresence
-                    childAgentUpdate.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, (int)rRegionX, (int)rRegionY);
+                    presence.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, (int)rRegionX, (int)rRegionY);
                 }
 
                 return true;
