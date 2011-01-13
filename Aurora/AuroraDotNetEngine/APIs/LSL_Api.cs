@@ -141,8 +141,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "LSL"; }
+        get { return "ll"; }
         }
+
+        public string InterfaceName
+            {
+            get { return "ILSL_Api"; }
+            }
+
+        /// <summary>
+        /// We don't have to add any assemblies here
+        /// </summary>
+        public string[] ReferencedAssemblies
+            {
+            get { return new string[0]; }
+            }
 
         public void Dispose()
         {
