@@ -656,19 +656,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// After a prim is removed, fix the link numbers so that they are correct
         /// </summary>
         private void FixLinkNumbers()
-        {
-            int lastSeenLinkNum = 0;
-            m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
-            for(int i = 0; i < m_partsList.Count; i++)
             {
+            if (m_partsList.Count == 1)
+                {
+                m_partsList[0].LinkNum = 0;
+                return;
+                }
+
+            // has prims so starts at 1
+            int lastSeenLinkNum = 1;
+            m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
+            for (int i = 0; i < m_partsList.Count; i++)
+                {
                 //If it isn't the same as the last seen +1, fix it
                 if (m_partsList[i].LinkNum != lastSeenLinkNum)
                     m_partsList[i].LinkNum = lastSeenLinkNum;
 
                 //Go onto the next prim
                 lastSeenLinkNum++;
+                }
             }
-        }
 
         #endregion
 
@@ -1896,7 +1903,7 @@ namespace OpenSim.Region.Framework.Scenes
             linkPart.SetOffsetPosition(axPos);
             Quaternion oldRot = linkPart.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
-            linkPart.RotationOffset = newRot;
+            linkPart.SetRotationOffset(false,newRot,false);
 
             //Fix the link number for the root
             if (m_rootPart.LinkNum == 0)
@@ -1962,20 +1969,21 @@ namespace OpenSim.Region.Framework.Scenes
             // Remove the part from this object
             m_scene.SceneGraph.DeLinkPartFromEntity(this, linkPart);
 
-            if (m_partsList.Count == 1 && RootPart != null) //Single prim is left
-                RootPart.LinkNum = 0;
-            else
-            {
-                lock (m_partsLock)
-                {
-                    foreach (SceneObjectPart p in m_partsList)
-                    {
-                        if (p.LinkNum > linkPart.LinkNum)
-                            p.LinkNum--;
-                    }
-                }
-            }
-
+            /* this is already done in DeLinkPartFromEntity
+                        if (m_partsList.Count == 1 && RootPart != null) //Single prim is left
+                            RootPart.LinkNum = 0;
+                        else
+                        {
+                            lock (m_partsLock)
+                            {
+                                foreach (SceneObjectPart p in m_partsList)
+                                {
+                                    if (p.LinkNum > linkPart.LinkNum)
+                                        p.LinkNum--;
+                                }
+                            }
+                        }
+            */
             linkPart.SetParentLocalId(0);
             linkPart.LinkNum = 0;
 
@@ -2030,7 +2038,7 @@ namespace OpenSim.Region.Framework.Scenes
             part.SetOffsetPosition(axPos);
             part.SetGroupPosition(oldGroupPosition + part.OffsetPosition);
             part.SetOffsetPosition(Vector3.Zero);
-            part.RotationOffset = worldRot;
+            part.SetRotationOffset(false,worldRot,false);
 
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
             part.CreateSelected = true;
@@ -2043,7 +2051,7 @@ namespace OpenSim.Region.Framework.Scenes
             parentRot = m_rootPart.RotationOffset;
             oldRot = part.RotationOffset;
             Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
-            part.RotationOffset = newRot;
+            part.SetRotationOffset(false,newRot,false);
 
 
         }

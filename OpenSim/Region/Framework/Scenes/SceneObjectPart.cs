@@ -2663,7 +2663,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Quaternion newRot = RotationOffset;
 
-            if (this.LinkNum > 1)
+            if (_parentID !=0)
             {
                 Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
                 newRot = parentRot * newRot;
