@@ -88,6 +88,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return "IMOD_Api"; }
         }
 
+        /// <summary>
+        /// We don't have to add any assemblies here
+        /// </summary>
+        public string[] ReferencedAssemblies
+        {
+            get { return new string[0]; }
+        }
+
         public void Dispose()
         {
         }

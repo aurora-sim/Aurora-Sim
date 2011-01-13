@@ -25,41 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
-using System;
-using OpenSim.Region.Framework.Scenes;
-using OpenMetaverse;
-using OpenSim.Framework;
+using System.Collections;
 
-namespace Aurora.ScriptEngine.AuroraDotNetEngine
+using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
+using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
+using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
+using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
+using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+
+namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 {
-    public interface IScriptApi : IPlugin
+    public interface IBot_Api
     {
-        //
-        // Each API has an identifier, which is used to load the
-        // proper runtime assembly at load time.
-        //
-        void Initialize(IScriptModulePlugin engine, SceneObjectPart part, uint localID, UUID item, ScriptProtectionModule module);
-
-        /// <summary>
-        /// Make a copy of the api so that it can be used again
-        /// </summary>
-        /// <returns></returns>
-        IScriptApi Copy();
-
-        /// <summary>
-        /// The name of the interface that is used to implement the functions
-        /// </summary>
-        string InterfaceName { get; }
-
-        /// <summary>
-        /// Any assemblies that may need referenced to implement your Api.
-        /// If you are adding an Api, you will need to have the path to your assembly in this 
-        /// (along with any other assemblies you may need). You can use this code to add the current assembly 
-        /// to this list:
-        /// "this.GetType().Assembly.Location"
-        /// as shown in the Bot_API.cs in Aurora.BotManager.
-        /// </summary>
-        string[] ReferencedAssemblies { get; }
+        void botStart(string bot);
+        void botStop(string bot);
+        void botUnPause(string bot);
+        void botPause(string bot);
+        void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType);
+        string botCreateBot(string FirstName, string LastName, string appearanceToClone);
     }
 }

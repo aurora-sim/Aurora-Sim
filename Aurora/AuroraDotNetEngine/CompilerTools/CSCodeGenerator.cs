@@ -248,11 +248,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             m_compiler = compiler;
-            IScriptApi[] apis = compiler.m_scriptEngine.GetAPIs();
+            IScriptApi[] apis = compiler.ScriptEngine.GetAPIs();
 
             foreach (IScriptApi api in apis)
             {
-                List<string> FunctionNames = compiler.m_scriptEngine.GetFunctionNames(api);
+                List<string> FunctionNames = compiler.ScriptEngine.GetFunctionNames(api);
                 foreach (string functionName in FunctionNames)
                 {
                     if (!m_apiFunctions.ContainsKey(functionName))

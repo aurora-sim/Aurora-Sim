@@ -89,6 +89,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return "ILS_Api"; }
         }
 
+        /// <summary>
+        /// We don't have to add any assemblies here
+        /// </summary>
+        public string[] ReferencedAssemblies
+        {
+            get { return new string[0]; }
+        }
+
         public IScriptApi Copy()
         {
             return new LS_Api();

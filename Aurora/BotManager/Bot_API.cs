@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -82,6 +83,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string InterfaceName
         {
             get { return "IBot_Api"; }
+        }
+
+        /// <summary>
+        /// We have to add a ref here, as this API is NOT inside of the script engine
+        /// So we add the referenced assembly to ourselves
+        /// </summary>
+        public string[] ReferencedAssemblies
+        {
+            get { return new string[1] {
+                this.GetType().Assembly.Location
+            }; }
         }
 
         public void Dispose()

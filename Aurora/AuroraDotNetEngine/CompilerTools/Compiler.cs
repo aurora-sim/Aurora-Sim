@@ -69,6 +69,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private List<string> m_errors = new List<string>();
 
+        private List<string> m_referencedFiles = new List<string>();
+
         private static UInt64 scriptCompileCounter = 0; // And a counter
 
         public UInt64 ScriptCompileCounter
@@ -76,7 +78,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             get { return scriptCompileCounter; }
         }
 
-        public ScriptEngine m_scriptEngine;
+        private ScriptEngine m_scriptEngine;
+
+        public ScriptEngine ScriptEngine
+        {
+            get { return m_scriptEngine; }
+        }
 
         #endregion
 
@@ -86,9 +93,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             m_scriptEngine = scriptEngine;
             ReadConfig();
+            SetupApis();
         }
 
-        public void ReadConfig()
+        private void ReadConfig()
         {
             // Get some config
             WriteScriptSourceToDebugFile = m_scriptEngine.Config.GetBoolean("WriteScriptSourceToDebugFile", false);
@@ -101,7 +109,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             FindDefaultCompiler();
         }
 
-        public void MakeFilePrefixSafe()
+        private void MakeFilePrefixSafe()
         {
             // Get file prefix from scriptengine name and make it file system safe:
             FilePrefix = "CommonCompiler";
@@ -111,7 +119,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
         }
 
-        public void FindDefaultCompiler()
+        private void FindDefaultCompiler()
         {
             // Allowed compilers
             string allowComp = m_scriptEngine.Config.GetString("AllowedCompilers", "lsl");
@@ -153,12 +161,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // We now have an allow-list, a mapping list, and a default language
         }
 
-        public void SetupCompilers()
+        private void SetupCompilers()
         {
             converters = Aurora.Framework.AuroraModuleLoader.PickupModules<IScriptConverter>();
             foreach (IScriptConverter convert in converters)
             {
                 convert.Initialise(this);
+            }
+        }
+
+        private void SetupApis()
+        {
+            //Get all of the Apis that are allowed (this does check for it)
+            IScriptApi[] apis = m_scriptEngine.GetAPIs();
+            //Now we need to pull the files they will need to access from them
+            foreach (IScriptApi api in apis)
+            {
+                m_referencedFiles.AddRange(api.ReferencedAssemblies);
             }
         }
 
@@ -413,19 +432,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             parameters.IncludeDebugInformation = true;
 
-            string rootPath =
-                Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-
-            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
+            parameters.ReferencedAssemblies.Add("Aurora.ScriptEngine.AuroraDotNetEngine.dll");
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("OpenSim.Framework.dll");
 
             if (converter.Name == "yp")
             {
-                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                        "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
+                parameters.ReferencedAssemblies.Add("OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll");
             }
+
+            parameters.ReferencedAssemblies.AddRange(m_referencedFiles.ToArray());
 
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = inMemory;
