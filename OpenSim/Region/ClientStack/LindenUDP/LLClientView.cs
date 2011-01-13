@@ -12140,18 +12140,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return (T)m_clientInterfaces[typeof(T)];
         }
 
-        public void Disconnect(string reason)
-        {
-            Kick(reason);
-            Thread.Sleep(1000);
-            Disconnect();
-        }
-
-        public void Disconnect()
-        {
-            Close();
-        }
-
         #endregion
 
         public string Report()

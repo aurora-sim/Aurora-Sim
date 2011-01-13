@@ -758,14 +758,6 @@ namespace Aurora.BotManager
             }
         }
 
-        public void Disconnect()
-        {
-        }
-
-        public void Disconnect(string reason)
-        {
-        }
-
         #endregion
 
         #region IClientAPI Members

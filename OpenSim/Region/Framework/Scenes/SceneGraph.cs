@@ -301,17 +301,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="presence"></param>
         protected internal void AddScenePresence(ScenePresence presence)
         {
-            bool child = presence.IsChildAgent;
-
-            if (child)
-            {
-                m_numChildAgents++;
-            }
-            else
-            {
-                m_numRootAgents++;
-                presence.AddToPhysicalScene(false, false);
-            }
+            m_numChildAgents++;
 
             Entities[presence.UUID] = presence;
 
@@ -411,26 +401,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_numChildAgents--;
             }
-        }
-
-        /// <summary>
-        /// Force the rebuilding of the child and root agent stats
-        /// </summary>
-        public void RecalculateStats()
-        {
-            int rootcount = 0;
-            int childcount = 0;
-
-            ForEachScenePresence(delegate(ScenePresence presence)
-            {
-                if (presence.IsChildAgent)
-                    ++childcount;
-                else
-                    ++rootcount;
-            });
-
-            m_numRootAgents = rootcount;
-            m_numChildAgents = childcount;
         }
 
         /// <summary>

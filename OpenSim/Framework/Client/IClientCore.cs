@@ -36,9 +36,5 @@ namespace OpenSim.Framework.Client
 
         // Basic Interfaces
         UUID AgentId { get; }
-
-        void Disconnect(string reason);
-        void Disconnect();
-
     }
 }
