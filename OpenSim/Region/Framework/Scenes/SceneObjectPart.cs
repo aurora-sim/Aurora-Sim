@@ -3420,8 +3420,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (PhysActor != null)
             {
-                Vector3 newpos = new Vector3(PhysActor.Position.GetBytes(), 0);
-                m_parentGroup.AbsolutePosition = newpos;
+//                Vector3 newpos = new Vector3(PhysActor.Position.GetBytes(), 0);
+                m_parentGroup.AbsolutePosition = PhysActor.Position;
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
@@ -5103,12 +5103,14 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pa == null)
                 {
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
+                    Vector3 tmp = GetWorldPosition();
+                    Quaternion qtmp = GetWorldRotation();
                     PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
-                        AbsolutePosition,
+                        tmp,
                         Scale,
-                        RotationOffset,
+                        qtmp,
                         UsePhysics);
 
                     pa = PhysActor;
