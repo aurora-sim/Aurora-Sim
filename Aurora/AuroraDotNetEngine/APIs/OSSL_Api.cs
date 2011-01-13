@@ -97,7 +97,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "OSSL"; }
+            get { return "os"; }
+        }
+
+        public string InterfaceName
+        {
+            get { return "IOSSL_Api"; }
         }
 
         public void Dispose()

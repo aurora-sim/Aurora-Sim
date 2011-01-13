@@ -160,16 +160,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <summary>
         /// Param 1 - the API function name, Param 2 - the API name
         /// </summary>
-        private Dictionary<string, string> m_apiFunctions = new Dictionary<string, string>();
+        private Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
         private Compiler m_compiler;
-        //private IScriptApi[] m_Apis = new IScriptApi[0];
 
         private bool FuncCntr = false;
 
         /// <summary>
         /// Creates an 'empty' CSCodeGenerator instance.
         /// </summary>
-        public CSCodeGenerator(IScriptApi[] Apis, Compiler compiler)
+        public CSCodeGenerator(Compiler compiler)
         {
             #region DTFunctions
 
@@ -221,24 +220,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             DTFunctions.Add("osTeleportOwner");
 
 
-/* suspended:  some API functions are not compatible with IEnum
-            // Api functions that can return a delay, a value or breakable in timeslices
-            // must be IEnumerator in stub, interface and implementation files           
+            /* suspended:  some API functions are not compatible with IEnum
+                        // Api functions that can return a delay, a value or breakable in timeslices
+                        // must be IEnumerator in stub, interface and implementation files           
  
-            IenFunctions.Add("llRequestAgentData", "LSL_Types.LSLString");
-            IenFunctions.Add("llRequestInventoryData", "LSL_Types.LSLString");
-            IenFunctions.Add("llSendRemoteData", "LSL_Types.LSLString");
-            IenFunctions.Add("llXorBase64Strings", "LSL_Types.LSLString");
-            IenFunctions.Add("llRequestSimulatorData", "LSL_Types.LSLString");
-            IenFunctions.Add("llParcelMediaQuery", "LSL_Types.list");
-            IenFunctions.Add("llGetPrimMediaParams", "LSL_Types.list");
-            IenFunctions.Add("llSetPrimMediaParams", "LSL_Types.LSLInteger");
-            IenFunctions.Add("llClearPrimMedia", "LSL_Types.LSLInteger");
-            IenFunctions.Add("llModPow", "LSL_Types.LSLInteger");
-            IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.LSLString");
-            IenFunctions.Add("llGetParcelPrimOwners", "LSL_Types.list");
-            IenFunctions.Add("llGetNotecardLine", "LSL_Types.LSLString");
-*/
+                        IenFunctions.Add("llRequestAgentData", "LSL_Types.LSLString");
+                        IenFunctions.Add("llRequestInventoryData", "LSL_Types.LSLString");
+                        IenFunctions.Add("llSendRemoteData", "LSL_Types.LSLString");
+                        IenFunctions.Add("llXorBase64Strings", "LSL_Types.LSLString");
+                        IenFunctions.Add("llRequestSimulatorData", "LSL_Types.LSLString");
+                        IenFunctions.Add("llParcelMediaQuery", "LSL_Types.list");
+                        IenFunctions.Add("llGetPrimMediaParams", "LSL_Types.list");
+                        IenFunctions.Add("llSetPrimMediaParams", "LSL_Types.LSLInteger");
+                        IenFunctions.Add("llClearPrimMedia", "LSL_Types.LSLInteger");
+                        IenFunctions.Add("llModPow", "LSL_Types.LSLInteger");
+                        IenFunctions.Add("llGetNumberOfNotecardLines", "LSL_Types.LSLString");
+                        IenFunctions.Add("llGetParcelPrimOwners", "LSL_Types.list");
+                        IenFunctions.Add("llGetNotecardLine", "LSL_Types.LSLString");
+            */
 
 
             // the rest will be directly called
@@ -246,10 +245,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             #endregion
 
             //m_SLCompatabilityMode = compatMode;
-//            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
+            //            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             m_compiler = compiler;
-            //m_Apis = Apis;
+            IScriptApi[] apis = compiler.m_scriptEngine.GetAPIs();
+
+            foreach (IScriptApi api in apis)
+            {
+                List<string> FunctionNames = compiler.m_scriptEngine.GetFunctionNames(api);
+                foreach (string functionName in FunctionNames)
+                {
+                    if (!m_apiFunctions.ContainsKey(functionName))
+                        m_apiFunctions.Add(functionName, api);
+                }
+            }
         }
 
         /// <summary>
@@ -310,7 +319,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "[Serializable]\n";
             compiledScript += "public class ScriptClass : Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass\n";
             compiledScript += "{\n";
-            compiledScript += "List<IScriptApi> m_apis = new List<IScriptApi>();\n";
 
             compiledScript += ScriptClass;
 
@@ -2661,7 +2669,9 @@ default
             if (m_apiFunctions.ContainsKey(CheckName(fc.Id)))
             {
                 //Add the m_apis link
-                fc.Id = String.Format("m_apis[{0}].{1}", m_apiFunctions[CheckName(fc.Id)], fc.Id);
+                fc.Id = String.Format("(({0})m_apis[\"{1}\"]).{2}", 
+                    m_apiFunctions[CheckName(fc.Id)].InterfaceName,
+                    m_apiFunctions[CheckName(fc.Id)].Name, fc.Id);
             }
 
             if (DTFunction)

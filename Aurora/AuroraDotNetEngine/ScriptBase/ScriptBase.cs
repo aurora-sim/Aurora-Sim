@@ -120,22 +120,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 new Dictionary<string, object>();
         private Dictionary<string, FieldInfo> m_Fields =
                 new Dictionary<string, FieldInfo>();
+        public Dictionary<string, IScriptApi> m_apis = new Dictionary<string, IScriptApi>();
 
         public void InitApi(string api, IScriptApi data)
         {
-            MethodInfo mi = GetType().GetMethod("ApiType" + api);
-            if (mi == null)
-                return;
-
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
+            /*ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
             if (lease != null)
-                lease.Register(m_sponser);
+                lease.Register(m_sponser);*/
+            m_apis.Add(data.Name, data);
+        }
 
-            Object[] args = new Object[1];
-            args[0] = data;
-
-            mi.Invoke(this, args);
-
+        public void UpdateInitialValues()
+        {
             m_InitialValues = GetVars();
         }
 

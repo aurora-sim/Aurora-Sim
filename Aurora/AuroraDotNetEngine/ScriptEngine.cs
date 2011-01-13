@@ -1145,19 +1145,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             IScriptApi[] apis = GetAPIs();
             foreach (IScriptApi api in apis)
             {
-                MemberInfo[] members = api.GetType().GetMembers();
-                string APIName = api.Name;
-                if (APIName == "LSL")
-                    continue;
-                else if (APIName == "OSSL")
-                    APIName = "os";
-                foreach (MemberInfo member in members)
-                {
-                    if (member.Name.StartsWith(APIName, StringComparison.CurrentCultureIgnoreCase))
-                        FunctionNames.Add(member.Name);
-                }
+                FunctionNames.AddRange(GetFunctionNames(api));
             }
 
+            return FunctionNames;
+        }
+
+        public List<string> GetFunctionNames(IScriptApi api)
+        {
+            List<string> FunctionNames = new List<string>();
+            MemberInfo[] members = api.GetType().GetMembers();
+            foreach (MemberInfo member in members)
+            {
+                if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase))
+                    FunctionNames.Add(member.Name);
+            }
             return FunctionNames;
         }
 

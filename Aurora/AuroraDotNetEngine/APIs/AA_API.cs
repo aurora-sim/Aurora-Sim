@@ -73,7 +73,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "AA"; }
+            get { return "aa"; }
         }
 
         public string InterfaceName

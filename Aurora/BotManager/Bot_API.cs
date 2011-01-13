@@ -79,6 +79,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return "bot"; }
         }
 
+        public string InterfaceName
+        {
+            get { return "IBot_Api"; }
+        }
+
         public void Dispose()
         {
         }

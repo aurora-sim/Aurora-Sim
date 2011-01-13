@@ -43,6 +43,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         IScriptApi Copy();
 
-        //string InterfaceName { get; }
+        string InterfaceName { get; }
     }
 }

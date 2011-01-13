@@ -81,7 +81,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "LS"; }
+            get { return "ls"; }
+        }
+
+        public string InterfaceName
+        {
+            get { return "ILS_Api"; }
         }
 
         public IScriptApi Copy()

@@ -31,7 +31,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
-            LSL_Converter = new CSCodeGenerator(null, m_compiler);
+            LSL_Converter = new CSCodeGenerator(m_compiler);
             CompiledScript = LSL_Converter.Convert(Script);
             PositionMap = LSL_Converter.PositionMap;
 

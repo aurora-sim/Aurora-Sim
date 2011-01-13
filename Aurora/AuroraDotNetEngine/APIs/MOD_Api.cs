@@ -80,7 +80,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "MOD"; }
+            get { return "mod"; }
+        }
+
+        public string InterfaceName
+        {
+            get { return "IMOD_Api"; }
         }
 
         public void Dispose()
@@ -106,7 +111,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             get { return m_host.ParentGroup.Scene; }
         }
 
-        internal void MODError(string msg)
+        internal void modError(string msg)
         {
             throw new Exception("MOD Runtime Error: " + msg);
         }
@@ -115,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //Dumps an error message on the debug console.
         //
 
-        internal void MODShoutError(string message) 
+        internal void modShoutError(string message) 
         {
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
