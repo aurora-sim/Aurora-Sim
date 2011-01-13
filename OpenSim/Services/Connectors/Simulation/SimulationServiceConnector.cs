@@ -74,8 +74,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 return true;
 
             reason = String.Empty;
-            
-            string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + aCircuit.AgentID + "/";
+
+            string uri = MakeUri(destination, AgentPath()) + aCircuit.AgentID + "/";
 
             try
             {
@@ -140,7 +140,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 // Eventually, we want to use a caps url instead of the agentID
-                string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + cAgentData.AgentID + "/";
+                string uri = MakeUri(destination, AgentPath()) + cAgentData.AgentID + "/";
 
                 try
                 {
@@ -176,7 +176,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 // Eventually, we want to use a caps url instead of the agentID
-                string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
+                string uri = MakeUri(destination, AgentPath()) + id + "/" + destination.RegionID.ToString() + "/";
 
                 try
                 {
@@ -231,7 +231,7 @@ namespace OpenSim.Services.Connectors.Simulation
             // else do the remote thing
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
-                string uri = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + AgentPath() + id + "/" + destination.RegionID.ToString() + "/";
+                string uri = MakeUri(destination, AgentPath()) + id + "/" + destination.RegionID.ToString() + "/";
 
                 try
                 {
@@ -270,8 +270,7 @@ namespace OpenSim.Services.Connectors.Simulation
             bool successful = false;
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
-                string uri
-                    = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + ObjectPath() + sog.UUID + "/";
+                string uri = MakeUri(destination, ObjectPath()) + sog.UUID + "/";
                 //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 OSDMap args = new OSDMap(7);
@@ -306,8 +305,7 @@ namespace OpenSim.Services.Connectors.Simulation
             // else do the remote thing
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
-                string uri
-                    = "http://" + destination.ExternalEndPoint.Address + ":" + destination.HttpPort + ObjectPath() + itemID + "/";
+                string uri = MakeUri(destination, ObjectPath()) + itemID + "/";
                 //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 OSDMap args = new OSDMap(6);
@@ -337,6 +335,15 @@ namespace OpenSim.Services.Connectors.Simulation
         }
 
         #endregion Objects
+
+        #region Misc
+
+        private string MakeUri(GridRegion destination, string path)
+        {
+            return destination.ServerURI + path;
+        }
+
+        #endregion
 
         #region IService Member
 
