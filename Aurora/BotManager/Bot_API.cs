@@ -92,8 +92,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string[] ReferencedAssemblies
         {
             get { return new string[1] {
-                this.GetType().Assembly.Location
+                AssemblyFileName
             }; }
+        }
+
+        static public string AssemblyFileName
+        {
+            get
+            {
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetFileName(path);
+            }
         }
 
         public void Dispose()

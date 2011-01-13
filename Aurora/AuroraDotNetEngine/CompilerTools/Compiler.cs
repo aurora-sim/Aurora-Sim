@@ -432,13 +432,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             parameters.IncludeDebugInformation = true;
 
-            parameters.ReferencedAssemblies.Add("Aurora.ScriptEngine.AuroraDotNetEngine.dll");
+            string rootPath =
+                            Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
             parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("OpenSim.Framework.dll");
+            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenSim.Framework.dll"));
 
             if (converter.Name == "yp")
             {
-                parameters.ReferencedAssemblies.Add("OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll");
+                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                        "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
             }
 
             parameters.ReferencedAssemblies.AddRange(m_referencedFiles.ToArray());
