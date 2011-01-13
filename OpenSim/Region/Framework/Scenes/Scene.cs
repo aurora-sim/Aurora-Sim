@@ -70,6 +70,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected RegionInfo m_regInfo;
 
+        protected ThreadMonitor monitor = new ThreadMonitor();
+            
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
         /// <value>
@@ -473,6 +475,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 IncomingCloseAgent(avatar.UUID);
             }
+            //Stop the heartbeat
+            monitor.Stop();
 
             if (SceneGraph.PhysicsScene != null)
                 SceneGraph.PhysicsScene.Dispose();
@@ -497,7 +501,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void StartHeartbeat()
         {
-            ThreadMonitor monitor = new ThreadMonitor();
             //Give it the heartbeat delegate with an infinite timeout
             monitor.StartTrackingThread(0, Update);
             //Then start the thread for it with an infinite loop time and no 

@@ -157,6 +157,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private int m_defaultRTO = 0;
         private int m_maxRTO = 0;
 
+        private ThreadMonitor incomingPacketMonitor = new ThreadMonitor();
+        private ThreadMonitor outgoingPacketMonitor = new ThreadMonitor();
+            
         private bool m_disableFacelights = false;
 
         public Socket Server { get { return null; } }
@@ -245,13 +248,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
 
             // Start the packet processing threads
-            ThreadMonitor incomingPacketMonitor = new ThreadMonitor();
             //Give it the heartbeat delegate with an infinite timeout
             incomingPacketMonitor.StartTrackingThread(0, IncomingPacketHandlerLoop);
             //Then start the thread for it with an infinite loop time and no 
             //  sleep overall as the Update delete does it on it's own
             incomingPacketMonitor.StartMonitor(0, 0);
-            ThreadMonitor outgoingPacketMonitor = new ThreadMonitor();
             outgoingPacketMonitor.StartTrackingThread(0, OutgoingPacketHandlerLoop);
             outgoingPacketMonitor.StartMonitor(0, 0);
             
@@ -261,6 +262,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public new void Stop()
         {
             m_log.Info("[LLUDPSERVER]: Shutting down the LLUDP server for " + m_scene.RegionInfo.RegionName);
+            incomingPacketMonitor.Stop();
+            outgoingPacketMonitor.Stop();
             base.Stop();
         }
 

@@ -96,6 +96,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }; }
         }
 
+        /// <summary>
+        /// Created by John Sibly @ http://stackoverflow.com/questions/52797/c-how-do-i-get-the-path-of-the-assembly-the-code-is-in
+        /// </summary>
         static public string AssemblyFileName
         {
             get

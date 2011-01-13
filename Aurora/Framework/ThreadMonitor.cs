@@ -80,9 +80,12 @@ namespace Aurora.Framework
                     if (m_timesToIterate == 0)
                         break;
                 }
+                if (m_timesToIterate == -1) //Kill signal
+                    break;
                 if (m_sleepTime != 0)
                     Thread.Sleep(m_sleepTime);
             }
+            Thread.CurrentThread.Abort();
         }
 
         /// <summary>
@@ -114,6 +117,17 @@ namespace Aurora.Framework
             }
             //Return what we got
             return RetVal;
+        }
+
+        public void Stop()
+        {
+            lock (m_lock)
+            {
+                //Remove all
+                m_heartbeats.Clear();
+                //Kill it
+                m_timesToIterate = -1;
+            }
         }
     }
 }
