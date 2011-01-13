@@ -141,21 +141,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string Name
         {
-            get { return "ll"; }
+        get { return "ll"; }
         }
 
         public string InterfaceName
-        {
+            {
             get { return "ILSL_Api"; }
-        }
+            }
 
         /// <summary>
         /// We don't have to add any assemblies here
         /// </summary>
         public string[] ReferencedAssemblies
-        {
+            {
             get { return new string[0]; }
-        }
+            }
 
         public void Dispose()
         {
@@ -3447,7 +3447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
 
                     World.SceneGraph.AddPrimToScene(group);
-
+                    
                     SceneObjectPart rootPart = group.GetChildPart(group.UUID);
                     List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
@@ -3462,30 +3462,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else
                     {
                         //TODO: Make sure this still works
-                        /*
-                        //Find the 'center' of the group
-                        //  Note: In SL, this is based on max - min
-                        Vector3 MinPos = new Vector3(100000, 100000, 100000);
-                        Vector3 MaxPos = Vector3.Zero;
-                        foreach (SceneObjectPart child in partList)
-                        {
-                            if (child.AbsolutePosition.X < MinPos.X)
-                                MinPos.X = child.AbsolutePosition.X;
-                            if (child.AbsolutePosition.Y < MinPos.Y)
-                                MinPos.Y = child.AbsolutePosition.Y;
-                            if (child.AbsolutePosition.Z < MinPos.Z)
-                                MinPos.Z = child.AbsolutePosition.Z;
+                    /*
+                    //Find the 'center' of the group
+                    //  Note: In SL, this is based on max - min
+                    Vector3 MinPos = new Vector3(100000, 100000, 100000);
+                    Vector3 MaxPos = Vector3.Zero;
+                    foreach (SceneObjectPart child in partList)
+                    {
+                        if (child.AbsolutePosition.X < MinPos.X)
+                            MinPos.X = child.AbsolutePosition.X;
+                        if (child.AbsolutePosition.Y < MinPos.Y)
+                            MinPos.Y = child.AbsolutePosition.Y;
+                        if (child.AbsolutePosition.Z < MinPos.Z)
+                            MinPos.Z = child.AbsolutePosition.Z;
 
-                            if (child.AbsolutePosition.X > MaxPos.X)
-                                MaxPos.X = child.AbsolutePosition.X;
-                            if (child.AbsolutePosition.Y > MaxPos.Y)
-                                MaxPos.Y = child.AbsolutePosition.Y;
-                            if (child.AbsolutePosition.Z > MaxPos.Z)
-                                MaxPos.Z = child.AbsolutePosition.Z;
-                        }
-                        Vector3 GroupAvg = ((MaxPos + MinPos) / 2);*/
-                        Vector3 GroupAvg = group.GroupScale();
-                        Vector3 offset = group.AbsolutePosition - GroupAvg;
+                        if (child.AbsolutePosition.X > MaxPos.X)
+                            MaxPos.X = child.AbsolutePosition.X;
+                        if (child.AbsolutePosition.Y > MaxPos.Y)
+                            MaxPos.Y = child.AbsolutePosition.Y;
+                        if (child.AbsolutePosition.Z > MaxPos.Z)
+                            MaxPos.Z = child.AbsolutePosition.Z;
+                    }
+                    Vector3 GroupAvg = ((MaxPos + MinPos) / 2);
+                     * 
+                         
+                    Vector3 GroupAvg = group.GroupScale();
+                    Vector3 offset = group.AbsolutePosition - GroupAvg;
+*/
+                    
+                        // center is on average of all positions
+                        // less root prim position
+
+                        Vector3 offset = Vector3.Zero;
+                        foreach (SceneObjectPart child in partList)
+                            {
+                            offset += child.AbsolutePosition;
+                            }
+                        offset /= partList.Count;
+                        offset -= group.AbsolutePosition;
                         offset += pos;
                         group.AbsolutePosition = offset;
                     }

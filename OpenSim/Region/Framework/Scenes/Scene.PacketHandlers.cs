@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://opensimulator.org/
+ *  Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,9 +79,16 @@ namespace OpenSim.Region.Framework.Scenes
                     if (entity is SceneObjectPart)
                     {
                         prim = entity as SceneObjectPart;
-                        if (prim.IsRoot)
+// changed so that we send select to all the indicated prims
+// also to root prim (done in prim.IsSelected)
+// so "edit link parts" keep the object select and not moved by physics
+// similar changes on deselect
+// part.IsSelect is on SceneObjectPart.cs
+// Ubit
+//                        if (prim.IsRoot)
                         {
-                            prim.ParentGroup.IsSelected = true;
+//                            prim.ParentGroup.IsSelected = true;
+                            prim.IsSelected = true;
                             if (!prim.ParentGroup.IsAttachment)
                             {
                                 if (Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
@@ -171,12 +178,13 @@ namespace OpenSim.Region.Framework.Scenes
             // A deselect packet contains all the local prims being deselected.  However, since selection is still
             // group based we only want the root prim to trigger a full update - otherwise on objects with many prims
             // we end up sending many duplicate ObjectUpdates
-            if (part.ParentGroup.RootPart.LocalId != part.LocalId)
-                return;
+//            if (part.ParentGroup.RootPart.LocalId != part.LocalId)
+//                return;
 
             bool isAttachment = false;
             
-            part.ParentGroup.IsSelected = false;
+//            part.ParentGroup.IsSelected = false;
+            part.IsSelected = false;
 
             if (part.ParentGroup.IsAttachment)
                 isAttachment = true;

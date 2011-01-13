@@ -465,6 +465,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [XmlIgnore]
+        private bool m_IsSelected=false;
+
         private int m_savedAttachmentPoint;
         public int SavedAttachmentPoint
         {
@@ -1194,61 +1197,27 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public Quaternion RotationOffset
-        {
-            get
             {
+            get
+                {
                 // We don't want the physics engine mucking up the rotations in a linkset
                 PhysicsActor actor = PhysActor;
-                if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0)  && actor != null)
-                {
+                if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0) && actor != null)
+                    {
                     if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
                         || actor.Orientation.Z != 0f || actor.Orientation.W != 0f)
-                    {
+                        {
                         m_rotationOffset = actor.Orientation;
+                        }
                     }
-                }
-                
+
                 return m_rotationOffset;
-            }
-            
-            set
-            {
-                if (ParentGroup != null)
-                    ParentGroup.HasGroupChanged = true;
-                m_rotationOffset = value;
-
-                if (value.W == 0) //We have an issue here... try to normalize it
-                    value.Normalize();
-
-                PhysicsActor actor = PhysActor;
-                if (actor != null)
-                {
-                    try
-                    {
-                        // Root prim gets value directly
-                        if (_parentID == 0)
-                        {
-                            actor.Orientation = value;
-                            //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
-                        }
-                        else 
-                        {
-                            // Child prim we have to calculate it's world rotationwel
-                            Quaternion resultingrotation = GetWorldRotation();
-                            actor.Orientation = resultingrotation;
-                            //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
-                        }
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        //}
-                    }
-                    catch (Exception ex)
-                    {
-                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
-                    }
                 }
-
+            set
+                {
+                SetRotationOffset(true, value, true);
+                }
             }
-        }
 
         /// <summary></summary>
         public Vector3 Velocity
@@ -1522,14 +1491,34 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         public bool CreateSelected
-        {
+            {
             get { return m_createSelected; }
-            set 
-            { 
-//                m_log.DebugFormat("[SOP]: Setting CreateSelected to {0} for {1} {2}", value, Name, UUID);
-                m_createSelected = value; 
+            set
+                {
+                //                m_log.DebugFormat("[SOP]: Setting CreateSelected to {0} for {1} {2}", value, Name, UUID);
+                m_createSelected = value;
+                }
             }
-        }
+
+        [XmlIgnore]
+        public bool IsSelected
+            {
+            get { return m_IsSelected; }
+            set
+                {
+                if (m_IsSelected != value)
+                    {
+                    if (PhysActor != null)
+                        {
+                        PhysActor.Selected = value;
+                        }
+                    if(ParentID !=0 && ParentGroup !=null && ParentGroup.RootPart!=null && ParentGroup.RootPart.IsSelected !=value)
+                        ParentGroup.RootPart.IsSelected=value;
+
+                    m_IsSelected = value;
+                    }               
+                }
+            }
 
         #endregion
 
@@ -1835,6 +1824,52 @@ namespace OpenSim.Region.Framework.Scenes
         #region Public Methods
 
 
+        public void SetRotationOffset(bool UpdatePrimActor, Quaternion value, bool single)
+            {
+            if (ParentGroup != null)
+                ParentGroup.HasGroupChanged = true;
+            m_rotationOffset = value;
+
+            if (value.W == 0) //We have an issue here... try to normalize it
+                value.Normalize();
+
+            PhysicsActor actor = PhysActor;
+            if (actor != null)
+                {
+                if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
+                    {
+                    UpdatePrimActor = true;
+                    single = false;
+                    }
+                if (UpdatePrimActor)
+                    {
+                    try
+                        {
+                        // Root prim gets value directly
+                        if (_parentID == 0)
+                            {
+                            actor.Orientation = value;
+                            //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
+                            }
+                        else if (single || !actor.IsPhysical)
+                            {
+                            // Child prim we have to calculate it's world rotationwel
+                            Quaternion resultingrotation = GetWorldRotation();
+                            actor.Orientation = resultingrotation;
+                            //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
+                            }
+                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                        //}
+                        }
+                    catch (Exception ex)
+                        {
+                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
+                        }
+                    }
+                }
+
+            }
+
         public void SetOffsetPosition(Vector3 value)
             {
             m_offsetPosition = value;
@@ -1874,7 +1909,13 @@ namespace OpenSim.Region.Framework.Scenes
             m_groupPosition = value;
             }
 
+
         public void FixGroupPosition(Vector3 value, bool single)
+            {
+            FixGroupPositionComum(true, value, single);
+            }
+
+        public void FixGroupPositionComum(bool UpdatePrimActor,Vector3 value, bool single)
             {
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
@@ -1888,30 +1929,39 @@ namespace OpenSim.Region.Framework.Scenes
             m_groupPosition = value;
 
             PhysicsActor actor = PhysActor;
+
             if (actor != null)
                 {
-                try
+                if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
                     {
-                    // Root prim actually goes at Position
-                    if (_parentID == 0)
-                        {
-                        actor.Position = value;
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        }
-                    else if(single || !actor.IsPhysical)
-                        {
-                        // To move the child prim in respect to the group position and rotation we have to calculate
-                        actor.Position = GetWorldPosition();
-                        actor.Orientation = GetWorldRotation();
-                        m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                        }
-
-                    // Tell the physics engines that this prim changed.
-                    
+                    UpdatePrimActor = true;
+                    single = false;
                     }
-                catch (Exception e)
+                if (UpdatePrimActor)
                     {
-                    m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                    try
+                        {
+                        // Root prim actually goes at Position
+                        if (_parentID == 0)
+                            {
+                            actor.Position = value;
+                            m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                            }
+                        else if (single || !actor.IsPhysical)
+                            {
+                            // To move the child prim in respect to the group position and rotation we have to calculate
+                            actor.Position = GetWorldPosition();
+                            actor.Orientation = GetWorldRotation();
+                            m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
+                            }
+
+                        // Tell the physics engines that this prim changed.
+
+                        }
+                    catch (Exception e)
+                        {
+                        m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                        }
                     }
                 }
 
@@ -2636,7 +2686,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Quaternion newRot = RotationOffset;
 
-            if (this.LinkNum > 1)
+            if (_parentID !=0)
             {
                 Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
                 newRot = parentRot * newRot;
@@ -3420,8 +3470,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (PhysActor != null)
             {
-                Vector3 newpos = new Vector3(PhysActor.Position.GetBytes(), 0);
-                m_parentGroup.AbsolutePosition = newpos;
+//                Vector3 newpos = new Vector3(PhysActor.Position.GetBytes(), 0);
+                m_parentGroup.SetAbsolutePosition(false,PhysActor.Position);
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
             ScheduleTerseUpdate();
@@ -5103,12 +5153,14 @@ namespace OpenSim.Region.Framework.Scenes
                 if (pa == null)
                 {
                     // It's not phantom anymore. So make sure the physics engine get's knowledge of it
+                    Vector3 tmp = GetWorldPosition();
+                    Quaternion qtmp = GetWorldRotation();
                     PhysActor = m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPrimShape(
                         string.Format("{0}/{1}", Name, UUID),
                         Shape,
-                        AbsolutePosition,
+                        tmp,
                         Scale,
-                        RotationOffset,
+                        qtmp,
                         UsePhysics);
 
                     pa = PhysActor;
