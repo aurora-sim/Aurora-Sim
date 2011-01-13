@@ -237,9 +237,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MainConsole.Instance.Commands.AddCommand(this.Name, true, "ADNE", "ADNE", "Subcommands for Aurora DotNet Engine", AuroraDotNetConsoleCommands);
                 MainConsole.Instance.Commands.AddCommand(this.Name, true, "help ADNE", "help ADNE", "Brings up the help for ADNE", AuroraDotNetConsoleHelp);
 
-                //Fire this once to make sure that the APIs are found later...
-                GetAPIs();
-
                 // Create all objects we'll be using
                 ScriptProtection = new ScriptProtectionModule(Config);
 
@@ -1132,8 +1129,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int i = 0;
             foreach(IScriptApi api in m_APIs)
             {
-                apis[i] = api.Copy();
-                i++;
+                if (ScriptProtection.CheckAPI(api.Name))
+                {
+                    apis[i] = api.Copy();
+                    i++;
+                }
             }
             return apis;
         }

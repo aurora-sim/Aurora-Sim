@@ -122,7 +122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 new Dictionary<string, FieldInfo>();
         public Dictionary<string, IScriptApi> m_apis = new Dictionary<string, IScriptApi>();
 
-        public void InitApi(string api, IScriptApi data)
+        public void InitApi(IScriptApi data)
         {
             /*ILease lease = (ILease)RemotingServices.GetLifetimeService(data as MarshalByRefObject);
             if (lease != null)
@@ -535,6 +535,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             {
                 return "ScriptBase";
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

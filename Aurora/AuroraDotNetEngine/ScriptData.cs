@@ -384,15 +384,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             foreach (IScriptApi api in m_ScriptEngine.GetAPIs())
             {
-                if (ScriptEngine.ScriptProtection.CheckAPI(api.Name))
-                {
-                    Apis[api.Name] = api;
-                    Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
-                }
-            }
-            foreach (KeyValuePair<string, IScriptApi> kv in Apis)
-            {
-                Script.InitApi(kv.Key, kv.Value);
+                Apis[api.Name] = api;
+                Apis[api.Name].Initialize(m_ScriptEngine, part, part.LocalId, ItemID, ScriptEngine.ScriptProtection);
+                Script.InitApi(api);
             }
             Script.UpdateInitialValues();
         }

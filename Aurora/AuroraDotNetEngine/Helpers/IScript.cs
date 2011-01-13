@@ -14,7 +14,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public interface IScript : IDisposable
     {
-        void InitApi(string name, IScriptApi data);
+        void InitApi(IScriptApi data);
 
         ISponsor Sponsor { get; }
         void UpdateLease(TimeSpan time);
