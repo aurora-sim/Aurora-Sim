@@ -11776,5 +11776,4 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
     }
->>>>>>> 3b86a0cc8f71c6279a66883b92e3b16cf4ed5cd1:Aurora/AuroraDotNetEngine/APIs/LSL_Api.cs
 }
