@@ -465,6 +465,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        [XmlIgnore]
+        private bool m_IsSelected=false;
+
         private int m_savedAttachmentPoint;
         public int SavedAttachmentPoint
         {
@@ -1488,14 +1491,34 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         public bool CreateSelected
-        {
+            {
             get { return m_createSelected; }
-            set 
-            { 
-//                m_log.DebugFormat("[SOP]: Setting CreateSelected to {0} for {1} {2}", value, Name, UUID);
-                m_createSelected = value; 
+            set
+                {
+                //                m_log.DebugFormat("[SOP]: Setting CreateSelected to {0} for {1} {2}", value, Name, UUID);
+                m_createSelected = value;
+                }
             }
-        }
+
+        [XmlIgnore]
+        public bool IsSelected
+            {
+            get { return m_IsSelected; }
+            set
+                {
+                if (m_IsSelected != value)
+                    {
+                    if (PhysActor != null)
+                        {
+                        PhysActor.Selected = value;
+                        }
+                    if(ParentID !=0 && ParentGroup !=null && ParentGroup.RootPart!=null && ParentGroup.RootPart.IsSelected !=value)
+                        ParentGroup.RootPart.IsSelected=value;
+
+                    m_IsSelected = value;
+                    }               
+                }
+            }
 
         #endregion
 
