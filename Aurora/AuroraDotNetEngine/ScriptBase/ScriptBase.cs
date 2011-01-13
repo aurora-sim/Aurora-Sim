@@ -265,7 +265,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return tmp;
             }
 
-
         public Dictionary<string, object> GetStoreVars()
             {
             Dictionary<string, object> vars = new Dictionary<string, object>();
@@ -517,7 +516,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 }
             }
 
-
         public void ResetVars()
         {
             m_Executor.ResetStateEventFlags();
@@ -531,7 +529,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // With a bit of luck the compiler may even optimize it out.
         }
 
-        public string  Name 
+        public string Name 
         {
             get
             {

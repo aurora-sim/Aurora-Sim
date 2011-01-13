@@ -394,6 +394,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 Script.InitApi(kv.Key, kv.Value);
             }
+            Script.UpdateInitialValues();
         }
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
