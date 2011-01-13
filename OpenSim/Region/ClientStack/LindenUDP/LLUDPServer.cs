@@ -946,7 +946,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_scene.TryGetClient(udpClient.AgentID, out client))
             {
                 client.IsLoggingOut = true;
-                client.Close();
+                m_scene.IncomingCloseAgent(udpClient.AgentID);
             }
         }
 

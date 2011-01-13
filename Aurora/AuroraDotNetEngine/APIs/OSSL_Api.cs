@@ -2252,7 +2252,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return result;
         }
 
-        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID)
+        public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_String RequestedRole)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL");
             
@@ -2265,7 +2265,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return 0;
             }
 
-            m_groupData.AddAgentToGroup(UUID.Parse(AgentID.m_string), m_host.OwnerID, UUID.Parse(GroupID.m_string), UUID.Parse(RequestedRoleID.m_string));
+            UUID roleID = UUID.Zero;
+            List<GroupRolesData> roles = m_groupData.GetGroupRoles(UUID.Zero, UUID.Parse(GroupID.m_string));
+            foreach (GroupRolesData role in roles)
+            {
+                if (role.Name == RequestedRole.m_string)
+                    roleID = role.RoleID;
+            }
+
+            m_groupData.AddAgentToGroup(UUID.Parse(AgentID.m_string), m_host.OwnerID, UUID.Parse(GroupID.m_string), roleID);
             return 1;
         }
 

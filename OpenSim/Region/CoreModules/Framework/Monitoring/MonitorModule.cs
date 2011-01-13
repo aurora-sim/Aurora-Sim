@@ -631,17 +631,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
 
             /// <summary>
-            /// Make sure that all followers of the stats module have the correct stats
-            /// </summary>
-            public void CheckStatSanity()
-            {
-                //Force the recalculation of the stats
-                m_currentScene.SceneGraph.RecalculateStats();
-
-                m_module.SendYourStatsAreWrong();
-            }
-
-            /// <summary>
             /// Set the correct update time for the timer
             /// </summary>
             /// <param name="ms"></param>

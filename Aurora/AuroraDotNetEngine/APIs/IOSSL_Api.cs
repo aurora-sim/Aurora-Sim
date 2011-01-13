@@ -168,7 +168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osReturnObjects(LSL_Float Parameter);
         void osShutDown();
 
-        LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_Key RequestedRoleID);
+        LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_Key GroupID, LSL_String RequestedRole);
         DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos);
         LSL_String osUnixTimeToTimestamp(long time);
         DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);

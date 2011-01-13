@@ -1550,6 +1550,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // with an empty group membership to hopefully remove groups being displayed due
             // to the core Groups Stub
             remoteClient.SendGroupMembership(new GroupMembershipData[0]);
+            IScenePresence sp = null;
+            remoteClient.Scene.TryGetScenePresence(dataForAgentID, out sp);
+            remoteClient.SendAvatarDataImmediate((ScenePresence)sp);
 
             GroupMembershipData[] membershipArray = GetProfileListedGroupMemberships(remoteClient, dataForAgentID);
             SendGroupMembershipInfoViaCaps(remoteClient, dataForAgentID, membershipArray);

@@ -1147,9 +1147,6 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePresence presence = m_sceneGraph.GetScenePresence(agentID);
             if (presence != null)
             {
-                // Nothing is removed here, so down count it as such
-                m_sceneGraph.removeUserCount(!presence.IsChildAgent);
-
                 // Don't do this to root agents on logout, it's not nice for the viewer
                 if (presence.IsChildAgent)
                 {
