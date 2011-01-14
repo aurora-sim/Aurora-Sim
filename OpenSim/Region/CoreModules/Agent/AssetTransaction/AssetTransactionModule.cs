@@ -148,7 +148,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private void OnClientClosed(UUID clientID, Scene scene)
         {
             ScenePresence SP = scene.GetScenePresence(clientID);
-            if(!SP.IsChildAgent)
+            if(SP != null && !SP.IsChildAgent)
                 RemoveAgentAssetTransactions(clientID);
         }
 

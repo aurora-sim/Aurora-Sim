@@ -201,7 +201,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     }
                 }
             }
-            m_log.Warn("[LOCAL SIMULATION COMMS]: region not found in ReleaseAgent " + origin);
+            m_log.Debug("[LOCAL SIMULATION COMMS]: region not found in ReleaseAgent " + origin);
             return false;
         }
 
