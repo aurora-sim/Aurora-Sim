@@ -2703,7 +2703,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     {
                                     try
                                         {
-                                        if (item.prim.DoAChange(timeElapsed, item.what, item.arg))
+                                        if (item.prim.DoAChange(item.what, item.arg))
                                             RemovePrimThreadLocked(item.prim);
                                         }
                                     catch { };
@@ -3053,7 +3053,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             if (actor.IsPhysical)// && (d.BodyIsEnabled(actor.Body)))// || !actor._zeroFlag))
                             {
-                                actor.UpdatePositionAndVelocity();
+                                actor.UpdatePositionAndVelocity(i * ODE_STEPSIZE);
                                 if (!actor._zeroFlag) //No NINJA if zero flag
                                 {
                                     if (SupportsNINJAJoints)

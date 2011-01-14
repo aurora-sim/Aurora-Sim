@@ -1718,7 +1718,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 vel = d.BodyGetLinearVel(Body);
                                 }
 
-                            float damp = -m_mass * 0.5f * 0.75f;
+                            float damp = -m_mass * 0.1f;
 
                             Vector3 linearDamping = new Vector3(vel.X, vel.Y, vel.Z);
                             linearDamping *= damp;
@@ -2631,7 +2631,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _velocity.Y = (float)vel.Y;
                             _velocity.Z = (float)vel.Z;
 
-                            _acceleration = ((_velocity - m_lastVelocity) / 0.1f);
+                            _acceleration = ((_velocity - m_lastVelocity) / timestep);
                             //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
                             m_lastRotationalVelocity = m_rotationalVelocity;
