@@ -963,6 +963,7 @@ namespace OpenSim.Services.LLLoginService
             reason = string.Empty;
             uint circuitCode = 0;
             AgentCircuitData aCircuit = null;
+            dest = destination;
 
             if (m_UserAgentService == null)
             {
@@ -1011,10 +1012,11 @@ namespace OpenSim.Services.LLLoginService
                     {
                         success = TryFindGridRegionForAgentLogin(defaultRegions, account,
                             appearance, session, secureSession, circuitCode, position,
-                            clientIP, aCircuit, out destination);
+                            clientIP, aCircuit, out dest);
                     }
                     if (!success)
                     {
+                        destination = dest;
                         // Try the fallback regions
                         List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, destination.RegionLocX, destination.RegionLocY);
                         if (fallbacks != null)
@@ -1023,6 +1025,7 @@ namespace OpenSim.Services.LLLoginService
                                 appearance, session, secureSession, circuitCode, position,
                                 clientIP, aCircuit, out destination);
                         }
+                        destination = dest;
                         if (!success)
                         {
                             //Try to find any safe region

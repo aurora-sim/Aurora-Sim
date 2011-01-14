@@ -443,11 +443,11 @@ namespace Aurora.Simulation.Base
                 // This just dumps a warning for any operation that takes more than 100 ms
                 int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
                 if (tickdiff > LongCallTime)
-                    m_log.InfoFormat("[WEB UTIL]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
+                    m_log.InfoFormat("[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
                                      reqnum, url, method, tickdiff, tickdata);
             }
 
-            m_log.WarnFormat("[WEB UTIL] <{0}> osd request failed: {1}", reqnum, errorMessage);
+            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1}", reqnum, errorMessage);
             return ErrorResponseMap(errorMessage);
         }
 
@@ -491,7 +491,7 @@ namespace Aurora.Simulation.Base
             catch (Exception e)
             {
                 // don't need to treat this as an error... we're just guessing anyway
-                m_log.DebugFormat("[WEB UTIL] couldn't decode <{0}>: {1}", response, e.Message);
+                m_log.DebugFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
             }
 
             return result;
@@ -563,11 +563,11 @@ namespace Aurora.Simulation.Base
             {
                 int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
                 if (tickdiff > LongCallTime)
-                    m_log.InfoFormat("[WEB UTIL]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
+                    m_log.InfoFormat("[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
                                      reqnum, url, method, tickdiff, tickdata);
             }
 
-            m_log.WarnFormat("[WEB UTIL]: <{0}> form request failed: {1}", reqnum, errorMessage);
+            m_log.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
             return ErrorResponseMap(errorMessage);
         }
 
@@ -720,6 +720,8 @@ namespace Aurora.Simulation.Base
         public static OSDMap GetOSDMap(string data)
         {
             OSDMap args = null;
+            if (data == "")
+                return null;
             try
             {
                 OSD buffer;
@@ -733,13 +735,13 @@ namespace Aurora.Simulation.Base
                 else
                 {
                     // uh?
-                    m_log.Warn(("[REST COMMS]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                    m_log.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                m_log.Warn("[REST COMMS]: exception on parse of REST message " + ex.Message);
+                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex.Message);
                 return null;
             }
         }

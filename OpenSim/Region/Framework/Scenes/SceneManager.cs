@@ -529,8 +529,8 @@ namespace OpenSim.Region.Framework.Scenes
             int port = regionInfo.InternalEndPoint.Port;
 
             // set initial ServerURI
-            regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.InternalEndPoint.Port;
             regionInfo.HttpPort = MainServer.Instance.Port;
+            regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.HttpPort;
 
             regionInfo.osSecret = SecretID;
 
