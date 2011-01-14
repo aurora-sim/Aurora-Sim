@@ -104,8 +104,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private string m_name = String.Empty;
 
-        private bool[] m_colliderarr = new bool[11];
-        private bool[] m_colliderGroundarr = new bool[11];
+        int m_colliderfilter = 0;
+        int m_colliderGroundfilter = 0;
+        int m_colliderObjectfilter = 0;
 
         // Default we're a Character
         private CollisionCategories m_collisionCategories = (CollisionCategories.Character);
@@ -171,10 +172,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //     new d.Matrix3(0.5f, 0.7071068f, 0.5f, -0.7071068f, 0f, 0.7071068f, 0.5f, -0.7071068f,
             //                   0.5f);
 
-            for (int i = 0; i < 11; i++)
-            {
-                m_colliderarr[i] = false;
-            }
+            m_colliderfilter = 0;
+            m_colliderGroundfilter = 0;
+            m_colliderObjectfilter = 0;
+
             CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
@@ -258,53 +259,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         /// Returns if the avatar is colliding in general.
         /// This includes the ground and objects and avatar.
+        /// in this and next collision sets there is a general set to false
+        /// at begin of loop, so a false is 2 sets while a true is a false plus a 1
         /// </summary>
         public override bool IsColliding
         {
             get { return m_iscolliding; }
             set
-            {
-                int i;
-                int truecount = 0;
-                int falsecount = 0;
-
-                if (m_colliderarr.Length >= 10)
                 {
-                    for (i = 0; i < 10; i++)
+                if (value)
                     {
-                        m_colliderarr[i] = m_colliderarr[i + 1];
+                    m_colliderfilter +=2;
+                    if (m_colliderfilter > 2)
+                        m_colliderfilter = 2;
                     }
-                }
-                m_colliderarr[10] = value;
-
-                for (i = 0; i < 11; i++)
-                {
-                    if (m_colliderarr[i])
-                    {
-                        truecount++;
-                    }
-                    else
-                    {
-                        falsecount++;
-                    }
-                }
-
-                // Equal truecounts and false counts means we're colliding with something.
-
-                if (falsecount >= 1.2*truecount)
-                {
-                    m_iscolliding = false;
-                }
                 else
-                {
+                    {
+                    m_colliderfilter--;
+                    if (m_colliderfilter < 0)
+                        m_colliderfilter = 0;
+                    }
+
+                if (m_colliderfilter == 2)
                     m_iscolliding = true;
-                }
-                if (m_wascolliding != m_iscolliding)
-                {
-                    //base.SendCollisionUpdate(new CollisionEventUpdate());
-                }
+                else
+                    m_iscolliding = false;
+
+//                if (m_iscolliding)
+//                    m_log.Warn("col");
                 m_wascolliding = m_iscolliding;
-            }
+                }
         }
 
         /// <summary>
@@ -315,48 +299,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscollidingGround; }
             set
             {
-                // Collisions against the ground are not really reliable
-                // So, to get a consistant value we have to average the current result over time
-                // Currently we use 1 second = 10 calls to this.
-                int i;
-                int truecount = 0;
-                int falsecount = 0;
-
-                if (m_colliderGroundarr.Length >= 10)
-                {
-                    for (i = 0; i < 10; i++)
+                
+                if (value)
                     {
-                        m_colliderGroundarr[i] = m_colliderGroundarr[i + 1];
+                    m_colliderGroundfilter +=2;
+                    if (m_colliderGroundfilter > 2)
+                        m_colliderGroundfilter = 2;
                     }
-                }
-                m_colliderGroundarr[10] = value;
-
-                for (i = 0; i < 11; i++)
-                {
-                    if (m_colliderGroundarr[i])
-                    {
-                        truecount++;
-                    }
-                    else
-                    {
-                        falsecount++;
-                    }
-                }
-
-                // Equal truecounts and false counts means we're colliding with something.
-
-                if (falsecount > 1.2*truecount)
-                {
-                    m_iscollidingGround = false;
-                }
                 else
-                {
+                    {
+                    m_colliderGroundfilter--;
+                    if (m_colliderGroundfilter < 0)
+                        m_colliderGroundfilter = 0;
+                    }
+
+                if (m_colliderGroundfilter == 2)
                     m_iscollidingGround = true;
-                }
-                if (m_wascollidingGround != m_iscollidingGround)
-                {
-                    //base.SendCollisionUpdate(new CollisionEventUpdate());
-                }
+                else
+                    m_iscollidingGround = false;
+
+//                if (m_iscollidingGround)
+//                    m_log.Warn("colgnd");
+
                 m_wascollidingGround = m_iscollidingGround;
             }
         }
@@ -369,8 +333,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscollidingObj; }
             set
             {
+            if (value)
+                {
+                m_colliderObjectfilter += 2; // there are 2 falses per false
+                if (m_colliderObjectfilter > 2)
+                    m_colliderObjectfilter = 2;
+                }
+            else
+                {
+                m_colliderObjectfilter--;
+                if (m_colliderObjectfilter < 0)
+                    m_colliderObjectfilter = 0;
+                }
+
+            if (m_colliderGroundfilter == 2)
+                m_iscollidingObj = true;
+            else
+                m_iscollidingObj = false;
+
+//            if (m_iscollidingObj)
+//                m_log.Warn("colobj");
+
                 m_iscollidingObj = value;
-                if (value)
+                if (m_iscollidingObj)
                     m_pidControllerActive = false;
                 else
                     m_pidControllerActive = true;
