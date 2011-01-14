@@ -2645,7 +2645,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     ode.drelease(world);
                 }
 
-                int i = 0;
+                int nodesteps = 0;
 
                 // Figure out the Frames Per Second we're going at.
                 //(step_time == 0.004f, there's 250 of those per second.   Times the step time/step size
@@ -2947,7 +2947,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODEPrim prim in _activeprims)
                                 {
                                     prim.m_collisionscore = 0;
-                                    prim.Move(timeElapsed);
+                                    prim.Move(ODE_STEPSIZE);
                                 }
                             }
 
@@ -3009,7 +3009,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     step_time -= ODE_STEPSIZE;
-                    i++;
+                    nodesteps++;
                 }
                 int AvatarUpdatePosAndVelocity = Util.EnvironmentTickCount();
 
@@ -3053,7 +3053,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             if (actor.IsPhysical)// && (d.BodyIsEnabled(actor.Body)))// || !actor._zeroFlag))
                             {
-                                actor.UpdatePositionAndVelocity(i * ODE_STEPSIZE);
+                                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                                 if (!actor._zeroFlag) //No NINJA if zero flag
                                 {
                                     if (SupportsNINJAJoints)

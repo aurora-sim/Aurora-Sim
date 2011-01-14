@@ -1431,7 +1431,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float m_mass = _mass;
                     d.Vector3 dcpos = d.BodyGetPosition(Body);
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
-                    d.Vector3 force = d.BodyGetForce(Body);
+//                    d.Vector3 force = d.BodyGetForce(Body);    wrong this is always null at this point
                     d.Vector3 angvel = d.BodyGetAngularVel(Body);
 
                     //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle.
@@ -1659,12 +1659,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.0001f);
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.0001f);
                             }
-
+/*
                         if (vel.Z < -30)
                             {
                             vel.Z = -30;
                             }
-
+*/
                         bool disabled = false;
 
                         if (_parent_scene.m_DisableSlowPrims)
@@ -1676,8 +1676,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 if (Math.Abs(vel.X) < 0.0001 || Math.Abs(vel.Y) < 0.0001 || Math.Abs(vel.Z) < 0.0001)
                                     {
                                     Vector3 angvelocity = new Vector3((float)angvel.X, (float)angvel.Y, (float)angvel.Z);
-                                    if (Math.Abs(force.X) < 100 && Math.Abs(force.Y) < 100 && Math.Abs(force.Z) < 100 &&
-                                        angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
+                                    if (angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
                                         vel.X != 0 && vel.Y != 0 && vel.Z != 0)
                                         {
                                         if (d.BodyIsEnabled(Body))
@@ -1718,17 +1717,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 vel = d.BodyGetLinearVel(Body);
                                 }
 
-                            float damp = -m_mass * 0.1f;
+                            float drag = -m_mass * 0.2f;
 
-                            Vector3 linearDamping = new Vector3(vel.X, vel.Y, vel.Z);
-                            linearDamping *= damp;
+                            fx += drag * vel.X;
+                            fy += drag * vel.Y;
+                            fz += drag * vel.Z;                                                    
 
-                            d.BodyAddForce(Body, linearDamping.X, linearDamping.Y, linearDamping.Z);
-
-                            Vector3 angularDamping = new Vector3(angvel.X, angvel.Y, angvel.Z);
-                            angularDamping *= damp;
-
-                            d.BodyAddTorque(Body, angularDamping.X, angularDamping.Y, angularDamping.Z);
+                            d.BodyAddTorque(Body, drag * angvel.X, drag * angvel.Y, drag * angvel.Z);
 
                             #region Force List
 
