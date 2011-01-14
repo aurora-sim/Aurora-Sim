@@ -96,11 +96,11 @@ namespace OpenSim.Services.Connectors
 
         public List<GridRegion> InformNeighborsRegionIsUp(RegionInfo incomingRegion, List<GridRegion> alreadyInformedRegions)
         {
-            List<GridRegion> informedRegions = new List<GridRegion>();
+            List<GridRegion> informedRegions = alreadyInformedRegions;
             foreach (GridRegion neighbor in Neighbors[incomingRegion.RegionID])
             {
                 //If we have already informed the region, don't tell it again
-                if (alreadyInformedRegions.Contains(neighbor))
+                if (informedRegions.Contains(neighbor))
                     continue;
                 //Call the region then and add the regions it informed
                 informedRegions.AddRange(DoHelloNeighbourCall(neighbor, incomingRegion));
@@ -111,7 +111,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoHelloNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = MakeUri(region, "/region/" + thisRegion.RegionID + "/");
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -162,6 +162,17 @@ namespace OpenSim.Services.Connectors
             return informedRegions;
         }
 
+        /// <summary>
+        /// Build a Uri to call for the region + the path
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private string MakeUri(GridRegion region, string path)
+        {
+            return region.ServerURI + path;
+        }
+
         public List<GridRegion> InformNeighborsRegionIsDown(RegionInfo closingRegion, List<GridRegion> alreadyInformedRegions, List<GridRegion> neighbors)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
@@ -179,7 +190,7 @@ namespace OpenSim.Services.Connectors
         protected List<GridRegion> DoGoodbyeNeighbourCall(GridRegion region, RegionInfo thisRegion)
         {
             List<GridRegion> informedRegions = new List<GridRegion>();
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = MakeUri(region, "/region/" + thisRegion.RegionID + "/");
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -283,8 +294,8 @@ namespace OpenSim.Services.Connectors
             List<GridRegion> neighbors = m_LocalService.GetNeighbors(region);
             if (neighbors.Count != 0)
                 return neighbors;
-            
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + region.RegionID + "/";
+
+            string uri = MakeUri(new GridRegion(region), "/region/" + region.RegionID + "/");
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in
@@ -349,7 +360,7 @@ namespace OpenSim.Services.Connectors
 
         protected void InformNeighborOfChatMessage(OSChatMessage message, ChatSourceType type, GridRegion region, RegionInfo thisRegion)
         {
-            string uri = "http://" + region.ExternalEndPoint.Address + ":" + region.HttpPort + "/region/" + thisRegion.RegionID + "/";
+            string uri = MakeUri(region, "/region/" + thisRegion.RegionID + "/");
             //m_log.Debug("   >>> DoHelloNeighbourCall <<< " + uri);
 
             // Fill it in

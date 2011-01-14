@@ -62,6 +62,10 @@ namespace OpenSim.Server.Handlers.Neighbor
         #endregion
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        /// <summary>
+        /// The neighbor service
+        /// NOTE: This is ALWAYS the local neighbor service, never the remote service.
+        /// </summary>
         private INeighborService m_NeighborService;
         private IAuthenticationService m_AuthenticationService;
         private IConfigSource m_source;
