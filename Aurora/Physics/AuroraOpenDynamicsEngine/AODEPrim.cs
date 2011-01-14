@@ -1341,7 +1341,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             changeSelectedStatus(m_isSelected);
             }
 
-        public void changemoveandrotate(float timestep, Vector3 newpos,Quaternion newrot)
+        public void changemoveandrotate(Vector3 newpos,Quaternion newrot)
             {
             if (IsPhysical)
                 {
@@ -1431,7 +1431,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float m_mass = _mass;
                     d.Vector3 dcpos = d.BodyGetPosition(Body);
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
-                    d.Vector3 force = d.BodyGetForce(Body);
+//                    d.Vector3 force = d.BodyGetForce(Body);    wrong this is always null at this point
                     d.Vector3 angvel = d.BodyGetAngularVel(Body);
 
                     //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle.
@@ -1444,7 +1444,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                             fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
                             fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = (_parent_scene.gravityz * 3) * (1.0f - m_buoyancy) * m_mass;
+                            fz = (_parent_scene.gravityz) * (1.0f - m_buoyancy) * m_mass;
                             }
                         else
                             {
@@ -1659,12 +1659,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.0001f);
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.0001f);
                             }
-
+/*
                         if (vel.Z < -30)
                             {
                             vel.Z = -30;
                             }
-
+*/
                         bool disabled = false;
 
                         if (_parent_scene.m_DisableSlowPrims)
@@ -1676,8 +1676,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 if (Math.Abs(vel.X) < 0.0001 || Math.Abs(vel.Y) < 0.0001 || Math.Abs(vel.Z) < 0.0001)
                                     {
                                     Vector3 angvelocity = new Vector3((float)angvel.X, (float)angvel.Y, (float)angvel.Z);
-                                    if (Math.Abs(force.X) < 100 && Math.Abs(force.Y) < 100 && Math.Abs(force.Z) < 100 &&
-                                        angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
+                                    if (angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
                                         vel.X != 0 && vel.Y != 0 && vel.Z != 0)
                                         {
                                         if (d.BodyIsEnabled(Body))
@@ -1718,17 +1717,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 vel = d.BodyGetLinearVel(Body);
                                 }
 
-                            float damp = -m_mass * 0.5f * 0.75f;
+                            float drag = -m_mass * 0.2f;
 
-                            Vector3 linearDamping = new Vector3(vel.X, vel.Y, vel.Z);
-                            linearDamping *= damp;
+                            fx += drag * vel.X;
+                            fy += drag * vel.Y;
+                            fz += drag * vel.Z;                                                    
 
-                            d.BodyAddForce(Body, linearDamping.X, linearDamping.Y, linearDamping.Z);
-
-                            Vector3 angularDamping = new Vector3(angvel.X, angvel.Y, angvel.Z);
-                            angularDamping *= damp;
-
-                            d.BodyAddTorque(Body, angularDamping.X, angularDamping.Y, angularDamping.Z);
+                            d.BodyAddTorque(Body, drag * angvel.X, drag * angvel.Y, drag * angvel.Z);
 
                             #region Force List
 
@@ -2459,7 +2454,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void UpdatePositionAndVelocity()
+        public void UpdatePositionAndVelocity(float timestep)
             {
             if (m_frozen)
                 return;
@@ -2631,7 +2626,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _velocity.Y = (float)vel.Y;
                             _velocity.Z = (float)vel.Z;
 
-                            _acceleration = ((_velocity - m_lastVelocity) / 0.1f);
+                            _acceleration = ((_velocity - m_lastVelocity) / timestep);
                             //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
                             m_lastRotationalVelocity = m_rotationalVelocity;
@@ -3171,7 +3166,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
 
-        public bool DoAChange(float timestep,changes what, object arg)
+        public bool DoAChange(changes what, object arg)
             {
             if (m_frozen && what != changes.Add && what != changes.Remove)
                 return false;
@@ -3210,11 +3205,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
 
                 case changes.Position:
-                    changemoveandrotate(timestep,(Vector3)arg,_orientation);
+                    changemoveandrotate((Vector3)arg,_orientation);
                     break;
 
                 case changes.Orientation:
-                    changemoveandrotate(timestep,_position,(Quaternion)arg);
+                    changemoveandrotate(_position,(Quaternion)arg);
                     break;
 
                 case changes.PosOffset:

@@ -88,7 +88,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (vars != null && vars.Count != 0)
                 instance.Script.SetStoreVars(vars);
 
-            instance.PluginData = (object[])save.Plugins;
+            if(save.Plugins is object[])
+                instance.PluginData = (object[])save.Plugins;
+            else
+                instance.PluginData = new object[1] {(object)save.Plugins};
+
             if (save.Permissions != " " && save.Permissions != "")
             {
                 instance.InventoryItem.PermsGranter = new UUID(save.Permissions.Split(',')[0]);
