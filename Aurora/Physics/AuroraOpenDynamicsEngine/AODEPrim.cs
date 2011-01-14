@@ -1341,7 +1341,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             changeSelectedStatus(m_isSelected);
             }
 
-        public void changemoveandrotate(float timestep, Vector3 newpos,Quaternion newrot)
+        public void changemoveandrotate(Vector3 newpos,Quaternion newrot)
             {
             if (IsPhysical)
                 {
@@ -1444,7 +1444,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                             fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
                             fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = (_parent_scene.gravityz * 3) * (1.0f - m_buoyancy) * m_mass;
+                            fz = (_parent_scene.gravityz) * (1.0f - m_buoyancy) * m_mass;
                             }
                         else
                             {
@@ -2459,7 +2459,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void UpdatePositionAndVelocity()
+        public void UpdatePositionAndVelocity(float timestep)
             {
             if (m_frozen)
                 return;
@@ -3171,7 +3171,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
 
-        public bool DoAChange(float timestep,changes what, object arg)
+        public bool DoAChange(changes what, object arg)
             {
             if (m_frozen && what != changes.Add && what != changes.Remove)
                 return false;
@@ -3210,11 +3210,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
 
                 case changes.Position:
-                    changemoveandrotate(timestep,(Vector3)arg,_orientation);
+                    changemoveandrotate((Vector3)arg,_orientation);
                     break;
 
                 case changes.Orientation:
-                    changemoveandrotate(timestep,_position,(Quaternion)arg);
+                    changemoveandrotate(_position,(Quaternion)arg);
                     break;
 
                 case changes.PosOffset:

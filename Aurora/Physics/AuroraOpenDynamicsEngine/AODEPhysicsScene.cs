@@ -440,7 +440,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
-                    gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f) / 5;
+                    gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f);
 
                     m_avDecayTime = physicsconfig.GetFloat("avDecayTime", m_avDecayTime);
                     m_avStopDecaying = physicsconfig.GetFloat("avStopDecaying", m_avStopDecaying);
