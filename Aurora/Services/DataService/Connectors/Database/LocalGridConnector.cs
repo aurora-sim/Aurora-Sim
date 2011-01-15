@@ -16,7 +16,7 @@ using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalGridConnector : IRegionData, IAuroraDataPlugin
+    public class LocalGridConnector : IRegionData
 	{
 		private IGenericData GD = null;
         private string m_realm = "gridregions";
@@ -40,7 +40,7 @@ namespace Aurora.Services.DataService
 
         public string Name
         {
-            get { return "IGridData"; }
+            get { return "IRegionData"; }
         }
 
         public void Dispose()
@@ -155,7 +155,7 @@ namespace Aurora.Services.DataService
             keys.Add("LocY");
             keys.Add("LocZ");
             keys.Add("OwnerUUID");
-            keys.Add("Maturity");
+            keys.Add("Access");
             keys.Add("SizeX");
             keys.Add("SizeY");
             keys.Add("SizeZ");

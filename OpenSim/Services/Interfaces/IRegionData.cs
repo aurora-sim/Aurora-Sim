@@ -45,8 +45,6 @@ namespace Aurora.Framework
 
         bool Store(GridRegion data);
 
-        bool SetDataItem(UUID regionID, string item, string value);
-
         bool Delete(UUID regionID);
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);
