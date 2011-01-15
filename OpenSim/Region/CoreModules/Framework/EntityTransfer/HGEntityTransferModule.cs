@@ -127,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             int flags = m_scenes[0].GridService.GetRegionFlags(m_scenes[0].RegionInfo.ScopeID, region.RegionID);
             m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: region {0} flags: {1}", region.RegionID, flags);
-            if ((flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
+            if ((flags & (int)Aurora.Framework.RegionFlags.Hyperlink) != 0)
             {
                 m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: Destination region {0} is hyperlink", region.RegionID);
                 return m_GatekeeperConnector.GetHyperlinkRegion(region, region.RegionID);
@@ -141,7 +141,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return true;
 
             int flags = m_scenes[0].GridService.GetRegionFlags(m_scenes[0].RegionInfo.ScopeID, reg.RegionID);
-            if (flags == -1 /* no region in DB */ || (flags & (int)OpenSim.Data.RegionFlags.Hyperlink) != 0)
+            if (flags == -1 /* no region in DB */ || (flags & (int)Aurora.Framework.RegionFlags.Hyperlink) != 0)
                 return true;
 
             return false;

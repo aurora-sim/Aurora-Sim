@@ -966,8 +966,7 @@ namespace OpenSim.CoreApplicationPlugins
                     // Modify access
                     scene.RegionInfo.EstateSettings.PublicAccess =
                         GetBoolean(requestData,"public", scene.RegionInfo.EstateSettings.PublicAccess);
-                    if (scene.RegionInfo.Persistent)
-                        scene.RegionInfo.EstateSettings.Save();
+                    scene.RegionInfo.EstateSettings.Save();
 
                     if (requestData.ContainsKey("enable_voice"))
                     {
@@ -2512,8 +2511,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 Scene scene = manager.CurrentScene;
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
-                if (scene.RegionInfo.Persistent)
-                    scene.RegionInfo.EstateSettings.Save();
+                scene.RegionInfo.EstateSettings.Save();
             }
             catch (Exception e)
             {
@@ -2596,8 +2594,7 @@ namespace OpenSim.CoreApplicationPlugins
                         }
                     }
                     scene.RegionInfo.EstateSettings.EstateAccess = accessControlList.ToArray();
-                    if (scene.RegionInfo.Persistent)
-                        scene.RegionInfo.EstateSettings.Save();
+                    scene.RegionInfo.EstateSettings.Save();
                 }
 
                 responseData["added"] = addedUsers;
@@ -2683,8 +2680,7 @@ namespace OpenSim.CoreApplicationPlugins
                         }
                     }
                     scene.RegionInfo.EstateSettings.EstateAccess = accessControlList.ToArray();
-                    if (scene.RegionInfo.Persistent)
-                        scene.RegionInfo.EstateSettings.Save();
+                    scene.RegionInfo.EstateSettings.Save();
                 }
 
                 responseData["removed"] = removedUsers;

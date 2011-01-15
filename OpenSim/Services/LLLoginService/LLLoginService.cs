@@ -695,8 +695,7 @@ namespace OpenSim.Services.LLLoginService
                 SimcapsSeedPath
                     = "http://"
                       + NetworkUtil.GetHostFor(ipepClient.Address, destination.ExternalHostName)
-                      + ":"
-                      + destination.HttpPort
+                      + ":" + destination.HttpPort
                       + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
             }
             else
@@ -977,7 +976,8 @@ namespace OpenSim.Services.LLLoginService
                     if (hostName == string.Empty)
                         SetHostAndPort(m_GatekeeperURL);
 
-                    gatekeeper = new GridRegion(destination);
+                    gatekeeper = new GridRegion();
+                    gatekeeper.FromOSD(destination.ToOSD());
                     gatekeeper.ExternalHostName = hostName;
                     gatekeeper.HttpPort = (uint)port;
 

@@ -41,6 +41,8 @@ using OpenSim.Services.Interfaces;
 using OpenSim.Services.Connectors.Hypergrid;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse;
+using Aurora.Framework;
+using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace OpenSim.Services.GridService
 {
@@ -87,7 +89,7 @@ namespace OpenSim.Services.GridService
                         else
                         {
                             // This shouldn't happen
-                            m_DefaultRegion = new GridRegion(1000 * Constants.RegionSize, 1000 * Constants.RegionSize);
+                            m_DefaultRegion = new GridRegion() { RegionLocX = 1000 * Constants.RegionSize, RegionLocY = 1000 * Constants.RegionSize };
                             m_log.Error("[HYPERGRID LINKER]: Something is wrong with this grid. It has no regions?");
                         }
                     }
@@ -299,11 +301,11 @@ namespace OpenSim.Services.GridService
             m_log.DebugFormat("[HYPERGRID LINKER]: Request to unlink {0}", mapName);
             GridRegion regInfo = null;
 
-            List<RegionData> regions = m_Database.Get(mapName, m_ScopeID);
+            List<GridRegion> regions = m_Database.Get(mapName, m_ScopeID);
             if (regions != null && regions.Count > 0)
             {
-                OpenSim.Data.RegionFlags rflags = (OpenSim.Data.RegionFlags)Convert.ToInt32(regions[0].Data["flags"]);
-                if ((rflags & OpenSim.Data.RegionFlags.Hyperlink) != 0)
+                RegionFlags rflags = (RegionFlags)regions[0].Flags;
+                if ((rflags & RegionFlags.Hyperlink) != 0)
                 {
                     regInfo = new GridRegion();
                     regInfo.RegionID = regions[0].RegionID;
@@ -384,13 +386,10 @@ namespace OpenSim.Services.GridService
 
         private void AddHyperlinkRegion(GridRegion regionInfo, ulong regionHandle)
         {
+            int flags = (int)RegionFlags.Hyperlink + (int)RegionFlags.NoDirectLogin + (int)RegionFlags.RegionOnline;
+            regionInfo.Flags = flags;
 
-            RegionData rdata = m_GridService.RegionInfo2RegionData(regionInfo);
-            int flags = (int)OpenSim.Data.RegionFlags.Hyperlink + (int)OpenSim.Data.RegionFlags.NoDirectLogin + (int)OpenSim.Data.RegionFlags.RegionOnline;
-            rdata.Data["flags"] = flags.ToString();
-
-            m_Database.Store(rdata);
-
+            m_Database.Store(regionInfo);
         }
 
         private void RemoveHyperlinkRegion(UUID regionID)
@@ -410,7 +409,7 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.Output("Syntax: show hyperlinks");
                 return;
             }
-            List<RegionData> regions = m_Database.GetHyperlinks(UUID.Zero);
+            List<GridRegion> regions = m_Database.GetHyperlinks(UUID.Zero);
             if (regions == null || regions.Count < 1)
             {
                 MainConsole.Instance.Output("No hyperlinks");
@@ -420,12 +419,12 @@ namespace OpenSim.Services.GridService
             MainConsole.Instance.Output("Region Name                             Region UUID");
             MainConsole.Instance.Output("Location                                URI");
             MainConsole.Instance.Output("-------------------------------------------------------------------------------");
-            foreach (RegionData r in regions)
+            foreach (GridRegion r in regions)
             {
                 MainConsole.Instance.Output(String.Format("{0,-39} {1}\n{2,-39} {3}\n",
                         r.RegionName, r.RegionID,
-                        String.Format("{0},{1} ({2},{3})", r.posX, r.posY, r.posX / 256, r.posY / 256),
-                        "http://" + r.Data["serverIP"].ToString() + ":" + r.Data["serverHttpPort"].ToString()));
+                        String.Format("{0},{1} ({2},{3})", r.RegionLocX, r.RegionLocY, r.RegionLocX / 256, r.RegionLocY / 256),
+                        r.ServerURI));
             }
             return;
         }

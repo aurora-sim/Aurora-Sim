@@ -147,10 +147,6 @@ namespace OpenSim.Services.Interfaces
         }
         protected string m_regionType = String.Empty;
 
-        protected string m_externalHostName;
-
-        protected IPEndPoint m_internalEndPoint;
-
         public int RegionLocX
         {
             get { return m_regionLocX; }
@@ -195,48 +191,40 @@ namespace OpenSim.Services.Interfaces
             get { return m_RegionSizeZ; }
         }
 
+        public int Flags
+        {
+            get { return m_flags; }
+            set { m_flags = value; }
+        }
+
+        public UUID SessionID
+        {
+            get { return m_SessionID; }
+            set { m_SessionID = value; }
+        }
+
         private float m_RegionSizeX = 256;
         private float m_RegionSizeY = 256;
         private float m_RegionSizeZ = 256;
         public UUID RegionID = UUID.Zero;
         public UUID ScopeID = UUID.Zero;
+        private int m_flags = 0;
+        private UUID m_SessionID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
         public UUID TerrainMapImage = UUID.Zero;
         public byte Access;
         public string Token = string.Empty;
         private IPEndPoint m_remoteEndPoint = null;
+        protected string m_externalHostName;
+        protected IPEndPoint m_internalEndPoint;
+        public int LastSeen = 0;
 
         public GridRegion()
         {
         }
 
-        public GridRegion(int xcell, int ycell)
-        {
-            m_regionLocX = xcell;
-            m_regionLocY = ycell;
-        }
-
         public GridRegion(RegionInfo ConvertFrom)
-        {
-            m_regionName = ConvertFrom.RegionName;
-            m_regionType = ConvertFrom.RegionType;
-            m_regionLocX = (int)ConvertFrom.RegionLocX;
-            m_regionLocY = (int)ConvertFrom.RegionLocY;
-            m_internalEndPoint = ConvertFrom.InternalEndPoint;
-            m_externalHostName = ConvertFrom.ExternalHostName;
-            m_httpPort = ConvertFrom.HttpPort;
-            RegionID = ConvertFrom.RegionID;
-            ServerURI = ConvertFrom.ServerURI;
-            TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
-            TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
-            Access = ConvertFrom.AccessLevel;
-            EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
-            m_RegionSizeX = ConvertFrom.RegionSizeX;
-            m_RegionSizeY = ConvertFrom.RegionSizeY;
-        }
-
-        public GridRegion(GridRegion ConvertFrom)
         {
             m_regionName = ConvertFrom.RegionName;
             m_regionType = ConvertFrom.RegionType;
@@ -248,10 +236,10 @@ namespace OpenSim.Services.Interfaces
             m_httpPort = ConvertFrom.HttpPort;
             RegionID = ConvertFrom.RegionID;
             ServerURI = ConvertFrom.ServerURI;
-            TerrainImage = ConvertFrom.TerrainImage;
-            TerrainMapImage = ConvertFrom.TerrainMapImage;
-            Access = ConvertFrom.Access;
-            EstateOwner = ConvertFrom.EstateOwner;
+            TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
+            TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
+            Access = ConvertFrom.AccessLevel;
+            EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;
@@ -342,6 +330,79 @@ namespace OpenSim.Services.Interfaces
             return kvp;
         }
 
+        public GridRegion(Dictionary<string, object> kvp)
+        {
+            if (kvp.ContainsKey("uuid"))
+                RegionID = new UUID((string)kvp["uuid"]);
+
+            if (kvp.ContainsKey("locX"))
+                RegionLocX = Convert.ToInt32((string)kvp["locX"]);
+
+            if (kvp.ContainsKey("locY"))
+                RegionLocY = Convert.ToInt32((string)kvp["locY"]);
+
+            if (kvp.ContainsKey("regionName"))
+                RegionName = (string)kvp["regionName"];
+
+            if (kvp.ContainsKey("regionType"))
+                RegionType = (string)kvp["regionType"];
+
+            if (kvp.ContainsKey("serverIP"))
+            {
+                //int port = 0;
+                //Int32.TryParse((string)kvp["serverPort"], out port);
+                //IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["serverIP"]), port);
+                ExternalHostName = (string)kvp["serverIP"];
+            }
+            else
+                ExternalHostName = "127.0.0.1";
+
+            if (kvp.ContainsKey("serverPort"))
+            {
+                Int32 port = 0;
+                Int32.TryParse((string)kvp["serverPort"], out port);
+                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
+            }
+
+            if (kvp.ContainsKey("serverHttpPort"))
+            {
+                UInt32 port = 0;
+                UInt32.TryParse((string)kvp["serverHttpPort"], out port);
+                HttpPort = port;
+            }
+
+            if (kvp.ContainsKey("serverURI"))
+                ServerURI = (string)kvp["serverURI"];
+
+            if (kvp.ContainsKey("regionMapTexture"))
+                UUID.TryParse((string)kvp["regionMapTexture"], out TerrainImage);
+
+            if (kvp.ContainsKey("regionTerrainTexture"))
+                UUID.TryParse((string)kvp["regionTerrainTexture"], out TerrainMapImage);
+
+            if (kvp.ContainsKey("access"))
+                Access = Byte.Parse((string)kvp["access"]);
+
+            if (kvp.ContainsKey("owner_uuid"))
+                EstateOwner = new UUID(kvp["owner_uuid"].ToString());
+
+            if (kvp.ContainsKey("Token"))
+                Token = kvp["Token"].ToString();
+
+            if (kvp.ContainsKey("sizeX"))
+                m_RegionSizeX = float.Parse(kvp["sizeX"].ToString());
+
+            if (kvp.ContainsKey("sizeY"))
+                m_RegionSizeY = float.Parse(kvp["sizeY"].ToString());
+
+            //if (kvp.ContainsKey("remoteEndPointIP"))
+            //{
+            //    IPAddress add = IPAddress.Parse(kvp["remoteEndPointIP"].ToString());
+            //    int port = Int32.Parse(kvp["remoteEndPointPort"].ToString());
+            //    m_remoteEndPoint = new IPEndPoint(add, port);
+            //}
+        }
+
         public OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
@@ -363,6 +424,7 @@ namespace OpenSim.Services.Interfaces
             map["sizeX"] = RegionSizeX;
             map["sizeY"] = RegionSizeY;
             map["sizeZ"] = RegionSizeZ;
+            map["LastSeen"] = LastSeen;
 
             // We send it along too so that it doesn't need resolved on the other end
             map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
@@ -440,85 +502,15 @@ namespace OpenSim.Services.Interfaces
             if (map.ContainsKey("sizeZ"))
                 m_RegionSizeZ = (float)map["sizeZ"].AsReal();
 
+            if (map.ContainsKey("LastSeen"))
+                LastSeen = map["LastSeen"].AsInteger();
+
             if (map.ContainsKey("remoteEndPointIP"))
             {
                 IPAddress add = new IPAddress(map["remoteEndPointIP"].AsBinary());
                 int port = map["remoteEndPointPort"].AsInteger();
                 m_remoteEndPoint = new IPEndPoint(add, port);
             }
-        }
-
-        public GridRegion(Dictionary<string, object> kvp)
-        {
-            if (kvp.ContainsKey("uuid"))
-                RegionID = new UUID((string)kvp["uuid"]);
-
-            if (kvp.ContainsKey("locX"))
-                RegionLocX = Convert.ToInt32((string)kvp["locX"]);
-
-            if (kvp.ContainsKey("locY"))
-                RegionLocY = Convert.ToInt32((string)kvp["locY"]);
-
-            if (kvp.ContainsKey("regionName"))
-                RegionName = (string)kvp["regionName"];
-
-            if (kvp.ContainsKey("regionType"))
-                RegionType = (string)kvp["regionType"];
-
-            if (kvp.ContainsKey("serverIP"))
-            {
-                //int port = 0;
-                //Int32.TryParse((string)kvp["serverPort"], out port);
-                //IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["serverIP"]), port);
-                ExternalHostName = (string)kvp["serverIP"];
-            }
-            else
-                ExternalHostName = "127.0.0.1";
-
-            if (kvp.ContainsKey("serverPort"))
-            {
-                Int32 port = 0;
-                Int32.TryParse((string)kvp["serverPort"], out port);
-                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
-            }
-
-            if (kvp.ContainsKey("serverHttpPort"))
-            {
-                UInt32 port = 0;
-                UInt32.TryParse((string)kvp["serverHttpPort"], out port);
-                HttpPort = port;
-            }
-
-            if (kvp.ContainsKey("serverURI"))
-                ServerURI = (string)kvp["serverURI"];
-
-            if (kvp.ContainsKey("regionMapTexture"))
-                UUID.TryParse((string)kvp["regionMapTexture"], out TerrainImage);
-
-            if (kvp.ContainsKey("regionTerrainTexture"))
-                UUID.TryParse((string)kvp["regionTerrainTexture"], out TerrainMapImage);
-
-            if (kvp.ContainsKey("access"))
-                Access = Byte.Parse((string)kvp["access"]);
-
-            if (kvp.ContainsKey("owner_uuid"))
-                EstateOwner = new UUID(kvp["owner_uuid"].ToString());
-
-            if (kvp.ContainsKey("Token"))
-                Token = kvp["Token"].ToString();
-
-            if (kvp.ContainsKey("sizeX"))
-                m_RegionSizeX = float.Parse(kvp["sizeX"].ToString());
-
-            if (kvp.ContainsKey("sizeY"))
-                m_RegionSizeY = float.Parse(kvp["sizeY"].ToString());
-
-            //if (kvp.ContainsKey("remoteEndPointIP"))
-            //{
-            //    IPAddress add = IPAddress.Parse(kvp["remoteEndPointIP"].ToString());
-            //    int port = Int32.Parse(kvp["remoteEndPointPort"].ToString());
-            //    m_remoteEndPoint = new IPEndPoint(add, port);
-            //}
         }
     }
 }

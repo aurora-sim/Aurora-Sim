@@ -149,7 +149,8 @@ namespace OpenSim.Services.HypergridService
                 gatekeeper.ExternalHostName +":"+ gatekeeper.HttpPort);
 
             // Take the IP address + port of the gatekeeper (reg) plus the info of finalDestination
-            GridRegion region = new GridRegion(gatekeeper);
+            GridRegion region = new GridRegion();
+            region.FromOSD(gatekeeper.ToOSD());
             region.RegionName = finalDestination.RegionName;
             region.RegionID = finalDestination.RegionID;
             region.RegionLocX = finalDestination.RegionLocX;

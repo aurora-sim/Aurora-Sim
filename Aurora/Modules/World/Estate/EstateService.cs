@@ -544,7 +544,7 @@ namespace Aurora.Modules
             //We assume that our own region isn't null....
             if (agentInfo != null)
             {
-                if (((flags & (int)OpenSim.Data.RegionFlags.Prelude) == (int)OpenSim.Data.RegionFlags.Prelude) && agentInfo != null)
+                if (((flags & (int)Aurora.Framework.RegionFlags.Prelude) == (int)Aurora.Framework.RegionFlags.Prelude) && agentInfo != null)
                 {
                     if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + m_scene.RegionInfo.RegionID))
                     {
