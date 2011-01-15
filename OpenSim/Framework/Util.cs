@@ -1596,6 +1596,55 @@ namespace OpenSim.Framework
             return retVal;
         }
 
+        public static IPEndPoint ResolveEndPoint(string hostName, int port)
+        {
+            IPEndPoint endpoint = null;
+            // Old one defaults to IPv6
+            //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
+
+            IPAddress ia = null;
+            // If it is already an IP, don't resolve it - just return directly
+            if (IPAddress.TryParse(hostName, out ia))
+            {
+                endpoint = new IPEndPoint(ia, port);
+                return endpoint;
+            }
+
+            try
+            {
+                if (IPAddress.TryParse(hostName.Split(':')[0], out ia))
+                {
+                    endpoint = new IPEndPoint(ia, port);
+                    return endpoint;
+                }
+            }
+            catch { }
+            // Reset for next check
+            ia = null;
+            try
+            {
+                foreach (IPAddress Adr in Dns.GetHostAddresses(hostName))
+                {
+                    if (ia == null)
+                        ia = Adr;
+
+                    if (Adr.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        ia = Adr;
+                        break;
+                    }
+                }
+            }
+            catch (SocketException e)
+            {
+                throw new Exception(
+                    "Unable to resolve local hostname " + hostName + " innerException of type '" +
+                    e + "' attached to this exception", e);
+            }
+            endpoint = new IPEndPoint(ia, port);
+            return endpoint;
+        }
+
 		/// <summary>
         /// Gets the client IP address
         /// </summary>

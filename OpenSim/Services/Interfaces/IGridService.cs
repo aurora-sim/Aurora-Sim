@@ -211,25 +211,6 @@ namespace OpenSim.Services.Interfaces
         {
         }
 
-        public GridRegion(int regionLocX, int regionLocY, IPEndPoint internalEndPoint, string externalUri)
-        {
-            m_regionLocX = regionLocX;
-            m_regionLocY = regionLocY;
-
-            m_internalEndPoint = internalEndPoint;
-            m_externalHostName = externalUri;
-        }
-
-        public GridRegion(int regionLocX, int regionLocY, string externalUri, uint port)
-        {
-            m_regionLocX = regionLocX;
-            m_regionLocY = regionLocY;
-
-            m_externalHostName = externalUri;
-
-            m_internalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), (int)port);
-        }
-
         public GridRegion(int xcell, int ycell)
         {
             m_regionLocX = xcell;
@@ -261,6 +242,7 @@ namespace OpenSim.Services.Interfaces
             m_regionType = ConvertFrom.RegionType;
             m_regionLocX = ConvertFrom.RegionLocX;
             m_regionLocY = ConvertFrom.RegionLocY;
+            m_regionLocZ = ConvertFrom.RegionLocZ;
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
             m_externalHostName = ConvertFrom.ExternalHostName;
             m_httpPort = ConvertFrom.HttpPort;
@@ -272,6 +254,7 @@ namespace OpenSim.Services.Interfaces
             EstateOwner = ConvertFrom.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
+            m_RegionSizeZ = ConvertFrom.RegionSizeZ;
         }
 
         #region Definition of equality
@@ -310,51 +293,9 @@ namespace OpenSim.Services.Interfaces
         {
             get
             {
-                if (m_remoteEndPoint != null)
-                    return m_remoteEndPoint;
-                // Old one defaults to IPv6
-                //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
+                if (m_remoteEndPoint == null)
+                    m_remoteEndPoint = Util.ResolveEndPoint(m_externalHostName, m_internalEndPoint.Port);
 
-                IPAddress ia = null;
-                // If it is already an IP, don't resolve it - just return directly
-                if (IPAddress.TryParse(m_externalHostName, out ia))
-                {
-                    m_remoteEndPoint = new IPEndPoint(ia, m_internalEndPoint.Port);
-                    return m_remoteEndPoint;
-                }
-
-                try
-                {
-                    if (IPAddress.TryParse(m_externalHostName.Split(':')[0], out ia))
-                    {
-                        m_remoteEndPoint = new IPEndPoint(ia, m_internalEndPoint.Port);
-                        return m_remoteEndPoint;
-                    }
-                }
-                catch { }
-                // Reset for next check
-                ia = null;
-                try
-                {
-                    foreach (IPAddress Adr in Dns.GetHostAddresses(m_externalHostName))
-                    {
-                        if (ia == null)
-                            ia = Adr;
-
-                        if (Adr.AddressFamily == AddressFamily.InterNetwork)
-                        {
-                            ia = Adr;
-                            break;
-                        }
-                    }
-                }
-                catch (SocketException e)
-                {
-                    throw new Exception(
-                        "Unable to resolve local hostname " + m_externalHostName + " innerException of type '" +
-                        e + "' attached to this exception", e);
-                }
-                m_remoteEndPoint = new IPEndPoint(ia, m_internalEndPoint.Port);
                 return m_remoteEndPoint;
             }
         }
@@ -407,6 +348,7 @@ namespace OpenSim.Services.Interfaces
             map["uuid"] = RegionID;
             map["locX"] = RegionLocX;
             map["locY"] = RegionLocY;
+            map["locZ"] = RegionLocZ;
             map["regionName"] = RegionName;
             map["regionType"] = RegionType;
             map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
@@ -420,6 +362,7 @@ namespace OpenSim.Services.Interfaces
             map["Token"] = Token;
             map["sizeX"] = RegionSizeX;
             map["sizeY"] = RegionSizeY;
+            map["sizeZ"] = RegionSizeZ;
 
             // We send it along too so that it doesn't need resolved on the other end
             map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
@@ -438,6 +381,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("locY"))
                 RegionLocY = map["locY"].AsInteger();
+
+            if (map.ContainsKey("locZ"))
+                RegionLocZ = map["locZ"].AsInteger();
 
             if (map.ContainsKey("regionName"))
                 RegionName = map["regionName"].AsString();
@@ -490,6 +436,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("sizeY"))
                 m_RegionSizeY = (float)map["sizeY"].AsReal();
+
+            if (map.ContainsKey("sizeZ"))
+                m_RegionSizeZ = (float)map["sizeZ"].AsReal();
 
             if (map.ContainsKey("remoteEndPointIP"))
             {

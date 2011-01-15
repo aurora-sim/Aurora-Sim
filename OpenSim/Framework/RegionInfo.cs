@@ -80,6 +80,12 @@ namespace OpenSim.Framework
         /// </summary>
         public float RegionSizeY = 256;
 
+        /// <summary>
+        /// The Z height (in meters) that the region is (not supported currently)
+        /// The default is 1024m
+        /// </summary>
+        public float RegionSizeZ = 1024;
+
         public EstateSettings EstateSettings
         {
             get
