@@ -521,9 +521,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             int port = regionInfo.InternalEndPoint.Port;
 
-            // set initial ServerURI
+            // set the initial ports
             regionInfo.HttpPort = MainServer.Instance.Port;
-            regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.HttpPort;
 
             IClientNetworkServer clientServer = null;
             Scene scene = SetupScene(regionInfo, m_config, out clientServer);

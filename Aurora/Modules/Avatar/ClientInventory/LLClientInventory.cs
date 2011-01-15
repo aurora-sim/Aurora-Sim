@@ -2021,10 +2021,7 @@ namespace OpenSim.Region.Framework.Scenes
                 MainServer.Instance.AddStreamHandler(
                     new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-                string Protocol = "http://";
-                if (MainServer.Instance.UseSSL)
-                    Protocol = "https://";
-                string uploaderURL = Protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+                string uploaderURL = m_scene.RegionInfo.ServerURI + capsBase +
                                      uploaderPath;
 
                 map = new OSDMap();
@@ -2064,10 +2061,7 @@ namespace OpenSim.Region.Framework.Scenes
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-            string Protocol = "http://";
-            if (MainServer.Instance.UseSSL)
-                Protocol = "https://";
-            string uploaderURL = Protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port + capsBase +
+            string uploaderURL = m_scene.RegionInfo.ServerURI + capsBase +
                                  uploaderPath;
 
             map = new OSDMap();

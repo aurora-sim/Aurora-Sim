@@ -73,6 +73,8 @@ namespace Aurora.Services.DataService
                 {
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
                 }
+                else
+                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
                 Infos.Add(replyData);
                 replyData = new RegionInfo();
             }
@@ -97,6 +99,8 @@ namespace Aurora.Services.DataService
             {
                 replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
             }
+            else
+                replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             return replyData;
         }
 
@@ -111,6 +115,8 @@ namespace Aurora.Services.DataService
             {
                 replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
             }
+            else
+                replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             return replyData;
         }
 

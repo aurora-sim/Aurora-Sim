@@ -55,7 +55,6 @@ namespace OpenSim.Framework
         protected uint m_httpPort;
         protected string m_serverURI;
         protected string m_regionName = String.Empty;
-        protected bool Allow_Alternate_Ports;
         public bool m_allow_alternate_ports;
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
@@ -186,59 +185,19 @@ namespace OpenSim.Framework
         /// </summary>
         public string ServerURI
         {
-            get { return m_serverURI; }
-            set { m_serverURI = value; }
+            get
+            {
+                string protocol = "http://";
+                if(MainServer.Instance.UseSSL)
+                    protocol = "https://";
+                return protocol + ExternalHostName + ":" + HttpPort;
+            }
         }
 
         public string RegionName
         {
             get { return m_regionName; }
             set { m_regionName = value; }
-        }
-
-        /// <value>
-        /// This accessor can throw all the exceptions that Dns.GetHostAddresses can throw.
-        ///
-        /// XXX Isn't this really doing too much to be a simple getter, rather than an explict method?
-        /// </value>
-        public IPEndPoint ExternalEndPoint
-        {
-            get
-            {
-                // Old one defaults to IPv6
-                //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
-
-                IPAddress ia = null;
-                // If it is already an IP, don't resolve it - just return directly
-                if (IPAddress.TryParse(m_externalHostName, out ia))
-                    return new IPEndPoint(ia, m_internalEndPoint.Port);
-
-                // Reset for next check
-                ia = null;
-                try
-                {
-                    foreach (IPAddress Adr in Dns.GetHostAddresses(m_externalHostName))
-                    {
-                        if (ia == null)
-                            ia = Adr;
-
-                        if (Adr.AddressFamily == AddressFamily.InterNetwork)
-                        {
-                            ia = Adr;
-                            break;
-                        }
-                    }
-                }
-                catch (SocketException e)
-                {
-                    throw new Exception(
-                        "Unable to resolve local hostname " + m_externalHostName + " innerException of type '" +
-                        e + "' attached to this exception", e);
-                }
-                return new IPEndPoint(ia, m_internalEndPoint.Port);
-            }
-
-            set { m_externalHostName = value.ToString(); }
         }
 
         public string ExternalHostName
@@ -406,8 +365,6 @@ namespace OpenSim.Framework
                 ExternalHostName = args["external_host_name"].AsString();
             if (args["http_port"] != null)
                 UInt32.TryParse(args["http_port"].AsString(), out m_httpPort);
-            if (args["server_uri"] != null)
-                ServerURI = args["server_uri"].AsString();
             if (args["region_xloc"] != null)
             {
                 int locx;

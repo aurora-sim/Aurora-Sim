@@ -167,12 +167,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-            string protocol = "http://";
-
-            if (MainServer.Instance.UseSSL)
-                protocol = "https://";
-
-            string uploaderURL = protocol + m_scene.RegionInfo.ExternalHostName + ":" + MainServer.Instance.Port.ToString() + capsBase +
+            string uploaderURL = m_scene.RegionInfo.ServerURI + capsBase +
                                  uploaderPath;
 
             map = new OSDMap();

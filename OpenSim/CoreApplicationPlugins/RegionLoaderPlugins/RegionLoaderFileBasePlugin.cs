@@ -296,7 +296,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
             else
             {
-                region.ExternalHostName = externalName;
+                region.ExternalHostName = Util.ResolveEndPoint(externalName, port).Address.ToString();
             }
 
             region.RegionType = config.GetString("RegionType", region.RegionType);
