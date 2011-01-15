@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
             List<IAuroraDataPlugin> Plugins = AuroraModuleLoader.PickupModules<IAuroraDataPlugin>();
             foreach (IAuroraDataPlugin plugin in Plugins)
             {
-                plugin.Initialize(DataConnector, simBase, ConnectionString);
+                plugin.Initialize(DataConnector.Copy(), simBase, ConnectionString);
             }
         }
     }

@@ -76,7 +76,9 @@ namespace OpenSim.Services.UserAccountService
             if (dllName == String.Empty)
                 throw new Exception("No StorageProvider configured");
 
-            m_Database = AuroraModuleLoader.LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
+            if(m_Database == null)
+                m_Database = AuroraModuleLoader.LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
 
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
