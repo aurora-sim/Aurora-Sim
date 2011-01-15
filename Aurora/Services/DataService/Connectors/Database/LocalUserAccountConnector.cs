@@ -8,7 +8,6 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using Nini.Config;
-using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService

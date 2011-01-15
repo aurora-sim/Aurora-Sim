@@ -9,7 +9,6 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using Nini.Config;
-using OpenSim.Data;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
