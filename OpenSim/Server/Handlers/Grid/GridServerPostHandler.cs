@@ -301,6 +301,7 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no regionID in request to get neighbours");
 
             List<GridRegion> rinfos = m_GridService.GetNeighbours(scopeID, regionID);
+            rinfos = CleanRegions(rinfos);
             //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -339,6 +340,7 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no regionID in request to get neighbours");
 
             GridRegion rinfo = m_GridService.GetRegionByUUID(scopeID, regionID);
+            rinfo = CleanRegion(rinfo);
             //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -372,6 +374,7 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no Y in request to get region by position");
 
             GridRegion rinfo = m_GridService.GetRegionByPosition(scopeID, x, y);
+            rinfo = CleanRegion(rinfo);
             //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -401,6 +404,7 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no name in request to get region by name");
 
             GridRegion rinfo = m_GridService.GetRegionByName(scopeID, regionName);
+            rinfo = CleanRegion(rinfo);
             //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -436,6 +440,7 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no MAX in request to get regions by name");
 
             List<GridRegion> rinfos = m_GridService.GetRegionsByName(scopeID, regionName, max);
+            rinfos = CleanRegions(rinfos);
             //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
@@ -487,7 +492,8 @@ namespace OpenSim.Server.Handlers.Grid
 
 
             List<GridRegion> rinfos = m_GridService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
-
+            rinfos = CleanRegions(rinfos);
+            
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
@@ -517,7 +523,8 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get region range");
 
             List<GridRegion> rinfos = m_GridService.GetDefaultRegions(scopeID);
-
+            rinfos = CleanRegions(rinfos);
+            
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
@@ -558,7 +565,8 @@ namespace OpenSim.Server.Handlers.Grid
 
 
             List<GridRegion> rinfos = m_GridService.GetFallbackRegions(scopeID, x, y);
-
+            rinfos = CleanRegions(rinfos);
+            
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
@@ -599,7 +607,8 @@ namespace OpenSim.Server.Handlers.Grid
 
 
             List<GridRegion> rinfos = m_GridService.GetSafeRegions(scopeID, x, y);
-
+            rinfos = CleanRegions(rinfos);
+            
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
@@ -629,7 +638,8 @@ namespace OpenSim.Server.Handlers.Grid
                 m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get linked regions");
 
             List<GridRegion> rinfos = m_GridService.GetHyperlinks(scopeID);
-
+            rinfos = CleanRegions(rinfos);
+            
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
@@ -768,6 +778,37 @@ namespace OpenSim.Server.Handlers.Grid
         #endregion
 
         #region Misc
+        
+        /// <summary>
+        /// Clean secure info out of the regions so that they do not get sent away from the grid service
+        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        /// </summary>
+        /// <param name="regions"></param>
+        /// <returns></returns>
+        private List<GridRegion> CleanRegions(List<GridRegion> regions)
+        {
+            List<GridRegion> regionsToReturn = new List<GridRegion>();
+            foreach (GridRegion region in regions)
+            {
+                regionsToReturn.Add(CleanRegion(region));
+            }
+            return regions;
+        }
+
+        /// <summary>
+        /// Clean secure info out of the regions so that they do not get sent away from the grid service
+        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        private GridRegion CleanRegion(GridRegion region)
+        {
+            region.Flags = 0;
+            region.SessionID = UUID.Zero;
+            region.LastSeen = 0;
+            region.AuthToken = "";
+            return region;
+        }
 
         private byte[] SuccessResult()
         {
