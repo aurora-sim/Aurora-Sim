@@ -110,15 +110,12 @@ namespace Aurora.Services.DataService
             List<string> query;
             if (scopeID != UUID.Zero)
                 query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                    "' and locY between '" + startY + "' and '" + endY + "'",
+                    "' and LocY between '" + startY + "' and '" + endY + "'",
                     m_realm, "*");
             else
                 query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                    "' and locY between '" + startY + "' and '" + endY +
+                    "' and LocY between '" + startY + "' and '" + endY +
                     "' and ScopeID = '" + scopeID + "'", m_realm, "*");
-
-            if (query.Count == 0)
-                return null;
 
             return ParseQuery(query);
         }
@@ -130,7 +127,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < query.Count; i += 14)
             {
                 GridRegion data = new GridRegion();
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[13]);
+                OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
                 data.FromOSD(map);
 
                 //Check whether it should be down

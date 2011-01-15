@@ -274,7 +274,7 @@ namespace OpenSim.Services.GridService
             if (region != null)
             {
                 //If we already have a session, we need to check it
-                if (m_UseSessionID && regionInfos.SessionID != oldSessionID)
+                if (m_UseSessionID && region.SessionID != oldSessionID)
                 {
                     m_log.Warn("[GRID SERVICE]: Region called register, but the sessionID they provided is wrong!");
                     return "Wrong Session ID";

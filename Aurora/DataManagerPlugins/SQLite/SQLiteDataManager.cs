@@ -169,7 +169,7 @@ namespace Aurora.DataManager.SQLite
             {
                 for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    RetVal.Add(reader.GetString(i));
+                    RetVal.Add(reader.GetValue(i).ToString());
                 }
             }
             reader.Close();
