@@ -807,12 +807,20 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        m_log.Info("[LLOGIN SERVICE]: Last Region Not Found Attempting to find random region");
-                        defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
+                        defaults = m_GridService.GetFallbackRegions(scopeID, 0, 0);
                         if (defaults != null && defaults.Count > 0)
                         {
                             region = defaults[0];
                             where = "safe";
+                        }
+                        else
+                        {
+                            defaults = m_GridService.GetSafeRegions(scopeID, 0, 0);
+                            if (defaults != null && defaults.Count > 0)
+                            {
+                                region = defaults[0];
+                                where = "safe";
+                            }
                         }
                     }
 

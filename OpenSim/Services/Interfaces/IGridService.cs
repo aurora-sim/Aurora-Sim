@@ -426,6 +426,7 @@ namespace OpenSim.Services.Interfaces
             map["sizeZ"] = RegionSizeZ;
             map["LastSeen"] = LastSeen;
             map["SessionID"] = SessionID;
+            map["Flags"] = Flags;
 
             // We send it along too so that it doesn't need resolved on the other end
             map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
@@ -508,6 +509,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("SessionID"))
                 SessionID = map["SessionID"].AsUUID();
+
+            if (map.ContainsKey("Flags"))
+                Flags = map["Flags"].AsInteger();
 
             if (map.ContainsKey("remoteEndPointIP"))
             {

@@ -95,9 +95,9 @@ namespace Aurora.Services.DataService
         {
             List<string> query;
             if (scopeID != UUID.Zero)
-                query = GD.Query("(flags & " + regionFlags.ToString() + ") <> 0 and ScopeID = '" + scopeID + "'", m_realm, "*");
+                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0 and ScopeID = '" + scopeID + "'", m_realm, "*");
             else
-                query = GD.Query("(flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
+                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
 
             if (query.Count == 0)
                 return new List<GridRegion>();
@@ -179,8 +179,6 @@ namespace Aurora.Services.DataService
             values.Add(OSDParser.SerializeJsonString(region.ToOSD()));
 
             return GD.Replace(m_realm, keys.ToArray(), values.ToArray());
-
-            return true;
         }
 
         public bool Delete(UUID regionID)

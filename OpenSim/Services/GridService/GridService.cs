@@ -294,17 +294,19 @@ namespace OpenSim.Services.GridService
                 if (NeedToDeletePreviousRegion != UUID.Zero)
                     m_Database.Delete(NeedToDeletePreviousRegion);
 
-                m_Database.Store(regionInfos);
+                if (m_Database.Store(regionInfos))
+                {
+                    m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
+                         regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+                    return String.Empty;
+                }
             }
             catch (Exception e)
             {
                 m_log.DebugFormat("[GRID SERVICE]: Database exception: {0}", e.ToString());
             }
 
-            //m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) registered successfully at {2}-{3}",
-            //    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
-
-            return String.Empty;
+            return "Failed to save region into the database.";
         }
 
         public string UpdateMap(UUID scopeID, GridRegion gregion, UUID sessionID)

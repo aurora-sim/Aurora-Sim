@@ -523,7 +523,10 @@ namespace Aurora.DataManager.MySQL
                         CloseDatabase(dbcon);
                     }
                 }
-                catch { }
+                catch 
+                {
+                    return false;
+                }
             }
             return true;
         }
