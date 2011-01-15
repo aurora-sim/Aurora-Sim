@@ -2175,30 +2175,31 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="vec">The vector in which to move.  This is relative to the rotation argument</param>
         /// <param name="rotation">The direction in which this avatar should now face.</param>
         public void AddNewMovement(Vector3 vec, Quaternion rotation)
-        {
-            if (IsChildAgent)
             {
+            if (IsChildAgent)
+                {
                 // WHAT??? we can't make them a root agent though... what if they shouldn't be here?
                 //  Or even worse, what if they are spoofing the client???
                 m_log.Info("[SCENEPRESENCE]: AddNewMovement() called on child agent for " + Name + "! Possible attempt to force a fake agent into a sim!");
                 return;
-            }
+                }
 
             m_perfMonMS = Util.EnvironmentTickCount();
 
-            Vector3 direc = rotation == Quaternion.Identity ? vec : (vec * rotation);
-            if (rotation != Quaternion.Identity)
-            {
-                Rotation = rotation;
-                direc.Normalize();
-                direc *= 0.03f * 128f * m_speedModifier;
-            }
-
             PhysicsActor actor = m_physicsActor;
             if (actor != null)
-            {
-                if (actor.Flying)
                 {
+                Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
+                Rotation = rotation;
+                direc.Normalize();
+                direc *= m_speedModifier;
+
+                
+
+                // scale it up acording to situation
+
+                if (actor.Flying)
+                    {
                     direc *= 4.0f;
                     //bool controlland = (((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0) || ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0));
                     //bool colliding = (m_physicsActor.IsColliding==true);
@@ -2211,24 +2212,24 @@ namespace OpenSim.Region.Framework.Scenes
                     //    StopFlying();
                     //    m_log.Info("[AGENT]: Stop FLying");
                     //}
-                }
+                    }
                 else if (!actor.Flying && actor.IsColliding)
-                {
-                    if (direc.Z > 2.0f)
                     {
+                    if (direc.Z > 2.0f)
+                        {
                         if (direc.Z < 2.5f)
                             direc.Z = 2.5f;
                         if (m_scene.m_usePreJump && !IsJumping)
-                        {
+                            {
                             //AllowMovement = false;
                             IsJumping = true;
                             PreJumpForce = direc;
                             Animator.TrySetMovementAnimation("PREJUMP");
                             //Leave this here! Otherwise jump will sometimes not occur...
                             return;
-                        }
-                        else if(PreJumpForce.Equals(Vector3.Zero))
-                        {
+                            }
+                        else if (PreJumpForce.Equals(Vector3.Zero))
+                            {
                             direc.X *= 4;
                             direc.Y *= 4;
                             if (direc.X == 0 && direc.Y == 0)
@@ -2236,32 +2237,35 @@ namespace OpenSim.Region.Framework.Scenes
                             else
                                 direc.Z *= 5.5f;
 
-                            if(!IsJumping)
+                            if (!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
 
                             PhysicsActor.SetMovementForce(direc);
+                            }
                         }
                     }
+
+
+                // UNTODO: Add the force instead of only setting it to support multiple forces per frame?
+                // It fires multiple time and screws things up...
+                if (!m_overrideUserInput)
+                    {
+                    //This is where you start to decay the velocity
+                    //direc *= 0.95f;
+                    //More decay on the Z, otherwise flying up and down is a bit hard
+
+
+                    //                    direc.Z = direc.Z * 0.5f; this does not acumulate and is just a constant
+
+                    //It'll stop the physics engine from decaying, which makes it look bad
+                    if (direc != Vector3.Zero)
+                        PhysicsActor.SetMovementForce(direc);
+                    }
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+                if (reporter != null)
+                    reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
                 }
             }
-
-            // UNTODO: Add the force instead of only setting it to support multiple forces per frame?
-            // It fires multiple time and screws things up...
-            if (!m_overrideUserInput)
-            {
-                //This is where you start to decay the velocity
-                //direc *= 0.95f;
-                //More decay on the Z, otherwise flying up and down is a bit hard
-                direc.Z = direc.Z * 0.5f;
-
-                //It'll stop the physics engine from decaying, which makes it look bad
-                if(direc != Vector3.Zero)
-                    PhysicsActor.SetMovementForce(direc);
-            }
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
-            if (reporter != null)
-                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-        }
 
         #endregion
 

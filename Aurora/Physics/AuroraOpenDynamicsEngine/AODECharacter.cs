@@ -540,7 +540,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void SetMovementForce(Vector3 force)
         {
-            _target_velocity = force;
+            _target_velocity = force * 4;  //  tmp compensate for removed constants on ScenePresence.cs
         }
 
         public override Vector3 Torque
