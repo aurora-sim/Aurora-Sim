@@ -256,7 +256,10 @@ namespace OpenSim.Services.CapsService
 
         public void DumpEventQueue()
         {
-            queue.Clear();
+            lock (queue)
+            {
+                queue.Clear();
+            }
         }
 
         /// <summary>
@@ -269,6 +272,9 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
+                if (ev == null)
+                    return false;
+
                 //Check the messages to pull out ones that are creating or destroying CAPS in this or other regions
                 if (ev.Type == OSDType.Map)
                 {
@@ -379,7 +385,8 @@ namespace OpenSim.Services.CapsService
                     }
                 }
                 if (queue != null)
-                    queue.Enqueue(ev);
+                    lock (queue)
+                        queue.Enqueue(ev);
             }
             catch (NullReferenceException e)
             {
@@ -423,12 +430,13 @@ namespace OpenSim.Services.CapsService
             OSDArray array = new OSDArray();
             if (element == null) // didn't have an event in 15s
             {
-                OSDMap keepAliveEvent = new OSDMap(2);
-                keepAliveEvent.Add("body", new OSDMap());
-                keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+                return NoEvents(requestID, pAgentId);
+                //OSDMap keepAliveEvent = new OSDMap(2);
+                //keepAliveEvent.Add("body", new OSDMap());
+                //keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
 
                 // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                array.Add(keepAliveEvent);
+                //array.Add(keepAliveEvent);
                 //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
             }
             else
@@ -447,11 +455,17 @@ namespace OpenSim.Services.CapsService
             //Look for disable Simulator EQMs so that we can disable ourselves safely
             foreach (OSD ev in array)
             {
-                OSDMap map = (OSDMap)ev;
-                if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                try
                 {
-                    //This will be the last bunch of EQMs that go through, so we can safely die now
-                    m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    OSDMap map = (OSDMap)ev;
+                    if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                    {
+                        //This will be the last bunch of EQMs that go through, so we can safely die now
+                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    }
+                }
+                catch
+                {
                 }
             }
 
@@ -476,7 +490,6 @@ namespace OpenSim.Services.CapsService
             responsedata["int_response_code"] = 502;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
-            responsedata["reusecontext"] = false;
             responsedata["str_response_string"] = "Upstream error: ";
             responsedata["error_status_text"] = "Upstream error:";
             responsedata["http_protocol_version"] = "HTTP/1.0";
@@ -499,73 +512,49 @@ namespace OpenSim.Services.CapsService
             //            }
             //m_log.Warn("Got EQM get at " + m_handler.CapsURL);
             OSD element = null;
-            if (queue.Count != 0)
-                element = queue.Dequeue(); // 15s timeout
+            lock (queue)
+            {
+                if (queue.Count != 0)
+                    element = queue.Dequeue(); // 15s timeout
+            }
 
             Hashtable responsedata = new Hashtable();
 
             if (element == null)
             {
                 //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                if (m_ids == -1) // close-request
-                {
-                    m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
-                    responsedata["int_response_code"] = 404; //501; //410; //404;
-                    responsedata["content_type"] = "text/plain";
-                    responsedata["keepalive"] = false;
-                    responsedata["str_response_string"] = "Closed EQG";
-                    return responsedata;
-                }
-                responsedata["int_response_code"] = 502;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] = "Upstream error: ";
-                responsedata["error_status_text"] = "Upstream error:";
-                responsedata["http_protocol_version"] = "HTTP/1.0";
-                return responsedata;
+                return NoEvents(UUID.Zero, agentID);
             }
 
             OSDArray array = new OSDArray();
             array.Add(element);
-            while (queue.Count > 0)
+            lock (queue)
             {
-                OSD item = queue.Dequeue();
-                if (item != null)
+                while (queue.Count > 0)
                 {
-                    array.Add(item);
-                    m_ids++;
+                    OSD item = queue.Dequeue();
+                    if (item != null)
+                    {
+                        array.Add(item);
+                        m_ids++;
+                    }
                 }
             }
             //Look for disable Simulator EQMs so that we can disable ourselves safely
             foreach (OSD ev in array)
             {
-                OSDMap map = (OSDMap)ev;
-                if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                try
                 {
-                    //This will be the last bunch of EQMs that go through, so we can safely die now
-                    m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    OSDMap map = (OSDMap)ev;
+                    if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                    {
+                        //This will be the last bunch of EQMs that go through, so we can safely die now
+                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    }
                 }
-            }
-            //Nothing to process... don't confuse the client
-            if (array.Count == 0)
-            {
-                //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                if (m_ids == -1) // close-request
+                catch
                 {
-                    m_log.ErrorFormat("[EVENTQUEUE]: 404 for " + agentID);
-                    responsedata["int_response_code"] = 404; //501; //410; //404;
-                    responsedata["content_type"] = "text/plain";
-                    responsedata["keepalive"] = false;
-                    responsedata["str_response_string"] = "Closed EQG";
-                    return responsedata;
                 }
-                responsedata["int_response_code"] = 502;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] = "Upstream error: ";
-                responsedata["error_status_text"] = "Upstream error:";
-                responsedata["http_protocol_version"] = "HTTP/1.0";
-                return responsedata;
             }
 
             OSDMap events = new OSDMap();

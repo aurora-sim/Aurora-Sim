@@ -32,8 +32,35 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IAvatarFactory
     {
+        /// <summary>
+        /// Check to make sure that all baked textures and assets exist for the given client
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
         bool ValidateBakedTextureCache(IClientAPI client);
+
+        /// <summary>
+        /// Queue the appearance to be sent for the given client
+        /// </summary>
+        /// <param name="agentid"></param>
         void QueueAppearanceSend(UUID agentid);
+
+        /// <summary>
+        /// Queue the appearance to be saved to the database for the given client
+        /// </summary>
+        /// <param name="agentid"></param>
         void QueueAppearanceSave(UUID agentid);
+
+        /// <summary>
+        /// Send the initial data to the client
+        /// </summary>
+        /// <param name="scenePresence"></param>
+        void QueueInitialAppearanceSend(UUID agentid);
+
+        /// <summary>
+        /// Force send all parts of the avatar's appearance
+        /// </summary>
+        /// <param name="agentid"></param>
+        void ForceSendAvatarAppearance(UUID agentid);
     }
 }

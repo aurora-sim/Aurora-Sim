@@ -32,6 +32,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 
 using System.Threading;
 using System.Timers;
@@ -45,19 +46,25 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 {
     public class AvatarFactoryModule : IAvatarFactory, INonSharedRegionModule
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Scene m_scene = null;
 
         private int m_savetime = 5; // seconds to wait before saving changed appearance
         private int m_sendtime = 2; // seconds to wait before sending changed appearance
+        private int m_initialsendtime = 3; // seconds to wait before sending the initial appearance
 
         private int m_checkTime = 500; // milliseconds to wait between checks for appearance updates
         private System.Timers.Timer m_updateTimer = new System.Timers.Timer();
         private Dictionary<UUID, long> m_savequeue = new Dictionary<UUID, long>();
         private Dictionary<UUID, long> m_sendqueue = new Dictionary<UUID, long>();
+        private Dictionary<UUID, long> m_initialsendqueue = new Dictionary<UUID, long>();
         private Dictionary<UUID, AvatarAppearance> m_saveQueueData = new Dictionary<UUID, AvatarAppearance>();
 
         private object m_setAppearanceLock = new object();
+
+        #endregion
 
         #region INonSharedRegionModule Members
 
@@ -70,6 +77,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 {
                     m_savetime = sconfig.GetInt("DelayBeforeAppearanceSave", m_savetime);
                     m_sendtime = sconfig.GetInt("DelayBeforeAppearanceSend", m_sendtime);
+                    m_initialsendtime = sconfig.GetInt("DelayBeforeInitialAppearanceSend", m_initialsendtime);
                     // m_log.InfoFormat("[AVFACTORY] configured for {0} save and {1} send",m_savetime,m_sendtime);
                 }
             }
@@ -83,6 +91,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += RemoveClient;
+
+            MainConsole.Instance.Commands.AddCommand("region", false, "force send appearance", "force send appearance",
+                "Force send the avatar's appearance", HandleConsoleForceSendAppearance);
 
             m_updateTimer.Enabled = false;
             m_updateTimer.AutoReset = true;
@@ -132,6 +143,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         }
 
         #endregion
+
+        #region Validate Baked Textures
 
         /// <summary>
         /// Check for the existence of the baked texture assets.
@@ -194,6 +207,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // If we only found default textures, then the appearance is not cached
             return (defonly ? false : true);
         }
+
+        #endregion
+
+        #region Set Appearance
 
         /// <summary>
         /// Set appearance data (textureentry and slider settings) received from the client
@@ -339,6 +356,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             return true;
         }
 
+        #endregion
+
         #region UpdateAppearanceTimer
 
         /// <summary>
@@ -377,6 +396,25 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 {
                     m_saveQueueData[agentid] = sp.Appearance;
                 }
+                m_updateTimer.Start();
+            }
+        }
+
+        public void QueueInitialAppearanceSend(UUID agentid)
+        {
+            // m_log.WarnFormat("[AVFACTORY]: Queue initial appearance send for {0}", agentid);
+
+            // 10000 ticks per millisecond, 1000 milliseconds per second
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
+            lock (m_initialsendqueue)
+            {
+                ScenePresence sp = m_scene.GetScenePresence(agentid);
+                if (sp == null)
+                {
+                    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                    return;
+                }
+                m_initialsendqueue[agentid] = timestamp;
                 m_updateTimer.Start();
             }
         }
@@ -427,6 +465,50 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
         }
 
+        /// <summary>
+        /// Do everything required once a client completes its movement into a region and becomes
+        /// a root agent.
+        /// </summary>
+        private void HandleInitialAppearanceSend(UUID agentid)
+        {
+            ScenePresence sp = m_scene.GetScenePresence(agentid);
+            if (sp == null)
+            {
+                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene to send appearance for.", agentid);
+                return;
+            }
+
+            m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
+
+            // We have an appearance but we may not have the baked textures. Check the asset cache 
+            // to see if all the baked textures are already here. 
+            if (ValidateBakedTextureCache(sp.ControllingClient))
+            {
+                sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+                sp.SendAvatarDataToAllAgents();
+                //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
+                // NOTE: Do NOT send this! It seems to make the client become a cloud
+                //sp.SendAppearanceToAgent(sp);
+
+                // If the avatars baked textures are all in the cache, then we have a 
+                // complete appearance... send it out, if not, then we'll send it when
+                // the avatar finishes updating its appearance
+                sp.SendAppearanceToAllOtherAgents();
+            }
+            else
+            {
+                m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", Name);
+            }
+
+            // This agent just became root. We are going to tell everyone about it. The process of
+            // getting other avatars information was initiated in the constructor... don't do it 
+            // again here... 
+            sp.SendAvatarDataToAllAgents();
+
+            //Tell us about everyone else as well now that we are here
+            sp.SendOtherAgentsAppearanceToMe();
+        }
+
         private void HandleAppearanceUpdateTimer(object sender, EventArgs ea)
         {
             long now = DateTime.Now.Ticks;
@@ -457,11 +539,26 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 }
             }
 
-            if (m_savequeue.Count == 0 && m_sendqueue.Count == 0)
+            lock (m_initialsendqueue)
+            {
+                Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_initialsendqueue);
+                foreach (KeyValuePair<UUID, long> kvp in saves)
+                {
+                    if (kvp.Value < now)
+                    {
+                        Util.FireAndForget(delegate(object o) { HandleInitialAppearanceSend(kvp.Key); });
+                        m_initialsendqueue.Remove(kvp.Key);
+                    }
+                }
+            }
+
+            if (m_savequeue.Count == 0 && m_sendqueue.Count == 0 && m_initialsendqueue.Count == 0)
                 m_updateTimer.Stop();
         }
 
         #endregion
+
+        #region Wearables
 
         /// <summary>
         /// Tell the client for this scene presence what items it should be wearing now
@@ -478,7 +575,8 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             //Make sure that the timer doesn't go off in the ScenePresence that this avatar hasn't requested its wearables yet
             sp.m_InitialHasWearablesBeenSent = true;
             m_log.DebugFormat("[AvatarFactory]: Received request for wearables of {0}", sp.Name);
-            client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            QueueInitialAppearanceSend(client.AgentId);
+            //client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
         }
 
         /// <summary>
@@ -567,5 +665,56 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 m_log.WarnFormat("[AvatarFactory]: user {0} has no inventory, setting appearance to default", userID);
             }
         }
+
+        #endregion
+
+        #region Console Commands
+
+        private void HandleConsoleForceSendAppearance(string module, string[] cmds)
+        {
+            //Make sure its set to the right region
+            if (MainConsole.Instance.ConsoleScene != m_scene)
+            {
+                if (MainConsole.Instance.ConsoleScene == null)
+                    m_log.Info("Choose the scene the avatar is in to run this command.");
+                return;
+            }
+
+            if (cmds.Length != 5)
+            {
+                m_log.Info("Wrong number of commands.");
+                return;
+            }
+            string firstName = cmds[3], lastName = cmds[4];
+
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, firstName, lastName);
+            if(account != null)
+            {
+                ForceSendAvatarAppearance(account.PrincipalID);
+            }
+            else
+                m_log.Info("Could not find user's account.");
+        }
+
+        public void ForceSendAvatarAppearance(UUID agentid)
+        {
+            //If the avatar changes appearance, then proptly logs out, this will break!
+            ScenePresence sp = m_scene.GetScenePresence(agentid);
+            if (sp == null || sp.IsChildAgent)
+            {
+                m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                return;
+            }
+
+            //Force send!
+            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            sp.SendAvatarDataToAllAgents();
+
+            sp.SendAppearanceToAgent(sp);
+
+            sp.SendAppearanceToAllOtherAgents();
+        }
+
+        #endregion
     }
 }
