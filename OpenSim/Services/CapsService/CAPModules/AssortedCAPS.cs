@@ -104,6 +104,8 @@ namespace OpenSim.Services.CapsService
             responsedata["str_response_string"] = "";
 
             OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            if (!(r is OSDMap))
+                return responsedata;
             OSDMap rm = (OSDMap)r;
             IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)

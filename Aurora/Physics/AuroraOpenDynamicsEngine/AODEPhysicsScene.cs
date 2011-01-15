@@ -1220,8 +1220,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (!DisableCollisions)
             {
-                p2.CollidingGround = false;
-                p2.CollidingObj = false;
+                bool p2col = false;
+                bool p2colgnd = false;
+                bool p2colobj = false;
+                
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
                 {
@@ -1229,28 +1231,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     //m_log.DebugFormat("[PHYSICS]: {0} - {1} - {2} - {3}", curContact.pos.Z, p2.Position.Z, (p2.Position.Z - curContact.pos.Z), (p2.Size.Z * 0.6f));
                     if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
-                        p2.IsColliding = true;
+                        p2col = true;
                 }
                 else
                 {
-                    p2.IsColliding = true;
+                p2col = true;
                 }
 
-                switch (p1.PhysicsActorType)
-                {
-                    case (int)ActorTypes.Agent:
-                        p2.CollidingObj = true;
-                        break;
-                    case (int)ActorTypes.Prim:
-                        if (p2.Velocity.X > 0 &&
-                            p2.Velocity.Y > 0 &&
-                            p2.Velocity.Z > 0)
-                            p2.CollidingObj = true;
-                        break;
-                    default:
-                        p2.CollidingGround = true;
-                        break;
-                }
+                if (p2col)
+                    {
+                    switch (p1.PhysicsActorType)
+                        {
+                        case (int)ActorTypes.Agent:
+                            p2colobj = true;
+                            break;
+                        case (int)ActorTypes.Prim:
+                            Vector3 tmp = p2.Velocity;
+                            if (tmp.X > 0 &&
+                                tmp.Y > 0 &&
+                                tmp.Z > 0)
+                                p2colobj = true;
+                            break;
+                        default:
+                            p2colgnd = true;
+                            break;
+                        }
+                    }
+
+                p2.CollidingObj = p2colobj;
+                p2.CollidingGround = p2colgnd;
+                p2.IsColliding = p2col;
 
                 if (count > geomContactPointsStartthrottle)
                 {
