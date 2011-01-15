@@ -225,8 +225,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             GridRegion homeGatekeeper = MakeRegion(aCircuit);
             
-            m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: teleporting user {0} home to {1} via {2}:{3}:{4}",
-                aCircuit.AgentID, finalDestination.RegionName, homeGatekeeper.ExternalHostName, homeGatekeeper.HttpPort, homeGatekeeper.RegionName);
+            m_log.DebugFormat("[HG ENTITY TRANSFER MODULE]: teleporting user {0} home to {1} via {2}:{3}",
+                aCircuit.AgentID, finalDestination.RegionName, homeGatekeeper.ServerURI, homeGatekeeper.RegionName);
 
             DoTeleport(sp, homeGatekeeper, finalDestination, position, lookAt, (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
         }

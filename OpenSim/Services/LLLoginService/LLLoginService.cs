@@ -702,10 +702,7 @@ namespace OpenSim.Services.LLLoginService
             else
             {
                 SimcapsSeedPath
-                    = "http://"
-                      + destination.ExternalHostName
-                      + ":"
-                      + destination.HttpPort
+                    = destination.ServerURI
                       + CapsUtil.GetCapsSeedPath(aCircuit.CapsPath);
             }
             #endregion

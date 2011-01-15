@@ -156,7 +156,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "ExternalPort", OSD.FromInteger(regionInfo.ExternalEndPoint.Port) },
                 { "MapTexture", OSD.FromUUID(regionInfo.TerrainMapImage) },
                 { "Access", OSD.FromInteger(regionInfo.Access) },
-                { "RegionSecret", OSD.FromString(regionInfo.RegionSecret) },
                 { "EstateOwner", OSD.FromUUID(regionInfo.EstateOwner) },
                 { "Token", OSD.FromString(regionInfo.Token) }
             };
@@ -538,7 +537,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             region.InternalEndPoint = new IPEndPoint(internalAddress, extraData["InternalPort"].AsInteger());
             region.TerrainImage = extraData["MapTexture"].AsUUID();
             region.Access = (byte)extraData["Access"].AsInteger();
-            region.RegionSecret = extraData["RegionSecret"].AsString();
             region.EstateOwner = extraData["EstateOwner"].AsUUID();
             region.Token = extraData["Token"].AsString();
 

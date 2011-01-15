@@ -96,7 +96,7 @@ namespace Aurora.Modules.RegionLoader
             IScene scene;
             m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-            manager.CreateRegion(region, true, out scene);
+            manager.CreateRegion(region, out scene);
 
             if (OpenedForCreateRegion)
             {
@@ -117,7 +117,7 @@ namespace Aurora.Modules.RegionLoader
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString();
-            int maturityLevel = region.RegionSettings.Maturity;
+            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
             if (maturityLevel == 0)
                 textBox4.Text = "PG";
             else if (maturityLevel == 1)

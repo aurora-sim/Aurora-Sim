@@ -692,10 +692,7 @@ namespace OpenSim.Services.CapsService
                     //Update 21-1-11 (Revolution) It is unclear whether this code is 'really' needed now
                     //Build the full URL
                     SimSeedCap
-                        = "http://"
-                      + neighbor.ExternalEndPoint.Address.ToString()
-                      + ":"
-                      + neighbor.HttpPort
+                        = neighbor.ServerURI
                       + CapsUtil.GetCapsSeedPath(CapsBase);
                     //Add the new Seed for this region
                 }

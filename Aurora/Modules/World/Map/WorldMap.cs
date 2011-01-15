@@ -872,22 +872,6 @@ namespace Aurora.Modules
             if (heightmap == null)
                 return;
 
-            int lastMapRefresh = 0;
-
-            try
-            {
-                lastMapRefresh = Convert.ToInt32(m_scene.RegionInfo.lastMapRefresh);
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (FormatException)
-            {
-            }
-            catch (OverflowException)
-            {
-            }
-
             //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
 
             UUID lastMapRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
@@ -898,7 +882,7 @@ namespace Aurora.Modules
 
             AssetBase Mapasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
-                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString(),
+                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
                 (sbyte)AssetType.Simstate,
                 m_scene.RegionInfo.RegionID.ToString());
             Mapasset.Description = m_scene.RegionInfo.RegionName;
@@ -907,7 +891,7 @@ namespace Aurora.Modules
 
             AssetBase Terrainasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
-                "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString(),
+                "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
                 (sbyte)AssetType.Simstate,
                 m_scene.RegionInfo.RegionID.ToString());
             Terrainasset.Description = m_scene.RegionInfo.RegionName;

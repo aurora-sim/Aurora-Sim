@@ -55,6 +55,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private CollisionLocker ode;
         private AuroraODEPhysicsScene _mScene;
+        private bool m_initialized = false;
 
         public AuroraODEPlugin()
         {
@@ -70,9 +71,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (_mScene == null)
             {
-                // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
-                // http://opensimulator.org/mantis/view.php?id=2750).
-                d.InitODE();
+                if (!m_initialized) //Only initialize ode once!
+                {
+                    // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
+                    // http://opensimulator.org/mantis/view.php?id=2750).
+                    d.InitODE();
+                    m_initialized = true;
+                }
                 
                 _mScene = new AuroraODEPhysicsScene(ode, sceneIdentifier);
             }

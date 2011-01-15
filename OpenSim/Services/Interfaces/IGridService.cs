@@ -113,7 +113,6 @@ namespace OpenSim.Services.Interfaces
 
     public class GridRegion
     {
-
         /// <summary>
         /// The port by which http communication occurs with the region 
         /// </summary>
@@ -125,7 +124,7 @@ namespace OpenSim.Services.Interfaces
         protected uint m_httpPort;
 
         /// <summary>
-        /// A well-formed URI for the host region server (namely "http://" + ExternalHostName)
+        /// A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
         /// </summary>
         public string ServerURI
         {
@@ -166,6 +165,13 @@ namespace OpenSim.Services.Interfaces
         }
         protected int m_regionLocY;
 
+        public int RegionLocZ
+        {
+            get { return m_regionLocZ; }
+            set { m_regionLocZ = value; }
+        }
+        protected int m_regionLocZ;
+
         protected UUID m_estateOwner;
 
         public UUID EstateOwner
@@ -184,16 +190,20 @@ namespace OpenSim.Services.Interfaces
             get { return m_RegionSizeY; }
         }
 
+        public float RegionSizeZ
+        {
+            get { return m_RegionSizeZ; }
+        }
+
         private float m_RegionSizeX = 256;
         private float m_RegionSizeY = 256;
+        private float m_RegionSizeZ = 256;
         public UUID RegionID = UUID.Zero;
         public UUID ScopeID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
         public UUID TerrainMapImage = UUID.Zero;
         public byte Access;
-        public int Maturity;
-        public string RegionSecret = string.Empty;
         public string Token = string.Empty;
         private IPEndPoint m_remoteEndPoint = null;
 
@@ -240,8 +250,6 @@ namespace OpenSim.Services.Interfaces
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             Access = ConvertFrom.AccessLevel;
-            Maturity = ConvertFrom.RegionSettings.Maturity;
-            RegionSecret = ConvertFrom.regionSecret;
             EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
@@ -261,8 +269,6 @@ namespace OpenSim.Services.Interfaces
             TerrainImage = ConvertFrom.TerrainImage;
             TerrainMapImage = ConvertFrom.TerrainMapImage;
             Access = ConvertFrom.Access;
-            Maturity = ConvertFrom.Maturity;
-            RegionSecret = ConvertFrom.RegionSecret;
             EstateOwner = ConvertFrom.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
@@ -385,9 +391,7 @@ namespace OpenSim.Services.Interfaces
             kvp["regionMapTexture"] = TerrainImage.ToString();
             kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
-            kvp["regionSecret"] = RegionSecret;
             kvp["owner_uuid"] = EstateOwner.ToString();
-            kvp["Maturity"] = Maturity.ToString();
             kvp["Token"] = Token.ToString();
             kvp["sizeX"] = RegionSizeX.ToString();
             kvp["sizeY"] = RegionSizeY.ToString();
@@ -412,9 +416,7 @@ namespace OpenSim.Services.Interfaces
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
             map["access"] = (int)Access;
-            map["regionSecret"] = RegionSecret;
             map["owner_uuid"] = EstateOwner;
-            map["Maturity"] = Maturity;
             map["Token"] = Token;
             map["sizeX"] = RegionSizeX;
             map["sizeY"] = RegionSizeY;
@@ -476,12 +478,6 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("access"))
                 Access = (byte)map["access"].AsInteger();
-
-            if (map.ContainsKey("Maturity"))
-                Maturity = map["Maturity"].AsInteger();
-
-            if (map.ContainsKey("regionSecret"))
-                RegionSecret = map["regionSecret"].AsString();
 
             if (map.ContainsKey("owner_uuid"))
                 EstateOwner = map["owner_uuid"].AsUUID();
@@ -555,12 +551,6 @@ namespace OpenSim.Services.Interfaces
 
             if (kvp.ContainsKey("access"))
                 Access = Byte.Parse((string)kvp["access"]);
-
-            if (kvp.ContainsKey("Maturity"))
-                Maturity = int.Parse((string)kvp["Maturity"]);
-
-            if (kvp.ContainsKey("regionSecret"))
-                RegionSecret =(string)kvp["regionSecret"];
 
             if (kvp.ContainsKey("owner_uuid"))
                 EstateOwner = new UUID(kvp["owner_uuid"].ToString());

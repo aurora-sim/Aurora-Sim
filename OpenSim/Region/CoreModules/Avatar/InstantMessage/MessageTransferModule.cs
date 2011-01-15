@@ -662,7 +662,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         presences[0].RegionID);
                     if (r != null)
                     {
-                        HTTPPath = "http://" + r.ExternalHostName + ":" + r.HttpPort;
+                        HTTPPath = r.ServerURI;
                     }
                     else
                     {

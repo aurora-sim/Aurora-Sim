@@ -531,7 +531,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
+                    Hashtable requestData = (Hashtable)request.Params[0];
 
                     CheckStringParameters(request, new string[]
                                                        {
@@ -540,11 +540,11 @@ namespace OpenSim.CoreApplicationPlugins
                                                            "listen_ip", "external_address",
                                                            "estate_name"
                                                        });
-                    CheckIntegerParams(request, new string[] {"region_x", "region_y", "listen_port"});
+                    CheckIntegerParams(request, new string[] { "region_x", "region_y", "listen_port" });
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                        (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                        (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     // check whether we still have space left (iff we are using limits)
                     if (m_regionLimit != 0 && manager.Scenes.Count >= m_regionLimit)
@@ -554,9 +554,9 @@ namespace OpenSim.CoreApplicationPlugins
                     Scene scene = null;
                     UUID regionID = UUID.Zero;
                     if (requestData.ContainsKey("region_id") &&
-                        !String.IsNullOrEmpty((string) requestData["region_id"]))
+                        !String.IsNullOrEmpty((string)requestData["region_id"]))
                     {
-                        regionID = (UUID) (string) requestData["region_id"];
+                        regionID = (UUID)(string)requestData["region_id"];
                         if (manager.TryGetScene(regionID, out scene))
                             throw new Exception(
                                 String.Format("region UUID already in use by region {0}, UUID {1}, <{2},{3}>",
@@ -573,7 +573,7 @@ namespace OpenSim.CoreApplicationPlugins
                     RegionInfo region = new RegionInfo();
 
                     region.RegionID = regionID;
-                    region.RegionName = (string) requestData["region_name"];
+                    region.RegionName = (string)requestData["region_name"];
                     region.RegionLocX = Convert.ToInt32(requestData["region_x"]) * Constants.RegionSize;
                     region.RegionLocY = Convert.ToInt32(requestData["region_y"]) * Constants.RegionSize;
 
@@ -591,7 +591,7 @@ namespace OpenSim.CoreApplicationPlugins
                                           scene.ToString()));
 
                     region.InternalEndPoint =
-                        new IPEndPoint(IPAddress.Parse((string) requestData["listen_ip"]), 0);
+                        new IPEndPoint(IPAddress.Parse((string)requestData["listen_ip"]), 0);
 
                     region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
@@ -603,65 +603,57 @@ namespace OpenSim.CoreApplicationPlugins
                                 region.InternalEndPoint.Port,
                                 scene.ToString()));
 
-                    region.ExternalHostName = (string) requestData["external_address"];
+                    region.ExternalHostName = (string)requestData["external_address"];
 
-                    bool persist = Convert.ToBoolean((string) requestData["persist"]);
-                    if (persist)
+                    // default place for region configuration files is in the
+                    // Regions directory of the config dir (aka /bin)
+                    string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
+                    try
                     {
-                        // default place for region configuration files is in the
-                        // Regions directory of the config dir (aka /bin)
-                        string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
-                        try
+                        // OpenSim.ini can specify a different regions dir
+                        IConfig config = m_configSource.Configs["RegionStartup"];
+                        if (config != null)
                         {
-                            // OpenSim.ini can specify a different regions dir
-                            IConfig config = m_configSource.Configs["RegionStartup"];
-                            if (config != null)
-                            {
-                                regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
-                            }
+                            regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
                         }
-                        catch (Exception)
-                        {
-                            // No INI setting recorded.
-                        }
-                        
-                        string regionIniPath;
-                        
-                        if (requestData.Contains("region_file"))
-                        {
-                            // Make sure that the file to be created is in a subdirectory of the region storage directory.
-                            string requestedFilePath = Path.Combine(regionConfigPath, (string) requestData["region_file"]);
-                            string requestedDirectory = Path.GetDirectoryName(Path.GetFullPath(requestedFilePath));
-                            if (requestedDirectory.StartsWith(Path.GetFullPath(regionConfigPath)))
-                                regionIniPath = requestedFilePath;
-                            else
-                                throw new Exception("Invalid location for region file.");
-                        }
+                    }
+                    catch (Exception)
+                    {
+                        // No INI setting recorded.
+                    }
+
+                    string regionIniPath;
+
+                    if (requestData.Contains("region_file"))
+                    {
+                        // Make sure that the file to be created is in a subdirectory of the region storage directory.
+                        string requestedFilePath = Path.Combine(regionConfigPath, (string)requestData["region_file"]);
+                        string requestedDirectory = Path.GetDirectoryName(Path.GetFullPath(requestedFilePath));
+                        if (requestedDirectory.StartsWith(Path.GetFullPath(regionConfigPath)))
+                            regionIniPath = requestedFilePath;
                         else
-                        {
-                            regionIniPath = Path.Combine(regionConfigPath,
-                                                            String.Format(
-                                                                m_config.GetString("region_file_template",
-                                                                                   "{0}x{1}-{2}.ini"),
-                                                                (region.RegionLocX / Constants.RegionSize).ToString(),
-                                                                (region.RegionLocY / Constants.RegionSize).ToString(),
-                                                                regionID.ToString(),
-                                                                region.InternalEndPoint.Port.ToString(),
-                                                                region.RegionName.Replace(" ", "_").Replace(":", "_").
-                                                                    Replace("/", "_")));
-                        }
-                        
-                        m_log.DebugFormat("[RADMIN] CreateRegion: persisting region {0} to {1}",
-                                          region.RegionID, regionIniPath);
-                        region.SaveRegionToFile("dynamic region", regionIniPath);
+                            throw new Exception("Invalid location for region file.");
                     }
                     else
                     {
-                        region.Persistent = false;
+                        regionIniPath = Path.Combine(regionConfigPath,
+                                                        String.Format(
+                                                            m_config.GetString("region_file_template",
+                                                                               "{0}x{1}-{2}.ini"),
+                                                            (region.RegionLocX / Constants.RegionSize).ToString(),
+                                                            (region.RegionLocY / Constants.RegionSize).ToString(),
+                                                            regionID.ToString(),
+                                                            region.InternalEndPoint.Port.ToString(),
+                                                            region.RegionName.Replace(" ", "_").Replace(":", "_").
+                                                                Replace("/", "_")));
                     }
-                        
+
+                    m_log.DebugFormat("[RADMIN] CreateRegion: persisting region {0} to {1}",
+                                      region.RegionID, regionIniPath);
+                    region.SaveRegionToFile("dynamic region", regionIniPath);
+
                     // Set the estate
-                    
+
                     // Check for an existing estate
                     Aurora.Framework.IEstateConnector estateService = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
                     if (estateService == null)
@@ -674,14 +666,14 @@ namespace OpenSim.CoreApplicationPlugins
                         {
                             // ok, client wants us to use an explicit UUID
                             // regardless of what the avatar name provided
-                            userID = new UUID((string) requestData["estate_owner_uuid"]);
+                            userID = new UUID((string)requestData["estate_owner_uuid"]);
                         }
                         else if (requestData.ContainsKey("estate_owner_first") & requestData.ContainsKey("estate_owner_last"))
                         {
                             // We need to look up the UUID for the avatar with the provided name.
-                            string ownerFirst = (string) requestData["estate_owner_first"];
-                            string ownerLast = (string) requestData["estate_owner_last"];
-                            
+                            string ownerFirst = (string)requestData["estate_owner_first"];
+                            string ownerLast = (string)requestData["estate_owner_last"];
+
                             Scene currentOrFirst = manager.CurrentOrFirstScene;
                             IUserAccountService accountService = currentOrFirst.UserAccountService;
                             UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
@@ -692,11 +684,11 @@ namespace OpenSim.CoreApplicationPlugins
                         {
                             throw new Exception("Estate owner details not provided.");
                         }
-                        
+
                         // Create a new estate with the name provided
                         region.EstateSettings = estateService.LoadEstateSettings(region.RegionID);
 
-                        region.EstateSettings.EstateName = (string) requestData["estate_name"];
+                        region.EstateSettings.EstateName = (string)requestData["estate_name"];
                         region.EstateSettings.EstateOwner = userID;
                         // Persistence does not seem to effect the need to save a new estate
                         region.EstateSettings.Save();
@@ -710,11 +702,11 @@ namespace OpenSim.CoreApplicationPlugins
                         if (!estateService.LinkRegion(region.RegionID, estateID, ""))
                             throw new Exception("Failed to join estate.");
                     }
-                    
+
                     // Create the region and perform any initial initialization
 
                     IScene newScene;
-                    manager.CreateRegion(region, true, out newScene);
+                    manager.CreateRegion(region, out newScene);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.

@@ -163,15 +163,15 @@ namespace Aurora.Modules
             {
                 if (cmdparams[3] == "PG")
                 {
-                    scene.RegionInfo.RegionSettings.Maturity = 0;
+                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(0);
                 }
                 else if (cmdparams[3] == "Mature")
                 {
-                    scene.RegionInfo.RegionSettings.Maturity = 1;
+                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(1);
                 }
                 else if (cmdparams[3] == "Adult")
                 {
-                    scene.RegionInfo.RegionSettings.Maturity = 2;
+                    scene.RegionInfo.AccessLevel = Util.ConvertMaturityToAccessLevel(2);
                 }
                 else
                 {
@@ -789,7 +789,7 @@ namespace Aurora.Modules
             }
             
 
-            if (agentInfo != null && scene.RegionInfo.RegionSettings.Maturity > agentInfo.MaturityRating)
+            if (agentInfo != null && scene.RegionInfo.AccessLevel > Util.ConvertMaturityToAccessLevel((uint)agentInfo.MaturityRating))
             {
                 reason = "The region has too high of a maturity level. Blocking teleport.";
                 return false;

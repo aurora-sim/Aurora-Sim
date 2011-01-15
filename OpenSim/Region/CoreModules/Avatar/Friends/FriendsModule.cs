@@ -496,15 +496,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                         return;
                     try
                     {
-                        //New style update!
-                        string http = AgentLocations[0].Remove(0, 7);
-                        string address = http.Split(':')[0];
-                        string port = http.Split(':')[1];
-                        //Create a fake GridRegion
-                        GridRegion region = new GridRegion() { ExternalHostName = address, HttpPort = uint.Parse(port) };
-                        //m_log.DebugFormat("[FRIENDS]: Remote Notify to region {0}", region.RegionName);
-                        m_FriendsSimConnector.StatusNotify(region, userID, friendID, online);
-                        return;
+                        for (int i = 0; i < AgentLocations.Length; i++)
+                        {
+                            //New style update!
+                            //Create a fake GridRegion
+                            GridRegion region = new GridRegion() { ServerURI = AgentLocations[i] };
+                            //m_log.DebugFormat("[FRIENDS]: Remote Notify to region {0}", region.RegionName);
+                            if (m_FriendsSimConnector.StatusNotify(region, userID, friendID, online))
+                                return;
+                        }
                     }
                     catch (Exception ex)
                     {

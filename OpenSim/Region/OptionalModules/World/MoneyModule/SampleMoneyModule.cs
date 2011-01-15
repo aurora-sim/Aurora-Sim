@@ -435,24 +435,16 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             Scene userScene = GetSceneByUUID(regionId);
             if (userScene != null)
             {
-                if (userScene.RegionInfo.regionSecret == secret)
+                IClientAPI client = LocateClientObject(agentId);
+                if (client != null)
                 {
 
-                    IClientAPI client = LocateClientObject(agentId);
-                       if (client != null)
-                       {
+                    if (soundId != UUID.Zero)
+                        client.SendPlayAttachedSound(soundId, UUID.Zero, UUID.Zero, 1.0f, 0);
 
-                           if (soundId != UUID.Zero)
-                               client.SendPlayAttachedSound(soundId, UUID.Zero, UUID.Zero, 1.0f, 0);
+                    client.SendBlueBoxMessage(UUID.Zero, "", text);
 
-                           client.SendBlueBoxMessage(UUID.Zero, "", text);
-
-                           retparam.Add("success", true);
-                       }
-                    else
-                    {
-                        retparam.Add("success", false);
-                    }
+                    retparam.Add("success", true);
                 }
                 else
                 {

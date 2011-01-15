@@ -44,22 +44,11 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public bool commFailTF = false;
         public string RegionFile = String.Empty;
-        public bool isSandbox = false;
-        public bool Persistent = true;
         public bool Disabled = false;
 
         private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
-
-        public string proxyUrl = "";
-        public int ProxyOffset = 0;
-        public string regionSecret = UUID.Random().ToString();
-
-        public string osSecret;
-
-        public string lastMapRefresh = "0";
 
         private int m_objectCapacity = 0;
         private string m_regionType = String.Empty;
@@ -72,10 +61,9 @@ namespace OpenSim.Framework
         protected IPEndPoint m_internalEndPoint;
         protected int m_regionLocX;
         protected int m_regionLocY;
-        protected uint m_remotingPort;
+        protected int m_regionLocZ;
         public UUID RegionID = UUID.Zero;
         public UUID Password = UUID.Random();
-        public string RemotingAddress;
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
         public int NumberStartup = 0;
@@ -162,7 +150,7 @@ namespace OpenSim.Framework
 
         public byte AccessLevel
         {
-            get { return (byte)Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
+            get { return Util.ConvertMaturityToAccessLevel((uint)RegionSettings.Maturity); }
             set { RegionSettings.Maturity = (int)Util.ConvertAccessLevelToMaturity(value); }
         }
 
@@ -200,12 +188,6 @@ namespace OpenSim.Framework
         {
             get { return m_regionName; }
             set { m_regionName = value; }
-        }
-
-        public uint RemotingPort
-        {
-            get { return m_remotingPort; }
-            set { m_remotingPort = value; }
         }
 
         /// <value>
@@ -284,16 +266,15 @@ namespace OpenSim.Framework
             set { m_regionLocY = value; }
         }
 
+        public int RegionLocZ
+        {
+            get { return m_regionLocZ; }
+            set { m_regionLocZ = value; }
+        }
+
         public ulong RegionHandle
         {
             get { return Util.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
-        }
-
-        public void SetEndPoint(string ipaddr, int port)
-        {
-            IPAddress tmpIP = IPAddress.Parse(ipaddr);
-            IPEndPoint tmpEPE = new IPEndPoint(tmpIP, port);
-            m_internalEndPoint = tmpEPE;
         }
 
         public void WriteNiniConfig(IConfigSource source)
@@ -390,12 +371,7 @@ namespace OpenSim.Framework
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
             args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
             args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
-            if ((RemotingAddress != null) && !RemotingAddress.Equals(""))
-                args["remoting_address"] = OSD.FromString(RemotingAddress);
-            args["remoting_port"] = OSD.FromString(RemotingPort.ToString());
             args["allow_alt_ports"] = OSD.FromBoolean(m_allow_alternate_ports);
-            if ((proxyUrl != null) && !proxyUrl.Equals(""))
-                args["proxy_url"] = OSD.FromString(proxyUrl);
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
             args["password"] = OSD.FromUUID(Password);
@@ -449,14 +425,8 @@ namespace OpenSim.Framework
                 Int32.TryParse(args["internal_ep_port"].AsString(), out port);
             }
             InternalEndPoint = new IPEndPoint(ip_addr, port);
-            if (args["remoting_address"] != null)
-                RemotingAddress = args["remoting_address"].AsString();
-            if (args["remoting_port"] != null)
-                UInt32.TryParse(args["remoting_port"].AsString(), out m_remotingPort);
             if (args["allow_alt_ports"] != null)
                 m_allow_alternate_ports = args["allow_alt_ports"].AsBoolean();
-            if (args["proxy_url"] != null)
-                proxyUrl = args["proxy_url"].AsString();
             if (args["region_type"] != null)
                 m_regionType = args["region_type"].AsString();
             if (args["password"] != null)

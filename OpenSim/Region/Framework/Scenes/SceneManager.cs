@@ -68,9 +68,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
         private int RegionsFinishedStarting = 0;
         public int AllRegions = 0;
-        private string proxyUrl = "";
-        private int proxyOffset = 0;
-        private string SecretID = UUID.Random().ToString();
         protected ISimulationDataStore m_simulationDataService;
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
         protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
@@ -213,10 +210,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Close()
         {
-            if (proxyUrl.Length > 0)
-            {
-                Util.XmlRpcCommand(proxyUrl, "Stop");
-            }
             Scene[] scenes = new Scene[m_localScenes.Count];
             m_localScenes.CopyTo(scenes, 0);
             // collect known shared modules in sharedModules
@@ -524,7 +517,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="portadd_flag"></param>
         /// <param name="do_post_init"></param>
         /// <returns></returns>
-        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, bool portadd_flag, out IScene m_scene)
+        public IClientNetworkServer CreateRegion(RegionInfo regionInfo, out IScene m_scene)
         {
             int port = regionInfo.InternalEndPoint.Port;
 
@@ -532,25 +525,8 @@ namespace OpenSim.Region.Framework.Scenes
             regionInfo.HttpPort = MainServer.Instance.Port;
             regionInfo.ServerURI = "http://" + regionInfo.ExternalHostName + ":" + regionInfo.HttpPort;
 
-            regionInfo.osSecret = SecretID;
-
-            IConfig networkConfig = m_config.Configs["Network"];
-            if (networkConfig != null)
-            {
-                proxyUrl = networkConfig.GetString("proxy_url", "");
-                proxyOffset = Int32.Parse(networkConfig.GetString("proxy_offset", "0"));
-            }
-
-            if ((proxyUrl.Length > 0) && (portadd_flag))
-            {
-                // set proxy url to RegionInfo
-                regionInfo.proxyUrl = proxyUrl;
-                regionInfo.ProxyOffset = proxyOffset;
-                Util.XmlRpcCommand(proxyUrl, "AddPort", port, port + proxyOffset, regionInfo.ExternalHostName);
-            }
-
             IClientNetworkServer clientServer = null;
-            Scene scene = SetupScene(regionInfo, proxyOffset, m_config, out clientServer);
+            Scene scene = SetupScene(regionInfo, m_config, out clientServer);
 
             m_log.Info("[Modules]: Loading region modules");
             IRegionModulesController controller;
@@ -585,12 +561,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="configSource"></param>
         /// <param name="clientServer"> </param>
         /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, int proxyOffset, IConfigSource configSource, out IClientNetworkServer clientServer)
+        protected Scene SetupScene(RegionInfo regionInfo, IConfigSource configSource, out IClientNetworkServer clientServer)
         {
             AgentCircuitManager circuitManager = new AgentCircuitManager();
             IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-            //if (!IPAddress.TryParse(regionInfo.InternalEndPoint, out listenIP))
-            //    listenIP = IPAddress.Parse("0.0.0.0");
+            if (!IPAddress.TryParse(regionInfo.InternalEndPoint.Address.ToString(), out listenIP))
+                listenIP = IPAddress.Parse("0.0.0.0");
 
             uint port = (uint)regionInfo.InternalEndPoint.Port;
 
@@ -598,7 +574,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer>(ClientstackDll);
             clientServer.Initialise(
-                    listenIP, ref port, proxyOffset, regionInfo.m_allow_alternate_ports,
+                    listenIP, ref port, 0, regionInfo.m_allow_alternate_ports,
                     m_config, circuitManager);
 
             regionInfo.InternalEndPoint.Port = (int)port;
@@ -664,7 +640,7 @@ namespace OpenSim.Region.Framework.Scenes
             CloseModules(scene);
             ShutdownClientServer(info);
             IScene iscene;
-            CreateRegion(info, true, out iscene);
+            CreateRegion(info, out iscene);
         }
 
         #endregion

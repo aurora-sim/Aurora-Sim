@@ -9932,7 +9932,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             break;
                         }
-                        int access = info.Maturity;
+                        int access = Util.ConvertAccessLevelToMaturity(info.Access);
                         if (access == 0)
                             reply = "PG";
                         else if (access == 1)

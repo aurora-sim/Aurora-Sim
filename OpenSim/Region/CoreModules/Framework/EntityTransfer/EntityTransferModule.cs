@@ -320,8 +320,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
 
             m_log.DebugFormat(
-                "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}:{2}/{3}",
-                reg.ExternalHostName, reg.HttpPort, finalDestination.RegionName, position);
+                "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}/{2}",
+                finalDestination.ServerURI, finalDestination.RegionName, position);
 
             int newRegionX = (int)(reg.RegionHandle >> 40) * Constants.RegionSize;
             int newRegionY = (((int)(reg.RegionHandle)) >> 8) * Constants.RegionSize;

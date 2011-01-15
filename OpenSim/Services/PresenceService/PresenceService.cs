@@ -38,6 +38,7 @@ using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.PresenceService
 {
@@ -256,9 +257,9 @@ namespace OpenSim.Services.PresenceService
                         continue;
                     }
 
-                    Services.Interfaces.GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, d.RegionID);
+                    GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, d.RegionID);
                     if (r != null)
-                        info.Add("http://" + r.ExternalHostName + ":" + r.HttpPort);
+                        info.Add(r.ServerURI);
                 }
                 else//Add a blank one
                     info.Add("");
