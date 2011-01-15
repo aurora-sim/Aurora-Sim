@@ -35,7 +35,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SizeZ", ColumnTypes.Integer),
                 ColDef("Flags", ColumnTypes.Integer),
                 ColDef("SessionID", ColumnTypes.String45),
-                ColDef("Info", ColumnTypes.String512)));
+                ColDef("Info", ColumnTypes.Text)));
         }
 
         protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)

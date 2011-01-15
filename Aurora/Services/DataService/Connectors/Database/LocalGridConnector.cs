@@ -100,7 +100,7 @@ namespace Aurora.Services.DataService
                 query = GD.Query("(flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
 
             if (query.Count == 0)
-                return null;
+                return new List<GridRegion>();
 
             return ParseQuery(query);
         }
@@ -117,6 +117,9 @@ namespace Aurora.Services.DataService
                     "' and LocY between '" + startY + "' and '" + endY +
                     "' and ScopeID = '" + scopeID + "'", m_realm, "*");
 
+            if (query.Count == 0)
+                return new List<GridRegion>();
+
             return ParseQuery(query);
         }
 
@@ -127,7 +130,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < query.Count; i += 14)
             {
                 GridRegion data = new GridRegion();
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
+                OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[13]);
                 data.FromOSD(map);
 
                 //Check whether it should be down
@@ -175,7 +178,7 @@ namespace Aurora.Services.DataService
             values.Add(region.SessionID);
             values.Add(OSDParser.SerializeJsonString(region.ToOSD()));
 
-            GD.Replace(m_realm, keys.ToArray(), values.ToArray());
+            return GD.Replace(m_realm, keys.ToArray(), values.ToArray());
 
             return true;
         }

@@ -47,7 +47,7 @@ namespace Aurora.Services.DataService
             Values.Add(region.RegionID);
             Values.Add(region.RegionName);
             Values.Add(OSDParser.SerializeJsonString(region.PackRegionInfoData(true)));
-            Values.Add(region.Disabled);
+            Values.Add(region.Disabled ? 1 : 0);
             GD.Replace("simulator", new string[]{"RegionID","RegionName",
                 "RegionInfo","Disabled"}, Values.ToArray());
         }

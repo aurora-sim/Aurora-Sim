@@ -91,7 +91,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
             if (conn == null)
                 return null;
-            RegionInfo[] infos = conn.GetRegionInfos(true);
+            RegionInfo[] infos = conn.GetRegionInfos(false);
             if (infos.Length == 0 && m_default)
             {
                 //Load up the GUI to make a new region
@@ -109,7 +109,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             if (!m_default)
                 return;
-            RegionManager manager = new RegionManager(true, baseOS);
+            RegionManager manager = new RegionManager(false, baseOS);
             System.Windows.Forms.Application.Run(manager);
         }
 

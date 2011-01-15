@@ -93,15 +93,17 @@ namespace Aurora.Modules.RegionLoader
             region.Disabled = DisabledEdit.Checked;
 
             m_connector.UpdateRegionInfo(region);
-            IScene scene;
-            m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-            SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-            manager.CreateRegion(region, out scene);
-
             if (OpenedForCreateRegion)
             {
                 System.Windows.Forms.Application.Exit();
                 return;
+            }
+            else
+            {
+                IScene scene;
+                m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+                SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+                manager.CreateRegion(region, out scene);
             }
             RefreshCurrentRegions();
         }
