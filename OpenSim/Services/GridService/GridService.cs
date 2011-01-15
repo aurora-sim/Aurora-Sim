@@ -182,7 +182,7 @@ namespace OpenSim.Services.GridService
                 if ((rflags & RegionFlags.Reservation) != 0)
                 {
                     // Regions reserved for the null key cannot be taken.
-                    if (region.Token == UUID.Zero.ToString())
+                    if (region.SessionID == UUID.Zero)
                         return "Region location is reserved";
 
                     // Treat it as an auth request
@@ -193,16 +193,19 @@ namespace OpenSim.Services.GridService
                     rflags |= RegionFlags.Authenticate;
                 }
 
-                /*if ((rflags & RegionFlags.Authenticate) != 0)
+                if ((rflags & RegionFlags.Authenticate) != 0)
                 {
                     // Can we authenticate at all?
                     //
                     if (m_AuthenticationService == null)
                         return "No authentication possible";
-
-                    if (!m_AuthenticationService.Verify(regionInfos., regionInfos.Token, 30))
+                    //Make sure the key exists
+                    if (!m_AuthenticationService.CheckExists(regionInfos.SessionID))
                         return "Bad authentication";
-                }*/
+                    //Now verify the key
+                    if (!m_AuthenticationService.Verify(regionInfos.SessionID, regionInfos.AuthToken, 30))
+                        return "Bad authentication";
+                }
             }
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
@@ -211,6 +214,7 @@ namespace OpenSim.Services.GridService
                     regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, scopeID);
                 return "Region overlaps another region";
             }
+
             if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
                 ((region.RegionLocX != regionInfos.RegionLocX) || (region.RegionLocY != regionInfos.RegionLocY)))
             {
@@ -245,17 +249,20 @@ namespace OpenSim.Services.GridService
 
             if (region != null)
             {
-                int oldFlags = region.Flags;
-                if ((oldFlags & (int)RegionFlags.LockedOut) != 0)
+                //If we are locked out, we can't come in
+                if ((region.Flags & (int)RegionFlags.LockedOut) != 0)
                     return "Region locked out";
 
-                oldFlags &= ~(int)RegionFlags.Reservation;
+                //Remove the reservation if we are there now
+                region.Flags &= ~(int)RegionFlags.Reservation;
 
-                regionInfos.Flags = oldFlags; // Preserve flags
+                regionInfos.Flags = region.Flags; // Preserve flags
             }
             else
             {
+                //Regions do not get to set flags, so wipe them
                 regionInfos.Flags = 0;
+                //See if we are in the configs anywhere and have flags set
                 if ((gridConfig != null) && regionInfos.RegionName != string.Empty)
                 {
                     int newFlags = 0;
@@ -267,6 +274,7 @@ namespace OpenSim.Services.GridService
                 }
             }
 
+            //Set these so that we can make sure the region is online later
             regionInfos.Flags |= (int)RegionFlags.RegionOnline;
             regionInfos.Flags |= (int)RegionFlags.Safe;
             regionInfos.LastSeen = Util.UnixTimeSinceEpoch();

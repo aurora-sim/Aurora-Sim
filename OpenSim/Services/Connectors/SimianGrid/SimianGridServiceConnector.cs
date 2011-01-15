@@ -157,7 +157,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 { "MapTexture", OSD.FromUUID(regionInfo.TerrainMapImage) },
                 { "Access", OSD.FromInteger(regionInfo.Access) },
                 { "EstateOwner", OSD.FromUUID(regionInfo.EstateOwner) },
-                { "Token", OSD.FromString(regionInfo.Token) }
+                { "Token", OSD.FromString(regionInfo.AuthToken) }
             };
 
             NameValueCollection requestArgs = new NameValueCollection
@@ -538,7 +538,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             region.TerrainImage = extraData["MapTexture"].AsUUID();
             region.Access = (byte)extraData["Access"].AsInteger();
             region.EstateOwner = extraData["EstateOwner"].AsUUID();
-            region.Token = extraData["Token"].AsString();
+            region.AuthToken = extraData["Token"].AsString();
 
             return region;
         }

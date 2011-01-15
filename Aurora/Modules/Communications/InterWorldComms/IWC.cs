@@ -148,7 +148,7 @@ namespace Aurora.Modules
             {
                 UUID SecureSessionID = UUID.Zero;
                 m_GridService.RegisterRegion(region.ScopeID, region, SecureSessionID, out SecureSessionID);
-                region.Token = SecureSessionID.ToString();
+                region.AuthToken = SecureSessionID.ToString();
             }
         }
 

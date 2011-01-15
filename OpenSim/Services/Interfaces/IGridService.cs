@@ -214,7 +214,7 @@ namespace OpenSim.Services.Interfaces
         public UUID TerrainImage = UUID.Zero;
         public UUID TerrainMapImage = UUID.Zero;
         public byte Access;
-        public string Token = string.Empty;
+        public string AuthToken = string.Empty;
         private IPEndPoint m_remoteEndPoint = null;
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
@@ -321,7 +321,7 @@ namespace OpenSim.Services.Interfaces
             kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
             kvp["owner_uuid"] = EstateOwner.ToString();
-            kvp["Token"] = Token.ToString();
+            kvp["Token"] = AuthToken.ToString();
             kvp["sizeX"] = RegionSizeX.ToString();
             kvp["sizeY"] = RegionSizeY.ToString();
             // We send it along too so that it doesn't need resolved on the other end
@@ -387,7 +387,7 @@ namespace OpenSim.Services.Interfaces
                 EstateOwner = new UUID(kvp["owner_uuid"].ToString());
 
             if (kvp.ContainsKey("Token"))
-                Token = kvp["Token"].ToString();
+                AuthToken = kvp["Token"].ToString();
 
             if (kvp.ContainsKey("sizeX"))
                 m_RegionSizeX = float.Parse(kvp["sizeX"].ToString());
@@ -420,7 +420,7 @@ namespace OpenSim.Services.Interfaces
             map["regionTerrainTexture"] = TerrainMapImage;
             map["access"] = (int)Access;
             map["owner_uuid"] = EstateOwner;
-            map["Token"] = Token;
+            map["AuthToken"] = AuthToken;
             map["sizeX"] = RegionSizeX;
             map["sizeY"] = RegionSizeY;
             map["sizeZ"] = RegionSizeZ;
@@ -492,8 +492,8 @@ namespace OpenSim.Services.Interfaces
             if (map.ContainsKey("owner_uuid"))
                 EstateOwner = map["owner_uuid"].AsUUID();
 
-            if (map.ContainsKey("Token"))
-                Token = map["Token"].AsString();
+            if (map.ContainsKey("AuthToken"))
+                AuthToken = map["AuthToken"].AsString();
 
             if (map.ContainsKey("sizeX"))
                 m_RegionSizeX = (float)map["sizeX"].AsReal();
