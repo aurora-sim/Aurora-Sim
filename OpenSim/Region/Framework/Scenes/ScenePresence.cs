@@ -2256,7 +2256,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //                    direc.Z = direc.Z * 0.5f; this does not acumulate and is just a constant
 
                     //It'll stop the physics engine from decaying, which makes it look bad
-                    if (direc != Vector3.Zero)
+//                    if (direc != Vector3.Zero)  let avas be stopped !!
                         PhysicsActor.SetMovementForce(direc);
                     }
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
