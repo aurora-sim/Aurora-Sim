@@ -164,7 +164,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public int bodyFramesAutoDisable = 20;
 
-        private bool m_filterCollisions = true;
+        private bool m_filterCollisions = false;
 
         private d.NearCallback nearCallback;
         public d.TriCallback triCallback;
@@ -1078,7 +1078,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             // Use the movement terrain contact
                             AvatarMovementTerrainContact.geom = curContact;
-                            if (!m_filterCollisions)
+                            if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
                             if (m_global_contactcount < maxContactsbeforedeath)
                             {
@@ -1092,7 +1092,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 // Use the non moving terrain contact
                                 TerrainContact.geom = curContact;
-                                if (!m_filterCollisions)
+                                if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
                                 if (m_global_contactcount < maxContactsbeforedeath)
                                 {
@@ -1116,7 +1116,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                                 //m_log.DebugFormat("Material: {0}", material);
                                 m_materialContacts[material, movintYN].geom = curContact;
-                                if (!m_filterCollisions)
+                                if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
                                 if (m_global_contactcount < maxContactsbeforedeath)
@@ -1138,7 +1138,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     material = ((AuroraODEPrim)p2).m_material;
 
                                 m_materialContacts[material, movintYN].geom = curContact;
-                                if (!m_filterCollisions)
+                                if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
                                 if (m_global_contactcount < maxContactsbeforedeath)
@@ -1159,7 +1159,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 // Use the Movement prim contact
                                 AvatarMovementprimContact.geom = curContact;
-                                if (!m_filterCollisions)
+                                if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
                                 if (m_global_contactcount < maxContactsbeforedeath)
                                 {
@@ -1171,7 +1171,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 // Use the non movement contact
                                 contact.geom = curContact;
-                                if (!m_filterCollisions)
+                                if (m_filterCollisions)
                                     _perloopContact.Add(curContact);
 
                                 if (m_global_contactcount < maxContactsbeforedeath)
@@ -1191,7 +1191,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             //m_log.DebugFormat("Material: {0}", material);
                             m_materialContacts[material, 0].geom = curContact;
-                            if (!m_filterCollisions)
+                            if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
                             if (m_global_contactcount < maxContactsbeforedeath)
@@ -1440,7 +1440,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="timeStep"></param>
         private void collision_optimized(float timeStep)
         {
-            if (!m_filterCollisions)
+            if (m_filterCollisions)
                 _perloopContact.Clear();
 
             lock (_characters)
@@ -1524,7 +1524,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            if (!m_filterCollisions)
+            if (m_filterCollisions)
                 _perloopContact.Clear();
         }
 
@@ -3890,25 +3890,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override Dictionary<uint, float> GetTopColliders()
         {
             Dictionary<uint, float> returncolliders = new Dictionary<uint, float>();
-            int cnt = 0;
+            List<AuroraODEPrim> collidingPrims = new List<AuroraODEPrim>();
             lock (_prims)
             {
                 foreach (AuroraODEPrim prm in _prims)
                 {
                     if (prm.CollisionScore > 0)
                     {
-                        if (!returncolliders.ContainsKey(prm.m_localID))
-                        {
-                            returncolliders.Add(prm.m_localID, prm.CollisionScore);
-                            cnt++;
-                            prm.CollisionScore = 0f;
-                            if (cnt > 25)
-                            {
-                                break;
-                            }
-                        }
+                        if(!collidingPrims.Contains(prm))
+                            collidingPrims.Add(prm);
                     }
                 }
+            }
+            //Sort them by their score
+            collidingPrims.Sort(delegate(AuroraODEPrim a, AuroraODEPrim b)
+            {
+                return b.CollisionScore.CompareTo(a.CollisionScore);
+            });
+            //Limit to 25
+            if(collidingPrims.Count > 25)
+                collidingPrims.RemoveRange(25, collidingPrims.Count - 25);
+
+            foreach (AuroraODEPrim prm in collidingPrims)
+            {
+                returncolliders[prm.m_localID] = prm.CollisionScore;
+                prm.CollisionScore = 0f;
             }
             return returncolliders;
         }
