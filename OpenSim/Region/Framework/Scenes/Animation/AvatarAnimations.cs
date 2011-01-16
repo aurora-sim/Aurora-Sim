@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         try
                         {
                             AnimsUUID.Add(name, id);
-                            if (animState != "")
+                            if (animState != "" && !AnimStateNames.ContainsKey(id))
                                 AnimStateNames.Add(id, animState);
                         }
                         catch

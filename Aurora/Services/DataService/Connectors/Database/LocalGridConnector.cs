@@ -109,12 +109,12 @@ namespace Aurora.Services.DataService
             List<string> query;
             if (scopeID != UUID.Zero)
                 query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                    "' and LocY between '" + startY + "' and '" + endY + "'",
-                    m_realm, "*");
-            else
-                query = GD.Query("LocX between '" + startX + "' and '" + endX +
                     "' and LocY between '" + startY + "' and '" + endY +
                     "' and ScopeID = '" + scopeID + "'", m_realm, "*");
+            else
+                query = GD.Query("LocX between '" + startX + "' and '" + endX +
+                    "' and LocY between '" + startY + "' and '" + endY + "'",
+                    m_realm, "*");
 
             if (query.Count == 0)
                 return new List<GridRegion>();
