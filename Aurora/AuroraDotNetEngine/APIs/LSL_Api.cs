@@ -9932,7 +9932,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             break;
                         }
-                        uint access = Util.ConvertAccessLevelToMaturity(info.Access);
+                        int access = info.Maturity;
                         if (access == 0)
                             reply = "PG";
                         else if (access == 1)
@@ -10361,7 +10361,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                     if (parcelManagement != null)
                     {
-                        switch ((ParcelMediaCommandEnum)aList.Data[i])
+                    LSL_Integer tmp = (LSL_Integer)aList.Data[i];
+                        switch ((ParcelMediaCommandEnum)tmp.value)
                         {
                             case ParcelMediaCommandEnum.Url:
                                 list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaURL));
