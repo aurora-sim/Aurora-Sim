@@ -248,6 +248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //            p = new LSLSyntax(new yyLSLSyntax(), new ErrorHandler(true));
             ResetCounters();
             m_compiler = compiler;
+
             IScriptApi[] apis = compiler.ScriptEngine.GetAPIs();
 
             foreach (IScriptApi api in apis)
@@ -312,7 +313,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "using System.Collections.Generic;\n";
             compiledScript += "using System.Collections;\n";
             compiledScript += "using System.Reflection;\n";
-            compiledScript += "using System.Timers;\n";
+            compiledScript += "using System.Timers;\n";          
+
             compiledScript += "namespace Script\n";
             compiledScript += "{\n";
 
@@ -1943,18 +1945,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         }
                         else
                         {
-                            if (kid is FunctionCallExpression)
+                        if (kid is FunctionCallExpression)
                             {
-                                foreach (SYMBOL akid in kid.kids)
+                            foreach (SYMBOL akid in kid.kids)
                                 {
-                                    if (akid is FunctionCall)
-                                        retstr += GenerateFunctionCall(akid as FunctionCall, false);
-                                    else
-                                        retstr += GenerateNode(akid);
+                                if (akid is FunctionCall)
+                                    retstr += GenerateFunctionCall(akid as FunctionCall, false);
+                                else
+                                    retstr += GenerateNode(akid);
                                 }
                             }
-                            else
-                                retstr += GenerateNode(kid);
+                        else
+                            {
+                            // this kids will not need to dump in current string position
+                            // so save what we have in dump and let kids have their own then take it again
+                            retstr += DumpFunc(marc) + GenerateNode(kid);
+                            marc = FuncCallsMarc();
+                            }
                         }
                     }
                 }
