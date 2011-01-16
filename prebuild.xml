@@ -944,6 +944,7 @@
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Xml"/>
+      <Reference name="System.Web"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="Aurora.Simulation.Base"/>
