@@ -399,7 +399,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                         }
-                        if (value.Z < -900f)
+                        if (value.Z < -90f)
                         {
                             value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                         }
@@ -749,36 +749,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
             // meaning only 4 possible capsule tilt orientations
 
+            float sqr2 = 1.4142135623730950488016887242097f; // square root of 2  lasy to cut extra digits
+
             if (movementVector.X > 0)
                 {
-                movementVector.X = 2f;
+                movementVector.X = sqr2;
 
                 // east ?? there is no east above
                 if (movementVector.Y > 0)
                     {
                     // northeast
-                    movementVector.Y = 2;
+                    movementVector.Y = sqr2;
                     }
                 else
                     {
                     // southeast
-                    movementVector.Y = -2;
+                    movementVector.Y = -sqr2;
                     }
                 }
             else
                 {
-                movementVector.X = -2;
+                movementVector.X = -sqr2;
                 // west 
 
                 if (movementVector.Y > 0)
                     {
                     // northwest
-                    movementVector.Y = 2;
+                    movementVector.Y = sqr2;
                     }
                 else
                     {
                     // southwest
-                    movementVector.Y = -2;
+                    movementVector.Y = -sqr2;
                     }
                 }
 
