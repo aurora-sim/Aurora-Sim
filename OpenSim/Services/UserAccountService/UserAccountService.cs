@@ -156,51 +156,6 @@ namespace OpenSim.Services.UserAccountService
             return d[0];
         }
 
-        private UserAccount MakeUserAccount(UserAccountData d)
-        {
-            UserAccount u = new UserAccount();
-            u.FirstName = d.FirstName;
-            u.LastName = d.LastName;
-            u.PrincipalID = d.PrincipalID;
-            u.ScopeID = d.ScopeID;
-            if (d.Data.ContainsKey("Email") && d.Data["Email"] != null)
-                u.Email = d.Data["Email"].ToString();
-            else
-                u.Email = string.Empty;
-            u.Created = Convert.ToInt32(d.Data["Created"].ToString());
-            if (d.Data.ContainsKey("UserTitle") && d.Data["UserTitle"] != null)
-                u.UserTitle = d.Data["UserTitle"].ToString();
-            else
-                u.UserTitle = string.Empty;
-            if (d.Data.ContainsKey("UserLevel") && d.Data["UserLevel"] != null)
-                Int32.TryParse(d.Data["UserLevel"], out u.UserLevel);
-            if (d.Data.ContainsKey("UserFlags") && d.Data["UserFlags"] != null)
-                Int32.TryParse(d.Data["UserFlags"], out u.UserFlags);
-
-            if (d.Data.ContainsKey("ServiceURLs") && d.Data["ServiceURLs"] != null)
-            {
-                string[] URLs = d.Data["ServiceURLs"].ToString().Split(new char[] { ' ' });
-                u.ServiceURLs = new Dictionary<string, object>();
-
-                foreach (string url in URLs)
-                {
-                    string[] parts = url.Split(new char[] { '=' });
-
-                    if (parts.Length != 2)
-                        continue;
-
-                    string name = System.Web.HttpUtility.UrlDecode(parts[0]);
-                    string val = System.Web.HttpUtility.UrlDecode(parts[1]);
-
-                    u.ServiceURLs[name] = val;
-                }
-            }
-            else
-                u.ServiceURLs = new Dictionary<string, object>();
-
-            return u;
-        }
-
         public UserAccount GetUserAccount(UUID scopeID, string email)
         {
             UserAccount[] d;
