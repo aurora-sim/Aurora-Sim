@@ -96,7 +96,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private CollisionLocker ode;
 
-        private float ODE_STEPSIZE = 0.020f;
+        public float ODE_STEPSIZE = 0.020f;
         private float metersInSpace = 29.9f;
         private float m_timeDilation = 1.0f;
 
@@ -2935,7 +2935,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 foreach (AuroraODECharacter actor in _characters)
                                 {
                                     if (actor != null)
-                                        actor.Move(timeElapsed, defects);
+                                        actor.Move(ODE_STEPSIZE, defects);
                                 }
                                 if (0 != defects.Count)
                                 {
@@ -3034,7 +3034,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 if (actor.bad)
                                     m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
                                 else
-                                    actor.UpdatePositionAndVelocity();
+                                    actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                             }
                         }
                     }

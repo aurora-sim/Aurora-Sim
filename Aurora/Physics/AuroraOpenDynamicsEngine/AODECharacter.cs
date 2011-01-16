@@ -132,6 +132,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool bad = false;
         private int m_WaitGroundCheck = 0;
 
+        private float PID_P;
+        private float PID_D;
+
         #endregion
 
         #region Constructor
@@ -146,7 +149,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                 }
-                if (pos.Z < -90000f)
+                if (pos.Z < -90f)
                 {
                     pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                 }
@@ -280,10 +283,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderfilter = 0;
                     }
 
-                if (m_colliderfilter == 2)
-                    m_iscolliding = true;
-                else
+                if (m_colliderfilter == 0)
                     m_iscolliding = false;
+                else
+                    m_iscolliding = true;
 
 //                if (m_iscolliding)
 //                    m_log.Warn("col");
@@ -313,8 +316,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderGroundfilter = 0;
                     }
 
-                if (m_colliderGroundfilter == 2)
-                    m_iscollidingGround = true;
+                if (m_colliderGroundfilter == 0)
+                    m_iscollidingGround = false;
                 else
                     m_iscollidingGround = false;
 
@@ -346,19 +349,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_colliderObjectfilter = 0;
                 }
 
-            if (m_colliderGroundfilter == 2)
-                m_iscollidingObj = true;
-            else
+            if (m_colliderGroundfilter == 0)
                 m_iscollidingObj = false;
+            else
+                m_iscollidingObj = true;
 
 //            if (m_iscollidingObj)
 //                m_log.Warn("colobj");
-
+/*
                 m_iscollidingObj = value;
                 if (m_iscollidingObj)
                     m_pidControllerActive = false;
                 else
                     m_pidControllerActive = true;
+ */
             }
         }
 
@@ -395,7 +399,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                         }
-                        if (value.Z < -90000f)
+                        if (value.Z < -900f)
                         {
                             value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                         }
@@ -530,7 +534,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void AddMovementForce(Vector3 force)
         {
-            _target_velocity += force;
+            _target_velocity += force;            
         }
 
         /// <summary>
@@ -540,7 +544,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void SetMovementForce(Vector3 force)
         {
-            _target_velocity = force * 4;  //  tmp compensate for removed constants on ScenePresence.cs
+            _target_velocity = force;       
         }
 
         public override Vector3 Torque
@@ -591,11 +595,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Rebuild the avatar representation
 
-        private float FindNewAvatarMass()
-        {
-            float volume = Size.X * Size.Y * Size.Z;
-            return volume * 200; //Aluminum g/cm3 aprox * 5
-        }
 
         /// <summary>
         /// This creates the Avatar's physical Surrogate at the position supplied
@@ -628,11 +627,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(Shell, (int)m_collisionCategories);
             d.GeomSetCollideBits(Shell, (int)m_collisionFlags);
 
-            m_mass = FindNewAvatarMass();
+            d.MassSetCapsule(out ShellMass, 150f, 2, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
 
-            d.MassSetCapsuleTotal(out ShellMass, m_mass, 2, CAPSULE_RADIUS, CAPSULE_LENGTH);
+            m_mass=ShellMass.mass;
+
+            // rescale PID parameters 
+            PID_D = _parent_scene.PID_D;
+            PID_P = _parent_scene.PID_P;
+
+
+            // rescale PID parameters so that this aren't so affected by mass
+            // but more importante, don't get unstable
+
+            PID_D /= 50 * 80; // original mass of 80, 50 ODE fps ??
+            PID_D *= m_mass / _parent_scene.ODE_STEPSIZE;
+            PID_P /= 50 * 80;
+            PID_P *= m_mass / _parent_scene.ODE_STEPSIZE;
+
+            
+            
             Body = d.BodyCreate(_parent_scene.world);
-            m_mass /= 2; //nasty nasty hack to keep things from being awkward when you stop moving
+            
             d.BodySetPosition(Body, npositionX, npositionY, npositionZ);
 
             // disconnect from world gravity so we can apply buoyancy
@@ -659,11 +674,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.RFromAxisAndAngle(out m_caprot, 0, 0, 1, (float)(Math.PI / 2));
             }
 
-
-            d.GeomSetRotation(Shell, ref m_caprot);
-            d.BodySetRotation(Body, ref m_caprot);
-
             d.GeomSetBody(Shell, Body);
+            d.GeomSetRotation(Shell, ref m_caprot);          
 
 
             // The purpose of the AMotor here is to keep the avatar's physical
@@ -725,57 +737,50 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Move
 
         private void AlignAvatarTiltWithCurrentDirectionOfMovement(Vector3 movementVector)
-        {
+            {
             movementVector.Z = 0f;
-            float magnitude = (float)Math.Sqrt((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
-            if (magnitude < 0.1f) return;
 
-            // normalize the velocity vector
-            float invMagnitude = 1.0f / magnitude;
-            movementVector.X *= invMagnitude;
-            movementVector.Y *= invMagnitude;
+            if (movementVector == Vector3.Zero)
+                {
+                return;
+                }
 
             // if we change the capsule heading too often, the capsule can fall down
             // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
             // meaning only 4 possible capsule tilt orientations
 
-            if (movementVector == Vector3.Zero)
-            {
-                return;
-            }
-            else if (movementVector.X > 0)
-            {
-                // east
-                if (movementVector.Y > 0)
+            if (movementVector.X > 0)
                 {
-                    // northeast
-                    movementVector.X = (float)Math.Sqrt(4);
-                    movementVector.Y = (float)Math.Sqrt(4);
-                }
-                else
-                {
-                    // southeast
-                    movementVector.X = (float)Math.Sqrt(4);
-                    movementVector.Y = -(float)Math.Sqrt(4);
-                }
-            }
-            else
-            {
-                // west
-                if (movementVector.Y > 0)
-                {
-                    // northwest
-                    movementVector.X = -(float)Math.Sqrt(4);
-                    movementVector.Y = (float)Math.Sqrt(4);
-                }
-                else
-                {
-                    // southwest
-                    movementVector.X = -(float)Math.Sqrt(4);
-                    movementVector.Y = -(float)Math.Sqrt(4);
-                }
-            }
+                movementVector.X = 2f;
 
+                // east ?? there is no east above
+                if (movementVector.Y > 0)
+                    {
+                    // northeast
+                    movementVector.Y = 2;
+                    }
+                else
+                    {
+                    // southeast
+                    movementVector.Y = -2;
+                    }
+                }
+            else
+                {
+                movementVector.X = -2;
+                // west 
+
+                if (movementVector.Y > 0)
+                    {
+                    // northwest
+                    movementVector.Y = 2;
+                    }
+                else
+                    {
+                    // southwest
+                    movementVector.Y = -2;
+                    }
+                }
 
             // movementVector.Z is zero
 
@@ -791,15 +796,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
             d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0f);
             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
-        }
-
+            }
+        
         /// <summary>
         /// Called from Simulate
         /// This is the avatar's movement control + PID Controller
         /// </summary>
         /// <param name="timeStep"></param>
         public void Move(float timeStep, List<AuroraODECharacter> defects)
-        {
+            {
             //  no lock; for now it's only called from within Simulate()
 
             // If the PID Controller isn't active then we set our force
@@ -809,210 +814,193 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
 
             if (m_pidControllerActive == false)
-            {
+                {
                 _zeroPosition = d.BodyGetPosition(Body);
-            }
+                }
             //PidStatus = true;
 
             // rex, added height check
+
             d.Vector3 tempPos = d.BodyGetPosition(Body);
+
             if (_parent_scene.m_useFlightCeilingHeight && tempPos.Z > _parent_scene.m_flightCeilingHeight)
-            {
+                {
                 tempPos.Z = _parent_scene.m_flightCeilingHeight;
                 d.BodySetPosition(Body, tempPos.X, tempPos.Y, tempPos.Z);
                 d.Vector3 tempVel = d.BodyGetLinearVel(Body);
                 if (tempVel.Z > 0.0f)
-                {
+                    {
                     tempVel.Z = 0.0f;
                     d.BodySetLinearVel(Body, tempVel.X, tempVel.Y, tempVel.Z);
-                }
+                    }
                 if (_target_velocity.Z > 0.0f)
                     _target_velocity.Z = 0.0f;
-            }
+                }
 
             // endrex
 
-            d.Vector3 localpos = d.BodyGetPosition(Body);
-            Vector3 localPos = new Vector3((float)localpos.X, (float)localpos.Y, (float)localpos.Z);
+
+            Vector3 localPos = new Vector3((float)tempPos.X, (float)tempPos.Y, (float)tempPos.Z);
 
             if (!localPos.IsFinite())
-            {
+                {
                 m_log.Warn("[PHYSICS]: Avatar Position is non-finite!");
                 defects.Add(this);
                 // _parent_scene.RemoveCharacter(this);
 
                 // destroy avatar capsule and related ODE data
                 if (Amotor != IntPtr.Zero)
-                {
+                    {
                     // Kill the Amotor
                     d.JointDestroy(Amotor);
                     Amotor = IntPtr.Zero;
-                }
+                    }
 
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
                 if (Body != IntPtr.Zero)
-                {
+                    {
                     //kill the body
                     d.BodyDestroy(Body);
 
                     Body = IntPtr.Zero;
-                }
+                    }
 
                 if (Shell != IntPtr.Zero)
-                {
+                    {
                     d.GeomDestroy(Shell);
                     _parent_scene.geom_name_map.Remove(Shell);
                     Shell = IntPtr.Zero;
-                }
+                    }
                 return;
-            }
+                }
 
             Vector3 vec = Vector3.Zero;
             d.Vector3 vel = d.BodyGetLinearVel(Body);
 
-            float movementdivisor = 1f;
 
+/*
             if (!m_alwaysRun)
                 movementdivisor = _parent_scene.avMovementDivisorWalk * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
             else
                 movementdivisor = _parent_scene.avMovementDivisorRun * (_parent_scene.TimeDilation < 0.3 ? 0.6f : _parent_scene.TimeDilation); //Dynamically adjust it for slower sims
+*/
+            // no dinamic messing here
+
+            float movementmult = 1f;
+            if (!m_alwaysRun)
+                movementmult /= _parent_scene.avMovementDivisorWalk;
+            else
+                movementmult /= _parent_scene.avMovementDivisorRun;
+
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&
-                Math.Abs(vel.X) < 0.5 && Math.Abs(vel.Y) < 0.5 && Math.Abs(vel.Z) < 0.5) //This is so that if we get moved by something else, it will update us in the client
-            {
+                Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
+                //This is so that if we get moved by something else, it will update us in the client
+                {
                 //  keep track of where we stopped.  No more slippin' & slidin'
                 if (!_zeroFlag)
-                {
+                    {
                     _zeroFlag = true;
-                    _zeroPosition = d.BodyGetPosition(Body);
-                }
+                    _zeroPosition = tempPos;
+                    }
 
                 if (m_pidControllerActive)
-                {
+                    {
                     // We only want to deactivate the PID Controller if we think we want to have our surrogate
                     // react to the physics scene by moving it's position.
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
-
-                    d.Vector3 pos = d.BodyGetPosition(Body);
-                    Vector3 velocity = new Vector3((float)vel.X, (float)vel.Y, (float)vel.Z);
-
-                    //NOTE: THIS WILL CAUSE BENDING KNEE
-                    //if (!velocity.ApproxEquals(Vector3.Zero, 0.2f))
-                    //{
-                    vec.X = (float)((_target_velocity.X - vel.X) * (_parent_scene.PID_D) + (_zeroPosition.X - pos.X) * (_parent_scene.PID_P * 2));
-                    vec.Y = (float)((_target_velocity.Y - vel.Y) * (_parent_scene.PID_D) + (_zeroPosition.Y - pos.Y) * (_parent_scene.PID_P * 2));
-                    //if(!Flying)
-                    //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
-                    //if (flying)
-                    //    vec.Z = (_target_velocity.Z - vel.Z) * (_parent_scene.PID_D) + (_zeroPosition.Z - pos.Z) * _parent_scene.PID_P;
-                    //}
+                    // if target vel is zero why was it here ?
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
+                    vec.Y = -vel.Z * PID_D + (_zeroPosition.Z - tempPos.Z) * PID_P;
+                    }
                 }
-            }
             else
-            {
+                {
                 m_pidControllerActive = true;
                 _zeroFlag = false;
-                if (m_iscolliding && !flying)
-                {
-                    // We're standing or walking on something
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D);
-                    //Stop pushing down if we are just standing
-                    //if (_target_velocity.Z < -0.3)
-                    //    vec.Z += -(_parent_scene.gravityz * 3f * m_mass);
-                    //if (_target_velocity.Z < 0)
-                    //    _target_velocity.Z = 0;
-                }
-                else if (m_iscolliding && flying)
-                {
-                    // We're flying and colliding with something
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D / 16);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D / 16);
-                }
-                else if (!m_iscolliding && flying)
-                {
-                    // we're in mid air suspended
-                    vec.X = (float)((_target_velocity.X / movementdivisor) - vel.X) * (_parent_scene.PID_D / 6);
-                    vec.Y = (float)((_target_velocity.Y / movementdivisor) - vel.Y) * (_parent_scene.PID_D / 6);
-                }
-                if (m_iscolliding && !flying && _target_velocity.Z > 0.0f)
-                {
-                    // We're colliding with something and we're not flying but we're moving
-                    // This means we're walking or running.
-                    d.Vector3 pos = d.BodyGetPosition(Body);
-                    vec.Z = (float)((_target_velocity.Z - vel.Z) * _parent_scene.PID_D + (_zeroPosition.Z - pos.Z) * _parent_scene.PID_P);
-                    if (_target_velocity.X > 0)
-                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * _parent_scene.PID_D;
-                    if (_target_velocity.Y > 0)
-                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * _parent_scene.PID_D;
-                }
-                else if (!m_iscolliding && !flying)
-                {
-                    // we're not colliding and we're not flying so that means we're falling!
-                    // m_iscolliding includes collisions with the ground.
 
-                    // d.Vector3 pos = d.BodyGetPosition(Body);
-                    if (_target_velocity.X > 0)
-                        vec.X = (float)((_target_velocity.X - vel.X) / 1.2f) * _parent_scene.PID_D;
-                    if (_target_velocity.Y > 0)
-                        vec.Y = (float)((_target_velocity.Y - vel.Y) / 1.2f) * _parent_scene.PID_D;
-                }
+                if (m_iscolliding)
+                    {
+                    if(!flying)
+                        {
+                        if (_target_velocity.Z != 0.0f)
+                            vec.Z = (_target_velocity.Z - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
+                        // We're standing or walking on something
+                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D*2;
+                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D*2;
+                        }
+                    else 
+                        {
+                    // We're flying and colliding with something
+                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.5f;
+                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.5f;
+                        }
+                    }               
+                else
+                    {
+                    if (flying)
+                        {
+                        // we're flyind
+                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
+                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
+                        }
+
+                    else 
+                        {
+                        // we're not colliding and we're not flying so that means we're falling!
+                        // m_iscolliding includes collisions with the ground.
+                        vec.X = (_target_velocity.X - vel.X) * PID_D * 0.85f;
+                        vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
+                        }
+                    }
 
                 if (flying)
-                {
+                    {
                     #region Av gravity
 
-                    float oldVelZ = (float)vel.Z;
                     if (_parent_scene.AllowAvGravity &&
                         tempPos.Z > _parent_scene.AvGravityHeight) //Should be stop avies from flying upwards
-                    {
+                        {
                         //Decay going up 
                         if (_target_velocity.Z > 0)
-                        {
+                            {
                             //How much should we force them down?
-                            float divisor = (_parent_scene.AllowAvsToEscapeGravity ? 100 : 25);
+                            float Multiplier = (_parent_scene.AllowAvsToEscapeGravity ? .03f : .1f);
                             //How much should we force them down?
                             float fudgeHeight = (_parent_scene.AllowAvsToEscapeGravity ? 80 : 30);
                             //We add the 30 so that gravity is resonably strong once they pass the min height
-                            float Multiplier = (float)(((tempPos.Z + fudgeHeight) - _parent_scene.AvGravityHeight) / divisor);
+                            Multiplier *= tempPos.Z + fudgeHeight - _parent_scene.AvGravityHeight;
 
                             //Limit these so that things don't go wrong
                             if (Multiplier < 1)
                                 Multiplier = 1;
 
-                            float maxpower = (_parent_scene.AllowAvsToEscapeGravity ? 1.5f : 3);
+                            float maxpower = (_parent_scene.AllowAvsToEscapeGravity ? 1.5f : 3f);
 
                             if (Multiplier > maxpower)
                                 Multiplier = maxpower;
+
                             _target_velocity.Z /= Multiplier;
-                            oldVelZ /= Multiplier;
+                            vel.Z /= Multiplier;
+                            }
                         }
-                    }
 
                     #endregion
 
-                    vec.Z = (_target_velocity.Z - oldVelZ) * (_parent_scene.PID_P);
+                    vec.Z = (_target_velocity.Z - vel.Z) * PID_D * 0.5f;
                     if (_parent_scene.AllowAvGravity && tempPos.Z > _parent_scene.AvGravityHeight)
                         //Add extra gravity
-                        vec.Z += ((25 * _parent_scene.gravityz) * Mass);
-                }
-            }
-            if (flying)
-            {
-                //Fix grav when flying
-                if (!_parent_scene.AllowAvGravity ||
-                    (_parent_scene.AllowAvGravity && tempPos.Z < _parent_scene.AvGravityHeight))
-                {
-                    //Cancel out gravity if we are flying
-                    vec.X += _parent_scene.gravityx * -3f * m_mass;
-                    vec.Y += _parent_scene.gravityy * -3f * m_mass;
-                    vec.Z += _parent_scene.gravityz * -3f * m_mass;
+                        vec.Z += ((10 * _parent_scene.gravityz) * Mass);
+                    }
                 }
 
+            if (flying)
+                {
                 #region Auto Fly Height
 
                 //Added for auto fly height. Kitto Flora
@@ -1021,69 +1009,69 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // Revolution: If the avatar is going down, they are trying to land (probably), so don't push them up to make it harder
                 //   Only if they are moving around sideways do we need to push them up
                 if (_target_velocity.X != 0 || _target_velocity.Y != 0)
-                {
+                    {
                     Vector3 forwardVel = new Vector3(_target_velocity.X > 0 ? 2 : (_target_velocity.X < 0 ? -2 : 0),
                         _target_velocity.Y > 0 ? 2 : (_target_velocity.Y < 0 ? -2 : 0),
                         0);
-                    float target_altitude = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + MinimumGroundFlightOffset;
+                    float target_altitude = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y) + MinimumGroundFlightOffset;
 
                     //We cheat a bit and do a bit lower than normal
-                    if ((_position.Z - CAPSULE_LENGTH) < target_altitude)
-                        vec.Z += (target_altitude - _position.Z) * _parent_scene.PID_D;
-                    //Check in the direction we are going as well
-                    target_altitude = _parent_scene.GetTerrainHeightAtXY(_position.X + forwardVel.X, _position.Y + forwardVel.Y) + MinimumGroundFlightOffset;
-                    if ((_position.Z - CAPSULE_LENGTH) < target_altitude)
-                        vec.Z += (target_altitude - _position.Z) * _parent_scene.PID_D / 2;
-                }
-                else
-                {
-                    //Straight up and down, only apply when they are very close to the ground
-                    float target_altitude = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
-
-                    if ((_position.Z - CAPSULE_LENGTH + (MinimumGroundFlightOffset / 1.5)) < target_altitude + MinimumGroundFlightOffset)
-                    {
-                        if ((_position.Z - CAPSULE_LENGTH) < target_altitude + 1)
-                        {
-                            vec.Z += ((target_altitude + 4) - (_position.Z - CAPSULE_LENGTH)) * _parent_scene.PID_D;
-                        }
-                        else
-                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (_position.Z - CAPSULE_LENGTH)) * _parent_scene.PID_D / 2;
+                    if ((tempPos.Z - CAPSULE_LENGTH) < target_altitude ||
+                            (tempPos.Z - CAPSULE_LENGTH) < _parent_scene.GetTerrainHeightAtXY(tempPos.X + forwardVel.X, tempPos.Y + forwardVel.Y)
+                            + MinimumGroundFlightOffset)
+                        vec.Z += (target_altitude - tempPos.Z) * PID_P * 0.5f;
                     }
-                }
+                else
+                    {
+                    //Straight up and down, only apply when they are very close to the ground
+                    float target_altitude = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
+
+                    if ((tempPos.Z - CAPSULE_LENGTH + (MinimumGroundFlightOffset / 1.5)) < target_altitude + MinimumGroundFlightOffset)
+                        {
+                        if ((tempPos.Z - CAPSULE_LENGTH) < target_altitude + 1)
+                            {
+                            vec.Z += ((target_altitude + 4) - (tempPos.Z - CAPSULE_LENGTH)) * PID_P;
+                            }
+                        else
+                            vec.Z += ((target_altitude + MinimumGroundFlightOffset) - (tempPos.Z - CAPSULE_LENGTH)) * PID_P * 0.5f;
+                        }
+                    }
 
                 #endregion
             }
 
             #region Gravity
 
-            //The '3' is since the gravity isn't exactly what people would expect... maybe should be a config option someday
-            if (!_parent_scene.UsePointGravity)
-            {
-                //Add normal gravity
-                vec.X += _parent_scene.gravityx * 3f * m_mass;
-                vec.Y += _parent_scene.gravityy * 3f * m_mass;
-                vec.Z += _parent_scene.gravityz * 3f * m_mass;
-            }
-            else
-            {
-                Vector3 cog = _parent_scene.PointOfGravity;
-                if (cog.X != 0)
-                    vec.X += (cog.X - Position.X) * m_mass;
-                if (cog.Y != 0)
-                    vec.Y += (cog.Y - Position.Y) * m_mass;
-                if (cog.Z != 0)
-                    vec.Z += (cog.Z - Position.Z) * m_mass;
-            }
+            if (!flying && _parent_scene.AllowAvGravity)
+                {
+                if (!_parent_scene.UsePointGravity)
+                    {
+                    //Add normal gravity
+                    vec.X += _parent_scene.gravityx * m_mass;
+                    vec.Y += _parent_scene.gravityy * m_mass;
+                    vec.Z += _parent_scene.gravityz * m_mass;
+                    }
+                else
+                    {
+                    Vector3 cog = _parent_scene.PointOfGravity;
+                    if (cog.X != 0)
+                        vec.X += (cog.X - tempPos.X) * m_mass;
+                    if (cog.Y != 0)
+                        vec.Y += (cog.Y - tempPos.Y) * m_mass;
+                    if (cog.Z != 0)
+                        vec.Z += (cog.Z - tempPos.Z) * m_mass;
+                    }
+                }
 
             #endregion
 
             #region Under water physics
 
             if (_parent_scene.AllowUnderwaterPhysics)
-            {
-                //Position plus height to av's shoulder (aprox) is just above water
-                if ((_position.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
                 {
+                //Position plus height to av's shoulder (aprox) is just above water
+                if ((tempPos.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
+                    {
                     if (StartingUnderWater)
                         ShouldBeWalking = Flying == false;
                     StartingUnderWater = false;
@@ -1091,49 +1079,50 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Flying = true;
                     lastUnderwaterPush = 0;
                     if (ShouldBeWalking)
-                    {
-                        lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 100 + 10;
+                        {
+                    lastUnderwaterPush += (_parent_scene.waterlevel - tempPos.Z) * 33 + 3;
                         vec.Z += lastUnderwaterPush;
-                    }
+                        }
                     else
-                    {
-                        lastUnderwaterPush += 8000;
-                        lastUnderwaterPush += (_parent_scene.waterlevel - _position.Z) * 25;
+                        {
+                        lastUnderwaterPush += 3500;
+                        lastUnderwaterPush += (_parent_scene.waterlevel - tempPos.Z) * 8;
                         vec.Z += lastUnderwaterPush;
+                        }
                     }
-                }
                 else
-                {
+                    {
                     StartingUnderWater = true;
                     if (WasUnderWater)
-                    {
+                        {
                         WasUnderWater = false;
                         Flying = true;
+                        }
                     }
                 }
-            }
 
             #endregion
 
             #region Check for underground
 
-            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0)) //Don't duplicate the ground check for flying from above, it will already have given us a good shove
-            {
-                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
+            if (!flying || (flying && _target_velocity.X == 0 || _target_velocity.Y == 0))
+                //Don't duplicate the ground check for flying from above, it will already have given us a good shove
                 {
-                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y);
-                    if (_position.Z - (CAPSULE_LENGTH / 2) < groundHeight)
-                        vec.Z += ((groundHeight - (_position.Z - (CAPSULE_LENGTH / 2))) * 100);
+                if (m_WaitGroundCheck >= 10 && vel.Z != 0)
+                    {
+                    float groundHeight = _parent_scene.GetTerrainHeightAtXY(tempPos.X, tempPos.Y);
+                    if (tempPos.Z - (CAPSULE_LENGTH / 2) < groundHeight)
+                        vec.Z += ((groundHeight - (tempPos.Z - (CAPSULE_LENGTH / 2))) * 33);
                     m_WaitGroundCheck = -1;
-                }
+                    }
                 m_WaitGroundCheck++;
-            }
+                }
 
             #endregion
 
             if (vec.IsFinite())
             {
-                if (vec.X < 100000 && vec.Y < 100000 && vec.Z < 100000) //Checks for crazy, going to NaN us values
+                if (vec.X < 100000000 && vec.Y < 10000000 && vec.Z < 10000000) //Checks for crazy, going to NaN us values
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
@@ -1157,9 +1146,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
 
-                    d.Vector3 posi = d.BodyGetPosition(Body);
-                    //if (vec != Vector3.Zero)
-                    //    m_log.Warn("[Physics]: Vec:" + vec + ",Vel:" + veloc.Z + ",zero_flag:" + _zeroFlag);
                     doForce(vec);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
@@ -1215,14 +1201,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomDestroy(Shell);
                     _parent_scene.geom_name_map.Remove(Shell);
                     Shell = IntPtr.Zero;
+                    }
                 }
             }
-        }
 
         /// <summary>
         /// Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
         /// </summary>
-        public void UpdatePositionAndVelocity()
+        public void UpdatePositionAndVelocity(float timestep)
         {
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
             d.Vector3 vec;

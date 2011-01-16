@@ -682,6 +682,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Note: This won't send data *to* other clients in that region (children don't send)
             //SendInitialFullUpdateToAllClients();
             SendOtherAgentsAvatarDataToMe();
+            //Comment this out for now, just to see what happens
+            //SendOtherAgentsAppearanceToMe();
 
             RegisterToEvents();
             SetDirectionVectors();
@@ -838,16 +840,24 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
+        void CheckToMakeSureWearablesHaveBeenSent(object sender, ElapsedEventArgs e)
         {
             if (!m_InitialHasWearablesBeenSent)
             {
                 m_InitialHasWearablesBeenSent = true;
                 m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
 
-                IAvatarFactory avFactory = Scene.RequestModuleInterface<IAvatarFactory>();
-                if (avFactory != null)
-                    avFactory.ForceSendAvatarAppearance(UUID);
+                //Force send!
+                ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
+                SendAvatarDataToAllAgents();
+
+                //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
+                SendAppearanceToAgent(this);
+
+                // If the avatars baked textures are all in the cache, then we have a 
+                // complete appearance... send it out, if not, then we'll send it when
+                // the avatar finishes updating its appearance
+                SendAppearanceToAllOtherAgents();
             }
         }
 
@@ -1048,10 +1058,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
-            //Send out the initial av appearance updates
-            IAvatarFactory avFactory = Scene.RequestModuleInterface<IAvatarFactory>();
-            if(avFactory != null)
-                avFactory.QueueInitialAppearanceSend(UUID);
+            // Create child agents in neighbouring regions
+            SendInitialData();
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -1612,7 +1620,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentPosition = Vector3.Zero;
 
                 m_parentID = UUID.Zero;
-                
                 SendAvatarDataToAllAgents();
                 m_requestedSitTargetUUID = UUID.Zero;
                 if ((m_physicsActor != null) && (m_avHeight > 0))
@@ -1694,9 +1701,8 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
-            //TODO: Appearance cruft
-            //SendAvatarDataToAllAgents();
-            //Animator.TrySetMovementAnimation(m_nextSitAnimation);
+            SendAvatarDataToAllAgents();
+            Animator.TrySetMovementAnimation(m_nextSitAnimation);
         }
 
         private void SendSitResponse(IClientAPI remoteClient, UUID targetID, Vector3 offset, Quaternion pSitOrientation)
@@ -2186,7 +2192,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 direc.Normalize();
-                direc *= m_speedModifier;
+                direc *= 6 * m_speedModifier;
 
                 
 
@@ -2218,23 +2224,21 @@ namespace OpenSim.Region.Framework.Scenes
                             //AllowMovement = false;
                             IsJumping = true;
                             PreJumpForce = direc;
-                            Animator.TrySetMovementAnimation("PREJUMP");
+                           Animator.TrySetMovementAnimation("PREJUMP");
                             //Leave this here! Otherwise jump will sometimes not occur...
                             return;
                             }
                         else if (PreJumpForce.Equals(Vector3.Zero))
                             {
-                            direc.X *= 4;
-                            direc.Y *= 4;
+                            direc.X *= 2;
+                            direc.Y *= 2;
                             if (direc.X == 0 && direc.Y == 0)
-                                direc.Z *= 4f;
+                                direc.Z *= 2f;
                             else
-                                direc.Z *= 5.5f;
+                                direc.Z *= 3f;
 
                             if (!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
-
-                            PhysicsActor.SetMovementForce(direc);
                             }
                         }
                     }
@@ -2399,6 +2403,43 @@ namespace OpenSim.Region.Framework.Scenes
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
+        }
+
+        /// <summary>
+        /// Do everything required once a client completes its movement into a region and becomes
+        /// a root agent.
+        /// </summary>
+        private void SendInitialData()
+        {
+            // This agent just became root. We are going to tell everyone about it. The process of
+            // getting other avatars information was initiated in the constructor... don't do it 
+            // again here... 
+            SendAvatarDataToAllAgents();
+
+            //Tell us about everyone else as well now that we are here
+            SendOtherAgentsAppearanceToMe();
+
+            // We have an appearance but we may not have the baked textures. Check the asset cache 
+            // to see if all the baked textures are already here. 
+            IAvatarFactory AvatarFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
+            if (AvatarFactory != null)
+            {
+                //Disabled for now to test that appearance works, as some users are stuck as clouds to themselves
+                if (AvatarFactory.ValidateBakedTextureCache(m_controllingClient))
+                {
+                    //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
+                    SendAppearanceToAgent(this);
+
+                    // If the avatars baked textures are all in the cache, then we have a 
+                    // complete appearance... send it out, if not, then we'll send it when
+                    // the avatar finishes updating its appearance
+                    SendAppearanceToAllOtherAgents();
+                }
+                else
+                {
+                    m_log.ErrorFormat("[SCENEPRESENCE]: baked textures are NOT in the cache for {0}", Name);
+                }
+            }
         }
 
         /// <summary>
