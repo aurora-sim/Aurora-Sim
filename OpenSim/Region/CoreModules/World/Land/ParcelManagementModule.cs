@@ -328,7 +328,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnValidateLandBuy += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy += EventManagerOnLandBuy;
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
-            m_scene.EventManager.OnMakeRootAgent += SendLandUpdate;
+            m_scene.EventManager.OnMakeRootAgent += CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement += EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnSignificantObjectMovement += EventManagerOnSignificantObjectMovement;
             m_scene.EventManager.OnObjectBeingRemovedFromScene += EventManagerOnObjectBeingRemovedFromScene;
@@ -365,7 +365,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnValidateLandBuy -= EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnLandBuy -= EventManagerOnLandBuy;
             m_scene.EventManager.OnNewClient -= EventManagerOnNewClient;
-            m_scene.EventManager.OnMakeRootAgent -= SendLandUpdate;
+            m_scene.EventManager.OnMakeRootAgent -= CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement -= EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnSignificantObjectMovement -= EventManagerOnSignificantObjectMovement;
             m_scene.EventManager.OnObjectBeingRemovedFromScene -= EventManagerOnObjectBeingRemovedFromScene;
@@ -495,7 +495,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             EntityBase presenceEntity;
             if (m_scene.Entities.TryGetValue(client.AgentId, out presenceEntity) && presenceEntity is ScenePresence)
             {
-                SendLandUpdate((ScenePresence)presenceEntity, true);
                 SendParcelOverlay(client);
             }
         }
@@ -773,6 +772,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 if (parcelAvatarIsEntering != null)
                 {
+                    //Tell the clint about it
+                    parcelAvatarIsEntering.SendLandUpdateToClient(avatar.ControllingClient);
+                    
                     if (UseDwell)
                         parcelAvatarIsEntering.LandData.Dwell += 1;
                     if (avatar.AbsolutePosition.Z < ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT)
@@ -809,13 +811,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     multiple++;
                     result |= (int)ParcelPropertiesStatus.CollisionBanned;
-                    return; //Only send one
+                    break; //Only send one
                 }
                 if (checkBan.IsRestrictedFromLand(client.AgentId))
                 {
                     multiple++;
                     result |= (int)ParcelPropertiesStatus.CollisionNotOnAccessList;
-                    return; //Only send one
+                    break; //Only send one
                 }
             }
             ParcelResult dataResult = ParcelResult.NoData;
@@ -823,34 +825,25 @@ namespace OpenSim.Region.CoreModules.World.Land
                 dataResult = ParcelResult.Multiple;
             else if (multiple == 1)
                 dataResult = ParcelResult.Single;
+            else //If there is no result, don't send anything
+                return;
 
             ILandObject ourLandObject = GetLandObject((int)sp.AbsolutePosition.X, (int)sp.AbsolutePosition.Y);
             if(ourLandObject != null)
                 ourLandObject.SendLandProperties(result, false, (int)dataResult, client);
         }
 
-        public void SendLandUpdate(ScenePresence avatar, bool force)
+        public void CheckEnteringNewParcel(ScenePresence avatar, bool force)
         {
             ILandObject over = GetLandObject((int)avatar.AbsolutePosition.X,
                                              (int)avatar.AbsolutePosition.Y);
 
             if (over != null)
             {
-                if (force)
+                if (force || avatar.currentParcelUUID != over.LandData.GlobalID)
                 {
                     if (!avatar.IsChildAgent)
                     {
-                        over.SendLandUpdateToClient(avatar.ControllingClient);
-                        m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, over.LandData.LocalID,
-                                                                            m_scene.RegionInfo.RegionID);
-                    }
-                }
-
-                if (avatar.currentParcelUUID != over.LandData.GlobalID)
-                {
-                    if (!avatar.IsChildAgent)
-                    {
-                        over.SendLandUpdateToClient(avatar.ControllingClient);
                         avatar.currentParcelUUID = over.LandData.GlobalID;
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, over.LandData.LocalID,
                                                                             m_scene.RegionInfo.RegionID);
@@ -859,9 +852,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void SendLandUpdate(ScenePresence avatar)
+        private void CheckEnteringNewParcel(ScenePresence avatar)
         {
-            SendLandUpdate(avatar, false);
+            CheckEnteringNewParcel(avatar, false);
         }
 
         void EventManager_OnClientMovement(ScenePresence client)
@@ -890,7 +883,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         Vector3 pos = GetNearestAllowedPosition(clientAvatar);
                         clientAvatar.Teleport(pos);
                     }
-                    SendLandUpdate(clientAvatar, false);
+                    CheckEnteringNewParcel(clientAvatar, false);
                     SendOutNearestBanLine(remote_client);
                 }
             }
