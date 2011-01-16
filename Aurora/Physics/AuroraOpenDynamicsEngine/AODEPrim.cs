@@ -1015,26 +1015,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // prim is the child
         public void ParentPrim(AuroraODEPrim prim)
             {
-             //Console.WriteLine("ParentPrim  " + m_primName);
+            //Console.WriteLine("ParentPrim  " + m_primName);
             if (this.m_localID != prim.m_localID)
                 {
                 lock (childrenPrim)
                     {
                     if (!childrenPrim.Contains(prim)) // must allow full reconstruction
                         childrenPrim.Add(prim);
-                    prim.childPrim = true;
-                    prim._parent = this;
                     }
-                if (!m_isphysical) // we only make body if we are physical
+                prim.childPrim = true;
+                prim._parent = this;
+
+                if (prim.Body != IntPtr.Zero && prim.Body != Body)
                     {
-                    if (prim.m_isphysical)
-                        prim.DestroyBody(); // if parent is not physical then childs can't be also
+                    prim.DestroyBody(); // don't loose bodies around
+                    prim.Body = IntPtr.Zero;
                     }
-                else
+                if (m_isphysical)
                     MakeBody(); // full nasty reconstruction
                 }
-            }
-       
+            }       
 
         private void ChildSetGeom(AuroraODEPrim odePrim)
         {           
