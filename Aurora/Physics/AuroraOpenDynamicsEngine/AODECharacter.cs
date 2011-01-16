@@ -319,7 +319,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_colliderGroundfilter == 0)
                     m_iscollidingGround = false;
                 else
-                    m_iscollidingGround = false;
+                    m_iscollidingGround = true;
 
 //                if (m_iscollidingGround)
 //                    m_log.Warn("colgnd");
