@@ -324,9 +324,6 @@ namespace OpenSim.Services.Interfaces
             kvp["Token"] = AuthToken.ToString();
             kvp["sizeX"] = RegionSizeX.ToString();
             kvp["sizeY"] = RegionSizeY.ToString();
-            // We send it along too so that it doesn't need resolved on the other end
-            //kvp["remoteEndPointIP"] = ExternalEndPoint.Address.ToString();
-            //kvp["remoteEndPointPort"] = ExternalEndPoint.Port.ToString();
             return kvp;
         }
 
@@ -394,13 +391,6 @@ namespace OpenSim.Services.Interfaces
 
             if (kvp.ContainsKey("sizeY"))
                 m_RegionSizeY = float.Parse(kvp["sizeY"].ToString());
-
-            //if (kvp.ContainsKey("remoteEndPointIP"))
-            //{
-            //    IPAddress add = IPAddress.Parse(kvp["remoteEndPointIP"].ToString());
-            //    int port = Int32.Parse(kvp["remoteEndPointPort"].ToString());
-            //    m_remoteEndPoint = new IPEndPoint(add, port);
-            //}
         }
 
         public OSDMap ToOSD()

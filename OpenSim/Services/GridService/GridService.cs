@@ -439,7 +439,7 @@ namespace OpenSim.Services.GridService
 
             int count = 0;
             List<GridRegion> rinfos = new List<GridRegion>();
-            List<GridRegion> rdatas = m_Database.Get("%" + name + "%", scopeID);
+            List<GridRegion> rdatas = m_Database.Get(name + "%", scopeID);
 
             if (rdatas != null)
             {
