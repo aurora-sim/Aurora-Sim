@@ -94,7 +94,6 @@ namespace Aurora.Framework
         Blob,
         Char36,
         Date,
-        Integer,
         Integer11,
         String,
         String1,

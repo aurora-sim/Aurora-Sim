@@ -642,8 +642,6 @@ namespace Aurora.DataManager.SQLite
         {
             switch (type)
             {
-                case ColumnTypes.Integer:
-                    return "INTEGER";
                 case ColumnTypes.Integer11:
                     return "INT(11)";
                 case ColumnTypes.Char36:
@@ -709,7 +707,7 @@ namespace Aurora.DataManager.SQLite
             switch (tStr)
             {
                 case "integer":
-                    return ColumnTypes.Integer;
+                    return ColumnTypes.Integer11;
                 case "int(11)":
                     return ColumnTypes.Integer11;
                 case "char(36)":

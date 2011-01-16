@@ -729,8 +729,6 @@ namespace Aurora.DataManager.MySQL
         {
             switch (type)
             {
-                case ColumnTypes.Integer:
-                    return "INTEGER";
                 case ColumnTypes.Integer11:
                     return "int(11)";
                 case ColumnTypes.Char36:
@@ -865,7 +863,7 @@ namespace Aurora.DataManager.MySQL
                 case "int(11)":
                     return ColumnTypes.Integer11;
                 case "integer":
-                    return ColumnTypes.Integer;
+                    return ColumnTypes.Integer11;
                 case "char(36)":
                     return ColumnTypes.Char36;
                 case "varchar(1)":
