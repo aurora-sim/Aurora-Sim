@@ -91,18 +91,22 @@ namespace Aurora.Framework
 
     public enum ColumnTypes
     {
-        Integer,
-        String,
+        Blob,
+        Char36,
         Date,
-        String50,
-        String512,
+        Integer,
+        Integer11,
+        String,
+        String1,
+        String2,
+        String36,
         String45,
+        String50,
+        String64,
+        String100,
+        String512,
         String1024,
         String8196,
-        String2,
-        String1,
-        String100,
-        Blob,
         Text
     }
     public class ColumnDefinition

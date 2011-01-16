@@ -99,6 +99,8 @@ namespace Aurora.Services.DataService
                 string val = System.Web.HttpUtility.UrlEncode(kvp.Value.ToString());
                 parts.Add(key + "=" + val);
             }
+            if (data.UserTitle == null)
+                data.UserTitle = "";
 
             string serviceUrls = string.Join(" ", parts.ToArray());
 

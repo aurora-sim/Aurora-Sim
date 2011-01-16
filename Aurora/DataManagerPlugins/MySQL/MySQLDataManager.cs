@@ -731,14 +731,22 @@ namespace Aurora.DataManager.MySQL
             {
                 case ColumnTypes.Integer:
                     return "INTEGER";
+                case ColumnTypes.Integer11:
+                    return "int(11)";
+                case ColumnTypes.Char36:
+                    return "char(36)";
                 case ColumnTypes.String:
                     return "TEXT";
                 case ColumnTypes.String1:
                     return "VARCHAR(1)";
                 case ColumnTypes.String2:
                     return "VARCHAR(2)";
+                case ColumnTypes.String36:
+                    return "VARCHAR(36)";
                 case ColumnTypes.String45:
                     return "VARCHAR(45)";
+                case ColumnTypes.String64:
+                    return "VARCHAR(64)";
                 case ColumnTypes.String50:
                     return "VARCHAR(50)";
                 case ColumnTypes.String100:
@@ -855,15 +863,21 @@ namespace Aurora.DataManager.MySQL
             switch (tStr)
             {
                 case "int(11)":
-                    return ColumnTypes.Integer;
+                    return ColumnTypes.Integer11;
                 case "integer":
                     return ColumnTypes.Integer;
+                case "char(36)":
+                    return ColumnTypes.Char36;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":
                     return ColumnTypes.String2;
+                case "varchar(36)":
+                    return ColumnTypes.String36;
                 case "varchar(45)":
                     return ColumnTypes.String45;
+                case "varchar(64)":
+                    return ColumnTypes.String64;
                 case "varchar(50)":
                     return ColumnTypes.String50;
                 case "varchar(100)":
