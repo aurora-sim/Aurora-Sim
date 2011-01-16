@@ -31,6 +31,7 @@ using OpenMetaverse;
 
 using OpenSim.Framework;
 using Aurora.Simulation.Base;
+using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -167,5 +168,16 @@ namespace OpenSim.Services.Interfaces
         /// <param name="password"></param>
         /// <param name="email"></param>
         void CreateUser(string firstName, string lastName, string password, string email);
+    }
+
+    /// <summary>
+    /// An interface for connecting to the user accounts datastore
+    /// </summary>
+    public interface IUserAccountData : IAuroraDataPlugin
+    {
+        UserAccount[] Get(string[] fields, string[] values);
+        bool Store(UserAccount data);
+        bool Delete(string field, string val);
+        UserAccount[] GetUsers(UUID scopeID, string query);
     }
 }

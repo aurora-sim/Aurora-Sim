@@ -129,7 +129,7 @@ namespace OpenSim.Services.UserAccountService
 //                "[USER ACCOUNT SERVICE]: Retrieving account by username for {0} {1}, scope {2}",
 //                firstName, lastName, scopeID);
 
-            UserAccountData[] d;
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -153,7 +153,7 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
-            return MakeUserAccount(d[0]);
+            return d[0];
         }
 
         private UserAccount MakeUserAccount(UserAccountData d)
@@ -203,7 +203,7 @@ namespace OpenSim.Services.UserAccountService
 
         public UserAccount GetUserAccount(UUID scopeID, string email)
         {
-            UserAccountData[] d;
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -227,12 +227,12 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
-            return MakeUserAccount(d[0]);
+            return d[0];
         }
 
         public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
-            UserAccountData[] d;
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -254,11 +254,9 @@ namespace OpenSim.Services.UserAccountService
             }
 
             if (d.Length < 1)
-            {
                 return null;
-            }
 
-            return MakeUserAccount(d[0]);
+            return d[0];
         }
 
         public bool StoreUserAccount(UserAccount data)
@@ -267,46 +265,20 @@ namespace OpenSim.Services.UserAccountService
 //                "[USER ACCOUNT SERVICE]: Storing user account for {0} {1} {2}, scope {3}",
 //                data.FirstName, data.LastName, data.PrincipalID, data.ScopeID);
 
-            UserAccountData d = new UserAccountData();
-
-            d.FirstName = data.FirstName;
-            d.LastName = data.LastName;
-            d.PrincipalID = data.PrincipalID;
-            d.ScopeID = data.ScopeID;
-            d.Data = new Dictionary<string, string>();
-            d.Data["Email"] = data.Email;
-            d.Data["Created"] = data.Created.ToString();
-            d.Data["UserLevel"] = data.UserLevel.ToString();
-            d.Data["UserFlags"] = data.UserFlags.ToString();
             if (data.UserTitle != null)
-                d.Data["UserTitle"] = data.UserTitle.ToString();
+                data.UserTitle = "";
 
-            List<string> parts = new List<string>();
-
-            foreach (KeyValuePair<string, object> kvp in data.ServiceURLs)
-            {
-                string key = System.Web.HttpUtility.UrlEncode(kvp.Key);
-                string val = System.Web.HttpUtility.UrlEncode(kvp.Value.ToString());
-                parts.Add(key + "=" + val);
-            }
-
-            d.Data["ServiceURLs"] = string.Join(" ", parts.ToArray());
-
-            return m_Database.Store(d);
+            return m_Database.Store(data);
         }
 
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
-            UserAccountData[] d = m_Database.GetUsers(scopeID, query);
+            UserAccount[] d = m_Database.GetUsers(scopeID, query);
 
             if (d == null)
                 return new List<UserAccount>();
 
-            List<UserAccount> ret = new List<UserAccount>();
-
-            foreach (UserAccountData data in d)
-                ret.Add(MakeUserAccount(data));
-
+            List<UserAccount> ret = new List<UserAccount>(d);
             return ret;
         }
 
