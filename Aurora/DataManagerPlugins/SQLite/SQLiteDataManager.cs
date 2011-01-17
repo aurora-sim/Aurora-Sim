@@ -673,7 +673,7 @@ namespace Aurora.DataManager.SQLite
                 case ColumnTypes.LongBlob:
                     return "blob";
                 case ColumnTypes.Text:
-                    return "TEXT";
+                    return "VARCHAR(512)";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -735,7 +735,7 @@ namespace Aurora.DataManager.SQLite
                 case "date":
                     return ColumnTypes.Date;
                 case "text":
-                    return ColumnTypes.Text;
+                    return ColumnTypes.String512;
                 case "varchar(8196)":
                     return ColumnTypes.String8196;
                 case "blob":
