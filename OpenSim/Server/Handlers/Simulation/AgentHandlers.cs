@@ -299,10 +299,10 @@ namespace OpenSim.Server.Handlers.Simulation
                 result = m_SimulationService.UpdateAgent(destination, agent);
 
             }
-
+            OSDMap resp = new OSDMap();
+            resp["Updated"] = result;
             responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = result.ToString();
-            //responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp); ??? instead
+            responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp);
         }
 
         // subclasses can override this
@@ -376,7 +376,9 @@ namespace OpenSim.Server.Handlers.Simulation
                 m_SimulationService.CloseAgent(destination, id);
 
             responsedata["int_response_code"] = HttpStatusCode.OK;
-            responsedata["str_response_string"] = "OpenSim agent " + id.ToString();
+            OSDMap map = new OSDMap();
+            map["Agent"] = id;
+            responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
 
             m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
         }

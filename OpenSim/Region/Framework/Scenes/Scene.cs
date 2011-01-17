@@ -971,7 +971,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Or the same user is trying to be root twice here, won't work.
                 // Kill it.
                 m_log.InfoFormat("[Scene]: Zombie scene presence detected for {0} in {1}", agent.AgentID, RegionInfo.RegionName);
-                IncomingCloseAgent(sp.UUID);
+                RemoveAgent(sp);
                 sp = null;
             }
 
@@ -1161,72 +1161,81 @@ namespace OpenSim.Region.Framework.Scenes
                         eq.DisableSimulator(agentID, RegionInfo.RegionHandle);
                     }
                 }
-
-                presence.ControllingClient.Close();
-                if (presence.ParentID != UUID.Zero)
+                else
                 {
-                    presence.StandUp(true);
+                    m_log.DebugFormat(
+                        "[SCENE]: Removing {0} from region {1}",
+                        presence.Name, RegionInfo.RegionName);
+                    INeighborService service = RequestModuleInterface<INeighborService>();
+                    if (service != null)
+                        service.CloseAllNeighborAgents(presence.UUID, RegionInfo.RegionID);
                 }
-
-                try
-                {
-                    m_sceneGraph.removeUserCount(!presence.IsChildAgent);
-
-                    if (!presence.IsChildAgent)
-                    {
-                        m_log.DebugFormat(
-                            "[SCENE]: Removing {0} from region {1}",
-                            presence.Name, RegionInfo.RegionName);
-                        INeighborService service = RequestModuleInterface<INeighborService>();
-                        if (service != null)
-                            service.CloseAllNeighborAgents(agentID, RegionInfo.RegionID);
-                    }
-                }
-                catch (NullReferenceException)
-                {
-                    // We don't know which count to remove it from
-                    // Avatar is already disposed :/
-                }
-
-                m_eventManager.TriggerClientClosed(agentID, this);
-                m_eventManager.TriggerOnClosingClient(presence.ControllingClient);
-                m_eventManager.TriggerOnRemovePresence(agentID);
-
-                ForEachClient(
-                    delegate(IClientAPI client)
-                    {
-                        //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                        try { client.SendKillObject(presence.RegionHandle, new ISceneEntity[] { presence }); }
-                        catch (NullReferenceException) { }
-                    });
-
-                CleanDroppedAttachments();
-
-                try
-                {
-                    presence.Close();
-                }
-                catch (NullReferenceException)
-                {
-                    //We can safely ignore null reference exceptions.  It means the avatar are dead and cleaned up anyway.
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());
-                }
-
-                // Remove the avatar from the scene
-                m_sceneGraph.RemoveScenePresence(agentID);
-                m_clientManager.Remove(agentID);
-
-                AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
-                //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
-                //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
-                return true;
+                return RemoveAgent(presence);
             }
 
             // Agent not here
             return false;
+        }
+
+        /// <summary>
+        /// Tell a single agent to disconnect from the region.
+        /// Does not send the DisableSimulator EQM or close child agents
+        /// </summary>
+        /// <param name="?"></param>
+        /// <returns></returns>
+        public bool RemoveAgent(ScenePresence presence)
+        {
+            presence.ControllingClient.Close();
+            if (presence.ParentID != UUID.Zero)
+            {
+                presence.StandUp(true);
+            }
+
+            try
+            {
+                m_sceneGraph.removeUserCount(!presence.IsChildAgent);
+            }
+            catch (NullReferenceException)
+            {
+                // We don't know which count to remove it from
+                // Avatar is already disposed :/
+            }
+
+            m_eventManager.TriggerClientClosed(presence.UUID, this);
+            m_eventManager.TriggerOnClosingClient(presence.ControllingClient);
+            m_eventManager.TriggerOnRemovePresence(presence.UUID);
+
+            ForEachClient(
+                delegate(IClientAPI client)
+                {
+                    //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
+                    try { client.SendKillObject(presence.RegionHandle, new ISceneEntity[] { presence }); }
+                    catch (NullReferenceException) { }
+                });
+
+            CleanDroppedAttachments();
+
+            try
+            {
+                presence.Close();
+            }
+            catch (NullReferenceException)
+            {
+                //We can safely ignore null reference exceptions.  It means the avatar are dead and cleaned up anyway.
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());
+            }
+
+            // Remove the avatar from the scene
+            m_sceneGraph.RemoveScenePresence(presence.UUID);
+            m_clientManager.Remove(presence.UUID);
+
+            AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
+            //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
+            //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
+            return true;
         }
 
         #endregion

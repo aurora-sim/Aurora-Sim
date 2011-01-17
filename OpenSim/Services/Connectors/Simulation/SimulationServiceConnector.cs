@@ -161,7 +161,9 @@ namespace OpenSim.Services.Connectors.Simulation
                     args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
                     OSDMap result = WebUtils.PutToService(uri, args);
-                    return result["Success"].AsBoolean();
+                    if (!result["Success"].AsBoolean())
+                        return result["Success"].AsBoolean();
+                    return result["Updated"].AsBoolean();
                 }
                 catch (Exception e)
                 {
