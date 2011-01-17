@@ -633,15 +633,17 @@ namespace OpenSim.Services.CapsService
 
                 if (neighbor.RegionHandle != m_service.RegionHandle)
                 {
-                    if (IPAddress == null)
+                    byte[] endAddress = IPAddress;
+                    int endPort = Port;
+                    if (endAddress == null)
                     {
                         //We need to find the IP then
                         IPEndPoint endPoint = neighbor.ExternalEndPoint;
-                        IPAddress = endPoint.Address.GetAddressBytes();
-                        Port = endPoint.Port;
+                        endAddress = endPoint.Address.GetAddressBytes();
+                        endPort = endPoint.Port;
                     }
                     if (!InformClientOfNeighbor(circuit.Copy(), neighbor, TeleportFlags, data,
-                        IPAddress, Port))
+                        endAddress, endPort))
                         informed = false;
                 }
                 count++;
