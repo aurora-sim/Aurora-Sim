@@ -348,6 +348,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             string reqnum = "unknown";
             int tickstart = Environment.TickCount;
+            string RawUrl = request.RawUrl;
 
             try
             {
@@ -588,7 +589,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 // since its just for reporting, 200ms limit can be adjusted
                 int tickdiff = Environment.TickCount - tickstart;
                 if (tickdiff > 200)
-                    m_log.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1} took {2} ms",reqnum,request.RawUrl,tickdiff);
+                    m_log.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1} took {2} ms", reqnum, RawUrl, tickdiff);
             }
         }
 

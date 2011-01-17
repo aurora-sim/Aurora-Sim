@@ -484,6 +484,9 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // to see if all the baked textures are already here. 
             if (ValidateBakedTextureCache(sp.ControllingClient))
             {
+                //Only set this if we actually have sent the wearables
+                sp.m_InitialHasWearablesBeenSent = true;
+                
                 sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
                 sp.SendAvatarDataToAllAgents();
                 //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
@@ -498,6 +501,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             else
             {
                 m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", Name);
+                //
+                // NOTE!!!! 
+                //
+                // This will cause the client to become a cloud if the wearables are not sent 
+                //  by the 10 second wearable re-send (which 'should' occur, otherwise we have a huge issue)
+                //  Still tell other agents about us though so we appear.
             }
 
             // This agent just became root. We are going to tell everyone about it. The process of
@@ -573,7 +582,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             }
 
             //Make sure that the timer doesn't go off in the ScenePresence that this avatar hasn't requested its wearables yet
-            sp.m_InitialHasWearablesBeenSent = true;
             m_log.DebugFormat("[AvatarFactory]: Received request for wearables of {0}", sp.Name);
             QueueInitialAppearanceSend(client.AgentId);
             //client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
