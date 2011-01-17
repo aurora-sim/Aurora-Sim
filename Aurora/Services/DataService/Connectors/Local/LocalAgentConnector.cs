@@ -9,6 +9,7 @@ using log4net;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
@@ -35,7 +36,7 @@ namespace Aurora.Services.DataService
             else
             {
                 //Check to make sure that something else exists
-                string m_ServerURI = source.Configs["AuroraData"].GetString("RemoteServerURI", "");
+                string m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
                 if (m_ServerURI == "") //Blank, not set up
                 {
                     OpenSim.Framework.Console.MainConsole.Instance.Output("[AuroraDataService]: Falling back on local connector for " + "AgentConnector", "None");

@@ -53,59 +53,24 @@ namespace OpenSim.Services.GridService
         private static GridService m_RootInstance = null;
         protected IConfigSource m_config;
         protected static HypergridLinker m_HypergridLinker;
-        protected Aurora.Framework.IEstateConnector m_EstateConnector;
         protected IRegionData m_Database = null;
 
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
         protected bool m_AllowHypergridMapSearch = false;
         protected bool m_UseSessionID = true;
-        protected Dictionary<UUID, UUID> GridSessionIDs = new Dictionary<UUID, UUID>();
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string dllName = String.Empty;
-            string connString = String.Empty;
-            string realm = "regions";
-
-            //
-            // Try reading the [DatabaseService] section, if it exists
-            //
-            IConfig dbConfig = config.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                if (dllName == String.Empty)
-                    dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                if (connString == String.Empty)
-                    connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            //
-            // [GridService] section overrides [DatabaseService], if it exists
-            //
-            IConfig gridConfig = config.Configs["GridService"];
-            if (gridConfig != null)
-            {
-                dllName = gridConfig.GetString("StorageProvider", dllName);
-                connString = gridConfig.GetString("ConnectionString", connString);
-                realm = gridConfig.GetString("Realm", realm);
-            }
-
-            //
-            // We tried, but this doesn't exist. We can't proceed.
-            //
-            if (dllName.Equals(String.Empty))
-                throw new Exception("No StorageProvider configured");
-
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
-            if(m_Database == null)
-                m_Database = AuroraModuleLoader.LoadPlugin<IRegionData>(dllName, new Object[] { connString, realm });
+            
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
             //m_log.DebugFormat("[GRID SERVICE]: Starting...");
 
             m_config = config;
+            IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
@@ -149,7 +114,6 @@ namespace OpenSim.Services.GridService
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            m_EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_HypergridLinker.PostInitialize(registry);
         }

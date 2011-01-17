@@ -53,33 +53,7 @@ namespace OpenSim.Services.UserAccountService
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            string dllName = String.Empty;
-            string connString = String.Empty;
-            ///This was decamel-cased, and it will break MONO appearently as MySQL on MONO cares about case.
-            string realm = "UserAccounts";
-
-            IConfig dbConfig = config.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                connString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            IConfig userConfig = config.Configs["UserAccountService"];
-            if (userConfig != null)
-            {
-                dllName = userConfig.GetString("StorageProvider", dllName);
-                connString = userConfig.GetString("ConnectionString", connString);
-                realm = userConfig.GetString("Realm", realm);
-            }
-
-            if (dllName == String.Empty)
-                throw new Exception("No StorageProvider configured");
-
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
-            if(m_Database == null)
-                m_Database = AuroraModuleLoader.LoadPlugin<IUserAccountData>(dllName, new Object[] { connString, realm });
-
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 

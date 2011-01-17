@@ -8,6 +8,7 @@ using OpenMetaverse;
 using Nini.Config;
 using OpenSim.Framework;
 using Aurora.Simulation.Base;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
@@ -28,6 +29,23 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString);
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
+            }
+            else
+            {
+                //Check to make sure that something else exists
+                string m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                if (m_ServerURI == "") //Blank, not set up
+                {
+                    OpenSim.Framework.Console.MainConsole.Instance.Output("[AuroraDataService]: Falling back on local connector for " + "AssetConnector", "None");
+                    GD = GenericData;
+
+                    if (source.Configs[Name] != null)
+                        defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+
+                    GD.ConnectToDatabase(defaultConnectionString);
+
+                    DataManager.DataManager.RegisterPlugin(Name, this);
+                }
             }
         }
 
