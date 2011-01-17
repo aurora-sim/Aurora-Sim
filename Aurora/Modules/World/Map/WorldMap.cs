@@ -184,7 +184,7 @@ namespace Aurora.Modules
             scene.EventManager.OnStartupComplete += StartupComplete;
         }
 
-        public void StartupComplete(List<string> data)
+        public void StartupComplete(IScene scene, List<string> data)
         {
             //Startup complete, we can generate a tile now
             CreateTerrainTexture();

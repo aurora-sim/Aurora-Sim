@@ -123,7 +123,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.RegionReady
 
         #endregion
 
-        void OnStartupComplete(List<string> data)
+        void OnStartupComplete(IScene scene, List<string> data)
         {
             int num = 0;
             while (num < data.Count - 1)

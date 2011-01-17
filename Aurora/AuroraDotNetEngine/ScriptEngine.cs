@@ -288,7 +288,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     connector.CacheStateSaves();
             }
 
-            scene.EventManager.OnStartupComplete += new OpenSim.Region.Framework.Scenes.EventManager.StartupComplete(EventManager_OnStartupComplete);
+            scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
             scene.EventManager.TriggerAddToStartupQueue("ScriptEngine");
             EventManager.HookUpRegionEvents(scene);
 
@@ -336,7 +336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private int AmountOfStartupsLeft = 0;
 
-        void EventManager_OnStartupComplete(List<string> data)
+        void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             AmountOfStartupsLeft++;
             if (AmountOfStartupsLeft == Util.NumberofScenes)

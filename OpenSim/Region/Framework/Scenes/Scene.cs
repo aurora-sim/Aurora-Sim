@@ -444,7 +444,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             EventManager.OnAddToStartupQueue += AddToStartupQueue;
             EventManager.OnFinishedStartup += FinishedStartup;
-            EventManager.OnStartupFullyComplete += StartupComplete;
+            EventManager.OnStartupComplete += StartupComplete;
 
             AddToStartupQueue("Startup");
 
@@ -1388,7 +1388,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (StartupCallbacks.Count == 0)
                 {
                     //All callbacks are done, trigger startup complete
-                    EventManager.TriggerStartupComplete(StartupData);
+                    EventManager.TriggerStartupComplete(this, StartupData);
                 }
             }
         }
@@ -1397,7 +1397,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Startup is complete, trigger the modules and allow logins
         /// </summary>
         /// <param name="data"></param>
-        public void StartupComplete(List<string> data)
+        public void StartupComplete(IScene scene, List<string> data)
         {
             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
             // this is a rare case where we know we have just went through a long cycle of heap

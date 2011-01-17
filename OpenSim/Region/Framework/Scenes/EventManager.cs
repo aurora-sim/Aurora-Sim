@@ -213,7 +213,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void AddToStartupQueue(string name);
         public delegate void FinishedStartup(string name, List<string> data);
-        public delegate void StartupComplete(List<string> data);
+        public delegate void StartupComplete(IScene scene, List<string> data);
         public event FinishedStartup OnFinishedStartup;
         public event AddToStartupQueue OnAddToStartupQueue;
         public event StartupComplete OnStartupComplete;
@@ -1937,7 +1937,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerStartupComplete(List<string> StartupData)
+        public void TriggerStartupComplete(IScene scene, List<string> StartupData)
         {
             StartupComplete handlerOnStartupComplete = OnStartupComplete;
             StartupComplete handlerOnStartupFullyComplete = OnStartupFullyComplete;
@@ -1947,7 +1947,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        d(StartupData);
+                        d(scene, StartupData);
                     }
                     catch (Exception e)
                     {
@@ -1962,7 +1962,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         try
                         {
-                            d(StartupData);
+                            d(scene, StartupData);
                         }
                         catch (Exception e)
                         {

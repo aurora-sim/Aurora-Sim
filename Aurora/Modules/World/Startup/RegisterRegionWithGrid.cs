@@ -51,6 +51,7 @@ namespace Aurora.Modules
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
+            scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
         }
 
         public void Close(Scene scene)
@@ -78,6 +79,18 @@ namespace Aurora.Modules
         {
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
             GridService.UpdateMap(scene.RegionInfo.ScopeID, new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
+        }
+
+        /// <summary>
+        /// Now that we are fully done, add the child agents from other regions
+        /// </summary>
+        /// <param name="data"></param>
+        private void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
+        {
+            //Tell the neighbor service about it
+            INeighborService service = scene.RequestModuleInterface<INeighborService>();
+            if (service != null)
+                service.InformNeighborsThatRegionIsUp(scene.RegionInfo);
         }
 
         /// <summary>
@@ -110,11 +123,6 @@ namespace Aurora.Modules
 
                 //Save the new SessionID to the database
                 g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
-
-                //Tell the neighbor service about it
-                INeighborService service = scene.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                    service.InformNeighborsThatRegionIsUp(scene.RegionInfo);
             }
             else
             {
