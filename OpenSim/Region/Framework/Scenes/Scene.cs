@@ -908,49 +908,23 @@ namespace OpenSim.Region.Framework.Scenes
         /// take proper notice of it let, we allowed banned users in still.
         /// </summary>
         /// <param name="agent">CircuitData of the agent who is connecting</param>
-        /// <param name="reason">Outputs the reason for the false response on this string</param>
-        /// <returns>True if the region accepts this agent.  False if it does not.  False will 
-        /// also return a reason.</returns>
-        public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
-        {
-            bool retVal = NewUserConnection(agent, teleportFlags, out reason, true);
-            if (!retVal && reason != string.Empty)
-                m_log.Warn("[Scene]: NewUserConnection failed with reason " + reason);
-            return retVal;
-        }
-
-        /// <summary>
-        /// Do the work necessary to initiate a new user connection for a particular scene.
-        /// At the moment, this consists of setting up the caps infrastructure
-        /// The return bool should allow for connections to be refused, but as not all calling paths
-        /// take proper notice of it let, we allowed banned users in still.
-        /// </summary>
-        /// <param name="agent">CircuitData of the agent who is connecting</param>
         /// <param name="reason">Outputs the reason for the false response on this string,
         /// If the agent was accepted, this will be the Caps SEED for the region</param>
         /// <param name="requirePresenceLookup">True for normal presence. False for NPC
         /// or other applications where a full grid/Hypergrid presence may not be required.</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        protected bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason, bool requirePresenceLookup)
+        public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
         {
             bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 ||
                              (teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0);
             reason = String.Empty;
 
-            //Teleport flags:
-            //
-            // TeleportFlags.ViaGodlikeLure - God teleport (forced teleport)
-            // TeleportFlags.ViaLogin - Login
-            // TeleportFlags.TeleportFlags.ViaLure - Teleport request sent by another user
-            // TeleportFlags.ViaLandmark | TeleportFlags.ViaLocation | TeleportFlags.ViaLandmark | TeleportFlags.Default - Regular Teleport
-
             // Don't disable this log message - it's too helpful
-            if (!agent.child)
-                m_log.DebugFormat(
-                    "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
-                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                    agent.circuitcode, teleportFlags);
+            m_log.DebugFormat(
+                "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
+                RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
+                agent.circuitcode, teleportFlags);
 
             try
             {
@@ -1025,11 +999,10 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (!agent.child)
-                m_log.InfoFormat(
-                    "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
-                    RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
-                    agent.circuitcode);
+            m_log.InfoFormat(
+                "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
+                RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
+                agent.circuitcode);
 
             reason = OSDParser.SerializeJsonString(responseMap);
             return true;

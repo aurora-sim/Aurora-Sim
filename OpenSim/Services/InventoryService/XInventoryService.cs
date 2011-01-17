@@ -47,6 +47,7 @@ namespace OpenSim.Services.InventoryService
 
         protected IXInventoryData m_Database;
         protected IUserAccountService m_UserAccountService;
+        protected ILibraryService m_LibraryService;
 		protected bool m_AllowDelete = true;
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
@@ -103,6 +104,7 @@ namespace OpenSim.Services.InventoryService
         public virtual void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -155,6 +157,76 @@ namespace OpenSim.Services.InventoryService
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.Texture, "Textures");
             if (!Array.Exists(sysFolders, delegate (XInventoryFolder f) { if (f.type == (int)AssetType.TrashFolder) return true; return false; }))
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.TrashFolder, "Trash");
+
+            if (m_LibraryService != null)
+            {
+
+                InventoryFolderBase bodypartFolder = GetFolderForType(principalID, AssetType.Bodypart);
+
+                // Default items
+                InventoryItemBase defaultShape = new InventoryItemBase();
+                defaultShape.Name = "Default shape";
+                defaultShape.Description = "Default shape description";
+                defaultShape.AssetType = (int)AssetType.Bodypart;
+                defaultShape.InvType = (int)InventoryType.Wearable;
+                defaultShape.Flags = (uint)WearableType.Shape;
+                defaultShape.ID = AvatarWearable.DEFAULT_BODY_ITEM;
+                defaultShape.AssetID = AvatarWearable.DEFAULT_BODY_ASSET;
+                defaultShape.Folder = bodypartFolder.ID;
+                defaultShape.CreatorId = UUID.Zero.ToString();
+                AddItem(defaultShape);
+
+                InventoryItemBase defaultSkin = new InventoryItemBase();
+                defaultSkin.Name = "Default skin";
+                defaultSkin.Description = "Default skin description";
+                defaultSkin.AssetType = (int)AssetType.Bodypart;
+                defaultSkin.InvType = (int)InventoryType.Wearable;
+                defaultSkin.Flags = (uint)WearableType.Skin;
+                defaultSkin.ID = AvatarWearable.DEFAULT_SKIN_ITEM;
+                defaultSkin.AssetID = AvatarWearable.DEFAULT_SKIN_ASSET;
+                defaultSkin.Folder = bodypartFolder.ID;
+                defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                defaultSkin.Owner = principalID;
+                defaultSkin.BasePermissions = (uint)PermissionMask.All;
+                defaultSkin.CurrentPermissions = (uint)PermissionMask.All;
+                defaultSkin.EveryOnePermissions = (uint)PermissionMask.None;
+                defaultSkin.NextPermissions = (uint)PermissionMask.All;
+                AddItem(defaultSkin);
+
+                InventoryItemBase defaultHair = new InventoryItemBase();
+                defaultHair.Name = "Default hair";
+                defaultHair.Description = "Default hair description";
+                defaultHair.AssetType = (int)AssetType.Bodypart;
+                defaultHair.InvType = (int)InventoryType.Wearable;
+                defaultHair.Flags = (uint)WearableType.Hair;
+                defaultHair.ID = AvatarWearable.DEFAULT_HAIR_ITEM;
+                defaultHair.AssetID = AvatarWearable.DEFAULT_HAIR_ASSET;
+                defaultHair.Folder = bodypartFolder.ID;
+                defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                defaultHair.Owner = principalID;
+                defaultHair.BasePermissions = (uint)PermissionMask.All;
+                defaultHair.CurrentPermissions = (uint)PermissionMask.All;
+                defaultHair.EveryOnePermissions = (uint)PermissionMask.None;
+                defaultHair.NextPermissions = (uint)PermissionMask.All;
+                AddItem(defaultHair);
+
+                InventoryItemBase defaultEyes = new InventoryItemBase();
+                defaultEyes.Name = "Default eyes";
+                defaultEyes.Description = "Default eyes description";
+                defaultEyes.AssetType = (int)AssetType.Bodypart;
+                defaultEyes.InvType = (int)InventoryType.Wearable;
+                defaultEyes.Flags = (uint)WearableType.Eyes;
+                defaultEyes.ID = AvatarWearable.DEFAULT_EYES_ITEM;
+                defaultEyes.AssetID = AvatarWearable.DEFAULT_EYES_ASSET;
+                defaultEyes.Folder = bodypartFolder.ID;
+                defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                defaultEyes.Owner = principalID;
+                defaultEyes.BasePermissions = (uint)PermissionMask.All;
+                defaultEyes.CurrentPermissions = (uint)PermissionMask.All;
+                defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
+                defaultEyes.NextPermissions = (uint)PermissionMask.All;
+                AddItem(defaultEyes);
+            }
 
             return result;
         }

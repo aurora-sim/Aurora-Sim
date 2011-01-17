@@ -76,8 +76,8 @@ namespace OpenSim.Framework
         public static readonly UUID DEFAULT_SKIN_ITEM = new UUID("77c41e39-38f9-f75a-024e-585989bfabc9");
         public static readonly UUID DEFAULT_SKIN_ASSET = new UUID("77c41e39-38f9-f75a-024e-585989bbabbb");
 
-        public static readonly UUID DEFAULT_EYES_ITEM = new UUID("77c41e39-38f9-f75a-0000-5859892f1111");
-        public static readonly UUID DEFAULT_EYES_ASSET = new UUID("00000000-38f9-1111-024e-222222111120");
+        public static readonly UUID DEFAULT_EYES_ITEM = new UUID("3a8d1e5c-998a-4c81-bdfb-89cd301e795e");
+        public static readonly UUID DEFAULT_EYES_ASSET = new UUID("6522e74d-1660-4e7f-b601-6f48c1659a77");
 
         public static readonly UUID DEFAULT_SHIRT_ITEM = new UUID("77c41e39-38f9-f75a-0000-585989bf0000");
         public static readonly UUID DEFAULT_SHIRT_ASSET = new UUID("00000000-38f9-1111-024e-222222111110");
@@ -90,8 +90,6 @@ namespace OpenSim.Framework
 
         //        public static readonly UUID DEFAULT_TATTOO_ITEM = new UUID("c47e22bd-3021-4ba4-82aa-2b5cb34d35e1");
         //        public static readonly UUID DEFAULT_TATTOO_ASSET = new UUID("00000000-0000-2222-3333-100000001007");
-
-        private static AvatarWearable[] defaultWearables = null;
 
         protected Dictionary<UUID, UUID> m_items = new Dictionary<UUID, UUID>();
         protected List<UUID> m_ids = new List<UUID>();
@@ -247,7 +245,7 @@ namespace OpenSim.Framework
         {
             get
             {
-                defaultWearables = new AvatarWearable[MAX_WEARABLES]; //should be 15 of these
+                AvatarWearable[] defaultWearables = new AvatarWearable[MAX_WEARABLES]; //should be 15 of these
                 for (int i = 0; i < MAX_WEARABLES; i++)
                 {
                     defaultWearables[i] = new AvatarWearable();
@@ -270,6 +268,9 @@ namespace OpenSim.Framework
 
                 // Pants
                 defaultWearables[PANTS].Add(DEFAULT_PANTS_ITEM, DEFAULT_PANTS_ASSET);
+                
+                // Eyes
+                defaultWearables[EYES].Add(DEFAULT_EYES_ITEM, DEFAULT_EYES_ASSET);
 
                 //                // Alpha
                 //                defaultWearables[ALPHA].Add(DEFAULT_ALPHA_ITEM, DEFAULT_ALPHA_ASSET);
