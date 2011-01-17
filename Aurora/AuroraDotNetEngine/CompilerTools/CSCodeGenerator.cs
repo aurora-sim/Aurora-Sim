@@ -2288,7 +2288,8 @@ default
         /// <returns>String containing C# code for StateChange sc.</returns>
         private string GenerateStateChange(StateChange sc)
         {
-            return Generate(String.Format("state(\"{0}\")", sc.NewState), sc);
+            //State is in the LSL_Api because it requires a ref to the ScriptEngine, which we can't have in the ScriptBase
+            return Generate(String.Format("((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\")", sc.NewState), sc);
         }
 
         /// <summary>
