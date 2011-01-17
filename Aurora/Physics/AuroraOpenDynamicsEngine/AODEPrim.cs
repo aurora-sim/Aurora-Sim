@@ -2758,116 +2758,78 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Amotor = IntPtr.Zero;
             }
 
-            float axisnum = 3;
-
-            axisnum = (axisnum - (axis.X + axis.Y + axis.Z));
-
-            // PhysicsVector totalSize = new PhysicsVector(_size.X, _size.Y, _size.Z);
-
-            // Inverse Inertia Matrix, set the X, Y, and/r Z inertia to 0 then invert it again.
-            d.Mass objMass = new d.Mass { };
-
-            d.BodyGetMass(Body, out objMass);
-
-            //m_log.DebugFormat("1-{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, ", objMass.I.M00, objMass.I.M01, objMass.I.M02, objMass.I.M10, objMass.I.M11, objMass.I.M12, objMass.I.M20, objMass.I.M21, objMass.I.M22);
-
-            Matrix4 dMassMat = FromDMass(objMass);
-
-            Matrix4 mathmat = Inverse(dMassMat);
-
-            /*
-            //m_log.DebugFormat("2-{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, ", mathmat[0, 0], mathmat[0, 1], mathmat[0, 2], mathmat[1, 0], mathmat[1, 1], mathmat[1, 2], mathmat[2, 0], mathmat[2, 1], mathmat[2, 2]);
-
-            mathmat = Inverse(mathmat);
-
-
-            objMass = FromMatrix4(mathmat, ref objMass);
-            //m_log.DebugFormat("3-{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, ", objMass.I.M00, objMass.I.M01, objMass.I.M02, objMass.I.M10, objMass.I.M11, objMass.I.M12, objMass.I.M20, objMass.I.M21, objMass.I.M22);
-
-            mathmat = Inverse(mathmat);
-            */
-            if (axis.X == 0)
-            {
-                mathmat.M33 = 50.0000001f;
-                //objMass.I.M22 = 0;
-            }
-            if (axis.Y == 0)
-            {
-                mathmat.M22 = 50.0000001f;
-                //objMass.I.M11 = 0;
-            }
-            if (axis.Z == 0)
-            {
-                mathmat.M11 = 50.0000001f;
-                //objMass.I.M00 = 0;
-            }
-
-
-
-            mathmat = Inverse(mathmat);
-            objMass = FromMatrix4(mathmat, ref objMass);
-            //m_log.DebugFormat("4-{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, ", objMass.I.M00, objMass.I.M01, objMass.I.M02, objMass.I.M10, objMass.I.M11, objMass.I.M12, objMass.I.M20, objMass.I.M21, objMass.I.M22);
-
-            //return;
-            if (d.MassCheck(ref objMass))
-            {
-                d.BodySetMass(Body, ref objMass);
-            }
-            else
-            {
-                //m_log.Debug("[PHYSICS]: Mass invalid, ignoring");
-            }
+            int axisnum = 3 - (int)(axis.X + axis.Y + axis.Z);
 
             if (axisnum <= 0)
-                return;
-            // int dAMotorEuler = 1;
+                return; 
+
+            // stop it
+            d.BodySetTorque(Body, 0, 0, 0);
+            d.BodySetAngularVel(Body, 0, 0, 0);
 
             Amotor = d.JointCreateAMotor(_parent_scene.world, IntPtr.Zero);
             d.JointAttach(Amotor, Body, IntPtr.Zero);
+           
+            d.JointSetAMotorMode(Amotor, 0);
+            d.JointSetAMotorNumAxes(Amotor, axisnum);
 
-            int dAMotorEuler = 1;
-            d.JointSetAMotorMode(Amotor, dAMotorEuler);
+            // get current orientation to lock
 
+            d.Quaternion dcur = d.BodyGetQuaternion(Body);
+            Quaternion curr; // crap convertion between identical things
+            curr.X = dcur.X;
+            curr.Y = dcur.Y;
+            curr.Z = dcur.Z;
+            curr.W = dcur.W;
+            Vector3 ax;
 
-            d.JointSetAMotorNumAxes(Amotor, (int)axisnum);
             int i = 0;
+            int j = 0;
             if (axis.X == 0)
-            {
-                d.JointSetAMotorAxis(Amotor, i, 0, 1, 0, 0);
+                {
+                ax = (new Vector3(1, 0, 0)) * curr; // rotate world X to current local X
+                // ODE should do this  with axis relative to body 1 but seems to fail
+                d.JointSetAMotorAxis(Amotor, 0, 0, ax.X, ax.Y, ax.Z);
+                d.JointSetAMotorAngle(Amotor, 0, 0);
+                d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0.001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0.001f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.Vel, 0);
+                d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0.1f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.Bounce, 0f);
+                d.JointSetAMotorParam(Amotor, (int)dParam.FMax, 55000000);
                 i++;
-            }
+                j = 256; // aodeplugin.cs doesn't have all parameters so this moves to next axis set
+                }
 
             if (axis.Y == 0)
-            {
-                d.JointSetAMotorAxis(Amotor, i, 0, 0, 1, 0);
+                {
+                ax = (new Vector3(0, 1, 0)) * curr;
+                d.JointSetAMotorAxis(Amotor, i, 0, ax.X, ax.Y, ax.Z);
+                d.JointSetAMotorAngle(Amotor, i, 0);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.LowStop, -0.001f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.HiStop, 0.001f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.Vel, 0);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.FudgeFactor, 0.1f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.Bounce, 0f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.FMax, 55000000);
                 i++;
-            }
+                j += 256;
+                }
 
             if (axis.Z == 0)
-            {
-                d.JointSetAMotorAxis(Amotor, i, 0, 0, 0, 1);
-                i++;
-            }
+                {
+                ax = (new Vector3(0, 0, 1)) * curr;
+                d.JointSetAMotorAxis(Amotor, i, 0, ax.X, ax.Y, ax.Z);
+                d.JointSetAMotorAngle(Amotor, i, 0);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.LowStop, -0.001f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.HiStop, 0.001f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.Vel, 0);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.FudgeFactor, 0.1f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.Bounce, 0f);
+                d.JointSetAMotorParam(Amotor, j + (int)dParam.FMax, 55000000);
+                }
 
-            /*for (int j = 0; j < (int)axisnum; j++)
-            {
-                d.JointSetAMotorAngle(Amotor, j, 0);
-            }*/
-
-            // These lowstops and high stops are effectively (no wiggle room)
-            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.01f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.Vel, 9000);
-            d.JointSetAMotorParam(Amotor, (int)dParam.FudgeFactor, 0f);
-            d.JointSetAMotorParam(Amotor, (int)dParam.FMax, 55000000);
-            d.JointAttach(Amotor, Body, IntPtr.Zero);
-            d.JointAddAMotorTorques(Amotor, 10000, 10000, 10000);
-
-            AmotorRotation = d.BodyGetRotation(Body);
+            d.JointAddAMotorTorques(Amotor, 0, 0, 0);
         }
 
         public Matrix4 FromDMass(d.Mass pMass)
@@ -2945,155 +2907,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return false;
         }
 
-        public static Matrix4 Inverse(Matrix4 pMat)
-        {
-            if (determinant3x3(pMat) == 0)
-            {
-                return Matrix4.Identity; // should probably throw an error.  singluar matrix inverse not possible
-            }
-
-
-
-            return (Adjoint(pMat) / determinant3x3(pMat));
-        }
-
-        public static Matrix4 Adjoint(Matrix4 pMat)
-        {
-            Matrix4 adjointMatrix = new Matrix4();
-            for (int i=0; i<4; i++)
-            {
-                for (int j=0; j<4; j++)
-                {
-                    Matrix4SetValue(ref adjointMatrix, i, j, (float)(Math.Pow(-1, i + j) * (determinant3x3(Minor(pMat, i, j)))));
-                }
-            }
-
-            adjointMatrix = Transpose(adjointMatrix);
-            return adjointMatrix;
-        }
-
-        public static Matrix4 Minor(Matrix4 matrix, int iRow, int iCol)
-        {
-            Matrix4 minor = new Matrix4();
-            int m = 0, n = 0;
-            for (int i = 0; i < 4; i++)
-            {
-                if (i == iRow)
-                    continue;
-                n = 0;
-                for (int j = 0; j < 4; j++)
-                {
-                    if (j == iCol)
-                        continue;
-                    Matrix4SetValue(ref minor, m,n, matrix[i, j]);
-                    n++;
-                }
-                m++;
-            }
-            return minor;
-        }
-
-        public static Matrix4 Transpose(Matrix4 pMat)
-        {
-            Matrix4 transposeMatrix = new Matrix4();
-            for (int i = 0; i < 4; i++)
-                for (int j = 0; j < 4; j++)
-                    Matrix4SetValue(ref transposeMatrix, i, j, pMat[j, i]);
-            return transposeMatrix;
-        }
-
-        public static void Matrix4SetValue(ref Matrix4 pMat, int r, int c, float val)
-        {
-            switch (r)
-            {
-                case 0:
-                    switch (c)
-                    {
-                        case 0:
-                            pMat.M11 = val;
-                            break;
-                        case 1:
-                            pMat.M12 = val;
-                            break;
-                        case 2:
-                            pMat.M13 = val;
-                            break;
-                        case 3:
-                            pMat.M14 = val;
-                            break;
-                    }
-
-                    break;
-                case 1:
-                    switch (c)
-                    {
-                        case 0:
-                            pMat.M21 = val;
-                            break;
-                        case 1:
-                            pMat.M22 = val;
-                            break;
-                        case 2:
-                            pMat.M23 = val;
-                            break;
-                        case 3:
-                            pMat.M24 = val;
-                            break;
-                    }
-
-                    break;
-                case 2:
-                    switch (c)
-                    {
-                        case 0:
-                            pMat.M31 = val;
-                            break;
-                        case 1:
-                            pMat.M32 = val;
-                            break;
-                        case 2:
-                            pMat.M33 = val;
-                            break;
-                        case 3:
-                            pMat.M34 = val;
-                            break;
-                    }
-
-                    break;
-                case 3:
-                    switch (c)
-                    {
-                        case 0:
-                            pMat.M41 = val;
-                            break;
-                        case 1:
-                            pMat.M42 = val;
-                            break;
-                        case 2:
-                            pMat.M43 = val;
-                            break;
-                        case 3:
-                            pMat.M44 = val;
-                            break;
-                    }
-
-                    break;
-            }
-        }
-        private static float determinant3x3(Matrix4 pMat)
-        {
-            float det = 0;
-            float diag1 = pMat[0, 0]*pMat[1, 1]*pMat[2, 2];
-            float diag2 = pMat[0, 1]*pMat[2, 1]*pMat[2, 0];
-            float diag3 = pMat[0, 2]*pMat[1, 0]*pMat[2, 1];
-            float diag4 = pMat[2, 0]*pMat[1, 1]*pMat[0, 2];
-            float diag5 = pMat[2, 1]*pMat[1, 2]*pMat[0, 0];
-            float diag6 = pMat[2, 2]*pMat[1, 0]*pMat[0, 1];
-
-            det = diag1 + diag2 + diag3 - (diag4 + diag5 + diag6);
-            return det;
-
-        }
         
         private static void DMassCopy(ref d.Mass src, ref d.Mass dst)
         {
