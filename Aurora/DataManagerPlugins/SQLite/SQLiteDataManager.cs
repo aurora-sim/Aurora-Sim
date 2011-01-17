@@ -638,7 +638,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        private string GetColumnTypeStringSymbol(ColumnTypes type)
+        public override string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)
             {

@@ -725,7 +725,7 @@ namespace Aurora.DataManager.MySQL
             CloseDatabase(dbcon);
         }
 
-        private string GetColumnTypeStringSymbol(ColumnTypes type)
+        public override string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)
             {

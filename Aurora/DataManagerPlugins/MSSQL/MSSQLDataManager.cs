@@ -639,7 +639,7 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        private string GetColumnTypeStringSymbol(ColumnTypes type)
+        public override string GetColumnTypeStringSymbol(ColumnTypes type)
         {
             switch (type)
             {

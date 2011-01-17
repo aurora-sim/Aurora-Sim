@@ -607,13 +607,6 @@ namespace OpenSim.Services.LLLoginService
                             m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                         }
                     }
-                    if (avappearance.Texture.GetFace(0).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
-                    {
-                        m_log.Warn("Bad texture index for user " + account.Name + " for " + 0 + "!");
-                        avappearance.Texture.FaceTextures[0] = avappearance.Texture.CreateFace(0);
-                        avappearance.Texture.FaceTextures[0].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
-                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
-                    }
                 }
 
                 //

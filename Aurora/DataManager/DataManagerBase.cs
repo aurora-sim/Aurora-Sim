@@ -35,6 +35,7 @@ namespace Aurora.DataManager
         public abstract void UpdateTable(string table, ColumnDefinition[] columns);
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract IGenericData Copy();
+        public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
 
         public Version GetAuroraVersion()
         {
@@ -108,6 +109,21 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
+                    ColumnDefinition thisDef = null;
+                    //Check to see whether the two tables have the same type, but under different names
+                    foreach (ColumnDefinition extractedDefinition in extractedColumns)
+                    {
+                        if (extractedDefinition.Name == columnDefinition.Name)
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+                    if (thisDef != null)
+                    {
+                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                            continue; //They are the same type, let them go on through
+                    }
                     OpenSim.Framework.Console.MainConsole.Instance.Output("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist!", "Warn");
                     return false;
                 }
