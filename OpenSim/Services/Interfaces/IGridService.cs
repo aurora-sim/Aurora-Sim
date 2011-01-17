@@ -411,8 +411,8 @@ namespace OpenSim.Services.Interfaces
             map["access"] = (int)Access;
             map["owner_uuid"] = EstateOwner;
             map["AuthToken"] = AuthToken;
-            map["sizeX"] = RegionSizeX;
-            map["sizeY"] = RegionSizeY;
+            map["sizeX"] = OSD.FromReal(RegionSizeX);
+            map["sizeY"] = OSD.FromReal(RegionSizeY);
             map["sizeZ"] = RegionSizeZ;
             map["LastSeen"] = LastSeen;
             map["SessionID"] = SessionID;
