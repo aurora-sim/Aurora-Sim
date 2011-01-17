@@ -2873,15 +2873,23 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     childPrim.StoreUndoState();
                     childPrim.IgnoreUndoUpdate = true;
+
+                    // fix rotation
+                    // get in world coords
+                    Quaternion primsRot = old_global_group_rot * childPrim.RotationOffset;
+                    // set new offset as inverse of the one on root
+                    // so world is right
+                    primsRot = Quaternion.Inverse(new_global_group_rot) * primsRot;
+                    // just store it
+                    childPrim.SetRotationOffset(false, primsRot, false);
+
+                    // fix position offset
                     Vector3 axPos = childPrim.OffsetPosition;
                     axPos *= old_global_group_rot;
                     axPos *= Quaternion.Inverse(new_global_group_rot);
+                    // store it and let physics know about both changes
                     childPrim.FixOffsetPosition(axPos,true);
-                    Quaternion primsRot = childPrim.RotationOffset;
 
-                    Quaternion newRot = primsRot * old_global_group_rot;
-                    newRot *= Quaternion.Inverse(new_global_group_rot);                   
-                    childPrim.RotationOffset = newRot;
                     childPrim.ScheduleTerseUpdate();
                     childPrim.IgnoreUndoUpdate = false;
                 }
