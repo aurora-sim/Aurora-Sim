@@ -411,9 +411,9 @@ namespace OpenSim.Services.Interfaces
             map["access"] = (int)Access;
             map["owner_uuid"] = EstateOwner;
             map["AuthToken"] = AuthToken;
-            map["sizeX"] = OSD.FromReal(RegionSizeX);
-            map["sizeY"] = OSD.FromReal(RegionSizeY);
-            map["sizeZ"] = RegionSizeZ;
+            map["sizeX"] = OSD.FromReal(RegionSizeX).AsString();
+            map["sizeY"] = OSD.FromReal(RegionSizeY).AsString();
+            map["sizeZ"] = OSD.FromReal(RegionSizeZ).AsString();
             map["LastSeen"] = LastSeen;
             map["SessionID"] = SessionID;
             map["Flags"] = Flags;
@@ -486,13 +486,13 @@ namespace OpenSim.Services.Interfaces
                 AuthToken = map["AuthToken"].AsString();
 
             if (map.ContainsKey("sizeX"))
-                m_RegionSizeX = (float)map["sizeX"].AsReal();
+                m_RegionSizeX = float.Parse(map["sizeX"].AsString());
 
             if (map.ContainsKey("sizeY"))
-                m_RegionSizeY = (float)map["sizeY"].AsReal();
+                m_RegionSizeY = float.Parse(map["sizeY"].AsString());
 
             if (map.ContainsKey("sizeZ"))
-                m_RegionSizeZ = (float)map["sizeZ"].AsReal();
+                m_RegionSizeZ = float.Parse(map["sizeZ"].AsString());
 
             if (map.ContainsKey("LastSeen"))
                 LastSeen = map["LastSeen"].AsInteger();
