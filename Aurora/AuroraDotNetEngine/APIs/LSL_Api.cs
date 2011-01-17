@@ -10090,7 +10090,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (parcelManagement != null)
             {
                 ILandObject landObject = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-                if(landObject != null)
+                if(landObject == null)
                     return DateTime.Now;
                 if (!World.Permissions.CanEditParcel(m_host.OwnerID, landObject)) 
                     return DateTime.Now;
@@ -10115,7 +10115,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 for (int i = 0; i < commandList.Data.Length; i++)
                 {
-                    ParcelMediaCommandEnum command = (ParcelMediaCommandEnum)commandList.Data[i];
+                    int tmp = ((LSL_Integer) commandList.Data[i]).value;
+                    ParcelMediaCommandEnum command = (ParcelMediaCommandEnum)tmp;
                     switch (command)
                     {
                         case ParcelMediaCommandEnum.Agent:
