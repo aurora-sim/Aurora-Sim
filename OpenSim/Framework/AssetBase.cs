@@ -407,11 +407,16 @@ namespace OpenSim.Framework
         private DateTime m_CreationDate = DateTime.Now;
 
         /// <summary>
-        /// The UUID of the Creator of this asset with the place the Creator was created at.
+        /// The UUID of the Creator of this asset.
         /// It is assumed that the Creator is from the same place the asset was created, and therefore, 
         ///    the creator info should be able to be found by the m_HostUri above as well.
         /// </summary>
-        private String m_CreatorID;
+        private UUID m_CreatorID;
+
+        /// <summary>
+        /// The UUID of the Owner of this asset.
+        /// </summary>
+        private UUID m_OwnerID;
 
         /// <summary>
         /// The flags that this asset has.
@@ -428,9 +433,14 @@ namespace OpenSim.Framework
             get { return m_AssetID; }
         }
 
-        public String CreatorID
+        public UUID CreatorID
         {
             get { return m_CreatorID; }
+        }
+
+        public UUID OwnerID
+        {
+            get { return m_OwnerID; }
         }
 
         public String HostUri
@@ -533,16 +543,18 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="assetID">The ID of this asset</param>
         /// <param name="creatorID">The creator of this asset</param>
+        /// <param name="ownerID">The current owner of this asset</param>
         /// <param name="hostUri">The HostUri that this asset can be accessed at</param>
         /// <param name="data">The binary data of this asset</param>
         /// <param name="name">The name of this asset</param>
         /// <param name="assetType">The type of asset this is</param>
         /// <param name="assetFlags">The flags that the asset will have</param>
-        public AssetMetaverseData(UUID assetID, String creatorID, String hostUri, byte[] data,
+        public AssetMetaverseData(UUID assetID, UUID creatorID, UUID ownerID, String hostUri, byte[] data,
             String name, AssetType assetType, AssetMetaDataFlags assetFlags)
         {
             m_AssetID = assetID;
             m_CreatorID = creatorID;
+            m_OwnerID = ownerID;
             m_HostUri = hostUri;
             m_Data = data;
             m_Name = name;
@@ -555,14 +567,16 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="assetID">The ID of this asset</param>
         /// <param name="creatorID">The creator of this asset</param>
+        /// <param name="ownerID">The current owner of this asset</param>
         /// <param name="hostUri">The HostUri that this asset can be accessed at</param>
         /// <param name="data">The binary data of this asset</param>
         /// <param name="name">The name of this asset</param>
-        public AssetMetaverseData(UUID assetID, String creatorID, String hostUri, byte[] data,
+        public AssetMetaverseData(UUID assetID, UUID creatorID, UUID ownerID, String hostUri, byte[] data,
             String name)
         {
             m_AssetID = assetID;
             m_CreatorID = creatorID;
+            m_OwnerID = ownerID;
             m_HostUri = hostUri;
             m_Data = data;
             m_Name = name;
@@ -617,16 +631,84 @@ namespace OpenSim.Framework
                 return;
             OSDMap assetMap = (OSDMap)osd;
 
-            m_AssetFlags = (AssetMetaDataFlags)assetMap["AssetFlags"].AsInteger();
-            m_AssetID = assetMap["AssetID"].AsUUID();
-            m_CreationDate = assetMap["CreationDate"].AsDate();
-            m_CreatorID = assetMap["CreationDate"].AsString();
-            m_Data = assetMap["Data"].AsBinary();
-            m_HostUri = assetMap["HostUri"].AsString();
-            m_LastAccessed = assetMap["LastAccessed"].AsDate();
-            m_LastChanged = assetMap["LastChanged"].AsDate();
-            m_Name = assetMap["Name"].AsString();
-            m_AssetType = (AssetType)assetMap["AssetType"].AsInteger();
+            if(assetMap.ContainsKey("AssetFlags"))
+                m_AssetFlags = (AssetMetaDataFlags)assetMap["AssetFlags"].AsInteger();
+
+            if (assetMap.ContainsKey("AssetID"))
+                m_AssetID = assetMap["AssetID"].AsUUID();
+
+            if (assetMap.ContainsKey("CreationDate"))
+                m_CreationDate = assetMap["CreationDate"].AsDate();
+
+            if (assetMap.ContainsKey("CreatorID"))
+                m_CreatorID = assetMap["CreatorID"].AsUUID();
+
+            if (assetMap.ContainsKey("OwnerID"))
+                m_OwnerID = assetMap["OwnerID"].AsUUID();
+
+            if (assetMap.ContainsKey("Data"))
+                m_Data = assetMap["Data"].AsBinary();
+
+            if (assetMap.ContainsKey("HostUri"))
+                m_HostUri = assetMap["HostUri"].AsString();
+
+            if (assetMap.ContainsKey("LastAccessed"))
+                m_LastAccessed = assetMap["LastAccessed"].AsDate();
+
+            if (assetMap.ContainsKey("LastChanged"))
+                m_LastChanged = assetMap["LastChanged"].AsDate();
+
+            if (assetMap.ContainsKey("Name"))
+                m_Name = assetMap["Name"].AsString();
+
+            if (assetMap.ContainsKey("AssetType"))
+                m_AssetType = (AssetType)assetMap["AssetType"].AsInteger();
+        }
+
+        /// <summary>
+        /// Make an OSDMap (json) with only the needed parts for the database and then compress it
+        /// </summary>
+        /// <returns>A compressed (gzip) string of the data needed for the database</returns>
+        public string CompressedPack()
+        {
+            OSDMap assetMap = new OSDMap();
+
+            assetMap["AssetFlags"] = (int)this.AssetFlags;
+            assetMap["CreationDate"] = this.CreationDate;
+            assetMap["CreatorID"] = this.CreatorID;
+
+            //In the database table, don't save it
+            //assetMap["OwnerID"] = this.OwnerID;
+
+            //In the database table, don't save it
+            //assetMap["Data"] = this.Data;
+
+            assetMap["HostUri"] = this.HostUri;
+            assetMap["LastAccessed"] = this.LastAccessed;
+            assetMap["LastChanged"] = this.LastChanged;
+
+            //In the database table, don't save it
+            //assetMap["Name"] = this.Name;
+
+            //In the database table, don't save it
+            //assetMap["AssetType"] = (int)this.AssetType;
+
+            //Serialize it with json
+            string jsonString = OSDParser.SerializeJsonString(assetMap);
+            //Now use gzip to compress this map
+            string compressedString = Util.Compress(jsonString);
+
+            return compressedString;
+        }
+
+        public void CompressedUnpack(string compressedString)
+        {
+            //Decompress the info back to json format
+            string jsonString = Util.Decompress(compressedString);
+            //Build the OSDMap 
+            OSDMap assetMap = (OSDMap)OSDParser.DeserializeJson(jsonString);
+            //Now unpack the contents
+            Unpack(assetMap);
         }
 
         #endregion
