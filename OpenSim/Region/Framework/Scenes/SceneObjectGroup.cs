@@ -1892,17 +1892,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 oldGroupPosition = linkPart.GroupPosition;
             Quaternion oldRootRotation = linkPart.RotationOffset;
-
-            linkPart.SetOffsetPosition(linkPart.GroupPosition - AbsolutePosition);
-            linkPart.SetGroupPosition(AbsolutePosition); // just change it without doing anything else
-            Vector3 axPos = linkPart.OffsetPosition;
-
             Quaternion parentRot = m_rootPart.RotationOffset;
-            axPos *= Quaternion.Inverse(parentRot);
 
+            linkPart.SetGroupPosition(AbsolutePosition); // just change it without doing anything else
+
+            Vector3 axPos = oldGroupPosition - AbsolutePosition;          
+            axPos *= Quaternion.Inverse(parentRot);
             linkPart.SetOffsetPosition(axPos);
-            Quaternion oldRot = linkPart.RotationOffset;
-            Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
+
+            Quaternion newRot = Quaternion.Inverse(parentRot) * oldRootRotation;
             linkPart.SetRotationOffset(false,newRot,false);
 
             //Fix the link number for the root
@@ -1924,7 +1922,8 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add the root part to our group!
                 m_scene.SceneGraph.LinkPartToSOG(this, linkPart, linkNum++);
                 linkPart.CreateSelected = true;
-                linkPart.FixOffsetPosition(linkPart.OffsetPosition, true);
+                linkPart.FixOffsetPosition(linkPart.OffsetPosition, true); // nasty let all know about where this is
+                // let physics link it
                 if (linkPart.PhysActor != null && m_rootPart.PhysActor != null)
                     {
                     linkPart.PhysActor.link(m_rootPart.PhysActor);
@@ -2026,33 +2025,30 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void LinkNonRootPart(SceneObjectPart part, Vector3 oldGroupPosition, Quaternion oldGroupRotation, int linkNum)
         {
-            Quaternion parentRot = oldGroupRotation;
             Quaternion oldRot = part.RotationOffset;
-            Quaternion worldRot = parentRot * oldRot;
 
-            parentRot = oldGroupRotation;
-
+            // first fix from old local to world 
+            // position
             Vector3 axPos = part.OffsetPosition;
+            axPos *= oldGroupRotation;
+            part.SetGroupPosition(oldGroupPosition + axPos);
+            //offset
+            part.SetRotationOffset(false, oldGroupRotation * oldRot ,false);
 
-            axPos *= parentRot;
-            part.SetOffsetPosition(axPos);
-            part.SetGroupPosition(oldGroupPosition + part.OffsetPosition);
-            part.SetOffsetPosition(Vector3.Zero);
-            part.SetRotationOffset(false,worldRot,false);
-
+            // have it in world coords lets fix other things
             m_scene.SceneGraph.LinkPartToSOG(this, part, linkNum);
             part.CreateSelected = true;
+
+            // now lets move to the new parent frame
             Quaternion rootRotation = m_rootPart.RotationOffset;
 
             Vector3 pos = part.GroupPosition - AbsolutePosition;
             pos *= Quaternion.Inverse(rootRotation);
             part.SetOffsetPosition(pos);
 
-            parentRot = m_rootPart.RotationOffset;
-            oldRot = part.RotationOffset;
-            Quaternion newRot = Quaternion.Inverse(parentRot) * oldRot;
+            Quaternion newRot = Quaternion.Inverse(rootRotation) * oldRot;
             part.SetRotationOffset(false,newRot,false);
-
+            // caller will tell the rest about this position changes..
 
         }
 
