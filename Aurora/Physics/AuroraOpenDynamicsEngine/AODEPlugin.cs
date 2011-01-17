@@ -55,7 +55,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private CollisionLocker ode;
         private AuroraODEPhysicsScene _mScene;
-        private bool m_initialized = false;
+        private static bool m_initialized = false;
 
         public AuroraODEPlugin()
         {
