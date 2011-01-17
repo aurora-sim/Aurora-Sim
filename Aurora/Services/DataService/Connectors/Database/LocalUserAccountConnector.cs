@@ -16,7 +16,7 @@ namespace Aurora.Services.DataService
     public class LocalUserAccountConnector : IUserAccountData
 	{
 		private IGenericData GD = null;
-        private string m_realm = "UserAccounts";
+        private string m_realm = "useraccounts";
 
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
