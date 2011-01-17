@@ -670,6 +670,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(8196)";
                 case ColumnTypes.Blob:
                     return "blob";
+                case ColumnTypes.LongBlob:
+                    return "blob";
                 case ColumnTypes.Text:
                     return "TEXT";
                 case ColumnTypes.Date:

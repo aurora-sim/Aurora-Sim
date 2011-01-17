@@ -671,6 +671,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(8196)";
                 case ColumnTypes.Blob:
                     return "image";
+                case ColumnTypes.LongBlob:
+                    return "image";
                 case ColumnTypes.Date:
                     return "DATE";
                 case ColumnTypes.Text:

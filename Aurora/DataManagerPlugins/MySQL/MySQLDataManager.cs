@@ -759,6 +759,8 @@ namespace Aurora.DataManager.MySQL
                     return "TEXT";
                 case ColumnTypes.Blob:
                     return "blob";
+                case ColumnTypes.LongBlob:
+                    return "longblob";
                 case ColumnTypes.Date:
                     return "DATE";
                 default:
@@ -892,6 +894,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Text;
                 case "blob":
                     return ColumnTypes.Blob;
+                case "longblob":
+                    return ColumnTypes.LongBlob;
             }
             if (tStr.StartsWith("varchar"))
             {

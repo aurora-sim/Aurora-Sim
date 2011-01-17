@@ -92,6 +92,7 @@ namespace Aurora.Framework
     public enum ColumnTypes
     {
         Blob,
+        LongBlob,
         Char36,
         Date,
         Integer11,
