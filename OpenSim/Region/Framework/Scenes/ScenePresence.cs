@@ -848,16 +848,26 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("[ScenePresence]: Been 10 seconds since root agent " + Name + " was added and appearance was not sent, force sending now.");
 
                 //Force send!
-                ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
-                SendAvatarDataToAllAgents();
+                m_InitialHasWearablesBeenSent = true;
 
-                //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
-                SendAppearanceToAgent(this);
+                ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
+
+                //Send rebakes if needed
+                // NOTE: Do NOT send this! It seems to make the client become a cloud
+                //sp.SendAppearanceToAgent(sp);
 
                 // If the avatars baked textures are all in the cache, then we have a 
                 // complete appearance... send it out, if not, then we'll send it when
                 // the avatar finishes updating its appearance
                 SendAppearanceToAllOtherAgents();
+
+                // This agent just became roo t. We are going to tell everyone about it. The process of
+                // getting other avatars information was initiated in the constructor... don't do it 
+                // again here... 
+                SendAvatarDataToAllAgents();
+
+                //Tell us about everyone else as well now that we are here
+                SendOtherAgentsAppearanceToMe();
             }
         }
 

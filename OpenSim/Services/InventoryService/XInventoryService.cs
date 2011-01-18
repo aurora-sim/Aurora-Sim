@@ -237,9 +237,9 @@ namespace OpenSim.Services.InventoryService
                 if (asset == null)
                 {
                     asset = new AssetBase(AvatarWearable.DEFAULT_EYES_ASSET.ToString(),
-                        "Eyes", 13, m_LibraryService.LibraryOwner.ToString());
+                        "Default eyes", 13, m_LibraryService.LibraryOwner.ToString());
                     asset.Data = Util.StringToBytes256(@"LLWearable version 22
-New Eyes
+Default eyes
 
 	permissions 0
 	{
@@ -304,7 +304,7 @@ textures 1
                 defaultPants.Description = "Default pants description";
                 defaultPants.AssetType = (int)AssetType.Clothing;
                 defaultPants.InvType = (int)InventoryType.Wearable;
-                defaultPants.Flags = (uint)WearableType.Shirt;
+                defaultPants.Flags = (uint)WearableType.Pants;
                 defaultPants.ID = AvatarWearable.DEFAULT_PANTS_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
