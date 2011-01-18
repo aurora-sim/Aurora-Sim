@@ -1863,22 +1863,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
             if (flexi)
-            {
+                {
                 part.Shape.FlexiEntry = true;   // this setting flexi true isn't working, but the below parameters do
-                                                // work once the prim is already flexi
+                // work once the prim is already flexi
                 part.Shape.FlexiSoftness = softness;
                 part.Shape.FlexiGravity = gravity;
                 part.Shape.FlexiDrag = friction;
                 part.Shape.FlexiWind = wind;
-                part.Shape.FlexiTension = tension; 
+                part.Shape.FlexiTension = tension;
                 part.Shape.FlexiForceX = (float)Force.x;
                 part.Shape.FlexiForceY = (float)Force.y;
                 part.Shape.FlexiForceZ = (float)Force.z;
                 part.Shape.PathCurve = 0x80;
-            }
+                }
+            else
+                part.Shape.FlexiEntry = false;
+
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            part.ScheduleUpdate(PrimUpdateFlags.Shape);
         }
 
         /// <summary>
