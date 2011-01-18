@@ -162,6 +162,7 @@ namespace OpenSim.Services.InventoryService
             {
 
                 InventoryFolderBase bodypartFolder = GetFolderForType(principalID, AssetType.Bodypart);
+                InventoryFolderBase clothingFolder = GetFolderForType(principalID, AssetType.Clothing);
 
                 // Default items
                 InventoryItemBase defaultShape = new InventoryItemBase();
@@ -226,6 +227,40 @@ namespace OpenSim.Services.InventoryService
                 defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
                 defaultEyes.NextPermissions = (uint)PermissionMask.All;
                 AddItem(defaultEyes);
+
+                InventoryItemBase defaultShirt = new InventoryItemBase();
+                defaultShirt.Name = "Default shirt";
+                defaultShirt.Description = "Default shirt description";
+                defaultShirt.AssetType = (int)AssetType.Clothing;
+                defaultShirt.InvType = (int)InventoryType.Wearable;
+                defaultShirt.Flags = (uint)WearableType.Shirt;
+                defaultShirt.ID = AvatarWearable.DEFAULT_SHIRT_ITEM;
+                defaultShirt.AssetID = AvatarWearable.DEFAULT_SHIRT_ASSET;
+                defaultShirt.Folder = clothingFolder.ID;
+                defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                defaultShirt.Owner = principalID;
+                defaultShirt.BasePermissions = (uint)PermissionMask.All;
+                defaultShirt.CurrentPermissions = (uint)PermissionMask.All;
+                defaultShirt.EveryOnePermissions = (uint)PermissionMask.None;
+                defaultShirt.NextPermissions = (uint)PermissionMask.All;
+                AddItem(defaultShirt);
+
+                InventoryItemBase defaultPants = new InventoryItemBase();
+                defaultPants.Name = "Default pants";
+                defaultPants.Description = "Default pants description";
+                defaultPants.AssetType = (int)AssetType.Clothing;
+                defaultPants.InvType = (int)InventoryType.Wearable;
+                defaultPants.Flags = (uint)WearableType.Shirt;
+                defaultPants.ID = AvatarWearable.DEFAULT_PANTS_ITEM;
+                defaultPants.AssetID = AvatarWearable.DEFAULT_PANTS_ASSET;
+                defaultPants.Folder = clothingFolder.ID;
+                defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                defaultPants.Owner = principalID;
+                defaultPants.BasePermissions = (uint)PermissionMask.All;
+                defaultPants.CurrentPermissions = (uint)PermissionMask.All;
+                defaultPants.EveryOnePermissions = (uint)PermissionMask.None;
+                defaultPants.NextPermissions = (uint)PermissionMask.All;
+                AddItem(defaultPants);
             }
 
             return result;

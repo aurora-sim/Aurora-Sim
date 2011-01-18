@@ -279,7 +279,7 @@ namespace OpenSim.Services.CapsService
             item["asset_id"] = invItem.AssetID;
             item["created_at"] = invItem.CreationDate;
             item["desc"] = invItem.Description;
-            item["flags"] = (int)invItem.Flags;
+            item["flags"] = invItem.Flags;
             item["item_id"] = invItem.ID;
             item["name"] = invItem.Name;
             item["parent_id"] = invItem.Folder;
