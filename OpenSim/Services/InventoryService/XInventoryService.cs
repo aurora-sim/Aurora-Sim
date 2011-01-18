@@ -47,6 +47,7 @@ namespace OpenSim.Services.InventoryService
 
         protected IXInventoryData m_Database;
         protected IUserAccountService m_UserAccountService;
+        protected IAssetService m_AssetService;
         protected ILibraryService m_LibraryService;
 		protected bool m_AllowDelete = true;
 
@@ -105,6 +106,7 @@ namespace OpenSim.Services.InventoryService
         {
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -172,7 +174,11 @@ namespace OpenSim.Services.InventoryService
                 defaultShape.InvType = (int)InventoryType.Wearable;
                 defaultShape.Flags = (uint)WearableType.Shape;
                 defaultShape.ID = AvatarWearable.DEFAULT_BODY_ITEM;
-                defaultShape.AssetID = AvatarWearable.DEFAULT_BODY_ASSET;
+                //Give a new copy to every person
+                AssetBase asset = m_AssetService.Get(AvatarWearable.DEFAULT_BODY_ASSET.ToString());
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultShape.AssetID = asset.FullID;
                 defaultShape.Folder = bodypartFolder.ID;
                 defaultShape.CreatorId = UUID.Zero.ToString();
                 AddItem(defaultShape);
@@ -184,7 +190,11 @@ namespace OpenSim.Services.InventoryService
                 defaultSkin.InvType = (int)InventoryType.Wearable;
                 defaultSkin.Flags = (uint)WearableType.Skin;
                 defaultSkin.ID = AvatarWearable.DEFAULT_SKIN_ITEM;
-                defaultSkin.AssetID = AvatarWearable.DEFAULT_SKIN_ASSET;
+                //Give a new copy to every person
+                asset = m_AssetService.Get(AvatarWearable.DEFAULT_SKIN_ASSET.ToString());
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultSkin.AssetID = asset.FullID;
                 defaultSkin.Folder = bodypartFolder.ID;
                 defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
                 defaultSkin.Owner = principalID;
@@ -201,7 +211,11 @@ namespace OpenSim.Services.InventoryService
                 defaultHair.InvType = (int)InventoryType.Wearable;
                 defaultHair.Flags = (uint)WearableType.Hair;
                 defaultHair.ID = AvatarWearable.DEFAULT_HAIR_ITEM;
-                defaultHair.AssetID = AvatarWearable.DEFAULT_HAIR_ASSET;
+                //Give a new copy to every person
+                asset = m_AssetService.Get(AvatarWearable.DEFAULT_HAIR_ASSET.ToString());
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultHair.AssetID = asset.FullID;
                 defaultHair.Folder = bodypartFolder.ID;
                 defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
                 defaultHair.Owner = principalID;
@@ -218,7 +232,43 @@ namespace OpenSim.Services.InventoryService
                 defaultEyes.InvType = (int)InventoryType.Wearable;
                 defaultEyes.Flags = (uint)WearableType.Eyes;
                 defaultEyes.ID = AvatarWearable.DEFAULT_EYES_ITEM;
-                defaultEyes.AssetID = AvatarWearable.DEFAULT_EYES_ASSET;
+                //Give a new copy to every person
+                asset = m_AssetService.Get(AvatarWearable.DEFAULT_EYES_ASSET.ToString());
+                if (asset == null)
+                {
+                    asset = new AssetBase(AvatarWearable.DEFAULT_EYES_ASSET.ToString(),
+                        "Eyes", 13, m_LibraryService.LibraryOwner.ToString());
+                    asset.Data = Util.StringToBytes256(@"LLWearable version 22
+New Eyes
+
+	permissions 0
+	{
+		base_mask	7fffffff
+		owner_mask	7fffffff
+		group_mask	00000000
+		everyone_mask	00000000
+		next_owner_mask	00082000
+		creator_id	22435ff6-ce10-4165-9973-bba745b84a21
+		owner_id	22435ff6-ce10-4165-9973-bba745b84a21
+		last_owner_id	00000000-0000-0000-0000-000000000000
+		group_id	00000000-0000-0000-0000-000000000000
+	}
+	sale_info	0
+	{
+		sale_type	not
+		sale_price	10
+	}
+type 3
+parameters 2
+98 0
+99 0
+textures 1
+3 6522e74d-1660-4e7f-b601-6f48c1659a77");
+                    m_AssetService.Store(asset);
+                }
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultEyes.AssetID = asset.FullID;
                 defaultEyes.Folder = bodypartFolder.ID;
                 defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
                 defaultEyes.Owner = principalID;
@@ -235,7 +285,11 @@ namespace OpenSim.Services.InventoryService
                 defaultShirt.InvType = (int)InventoryType.Wearable;
                 defaultShirt.Flags = (uint)WearableType.Shirt;
                 defaultShirt.ID = AvatarWearable.DEFAULT_SHIRT_ITEM;
-                defaultShirt.AssetID = AvatarWearable.DEFAULT_SHIRT_ASSET;
+                //Give a new copy to every person
+                asset = m_AssetService.Get(AvatarWearable.DEFAULT_SHIRT_ASSET.ToString());
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultShirt.AssetID = asset.FullID;
                 defaultShirt.Folder = clothingFolder.ID;
                 defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
                 defaultShirt.Owner = principalID;
@@ -252,7 +306,11 @@ namespace OpenSim.Services.InventoryService
                 defaultPants.InvType = (int)InventoryType.Wearable;
                 defaultPants.Flags = (uint)WearableType.Shirt;
                 defaultPants.ID = AvatarWearable.DEFAULT_PANTS_ITEM;
-                defaultPants.AssetID = AvatarWearable.DEFAULT_PANTS_ASSET;
+                //Give a new copy to every person
+                asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
+                asset.FullID = UUID.Random();
+                m_AssetService.Store(asset);
+                defaultPants.AssetID = asset.FullID;
                 defaultPants.Folder = clothingFolder.ID;
                 defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
                 defaultPants.Owner = principalID;

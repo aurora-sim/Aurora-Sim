@@ -566,45 +566,50 @@ namespace OpenSim.Services.LLLoginService
                     if (avappearance == null)
                     {
                         //Create an appearance for the user if one doesn't exist
-                        m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                         if (m_DefaultUserAvatarArchive != "")
                         {
+                            m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
+                                ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
                             archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, firstName, lastName);
                         }
                         else
                         {
+                            m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                             AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
                         }
                         avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
-                    //Verify that all assets exist now
-                    for (int i = 0; i < avappearance.Wearables.Length; i++)
+                    else
                     {
-                        bool messedUp = false;
-                        foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
+                        //Verify that all assets exist now
+                        for (int i = 0; i < avappearance.Wearables.Length; i++)
                         {
-                            AssetBase asset = m_AssetService.Get(item.Value.ToString());
-                            if (asset == null)
+                            bool messedUp = false;
+                            foreach (KeyValuePair<UUID, UUID> item in avappearance.Wearables[i].GetItems())
                             {
-                                m_log.Warn("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
-                                messedUp = true;
+                                AssetBase asset = m_AssetService.Get(item.Value.ToString());
+                                if (asset == null)
+                                {
+                                    m_log.Warn("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
+                                    messedUp = true;
+                                }
                             }
+                            if (messedUp)
+                                avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                         }
-                        if (messedUp)
-                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
-                    }
-                    //Also verify that all baked texture indices exist
-                    foreach(byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
-                    {
-                        if (BakedTextureIndex == 19)
-                            continue;
-                        if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                        //Also verify that all baked texture indices exist
+                        foreach (byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
                         {
-                            m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
-                            avappearance.Texture.FaceTextures[BakedTextureIndex] = avappearance.Texture.CreateFace(BakedTextureIndex);
-                            avappearance.Texture.FaceTextures[BakedTextureIndex].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
-                            m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                            if (BakedTextureIndex == 19)
+                                continue;
+                            if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                            {
+                                m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
+                                avappearance.Texture.FaceTextures[BakedTextureIndex] = avappearance.Texture.CreateFace(BakedTextureIndex);
+                                avappearance.Texture.FaceTextures[BakedTextureIndex].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
+                                m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                            }
                         }
                     }
                 }

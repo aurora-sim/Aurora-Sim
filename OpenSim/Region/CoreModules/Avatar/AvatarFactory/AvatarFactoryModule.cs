@@ -128,7 +128,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public void NewClient(IClientAPI client)
         {
-            client.OnRequestWearables += SendWearables;
+            client.OnRequestWearables += RequestWearables;
             client.OnSetAppearance += SetAppearance;
             client.OnAvatarNowWearing += AvatarIsWearing;
             client.OnAgentCachedTextureRequest += AgentCachedTexturesRequest;
@@ -136,7 +136,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public void RemoveClient(IClientAPI client)
         {
-            client.OnRequestWearables -= SendWearables;
+            client.OnRequestWearables -= RequestWearables;
             client.OnSetAppearance -= SetAppearance;
             client.OnAvatarNowWearing -= AvatarIsWearing;
             client.OnAgentCachedTextureRequest -= AgentCachedTexturesRequest;
@@ -430,9 +430,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             // m_log.WarnFormat("[AvatarFactory]: Handle appearance send for {0}", agentid);
 
-            //Send our avatar to ourselves as well
-            //sp.SendAppearanceToAgent(sp);
-
             // Send the appearance to everyone in the scene
             sp.SendAppearanceToAllOtherAgents();
 
@@ -480,34 +477,21 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             m_log.InfoFormat("[AvatarFactory]: Handle initial appearance send for {0}", agentid);
 
-            // We have an appearance but we may not have the baked textures. Check the asset cache 
-            // to see if all the baked textures are already here. 
-            if (ValidateBakedTextureCache(sp.ControllingClient))
-            {
-                //Only set this if we actually have sent the wearables
-                sp.m_InitialHasWearablesBeenSent = true;
-                
-                sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
-                sp.SendAvatarDataToAllAgents();
-                //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
-                // NOTE: Do NOT send this! It seems to make the client become a cloud
-                //sp.SendAppearanceToAgent(sp);
+            //Only set this if we actually have sent the wearables
+            sp.m_InitialHasWearablesBeenSent = true;
 
-                // If the avatars baked textures are all in the cache, then we have a 
-                // complete appearance... send it out, if not, then we'll send it when
-                // the avatar finishes updating its appearance
-                sp.SendAppearanceToAllOtherAgents();
-            }
-            else
-            {
-                m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", Name);
-                //
-                // NOTE!!!! 
-                //
-                // This will cause the client to become a cloud if the wearables are not sent 
-                //  by the 10 second wearable re-send (which 'should' occur, otherwise we have a huge issue)
-                //  Still tell other agents about us though so we appear.
-            }
+            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            
+            //Send rebakes if needed
+            ValidateBakedTextureCache(sp.ControllingClient, false);
+            //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
+            // NOTE: Do NOT send this! It seems to make the client become a cloud
+            //sp.SendAppearanceToAgent(sp);
+
+            // If the avatars baked textures are all in the cache, then we have a 
+            // complete appearance... send it out, if not, then we'll send it when
+            // the avatar finishes updating its appearance
+            sp.SendAppearanceToAllOtherAgents();
 
             // This agent just became root. We are going to tell everyone about it. The process of
             // getting other avatars information was initiated in the constructor... don't do it 
@@ -572,7 +556,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         /// <summary>
         /// Tell the client for this scene presence what items it should be wearing now
         /// </summary>
-        public void SendWearables(IClientAPI client)
+        public void RequestWearables(IClientAPI client)
         {
             ScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             if (sp == null)
@@ -581,8 +565,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            //Make sure that the timer doesn't go off in the ScenePresence that this avatar hasn't requested its wearables yet
-            m_log.DebugFormat("[AvatarFactory]: Received request for wearables of {0}", sp.Name);
+            //Don't send the wearables immediately, make sure that everything is loaded first
             QueueInitialAppearanceSend(client.AgentId);
             //client.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
         }
@@ -622,7 +605,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // since the "iswearing" will trigger a new set of visual param and baked texture changes
             // when those complete, the new appearance will be sent
             sp.Appearance = avatAppearance;
-            //Do not save or send! The client loops back and sends a bunch of SetAppearance (handled above) and that takes care of it
+            //Send the wearables HERE so that the client knows what it is wearing
+            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
+            //  (handled above) and that takes care of it
         }
 
         private void SetAppearanceAssets(UUID userID, ref AvatarAppearance appearance)
@@ -641,10 +627,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         // Ignore ruth's assets
                         if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
                         {
-                            m_log.ErrorFormat(
-                                "[AvatarFactory]: Found an asset for the default avatar, setting to default asset.",
-                                appearance.Wearables[i][j].ItemID, (WearableType)i);
-                            appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, AvatarWearable.DefaultWearables[i][j].AssetID);
+                            //m_log.ErrorFormat(
+                            //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
+                            //    ", setting to default asset {3}.",
+                            //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
+                            //    AvatarWearable.DefaultWearables[i][j].AssetID);
+                            appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID, appearance.Wearables[i][j].AssetID);
                             continue;
                         }
 
