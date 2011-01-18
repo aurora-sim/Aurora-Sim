@@ -9275,7 +9275,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 bool EstateFixedSun = convertParamStringToBool(messagePacket.ParamList[7].Parameter);
                                 float EstateSunHour = (float)Convert.ToDecimal(Utils.BytesToString(messagePacket.ParamList[8].Parameter), Culture.NumberFormatInfo);
 
-                                OnSetRegionTerrainSettings(WaterHeight, TerrainRaiseLimit, TerrainLowerLimit, UseEstateSun, UseFixedSun, SunHour, UseGlobal, EstateFixedSun, EstateSunHour);
+                                OnSetRegionTerrainSettings(AgentId, WaterHeight, TerrainRaiseLimit, TerrainLowerLimit, UseEstateSun, UseFixedSun, SunHour, UseGlobal, EstateFixedSun, EstateSunHour);
 
                             }
                             catch (Exception ex)

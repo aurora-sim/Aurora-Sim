@@ -354,12 +354,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
             //sendRegionHandshakeToAll();
         }
 
-        public void setRegionTerrainSettings(float WaterHeight,
+        public void setRegionTerrainSettings(UUID AgentID, float WaterHeight,
                 float TerrainRaiseLimit, float TerrainLowerLimit,
                 bool UseEstateSun, bool UseFixedSun, float SunHour,
                 bool UseGlobal, bool EstateFixedSun, float EstateSunHour)
         {
-            if (m_scene.Permissions.CanIssueEstateCommand(UUID.Zero, true))
+            if (AgentID == UUID.Zero || m_scene.Permissions.CanIssueEstateCommand(AgentID, false))
             {
                 // Water Height
                 m_scene.RegionInfo.RegionSettings.WaterHeight = WaterHeight;
@@ -1368,7 +1368,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public void changeWaterHeight(float height)
         {
-            setRegionTerrainSettings(height,
+            setRegionTerrainSettings(UUID.Zero, height,
                     (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit,
                     (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit,
                     m_scene.RegionInfo.RegionSettings.UseEstateSun,

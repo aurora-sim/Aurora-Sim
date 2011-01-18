@@ -588,7 +588,7 @@ namespace OpenSim.Region.RegionCombinerModule
             client.OnSetRegionTerrainSettings -= setRegionTerrainSettings;
         }
 
-        public void setRegionTerrainSettings(float WaterHeight,
+        public void setRegionTerrainSettings(UUID AgentID, float WaterHeight,
                 float TerrainRaiseLimit, float TerrainLowerLimit,
                 bool UseEstateSun, bool UseFixedSun, float SunHour,
                 bool UseGlobal, bool EstateFixedSun, float EstateSunHour)
@@ -597,26 +597,29 @@ namespace OpenSim.Region.RegionCombinerModule
             {
                 foreach (Scene r in m_startingScenes.Values)
                 {
-                    // Water Height
-                    r.RegionInfo.RegionSettings.WaterHeight = WaterHeight;
+                    if (AgentID == UUID.Zero || r.Permissions.CanIssueEstateCommand(AgentID, false))
+                    {
+                        // Water Height
+                        r.RegionInfo.RegionSettings.WaterHeight = WaterHeight;
 
-                    // Terraforming limits
-                    r.RegionInfo.RegionSettings.TerrainRaiseLimit = TerrainRaiseLimit;
-                    r.RegionInfo.RegionSettings.TerrainLowerLimit = TerrainLowerLimit;
+                        // Terraforming limits
+                        r.RegionInfo.RegionSettings.TerrainRaiseLimit = TerrainRaiseLimit;
+                        r.RegionInfo.RegionSettings.TerrainLowerLimit = TerrainLowerLimit;
 
-                    // Time of day / fixed sun
-                    r.RegionInfo.RegionSettings.UseEstateSun = UseEstateSun;
-                    r.RegionInfo.RegionSettings.FixedSun = UseFixedSun;
-                    r.RegionInfo.RegionSettings.SunPosition = SunHour;
+                        // Time of day / fixed sun
+                        r.RegionInfo.RegionSettings.UseEstateSun = UseEstateSun;
+                        r.RegionInfo.RegionSettings.FixedSun = UseFixedSun;
+                        r.RegionInfo.RegionSettings.SunPosition = SunHour;
 
-                    r.RequestModuleInterface<IEstateModule>().TriggerEstateSunUpdate();
+                        r.RequestModuleInterface<IEstateModule>().TriggerEstateSunUpdate();
 
-                    //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
-                    //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
+                        //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
+                        //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
 
-                    sendRegionInfoPacketToAll(r);
-                    r.RegionInfo.RegionSettings.Save();
-                    r.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                        sendRegionInfoPacketToAll(r);
+                        r.RegionInfo.RegionSettings.Save();
+                        r.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                    }
                 }
             }
         }

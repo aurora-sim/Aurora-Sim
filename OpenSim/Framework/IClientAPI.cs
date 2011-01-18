@@ -353,7 +353,7 @@ namespace OpenSim.Framework
 
     public delegate void CommitEstateTerrainTextureRequest(IClientAPI remoteClient);
 
-    public delegate void SetRegionTerrainSettings(
+    public delegate void SetRegionTerrainSettings(UUID AgentID,
         float waterHeight, float terrainRaiseLimit, float terrainLowerLimit, bool estateSun, bool fixedSun,
         float sunHour, bool globalSun, bool estateFixed, float estateSunHour);
 
