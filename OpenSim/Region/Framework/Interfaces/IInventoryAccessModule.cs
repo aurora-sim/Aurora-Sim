@@ -38,7 +38,7 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IInventoryAccessModule
     {
         string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data);
-        UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentId);
+        UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentId, out UUID itemID);
         SceneObjectGroup RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
                                     UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                     bool RezSelected, bool RemoveItem, UUID fromTaskID, bool attachment);

@@ -256,8 +256,9 @@ namespace OpenSim.Region.CoreModules
                         try
                         {
                             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                            UUID itemID;
                             if (invAccess != null)
-                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroups, x.agentId);
+                                invAccess.DeleteToInventory(x.action, x.folderID, x.objectGroups, x.agentId, out itemID);
                         }
                         catch (Exception e)
                         {

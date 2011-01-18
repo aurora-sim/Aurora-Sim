@@ -72,8 +72,14 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         internal void ReQueueEvent(PollServiceHttpRequest req)
         {
-            // Do accounting stuff here
-            Enqueue(req);
+            try
+            {
+                // Do accounting stuff here
+                Enqueue(req);
+            }
+            catch
+            {
+            }
         }
 
         public void Enqueue(PollServiceHttpRequest req)
@@ -86,7 +92,13 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             while (m_running)
             {
-                ProcessQueuedRequests();
+                try
+                {
+                    ProcessQueuedRequests();
+                }
+                catch
+                {
+                }
                 Thread.Sleep(1000);
             }
         }

@@ -1502,23 +1502,25 @@ namespace OpenSim.Region.Framework.Scenes
 
         [XmlIgnore]
         public bool IsSelected
-            {
+        {
             get { return m_IsSelected; }
             set
-                {
+            {
                 if (m_IsSelected != value)
-                    {
+                {
                     if (PhysActor != null)
-                        {
+                    {
                         PhysActor.Selected = value;
-                        }
-                    if(ParentID !=0 && ParentGroup !=null && ParentGroup.RootPart!=null && ParentGroup.RootPart.IsSelected !=value)
-                        ParentGroup.RootPart.IsSelected=value;
+                    }
+                    if (ParentID != 0 && ParentGroup != null &&
+                        ParentGroup.RootPart != null && ParentGroup.RootPart != this &&
+                        ParentGroup.RootPart.IsSelected != value)
+                        ParentGroup.RootPart.IsSelected = value;
 
                     m_IsSelected = value;
-                    }               
                 }
             }
+        }
 
         #endregion
 

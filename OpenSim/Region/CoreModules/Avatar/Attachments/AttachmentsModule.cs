@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                     if(inventoryAccess != null)
                         inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
-                            groups, remoteClient.AgentId);
+                            groups, remoteClient.AgentId, out itemID);
                 }
                 else
                 {
@@ -408,7 +408,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 // XXYY!!
                 InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = m_scene.InventoryService.GetItem(item);
-                presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID /* att.UUID */);
+                att.SetFromItemID(itemID);
+                presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID);
 
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }

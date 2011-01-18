@@ -122,22 +122,23 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         ///
         /// DeleteToInventory
         ///
-        public override UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentID)
+        public override UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentID, out UUID itemID)
         {
             UUID ret = UUID.Zero;
+            itemID = UUID.Zero;
 
             // HACK: Only works for lists of length one.
             // Intermediate version, just to make things compile
             foreach (SceneObjectGroup g in objectGroups)
-                ret = InternalDeleteToInventory(action, folderID, g, agentID);
+                ret = InternalDeleteToInventory(action, folderID, g, agentID, out itemID);
             
             return ret;
         }
 
         public UUID InternalDeleteToInventory(DeRezAction action, UUID folderID,
-                SceneObjectGroup objectGroup, UUID agentID)
+                SceneObjectGroup objectGroup, UUID agentID, out UUID itemID)
         {
-            UUID assetID = base.DeleteToInventory(action, folderID, new List<SceneObjectGroup>() { objectGroup }, agentID);
+            UUID assetID = base.DeleteToInventory(action, folderID, new List<SceneObjectGroup>() { objectGroup }, agentID, out itemID);
 
             if (!assetID.Equals(UUID.Zero))
             {

@@ -419,61 +419,67 @@ namespace OpenSim.Services.CapsService
 
         public Hashtable GetEvents(UUID requestID, UUID pAgentId, string request)
         {
-            OSD element;
-            lock (queue)
+            OSDMap events = new OSDMap();
+            try
             {
-                if (queue.Count == 0)
-                    return NoEvents(requestID, pAgentId);
-                element = queue.Dequeue(); // 15s timeout
-            }
-
-            OSDArray array = new OSDArray();
-            if (element == null) // didn't have an event in 15s
-            {
-                return NoEvents(requestID, pAgentId);
-                //OSDMap keepAliveEvent = new OSDMap(2);
-                //keepAliveEvent.Add("body", new OSDMap());
-                //keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
-
-                // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                //array.Add(keepAliveEvent);
-                //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
-            }
-            else
-            {
-                array.Add(element);
+                OSD element;
                 lock (queue)
                 {
-                    while (queue.Count > 0)
+                    if (queue.Count == 0)
+                        return NoEvents(requestID, pAgentId);
+                    element = queue.Dequeue(); // 15s timeout
+                }
+
+                OSDArray array = new OSDArray();
+                if (element == null) // didn't have an event in 15s
+                {
+                    return NoEvents(requestID, pAgentId);
+                    //OSDMap keepAliveEvent = new OSDMap(2);
+                    //keepAliveEvent.Add("body", new OSDMap());
+                    //keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+
+                    // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
+                    //array.Add(keepAliveEvent);
+                    //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
+                }
+                else
+                {
+                    array.Add(element);
+                    lock (queue)
                     {
-                        array.Add(queue.Dequeue());
-                        m_ids++;
+                        while (queue.Count > 0)
+                        {
+                            array.Add(queue.Dequeue());
+                            m_ids++;
+                        }
                     }
                 }
-            }
 
-            //Look for disable Simulator EQMs so that we can disable ourselves safely
-            foreach (OSD ev in array)
+                //Look for disable Simulator EQMs so that we can disable ourselves safely
+                foreach (OSD ev in array)
+                {
+                    try
+                    {
+                        OSDMap map = (OSDMap)ev;
+                        if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                        {
+                            //This will be the last bunch of EQMs that go through, so we can safely die now
+                            m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                events.Add("events", array);
+
+                events.Add("id", new OSDInteger(m_ids));
+                m_ids += 1;
+            }
+            catch
             {
-                try
-                {
-                    OSDMap map = (OSDMap)ev;
-                    if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
-                    {
-                        //This will be the last bunch of EQMs that go through, so we can safely die now
-                        m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                    }
-                }
-                catch
-                {
-                }
             }
-
-            OSDMap events = new OSDMap();
-            events.Add("events", array);
-
-            events.Add("id", new OSDInteger(m_ids));
-            m_ids += 1;
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200;
             responsedata["content_type"] = "application/xml";

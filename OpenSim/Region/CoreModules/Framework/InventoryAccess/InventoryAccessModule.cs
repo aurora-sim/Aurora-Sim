@@ -269,8 +269,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="objectGroup"></param>
         /// <param name="remoteClient"> </param>
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
-                List<SceneObjectGroup> objectGroups, UUID agentId)
+                List<SceneObjectGroup> objectGroups, UUID agentId, out UUID itemID)
         {
+            itemID = UUID.Zero;
             if (objectGroups.Count == 0)
                 return UUID.Zero;
 
@@ -427,6 +428,10 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         InventoryFolderBase f = new InventoryFolderBase(objectGroups[0].RootPart.FromItemID, userID);
                         folder = m_Scene.InventoryService.GetFolder(f);
                     }
+                    else
+                    {
+                        folder = m_Scene.InventoryService.GetFolderForType(userID, AssetType.Object);
+                    }
                 }
 
                 if (folder == null) // None of the above
@@ -545,7 +550,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                 }
             }
-
+            if (item != null)
+                itemID = item.ID;
             return assetID;
         }
 
