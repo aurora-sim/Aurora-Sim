@@ -272,7 +272,7 @@ namespace OpenSim.Framework
 
             config.Set("RegionUUID", RegionID.ToString());
 
-            string location = String.Format("{0},{1}", m_regionLocX, m_regionLocY);
+            string location = String.Format("{0},{1}", m_regionLocX / 256, m_regionLocY / 256);
             config.Set("Location", location);
 
             config.Set("InternalAddress", m_internalEndPoint.Address.ToString());

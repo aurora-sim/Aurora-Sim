@@ -626,7 +626,7 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        #region EnableChildAgents 
+        #region EnableChildAgents
 
         public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
             AgentCircuitData circuit, uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
