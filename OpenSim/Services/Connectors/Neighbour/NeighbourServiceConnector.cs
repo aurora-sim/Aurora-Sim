@@ -83,7 +83,7 @@ namespace OpenSim.Services.Connectors
                 return nowInformedRegions;
 
             //Now add the remote ones and tell it which ones have already been informed locally so that it doesn't inform them twice
-            nowInformedRegions.AddRange(InformNeighborsRegionIsUp(incomingRegion, nowInformedRegions));
+            InformNeighborsRegionIsUp(incomingRegion, nowInformedRegions);
 
             //Now check to see if we informed everyone
             RegionsNotInformed = Neighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
@@ -151,7 +151,7 @@ namespace OpenSim.Services.Connectors
                         Dictionary<string, object> r = kvp.Value as Dictionary<string, object>;
                         GridRegion nregion = new GridRegion(r);
                         m_log.InfoFormat("[NeighborConnector]: Informed neighbor {0} about {1}",
-                            nregion.RegionName, region.RegionName);
+                            nregion.RegionName, thisRegion.RegionName);
                         informedRegions.Add(nregion);
                     }
                 }

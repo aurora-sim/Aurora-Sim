@@ -166,7 +166,7 @@ namespace OpenSim.Services.Connectors
                 }
             }
             int RegionsNotInformed = m_KnownNeighbors[incomingRegion.RegionID].Count - m_informedRegions.Count;
-            if (RegionsNotInformed > 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
+            if (RegionsNotInformed != 0) //If we arn't enabled, we are being called from the remote service, so we don't spam this
             {
                 m_log.Warn("[NeighborsService]: Failed to inform " + RegionsNotInformed + " neighbors locally about a new neighbor.");
             }
