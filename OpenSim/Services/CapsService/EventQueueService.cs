@@ -384,9 +384,8 @@ namespace OpenSim.Services.CapsService
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
                     }
                 }
-                if (queue != null)
-                    lock (queue)
-                        queue.Enqueue(ev);
+                lock (queue)
+                    queue.Enqueue(ev);
             }
             catch (NullReferenceException e)
             {
@@ -403,18 +402,10 @@ namespace OpenSim.Services.CapsService
 
         public bool HasEvents(UUID requestID, UUID agentID)
         {
-            // Don't use this, because of race conditions at agent closing time
-            //Queue<OSD> queue = TryGetQueue(agentID);
-
-            if (queue != null)
-                lock (queue)
-                {
-                    if (queue.Count > 0)
-                        return true;
-                    else
-                        return false;
-                }
-            return false;
+            lock (queue)
+            {
+                return queue.Count > 0;
+            }
         }
 
         public Hashtable GetEvents(UUID requestID, UUID pAgentId, string request)
@@ -433,25 +424,23 @@ namespace OpenSim.Services.CapsService
                 OSDArray array = new OSDArray();
                 if (element == null) // didn't have an event in 15s
                 {
-                    return NoEvents(requestID, pAgentId);
-                    //OSDMap keepAliveEvent = new OSDMap(2);
-                    //keepAliveEvent.Add("body", new OSDMap());
-                    //keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
-
+                    //return NoEvents(requestID, pAgentId);
                     // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                    //array.Add(keepAliveEvent);
+                    OSDMap keepAliveEvent = new OSDMap(2);
+                    keepAliveEvent.Add("body", new OSDMap());
+                    keepAliveEvent.Add("message", new OSDString("FAKEEVENT"));
+                    element = keepAliveEvent;
+                    array.Add(keepAliveEvent);
                     //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
                 }
-                else
+
+                array.Add(element);
+                lock (queue)
                 {
-                    array.Add(element);
-                    lock (queue)
+                    while (queue.Count > 0)
                     {
-                        while (queue.Count > 0)
-                        {
-                            array.Add(queue.Dequeue());
-                            m_ids++;
-                        }
+                        array.Add(queue.Dequeue());
+                        m_ids++;
                     }
                 }
 
@@ -460,11 +449,14 @@ namespace OpenSim.Services.CapsService
                 {
                     try
                     {
-                        OSDMap map = (OSDMap)ev;
-                        if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                        if (ev.Type == OSDType.Map)
                         {
-                            //This will be the last bunch of EQMs that go through, so we can safely die now
-                            m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                            OSDMap map = (OSDMap)ev;
+                            if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
+                            {
+                                //This will be the last bunch of EQMs that go through, so we can safely die now
+                                m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                            }
                         }
                     }
                     catch
@@ -475,7 +467,7 @@ namespace OpenSim.Services.CapsService
                 events.Add("events", array);
 
                 events.Add("id", new OSDInteger(m_ids));
-                m_ids += 1;
+                m_ids++;
             }
             catch
             {
@@ -495,7 +487,7 @@ namespace OpenSim.Services.CapsService
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 502;
             responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
+            responsedata["keepalive"] = true;
             responsedata["str_response_string"] = "Upstream error: ";
             responsedata["error_status_text"] = "Upstream error:";
             responsedata["http_protocol_version"] = "HTTP/1.0";
@@ -567,7 +559,7 @@ namespace OpenSim.Services.CapsService
             events.Add("events", array);
 
             events.Add("id", new OSDInteger(m_ids));
-            m_ids += 1;
+            m_ids++;
 
             responsedata["int_response_code"] = 200;
             responsedata["content_type"] = "application/xml";
