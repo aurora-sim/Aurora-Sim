@@ -72,9 +72,9 @@ namespace OpenSim.Services.Connectors
 
         #region INeighborService
 
-        public virtual List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
+        public virtual List<GridRegion> InformRegionsNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
-            List<GridRegion> nowInformedRegions = m_LocalService.InformNeighborsThatRegionIsUp(incomingRegion);
+            List<GridRegion> nowInformedRegions = m_LocalService.InformRegionsNeighborsThatRegionIsUp(incomingRegion);
 
             int RegionsNotInformed = Neighbors[incomingRegion.RegionID].Count - nowInformedRegions.Count;
 
@@ -150,6 +150,8 @@ namespace OpenSim.Services.Connectors
                     {
                         Dictionary<string, object> r = kvp.Value as Dictionary<string, object>;
                         GridRegion nregion = new GridRegion(r);
+                        m_log.InfoFormat("[NeighborConnector]: Informed neighbor {0} about {1}",
+                            nregion.RegionName, region.RegionName);
                         informedRegions.Add(nregion);
                     }
                 }

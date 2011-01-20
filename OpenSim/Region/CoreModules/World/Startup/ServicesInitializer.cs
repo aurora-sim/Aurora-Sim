@@ -97,5 +97,9 @@ namespace OpenSim.Region.CoreModules
         public void Close(Scene scene)
         {
         }
+
+        public void StartupComplete()
+        {
+        }
     }
 }

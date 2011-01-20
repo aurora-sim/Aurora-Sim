@@ -53,7 +53,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="incomingRegion">The region that is now up</param>
         /// <returns>Returns the list of neighbors that were informed of this change</returns>
-        List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion);
+        List<GridRegion> InformRegionsNeighborsThatRegionIsUp(RegionInfo incomingRegion);
 
         /// <summary>
         /// Tell the neighbors that this region is going down

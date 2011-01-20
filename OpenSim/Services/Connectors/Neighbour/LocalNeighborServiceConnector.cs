@@ -125,7 +125,7 @@ namespace OpenSim.Services.Connectors
 
         #region INeighborService
 
-        public List<GridRegion> InformNeighborsThatRegionIsUp(RegionInfo incomingRegion)
+        public List<GridRegion> InformRegionsNeighborsThatRegionIsUp(RegionInfo incomingRegion)
         {
             GridRegion incomingGridRegion = new GridRegion(incomingRegion);
 
@@ -142,15 +142,18 @@ namespace OpenSim.Services.Connectors
                 if (s.RegionInfo.RegionID == incomingRegion.RegionID)
                     continue;
 
+                GridRegion thisSceneInfo = new GridRegion(s.RegionInfo);
+
                 //Make sure we don't already have this region in the neighbors
-                if (!m_KnownNeighbors[incomingRegion.RegionID].Contains(incomingGridRegion))
+                if (!m_informedRegions.Contains(thisSceneInfo))
                 {
                     //Now check to see whether the incoming region should be a neighbor of this Scene
                     if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX,
                         s.RegionInfo.RegionLocY, incomingRegion.RegionLocY))
                     {
                         //Fix this regions neighbors now that it has a new one
-                        m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
+                        if(m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))
+                            m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
 
                         m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
                             incomingRegion.RegionName, s.RegionInfo.RegionName);
@@ -158,7 +161,7 @@ namespace OpenSim.Services.Connectors
                         //Tell this region about the original region
                         IncomingHelloNeighbor(s, incomingGridRegion);
                         //This region knows now, so add it to the list
-                        m_informedRegions.Add(new GridRegion(s.RegionInfo));
+                        m_informedRegions.Add(thisSceneInfo);
                     }
                 }
             }
@@ -178,7 +181,7 @@ namespace OpenSim.Services.Connectors
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="otherRegion"></param>
-        private void IncomingHelloNeighbor(Scene scene, GridRegion otherRegion)
+        public void IncomingHelloNeighbor(Scene scene, GridRegion otherRegion)
         {
             // Let the grid service module know, so this can be cached
             scene.EventManager.TriggerOnRegionUp(otherRegion);

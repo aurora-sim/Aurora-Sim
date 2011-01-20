@@ -67,6 +67,10 @@ namespace Aurora.Modules
             m_backup[scene].FinishStartup();
         }
 
+        public void StartupComplete()
+        {
+        }
+
         public void Close(Scene scene)
         {
             m_log.Info("[BackupModule]: Persisting changed objects in scene " + scene.RegionInfo.RegionName + "...");

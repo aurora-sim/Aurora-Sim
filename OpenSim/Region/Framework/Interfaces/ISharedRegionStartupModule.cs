@@ -41,5 +41,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="m_config"></param>
         /// <param name="m_OpenSimBase"></param>
         void Close(Scene scene);
+
+        void StartupComplete();
     }
 }

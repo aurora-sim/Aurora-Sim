@@ -31,6 +31,7 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_config;
+        private List<Scene> m_scenes = new List<Scene>();
 
         #endregion
 
@@ -47,11 +48,19 @@ namespace Aurora.Modules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+            m_scenes.Add(scene);
             //Register the interface
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
-            scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
+        }
+
+        public void StartupComplete()
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                InformNeighborsAboutUs(scene);
+            }
         }
 
         public void Close(Scene scene)
@@ -85,12 +94,12 @@ namespace Aurora.Modules
         /// Now that we are fully done, add the child agents from other regions
         /// </summary>
         /// <param name="data"></param>
-        private void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)
+        private void InformNeighborsAboutUs(IScene scene)
         {
             //Tell the neighbor service about it
             INeighborService service = scene.RequestModuleInterface<INeighborService>();
             if (service != null)
-                service.InformNeighborsThatRegionIsUp(scene.RegionInfo);
+                service.InformRegionsNeighborsThatRegionIsUp(scene.RegionInfo);
         }
 
         /// <summary>

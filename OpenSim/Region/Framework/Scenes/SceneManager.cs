@@ -235,6 +235,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void FinishStartUp()
         {
+            //Tell modules about it 
+            StartupCompleteModules();
+
             m_OpenSimBase.RunStartupCommands();
 
             // For now, start at the 'root' level by default
@@ -740,6 +743,14 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
                 module.FinishStartup(scene, m_config, m_OpenSimBase);
+            }
+        }
+
+        public void StartupCompleteModules()
+        {
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.StartupComplete();
             }
         }
 

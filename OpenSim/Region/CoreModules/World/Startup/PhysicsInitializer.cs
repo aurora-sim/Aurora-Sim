@@ -53,6 +53,10 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
+        public void StartupComplete()
+        {
+        }
+
         public void Close(Scene scene)
         {
         }
