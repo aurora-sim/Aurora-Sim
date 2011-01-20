@@ -176,12 +176,15 @@ namespace OpenSim.Services.InventoryService
                 defaultShape.ID = AvatarWearable.DEFAULT_BODY_ITEM;
                 //Give a new copy to every person
                 AssetBase asset = m_AssetService.Get(AvatarWearable.DEFAULT_BODY_ASSET.ToString());
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultShape.AssetID = asset.FullID;
-                defaultShape.Folder = bodypartFolder.ID;
-                defaultShape.CreatorId = UUID.Zero.ToString();
-                AddItem(defaultShape);
+                if (asset != null)
+                {
+                    asset.FullID = UUID.Random();
+                    m_AssetService.Store(asset);
+                    defaultShape.AssetID = asset.FullID;
+                    defaultShape.Folder = bodypartFolder.ID;
+                    defaultShape.CreatorId = UUID.Zero.ToString();
+                    AddItem(defaultShape);
+                }
 
                 InventoryItemBase defaultSkin = new InventoryItemBase();
                 defaultSkin.Name = "Default skin";
@@ -192,17 +195,20 @@ namespace OpenSim.Services.InventoryService
                 defaultSkin.ID = AvatarWearable.DEFAULT_SKIN_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SKIN_ASSET.ToString());
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultSkin.AssetID = asset.FullID;
-                defaultSkin.Folder = bodypartFolder.ID;
-                defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
-                defaultSkin.Owner = principalID;
-                defaultSkin.BasePermissions = (uint)PermissionMask.All;
-                defaultSkin.CurrentPermissions = (uint)PermissionMask.All;
-                defaultSkin.EveryOnePermissions = (uint)PermissionMask.None;
-                defaultSkin.NextPermissions = (uint)PermissionMask.All;
-                AddItem(defaultSkin);
+                if (asset != null)
+                {
+                    asset.FullID = UUID.Random();
+                    m_AssetService.Store(asset);
+                    defaultSkin.AssetID = asset.FullID;
+                    defaultSkin.Folder = bodypartFolder.ID;
+                    defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultSkin.Owner = principalID;
+                    defaultSkin.BasePermissions = (uint)PermissionMask.All;
+                    defaultSkin.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultSkin.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultSkin.NextPermissions = (uint)PermissionMask.All;
+                    AddItem(defaultSkin);
+                }
 
                 InventoryItemBase defaultHair = new InventoryItemBase();
                 defaultHair.Name = "Default hair";
@@ -213,17 +219,20 @@ namespace OpenSim.Services.InventoryService
                 defaultHair.ID = AvatarWearable.DEFAULT_HAIR_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_HAIR_ASSET.ToString());
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultHair.AssetID = asset.FullID;
-                defaultHair.Folder = bodypartFolder.ID;
-                defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
-                defaultHair.Owner = principalID;
-                defaultHair.BasePermissions = (uint)PermissionMask.All;
-                defaultHair.CurrentPermissions = (uint)PermissionMask.All;
-                defaultHair.EveryOnePermissions = (uint)PermissionMask.None;
-                defaultHair.NextPermissions = (uint)PermissionMask.All;
-                AddItem(defaultHair);
+                if (asset != null)
+                {
+                    asset.FullID = UUID.Random();
+                    m_AssetService.Store(asset);
+                    defaultHair.AssetID = asset.FullID;
+                    defaultHair.Folder = bodypartFolder.ID;
+                    defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultHair.Owner = principalID;
+                    defaultHair.BasePermissions = (uint)PermissionMask.All;
+                    defaultHair.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultHair.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultHair.NextPermissions = (uint)PermissionMask.All;
+                    AddItem(defaultHair);
+                }
 
                 InventoryItemBase defaultEyes = new InventoryItemBase();
                 defaultEyes.Name = "Default eyes";
@@ -234,49 +243,20 @@ namespace OpenSim.Services.InventoryService
                 defaultEyes.ID = AvatarWearable.DEFAULT_EYES_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_EYES_ASSET.ToString());
-                if (asset == null)
+                if (asset != null)
                 {
-                    asset = new AssetBase(AvatarWearable.DEFAULT_EYES_ASSET.ToString(),
-                        "Default eyes", 13, m_LibraryService.LibraryOwner.ToString());
-                    asset.Data = Util.StringToBytes256(@"LLWearable version 22
-Default eyes
-
-	permissions 0
-	{
-		base_mask	7fffffff
-		owner_mask	7fffffff
-		group_mask	00000000
-		everyone_mask	00000000
-		next_owner_mask	00082000
-		creator_id	22435ff6-ce10-4165-9973-bba745b84a21
-		owner_id	22435ff6-ce10-4165-9973-bba745b84a21
-		last_owner_id	00000000-0000-0000-0000-000000000000
-		group_id	00000000-0000-0000-0000-000000000000
-	}
-	sale_info	0
-	{
-		sale_type	not
-		sale_price	10
-	}
-type 3
-parameters 2
-98 0
-99 0
-textures 1
-3 6522e74d-1660-4e7f-b601-6f48c1659a77");
+                    asset.FullID = UUID.Random();
                     m_AssetService.Store(asset);
+                    defaultEyes.AssetID = asset.FullID;
+                    defaultEyes.Folder = bodypartFolder.ID;
+                    defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultEyes.Owner = principalID;
+                    defaultEyes.BasePermissions = (uint)PermissionMask.All;
+                    defaultEyes.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultEyes.NextPermissions = (uint)PermissionMask.All;
+                    AddItem(defaultEyes);
                 }
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultEyes.AssetID = asset.FullID;
-                defaultEyes.Folder = bodypartFolder.ID;
-                defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
-                defaultEyes.Owner = principalID;
-                defaultEyes.BasePermissions = (uint)PermissionMask.All;
-                defaultEyes.CurrentPermissions = (uint)PermissionMask.All;
-                defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
-                defaultEyes.NextPermissions = (uint)PermissionMask.All;
-                AddItem(defaultEyes);
 
                 InventoryItemBase defaultShirt = new InventoryItemBase();
                 defaultShirt.Name = "Default shirt";
@@ -287,17 +267,20 @@ textures 1
                 defaultShirt.ID = AvatarWearable.DEFAULT_SHIRT_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SHIRT_ASSET.ToString());
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultShirt.AssetID = asset.FullID;
-                defaultShirt.Folder = clothingFolder.ID;
-                defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
-                defaultShirt.Owner = principalID;
-                defaultShirt.BasePermissions = (uint)PermissionMask.All;
-                defaultShirt.CurrentPermissions = (uint)PermissionMask.All;
-                defaultShirt.EveryOnePermissions = (uint)PermissionMask.None;
-                defaultShirt.NextPermissions = (uint)PermissionMask.All;
-                AddItem(defaultShirt);
+                if (asset != null)
+                {
+                    asset.FullID = UUID.Random();
+                    m_AssetService.Store(asset);
+                    defaultShirt.AssetID = asset.FullID;
+                    defaultShirt.Folder = clothingFolder.ID;
+                    defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultShirt.Owner = principalID;
+                    defaultShirt.BasePermissions = (uint)PermissionMask.All;
+                    defaultShirt.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultShirt.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultShirt.NextPermissions = (uint)PermissionMask.All;
+                    AddItem(defaultShirt);
+                }
 
                 InventoryItemBase defaultPants = new InventoryItemBase();
                 defaultPants.Name = "Default pants";
@@ -308,17 +291,20 @@ textures 1
                 defaultPants.ID = AvatarWearable.DEFAULT_PANTS_ITEM;
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
-                asset.FullID = UUID.Random();
-                m_AssetService.Store(asset);
-                defaultPants.AssetID = asset.FullID;
-                defaultPants.Folder = clothingFolder.ID;
-                defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
-                defaultPants.Owner = principalID;
-                defaultPants.BasePermissions = (uint)PermissionMask.All;
-                defaultPants.CurrentPermissions = (uint)PermissionMask.All;
-                defaultPants.EveryOnePermissions = (uint)PermissionMask.None;
-                defaultPants.NextPermissions = (uint)PermissionMask.All;
-                AddItem(defaultPants);
+                if (asset != null)
+                {
+                    asset.FullID = UUID.Random();
+                    m_AssetService.Store(asset);
+                    defaultPants.AssetID = asset.FullID;
+                    defaultPants.Folder = clothingFolder.ID;
+                    defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultPants.Owner = principalID;
+                    defaultPants.BasePermissions = (uint)PermissionMask.All;
+                    defaultPants.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultPants.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultPants.NextPermissions = (uint)PermissionMask.All;
+                    AddItem(defaultPants);
+                }
             }
 
             return result;
