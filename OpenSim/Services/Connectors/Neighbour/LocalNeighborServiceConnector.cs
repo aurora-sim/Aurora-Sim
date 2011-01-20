@@ -174,6 +174,53 @@ namespace OpenSim.Services.Connectors
             return m_informedRegions;
         }
 
+        public List<GridRegion> InformOurRegionsOfNewNeighbor(RegionInfo incomingRegion)
+        {
+            GridRegion incomingGridRegion = new GridRegion(incomingRegion);
+
+            List<GridRegion> m_informedRegions = new List<GridRegion>();
+            List<GridRegion> neighborsOfIncomingRegion = FindNewNeighbors(incomingRegion);
+
+            //We need to inform all the regions around us that our region now exists
+
+            //First run through the scenes that we have here locally, 
+            //   as we don't inform remote regions in this module
+            foreach (Scene s in m_Scenes)
+            {
+                //Don't tell ourselves about us
+                if (s.RegionInfo.RegionID == incomingRegion.RegionID)
+                    continue;
+
+                GridRegion thisSceneInfo = new GridRegion(s.RegionInfo);
+
+                if (neighborsOfIncomingRegion.Contains(thisSceneInfo))
+                {
+                    //Make sure we don't already have this region in the neighbors
+                    if (!m_informedRegions.Contains(thisSceneInfo))
+                    {
+                        //Now check to see whether the incoming region should be a neighbor of this Scene
+                        if (!IsOutsideView(s.RegionInfo.RegionLocX, incomingRegion.RegionLocX,
+                            s.RegionInfo.RegionLocY, incomingRegion.RegionLocY))
+                        {
+                            //Fix this regions neighbors now that it has a new one
+                            if (m_KnownNeighbors.ContainsKey(s.RegionInfo.RegionID))
+                                m_KnownNeighbors[s.RegionInfo.RegionID].Add(incomingGridRegion);
+
+                            m_log.InfoFormat("[NeighborConnector]: HelloNeighbor from {0} to {1}.",
+                                incomingRegion.RegionName, s.RegionInfo.RegionName);
+
+                            //Tell this region about the original region
+                            IncomingHelloNeighbor(s, incomingGridRegion);
+                            //This region knows now, so add it to the list
+                            m_informedRegions.Add(thisSceneInfo);
+                        }
+                    }
+                }
+            }
+
+            return m_informedRegions;
+        }
+
         #region Inform scenes about incoming/outgoing neighbors
 
         /// <summary>

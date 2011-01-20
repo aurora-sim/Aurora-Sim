@@ -56,6 +56,14 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> InformRegionsNeighborsThatRegionIsUp(RegionInfo incomingRegion);
 
         /// <summary>
+        /// Inform our regions of this neighbor, does not call remote regions
+        /// Used when remote regions call this instance
+        /// </summary>
+        /// <param name="incomingRegion"></param>
+        /// <returns></returns>
+        List<GridRegion> InformOurRegionsOfNewNeighbor(RegionInfo incomingRegion);
+
+        /// <summary>
         /// Tell the neighbors that this region is going down
         /// </summary>
         /// <param name="incomingRegion">The region that is now down</param>

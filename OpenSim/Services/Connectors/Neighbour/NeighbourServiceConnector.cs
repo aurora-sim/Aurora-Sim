@@ -94,6 +94,11 @@ namespace OpenSim.Services.Connectors
             return nowInformedRegions;
         }
 
+        public List<GridRegion> InformOurRegionsOfNewNeighbor(RegionInfo incomingRegion)
+        {
+            return m_LocalService.InformOurRegionsOfNewNeighbor(incomingRegion);
+        }
+
         public List<GridRegion> InformNeighborsRegionIsUp(RegionInfo incomingRegion, List<GridRegion> alreadyInformedRegions)
         {
             List<GridRegion> informedRegions = alreadyInformedRegions;

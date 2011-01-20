@@ -248,7 +248,7 @@ namespace OpenSim.Server.Handlers.Neighbor
             }
 
             // Finally!
-            List<GridRegion> thisRegion = m_NeighborService.InformRegionsNeighborsThatRegionIsUp(aRegion);
+            List<GridRegion> thisRegion = m_NeighborService.InformOurRegionsOfNewNeighbor(aRegion);
             
             Dictionary<string, object> resp = new Dictionary<string, object>();
 
