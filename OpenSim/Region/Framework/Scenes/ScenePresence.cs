@@ -2741,6 +2741,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
                             }
                         }
+                        else
+                            m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + RegionCrossX / 256 + ", " + RegionCrossY / 256 + "}");
                     }
                 }
             }
