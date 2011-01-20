@@ -36,6 +36,8 @@ namespace Aurora.DataManager
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract IGenericData Copy();
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
+        public abstract void DropTable(string tableName);
+        public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
         public Version GetAuroraVersion()
         {
@@ -72,6 +74,9 @@ namespace Aurora.DataManager
             {
                 CreateTable(VERSION_TABLE_NAME, new[] {new ColumnDefinition {Name = COLUMN_VERSION, Type = ColumnTypes.String100}});
             }
+            //Remove previous versions
+            Delete(VERSION_TABLE_NAME, new string[0] { }, new object[0] { });
+            //Add the new version
             Insert(VERSION_TABLE_NAME, new[] {version.ToString()});
         }
 
@@ -147,7 +152,14 @@ namespace Aurora.DataManager
             CreateTable(tableName, columnDefinitions);
         }
 
-        public abstract void DropTable(string tableName);
+        public void RenameTable(string oldTableName, string newTableName)
+        {
+            //Make sure that the old one exists and the new one doesn't
+            if (TableExists(oldTableName) && !TableExists(newTableName))
+            {
+                ForceRenameTable(oldTableName, newTableName);
+            }
+        }
 
         #endregion
 

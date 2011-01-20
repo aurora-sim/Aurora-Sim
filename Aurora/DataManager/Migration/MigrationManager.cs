@@ -25,6 +25,7 @@ namespace Aurora.DataManager.Migration
             migrators.Add(new AuroraMigrator_2010_12_30());
             migrators.Add(new AuroraMigrator_2011_1_15());
             migrators.Add(new AuroraMigrator_2011_1_16());
+            migrators.Add(new AuroraMigrator_2011_1_20());
         }
 
         public MigrationManager(DataSessionProvider sessionProvider, IDataConnector genericData, List<Migrator> migrators)

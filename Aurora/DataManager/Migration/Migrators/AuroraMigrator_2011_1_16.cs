@@ -13,13 +13,14 @@ namespace Aurora.DataManager.Migration.Migrators
             CanProvideDefaults = true;
 
             schema = new AuroraMigrator_2011_1_15().schema;
+            renameSchema = new Dictionary<string, string>();
 
             //Added tables
 
             //
             // Change summery:
             //
-            //   Add 'useraccounts' to the tables that we are to track now
+            //   Add 'UserAccounts' to the tables that we are to track now
             //
             AddSchema("UserAccounts", ColDefs(
                 ColDef("PrincipalID", ColumnTypes.Char36, true),

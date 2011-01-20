@@ -517,14 +517,15 @@ namespace Aurora.DataManager.MSSQL
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
-            string query = "delete from " + table + " WHERE ";
+            string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
             foreach (object value in values)
             {
                 query += keys[i] + " = '" + value.ToString() + "' AND ";
                 i++;
             }
-            query = query.Remove(query.Length - 5);
+            if(keys.Length > 0)
+                query = query.Remove(query.Length - 5);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -687,6 +688,15 @@ namespace Aurora.DataManager.MSSQL
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
             dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
+            dbcommand.ExecuteNonQuery();
+            CloseDatabase(dbcon);
+        }
+
+        public override void ForceRenameTable(string oldTableName, string newTableName)
+        {
+            SqlConnection dbcon = GetLockedConnection();
+            SqlCommand dbcommand = dbcon.CreateCommand();
+            dbcommand.CommandText = string.Format("RENAME TABLE {0} TO {1}", oldTableName, newTableName);
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
         }

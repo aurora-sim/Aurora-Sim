@@ -13,6 +13,7 @@ namespace Aurora.DataManager.Migration.Migrators
             CanProvideDefaults = true;
 
             schema = new AuroraMigrator_2010_12_30().schema;
+            renameSchema = new Dictionary<string, string>();
 
             //Added tables
 

@@ -13,6 +13,7 @@ namespace Aurora.DataManager.Migration.Migrators
             CanProvideDefaults = true;
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
+            renameSchema = new Dictionary<string, string>();
 
             AddSchema("userdata", ColDefs(
                 ColDef("ID", ColumnTypes.String45, true),

@@ -76,10 +76,9 @@ namespace Aurora.DataManager.SQLite
                     return cmd.ExecuteNonQuery();
                 }
             }
-            catch (Mono.Data.Sqlite.SqliteException)
+            catch (Mono.Data.Sqlite.SqliteException ex)
             {
-                //m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
-                //throw ex;
+                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " + ex);
             }
             catch (Exception ex)
             {
@@ -385,7 +384,7 @@ namespace Aurora.DataManager.SQLite
         {
             var cmd = new SqliteCommand();
 
-            string query = String.Format("delete from {0} where ", table);
+            string query = String.Format("delete from {0} " + (keys.Length > 0 ? "where " : ""), table);
             ;
             int i = 0;
             foreach (object value in values)
@@ -393,7 +392,8 @@ namespace Aurora.DataManager.SQLite
                 query += keys[i] + " = '" + value.ToString() + "' and ";
                 i++;
             }
-            query = query.Remove(query.Length - 4);
+            if(keys.Length > 0)
+                query = query.Remove(query.Length - 4);
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
@@ -749,6 +749,14 @@ namespace Aurora.DataManager.SQLite
         {
             var cmd = new SqliteCommand();
             cmd.CommandText = string.Format("drop table {0}", tableName);
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+        }
+
+        public override void ForceRenameTable(string oldTableName, string newTableName)
+        {
+            var cmd = new SqliteCommand();
+            cmd.CommandText = string.Format("ALTER TABLE {0} RENAME TO {1}", oldTableName, newTableName);
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }

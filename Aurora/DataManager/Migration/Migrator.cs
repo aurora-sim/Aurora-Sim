@@ -8,6 +8,7 @@ namespace Aurora.DataManager.Migration
     public class Migrator : IRestorePoint
     {
         public List<Rec<string, ColumnDefinition[]>> schema;
+        public Dictionary<string, string> renameSchema;
 
         public Version Version { get; protected set; }
 
@@ -99,6 +100,10 @@ namespace Aurora.DataManager.Migration
 
         protected void EnsureAllTablesInSchemaExist(IDataConnector genericData)
         {
+            foreach (System.Collections.Generic.KeyValuePair<string, string> r in renameSchema)
+            {
+                genericData.RenameTable(r.Key, r.Value);
+            }
             foreach (var s in schema)
             {
                 genericData.EnsureTableExists(s.X1, s.X2);
@@ -107,7 +112,6 @@ namespace Aurora.DataManager.Migration
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
-
             foreach (var s in schema)
             {
                 if (!genericData.VerifyTableExists(s.X1, s.X2))
