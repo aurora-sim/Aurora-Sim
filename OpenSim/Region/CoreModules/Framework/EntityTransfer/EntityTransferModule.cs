@@ -743,6 +743,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 
                 if (!m_scene.SimulationService.UpdateAgent(crossingRegion, cAgent))
                 {
+                    m_log.Warn("[EntityTransferModule]: Failed to cross agent " + agent.Name + " because region did not accept it. Resetting.");
                     // region doesn't take it
                     ResetFromTransit(agent.UUID);
                     return agent;
