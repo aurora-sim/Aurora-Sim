@@ -130,8 +130,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private CollisionLocker ode;
 
         private Vector3 m_force;
-        private List<Vector3> m_forcelist = new List<Vector3>();
-        private List<Vector3> m_angularforcelist = new List<Vector3>();
+        private Vector3 m_forceacc;
+        private Vector3 m_angularforceacc;
 
         private IMesh _mesh;
         private PrimitiveBaseShape _pbs;
@@ -141,7 +141,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr prev_geom;
         public IntPtr _triMeshData;
 
-        private IntPtr _linkJointGroup = IntPtr.Zero;
         private PhysicsActor _parent;
 
         private List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
@@ -176,8 +175,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public int m_eventsubscription;
         private CollisionEventUpdate CollisionEventsThisFrame;
 
-        private IntPtr m_linkJoint = IntPtr.Zero;
-
         public volatile bool childPrim;
 
         private AuroraODEDynamics m_vehicle;
@@ -201,6 +198,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             PID_D = parent_scene.bodyPIDD;
             PID_G = parent_scene.bodyPIDG;
+
+            // correct for changed timestep
+            PID_D /= (parent_scene.ODE_STEPSIZE * 50f); // original ode fps of 50
+            PID_G /= (parent_scene.ODE_STEPSIZE * 50f);
+
             m_density = parent_scene.geomDefaultDensity;
             // m_tensor = parent_scene.bodyMotorJointMaxforceTensor;
             body_autodisable_frames = parent_scene.bodyFramesAutoDisable;
@@ -209,7 +211,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             prim_geom = IntPtr.Zero;
             prev_geom = IntPtr.Zero;
 
-            if (!pos.IsFinite())
+            if (!size.IsFinite())
             {
                 size = new Vector3(0.5f, 0.5f, 0.5f);
                 m_log.Warn("[PHYSICS]: Got nonFinite Object create Size");
@@ -247,6 +249,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_targetSpace = _parent_scene.space;
             }
             m_primName = primName;
+
+            m_forceacc = Vector3.Zero;
+            m_angularforceacc = Vector3.Zero;
+
             AddChange(changes.Add, null);
         }
 
@@ -359,8 +365,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void MakeBody()
             {
-            d.Vector3 dvtmp;
-            d.Vector3 dbtmp;
+//            d.Vector3 dvtmp;
+//            d.Vector3 dbtmp;
             
             d.Mass tmpdmass = new d.Mass { };
             d.Mass objdmass = new d.Mass { };
@@ -519,13 +525,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             _parent_scene.addActivePrim(this);
 
-            d.Mass mtmp;
+/*            d.Mass mtmp;
             d.BodyGetMass(Body, out mtmp);
             d.Matrix3 mt = d.GeomGetRotation(prim_geom);
             d.Matrix3 mt2 = d.BodyGetRotation(Body);
             dvtmp = d.GeomGetPosition(prim_geom);
             dbtmp = d.BodyGetPosition(Body);
-
+*/
             }
 
         public void DestroyBody()  // for now removes all colisions etc from childs, full body reconstruction is needed after this
@@ -1431,7 +1437,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float m_mass = _mass;
                     d.Vector3 dcpos = d.BodyGetPosition(Body);
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
-//                    d.Vector3 force = d.BodyGetForce(Body);    wrong this is always null at this point
                     d.Vector3 angvel = d.BodyGetAngularVel(Body);
 
                     //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle.
@@ -1442,9 +1447,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                         if (!testRealGravity)
                             {
-                            fx = _parent_scene.gravityx * (1.0f - m_buoyancy) * m_mass;
-                            fy = _parent_scene.gravityy * (1.0f - m_buoyancy) * m_mass;
-                            fz = (_parent_scene.gravityz) * (1.0f - m_buoyancy) * m_mass;
+                            fx = _parent_scene.gravityx * (1.0f - m_buoyancy);
+                            fy = _parent_scene.gravityy * (1.0f - m_buoyancy);
+                            fz = _parent_scene.gravityz * (1.0f - m_buoyancy);
                             }
                         else
                             {
@@ -1458,11 +1463,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //Set up point gravity for this object
                         Vector3 cog = _parent_scene.PointOfGravity;
                         if (cog.X != 0)
-                            fx = (cog.X - dcpos.X) * m_mass;
+                            fx = (cog.X - dcpos.X);
                         if (cog.Y != 0)
-                            fy = (cog.Y - dcpos.Y) * m_mass;
+                            fy = (cog.Y - dcpos.Y);
                         if (cog.Z != 0)
-                            fz = (cog.Z - dcpos.Z) * m_mass;
+                            fz = (cog.Z - dcpos.Z);
                         }
 
 
@@ -1525,6 +1530,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             d.BodySetLinearVel(Body, 0, 0, 0);
                             d.BodyAddForce(Body, 0, 0, fz);
+
                             return;
                             }
                         else
@@ -1537,7 +1543,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             // vec.Z = (_target_velocity.Z - vel.Z) * PID_D + (_zeroPosition.Z - pos.Z) * PID_P;
 
-                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass));
+                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
                             }
                         }        // end if (m_usePID)
                     #endregion
@@ -1548,9 +1554,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //Console.WriteLine("Hover " +  m_primName);
 
                         // If we're using the PID controller, then we have no gravity
-                        fx = (-1 * _parent_scene.gravityx) * m_mass;
-                        fy = (-1 * _parent_scene.gravityy) * m_mass;
-                        fz = (-1 * _parent_scene.gravityz) * m_mass;
+                        fx = -_parent_scene.gravityx;
+                        fy = -_parent_scene.gravityy;
+                        fz = -_parent_scene.gravityz;
 
                         //  no lock; for now it's only called from within Simulate()
 
@@ -1620,25 +1626,47 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             _zeroFlag = false;
 
                             // We're flying and colliding with something
-                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D) * m_mass));
+                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
                             }
                         }
                     #endregion
 
                     fx *= m_mass;
                     fy *= m_mass;
+                    fz *= m_mass;
 
                     fx += m_force.X;
                     fy += m_force.Y;
                     fz += m_force.Z;
 
+                    # region drag and forces accumulators
+
+                    float drag = -m_mass * 0.2f;
+
+                    fx += drag * vel.X;
+                    fy += drag * vel.Y;
+                    fz += drag * vel.Z;
+
+                   
+                    Vector3 newtorque;
+                    newtorque.X = m_angularforceacc.X;
+                    newtorque.Y = m_angularforceacc.Y;
+                    newtorque.Z = m_angularforceacc.Z;
+                    m_angularforceacc = Vector3.Zero;
+
+                    fx += m_forceacc.X;
+                    fy += m_forceacc.Y;
+                    fz += m_forceacc.Z;
+                    m_forceacc = Vector3.Zero;
+
+                    #endregion
+
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
-                    if (fx != 0 || fy != 0 || fz != 0)
+                    if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
                         {
                         // 35n times the mass per second applied maximum.
                         float nmax = 35f * m_mass;
                         float nmin = -35f * m_mass;
-
 
                         if (fx > nmax)
                             fx = nmax;
@@ -1649,12 +1677,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (fy < nmin)
                             fy = nmin;
 
-                        if (!m_angularlock.ApproxEquals(Vector3.One, 0.003f) &&
-                                Amotor != IntPtr.Zero)
+                        if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals(Vector3.One, 0.003f)                                )
                             {
-                            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, 0.001f);
-                            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, 0.0001f);
-                            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, 0.0001f);
+                            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -0.001f);
+                            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -0.0001f);
+                            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -0.0001f);
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 0.0001f);
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 0.0001f);
                             d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 0.0001f);
@@ -1666,16 +1693,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
 */
                         bool disabled = false;
-
+/*
                         if (_parent_scene.m_DisableSlowPrims)
                             {
                             if (((float)fz == (float)(_parent_scene.gravityz * m_mass)) &&
-                                (vel.X < 0.01 || vel.Y < 0.01 || vel.Z < 0.0001) &&
-                                m_forcelist.Count == 0)
+                                (Math.Abs(vel.X) < 0.01 || Math.Abs(vel.Y) < 0.01 || Math.Abs(vel.Z) < 0.0001))
                                 {
                                 if (Math.Abs(vel.X) < 0.0001 || Math.Abs(vel.Y) < 0.0001 || Math.Abs(vel.Z) < 0.0001)
                                     {
                                     Vector3 angvelocity = new Vector3((float)angvel.X, (float)angvel.Y, (float)angvel.Z);
+
                                     if (angvelocity.ApproxEquals(Vector3.Zero, 0.005f) &&
                                         vel.X != 0 && vel.Y != 0 && vel.Z != 0)
                                         {
@@ -1703,61 +1730,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     }
                                 }
                             }
-
+*/
                         if (!disabled)
                             {
                             if (!d.BodyIsEnabled(Body))
                                 {
-                                // A physical body at rest on a surface will auto-disable after a while,
-                                // this appears to re-enable it incase the surface it is upon vanishes,
-                                // and the body should fall again. 
-                                //d.BodySetLinearVel(Body, 0f, 0f, m_mass);
-                                //d.BodySetForce(Body, 0, 0, 100 * m_mass);
-                                enableBodySoft();
-                                vel = d.BodyGetLinearVel(Body);
+                                enableBodySoft();                               
                                 }
-
-                            float drag = -m_mass * 0.2f;
-
-                            fx += drag * vel.X;
-                            fy += drag * vel.Y;
-                            fz += drag * vel.Z;                                                    
-
-                            d.BodyAddTorque(Body, drag * angvel.X, drag * angvel.Y, drag * angvel.Z);
-
-                            #region Force List
-
-                            Vector3 iforce = Vector3.Zero;
-                            int i = 0;
-                            try
-                                {
-                                for (i = 0; i < m_forcelist.Count; i++)
-                                    {
-                                    iforce = iforce + (m_forcelist[i] * 100);
-                                    }
-                                }
-                            catch (IndexOutOfRangeException)
-                                {
-                                m_forcelist = new List<Vector3>();
-                                m_collisionscore = 0;
-                                m_interpenetrationcount = 0;
-                                return;
-                                }
-                            catch (ArgumentOutOfRangeException)
-                                {
-                                m_forcelist = new List<Vector3>();
-                                m_collisionscore = 0;
-                                m_interpenetrationcount = 0;
-                                return;
-                                }
-                            fx += iforce.X;
-                            fy += iforce.Y;
-                            fz += iforce.Z;
-                            m_forcelist.Clear();
-
-                            #endregion
 
                             d.BodyAddForce(Body, fx, fy, fz);
+                            d.BodyAddTorque(Body, newtorque.X, newtorque.Y, newtorque.Z);                    
+
                             }
                         }
                     }
@@ -1966,33 +1949,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             changeprimsizeshape();
             }
 
-
-        public void changeAddForce()
-        {
-            if (!m_isSelected)
+        public void changeAddForce(object arg)
             {
-                lock (m_forcelist)
+            if (!m_isSelected)
                 {
+                if (IsPhysical)
+                    {
                     if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                    {
-                        //m_log.Info("[PHYSICS]: dequeing forcelist");
-                        //if (IsPhysical)
-                        //{
-                            
-                        //}
-                        //m_forcelist.Clear();
-                    }
+                        {
+                        m_forceacc += (Vector3)arg *100;
+                        }
                     else
-                    {
-                        m_vehicle.ProcessForceTaint(m_forcelist);
+                        {
+                        m_vehicle.ProcessForceTaint((Vector3)arg);
+                        }
                     }
-                }
-
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
-            }       
-        }
-
+                }
+            }
         public void changeSetTorque(Object arg)
         {
             Vector3 newtorque = (Vector3) arg;
@@ -2005,34 +1980,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void changeAddAngularForce()
-        {
-            if (!m_isSelected)
+        public void changeAddAngularForce(object arg)
             {
-                lock (m_angularforcelist)
+            if (!m_isSelected)
                 {
-                    //m_log.Info("[PHYSICS]: dequeing forcelist");
-                    if (IsPhysical)
+                //m_log.Info("[PHYSICS]: dequeing forcelist");
+                if (IsPhysical)
                     {
-                        Vector3 iforce = Vector3.Zero;
-                        for (int i = 0; i < m_angularforcelist.Count; i++)
-                        {
-                            iforce = iforce + (m_angularforcelist[i] * 100);
-                        }
-                        if (Body != IntPtr.Zero)
-                            {
-                            d.BodyEnable(Body);
-                            d.BodyAddTorque(Body, iforce.X, iforce.Y, iforce.Z);
-                            }
-                        
+                    m_angularforceacc += (Vector3)arg * 100;
                     }
-                    m_angularforcelist.Clear();
-                }
 
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
+                }
             }
-        }
 
         private void changevelocity(object arg)
             {
@@ -2357,10 +2318,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (force.IsFinite())
             {
-                lock (m_forcelist)
-                    m_forcelist.Add(force);
-
-                AddChange(changes.Force, null);
+                AddChange(changes.Force, (object) force);
             }
             else
             {
@@ -2373,8 +2331,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (force.IsFinite())
             {
-                m_angularforcelist.Add(force);
-                AddChange(changes.AddAngForce, null);
+                AddChange(changes.AddAngForce, (object) force);
             }
             else
             {
@@ -2474,14 +2431,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     d.Vector3 vel = d.BodyGetLinearVel(Body);
                     d.Vector3 rotvel = d.BodyGetAngularVel(Body);
-                    d.Vector3 torque = d.BodyGetTorque(Body);
-                    _torque = new Vector3((float)torque.X, (float)torque.Y, (float)torque.Z);
-
-                    //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
-                    //if (vec.X < 0.0f) { vec.X = 0.0f; if (Body != (IntPtr)0) d.BodySetAngularVel(Body, 0, 0, 0); }
-                    //if (vec.Y < 0.0f) { vec.Y = 0.0f; if (Body != (IntPtr)0) d.BodySetAngularVel(Body, 0, 0, 0); }
-                    //if (vec.X > 255.95f) { vec.X = 255.95f; if (Body != (IntPtr)0) d.BodySetAngularVel(Body, 0, 0, 0); }
-                    //if (vec.Y > 255.95f) { vec.Y = 255.95f; if (Body != (IntPtr)0) d.BodySetAngularVel(Body, 0, 0, 0); }
 
                     m_lastposition = _position;
                     m_lastorientation = _orientation;
@@ -2547,7 +2496,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.Z = 0;
 
                         d.BodySetLinearVel(Body, 0, 0, 0); // stop it
-                        d.BodySetForce(Body, 0, 0, 0);
+                        d.BodySetAngularVel(Body, 0, 0, 0); // stop it
                         d.BodySetPosition(Body, cpos.X, cpos.Y, cpos.Z); // put it somewhere 
 
                         base.RequestPhysicsterseUpdate();
@@ -2559,17 +2508,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     #endregion
 
-                    if ((Math.Abs(m_lastposition.X - l_position.X) < 0.005)
-                        && (Math.Abs(m_lastposition.Y - l_position.Y) < 0.005)
-                        && (Math.Abs(m_lastposition.Z - l_position.Z) < 0.005)
-                        && (Math.Abs(_velocity.X - m_lastVelocity.X) < 0.005)
-                        //                        && (Math.Abs(_velocity.Y - m_lastVelocity.Y) < 0.005)
-                        //                        && (Math.Abs(_velocity.Z - m_lastVelocity.Z) < 0.005) //Accel
-                        //                        && (Math.Abs(m_rotationalVelocity.X - m_lastRotationalVelocity.X) < 0.005)
-                        //                        && (Math.Abs(m_rotationalVelocity.Y - m_lastRotationalVelocity.Y) < 0.005)
-                        //                        && (Math.Abs(m_rotationalVelocity.Z - m_lastRotationalVelocity.Z) < 0.005) 
-                        && (1.0 - Math.Abs(Quaternion.Dot(m_lastorientation, l_orientation)) < 0.00001) // KF 0.01 is far to large
-                        && m_vehicle.Type == Vehicle.TYPE_NONE)
+                    if ((Math.Abs(m_lastposition.X - l_position.X) < 0.001)
+                        && (Math.Abs(m_lastposition.Y - l_position.Y) < 0.001)
+                        && (Math.Abs(m_lastposition.Z - l_position.Z) < 0.001)
+                        && (Math.Abs(vel.X) < 0.001)
+                        && (Math.Abs(vel.Y) < 0.001)
+                        && (Math.Abs(vel.Z) < 0.001)
+                        && (Math.Abs(rotvel.X) < 0.0001)
+                        && (Math.Abs(rotvel.Y) < 0.0001)
+                        && (Math.Abs(rotvel.Z) < 0.0001)
+
+                        && m_vehicle.Type == Vehicle.TYPE_NONE )
                         {
                         _zeroFlag = true;
                         m_throttleUpdates = false;
@@ -2595,13 +2544,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.Z = 0;
 
                         d.BodySetLinearVel(Body, 0, 0, 0);
-                        d.BodySetForce(Body, 0, 0, 0);
-                        d.BodySetTorque(Body, 0, 0, 0);
+                        d.BodySetAngularVel(Body, 0, 0, 0);
 
                         if (m_lastUpdateSent > 0)
                             {
-
-                            if (throttleCounter > 200 || m_lastUpdateSent >= 3)
+                            if (throttleCounter > 100 || m_lastUpdateSent >= 2)
                                 {
                                 base.RequestPhysicsterseUpdate();
                                 m_lastUpdateSent--;
@@ -2610,16 +2557,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             else
                                 throttleCounter++;
- 
- 
-                            }
+                             }
                         }
                     else
                         {
                         m_lastVelocity = _velocity;
                         if (m_vehicle.Type == Vehicle.TYPE_NONE)
                             {
-
                             _position = l_position;
 
                             _velocity.X = (float)vel.X;
@@ -2630,41 +2574,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
                             m_lastRotationalVelocity = m_rotationalVelocity;
-
                             m_rotationalVelocity = new Vector3((float)rotvel.X, (float)rotvel.Y, (float)rotvel.Z);
 
-                            bool tz = false;
-
-                            if (_velocity.ApproxEquals(pv, 0.005f))
-                                {
-                                if (_velocity != Vector3.Zero)
-                                    {
-                                    _velocity = Vector3.Zero;
-                                    tz = true;
-                                    d.BodySetForce(Body, 0, 0, 0);
-                                    }
-                                else
-                                    d.BodySetForce(Body, 0, 0, 0);
-                                }
-                            if (m_rotationalVelocity != Vector3.Zero && m_rotationalVelocity.ApproxEquals(pv, 0.005f))
-                                {
-                                m_rotationalVelocity = Vector3.Zero;
-                                tz = true;
-                                }
-
-                            if (tz)
-                                {
-                                _zeroFlag = tz;
-                                m_lastUpdateSent = 1;
-                                }
-                            //d.BodySetLinearVel(Body, _velocity.X,
-                            //    _velocity.Y,
-                            //    _velocity.Z);
-                            //d.BodySetAngularVel(Body, m_rotationalVelocity.X,
-                            //    m_rotationalVelocity.Y,
-                            //    m_rotationalVelocity.Z);
-
-                            //m_log.Debug("ODE: " + m_rotationalVelocity.ToString());
                             }
                         _orientation.X = (float)ori.X;
                         _orientation.Y = (float)ori.Y;
@@ -2673,13 +2584,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (!m_throttleUpdates || throttleCounter > _parent_scene.geomUpdatesPerThrottledUpdate)
                             {
                             base.RequestPhysicsterseUpdate();
-//                            throttleCounter = 0;
                             }
                         else
                             throttleCounter++;
-
                         }
-                    m_lastposition = l_position;
                     }
                 else
                     {
@@ -2934,6 +2842,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private static void DMassDup(ref d.Mass src, out d.Mass dst)
             {
             dst = new d.Mass { };
+            
             dst.c.W = src.c.W;
             dst.c.X = src.c.X;
             dst.c.Y = src.c.Y;
@@ -2968,16 +2877,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private void changevoldtc(Object arg)
             {
             m_isVolumeDetect = ((int)arg != 0);
-            }
-
-
-                        
-
+            }                       
 
         private void donullchange()
             {
             }
-
 
         public bool DoAChange(changes what, object arg)
             {
@@ -2988,9 +2892,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                 m_frozen = true;
                 return false;
-                }
-
-            
+                }            
 
             // nasty switch
             switch (what)
@@ -3053,11 +2955,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
 
                 case changes.AddForce:
-                    changeAddForce();
+                    changeAddForce(arg);
                     break;
 
                 case changes.AddAngForce:
-                    changeAddAngularForce();
+                    changeAddAngularForce(arg);
                     break;
 
                 case changes.AngLock:
