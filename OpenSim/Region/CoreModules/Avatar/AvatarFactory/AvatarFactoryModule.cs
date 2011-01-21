@@ -480,21 +480,19 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             //Only set this if we actually have sent the wearables
             sp.m_InitialHasWearablesBeenSent = true;
 
-            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
-            
-            //Send rebakes if needed
-            ValidateBakedTextureCache(sp.ControllingClient, false);
-            //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
-            // NOTE: Do NOT send this! It seems to make the client become a cloud
-            //sp.SendAppearanceToAgent(sp);
+            // This agent just became root. We are going to tell everyone about it.
+            sp.SendAvatarDataToAllAgents();
 
             if (ValidateBakedTextureCache(sp.ControllingClient))
                 sp.SendAppearanceToAgent(sp);
             else
                 m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", sp.Name);
 
-            // This agent just became root. We are going to tell everyone about it.
-            sp.SendAvatarDataToAllAgents();
+            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            
+            //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
+            // NOTE: Do NOT send this! It seems to make the client become a cloud
+            //sp.SendAppearanceToAgent(sp);
 
             // If the avatars baked textures are all in the cache, then we have a 
             // complete appearance... send it out, if not, then we'll send it when
