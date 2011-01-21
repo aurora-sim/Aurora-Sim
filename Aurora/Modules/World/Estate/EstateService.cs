@@ -33,13 +33,6 @@ namespace Aurora.Modules
         private string[] BanCriteria = new string[0];
 
         private Dictionary<UUID, int> LastTelehub = new Dictionary<UUID, int>();
-        private enum ProfileFlags : int
-        {
-            NoPaymentInfoOnFile = 2,
-            PaymentInfoOnFile = 4,
-            PaymentInfoInUse = 8,
-            AgentOnline = 16
-        }
 
         #endregion
 
@@ -562,7 +555,7 @@ namespace Aurora.Modules
 
             if ((ILO.LandData.Flags & (int)ParcelFlags.DenyAnonymous) != 0)
             {
-                if ((account.UserFlags & (int)ProfileFlags.NoPaymentInfoOnFile) == (int)ProfileFlags.NoPaymentInfoOnFile)
+                if ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile)
                 {
                     reason = "You may not enter this region.";
                     return false;
@@ -745,19 +738,19 @@ namespace Aurora.Modules
                 return true;
             }
 
-            if (ES.DenyAnonymous && ((account.UserFlags & (int)ProfileFlags.NoPaymentInfoOnFile) == (int)ProfileFlags.NoPaymentInfoOnFile))
+            if (ES.DenyAnonymous && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
-            if (ES.DenyIdentified && ((account.UserFlags & (int)ProfileFlags.PaymentInfoOnFile) == (int)ProfileFlags.PaymentInfoOnFile))
+            if (ES.DenyIdentified && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
-            if (ES.DenyTransacted && ((account.UserFlags & (int)ProfileFlags.PaymentInfoInUse) == (int)ProfileFlags.PaymentInfoInUse))
+            if (ES.DenyTransacted && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
             {
                 reason = "You may not enter this region.";
                 return false;

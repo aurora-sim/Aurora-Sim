@@ -601,7 +601,7 @@ namespace OpenSim.Services.LLLoginService
                         //Also verify that all baked texture indices exist
                         foreach (byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
                         {
-                            if (BakedTextureIndex == 19)
+                            if (BakedTextureIndex == 19) //Skirt isn't used unless you have a skirt
                                 continue;
                             if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                             {

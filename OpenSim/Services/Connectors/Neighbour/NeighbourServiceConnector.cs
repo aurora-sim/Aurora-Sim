@@ -107,6 +107,7 @@ namespace OpenSim.Services.Connectors
                 //If we have already informed the region, don't tell it again
                 if (informedRegions.Contains(neighbor))
                     continue;
+
                 //Call the region then and add the regions it informed
                 informedRegions.AddRange(DoHelloNeighbourCall(neighbor, incomingRegion));
             }

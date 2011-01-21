@@ -48,6 +48,10 @@ namespace OpenSim.Services.Connectors.Simulation
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected LocalSimulationServiceConnector m_localBackend;
+        /// <summary>
+        /// These are regions that have timed out and we are not sending updates to until the (int) time passes
+        /// </summary>
+        protected Dictionary<string, int> m_blackListedRegions = new Dictionary<string, int>();
         
         public IScene GetScene(ulong regionHandle)
         {
@@ -139,7 +143,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (m_localBackend.UpdateAgent(destination, (AgentData)cAgentData))
                     return true;
             }
-            else if (cAgentData is AgentData)
+            else if (cAgentData is AgentPosition)
             {
                 if (m_localBackend.UpdateAgent(destination, (AgentPosition)cAgentData))
                     return true;
@@ -150,6 +154,16 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 // Eventually, we want to use a caps url instead of the agentID
                 string uri = MakeUri(destination, AgentPath()) + cAgentData.AgentID + "/";
+
+                if (m_blackListedRegions.ContainsKey(uri))
+                {
+                    //Check against time
+                    if(Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
+                    {
+                        //Still blacklisted
+                        return false;
+                    }
+                }
 
                 try
                 {
@@ -162,8 +176,16 @@ namespace OpenSim.Services.Connectors.Simulation
 
                     OSDMap result = WebUtils.PutToService(uri, args);
                     if (!result["Success"].AsBoolean())
+                    {
+                        //add it to the blacklist
+                        m_blackListedRegions[uri] = Util.EnvironmentTickCount() + 60 * 1000; //60 seconds
                         return result["Success"].AsBoolean();
-                    return result["Updated"].AsBoolean();
+                    }
+                    //Clear out the blacklist if it went through
+                    m_blackListedRegions.Remove(uri);
+
+                    OSDMap innerResult = (OSDMap)result["_Result"];
+                    return innerResult["Updated"].AsBoolean();
                 }
                 catch (Exception e)
                 {

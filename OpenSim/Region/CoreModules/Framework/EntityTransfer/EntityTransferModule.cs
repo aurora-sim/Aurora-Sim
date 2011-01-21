@@ -654,57 +654,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Agent Crossings
 
-        public delegate void InformClientToInitateTeleportToLocationDelegate(ScenePresence agent, uint regionX, uint regionY,
-                                                            Vector3 position,
-                                                            Scene initiatingScene);
-
-        protected void InformClientToInitateTeleportToLocation(ScenePresence agent, uint regionX, uint regionY, Vector3 position, Scene initiatingScene)
-        {
-
-            // This assumes that we know what our neighbors are.
-
-            InformClientToInitateTeleportToLocationDelegate d = InformClientToInitiateTeleportToLocationAsync;
-            d.BeginInvoke(agent, regionX, regionY, position, initiatingScene,
-                          InformClientToInitiateTeleportToLocationCompleted,
-                          d);
-        }
-
-        public void InformClientToInitiateTeleportToLocationAsync(ScenePresence agent, uint regionX, uint regionY, Vector3 position,
-            Scene initiatingScene)
-        {
-            Thread.Sleep(10000);
-            IMessageTransferModule im = initiatingScene.RequestModuleInterface<IMessageTransferModule>();
-            if (im != null)
-            {
-                UUID gotoLocation = Util.BuildFakeParcelID(
-                    Util.UIntsToLong(
-                                              (regionX *
-                                               (uint)Constants.RegionSize),
-                                              (regionY *
-                                               (uint)Constants.RegionSize)),
-                    (uint)(int)position.X,
-                    (uint)(int)position.Y,
-                    (uint)(int)position.Z);
-                GridInstantMessage m = new GridInstantMessage(initiatingScene, UUID.Zero,
-                "Region", agent.UUID,
-                (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
-                "", gotoLocation, false, new Vector3(127, 0, 0),
-                new Byte[0]);
-                im.SendInstantMessage(m, delegate(bool success)
-                {
-                    //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Client Initiating Teleport sending IM success = {0}", success);
-                });
-
-            }
-        }
-
-        protected void InformClientToInitiateTeleportToLocationCompleted(IAsyncResult iar)
-        {
-            InformClientToInitateTeleportToLocationDelegate icon =
-                (InformClientToInitateTeleportToLocationDelegate)iar.AsyncState;
-            icon.EndInvoke(iar);
-        }
-
         public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
             Scene scene = agent.Scene;

@@ -219,12 +219,32 @@ namespace Aurora.Framework
         /// </summary>
         public OSDMap Classifieds = new OSDMap();
 
+        public enum ProfileFlags : int
+        {
+            NoPaymentInfoOnFile = 2,
+            PaymentInfoOnFile = 4,
+            PaymentInfoInUse = 8,
+            AgentOnline = 16
+        }
+
         public override Dictionary<string, object> ToKeyValuePairs()
         {
             return Util.OSDToDictionary(ToOSD());
         }
 
         public override OSDMap ToOSD()
+        {
+            return ToOSD(true);
+        }
+
+        /// <summary>
+        /// This method creates a smaller OSD that 
+        /// does not contain sensitive information
+        /// if the trusted boolean is false
+        /// </summary>
+        /// <param name="secure"></param>
+        /// <returns></returns>
+        public OSDMap ToOSD(bool trusted)
         {
             OSDMap map = new OSDMap();
             map.Add("PrincipalID", OSD.FromUUID(PrincipalID));
@@ -244,11 +264,14 @@ namespace Aurora.Framework
             map.Add("DisplayName", OSD.FromString(DisplayName));
             map.Add("Partner", OSD.FromUUID(Partner));
             map.Add("Visible", OSD.FromBoolean(Visible));
-            map.Add("AArchiveName", OSD.FromString(AArchiveName));
             map.Add("CustomType", OSD.FromString(CustomType));
-            map.Add("IMViaEmail", OSD.FromBoolean(IMViaEmail));
-            map.Add("IsNewUser", OSD.FromBoolean(IsNewUser));
-            map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
+            if (trusted)
+            {
+                map.Add("AArchiveName", OSD.FromString(AArchiveName));
+                map.Add("IMViaEmail", OSD.FromBoolean(IMViaEmail));
+                map.Add("IsNewUser", OSD.FromBoolean(IsNewUser));
+                map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
+            }
 
             map.Add("Classifieds", OSD.FromString(OSDParser.SerializeJsonString(Classifieds)));
             map.Add("Picks", OSD.FromString(OSDParser.SerializeJsonString(Picks)));
