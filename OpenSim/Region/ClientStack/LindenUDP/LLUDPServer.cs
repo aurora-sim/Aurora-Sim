@@ -932,14 +932,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Start the IClientAPI
                 m_scene.AddNewClient(client);
-                return true;
             }
             else
             {
                 m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
                     circuitCode, agentID, remoteEndPoint);
             }
-            return false;
+            return true;
         }
 
         private void RemoveClient(LLUDPClient udpClient)

@@ -779,10 +779,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData)
         {
         }
-        
-        public void SendShutdownConnectionNotice()
-        {
-        }
 
         public void SendSimStats(SimStats stats)
         {

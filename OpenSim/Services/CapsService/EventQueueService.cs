@@ -718,10 +718,6 @@ namespace OpenSim.Services.CapsService
                     otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
                     if (newAgent)
                     {
-                        //m_log.DebugFormat("[EventQueueService]: {0} is sending {1} EnableSimulator for neighbor region {2} @ {3} " +
-                        //    "and EstablishAgentCommunication with seed cap {4}",
-                        //    m_scene.RegionInfo.RegionName, sp.Name, reg.RegionName, reg.RegionHandle, capsPath);
-
                         //We 'could' call Enqueue directly... but its better to just let it go and do it this way
                         IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 

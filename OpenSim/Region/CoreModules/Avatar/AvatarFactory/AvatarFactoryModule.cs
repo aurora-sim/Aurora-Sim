@@ -490,10 +490,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             
-            //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
-            // NOTE: Do NOT send this! It seems to make the client become a cloud
-            //sp.SendAppearanceToAgent(sp);
-
             // If the avatars baked textures are all in the cache, then we have a 
             // complete appearance... send it out, if not, then we'll send it when
             // the avatar finishes updating its appearance

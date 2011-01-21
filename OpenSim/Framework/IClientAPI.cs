@@ -1307,8 +1307,6 @@ namespace OpenSim.Framework
         /// </summary>
         void SendImageNotFound(UUID imageid);
 
-        void SendShutdownConnectionNotice();
-
         /// <summary>
         /// Send statistical information about the sim to the client.
         /// </summary>

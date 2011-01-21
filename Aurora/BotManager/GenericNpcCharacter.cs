@@ -687,10 +687,6 @@ namespace Aurora.BotManager
         public void SendImageNotFound(UUID imageid)
         {
         }
-        
-        public void SendShutdownConnectionNotice()
-        {
-        }
 
         public void SendSimStats(SimStats stats)
         {

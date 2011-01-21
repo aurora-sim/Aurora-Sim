@@ -2609,7 +2609,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Transfer.TransferInfo.ChannelType = (int)ChannelType.Asset;
             Transfer.TransferInfo.Status = (int)TransferPacketStatus.MorePacketsToCome;
             Transfer.TransferInfo.TargetType = 0;
-
             if (req.AssetRequestSource == 2)
             {
                 Transfer.TransferInfo.Params = new byte[20];

@@ -391,7 +391,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 if (eq != null)
                 {
-                    eq.TeleportFinishEvent(destinationHandle, 13, endPoint,
+                    eq.TeleportFinishEvent(destinationHandle, finalDestination.Access, endPoint,
                                            4, teleportFlags, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
                 }
 

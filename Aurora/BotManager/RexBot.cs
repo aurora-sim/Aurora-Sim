@@ -2551,11 +2551,6 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.SendShutdownConnectionNotice()
-        {
-            
-        }
-
         void IClientAPI.SendSimStats(SimStats stats)
         {
             
