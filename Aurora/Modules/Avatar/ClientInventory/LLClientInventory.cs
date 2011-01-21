@@ -568,7 +568,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n",
                                 presence.Scene.RegionInfo.RegionID,
                                 pos.X, pos.Y, pos.Z,
-                                presence.RegionHandle);
+                                presence.Scene.RegionInfo.RegionHandle);
                             data = Encoding.ASCII.GetBytes(strdata);
                         }
                         if (invType == (sbyte)InventoryType.LSL)

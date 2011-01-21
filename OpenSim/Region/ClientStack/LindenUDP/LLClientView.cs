@@ -3499,16 +3499,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             ObjectUpdatePacket objupdate = (ObjectUpdatePacket)PacketPool.Instance.GetPacket(PacketType.ObjectUpdate);
             objupdate.Header.Zerocoded = true;
 
-            objupdate.RegionData.RegionHandle = presence.RegionHandle;
-            objupdate.RegionData.TimeDilation = ushort.MaxValue;
+            objupdate.RegionData.RegionHandle = presence.Scene.RegionInfo.RegionHandle;
+            float TIME_DILATION = presence.Scene.TimeDilation;
+            ushort timeDilation = Utils.FloatToUInt16(TIME_DILATION, 0.0f, 1.0f);
+
+            objupdate.RegionData.TimeDilation = timeDilation;
 
             objupdate.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[1];
             objupdate.ObjectData[0] = CreateAvatarUpdateBlock(presence);
 
             OutPacket(objupdate, ThrottleOutPacketType.Task);
-
-            // We need to record the avatar local id since the root prim of an attachment points to this.
-//            m_attachmentsSent.Add(avatar.LocalId);
         }
 
         public void SendCoarseLocationUpdate(List<UUID> users, List<Vector3> CoarseLocations)
@@ -4604,6 +4604,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             byte[] objectData = new byte[76];
 
+            //Vector4.Zero causes bended knee
             if (data.CollisionPlane == Vector4.Zero)
                 data.CollisionPlane = Vector4.UnitW;
             //m_log.DebugFormat("CollisionPlane: {0}", data.CollisionPlane);

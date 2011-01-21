@@ -5184,7 +5184,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (presence == null)
                 return "";
 
-            if (m_host.ParentGroup.Scene.RegionInfo.RegionHandle == presence.RegionHandle)
+            if (m_host.ParentGroup.Scene.RegionInfo.RegionHandle == presence.Scene.RegionInfo.RegionHandle)
             {
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
 

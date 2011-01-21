@@ -244,8 +244,6 @@ namespace OpenSim.Region.Framework.Scenes
         string m_callbackURI;
         UUID m_originRegionID;
 
-        ulong m_rootRegionHandle;
-
         private bool m_IsSelecting = false;
         private SceneObjectPart m_SelectedUUID = null;
         private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
@@ -313,11 +311,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_godLevel; }
             set { m_godLevel = value; }
-        }
-
-        public ulong RegionHandle
-        {
-            get { return m_rootRegionHandle; }
         }
 
         public Vector3 CameraPosition
@@ -653,7 +646,6 @@ namespace OpenSim.Region.Framework.Scenes
         public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
             : this()
         {
-            m_rootRegionHandle = reginfo.RegionHandle;
             m_controllingClient = client;
             m_firstname = m_controllingClient.FirstName;
             m_lastname = m_controllingClient.LastName;
@@ -778,8 +770,6 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             //m_log.DebugFormat("[SCENE]: known regions in {0}: {1}", Scene.RegionInfo.RegionName, KnownChildRegionHandles.Count);
-           
-            m_rootRegionHandle = m_scene.RegionInfo.RegionHandle;
 
             // Moved this from SendInitialData to ensure that m_appearance is initialized
             // before the inventory is processed in MakeRootAgent. This fixes a race condition
@@ -1067,6 +1057,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
+
+            //Send updates to everyone about us
+            SendAvatarDataToAllAgents();
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -1479,8 +1472,6 @@ namespace OpenSim.Region.Framework.Scenes
                     AddNewMovement(agent_control_v3, q);
 
                     m_scene.EventManager.TriggerOnClientMovement(this);
-
-                    
                 }
             }
 
@@ -2182,31 +2173,31 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="vec">The vector in which to move.  This is relative to the rotation argument</param>
         /// <param name="rotation">The direction in which this avatar should now face.</param>
         public void AddNewMovement(Vector3 vec, Quaternion rotation)
-            {
+        {
             if (IsChildAgent)
-                {
+            {
                 // WHAT??? we can't make them a root agent though... what if they shouldn't be here?
                 //  Or even worse, what if they are spoofing the client???
                 m_log.Info("[SCENEPRESENCE]: AddNewMovement() called on child agent for " + Name + "! Possible attempt to force a fake agent into a sim!");
                 return;
-                }
+            }
 
             m_perfMonMS = Util.EnvironmentTickCount();
 
             PhysicsActor actor = m_physicsActor;
             if (actor != null)
-                {
+            {
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 direc.Normalize();
                 direc *= 6 * m_speedModifier;
 
-                
+
 
                 // scale it up acording to situation
 
                 if (actor.Flying)
-                    {
+                {
                     direc *= 4.0f;
                     //bool controlland = (((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0) || ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0));
                     //bool colliding = (m_physicsActor.IsColliding==true);
@@ -2219,24 +2210,24 @@ namespace OpenSim.Region.Framework.Scenes
                     //    StopFlying();
                     //    m_log.Info("[AGENT]: Stop FLying");
                     //}
-                    }
+                }
                 else if (!actor.Flying && actor.IsColliding)
-                    {
+                {
                     if (direc.Z > 2.0f)
-                        {
+                    {
                         if (direc.Z < 2.5f)
                             direc.Z = 2.5f;
                         if (m_scene.m_usePreJump && !IsJumping)
-                            {
+                        {
                             //AllowMovement = false;
                             IsJumping = true;
                             PreJumpForce = direc;
-                           Animator.TrySetMovementAnimation("PREJUMP");
+                            Animator.TrySetMovementAnimation("PREJUMP");
                             //Leave this here! Otherwise jump will sometimes not occur...
                             return;
-                            }
+                        }
                         else if (PreJumpForce.Equals(Vector3.Zero))
-                            {
+                        {
                             direc.X *= 2;
                             direc.Y *= 2;
                             if (direc.X == 0 && direc.Y == 0)
@@ -2246,15 +2237,15 @@ namespace OpenSim.Region.Framework.Scenes
 
                             if (!IsJumping)
                                 Animator.TrySetMovementAnimation("JUMP");
-                            }
                         }
                     }
+                }
 
 
                 // UNTODO: Add the force instead of only setting it to support multiple forces per frame?
                 // It fires multiple time and screws things up...
                 if (!m_overrideUserInput)
-                    {
+                {
                     //This is where you start to decay the velocity
                     //direc *= 0.95f;
                     //More decay on the Z, otherwise flying up and down is a bit hard
@@ -2263,14 +2254,14 @@ namespace OpenSim.Region.Framework.Scenes
                     //                    direc.Z = direc.Z * 0.5f; this does not acumulate and is just a constant
 
                     //It'll stop the physics engine from decaying, which makes it look bad
-//                    if (direc != Vector3.Zero)  let avas be stopped !!
-                        PhysicsActor.SetMovementForce(direc);
-                    }
+                    //                    if (direc != Vector3.Zero)  let avas be stopped !!
+                    PhysicsActor.SetMovementForce(direc);
+                }
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
                 if (reporter != null)
                     reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-                }
             }
+        }
 
         #endregion
 
@@ -2602,7 +2593,7 @@ namespace OpenSim.Region.Framework.Scenes
                 agentpos.Far = DrawDistance;
                 agentpos.LeftAxis = CameraLeftAxis;
                 agentpos.Position = m_lastChildAgentUpdatePosition;
-                agentpos.RegionHandle = RegionHandle;
+                agentpos.RegionHandle = Scene.RegionInfo.RegionHandle;
                 agentpos.SessionID = UUID.Zero;
                 agentpos.Size = PhysicsActor != null ? PhysicsActor.Size : new Vector3(0, 0, m_avHeight);
                 agentpos.Throttles = new byte[0];
@@ -2804,9 +2795,6 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
 
             m_sceneViewer.Reprioritize();
-
-            //cAgentData.AVHeight;
-            m_rootRegionHandle = cAgentData.RegionHandle;
             //m_velocity = cAgentData.Velocity;
         }
 

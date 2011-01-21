@@ -327,7 +327,7 @@ namespace OpenSim.Region.UserStatistics
 
         public void OnMakeRootAgent(ScenePresence agent)
         {
-            UUID regionUUID = GetRegionUUIDFromHandle(agent.RegionHandle);
+            UUID regionUUID = GetRegionUUIDFromHandle(agent.Scene.RegionInfo.RegionHandle);
 
             lock (m_sessions)
             {

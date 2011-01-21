@@ -1181,7 +1181,7 @@ namespace OpenSim.Region.Framework.Scenes
                 delegate(IClientAPI client)
                 {
                     //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                    try { client.SendKillObject(presence.RegionHandle, new ISceneEntity[] { presence }); }
+                    try { client.SendKillObject(presence.Scene.RegionInfo.RegionHandle, new ISceneEntity[] { presence }); }
                     catch (NullReferenceException) { }
                 });
 

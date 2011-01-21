@@ -276,11 +276,6 @@ namespace OpenSim.Framework
             get { return randomClass; }
         }
 
-        public static ulong UIntsToLong(uint X, uint Y)
-        {
-            return Utils.UIntsToLong(X, Y);
-        }
-
         public static T Clamp<T>(T x, T min, T max)
             where T : IComparable<T>
         {

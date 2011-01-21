@@ -239,7 +239,7 @@ namespace OpenSim.Framework
 
         public ulong RegionHandle
         {
-            get { return Util.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
+            get { return Utils.UIntsToLong((uint)RegionLocX, (uint)RegionLocY); }
         }
 
         public void WriteNiniConfig(IConfigSource source)

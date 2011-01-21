@@ -301,7 +301,7 @@ namespace OpenSim.Services.CapsService
                         GridRegion Region = new GridRegion();
                         Region.FromOSD((OSDMap)body["Region"]);
                         AgentCircuitData Circuit = new AgentCircuitData();
-                        Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"].AsVector3());
+                        Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
                         AgentData AgentData = new AgentData();
                         AgentData.Unpack((OSDMap)body["AgentData"]);
 
@@ -700,11 +700,25 @@ namespace OpenSim.Services.CapsService
             {
                 //Make sure that we have a URL for the Caps on the grid server and one for the sim
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                string SimSeedCap = neighbor.ServerURI + CapsUtil.GetCapsSeedPath(CapsBase);
+                //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
+                string SimSeedCap = "";
                 bool newAgent = m_service.ClientCaps.GetCapsService(neighbor.RegionHandle) == null;
                 IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
 
+                //ONLY UPDATE THE SIM SEED HERE
+                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
+                if (newAgent)
+                {
+                    //Update 21-1-11 (Revolution) This is still very much needed for standalone mode
+                    //Build the full URL
+                    SimSeedCap
+                        = neighbor.ServerURI
+                      + CapsUtil.GetCapsSeedPath(CapsBase);
+                    //Add the new Seed for this region
+                }
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
                 //Add the password too

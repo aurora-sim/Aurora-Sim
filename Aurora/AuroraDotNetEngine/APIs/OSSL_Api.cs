@@ -664,7 +664,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 regInfo = regions[0];
 
-                ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
+                ulong regionHandle = regInfo.RegionHandle;
                 return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
@@ -684,7 +684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Try to link the region
             if (regInfo != null)
             {
-                ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
+                ulong regionHandle = regInfo.RegionHandle;
                 return TeleportAgent(m_host.OwnerID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                             new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
@@ -708,7 +708,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     regInfo = regions[0];
 
-                    ulong regionHandle = Util.UIntsToLong((uint)regInfo.RegionLocX, (uint)regInfo.RegionLocY);
+                    ulong regionHandle = regInfo.RegionHandle;
                     return TeleportAgent(AgentID, regionHandle, new Vector3((float)position.x, (float)position.y, (float)position.z),
                                 new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                 }
@@ -723,7 +723,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
 
-            ulong regionHandle = Util.UIntsToLong(((uint)regionX * (uint)Constants.RegionSize), ((uint)regionY * (uint)Constants.RegionSize));
+            ulong regionHandle = Utils.UIntsToLong(((uint)regionX * (uint)Constants.RegionSize), ((uint)regionY * (uint)Constants.RegionSize));
 
             
             UUID agentId = new UUID();
