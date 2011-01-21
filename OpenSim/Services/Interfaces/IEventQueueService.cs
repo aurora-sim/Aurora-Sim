@@ -61,8 +61,7 @@ namespace OpenSim.Services.Interfaces
         void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
                                  IPEndPoint regionExternalEndPoint,
-                                 uint locationID, uint flags,
-                                 UUID agentID, uint teleportFlags, ulong RegionHandle);
+                                 uint locationID, UUID agentID, uint teleportFlags, ulong RegionHandle);
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPEndPoint newRegionExternalEndPoint,
                          UUID avatarID, UUID sessionID, ulong RegionHandle);
@@ -117,5 +116,25 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle);
+
+        /// <summary>
+        /// Tell the EventQueueService to cross this agent
+        /// </summary>
+        /// <param name="crossingRegion"></param>
+        /// <param name="pos"></param>
+        /// <param name="velocity"></param>
+        /// <param name="circuit"></param>
+        /// <param name="cAgent"></param>
+        /// <param name="RegionHandle"></param>
+        /// <returns></returns>
+        bool TeleportAgent(UUID AgentID, GridRegion destination, uint TeleportFlags, ulong RegionHandle);
+
+        /// <summary>
+        /// Send an update to all child agents
+        /// </summary>
+        /// <param name="agentpos"></param>
+        /// <param name="uUID"></param>
+        /// <param name="p"></param>
+        void SendChildAgentUpdate(AgentPosition agentpos, UUID agentID, ulong RegionHandle);
     }
 }

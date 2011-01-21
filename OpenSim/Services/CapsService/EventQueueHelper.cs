@@ -142,7 +142,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD TeleportFinishEvent(
             ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
-            uint locationID, uint flags, string capsURL, UUID agentID, uint teleportFlags)
+            uint locationID, string capsURL, UUID agentID, uint teleportFlags)
         {
             OSDMap info = new OSDMap();
             info.Add("AgentID", OSD.FromUUID(agentID));
@@ -498,6 +498,15 @@ namespace OpenSim.Services.CapsService
             llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
             llsdBody.Add("AgentData", cAgent.Pack());
             return buildEvent("CrossAgent", llsdBody);
+        }
+
+        public static OSD TeleportAgent(GridRegion destination, uint TeleportFlags)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("TeleportFlags", TeleportFlags);
+            llsdBody.Add("Region", destination.ToOSD());
+            return buildEvent("TeleportAgent", llsdBody);
         }
     }
 }

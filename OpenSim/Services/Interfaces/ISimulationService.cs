@@ -71,6 +71,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Create an agent at the given destination
+        /// Grid Server only.
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="aCircuit"></param>
@@ -82,6 +83,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Full child agent update.
+        /// Grid Server only.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="data"></param>
@@ -117,6 +119,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Close agent.
+        /// Grid Server only.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="id"></param>

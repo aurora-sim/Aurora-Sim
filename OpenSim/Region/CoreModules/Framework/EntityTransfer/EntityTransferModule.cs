@@ -395,31 +395,16 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 if (eq != null)
                 {
-                    eq.TeleportFinishEvent(destinationHandle, finalDestination.Access, endPoint,
-                                           4, teleportFlags, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
-                }
-
-                // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
-                // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
-                // that the client contacted the destination before we send the attachments and close things here.
-
-                bool callWasCanceled = false;
-                if (!WaitForCallback(sp.UUID, out callWasCanceled))
-                {
-                    if (!callWasCanceled)
+                    //This sends the TeleportFinish event and deals with the callback
+                    //  messages if they need to be called
+                    if (!eq.TeleportAgent(sp.UUID, finalDestination, teleportFlags, sp.Scene.RegionInfo.RegionHandle))
                     {
-                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
-                        Fail(sp, finalDestination);
+                        // Fix the agent status
+                        sp.IsChildAgent = false;
+                        sp.ControllingClient.SendTeleportFailed("Destination refused");
+                        return;
                     }
-                    else
-                        Cancel(sp);
-                    return;
                 }
-
-                // OK, it got this agent. Let's close some child agents
-                INeighborService neighborService = sp.Scene.RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                    neighborService.CloseNeighborAgents(newRegionX, newRegionY, sp.UUID, sp.Scene.RegionInfo.RegionID);
 
                 // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
                 CrossAttachmentsIntoNewRegion(finalDestination, sp);
@@ -699,7 +684,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
+                    //This does UpdateAgent and closing of child agents
                     //  messages if they need to be called
                     if (!eq.CrossAgent(crossingRegion, pos, agent.Velocity, agentCircuit,
                         cAgent, agent.Scene.RegionInfo.RegionHandle))

@@ -138,12 +138,12 @@ namespace OpenSim.Services.CapsService
 
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                         IPEndPoint regionExternalEndPoint,
-                                        uint locationID, uint flags,
+                                        uint locationID,
                                         UUID avatarID, uint teleportFlags, ulong RegionHandle)
         {
             //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
             OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, regionExternalEndPoint,
-                                                            locationID, flags, "", avatarID, teleportFlags);
+                                                            locationID, "", avatarID, teleportFlags);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -238,6 +238,12 @@ namespace OpenSim.Services.CapsService
         {
             OSD item = EventQueueHelper.CrossAgent(crossingRegion, pos, velocity, circuit, cAgent);
             return TryEnqueue(item, circuit.AgentID, RegionHandle);
+        }
+
+        public virtual bool TeleportAgent(UUID AgentID, GridRegion destination, uint TeleportFlags, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.TeleportAgent(destination, TeleportFlags);
+            return TryEnqueue(item, AgentID, RegionHandle);
         }
 
         #endregion
@@ -806,6 +812,51 @@ namespace OpenSim.Services.CapsService
                     Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                     GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
                     service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags)
+        {
+            //We arn't going to deal with CallbackURLs
+            //SetCallbackURL(cAgent, crossingRegion.RegionID);
+
+            uint x, y;
+            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+            GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+            
+            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
+            {
+                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
+                                           4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
+
+                // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
+                // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
+                // that the client contacted the destination before we send the attachments and close things here.
+
+                /*bool callWasCanceled = false;
+                if (!WaitForCallback(sp.UUID, out callWasCanceled))
+                {
+                    if (!callWasCanceled)
+                    {
+                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
+                        Fail(sp, finalDestination);
+                    }
+                    else
+                        Cancel(sp);
+                    return;
+                }*/
+
+                // Next, let's close the child agent connections that are too far away.
+                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                {
+                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                 }
                 return true;
             }

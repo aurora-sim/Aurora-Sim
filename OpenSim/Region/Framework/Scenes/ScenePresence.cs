@@ -1055,11 +1055,11 @@ namespace OpenSim.Region.Framework.Scenes
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(AbsolutePosition, m_flying);
 
-            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
-            m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
-
             //Send updates to everyone about us
             SendAvatarDataToAllAgents();
+
+            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
+            m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -2599,6 +2599,12 @@ namespace OpenSim.Region.Framework.Scenes
                 agentpos.Throttles = new byte[0];
                 agentpos.UpAxis = CameraUpAxis;
                 agentpos.Velocity = Velocity;
+
+                IEventQueueService eventQueueService = m_scene.RequestModuleInterface<IEventQueueService>();
+                if (eventQueueService != null)
+                {
+                    eventQueueService.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID, m_scene.RegionInfo.RegionHandle);
+                }
 
                 INeighborService service = m_scene.RequestModuleInterface<INeighborService>();
                 if (service != null)
