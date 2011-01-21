@@ -194,7 +194,7 @@ namespace OpenSim.Region.CoreModules
 
                         if (scene.UserAccountService.StoreUserAccount(account))
                         {
-                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password ");
+                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
                             string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
 
                             account.Email = email;
@@ -276,7 +276,7 @@ namespace OpenSim.Region.CoreModules
 
                         if (scene.UserAccountService.StoreUserAccount(account))
                         {
-                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password ");
+                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
                             string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
 
                             account.Email = email;

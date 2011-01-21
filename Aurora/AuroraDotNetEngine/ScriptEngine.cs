@@ -638,7 +638,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             DetectParams[] det = id.LastDetectParams;
 
-            if (number < 0 || number >= det.Length)
+            if (det == null || number < 0 || number >= det.Length)
                 return null;
 
             return det[number];

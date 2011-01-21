@@ -1863,7 +1863,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
             if (flexi)
-                {
+            {
+                part.Shape.PathCurve |= (byte)Extrusion.Flexible;
                 part.Shape.FlexiEntry = true;   // this setting flexi true isn't working, but the below parameters do
                 // work once the prim is already flexi
                 part.Shape.FlexiSoftness = softness;
@@ -1875,13 +1876,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.Shape.FlexiForceY = (float)Force.y;
                 part.Shape.FlexiForceZ = (float)Force.z;
                 part.Shape.PathCurve = 0x80;
-                }
+            }
             else
+            {
+                int curve = part.Shape.PathCurve;
+                curve &= (int)(~(Extrusion.Flexible));
+                part.Shape.PathCurve = (byte)curve;
                 part.Shape.FlexiEntry = false;
+            }
 
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleUpdate(PrimUpdateFlags.Shape);
+            part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>
@@ -8377,8 +8383,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 7)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     bool flexi = rules.GetLSLIntegerItem(idx++);
                     int softness = rules.GetLSLIntegerItem(idx++);
@@ -8389,15 +8394,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     LSL_Vector force = rules.GetVector3Item(idx++);
 
                     SetFlexi((part as SceneObjectPart), flexi, softness, gravity, friction, wind, tension, force);
-
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
                 {
                     if (remain < 5)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     bool light = rules.GetLSLIntegerItem(idx++);
                     LSL_Vector lightcolor = rules.GetVector3Item(idx++);
@@ -8413,8 +8415,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 2)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     face = rules.GetLSLIntegerItem(idx++);
                     float glow = (float)rules.GetLSLFloatItem(idx++);
@@ -8422,13 +8423,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     SetGlow((part as SceneObjectPart), face, glow);
 
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
                 {
                     if (remain < 3)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     face = (int)rules.GetLSLIntegerItem(idx++);
                     int shiny = (int)rules.GetLSLIntegerItem(idx++);
@@ -8437,13 +8436,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     SetShiny((part as SceneObjectPart), face, shiny, bump);
 
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
                 {
                     if (remain < 2)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     face = rules.GetLSLIntegerItem(idx++);
                     bool st = rules.GetLSLIntegerItem(idx++);
@@ -8454,8 +8451,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 1)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     int mat = rules.GetLSLIntegerItem(idx++);
                     if (mat < 0 || mat > 7)
@@ -8463,13 +8459,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     (part as SceneObjectPart).Material = Convert.ToByte(mat);
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
                 {
                     if (remain < 1)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     string ph = rules.Data[idx++].ToString();
                     bool phantom;
@@ -8481,13 +8475,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     (part as SceneObjectPart).ScriptSetPhantomStatus(phantom);
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_PHYSICS)
                 {
                     if (remain < 1)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     string phy = rules.Data[idx++].ToString();
                     bool physics;
@@ -8499,13 +8491,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     (part as SceneObjectPart).ScriptSetPhysicsStatus(physics);
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
                 {
                     if (remain < 1)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     string temp = rules.Data[idx++].ToString();
                     bool tempOnRez;
@@ -8517,13 +8507,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     (part as SceneObjectPart).ScriptSetTemporaryStatus(tempOnRez);
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_TEXGEN)
                 {
                     if (remain < 2)
                         return;
-                    if (part is SceneObjectPart) { }
-                    else
+                    if (!(part is SceneObjectPart))
                         return;
                     //face,type
                     face = rules.GetLSLIntegerItem(idx++);
@@ -8533,6 +8521,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 else if (code == (int)ScriptBaseClass.PRIM_TEXT)
                 {
                     if (remain < 3)
+                        return;
+                    if (!(part is SceneObjectPart))
                         return;
                     string primText = rules.GetLSLStringItem(idx++);
                     LSL_Vector primTextColor = rules.GetVector3Item(idx++);

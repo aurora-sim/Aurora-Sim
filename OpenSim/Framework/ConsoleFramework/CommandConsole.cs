@@ -737,7 +737,7 @@ namespace OpenSim.Framework
         // (Done with no echo and suitable for passwords)
         public string PasswdPrompt(string p)
         {
-            return ReadLine(p, false, false);
+            return ReadLine(p + ": ", false, false);
         }
 
         public virtual void Output(string text, string level)
