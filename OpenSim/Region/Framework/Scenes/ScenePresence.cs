@@ -2605,10 +2605,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     eventQueueService.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID, m_scene.RegionInfo.RegionHandle);
                 }
-
-                INeighborService service = m_scene.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                    service.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionID);
             }
 
             //Moving these into the terse update check, as they don't need to be checked/sent unless the client has moved.

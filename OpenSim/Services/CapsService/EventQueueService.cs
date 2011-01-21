@@ -246,6 +246,12 @@ namespace OpenSim.Services.CapsService
             return TryEnqueue(item, AgentID, RegionHandle);
         }
 
+        public void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.SendChildAgentUpdate(agentpos, regionID);
+            Enqueue(item, agentpos.AgentID, RegionHandle);
+        }
+
         #endregion
     }
 
@@ -826,7 +832,7 @@ namespace OpenSim.Services.CapsService
             uint x, y;
             Utils.LongToUInts(m_service.RegionHandle, out x, out y);
             GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-            
+
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
@@ -861,6 +867,14 @@ namespace OpenSim.Services.CapsService
                 return true;
             }
             return false;
+        }
+
+        protected void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID)
+        {
+            //We need to send this update out to all the child agents this region has
+            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+            if (service != null)
+                service.SendChildAgentUpdate(agentpos, regionID);
         }
 
         #endregion

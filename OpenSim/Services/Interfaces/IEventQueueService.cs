@@ -133,8 +133,8 @@ namespace OpenSim.Services.Interfaces
         /// Send an update to all child agents
         /// </summary>
         /// <param name="agentpos"></param>
-        /// <param name="uUID"></param>
-        /// <param name="p"></param>
-        void SendChildAgentUpdate(AgentPosition agentpos, UUID agentID, ulong RegionHandle);
+        /// <param name="regionID"></param>
+        /// <param name="RegionHandle"></param>
+        void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle);
     }
 }
