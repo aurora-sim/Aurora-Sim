@@ -102,7 +102,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
             //This is a dirty nasty hack of a way to pull the Scene out of an IRegistryCore interface
             // as this isn't a Scene module anymore. This is called by both AddNewRegistry and PostStart as
             // both of those pass the Scene down to register interfaces into.
-
+            SceneManager manager = registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (Scene scene in manager.Scenes)
+                {
+                    m_scenes[scene.RegionInfo.RegionID] = scene;
+                }
+            }
             if (registry is Scene)
             {
                 Scene s = (Scene)registry;
