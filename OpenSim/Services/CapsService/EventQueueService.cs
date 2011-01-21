@@ -291,6 +291,22 @@ namespace OpenSim.Services.CapsService
                         //Let this pass through, after the next event queue pass we can remove it
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }
+                    else if (map.ContainsKey("message") && map["message"] == "CrossAgent")
+                    {
+                        //This is a simulator message that tells us to cross the agent
+                        OSDMap body = ((OSDMap)map["body"]);
+
+                        Vector3 pos = body["Pos"].AsVector3();
+                        Vector3 Vel = body["Vel"].AsVector3();
+                        GridRegion Region = new GridRegion();
+                        Region.FromOSD((OSDMap)body["Region"]);
+                        AgentCircuitData Circuit = new AgentCircuitData();
+                        Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"].AsVector3());
+                        AgentData AgentData = new AgentData();
+                        AgentData.Unpack((OSDMap)body["AgentData"]);
+
+                        CrossAgent(Region, pos, Vel, Circuit, AgentData);
+                    }
                     else if (map.ContainsKey("message") && map["message"] == "EnableChildAgents")
                     {
                         //Some notes on this message:
@@ -752,10 +768,11 @@ namespace OpenSim.Services.CapsService
 
                 IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
+                //Tell the client about the transfer
                 EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
                                    m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
 
-                /*bool callWasCanceled = false;
+                /* bool callWasCanceled = false;
                 if (!WaitForCallback(circuit.AgentID, out callWasCanceled))
                 {
                     m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
