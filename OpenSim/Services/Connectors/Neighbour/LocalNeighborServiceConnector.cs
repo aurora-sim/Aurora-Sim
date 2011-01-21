@@ -314,6 +314,7 @@ namespace OpenSim.Services.Connectors
             if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
             {
                 neighbors = FindNewNeighbors(region);
+                m_KnownNeighbors[region.RegionID] = neighbors;
             }
             return neighbors;
         }

@@ -896,7 +896,13 @@ namespace OpenSim.Services.CapsService
             //We need to send this update out to all the child agents this region has
             INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
             if (service != null)
+            {
+                uint x, y;
+                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                service.GetNeighbors(ourRegion);
                 service.SendChildAgentUpdate(agentpos, regionID);
+            }
         }
 
         #endregion

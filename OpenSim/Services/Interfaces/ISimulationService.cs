@@ -92,6 +92,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Short child agent update, mostly for position.
+        /// Grid Server only.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="data"></param>
@@ -100,6 +101,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// Pull the root agent info from the given destination
+        /// Grid Server only.
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="id"></param>
@@ -110,6 +112,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Message from receiving region to departing region, telling it got contacted by the client.
         /// When sent over REST, it invokes the opaque uri.
+        /// Grid Server only.
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="id"></param>
