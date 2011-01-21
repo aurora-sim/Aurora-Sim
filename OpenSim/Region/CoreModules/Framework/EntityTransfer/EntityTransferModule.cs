@@ -361,13 +361,18 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 agentCircuit.child = false;
                 agentCircuit.Appearance = sp.Appearance;
 
-                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-
                 AgentData agent = new AgentData();
                 sp.CopyTo(agent);
                 agent.Position = position;
                 SetCallbackURL(agent, sp.Scene.RegionInfo);
-                
+
+                // Let's set this to true tentatively. This does not trigger OnChildAgent
+                sp.IsChildAgent = true;
+
+                //Set the agent in transit before we send the event
+                SetInTransit(sp.UUID);
+
+                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
@@ -375,6 +380,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
                         finalDestination, agentCircuit, agent, teleportFlags, endPoint.Address.GetAddressBytes(), endPoint.Port))
                     {
+                        // Fix the agent status
+                        sp.IsChildAgent = false;
                         sp.ControllingClient.SendTeleportFailed("Destination refused");
                         return;
                     }
@@ -386,17 +393,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     return;
                 }
 
-                //Set the agent in transit before we send the event
-                SetInTransit(sp.UUID);
-
                 if (eq != null)
                 {
                     eq.TeleportFinishEvent(destinationHandle, finalDestination.Access, endPoint,
                                            4, teleportFlags, sp.UUID, teleportFlags, sp.Scene.RegionInfo.RegionHandle);
                 }
-
-                // Let's set this to true tentatively. This does not trigger OnChildAgent
-                sp.IsChildAgent = true;
 
                 // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
@@ -672,7 +673,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// This Closes child agents on neighboring regions
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
         /// </summary>
-        protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos, GridRegion crossingRegion, bool isFlying)
+        protected ScenePresence CrossAgentToNewRegionAsync(ScenePresence agent, Vector3 pos,
+            GridRegion crossingRegion, bool isFlying)
         {
             m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} {1} to region {2}", agent.Firstname, agent.Lastname, crossingRegion.RegionName);
 
@@ -688,41 +690,25 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 cAgent.Position = pos;
                 if (isFlying)
                     cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-                SetCallbackURL(cAgent, m_scene.RegionInfo);
-                
-                if (!m_scene.SimulationService.UpdateAgent(crossingRegion, cAgent))
-                {
-                    m_log.Warn("[EntityTransferModule]: Failed to cross agent " + agent.Name + " because region did not accept it. Resetting.");
-                    // region doesn't take it
-                    ResetFromTransit(agent.UUID);
-                    return agent;
-                }
+
+                AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
+                agentCircuit.startpos = pos;
+                agentCircuit.child = false;
+                agentCircuit.Appearance = agent.Appearance;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
-                    eq.CrossRegion(crossingRegion.RegionHandle, pos, agent.Velocity, crossingRegion.ExternalEndPoint,
-                                   agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
+                    //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
+                    //  messages if they need to be called
+                    if (!eq.CrossAgent(crossingRegion, pos, agent.Velocity, agentCircuit,
+                        cAgent, agent.Scene.RegionInfo.RegionHandle))
+                    {
+                        agent.ControllingClient.SendTeleportFailed("Could not cross");
+                        return agent;
+                    }
                 }
-
-                bool callWasCanceled = false;
-                if (!WaitForCallback(agent.UUID, out callWasCanceled))
-                {
-                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + agent.Name + ". Resetting.");
-                    ResetFromTransit(agent.UUID);
-
-                    // Yikes! We should just have a ref to scene here.
-                    //agent.Scene.InformClientOfNeighbours(agent);
-                    EnableChildAgents(agent);
-
-                    return agent;
-                }
-
-                // Next, let's close the child agent connections that are too far away.
-                INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                    neighborService.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, agent.UUID, agent.Scene.RegionInfo.RegionID);
-
+                
                 agent.MakeChildAgent();
                 // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
                 agent.SendOtherAgentsAvatarDataToMe();
@@ -746,52 +732,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if(backup != null)
                     backup.DeleteFromStorage(grp.UUID);
             }
-        }
-
-        /// <summary>
-        /// This Closes child agents on neighboring regions
-        /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
-        /// </summary>
-        protected ScenePresence CrossAgentSittingToNewRegionAsync(ScenePresence agent, GridRegion neighbourRegion, SceneObjectGroup grp)
-        {
-            Scene m_scene = agent.Scene;
-            
-            if (agent.ValidateAttachments())
-            {
-                AgentData cAgent = new AgentData();
-                agent.CopyTo(cAgent);
-                cAgent.Position = grp.AbsolutePosition;
-
-                //Set the callback URL
-                SetCallbackURL(cAgent, m_scene.RegionInfo);
-                
-                if (!m_scene.SimulationService.UpdateAgent(neighbourRegion, cAgent))
-                {
-                    // region doesn't take it
-                    ResetFromTransit(agent.UUID);
-                    return agent;
-                }
-
-                // Next, let's close the child agent connections that are too far away.
-                INeighborService neighborService = agent.Scene.RequestModuleInterface<INeighborService>();
-                if (neighborService != null)
-                    neighborService.CloseNeighborAgents(neighbourRegion.RegionLocX, neighbourRegion.RegionLocY, agent.UUID, agent.Scene.RegionInfo.RegionID);
-
-                IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
-                {
-                    eq.CrossRegion(neighbourRegion.RegionHandle, agent.AbsolutePosition, agent.Velocity, neighbourRegion.ExternalEndPoint,
-                                   agent.UUID, agent.ControllingClient.SessionId, agent.Scene.RegionInfo.RegionHandle);
-                }
-
-                agent.MakeChildAgent();
-                // now we have a child agent in this region. Request all interesting data about other (root) agents
-                agent.SendOtherAgentsAvatarDataToMe();
-                agent.SendOtherAgentsAppearanceToMe();
-
-                CrossAttachmentsIntoNewRegion(neighbourRegion, agent);
-            }
-            return agent;
         }
 
         protected void CrossAgentToNewRegionCompleted(IAsyncResult iar)
@@ -1069,7 +1009,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         foreach (UUID avID in grp.RootPart.SitTargetAvatar)
                         {
                             ScenePresence SP = grp.Scene.GetScenePresence(avID);
-                            CrossAgentSittingToNewRegionAsync(SP, destination, grp);
+                            CrossAgentToNewRegionAsync(SP, grp.AbsolutePosition, destination, false);
                         }
                     }
                 }

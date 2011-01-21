@@ -91,16 +91,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD DisableSimulator(ulong handle)
         {
-            //OSDMap llsdSimInfo = new OSDMap(1);
-
-            //llsdSimInfo.Add("Handle", new OSDBinary(regionHandleToByteArray(handle)));
-
-            //OSDArray arr = new OSDArray(1);
-            //arr.Add(llsdSimInfo);
-
             OSDMap llsdBody = new OSDMap(0);
-            //llsdBody.Add("SimulatorInfo", arr);
-
             return buildEvent("DisableSimulator", llsdBody);
         }
         
@@ -494,6 +485,19 @@ namespace OpenSim.Services.CapsService
             if(data != null)
                 llsdBody.Add("AgentData", data.Pack());
             return buildEvent("EnableChildAgents", llsdBody);
+        }
+
+        public static OSD CrossAgent(GridRegion crossingRegion, Vector3 pos,
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("Pos", pos);
+            llsdBody.Add("Vel", velocity);
+            llsdBody.Add("Region", crossingRegion.ToOSD());
+            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
+            llsdBody.Add("AgentData", cAgent.Pack());
+            return buildEvent("CrossAgent", llsdBody);
         }
     }
 }

@@ -130,7 +130,7 @@ namespace OpenSim.Services.Connectors
             GridRegion incomingGridRegion = new GridRegion(incomingRegion);
 
             List<GridRegion> m_informedRegions = new List<GridRegion>();
-            m_KnownNeighbors[incomingRegion.RegionID] = FindNewNeighbors(incomingRegion);
+            m_KnownNeighbors[incomingRegion.RegionID] = FindNewNeighbors(incomingGridRegion);
 
             //We need to inform all the regions around us that our region now exists
 
@@ -179,7 +179,7 @@ namespace OpenSim.Services.Connectors
             GridRegion incomingGridRegion = new GridRegion(incomingRegion);
 
             List<GridRegion> m_informedRegions = new List<GridRegion>();
-            List<GridRegion> neighborsOfIncomingRegion = FindNewNeighbors(incomingRegion);
+            List<GridRegion> neighborsOfIncomingRegion = FindNewNeighbors(incomingGridRegion);
 
             //We need to inform all the regions around us that our region now exists
 
@@ -264,7 +264,7 @@ namespace OpenSim.Services.Connectors
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
-        private List<GridRegion> FindNewNeighbors(RegionInfo region)
+        private List<GridRegion> FindNewNeighbors(GridRegion region)
         {
             int startX = (int)(region.RegionLocX - RegionViewSize);
             int startY = (int)(region.RegionLocY - RegionViewSize);
@@ -299,6 +299,21 @@ namespace OpenSim.Services.Connectors
             if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
             {
                 neighbors = new List<GridRegion>();
+            }
+            return neighbors;
+        }
+
+        /// <summary>
+        /// Get the cached list of neighbors or a new list
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        public List<GridRegion> GetNeighbors(GridRegion region)
+        {
+            List<GridRegion> neighbors = new List<GridRegion>();
+            if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
+            {
+                neighbors = FindNewNeighbors(region);
             }
             return neighbors;
         }

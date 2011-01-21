@@ -233,6 +233,13 @@ namespace OpenSim.Services.CapsService
             return TryEnqueue(item, avatarID, RegionHandle);
         }
 
+        public virtual bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.CrossAgent(crossingRegion, pos, velocity, circuit, cAgent);
+            return TryEnqueue(item, circuit.AgentID, RegionHandle);
+        }
+
         #endregion
     }
 
@@ -677,29 +684,10 @@ namespace OpenSim.Services.CapsService
             {
                 //Make sure that we have a URL for the Caps on the grid server and one for the sim
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
-                //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
-                string SimSeedCap = "";
+                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
+                string SimSeedCap = neighbor.ServerURI + CapsUtil.GetCapsSeedPath(CapsBase);
                 bool newAgent = m_service.ClientCaps.GetCapsService(neighbor.RegionHandle) == null;
                 IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
-               
-                //ONLY UPDATE THE SIM SEED HERE
-                //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                if (newAgent)
-                {
-                    //Update 21-1-11 (Revolution) It is unclear whether this code is 'really' needed now
-                    //Build the full URL
-                    SimSeedCap
-                        = neighbor.ServerURI
-                      + CapsUtil.GetCapsSeedPath(CapsBase);
-                    //Add the new Seed for this region
-                }
-                else
-                {
-                    
-                }
 
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
@@ -715,6 +703,10 @@ namespace OpenSim.Services.CapsService
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                         SimSeedCap = responseMap["CapsUrl"].AsString();
                     }
+                    //ONLY UPDATE THE SIM SEED HERE
+                    //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                    // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                    // AND FORCE UPDATING IT HERE WILL BREAK IT.
                     otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
                     if (newAgent)
                     {
@@ -740,6 +732,52 @@ namespace OpenSim.Services.CapsService
                 return true;
             }
             m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: SimulationService does not exist!");
+            return false;
+        }
+
+        protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
+        {
+            //We arn't going to deal with CallbackURLs
+            //SetCallbackURL(cAgent, crossingRegion.RegionID);
+
+            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
+            {
+                if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
+                {
+                    m_log.Warn("[EventQueue]: Failed to cross agent " + m_service.AgentID + " because region did not accept it. Resetting.");
+                    return false;
+                }
+
+                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
+                                   m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
+
+                /*bool callWasCanceled = false;
+                if (!WaitForCallback(circuit.AgentID, out callWasCanceled))
+                {
+                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
+                    ResetFromTransit(circuit.AgentID);
+
+                    // Yikes! We should just have a ref to scene here.
+                    EnableChildAgents(agent);
+
+                    return false;
+                }*/
+
+                // Next, let's close the child agent connections that are too far away.
+                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                {
+                    uint x, y;
+                    Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                    GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                    service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                }
+                return true;
+            }
             return false;
         }
 

@@ -63,11 +63,9 @@ namespace OpenSim.Server.Handlers.Simulation
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
-            if(m_LocalSimulationService.GetInnerService() != null)
-                m_LocalSimulationService = m_LocalSimulationService.GetInnerService();
-
-            server.AddHTTPHandler("/agent/", new AgentHandler(m_LocalSimulationService).Handler);
-            server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService).Handler);
+            
+            server.AddHTTPHandler("/agent/", new AgentHandler(m_LocalSimulationService.GetInnerService()).Handler);
+            server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService()).Handler);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

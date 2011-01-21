@@ -104,5 +104,18 @@ namespace OpenSim.Services.Interfaces
         bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle,
             int DrawDistance, GridRegion region, AgentCircuitData circuit,
             AgentData data, uint TeleportFlags, byte[] IPAddress, int Port);
+
+        /// <summary>
+        /// Tell the EventQueueService to cross this agent
+        /// </summary>
+        /// <param name="crossingRegion"></param>
+        /// <param name="pos"></param>
+        /// <param name="velocity"></param>
+        /// <param name="circuit"></param>
+        /// <param name="cAgent"></param>
+        /// <param name="RegionHandle"></param>
+        /// <returns></returns>
+        bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
+            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle);
     }
 }

@@ -297,6 +297,11 @@ namespace OpenSim.Services.Connectors
             return RetVal;
         }
 
+        public List<GridRegion> GetNeighbors(GridRegion region)
+        {
+            return m_LocalService.GetNeighbors(region);
+        }
+
         public virtual List<GridRegion> GetNeighbors(RegionInfo region)
         {
             List<GridRegion> neighbors = m_LocalService.GetNeighbors(region);

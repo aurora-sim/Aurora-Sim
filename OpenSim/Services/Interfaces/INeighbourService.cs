@@ -94,6 +94,13 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetNeighbors(RegionInfo region);
 
         /// <summary>
+        /// Get the cached list of neighbors or a new list as it could be a remote region
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        List<GridRegion> GetNeighbors(GridRegion region);
+
+        /// <summary>
         /// Close all the child agents of the given AgentID in the neighbors
         /// </summary>
         /// <param name="AgentID"></param>

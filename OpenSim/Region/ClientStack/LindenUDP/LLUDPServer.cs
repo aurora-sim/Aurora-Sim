@@ -935,7 +935,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                m_log.WarnFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
+                m_log.DebugFormat("[LLUDPSERVER]: Ignoring a repeated UseCircuitCode ({0}) from {1} at {2} ",
                     circuitCode, agentID, remoteEndPoint);
             }
             return true;
