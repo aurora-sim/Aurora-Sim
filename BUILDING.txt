@@ -13,13 +13,13 @@ Steps:
 
 Prereqs:
  * Mono >= 2.4.2
- * Nant >= 0.85
+ * XBuild
  * On some Linux distributions you may need to install additional packages.  
     See http://opensimulator.org/wiki/Dependencies for more information.
 
 From the distribution type:
  * ./runprebuild.sh
- * nant
+ * xbuild
  * cd bin 
  * copy OpenSim.ini.example to OpenSim.ini and other appropriate files in bin/config-include
  * run mono OpenSim.exe
