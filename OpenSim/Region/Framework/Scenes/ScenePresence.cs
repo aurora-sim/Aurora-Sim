@@ -1068,9 +1068,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
-            // Create child agents in neighbouring regions
-            SendInitialData();
-
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
                 m_agentTransfer.EnableChildAgents(this);
@@ -2413,43 +2410,6 @@ namespace OpenSim.Region.Framework.Scenes
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
-        }
-
-        /// <summary>
-        /// Do everything required once a client completes its movement into a region and becomes
-        /// a root agent.
-        /// </summary>
-        private void SendInitialData()
-        {
-            // This agent just became root. We are going to tell everyone about it. The process of
-            // getting other avatars information was initiated in the constructor... don't do it 
-            // again here... 
-            SendAvatarDataToAllAgents();
-
-            //Tell us about everyone else as well now that we are here
-            SendOtherAgentsAppearanceToMe();
-
-            // We have an appearance but we may not have the baked textures. Check the asset cache 
-            // to see if all the baked textures are already here. 
-            IAvatarFactory AvatarFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
-            if (AvatarFactory != null)
-            {
-                //Disabled for now to test that appearance works, as some users are stuck as clouds to themselves
-                if (AvatarFactory.ValidateBakedTextureCache(m_controllingClient))
-                {
-                    //m_log.WarnFormat("[SCENEPRESENCE]: baked textures are in the cache for {0}", Name);
-                    SendAppearanceToAgent(this);
-
-                    // If the avatars baked textures are all in the cache, then we have a 
-                    // complete appearance... send it out, if not, then we'll send it when
-                    // the avatar finishes updating its appearance
-                    SendAppearanceToAllOtherAgents();
-                }
-                else
-                {
-                    m_log.ErrorFormat("[SCENEPRESENCE]: baked textures are NOT in the cache for {0}", Name);
-                }
-            }
         }
 
         /// <summary>

@@ -488,6 +488,14 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // NOTE: Do NOT send this! It seems to make the client become a cloud
             //sp.SendAppearanceToAgent(sp);
 
+            if (ValidateBakedTextureCache(sp.ControllingClient))
+                sp.SendAppearanceToAgent(sp);
+            else
+                m_log.ErrorFormat("[AvatarFactory]: baked textures are NOT in the cache for {0}", sp.Name);
+
+            // This agent just became root. We are going to tell everyone about it.
+            sp.SendAvatarDataToAllAgents();
+
             // If the avatars baked textures are all in the cache, then we have a 
             // complete appearance... send it out, if not, then we'll send it when
             // the avatar finishes updating its appearance
