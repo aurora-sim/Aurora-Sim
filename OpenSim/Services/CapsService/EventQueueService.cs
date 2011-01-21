@@ -303,6 +303,27 @@ namespace OpenSim.Services.CapsService
                         //Let this pass through, after the next event queue pass we can remove it
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                     }
+                    else if (map.ContainsKey("message") && map["message"] == "SendChildAgentUpdate")
+                    {
+                        OSDMap body = ((OSDMap)map["body"]);
+
+                        AgentPosition pos = new AgentPosition();
+                        pos.Unpack((OSDMap)body["AgentPos"]);
+                        UUID region = body["Region"].AsUUID();
+
+                        SendChildAgentUpdate(pos, region);
+                        //Don't send to the client
+                        return true;
+                    }
+                    else if (map.ContainsKey("message") && map["message"] == "TeleportAgent")
+                    {
+                        OSDMap body = ((OSDMap)map["body"]);
+                        GridRegion destination = new GridRegion();
+                        destination.FromOSD((OSDMap)body["Region"]);
+                        uint TeleportFlags = body["TeleportFlags"].AsUInteger();
+                        //Don't send to the client
+                        return TeleportAgent(destination, TeleportFlags);
+                    }
                     else if (map.ContainsKey("message") && map["message"] == "CrossAgent")
                     {
                         //This is a simulator message that tells us to cross the agent
@@ -317,7 +338,8 @@ namespace OpenSim.Services.CapsService
                         AgentData AgentData = new AgentData();
                         AgentData.Unpack((OSDMap)body["AgentData"]);
 
-                        CrossAgent(Region, pos, Vel, Circuit, AgentData);
+                        //Client doesn't get this
+                        return CrossAgent(Region, pos, Vel, Circuit, AgentData);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EnableChildAgents")
                     {
