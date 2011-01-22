@@ -141,20 +141,6 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAuthenticationService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
@@ -168,6 +154,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Authentication connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IAuthenticationService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

@@ -594,19 +594,6 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IInventoryService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", "") != Name)
-                return;
-
             string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("InventoryServerURI",
                     "InventoryService");
 
@@ -616,6 +603,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Inventory connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IInventoryService>(this);
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

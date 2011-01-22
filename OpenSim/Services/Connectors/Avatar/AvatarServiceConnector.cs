@@ -333,19 +333,6 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IAvatarService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", "") != Name)
-                return;
-
             string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AvatarServerURI",
                         "AvatarService");
 
@@ -355,6 +342,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Avatar connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IAvatarService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

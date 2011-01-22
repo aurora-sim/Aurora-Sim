@@ -828,6 +828,15 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("GridServerURI",
+                    "GridService");
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[GRID CONNECTOR]: No Server URI named in section GridService");
+                throw new Exception("Grid connector init error");
+            }
+            m_ServerURI = serviceURI;
+
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
@@ -837,18 +846,6 @@ namespace OpenSim.Services.Connectors
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridHandler", "") != Name)
-                return;
-
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("GridServerURI",
-                    "GridService");
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[GRID CONNECTOR]: No Server URI named in section GridService");
-                throw new Exception("Grid connector init error");
-            }
-            m_ServerURI = serviceURI;
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

@@ -389,19 +389,6 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IPresenceService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("PresenceHandler", "") != Name)
-                return;
-
             string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
                         "PresenceService");
 
@@ -411,6 +398,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Presence connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IPresenceService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

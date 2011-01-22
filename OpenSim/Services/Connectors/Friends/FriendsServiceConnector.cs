@@ -214,19 +214,6 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IFriendsService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("FriendsHandler", "") != Name)
-                return;
-
             string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("FriendsServerURI",
                         "FriendsService");
 
@@ -236,6 +223,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("Friends connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IFriendsService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

@@ -273,23 +273,10 @@ namespace OpenSim.Services.Connectors
         }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
-        { 
+        {
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
@@ -304,6 +291,16 @@ namespace OpenSim.Services.Connectors
                 throw new Exception("User account connector init error");
             }
             m_ServerURI = serviceURI;
+
+            registry.RegisterModuleInterface<IUserAccountService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

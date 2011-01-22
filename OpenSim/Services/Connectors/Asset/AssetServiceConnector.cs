@@ -331,6 +331,16 @@ namespace OpenSim.Services.Connectors
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 
+            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AssetServerURI",
+                    "AssetService");
+
+            if (serviceURI == String.Empty)
+            {
+                m_log.Error("[ASSET CONNECTOR]: No Server URI named in section AssetService");
+                throw new Exception("Asset connector init error");
+            }
+            m_ServerURI = serviceURI;
+
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 
@@ -343,16 +353,6 @@ namespace OpenSim.Services.Connectors
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
-
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AssetServerURI",
-                    "AssetService");
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[ASSET CONNECTOR]: No Server URI named in section AssetService");
-                throw new Exception("Asset connector init error");
-            }
-            m_ServerURI = serviceURI;
 
             SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
         }
