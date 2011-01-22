@@ -372,7 +372,6 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-
         #region IService Members
 
         public string Name

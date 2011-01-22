@@ -63,9 +63,65 @@ namespace OpenSim.Services.Connectors
             {
                 OSDMap innerresult = (OSDMap)result["Result"];
                 SessionID = innerresult["SecureSessionID"].AsUUID();
-                return innerresult["Result"];
+                if (innerresult["Result"].AsString() == "")
+                    return "";
             }
+
             SessionID = UUID.Zero;
+            return OldRegisterRegion(regionInfo);
+        }
+
+        public string OldRegisterRegion(GridRegion region)
+        {
+            Dictionary<string, object> rinfo = region.ToKeyValuePairs();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, object> kvp in rinfo)
+                sendData[kvp.Key] = (string)kvp.Value;
+
+            sendData["SCOPEID"] = region.ScopeID.ToString();
+            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "register";
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
+            try
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                        m_ServerURI + "/grid",
+                        reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "success"))
+                    {
+                        return String.Empty;
+                    }
+                    else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
+                    {
+                        m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
+                        return replyData["Message"].ToString();
+                    }
+                    else if (!replyData.ContainsKey("Result"))
+                    {
+                        m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
+                    }
+                    else
+                    {
+                        m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"].ToString());
+                        return "Unexpected result " + replyData["Result"].ToString();
+                    }
+
+                }
+                else
+                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+            }
+
             return "Error communicating with grid service";
         }
 
@@ -644,7 +700,7 @@ namespace OpenSim.Services.Connectors
             if (result["Success"].AsBoolean())
             {
                 OSDMap innerresult = (OSDMap)result["Result"];
-                return innerresult["Result"];
+                return innerresult["Result"].AsString();
             }
             return "Error communicating with grid service";
         }
