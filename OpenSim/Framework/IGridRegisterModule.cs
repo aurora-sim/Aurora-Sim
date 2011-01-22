@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace OpenSim.Framework
 {
     public interface IGridRegisterModule
     {
@@ -20,5 +19,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="scene"></param>
         void RegisterRegionWithGrid(IScene scene);
+
+        /// <summary>
+        /// Add this generic info to all registering regions
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="path"></param>
+        void AddGenericInfo(string key, string value);
     }
 }

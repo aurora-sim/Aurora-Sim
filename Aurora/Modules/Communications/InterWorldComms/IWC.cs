@@ -147,7 +147,7 @@ namespace Aurora.Modules
             foreach (OpenSim.Services.Interfaces.GridRegion region in m_ForeignRegions)
             {
                 UUID SecureSessionID = UUID.Zero;
-                m_GridService.RegisterRegion(region.ScopeID, region, SecureSessionID, out SecureSessionID);
+                m_GridService.RegisterRegion(region, SecureSessionID, out SecureSessionID);
                 region.AuthToken = SecureSessionID.ToString();
             }
         }

@@ -139,7 +139,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IGridService
 
-        public string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID oldSessionID, out UUID SessionID)
+        public string RegisterRegion(GridRegion regionInfo, UUID oldSessionID, out UUID SessionID)
         {
             SessionID = UUID.Zero;
             // Generate and upload our map tile in PNG format to the SimianGrid AddMapTile service
@@ -550,10 +550,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return region;
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
+        public string UpdateMap(GridRegion region, UUID sessionID)
         {
             UUID SessionID;
-            return RegisterRegion(scopeID, region, UUID.Zero, out SessionID);
+            return RegisterRegion(region, UUID.Zero, out SessionID);
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

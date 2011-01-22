@@ -42,6 +42,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Aurora.DataManager;
 using Aurora.Framework;
 
@@ -78,7 +79,22 @@ namespace OpenSim.Server.Handlers.Grid
                         WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
-                    return FailureResult();
+                {
+                    //OSD map test
+                    OSDMap map = WebUtils.GetOSDMap(body);
+                    if (map != null)
+                    {
+                        if (map.ContainsKey("Method"))
+                        {
+                            if (map["Method"] == "Register")
+                                return NewRegister(map);
+                            if (map["Method"] == "UpdateMap")
+                                return UpdateMap(map);
+                        }
+                    }
+                    else
+                        return FailureResult();
+                }
 
                 string method = request["METHOD"].ToString();
 
@@ -123,9 +139,6 @@ namespace OpenSim.Server.Handlers.Grid
                     case "get_region_flags":
                         return GetRegionFlags(request);
 
-                    case "update_map":
-                        return UpdateMap(request);
-
                     case "addagent":
                         return AddAgent(request);
 
@@ -159,12 +172,6 @@ namespace OpenSim.Server.Handlers.Grid
 
         private byte[] Register(Dictionary<string, object> request)
         {
-            UUID scopeID = UUID.Zero;
-            if (request.ContainsKey("SCOPEID"))
-                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to register region");
-
             int versionNumberMin = 0, versionNumberMax = 0;
             if (request.ContainsKey("VERSIONMIN"))
                 Int32.TryParse(request["VERSIONMIN"].ToString(), out versionNumberMin);
@@ -206,7 +213,7 @@ namespace OpenSim.Server.Handlers.Grid
 
             UUID SessionID = UUID.Zero;
             if (rinfo != null)
-                result = m_GridService.RegisterRegion(scopeID, rinfo, sessionIDIn, out SessionID);
+                result = m_GridService.RegisterRegion(rinfo, sessionIDIn, out SessionID);
 
             if (SessionID != UUID.Zero)
                 SessionCache[rinfo.RegionID] = SessionID;
@@ -217,50 +224,38 @@ namespace OpenSim.Server.Handlers.Grid
                 return FailureResult(result);
         }
 
-        private byte[] UpdateMap(Dictionary<string, object> request)
+        private byte[] NewRegister(OSDMap request)
         {
-            UUID scopeID = UUID.Zero;
-            if (request.ContainsKey("SCOPEID"))
-                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to register region");
+            GridRegion rinfo = new GridRegion();
+            rinfo.FromOSD((OSDMap)request["Region"]);
+            UUID SecureSessionID = request["SecureSessionID"].AsUUID();
+            string result = "";
+            if (rinfo != null)
+                result = m_GridService.RegisterRegion(rinfo, SecureSessionID, out SecureSessionID);
 
+            if(result == "")
+                SessionCache[rinfo.RegionID] = SecureSessionID;
 
+            OSDMap resultMap = new OSDMap();
+            resultMap["SecureSessionID"] = SecureSessionID;
+            resultMap["Result"] = result;
 
-            UUID sessionID = UUID.Zero;
-            if (request.ContainsKey("SESSIONID"))
-                UUID.TryParse(request["SESSIONID"].ToString(), out sessionID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to update region");
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));
+        }
 
-            GridRegion region = region = new GridRegion(request);
+        private byte[] UpdateMap(OSDMap request)
+        {
+            GridRegion rinfo = new GridRegion();
+            rinfo.FromOSD((OSDMap)request["Region"]);
+            UUID SecureSessionID = request["SecureSessionID"].AsUUID();
+            string result = "";
+            if (rinfo != null)
+                result = m_GridService.UpdateMap(rinfo, SecureSessionID);
 
-            int versionNumberMin = 0, versionNumberMax = 0;
-            if (request.ContainsKey("VERSIONMIN"))
-                Int32.TryParse(request["VERSIONMIN"].ToString(), out versionNumberMin);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no minimum protocol version in request to register region");
+            OSDMap resultMap = new OSDMap();
+            resultMap["Result"] = result;
 
-            if (request.ContainsKey("VERSIONMAX"))
-                Int32.TryParse(request["VERSIONMAX"].ToString(), out versionNumberMax);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no maximum protocol version in request to register region");
-
-            // Check the protocol version
-            if ((versionNumberMin > ProtocolVersions.ServerProtocolVersionMax && versionNumberMax < ProtocolVersions.ServerProtocolVersionMax))
-            {
-                // Can't do, there is no overlap in the acceptable ranges
-                return FailureResult();
-            }
-
-            string result = "Error communicating with grid service";
-
-            result = m_GridService.UpdateMap(scopeID, region, sessionID);
-
-            if (result == String.Empty)
-                return SuccessResult();
-            else
-                return FailureResult(result);
+            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(resultMap));
         }
 
         private byte[] Deregister(Dictionary<string, object> request)

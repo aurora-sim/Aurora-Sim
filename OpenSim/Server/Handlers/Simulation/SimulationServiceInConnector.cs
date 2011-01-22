@@ -31,6 +31,7 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenMetaverse;
 
 namespace OpenSim.Server.Handlers.Simulation
 {
@@ -64,7 +65,15 @@ namespace OpenSim.Server.Handlers.Simulation
 
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
             
-            server.AddHTTPHandler("/agent/", new AgentHandler(m_LocalSimulationService.GetInnerService()).Handler);
+            string path = UUID.Random().ToString() + "/agent/";
+
+            IGridRegisterModule registerModule = registry.RequestModuleInterface<IGridRegisterModule>();
+            if (registerModule != null)
+                registerModule.AddGenericInfo("SimulationAgent", path);
+            else
+                path = "/agent/";
+
+            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService()).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService()).Handler);
         }
 

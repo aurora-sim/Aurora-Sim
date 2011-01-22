@@ -32,6 +32,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_config;
         private List<Scene> m_scenes = new List<Scene>();
+        private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
 
         #endregion
 
@@ -87,7 +88,7 @@ namespace Aurora.Modules
         public void UpdateGridRegion(IScene scene)
         {
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            GridService.UpdateMap(scene.RegionInfo.ScopeID, new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
+            GridService.UpdateMap(new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
         }
 
         /// <summary>
@@ -109,6 +110,12 @@ namespace Aurora.Modules
         public void RegisterRegionWithGrid(IScene scene)
         {
             GridRegion region = new GridRegion(scene.RegionInfo);
+            OSDMap map = new OSDMap();
+            foreach(KeyValuePair<string, string> kvp in genericInfo)
+            {
+                map[kvp.Key] = kvp.Value;
+            }
+            region.GenericMap = map;
 
             IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridSessionID s = null;
@@ -124,7 +131,7 @@ namespace Aurora.Modules
             }
 
             //Tell the grid service about us
-            string error = GridService.RegisterRegion(scene.RegionInfo.ScopeID, region, s.SessionID, out s.SessionID);
+            string error = GridService.RegisterRegion(region, s.SessionID, out s.SessionID);
             if (error == String.Empty)
             {
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it
@@ -270,6 +277,11 @@ namespace Aurora.Modules
         }
 
         #endregion
+
+        public void AddGenericInfo(string key, string value)
+        {
+            genericInfo[key] = value;
+        }
 
         #endregion
     }

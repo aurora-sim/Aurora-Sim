@@ -43,7 +43,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionInfos"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        string RegisterRegion(UUID scopeID, GridRegion regionInfos, UUID oldSessionID, out UUID SessionID);
+        string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID);
 
         /// <summary>
         /// Deregister a region with the grid service.
@@ -98,7 +98,7 @@ namespace OpenSim.Services.Interfaces
 
         int GetRegionFlags(UUID scopeID, UUID regionID);
 
-        string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID);
+        string UpdateMap(GridRegion region, UUID sessionID);
 
         multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
 
@@ -219,6 +219,12 @@ namespace OpenSim.Services.Interfaces
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
         public int LastSeen = 0;
+        protected OSDMap m_genericMap = new OSDMap();
+        public OSDMap GenericMap
+        {
+            get { return m_genericMap; }
+            set { m_genericMap = value; }
+        }
 
         public GridRegion()
         {
@@ -243,6 +249,7 @@ namespace OpenSim.Services.Interfaces
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;
+            ScopeID = ConvertFrom.ScopeID;
         }
 
         #region Definition of equality
@@ -417,6 +424,7 @@ namespace OpenSim.Services.Interfaces
             map["LastSeen"] = LastSeen;
             map["SessionID"] = SessionID;
             map["Flags"] = Flags;
+            map["GenericMap"] = GenericMap;
 
             // We send it along too so that it doesn't need resolved on the other end
             map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
@@ -502,6 +510,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("Flags"))
                 Flags = map["Flags"].AsInteger();
+
+            if (map.ContainsKey("GenericMap"))
+                GenericMap = (OSDMap)map["GenericMap"];
 
             if (map.ContainsKey("remoteEndPointIP"))
             {

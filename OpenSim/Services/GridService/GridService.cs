@@ -124,7 +124,7 @@ namespace OpenSim.Services.GridService
 
         #region IGridService
 
-        public string RegisterRegion(UUID scopeID, GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)
+        public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)
         {
             SessionID = UUID.Zero;
             UUID NeedToDeletePreviousRegion = UUID.Zero;
@@ -132,7 +132,7 @@ namespace OpenSim.Services.GridService
             IConfig gridConfig = m_config.Configs["GridService"];
             // This needs better sanity testing. What if regionInfo is registering in
             // overlapping coords?
-            GridRegion region = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY, scopeID);
+            GridRegion region = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
             if (region != null)
             {
                 // There is a preexisting record
@@ -175,7 +175,7 @@ namespace OpenSim.Services.GridService
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
             {
                 m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
-                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, scopeID);
+                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
                 return "Region overlaps another region";
             }
 
@@ -194,7 +194,7 @@ namespace OpenSim.Services.GridService
 
             if (!m_AllowDuplicateNames)
             {
-                List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, scopeID);
+                List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, regionInfos.ScopeID);
                 if (dupe != null && dupe.Count > 0)
                 {
                     foreach (GridRegion d in dupe)
@@ -208,8 +208,6 @@ namespace OpenSim.Services.GridService
                     }
                 }
             }
-
-            regionInfos.ScopeID = scopeID;
 
             if (region != null)
             {
@@ -281,9 +279,9 @@ namespace OpenSim.Services.GridService
             return "Failed to save region into the database.";
         }
 
-        public string UpdateMap(UUID scopeID, GridRegion gregion, UUID sessionID)
+        public string UpdateMap(GridRegion gregion, UUID sessionID)
         {
-            GridRegion region = m_Database.Get(gregion.RegionID, scopeID);
+            GridRegion region = m_Database.Get(gregion.RegionID, gregion.ScopeID);
             if (region != null)
             {
                 if (m_UseSessionID && region.SessionID != sessionID)

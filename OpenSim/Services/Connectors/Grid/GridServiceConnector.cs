@@ -37,6 +37,7 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Connectors
 {
@@ -50,63 +51,21 @@ namespace OpenSim.Services.Connectors
 
         #region IGridService
 
-        public virtual string RegisterRegion(UUID scopeID, GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
+        public virtual string RegisterRegion(GridRegion regionInfo, UUID SecureSessionID, out UUID SessionID)
         {
+            OSDMap map = new OSDMap();
+            map["Region"] = regionInfo.ToOSD();
+            map["SecureSessionID"] = SecureSessionID;
+            map["Method"] = "Register";
+
+            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+            if (result["Success"].AsBoolean())
+            {
+                OSDMap innerresult = (OSDMap)result["Result"];
+                SessionID = innerresult["SecureSessionID"].AsUUID();
+                return innerresult["Result"];
+            }
             SessionID = UUID.Zero;
-            Dictionary<string, object> rinfo = regionInfo.ToKeyValuePairs();
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
-            foreach (KeyValuePair<string, object> kvp in rinfo)
-                sendData[kvp.Key] = (string)kvp.Value;
-
-            sendData["SCOPEID"] = scopeID.ToString();
-            sendData["SESSIONID"] = SecureSessionID.ToString();
-            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
-            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
-            sendData["METHOD"] = "register";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
-            try
-            {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData.ContainsKey("Result")&& (replyData["Result"].ToString().ToLower() == "success"))
-                    {
-                        if (replyData.ContainsKey("Message"))
-                        {
-                            SessionID = UUID.Parse(replyData["Message"].ToString());
-                        }
-                        m_log.Info("[GridService]: Successfully registered region " + regionInfo.RegionName + " at " + regionInfo.RegionLocX + "," + regionInfo.RegionLocY + " to the grid server @ " + m_ServerURI);
-                        return String.Empty;
-                    }
-                    else if (replyData.ContainsKey("Result")&& (replyData["Result"].ToString().ToLower() == "failure"))
-                    {
-                        //m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
-                        return replyData["Message"].ToString();
-                    }
-                    else if (!replyData.ContainsKey("Result"))
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
-                    }
-                    else
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"].ToString());
-                        return "Unexpected result "+replyData["Result"].ToString();
-                    }
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply from " + m_ServerURI);
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server " + m_ServerURI + " : {0}", e.Message);
-            }
-
             return "Error communicating with grid service";
         }
 
@@ -628,6 +587,7 @@ namespace OpenSim.Services.Connectors
 
             return rinfos;
         }
+
         public virtual int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -673,64 +633,19 @@ namespace OpenSim.Services.Connectors
             return flags;
         }
 
-        public virtual string UpdateMap(UUID scopeID, GridRegion region, UUID sessionID)
+        public virtual string UpdateMap(GridRegion regionInfo, UUID SecureSessionID)
         {
-            Dictionary<string, object> sendData = region.ToKeyValuePairs();
+            OSDMap map = new OSDMap();
+            map["Region"] = regionInfo.ToOSD();
+            map["SecureSessionID"] = SecureSessionID;
+            map["Method"] = "UpdateMap";
 
-            sendData["SCOPEID"] = scopeID.ToString();
-            sendData["SESSIONID"] = sessionID.ToString();
-            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
-            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
-            sendData["METHOD"] = "update_map";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
-            try
+            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+            if (result["Success"].AsBoolean())
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "success"))
-                        return String.Empty;
-
-                    else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
-                    {
-                        if (replyData["Message"].ToString() == "")
-                        {
-                            if (RegisterRegion(scopeID, region, sessionID, out sessionID) != "")
-                            {
-                                m_log.DebugFormat("[GRID CONNECTOR]: update_map failed, non Aurora grid-server?");
-                            }
-                            return "";
-                        }
-                        else
-                        {
-                            m_log.DebugFormat("[GRID CONNECTOR]: update_map failed: {0}", replyData["Message"].ToString());
-                            return replyData["Message"].ToString();
-                        }
-                    }
-                    else if (!replyData.ContainsKey("Result"))
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
-                    }
-                    else
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"].ToString());
-                        return "Unexpected result " + replyData["Result"].ToString();
-                    }
-                }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
+                OSDMap innerresult = (OSDMap)result["Result"];
+                return innerresult["Result"];
             }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
-            }
-
             return "Error communicating with grid service";
         }
 
