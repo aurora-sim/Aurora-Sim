@@ -525,5 +525,13 @@ namespace OpenSim.Services.CapsService
             llsdBody.Add("AgentID", AgentID);
             return buildEvent("CancelTeleport", llsdBody);
         }
+
+        public static OSD ArrivedAtDestination(UUID AgentID)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("AgentID", AgentID);
+            return buildEvent("ArrivedAtDestination", llsdBody);
+        }
     }
 }

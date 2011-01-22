@@ -192,11 +192,11 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 if (s.RegionInfo.RegionID == origin)
                 {
-                    IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
-                    if (AgentTransferModule != null)
+                    IEventQueueService eventQueueService = s.RequestModuleInterface<IEventQueueService>();
+                    if (eventQueueService != null)
                     {
                         //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
-                        AgentTransferModule.AgentArrivedAtDestination(id);
+                        eventQueueService.ArrivedAtDestination(id, s.RegionInfo.RegionHandle);
                         return true;
                     }
                 }

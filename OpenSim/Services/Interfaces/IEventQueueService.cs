@@ -143,5 +143,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name="AgentID"></param>
         /// <param name="RegionHandle"></param>
         void CancelTeleport(UUID AgentID, ulong RegionHandle);
+
+        /// <summary>
+        /// Handle a callback from the region the user teleported into
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="RegionHandle"></param>
+        void ArrivedAtDestination(UUID AgentID, ulong RegionHandle);
     }
 }

@@ -44,15 +44,13 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void Cross(ScenePresence agent, bool isFlying, GridRegion neighborRegion);
 
-        void AgentArrivedAtDestination(UUID agent);
-
         void EnableChildAgents(ScenePresence agent);
 
         void EnableChildAgent(ScenePresence agent, GridRegion region);
 
         void CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion destination);
 
-        void CancelTeleport(UUID AgentID);
+        void CancelTeleport(UUID AgentID, ulong RegionHandle);
 
         void RequestTeleportLocation(IClientAPI iClientAPI, ulong regionHandle, Vector3 position, Vector3 lookAt, uint p);
 

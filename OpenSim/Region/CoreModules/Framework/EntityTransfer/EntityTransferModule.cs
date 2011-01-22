@@ -55,7 +55,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected bool m_Enabled = false;
         protected List<Scene> m_scenes = new List<Scene>();
         protected List<UUID> m_agentsInTransit;
-        protected List<UUID> m_cancelingAgents;
         public Dictionary<Scene, bool[,]> DirectionsToBlockChildAgents = new Dictionary<Scene,bool[,]>();
 
         #endregion
@@ -81,7 +80,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (name == Name)
                 {
                     m_agentsInTransit = new List<UUID>();
-                    m_cancelingAgents = new List<UUID>();
                     m_Enabled = true;
                     //m_log.InfoFormat("[ENTITY TRANSFER MODULE]: {0} enabled.", Name);
                 }
@@ -338,12 +336,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
 
-                if (CheckForCancelingAgent(sp.UUID))
-                {
-                    Cancel(sp);
-                    return;
-                }
-                
                 // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
                 // both regions
                 if (sp.ParentID != UUID.Zero)
@@ -364,13 +356,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 AgentData agent = new AgentData();
                 sp.CopyTo(agent);
                 agent.Position = position;
-                SetCallbackURL(agent, sp.Scene.RegionInfo);
 
                 // Let's set this to true tentatively. This does not trigger OnChildAgent
                 sp.IsChildAgent = true;
-
-                //Set the agent in transit before we send the event
-                SetInTransit(sp.UUID);
 
                 IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
@@ -385,12 +373,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         sp.ControllingClient.SendTeleportFailed("Destination refused");
                         return;
                     }
-                }
-
-                if (CheckForCancelingAgent(sp.UUID))
-                {
-                    Cancel(sp);
-                    return;
                 }
 
                 if (eq != null)
@@ -446,8 +428,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // Fail. Reset it back
             sp.IsChildAgent = false;
 
-            ResetFromTransit(sp.UUID);
-
             EnableChildAgents(sp);
         }
 
@@ -460,8 +440,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             sp.IsChildAgent = false;
 
             ResetFromTransit(sp.UUID);
-
-            EnableChildAgents(sp);
 
             // Finally, kill the agent we just created at the destination.
             sp.Scene.SimulationService.CloseAgent(finalDestination, sp.UUID);
@@ -529,7 +507,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public void RequestTeleportCancel(IClientAPI client)
         {
-            CancelTeleport(client.AgentId);
+            CancelTeleport(client.AgentId, client.Scene.RegionInfo.RegionHandle);
         }
 
         /// <summary>
@@ -669,7 +647,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 pos = pos + (agent.Velocity);
 
-                SetInTransit(agent.UUID);
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = pos;
@@ -837,16 +814,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     handles.Add(reg.RegionHandle);
             }
             return handles;
-        }
-
-        #endregion
-
-        #region Agent Arrived
-
-        public void AgentArrivedAtDestination(UUID id)
-        {
-            //m_log.Debug(" >>> ReleaseAgent called <<< ");
-            ResetFromTransit(id);
         }
 
         #endregion
@@ -1234,42 +1201,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Misc
 
-        protected bool WaitForCallback(UUID id, out bool callWasCanceled)
-        {
-            int count = 200;
-            while (m_agentsInTransit.Contains(id) && count-- > 0)
-            {
-                //m_log.Debug("  >>> Waiting... " + count);
-                if (CheckForCancelingAgent(id))
-                {
-                    //If the call was canceled, we need to break here 
-                    //   now and tell the code that called us about it
-                    callWasCanceled = true;
-                    return true;
-                }
-                Thread.Sleep(100);
-            }
-            //If we made it through the whole loop, we havn't been canceled,
-            //    as we either have timed out or made it, so no checks are needed
-            callWasCanceled = false;
-            if (count > 0)
-                return true;
-            else
-                return false;
-        }
-
-        protected void SetInTransit(UUID id)
-        {
-            lock (m_agentsInTransit)
-            {
-                if (!m_agentsInTransit.Contains(id))
-                    m_agentsInTransit.Add(id);
-            }
-        }
-
         protected bool ResetFromTransit(UUID id)
         {
-            RemoveCancelingAgent(id);
             lock (m_agentsInTransit)
             {
                 if (m_agentsInTransit.Contains(id))
@@ -1281,37 +1214,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        public void CancelTeleport(UUID AgentID)
+        public void CancelTeleport(UUID AgentID, ulong RegionHandle)
         {
-            AddCancelingAgent(AgentID);
-        }
-
-        private bool CheckForCancelingAgent(UUID AgentID)
-        {
-            lock (m_cancelingAgents)
+            IEventQueueService eventQueueService = m_scenes[0].RequestModuleInterface<IEventQueueService>();
+            if (eventQueueService != null)
             {
-                if (m_cancelingAgents.Contains(AgentID))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private void RemoveCancelingAgent(UUID AgentID)
-        {
-            lock (m_cancelingAgents)
-            {
-                m_cancelingAgents.Remove(AgentID);
-            }
-        }
-
-        private void AddCancelingAgent(UUID AgentID)
-        {
-            lock (m_cancelingAgents)
-            {
-                if (!m_cancelingAgents.Contains(AgentID))
-                    m_cancelingAgents.Add(AgentID);
+                eventQueueService.CancelTeleport(AgentID, RegionHandle);
             }
         }
 

@@ -248,15 +248,21 @@ namespace OpenSim.Services.CapsService
             return TryEnqueue(item, AgentID, RegionHandle);
         }
 
-        public void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle)
+        public virtual void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.SendChildAgentUpdate(agentpos, regionID);
             Enqueue(item, agentpos.AgentID, RegionHandle);
         }
 
-        public void CancelTeleport(UUID AgentID, ulong RegionHandle)
+        public virtual void CancelTeleport(UUID AgentID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.CancelTeleport(AgentID);
+            Enqueue(item, AgentID, RegionHandle);
+        }
+
+        public virtual void ArrivedAtDestination(UUID AgentID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.ArrivedAtDestination(AgentID);
             Enqueue(item, AgentID, RegionHandle);
         }
 
@@ -312,6 +318,22 @@ namespace OpenSim.Services.CapsService
                     {
                         //Let this pass through, after the next event queue pass we can remove it
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                    }
+                    else if (map.ContainsKey("message") && map["message"] == "ArrivedAtDestination")
+                    {
+                        //Recieved a callback
+                        m_callbackHasCome = true;
+
+                        //Don't send it to the client
+                        return true;
+                    }
+                    else if (map.ContainsKey("message") && map["message"] == "CancelTeleport")
+                    {
+                        //The user has requested to cancel the teleport, stop them.
+                        m_requestToCancelTeleport = true;
+
+                        //Don't send it to the client
+                        return true;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "SendChildAgentUpdate")
                     {
@@ -687,6 +709,10 @@ namespace OpenSim.Services.CapsService
 
         #region Agent code (teleporting, crossing, disabling/enabling)
 
+        protected bool m_inTeleport = false;
+        protected bool m_requestToCancelTeleport = false;
+        protected bool m_callbackHasCome = false;
+
         #region EnableChildAgents
 
         public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
@@ -885,8 +911,12 @@ namespace OpenSim.Services.CapsService
 
         protected bool TeleportAgent(GridRegion destination, uint TeleportFlags)
         {
-            //We arn't going to deal with CallbackURLs
+            //We arn't going to deal with CallbackURLs yet
             //SetCallbackURL(cAgent, crossingRegion.RegionID);
+
+            //Set the user in transit so that we block duplicate tps and reset any cancelations
+            if (!SetUserInTransit())
+                return false;
 
             uint x, y;
             Utils.LongToUInts(m_service.RegionHandle, out x, out y);
@@ -901,26 +931,78 @@ namespace OpenSim.Services.CapsService
             // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
             // that the client contacted the destination before we send the attachments and close things here.
 
-            /*bool callWasCanceled = false;
-            if (!WaitForCallback(sp.UUID, out callWasCanceled))
+            bool callWasCanceled = false;
+            bool result = WaitForCallback(out callWasCanceled);
+            if (!result)
             {
                 if (!callWasCanceled)
                 {
-                    m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
-                    Fail(sp, finalDestination);
+                    m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                        m_service.AgentID + ". Resetting.");
                 }
-                else
-                    Cancel(sp);
-                return;
-            }*/
-
-            // Next, let's close the child agent connections that are too far away.
-            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-            if (service != null)
-            {
-                service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
             }
+            else
+            {
+                // Next, let's close the child agent connections that are too far away.
+                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                {
+                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                }
+            }
+
+            //All done
+            ResetFromTransit();
+
+            return result;
+        }
+
+        protected void ResetFromTransit()
+        {
+            m_inTeleport = false;
+            m_requestToCancelTeleport = false;
+            m_callbackHasCome = false;
+        }
+
+        protected bool SetUserInTransit()
+        {
+            if (m_inTeleport)
+            {
+                m_log.Warn("[EventQueueService]: Got a request to teleport during another teleport for agent " + m_service.AgentID + "!");
+                return false; //What??? Stop here and don't go forward
+            }
+
+            m_inTeleport = true;
+            m_requestToCancelTeleport = false;
+            m_callbackHasCome = false;
             return true;
+        }
+
+        protected virtual void SetCallbackURL(AgentData agent, RegionInfo region)
+        {
+            agent.CallbackURI = region.ServerURI +
+                "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
+            //m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
+        }
+
+        protected bool WaitForCallback(out bool callWasCanceled)
+        {
+            while (!m_callbackHasCome)
+            {
+                //m_log.Debug("  >>> Waiting... " + count);
+                if (m_requestToCancelTeleport)
+                {
+                    //If the call was canceled, we need to break here 
+                    //   now and tell the code that called us about it
+                    callWasCanceled = true;
+                    return true;
+                }
+                Thread.Sleep(100);
+            }
+            //If we made it through the whole loop, we havn't been canceled,
+            //    as we either have timed out or made it, so no checks are needed
+            callWasCanceled = false;
+            return m_callbackHasCome;
         }
 
         #endregion
