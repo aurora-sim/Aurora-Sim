@@ -129,6 +129,22 @@ namespace OpenSim.Services.Connectors
             return "Error communicating with grid service";
         }
 
+        public virtual string UpdateMap(GridRegion regionInfo, UUID SecureSessionID)
+        {
+            OSDMap map = new OSDMap();
+            map["Region"] = regionInfo.ToOSD();
+            map["SecureSessionID"] = SecureSessionID;
+            map["Method"] = "UpdateMap";
+
+            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+            if (result["Success"].AsBoolean())
+            {
+                OSDMap innerresult = (OSDMap)result["Result"];
+                return innerresult["Result"].AsString();
+            }
+            return "Error communicating with grid service";
+        }
+
         public virtual bool DeregisterRegion(UUID regionID, UUID SessionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -691,22 +707,6 @@ namespace OpenSim.Services.Connectors
                 m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
 
             return flags;
-        }
-
-        public virtual string UpdateMap(GridRegion regionInfo, UUID SecureSessionID)
-        {
-            OSDMap map = new OSDMap();
-            map["Region"] = regionInfo.ToOSD();
-            map["SecureSessionID"] = SecureSessionID;
-            map["Method"] = "UpdateMap";
-
-            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
-            if (result["Success"].AsBoolean())
-            {
-                OSDMap innerresult = (OSDMap)result["Result"];
-                return innerresult["Result"].AsString();
-            }
-            return "Error communicating with grid service";
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

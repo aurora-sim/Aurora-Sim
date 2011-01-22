@@ -250,6 +250,7 @@ namespace OpenSim.Services.Interfaces
             m_RegionSizeY = ConvertFrom.RegionSizeY;
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;
             ScopeID = ConvertFrom.ScopeID;
+            SessionID = ConvertFrom.GridSecureSessionID;
         }
 
         #region Definition of equality

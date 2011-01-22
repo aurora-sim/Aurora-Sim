@@ -88,7 +88,7 @@ namespace Aurora.Modules
         public void UpdateGridRegion(IScene scene)
         {
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            GridService.UpdateMap(new GridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
+            GridService.UpdateMap(BuildGridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
         }
 
         /// <summary>
@@ -103,19 +103,25 @@ namespace Aurora.Modules
                 service.InformRegionsNeighborsThatRegionIsUp(scene.RegionInfo);
         }
 
+        private GridRegion BuildGridRegion(RegionInfo regionInfo)
+        {
+            GridRegion region = new GridRegion(regionInfo);
+            OSDMap map = new OSDMap();
+            foreach (KeyValuePair<string, string> kvp in genericInfo)
+            {
+                map[kvp.Key] = kvp.Value;
+            }
+            region.GenericMap = map;
+            return region;
+        }
+
         /// <summary>
         /// Register this region with the grid service
         /// </summary>
         /// <param name="scene"></param>
         public void RegisterRegionWithGrid(IScene scene)
         {
-            GridRegion region = new GridRegion(scene.RegionInfo);
-            OSDMap map = new OSDMap();
-            foreach(KeyValuePair<string, string> kvp in genericInfo)
-            {
-                map[kvp.Key] = kvp.Value;
-            }
-            region.GenericMap = map;
+            GridRegion region = BuildGridRegion(scene.RegionInfo);
 
             IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridSessionID s = null;

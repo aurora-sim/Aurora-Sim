@@ -12,6 +12,8 @@ namespace OpenSim.Server.Handlers
 {
     public class AutoConfigurationInHandler : IService
     {
+        private OSDMap configMap = new OSDMap();
+
         public string Name
         {
             get { return GetType().Name; }
@@ -19,6 +21,24 @@ namespace OpenSim.Server.Handlers
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AutoConfigurationInHandler", "") != Name)
+                return;
+            IConfig autoConfConfig = config.Configs["AutoConfiguration"];
+            if (autoConfConfig == null)
+                return;
+            configMap["GridServerURI"] = autoConfConfig.GetString("GridServerURI", "");
+            configMap["GridUserServerURI"] = autoConfConfig.GetString("GridUserServerURI", "");
+            configMap["AssetServerURI"] = autoConfConfig.GetString("AssetServerURI", "");
+            configMap["InventoryServerURI"] = autoConfConfig.GetString("InventoryServerURI", "");
+            configMap["AvatarServerURI"] = autoConfConfig.GetString("AvatarServerURI", "");
+            configMap["PresenceServerURI"] = autoConfConfig.GetString("PresenceServerURI", "");
+            configMap["UserAccountServerURI"] = autoConfConfig.GetString("UserAccountServerURI", "");
+            configMap["AuthenticationServerURI"] = autoConfConfig.GetString("AuthenticationServerURI", "");
+            configMap["FriendsServerURI"] = autoConfConfig.GetString("FriendsServerURI", "");
+            configMap["RemoteServerURI"] = autoConfConfig.GetString("RemoteServerURI", "");
+            configMap["EventQueueServiceURI"] = autoConfConfig.GetString("EventQueueServiceURI", "");
+            configMap["FreeswitchServiceURL"] = autoConfConfig.GetString("FreeswitchServiceURL", "");
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -38,19 +58,7 @@ namespace OpenSim.Server.Handlers
             if (autoConfConfig == null)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AutoConfigurationInHandlerPort"));
-            OSDMap configMap = new OSDMap();
-            configMap["GridServerURI"] = autoConfConfig.GetString("GridServerURI", "");
-            configMap["GridUserServerURI"] = autoConfConfig.GetString("GridUserServerURI", "");
-            configMap["AssetServerURI"] = autoConfConfig.GetString("AssetServerURI", "");
-            configMap["InventoryServerURI"] = autoConfConfig.GetString("InventoryServerURI", "");
-            configMap["AvatarServerURI"] = autoConfConfig.GetString("AvatarServerURI", "");
-            configMap["PresenceServerURI"] = autoConfConfig.GetString("PresenceServerURI", "");
-            configMap["UserAccountServerURI"] = autoConfConfig.GetString("UserAccountServerURI", "");
-            configMap["AuthenticationServerURI"] = autoConfConfig.GetString("AuthenticationServerURI", "");
-            configMap["FriendsServerURI"] = autoConfConfig.GetString("FriendsServerURI", "");
-            configMap["RemoteServerURI"] = autoConfConfig.GetString("RemoteServerURI", "");
-            configMap["EventQueueServiceURI"] = autoConfConfig.GetString("EventQueueServiceURI", "");
-            configMap["FreeswitchServiceURL"] = autoConfConfig.GetString("FreeswitchServiceURL", "");
+
             server.AddStreamHandler(new AutoConfigurationPostHandler(configMap));
         }
 
