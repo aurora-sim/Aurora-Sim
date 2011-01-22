@@ -118,16 +118,19 @@ namespace OpenSim.Services.Interfaces
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RegionHandle);
 
         /// <summary>
-        /// Tell the EventQueueService to cross this agent
+        /// Tell the EventQueueService to teleport this agent
         /// </summary>
-        /// <param name="crossingRegion"></param>
-        /// <param name="pos"></param>
-        /// <param name="velocity"></param>
-        /// <param name="circuit"></param>
-        /// <param name="cAgent"></param>
-        /// <param name="RegionHandle"></param>
+        /// <param name="AgentID">The agent that is doing the teleport</param>
+        /// <param name="DrawDistance">The agent's draw distance</param>
+        /// <param name="circuit">The circuit data of the agent</param>
+        /// <param name="data">The update that the other region will get about this agent</param>
+        /// <param name="TeleportFlags">The teleport flags</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="RegionHandle">The current region's handle</param>
         /// <returns></returns>
-        bool TeleportAgent(UUID AgentID, GridRegion destination, uint TeleportFlags, ulong RegionHandle);
+        bool TeleportAgent(UUID AgentID, int DrawDistance, AgentCircuitData circuit,
+            AgentData data, uint TeleportFlags,
+            GridRegion destination, ulong RegionHandle);
 
         /// <summary>
         /// Send an update to all child agents

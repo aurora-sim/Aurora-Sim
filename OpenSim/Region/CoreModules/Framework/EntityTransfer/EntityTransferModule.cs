@@ -338,20 +338,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (sp.ParentID != UUID.Zero)
                     sp.StandUp(true);
 
-                if (!sp.ValidateAttachments())
-                {
-                    sp.ControllingClient.SendTeleportProgress(teleportFlags, "missing_attach_tport");
-                    sp.ControllingClient.SendTeleportFailed("Inconsistent attachment state");
-                    return;
-                }
+                //Make sure that all attachments are ready for the teleport
+                sp.ValidateAttachments();
 
                 AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
                 agentCircuit.startpos = position;
+                //The agent will be a root agent
                 agentCircuit.child = false;
+                //Make sure the appearnace is right
                 agentCircuit.Appearance = sp.Appearance;
 
                 AgentData agent = new AgentData();
                 sp.CopyTo(agent);
+                //Fix the position
                 agent.Position = position;
 
                 // Let's set this to true tentatively. This does not trigger OnChildAgent
@@ -362,21 +361,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
                     //  messages if they need to be called
-                    if(!eq.TryEnableChildAgents(sp.UUID, sp.Scene.RegionInfo.RegionHandle, (int)sp.DrawDistance,
-                        finalDestination, agentCircuit, agent, teleportFlags, endPoint.Address.GetAddressBytes(), endPoint.Port))
-                    {
-                        // Fix the agent status
-                        sp.IsChildAgent = false;
-                        sp.ControllingClient.SendTeleportFailed("Destination refused");
-                        return;
-                    }
-                }
-
-                if (eq != null)
-                {
                     //This sends the TeleportFinish event and deals with the callback
                     //  messages if they need to be called
-                    if (!eq.TeleportAgent(sp.UUID, finalDestination, teleportFlags, sp.Scene.RegionInfo.RegionHandle))
+                    if (!eq.TeleportAgent(sp.UUID, (int)sp.DrawDistance,
+                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle))
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;
@@ -391,9 +379,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Well, this is it. The agent is over there.
                 KillEntity(sp.Scene, sp);
 
-                // May need to logout or other cleanup
-                AgentHasMovedAway(sp.ControllingClient.SessionId, false);
-
                 // Now let's make it officially a child agent
                 sp.MakeChildAgent();
 
@@ -404,10 +389,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 sp.ControllingClient.SendTeleportFailed("Remote Region appears to be down");
             }
-        }
-
-        protected virtual void AgentHasMovedAway(UUID sessionID, bool logout)
-        {
         }
 
         protected void KillEntity(Scene scene, ISceneEntity entity)
@@ -589,8 +570,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             Scene m_scene = agent.Scene;
 
-            if (crossingRegion != null && agent.ValidateAttachments())
+            if (crossingRegion != null)
             {
+                //Make sure that all attachments are ready for the teleport
+                agent.ValidateAttachments();
                 pos = pos + (agent.Velocity);
 
                 AgentData cAgent = new AgentData();

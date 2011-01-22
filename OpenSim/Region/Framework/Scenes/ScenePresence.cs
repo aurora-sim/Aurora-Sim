@@ -3222,7 +3222,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool ValidateAttachments()
+        public void ValidateAttachments()
         {
             lock (m_attachments)
             {
@@ -3243,7 +3243,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-            return true;
         }
 
         /// <summary>

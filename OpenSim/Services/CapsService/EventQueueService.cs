@@ -242,9 +242,11 @@ namespace OpenSim.Services.CapsService
             return TryEnqueue(item, circuit.AgentID, RegionHandle);
         }
 
-        public virtual bool TeleportAgent(UUID AgentID, GridRegion destination, uint TeleportFlags, ulong RegionHandle)
+        public virtual bool TeleportAgent(UUID AgentID, int DrawDistance, AgentCircuitData circuit, 
+            AgentData data, uint TeleportFlags, 
+            GridRegion destination, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.TeleportAgent(destination, TeleportFlags);
+            OSD item = EventQueueHelper.TeleportAgent(DrawDistance, circuit, data, TeleportFlags, destination);
             return TryEnqueue(item, AgentID, RegionHandle);
         }
 
@@ -350,11 +352,21 @@ namespace OpenSim.Services.CapsService
                     else if (map.ContainsKey("message") && map["message"] == "TeleportAgent")
                     {
                         OSDMap body = ((OSDMap)map["body"]);
+
                         GridRegion destination = new GridRegion();
                         destination.FromOSD((OSDMap)body["Region"]);
+
                         uint TeleportFlags = body["TeleportFlags"].AsUInteger();
+                        int DrawDistance = body["DrawDistance"].AsInteger();
+
+                        AgentCircuitData Circuit = new AgentCircuitData();
+                        Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
+
+                        AgentData AgentData = new AgentData();
+                        AgentData.Unpack((OSDMap)body["AgentData"]);
+
                         //Don't send to the client
-                        return TeleportAgent(destination, TeleportFlags);
+                        return TeleportAgent(destination, TeleportFlags, DrawDistance, Circuit, AgentData);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "CrossAgent")
                     {
@@ -909,10 +921,12 @@ namespace OpenSim.Services.CapsService
 
         #region Teleporting
 
-        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags)
+        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance, 
+            AgentCircuitData circuit, AgentData agentData)
         {
-            //We arn't going to deal with CallbackURLs yet
-            //SetCallbackURL(cAgent, crossingRegion.RegionID);
+            //Set the callback URL
+            SetCallbackURL(agentData, destination);
+
             bool result = false;
 
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
@@ -985,11 +999,9 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
-        protected virtual void SetCallbackURL(AgentData agent, RegionInfo region)
+        protected void SetCallbackURL(AgentData agent, GridRegion region)
         {
-            agent.CallbackURI = region.ServerURI +
-                "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
-            //m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
+            agent.CallbackURI = m_service.HostUri + "/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
         }
 
         protected bool WaitForCallback(out bool callWasCanceled)
