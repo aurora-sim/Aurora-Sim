@@ -959,15 +959,26 @@ namespace OpenSim.Services.CapsService
                     result = WaitForCallback(out callWasCanceled);
                     if (!result)
                     {
-                        if (!callWasCanceled)
+                        //It says it failed, lets call the sim and check
+                        IAgentData data = null;
+                        if (!SimulationService.RetrieveAgent(destination, m_service.AgentID, out data))
                         {
-                            m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
-                                m_service.AgentID + ". Resetting.");
+                            if (!callWasCanceled)
+                            {
+                                m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                                    m_service.AgentID + ". Resetting.");
+                            }
+                            //Close the agent at the place we just created if it isn't a neighbor
+                            if (service.IsOutsideView(ourRegion.RegionLocX, destination.RegionLocX,
+                                ourRegion.RegionLocY, destination.RegionLocY))
+                                SimulationService.CloseAgent(destination, m_service.AgentID);
                         }
-                        //Close the agent at the place we just created if it isn't a neighbor
-                        if(service.IsOutsideView(ourRegion.RegionLocX, destination.RegionLocX,
-                            ourRegion.RegionLocY, destination.RegionLocY))
-                            SimulationService.CloseAgent(destination, m_service.AgentID);
+                        else
+                        {
+                            //Ok... the agent exists... so lets assume that it worked?
+                            service.GetNeighbors(ourRegion);
+                            service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                        }
                     }
                     else
                     {
