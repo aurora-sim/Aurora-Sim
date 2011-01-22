@@ -949,24 +949,26 @@ namespace OpenSim.Services.CapsService
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                 // that the client contacted the destination before we send the attachments and close things here.
 
-                bool callWasCanceled = false;
-                result = WaitForCallback(out callWasCanceled);
-                if (!result)
+                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                if (service != null)
                 {
-                    if (!callWasCanceled)
+                    bool callWasCanceled = false;
+                    result = WaitForCallback(out callWasCanceled);
+                    if (!result)
                     {
-                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
-                            m_service.AgentID + ". Resetting.");
+                        if (!callWasCanceled)
+                        {
+                            m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                                m_service.AgentID + ". Resetting.");
+                        }
+                        //Close the agent at the place we just created if it isn't a neighbor
+                        if(service.IsOutsideView(ourRegion.RegionLocX, destination.RegionLocX,
+                            ourRegion.RegionLocY, destination.RegionLocY))
+                            SimulationService.CloseAgent(destination, m_service.AgentID);
                     }
-                    //Close the agent at the place we just created
-                    SimulationService.CloseAgent(destination, m_service.AgentID);
-                }
-                else
-                {
-                    // Next, let's close the child agent connections that are too far away.
-                    INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                    if (service != null)
+                    else
                     {
+                        // Next, let's close the child agent connections that are too far away.
                         service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                     }
                 }
@@ -999,14 +1001,19 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
+        #region Callbacks
+
         protected void SetCallbackURL(AgentData agent, GridRegion region)
         {
-            agent.CallbackURI = m_service.HostUri + "/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
+            string path = "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
+            agent.CallbackURI = m_service.HostUri + path;
+            m_service.ClientCaps.Server.AddHTTPHandler("/agent/", CallbackHandler);
         }
 
         protected bool WaitForCallback(out bool callWasCanceled)
         {
-            while (!m_callbackHasCome)
+            int count = 100;
+            while (!m_callbackHasCome && count > 0)
             {
                 //m_log.Debug("  >>> Waiting... " + count);
                 if (m_requestToCancelTeleport)
@@ -1017,12 +1024,56 @@ namespace OpenSim.Services.CapsService
                     return true;
                 }
                 Thread.Sleep(100);
+                count--;
             }
             //If we made it through the whole loop, we havn't been canceled,
             //    as we either have timed out or made it, so no checks are needed
             callWasCanceled = false;
             return m_callbackHasCome;
         }
+
+        public Hashtable CallbackHandler(Hashtable request)
+        {
+            //m_log.Debug("[CONNECTION DEBUGGING]: AgentHandler Called");
+
+            //m_log.Debug("---------------------------");
+            //m_log.Debug(" >> uri=" + request["uri"]);
+            //m_log.Debug(" >> content-type=" + request["content-type"]);
+            //m_log.Debug(" >> http-method=" + request["http-method"]);
+            //m_log.Debug("---------------------------\n");
+
+            Hashtable responsedata = new Hashtable();
+            responsedata["content_type"] = "text/html";
+            responsedata["keepalive"] = false;
+            //Remove it so that it doesn't stay around
+            m_service.ClientCaps.Server.RemoveHTTPHandler("POST", "/agent/");
+
+            UUID agentID;
+            UUID regionID;
+            string action;
+            string uri = ((string)request["uri"]);
+            if (!WebUtils.GetParams(uri, out agentID, out regionID, out action))
+            {
+                m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
+                responsedata["int_response_code"] = 404;
+                responsedata["str_response_string"] = "false";
+
+                return responsedata;
+            }
+
+
+            responsedata["int_response_code"] = HttpStatusCode.OK;
+            OSDMap map = new OSDMap();
+            map["Agent"] = agentID;
+            responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
+
+            m_callbackHasCome = true;
+
+            m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
+            return responsedata;
+        }
+
+        #endregion
 
         #endregion
 

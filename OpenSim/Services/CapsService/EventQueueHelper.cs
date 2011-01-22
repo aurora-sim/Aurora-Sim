@@ -500,11 +500,16 @@ namespace OpenSim.Services.CapsService
             return buildEvent("CrossAgent", llsdBody);
         }
 
-        public static OSD TeleportAgent(GridRegion destination, uint TeleportFlags)
+        public static OSD TeleportAgent(int DrawDistance, AgentCircuitData circuit,
+            AgentData data, uint TeleportFlags,
+            GridRegion destination)
         {
             OSDMap llsdBody = new OSDMap();
 
+            llsdBody.Add("DrawDistance", DrawDistance);
+            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
             llsdBody.Add("TeleportFlags", TeleportFlags);
+            llsdBody.Add("AgentData", data.Pack());
             llsdBody.Add("Region", destination.ToOSD());
             return buildEvent("TeleportAgent", llsdBody);
         }

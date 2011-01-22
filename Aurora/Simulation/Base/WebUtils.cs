@@ -279,84 +279,12 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Send LLSD to an HTTP client in application/llsd+json form
-        /// </summary>
-        /// <param name="response">HTTP response to send the data in</param>
-        /// <param name="body">LLSD to send to the client</param>
-        public static void SendJSONResponse(OSHttpResponse response, OSDMap body)
-        {
-            byte[] responseData = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(body));
-
-            response.ContentEncoding = Encoding.UTF8;
-            response.ContentLength = responseData.Length;
-            response.ContentType = "application/llsd+json";
-            response.Body.Write(responseData, 0, responseData.Length);
-        }
-
-        /// <summary>
-        /// Send LLSD to an HTTP client in application/llsd+xml form
-        /// </summary>
-        /// <param name="response">HTTP response to send the data in</param>
-        /// <param name="body">LLSD to send to the client</param>
-        public static void SendXMLResponse(OSHttpResponse response, OSDMap body)
-        {
-            byte[] responseData = OSDParser.SerializeLLSDXmlBytes(body);
-
-            response.ContentEncoding = Encoding.UTF8;
-            response.ContentLength = responseData.Length;
-            response.ContentType = "application/llsd+xml";
-            response.Body.Write(responseData, 0, responseData.Length);
-        }
-
-        /// <summary>
-        /// Make a GET or GET-like request to a web service that returns LLSD
-        /// or JSON data
-        /// </summary>
-        public static OSDMap ServiceRequest(string url, string httpVerb)
-        {
-            string errorMessage;
-
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
-                request.Method = httpVerb;
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
-                    {
-                        try
-                        {
-                            string responseStr = responseStream.GetStreamString();
-                            OSD responseOSD = OSDParser.Deserialize(responseStr);
-                            if (responseOSD.Type == OSDType.Map)
-                                return (OSDMap)responseOSD;
-                            else
-                                errorMessage = "Response format was invalid.";
-                        }
-                        catch
-                        {
-                            errorMessage = "Failed to parse the response.";
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                m_log.Warn(httpVerb + " on URL " + url + " failed: " + ex.Message);
-                errorMessage = ex.Message;
-            }
-
-            return new OSDMap { { "Message", OSD.FromString("Service request failed. " + errorMessage) } };
-        }
-
-        /// <summary>
         /// PUT JSON-encoded data to a web service that returns LLSD or
         /// JSON data
         /// </summary>
         public static OSDMap PutToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "PUT", 10000);
+            return ServiceOSDRequest(url, data, "PUT", 20000);
         }
 
         /// <summary>
@@ -365,12 +293,12 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public static OSDMap PostToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "POST", 10000);
+            return ServiceOSDRequest(url, data, "POST", 20000);
         }
 
         public static OSDMap GetFromService(string url)
         {
-            return ServiceOSDRequest(url, null, "GET", 10000);
+            return ServiceOSDRequest(url, null, "GET", 20000);
         }
 
         public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
