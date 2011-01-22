@@ -1270,9 +1270,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_userLookAt = CameraRotation;
         }
 
-        internal void ProcessForceTaint(List<Vector3> forcelist)
+        internal void ProcessForceTaint(Vector3 force)
         {
-            m_forcelist = forcelist;
+            m_forcelist.Add(force);
         }
 
         public Quaternion llRotBetween(Vector3 a, Vector3 b)
