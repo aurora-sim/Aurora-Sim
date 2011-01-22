@@ -58,16 +58,30 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "Register";
 
-            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+            OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
             if (result["Success"].AsBoolean())
             {
-                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
-                if (r is OSDMap)
+                try
                 {
-                    OSDMap innerresult = (OSDMap)r;
-                    SessionID = innerresult["SecureSessionID"].AsUUID();
-                    if (innerresult["Result"].AsString() == "")
-                        return "";
+                    OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                    if (r is OSDMap)
+                    {
+                        OSDMap innerresult = (OSDMap)r;
+                        if (innerresult["Result"].AsString() == "")
+                        {
+                            SessionID = innerresult["SecureSessionID"].AsUUID();
+                            return "";
+                        }
+                        else
+                        {
+                            SessionID = UUID.Zero;
+                            return innerresult["Result"].AsString();
+                        }
+                    }
+                }
+                catch(Exception)//JsonException
+                {
+                    m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
                 }
             }
 
@@ -136,11 +150,17 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "UpdateMap";
 
-            OSDMap result = WebUtils.PostToService(m_ServerURI, map);
+            OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
             if (result["Success"].AsBoolean())
             {
-                OSDMap innerresult = (OSDMap)result["Result"];
-                return innerresult["Result"].AsString();
+                try
+                {
+                    OSDMap innerresult = (OSDMap)result["Result"];
+                    return innerresult["Result"].AsString();
+                }
+                catch
+                {
+                }
             }
             return "Error communicating with grid service";
         }
