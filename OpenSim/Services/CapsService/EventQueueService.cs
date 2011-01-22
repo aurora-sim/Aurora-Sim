@@ -758,34 +758,45 @@ namespace OpenSim.Services.CapsService
                 //Add the password too
                 circuitData.OtherInformation["CapsPassword"] = otherRegionService.Password;
 
-                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, data, out reason);
-                if (regionAccepted)
+                //Note: we have to pull the new grid region info as the one from the region cannot be trusted
+                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
+                if (GridService != null)
                 {
-                    //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
-                    if (reason != "")
+                    neighbor = GridService.GetRegionByUUID(UUID.Zero, neighbor.RegionID);
+                    bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, data, out reason);
+                    if (regionAccepted)
                     {
-                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                        SimSeedCap = responseMap["CapsUrl"].AsString();
+                        //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
+                        if (reason != "")
+                        {
+                            OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                            SimSeedCap = responseMap["CapsUrl"].AsString();
+                        }
+                        //ONLY UPDATE THE SIM SEED HERE
+                        //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                        // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                        // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                        otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
+                        if (newAgent)
+                        {
+                            //We 'could' call Enqueue directly... but its better to just let it go and do it this way
+                            IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                            EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
+
+                            // ES makes the client send a UseCircuitCode message to the destination, 
+                            // which triggers a bunch of things there.
+                            // So let's wait
+                            Thread.Sleep(300);
+                            EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
+
+                            m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
+                        }
                     }
-                    //ONLY UPDATE THE SIM SEED HERE
-                    //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                    // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                    // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                    otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
-                    if (newAgent)
+                    else
                     {
-                        //We 'could' call Enqueue directly... but its better to just let it go and do it this way
-                        IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-                        EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
-
-                        // ES makes the client send a UseCircuitCode message to the destination, 
-                        // which triggers a bunch of things there.
-                        // So let's wait
-                        Thread.Sleep(300);
-                        EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
-
-                        m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
+                        m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: The Grid Service did not exist");
+                        return false;
                     }
                 }
                 else
