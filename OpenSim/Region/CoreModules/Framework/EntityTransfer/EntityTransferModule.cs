@@ -54,7 +54,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected bool m_Enabled = false;
         protected List<Scene> m_scenes = new List<Scene>();
-        protected List<UUID> m_agentsInTransit;
         public Dictionary<Scene, bool[,]> DirectionsToBlockChildAgents = new Dictionary<Scene,bool[,]>();
 
         #endregion
@@ -79,7 +78,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 string name = moduleConfig.GetString("EntityTransferModule", "");
                 if (name == Name)
                 {
-                    m_agentsInTransit = new List<UUID>();
                     m_Enabled = true;
                     //m_log.InfoFormat("[ENTITY TRANSFER MODULE]: {0} enabled.", Name);
                 }
@@ -170,7 +168,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             sp.ControllingClient.SendTeleportStart(teleportFlags);
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "requesting");
-            //sp.ControllingClient.SendTeleportProgress("resolving");
 
             // Reset animations; the viewer does that in teleports.
             if(sp.Animator != null)
@@ -321,10 +318,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}/{2}",
                 finalDestination.ServerURI, finalDestination.RegionName, position);
 
-            int newRegionX = (int)(reg.RegionHandle >> 40) * Constants.RegionSize;
-            int newRegionY = (((int)(reg.RegionHandle)) >> 8) * Constants.RegionSize;
-            int oldRegionX = (int)(sp.Scene.RegionInfo.RegionHandle >> 40) * Constants.RegionSize;
-            int oldRegionY = (((int)(sp.Scene.RegionInfo.RegionHandle)) >> 8) * Constants.RegionSize;
+            int newRegionX = reg.RegionLocX;
+            int newRegionY = reg.RegionLocY;
+            int oldRegionX = sp.Scene.RegionInfo.RegionLocX;
+            int oldRegionY = sp.Scene.RegionInfo.RegionLocY;
 
             ulong destinationHandle = finalDestination.RegionHandle;
 
@@ -402,54 +399,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 // Clean up any dropped attachments
                 sp.Scene.CleanDroppedAttachments();
-
-                // Finally, let's close this previously-known-as-root agent, when the jump is outside the view zone
-                if (NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
-                {
-                    Thread.Sleep(5000);
-                    sp.Close();
-                    sp.Scene.IncomingCloseAgent(sp.UUID);
-                }
-                else
-                    // now we have a child agent in this region. 
-                    sp.Reset();
             }
             else
             {
                 sp.ControllingClient.SendTeleportFailed("Remote Region appears to be down");
             }
-        }
-
-        private void Cancel(ScenePresence sp)
-        {
-            // Client never contacted destination. Let's restore everything back
-            sp.ControllingClient.SendTeleportFailed("You canceled the tp.");
-
-            // Fail. Reset it back
-            sp.IsChildAgent = false;
-
-            EnableChildAgents(sp);
-        }
-
-        private void Fail(ScenePresence sp, GridRegion finalDestination)
-        {
-            // Client never contacted destination. Let's restore everything back
-            sp.ControllingClient.SendTeleportFailed("Problems connecting to destination.");
-
-            // Fail. Reset it back
-            sp.IsChildAgent = false;
-
-            ResetFromTransit(sp.UUID);
-
-            // Finally, kill the agent we just created at the destination.
-            sp.Scene.SimulationService.CloseAgent(finalDestination, sp.UUID);
-        }
-
-        protected virtual void SetCallbackURL(AgentData agent, RegionInfo region)
-        {
-            agent.CallbackURI = region.ServerURI +
-                "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
-            //m_log.Warn("[EntityTransferModule]: Setting callbackURI to " + agent.CallbackURI);
         }
 
         protected virtual void AgentHasMovedAway(UUID sessionID, bool logout)
@@ -475,14 +429,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected virtual GridRegion GetFinalDestination(GridRegion region)
         {
             return region;
-        }
-
-        protected virtual bool NeedsClosing(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY, GridRegion reg)
-        {
-            INeighborService neighborService = m_scenes[0].RequestModuleInterface<INeighborService>();
-            if (neighborService != null)
-                return neighborService.IsOutsideView(oldRegionX, newRegionX, oldRegionY, newRegionY);
-            return false;
         }
 
         #endregion
@@ -1200,19 +1146,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         #endregion
 
         #region Misc
-
-        protected bool ResetFromTransit(UUID id)
-        {
-            lock (m_agentsInTransit)
-            {
-                if (m_agentsInTransit.Contains(id))
-                {
-                    m_agentsInTransit.Remove(id);
-                    return true;
-                }
-            }
-            return false;
-        }
 
         public void CancelTeleport(UUID AgentID, ulong RegionHandle)
         {

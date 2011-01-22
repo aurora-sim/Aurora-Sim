@@ -67,8 +67,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 string name = moduleConfig.GetString("EntityTransferModule", "");
                 if (name == Name)
                 {
-                    m_agentsInTransit = new List<UUID>();
-                    
                     m_Enabled = true;
                     m_log.InfoFormat("[HG ENTITY TRANSFER MODULE]: {0} enabled.", Name);
                 }
@@ -132,18 +130,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return m_GatekeeperConnector.GetHyperlinkRegion(region, region.RegionID);
             }
             return region;
-        }
-
-        protected override bool NeedsClosing(int oldRegionX, int newRegionX, int oldRegionY, int newRegionY, GridRegion reg)
-        {
-            if (base.NeedsClosing(oldRegionX, newRegionX, oldRegionY, newRegionY, reg))
-                return true;
-
-            int flags = m_scenes[0].GridService.GetRegionFlags(m_scenes[0].RegionInfo.ScopeID, reg.RegionID);
-            if (flags == -1 /* no region in DB */ || (flags & (int)Aurora.Framework.RegionFlags.Hyperlink) != 0)
-                return true;
-
-            return false;
         }
 
         protected override void AgentHasMovedAway(UUID sessionID, bool logout)

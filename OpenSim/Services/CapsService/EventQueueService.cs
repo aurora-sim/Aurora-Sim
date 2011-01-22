@@ -913,46 +913,53 @@ namespace OpenSim.Services.CapsService
         {
             //We arn't going to deal with CallbackURLs yet
             //SetCallbackURL(cAgent, crossingRegion.RegionID);
+            bool result = false;
 
-            //Set the user in transit so that we block duplicate tps and reset any cancelations
-            if (!SetUserInTransit())
-                return false;
-
-            uint x, y;
-            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-            GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-
-            IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-            EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
-                                       4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
-
-            // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
-            // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
-            // that the client contacted the destination before we send the attachments and close things here.
-
-            bool callWasCanceled = false;
-            bool result = WaitForCallback(out callWasCanceled);
-            if (!result)
+            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
             {
-                if (!callWasCanceled)
-                {
-                    m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
-                        m_service.AgentID + ". Resetting.");
-                }
-            }
-            else
-            {
-                // Next, let's close the child agent connections that are too far away.
-                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                {
-                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
-                }
-            }
+                //Set the user in transit so that we block duplicate tps and reset any cancelations
+                if (!SetUserInTransit())
+                    return false;
 
-            //All done
-            ResetFromTransit();
+                uint x, y;
+                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+
+                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
+                                           4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
+
+                // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
+                // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
+                // that the client contacted the destination before we send the attachments and close things here.
+
+                bool callWasCanceled = false;
+                result = WaitForCallback(out callWasCanceled);
+                if (!result)
+                {
+                    if (!callWasCanceled)
+                    {
+                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " +
+                            m_service.AgentID + ". Resetting.");
+                    }
+                    //Close the agent at the place we just created
+                    SimulationService.CloseAgent(destination, m_service.AgentID);
+                }
+                else
+                {
+                    // Next, let's close the child agent connections that are too far away.
+                    INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                    if (service != null)
+                    {
+                        service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                    }
+                }
+
+                //All done
+                ResetFromTransit();
+            }
 
             return result;
         }
