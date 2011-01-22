@@ -78,7 +78,8 @@ namespace OpenSim.Server.Handlers.Simulation
             UUID agentID;
             UUID regionID;
             string action;
-            if (!WebUtils.GetParams((string)request["uri"], out agentID, out regionID, out action))
+            string uri = ((string)request["uri"]).Remove(0, 37); //Remove the secure UUID from the uri
+            if (!WebUtils.GetParams(uri, out agentID, out regionID, out action))
             {
                 m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;

@@ -155,7 +155,7 @@ namespace OpenSim.Services.Connectors
             {
                 try
                 {
-                    OSDMap innerresult = (OSDMap)result["_Raw_Result"];
+                    OSDMap innerresult = (OSDMap)result["_Result"];
                     return innerresult["Result"].AsString();
                 }
                 catch

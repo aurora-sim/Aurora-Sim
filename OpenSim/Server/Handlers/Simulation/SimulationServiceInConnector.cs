@@ -65,7 +65,7 @@ namespace OpenSim.Server.Handlers.Simulation
 
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
             
-            string path = UUID.Random().ToString() + "/agent/";
+            string path = "/" + UUID.Random().ToString() + "/agent/";
 
             IGridRegisterModule registerModule = registry.RequestModuleInterface<IGridRegisterModule>();
             if (registerModule != null)

@@ -41,6 +41,9 @@ namespace Aurora.Modules
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_config = source;
+            m_scenes.Add(scene);
+            //Register the interface
+            scene.RegisterModuleInterface<IGridRegisterModule>(this);
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -49,9 +52,6 @@ namespace Aurora.Modules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_scenes.Add(scene);
-            //Register the interface
-            scene.RegisterModuleInterface<IGridRegisterModule>(this);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene);
         }
