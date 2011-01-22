@@ -51,6 +51,7 @@ namespace Aurora.Simulation.Base
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static int m_requestNumber = 0;
+        private static int m_defaultTimeout = 20000;
 
         // this is the header field used to communicate the local request id
         // used for performance and debugging
@@ -58,7 +59,7 @@ namespace Aurora.Simulation.Base
 
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
-        public const int LongCallTime = 200;
+        public const int LongCallTime = 500;
 
         public static byte[] SerializeResult(XmlSerializer xs, object data)
         {
@@ -284,7 +285,7 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public static OSDMap PutToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "PUT", 20000);
+            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout);
         }
 
         /// <summary>
@@ -293,12 +294,12 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public static OSDMap PostToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "POST", 20000);
+            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
         }
 
         public static OSDMap GetFromService(string url)
         {
-            return ServiceOSDRequest(url, null, "GET", 20000);
+            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
         }
 
         public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout)

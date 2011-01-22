@@ -1533,6 +1533,10 @@ namespace OpenSim.Framework.Servers.HttpServer
                 {
                     m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.Message);
                 }
+                catch (Exception e)
+                {
+                    m_log.Warn("[BASE HTTP SERVER]: New Error in HTTP Server sending: " + e.Message);
+                }
             }
         }
 

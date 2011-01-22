@@ -26,9 +26,31 @@ namespace OpenSim.Services.CapsService
         protected Dictionary<ulong, IRegionClientCapsService> m_RegionCapsServices = new Dictionary<ulong, IRegionClientCapsService>();
         protected ICapsService m_CapsService;
         protected UUID m_agentID;
+        protected bool m_inTeleport = false;
+        protected bool m_requestToCancelTeleport = false;
+        protected bool m_callbackHasCome = false;
+
         public UUID AgentID
         {
             get { return m_agentID; }
+        }
+
+        public bool InTeleport
+        {
+            get { return m_inTeleport; }
+            set { m_inTeleport = value; }
+        }
+
+        public bool RequestToCancelTeleport
+        {
+            get { return m_requestToCancelTeleport; }
+            set { m_requestToCancelTeleport = value; }
+        }
+
+        public bool CallbackHasCome
+        {
+            get { return m_callbackHasCome; }
+            set { m_callbackHasCome = value; }
         }
 
         public IHttpServer Server

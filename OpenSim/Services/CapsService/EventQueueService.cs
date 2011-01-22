@@ -324,7 +324,7 @@ namespace OpenSim.Services.CapsService
                     else if (map.ContainsKey("message") && map["message"] == "ArrivedAtDestination")
                     {
                         //Recieved a callback
-                        m_callbackHasCome = true;
+                        m_service.ClientCaps.CallbackHasCome = true;
 
                         //Don't send it to the client
                         return true;
@@ -332,7 +332,7 @@ namespace OpenSim.Services.CapsService
                     else if (map.ContainsKey("message") && map["message"] == "CancelTeleport")
                     {
                         //The user has requested to cancel the teleport, stop them.
-                        m_requestToCancelTeleport = true;
+                        m_service.ClientCaps.RequestToCancelTeleport = true;
 
                         //Don't send it to the client
                         return true;
@@ -721,10 +721,6 @@ namespace OpenSim.Services.CapsService
 
         #region Agent code (teleporting, crossing, disabling/enabling)
 
-        protected bool m_inTeleport = false;
-        protected bool m_requestToCancelTeleport = false;
-        protected bool m_callbackHasCome = false;
-
         #region EnableChildAgents
 
         public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
@@ -936,6 +932,12 @@ namespace OpenSim.Services.CapsService
                 if (!SetUserInTransit())
                     return false;
 
+                //Inform the client of the neighbor if needed
+                if (!InformClientOfNeighbor(circuit, destination, TeleportFlags,
+                    agentData, destination.ExternalEndPoint.Address.GetAddressBytes(),
+                    destination.ExternalEndPoint.Port))
+                    return false;
+
                 uint x, y;
                 Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                 GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
@@ -982,22 +984,22 @@ namespace OpenSim.Services.CapsService
 
         protected void ResetFromTransit()
         {
-            m_inTeleport = false;
-            m_requestToCancelTeleport = false;
-            m_callbackHasCome = false;
+            m_service.ClientCaps.InTeleport = false;
+            m_service.ClientCaps.RequestToCancelTeleport = false;
+            m_service.ClientCaps.CallbackHasCome = false;
         }
 
         protected bool SetUserInTransit()
         {
-            if (m_inTeleport)
+            if (m_service.ClientCaps.InTeleport)
             {
                 m_log.Warn("[EventQueueService]: Got a request to teleport during another teleport for agent " + m_service.AgentID + "!");
                 return false; //What??? Stop here and don't go forward
             }
 
-            m_inTeleport = true;
-            m_requestToCancelTeleport = false;
-            m_callbackHasCome = false;
+            m_service.ClientCaps.InTeleport = true;
+            m_service.ClientCaps.RequestToCancelTeleport = false;
+            m_service.ClientCaps.CallbackHasCome = false;
             return true;
         }
 
@@ -1013,10 +1015,10 @@ namespace OpenSim.Services.CapsService
         protected bool WaitForCallback(out bool callWasCanceled)
         {
             int count = 100;
-            while (!m_callbackHasCome && count > 0)
+            while (!m_service.ClientCaps.CallbackHasCome && count > 0)
             {
                 //m_log.Debug("  >>> Waiting... " + count);
-                if (m_requestToCancelTeleport)
+                if (m_service.ClientCaps.RequestToCancelTeleport)
                 {
                     //If the call was canceled, we need to break here 
                     //   now and tell the code that called us about it
@@ -1029,7 +1031,7 @@ namespace OpenSim.Services.CapsService
             //If we made it through the whole loop, we havn't been canceled,
             //    as we either have timed out or made it, so no checks are needed
             callWasCanceled = false;
-            return m_callbackHasCome;
+            return m_service.ClientCaps.CallbackHasCome;
         }
 
         public Hashtable CallbackHandler(Hashtable request)
@@ -1067,7 +1069,7 @@ namespace OpenSim.Services.CapsService
             map["Agent"] = agentID;
             responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
 
-            m_callbackHasCome = true;
+            m_service.ClientCaps.CallbackHasCome = true;
 
             m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
             return responsedata;

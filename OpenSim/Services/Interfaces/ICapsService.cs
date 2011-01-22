@@ -59,6 +59,9 @@ namespace OpenSim.Services.Interfaces
     public interface IClientCapsService
     {
         UUID AgentID { get; }
+        bool InTeleport { get; set; }
+        bool RequestToCancelTeleport { get; set; }
+        bool CallbackHasCome { get; set; }
         IRegistryCore Registry { get; }
         IHttpServer Server { get; }
         String HostUri { get; }
