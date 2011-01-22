@@ -136,5 +136,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionID"></param>
         /// <param name="RegionHandle"></param>
         void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID, ulong RegionHandle);
+
+        /// <summary>
+        /// Cancel the teleport for the user
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="RegionHandle"></param>
+        void CancelTeleport(UUID AgentID, ulong RegionHandle);
     }
 }

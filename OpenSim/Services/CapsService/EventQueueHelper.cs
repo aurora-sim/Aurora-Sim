@@ -517,5 +517,13 @@ namespace OpenSim.Services.CapsService
             llsdBody.Add("Region", regionID);
             return buildEvent("SendChildAgentUpdate", llsdBody);
         }
+
+        public static OSD CancelTeleport(UUID AgentID)
+        {
+            OSDMap llsdBody = new OSDMap();
+
+            llsdBody.Add("AgentID", AgentID);
+            return buildEvent("CancelTeleport", llsdBody);
+        }
     }
 }

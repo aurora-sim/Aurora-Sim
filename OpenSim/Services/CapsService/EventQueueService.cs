@@ -216,6 +216,8 @@ namespace OpenSim.Services.CapsService
             Enqueue(Item, avatarID, RegionHandle);
         }
 
+        #region Server ONLY messages
+
         //
         // Region > CapsService EventQueueMessages ONLY
         // These are NOT sent to the client under ANY circumstances!
@@ -251,6 +253,14 @@ namespace OpenSim.Services.CapsService
             OSD item = EventQueueHelper.SendChildAgentUpdate(agentpos, regionID);
             Enqueue(item, agentpos.AgentID, RegionHandle);
         }
+
+        public void CancelTeleport(UUID AgentID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.CancelTeleport(AgentID);
+            Enqueue(item, AgentID, RegionHandle);
+        }
+
+        #endregion
 
         #endregion
     }
@@ -675,6 +685,8 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
+        #region Agent code (teleporting, crossing, disabling/enabling)
+
         #region EnableChildAgents
 
         public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
@@ -810,6 +822,10 @@ namespace OpenSim.Services.CapsService
             return false;
         }
 
+        #endregion
+
+        #region Crossing
+
         protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
         {
@@ -863,6 +879,10 @@ namespace OpenSim.Services.CapsService
             return false;
         }
 
+        #endregion
+
+        #region Teleporting
+
         protected bool TeleportAgent(GridRegion destination, uint TeleportFlags)
         {
             //We arn't going to deal with CallbackURLs
@@ -903,6 +923,10 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
+        #endregion
+
+        #region Agent Update
+
         protected void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID)
         {
             //We need to send this update out to all the child agents this region has
@@ -916,6 +940,8 @@ namespace OpenSim.Services.CapsService
                 service.SendChildAgentUpdate(agentpos, regionID);
             }
         }
+
+        #endregion
 
         #endregion
     }
