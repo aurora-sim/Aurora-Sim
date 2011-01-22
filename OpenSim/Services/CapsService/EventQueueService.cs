@@ -905,6 +905,7 @@ namespace OpenSim.Services.CapsService
                         uint x, y;
                         Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                         GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                        service.GetNeighbors(ourRegion);
                         service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                     }
                     return true;
@@ -971,9 +972,11 @@ namespace OpenSim.Services.CapsService
                     else
                     {
                         // Next, let's close the child agent connections that are too far away.
+                        service.GetNeighbors(ourRegion);
                         service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                     }
                 }
+
 
                 //All done
                 ResetFromTransit();

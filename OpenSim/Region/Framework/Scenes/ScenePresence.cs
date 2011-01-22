@@ -894,6 +894,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
+
+            Reset();
         }
 
         public delegate void RemovePhysics();
@@ -2732,7 +2734,7 @@ namespace OpenSim.Region.Framework.Scenes
             AddToPhysicalScene(false, false); // not exactly false
         }
 
-        public void Reset()
+        private void Reset()
         {
             lock (m_attachments)
             {

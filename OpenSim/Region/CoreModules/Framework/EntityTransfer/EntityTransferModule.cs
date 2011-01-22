@@ -384,6 +384,20 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 // Clean up any dropped attachments
                 sp.Scene.CleanDroppedAttachments();
+
+                INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
+                if (service != null)
+                {
+                    //Check that the region the client is in right now isn't a part of the
+                    //  regions that should be closed as well
+                    if (service.IsOutsideView(sp.Scene.RegionInfo.RegionLocX, finalDestination.RegionLocX,
+                        sp.Scene.RegionInfo.RegionLocY, finalDestination.RegionLocY))
+                    {
+                        Thread.Sleep(1000);
+                        //Wait a bit for the agent to leave this region, then close them
+                        sp.Scene.IncomingCloseAgent(sp.UUID);
+                    }
+                }
             }
             else
             {
@@ -631,9 +645,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ScenePresence agent = icon.EndInvoke(iar);
 
             // If the cross was successful, this agent is a child agent
-            if (agent.IsChildAgent)
-                agent.Reset();
-            else // Not successful
+            if (!agent.IsChildAgent)
                 agent.RestoreInCurrentScene();
 
             // In any case
