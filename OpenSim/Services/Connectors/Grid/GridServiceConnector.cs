@@ -61,10 +61,14 @@ namespace OpenSim.Services.Connectors
             OSDMap result = WebUtils.PostToService(m_ServerURI, map);
             if (result["Success"].AsBoolean())
             {
-                OSDMap innerresult = (OSDMap)result["Result"];
-                SessionID = innerresult["SecureSessionID"].AsUUID();
-                if (innerresult["Result"].AsString() == "")
-                    return "";
+                OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                if (r is OSDMap)
+                {
+                    OSDMap innerresult = (OSDMap)r;
+                    SessionID = innerresult["SecureSessionID"].AsUUID();
+                    if (innerresult["Result"].AsString() == "")
+                        return "";
+                }
             }
 
             SessionID = UUID.Zero;
