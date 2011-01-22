@@ -819,40 +819,46 @@ namespace OpenSim.Services.CapsService
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
-                if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
+                //Note: we have to pull the new grid region info as the one from the region cannot be trusted
+                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
+                if (GridService != null)
                 {
-                    m_log.Warn("[EventQueue]: Failed to cross agent " + m_service.AgentID + " because region did not accept it. Resetting.");
-                    return false;
+                    crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
+                    if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
+                    {
+                        m_log.Warn("[EventQueue]: Failed to cross agent " + m_service.AgentID + " because region did not accept it. Resetting.");
+                        return false;
+                    }
+
+                    IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                    //Tell the client about the transfer
+                    EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
+                                       m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
+
+                    /* bool callWasCanceled = false;
+                    if (!WaitForCallback(circuit.AgentID, out callWasCanceled))
+                    {
+                        m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
+                        ResetFromTransit(circuit.AgentID);
+
+                        // Yikes! We should just have a ref to scene here.
+                        EnableChildAgents(agent);
+
+                        return false;
+                    }*/
+
+                    // Next, let's close the child agent connections that are too far away.
+                    INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                    if (service != null)
+                    {
+                        uint x, y;
+                        Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                        GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                        service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                    }
+                    return true;
                 }
-
-                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-                //Tell the client about the transfer
-                EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
-                                   m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
-
-                /* bool callWasCanceled = false;
-                if (!WaitForCallback(circuit.AgentID, out callWasCanceled))
-                {
-                    m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
-                    ResetFromTransit(circuit.AgentID);
-
-                    // Yikes! We should just have a ref to scene here.
-                    EnableChildAgents(agent);
-
-                    return false;
-                }*/
-
-                // Next, let's close the child agent connections that are too far away.
-                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                {
-                    uint x, y;
-                    Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                    GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                    service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
-                }
-                return true;
             }
             return false;
         }
@@ -866,40 +872,35 @@ namespace OpenSim.Services.CapsService
             Utils.LongToUInts(m_service.RegionHandle, out x, out y);
             GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
 
-            ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
-            if (SimulationService != null)
+            IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+            EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
+                                       4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
+
+            // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
+            // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
+            // that the client contacted the destination before we send the attachments and close things here.
+
+            /*bool callWasCanceled = false;
+            if (!WaitForCallback(sp.UUID, out callWasCanceled))
             {
-                IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-                EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
-                                           4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
-
-                // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
-                // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
-                // that the client contacted the destination before we send the attachments and close things here.
-
-                /*bool callWasCanceled = false;
-                if (!WaitForCallback(sp.UUID, out callWasCanceled))
+                if (!callWasCanceled)
                 {
-                    if (!callWasCanceled)
-                    {
-                        m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
-                        Fail(sp, finalDestination);
-                    }
-                    else
-                        Cancel(sp);
-                    return;
-                }*/
-
-                // Next, let's close the child agent connections that are too far away.
-                INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                {
-                    service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                    m_log.Warn("[EntityTransferModule]: Callback never came for teleporting agent " + sp.Name + ". Resetting.");
+                    Fail(sp, finalDestination);
                 }
-                return true;
+                else
+                    Cancel(sp);
+                return;
+            }*/
+
+            // Next, let's close the child agent connections that are too far away.
+            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+            if (service != null)
+            {
+                service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
             }
-            return false;
+            return true;
         }
 
         protected void SendChildAgentUpdate(AgentPosition agentpos, UUID regionID)
