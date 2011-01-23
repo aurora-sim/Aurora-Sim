@@ -62,9 +62,4 @@ namespace OpenSim.Region.Framework.Interfaces
 
         bool IncomingCreateObject(UUID regionID, ISceneObject sog);
     }
-
-    public interface IUserAgentVerificationModule
-    {
-        bool VerifyClient(AgentCircuitData aCircuit, string token);
-    }
 }

@@ -627,89 +627,44 @@ namespace OpenSim.Region.Framework.Scenes
         {
             System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
             AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
-            bool vialogin = false;
-
+            
             if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
                 return;
 
-            // Do the verification here
-            if (!VerifyClient(aCircuit, ep, out vialogin))
-            {
-                // uh-oh, this is fishy
-                m_log.WarnFormat("[Scene]: Agent {0} with session {1} connecting with unidentified end point {2}. Refusing service.",
-                    client.AgentId, client.SessionId, ep.ToString());
-                try
-                {
-                    client.Close();
-                }
-                catch (Exception e)
-                {
-                    m_log.DebugFormat("[Scene]: Exception while closing aborted client: {0}", e.StackTrace);
-                }
-                return;
-            }
-
-            m_log.Debug("[Scene] Adding new agent " + client.Name + " to scene " + RegionInfo.RegionName);
-
+            //Create the scenepresence, then update it with any info that we have about it
             ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
             lock (m_incomingChildAgentData)
             {
                 if (m_incomingChildAgentData.ContainsKey(sp.UUID))
                 {
+                    //Found info, update the agent then remove it
                     sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
                     m_incomingChildAgentData.Remove(sp.UUID);
                 }
             }
+            //Make sure the appearanace is updated
             if (aCircuit != null)
                 sp.Appearance = aCircuit.Appearance;
-
-            m_eventManager.TriggerOnNewPresence(sp);
 
             m_clientManager.Add(client);
             SubscribeToClientEvents(client);
 
+            //Trigger events
+            m_eventManager.TriggerOnNewPresence(sp);
+
             if (GetScenePresence(client.AgentId) != null)
             {
                 EventManager.TriggerOnNewClient(client);
-                if (vialogin)
+                if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
                     EventManager.TriggerOnClientLogin(client);
             }
 
+            //Add the client to login stats
             ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
-            if (vialogin && monitor != null)
+            if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 && monitor != null)
             {
                 monitor.AddSuccessfulLogin();
             }
-        }
-
-        private bool VerifyClient(AgentCircuitData aCircuit, System.Net.IPEndPoint ep, out bool vialogin)
-        {
-            vialogin = false;
-
-            // Do the verification here
-            if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0)
-            {
-                m_log.DebugFormat("[SCENE]: Incoming client {0} in region {1} via HG login", aCircuit.AgentID, RegionInfo.RegionName);
-                vialogin = true;
-                IUserAgentVerificationModule userVerification = RequestModuleInterface<IUserAgentVerificationModule>();
-                if (userVerification != null && ep != null)
-                {
-                    if (!userVerification.VerifyClient(aCircuit, ep.Address.ToString()))
-                    {
-                        // uh-oh, this is fishy
-                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} in {1} returned false", aCircuit.AgentID, RegionInfo.RegionName);
-                        return false;
-                    }
-                    else
-                        m_log.DebugFormat("[SCENE]: User Client Verification for {0} in {1} returned true", aCircuit.AgentID, RegionInfo.RegionName);
-                }
-            }
-            else if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
-            {
-                vialogin = true;
-            }
-
-            return true;
         }
 
         #region Subscribing and Unsubscribing to client events
@@ -875,8 +830,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// also return a reason.</returns>
         public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
         {
-            bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 ||
-                             (teleportFlags & (uint)Constants.TeleportFlags.ViaHGLogin) != 0);
+            bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0);
             reason = String.Empty;
 
             // Don't disable this log message - it's too helpful
@@ -885,16 +839,8 @@ namespace OpenSim.Region.Framework.Scenes
                 RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode, teleportFlags);
 
-            try
-            {
-                if (!AuthorizeUser(agent, out reason))
-                    return false;
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[ConnectionBegin]: Exception authorizing user {0}", e.Message);
+            if (!AuthorizeUser(agent, out reason))
                 return false;
-            }
 
             ScenePresence sp = GetScenePresence(agent.AgentID);
 
@@ -931,30 +877,28 @@ namespace OpenSim.Region.Framework.Scenes
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
 
-            if (vialogin)
+            //Make sure that users are not logging into bad positions in the sim
+            if (agent.startpos.X < 0f || agent.startpos.Y < 0f ||
+                agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
             {
-                //Make sure that users are not logging into bad positions in the sim
-                if (agent.startpos.X < 0f || agent.startpos.Y < 0f ||
-                    agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
-                {
-                    m_log.WarnFormat(
-                        "[Scene]: NewUserConnection was given an illegal position of {0} for avatar {1}. Clamping",
-                        agent.startpos, agent.AgentID);
+                m_log.WarnFormat(
+                    "[Scene]: NewUserConnection was given an illegal position of {0} for avatar {1}. Clamping",
+                    agent.startpos, agent.AgentID);
 
-                    if (agent.startpos.X < 0f) agent.startpos.X = 0f;
-                    if (agent.startpos.Y < 0f) agent.startpos.Y = 0f;
+                if (agent.startpos.X < 0f) agent.startpos.X = 0f;
+                if (agent.startpos.Y < 0f) agent.startpos.Y = 0f;
 
-                    if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
-                    if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
-                }
-                ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
-                float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
-                //Keep users from being underground
-                if (agent.startpos.Z < groundHeight)
-                {
-                    agent.startpos.Z = groundHeight;
-                }
+                if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
+                if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
             }
+            ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
+            float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
+            //Keep users from being underground
+            if (agent.startpos.Z < groundHeight)
+            {
+                agent.startpos.Z = groundHeight;
+            }
+
             //Add the circuit at the end
             AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
