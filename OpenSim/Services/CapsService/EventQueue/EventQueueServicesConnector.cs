@@ -191,9 +191,13 @@ namespace OpenSim.Services.CapsService
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
             try
             {
+                if (ev == null)
+                    return false;
+
                 //Make sure these exist
                 if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
                     m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new Dictionary<ulong, List<OSD>>());
+
                 if (!m_eventsNotSentPasswordDoesNotExist[avatarID].ContainsKey(regionHandle))
                     m_eventsNotSentPasswordDoesNotExist[avatarID].Add(regionHandle, new List<OSD>());
 
@@ -221,14 +225,24 @@ namespace OpenSim.Services.CapsService
                     //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
                     foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle])
                     {
-                        //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
-                        //  because we can't
-                        OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
-                        if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
-                            events.Add(EQMessage);
-                        else
+                        try
                         {
-                            m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
+                            if (EQMessage == null)
+                                continue;
+                            //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
+                            //  because we can't
+                            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
+                            if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
+                                events.Add(EQMessage);
+                            else
+                            {
+                                m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.Error("[EVENTQUEUE] Caught event not found exception: " + e.ToString());
+                            return false;
                         }
                     }
                 }
@@ -256,7 +270,8 @@ namespace OpenSim.Services.CapsService
                         //We need to save the EQMs so that we can try again later
                         foreach (OSD o in events)
                         {
-                            m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
+                            if(o != null)
+                                m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
                         }
                     }
                     return success;
@@ -264,7 +279,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception e)
             {
-                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
+                m_log.Error("[EVENTQUEUE] Caught exception: " + e.ToString());
                 return false;
             }
 
