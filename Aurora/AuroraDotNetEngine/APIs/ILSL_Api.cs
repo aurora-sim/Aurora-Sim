@@ -379,7 +379,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
        LSL_Integer llTarget(LSL_Vector position, double range);
               void llTargetOmega(LSL_Vector axis, double spinrate, double gain);
               void llTargetRemove(int number);
-              DateTime llTeleportAgentHome(object agent);
+              DateTime llTeleportAgentHome(LSL_Key agent);
               DateTime llTextBox(string avatar, string message, int chat_channel);
         LSL_String llToLower(string source);
         LSL_String llToUpper(string source);

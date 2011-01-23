@@ -5071,7 +5071,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.ParentGroup.Damage = (float)damage;
         }
 
-        public DateTime llTeleportAgentHome(object _agent)
+        public DateTime llTeleportAgentHome(LSL_Key _agent)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 
@@ -5095,7 +5095,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                     }
 
-                    presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaHome);
+                    //Send disable cancel so that the agent cannot attempt to stay in the region
+                    presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.DisableCancel);
                     IEntityTransferModule transferModule = World.RequestModuleInterface<IEntityTransferModule>();
                     if (transferModule != null)
                         transferModule.TeleportHome(agentId, presence.ControllingClient);

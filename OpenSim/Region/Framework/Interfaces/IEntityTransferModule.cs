@@ -54,6 +54,8 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void RequestTeleportLocation(IClientAPI iClientAPI, ulong regionHandle, Vector3 position, Vector3 lookAt, uint p);
 
+        void RequestTeleportLocation(IClientAPI iClientAPI, GridRegion reg, Vector3 position, Vector3 lookAt, uint p);
+
         void RequestTeleportLocation(IClientAPI iClientAPI, string RegionName, Vector3 pos, Vector3 lookat, uint p);
 
         bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID);

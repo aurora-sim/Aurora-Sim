@@ -164,6 +164,36 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void Teleport(ScenePresence sp, ulong regionHandle, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
+            uint x = 0, y = 0;
+            Utils.LongToUInts(regionHandle, out x, out y);
+
+            GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
+
+            if (reg == null)
+            {
+                // TP to a place that doesn't exist (anymore)
+                // Inform the viewer about that
+                sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
+
+                // and set the map-tile to '(Offline)'
+                uint regX, regY;
+                Utils.LongToUInts(regionHandle, out regX, out regY);
+
+                MapBlockData block = new MapBlockData();
+                block.X = (ushort)(regX / Constants.RegionSize);
+                block.Y = (ushort)(regY / Constants.RegionSize);
+                block.Access = 254; // == not there
+
+                List<MapBlockData> blocks = new List<MapBlockData>();
+                blocks.Add(block);
+                sp.ControllingClient.SendMapBlock(blocks, 0);
+                return;
+            }
+            Teleport(sp, reg, position, lookAt, teleportFlags);
+        }
+
+        public virtual void Teleport(ScenePresence sp, GridRegion reg, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        {
             string reason = "";
 
             sp.ControllingClient.SendTeleportStart(teleportFlags);
@@ -175,34 +205,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             try
             {
-                uint x = 0, y = 0;
-                Utils.LongToUInts(regionHandle, out x, out y);
-
-                GridRegion reg = sp.Scene.GridService.GetRegionByPosition(sp.Scene.RegionInfo.ScopeID, (int)x, (int)y);
-
-                if (reg == null)
-                {
-                    // TP to a place that doesn't exist (anymore)
-                    // Inform the viewer about that
-                    sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
-
-                    // and set the map-tile to '(Offline)'
-                    uint regX, regY;
-                    Utils.LongToUInts(regionHandle, out regX, out regY);
-
-                    MapBlockData block = new MapBlockData();
-                    block.X = (ushort)(regX / Constants.RegionSize);
-                    block.Y = (ushort)(regY / Constants.RegionSize);
-                    block.Access = 254; // == not there
-
-                    List<MapBlockData> blocks = new List<MapBlockData>();
-                    blocks.Add(block);
-                    sp.ControllingClient.SendMapBlock(blocks, 0);
-                    return;
-                }
                 long XShift = (reg.RegionLocX - sp.Scene.RegionInfo.RegionLocX);
                 long YShift = (reg.RegionLocY - sp.Scene.RegionInfo.RegionLocY);
-                if (regionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
+                if (reg.RegionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
                     (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
@@ -248,54 +253,32 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;
                     }
-                    if (reg != null)
+                    GridRegion finalDestination = GetFinalDestination(reg);
+                    if (finalDestination == null)
                     {
-                        GridRegion finalDestination = GetFinalDestination(reg);
-                        if (finalDestination == null)
-                        {
-                            m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is having problems. Unable to teleport agent.");
-                            sp.ControllingClient.SendTeleportFailed("Problem at destination");
-                            return;
-                        }
-                        //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is x={0} y={1} uuid={2}",
-                        //    finalDestination.RegionLocX / Constants.RegionSize, finalDestination.RegionLocY / Constants.RegionSize, finalDestination.RegionID);
-
-                        // Check that these are not the same coordinates
-                        if (finalDestination.RegionLocX == sp.Scene.RegionInfo.RegionLocX &&
-                            finalDestination.RegionLocY == sp.Scene.RegionInfo.RegionLocY)
-                        {
-                            // Can't do. Viewer crashes
-                            sp.ControllingClient.SendTeleportFailed("Space warp! You would crash. Move to a different region and try again.");
-                            return;
-                        }
-
-                        //
-                        // This is it
-                        //
-                        DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags);
-                        //
-                        //
-                        //
+                        m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is having problems. Unable to teleport agent.");
+                        sp.ControllingClient.SendTeleportFailed("Problem at destination");
+                        return;
                     }
-                    else
+                    //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is x={0} y={1} uuid={2}",
+                    //    finalDestination.RegionLocX / Constants.RegionSize, finalDestination.RegionLocY / Constants.RegionSize, finalDestination.RegionID);
+
+                    // Check that these are not the same coordinates
+                    if (finalDestination.RegionLocX == sp.Scene.RegionInfo.RegionLocX &&
+                        finalDestination.RegionLocY == sp.Scene.RegionInfo.RegionLocY)
                     {
-                        // TP to a place that doesn't exist (anymore)
-                        // Inform the viewer about that
-                        sp.ControllingClient.SendTeleportFailed("The region you tried to teleport to doesn't exist anymore");
-
-                        // and set the map-tile to '(Offline)'
-                        uint regX, regY;
-                        Utils.LongToUInts(regionHandle, out regX, out regY);
-
-                        MapBlockData block = new MapBlockData();
-                        block.X = (ushort)(regX / Constants.RegionSize);
-                        block.Y = (ushort)(regY / Constants.RegionSize);
-                        block.Access = 254; // == not there
-
-                        List<MapBlockData> blocks = new List<MapBlockData>();
-                        blocks.Add(block);
-                        sp.ControllingClient.SendMapBlock(blocks, 0);
+                        // Can't do. Viewer crashes
+                        sp.ControllingClient.SendTeleportFailed("Space warp! You would crash. Move to a different region and try again.");
+                        return;
                     }
+
+                    //
+                    // This is it
+                    //
+                    DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags);
+                    //
+                    //
+                    //
                 }
             }
             catch (Exception e)
@@ -325,81 +308,71 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             ulong destinationHandle = finalDestination.RegionHandle;
 
-            // Let's do DNS resolution only once in this process, please!
-            // This may be a costly operation. The reg.ExternalEndPoint field is not a passive field,
-            // it's actually doing a lot of work.
-            IPEndPoint endPoint = finalDestination.ExternalEndPoint;
-            if (endPoint.Address != null)
+            sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
+
+            // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
+            // both regions
+            if (sp.ParentID != UUID.Zero)
+                sp.StandUp(true);
+
+            //Make sure that all attachments are ready for the teleport
+            sp.ValidateAttachments();
+
+            AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
+            agentCircuit.startpos = position;
+            //The agent will be a root agent
+            agentCircuit.child = false;
+            //Make sure the appearnace is right
+            agentCircuit.Appearance = sp.Appearance;
+
+            AgentData agent = new AgentData();
+            sp.CopyTo(agent);
+            //Fix the position
+            agent.Position = position;
+
+            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
+            if (eq != null)
             {
-                sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
-
-                // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
-                // both regions
-                if (sp.ParentID != UUID.Zero)
-                    sp.StandUp(true);
-
-                //Make sure that all attachments are ready for the teleport
-                sp.ValidateAttachments();
-
-                AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
-                agentCircuit.startpos = position;
-                //The agent will be a root agent
-                agentCircuit.child = false;
-                //Make sure the appearnace is right
-                agentCircuit.Appearance = sp.Appearance;
-
-                AgentData agent = new AgentData();
-                sp.CopyTo(agent);
-                //Fix the position
-                agent.Position = position;
-
-                IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
+                //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
+                //  messages if they need to be called
+                //This sends the TeleportFinish event and deals with the callback
+                //  messages if they need to be called
+                if (!eq.TeleportAgent(sp.UUID, (int)sp.DrawDistance,
+                    agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle))
                 {
-                    //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
-                    //  messages if they need to be called
-                    //This sends the TeleportFinish event and deals with the callback
-                    //  messages if they need to be called
-                    if (!eq.TeleportAgent(sp.UUID, (int)sp.DrawDistance,
-                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle))
-                    {
-                        // Fix the agent status
-                        sp.IsChildAgent = false;
-                        sp.ControllingClient.SendTeleportFailed("Destination refused");
-                        return;
-                    }
-                }
-
-                // CrossAttachmentsIntoNewRegion is a synchronous call. We shouldn't need to wait after it
-                CrossAttachmentsIntoNewRegion(finalDestination, sp);
-
-                // Well, this is it. The agent is over there.
-                KillEntity(sp.Scene, sp);
-
-                // Clean up any dropped attachments
-                sp.Scene.CleanDroppedAttachments();
-
-                INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                {
-                    //Check that the region the client is in right now isn't a part of the
-                    //  regions that should be closed as well
-                    if (service.IsOutsideView(sp.Scene.RegionInfo.RegionLocX, finalDestination.RegionLocX,
-                        sp.Scene.RegionInfo.RegionLocY, finalDestination.RegionLocY))
-                    {
-                        Thread.Sleep(1000);
-                        // Fix this so that when we close, we don't have the wrong type
-                        sp.IsChildAgent = false;
-                        //Wait a bit for the agent to leave this region, then close them
-                        sp.Scene.IncomingCloseAgent(sp.UUID);
-                    }
-                    else
-                        sp.MakeChildAgent();
+                    // Fix the agent status
+                    sp.IsChildAgent = false;
+                    sp.ControllingClient.SendTeleportFailed("Destination refused");
+                    return;
                 }
             }
-            else
+
+            //Kill the groups here, otherwise they will become ghost attachments 
+            //  and stay in the sim, they'll get readded below into the new sim
+            KillAttachments(sp);
+
+            // Well, this is it. The agent is over there.
+            KillEntity(sp.Scene, sp);
+
+            // Clean up any dropped attachments
+            sp.Scene.CleanDroppedAttachments();
+
+            INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
+            if (service != null)
             {
-                sp.ControllingClient.SendTeleportFailed("Remote Region appears to be down");
+                //Check that the region the client is in right now isn't a part of the
+                //  regions that should be closed as well
+                if (service.IsOutsideView(sp.Scene.RegionInfo.RegionLocX, finalDestination.RegionLocX,
+                    sp.Scene.RegionInfo.RegionLocY, finalDestination.RegionLocY))
+                {
+                    Thread.Sleep(1000);
+                    // Fix this so that when we close, we don't have the wrong type
+                    sp.IsChildAgent = false;
+                    //Wait a bit for the agent to leave this region, then close them
+                    sp.Scene.IncomingCloseAgent(sp.UUID);
+                }
+                else
+                    sp.MakeChildAgent();
             }
         }
 
@@ -468,7 +441,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            RequestTeleportLocation(remoteClient, regionInfo.RegionHandle, position, lookat, teleportFlags);
+            RequestTeleportLocation(remoteClient, regionInfo, position, lookat, teleportFlags);
         }
 
         /// <summary>
@@ -491,6 +464,25 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         }
 
         /// <summary>
+        /// Tries to teleport agent to other region.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="regionHandle"></param>
+        /// <param name="position"></param>
+        /// <param name="lookAt"></param>
+        /// <param name="teleportFlags"></param>
+        public void RequestTeleportLocation(IClientAPI remoteClient, GridRegion reg, Vector3 position,
+                                            Vector3 lookAt, uint teleportFlags)
+        {
+            Scene scene = (Scene)remoteClient.Scene;
+            ScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            if (sp != null)
+            {
+                Teleport(sp, reg, position, lookAt, teleportFlags);
+            }
+        }
+
+        /// <summary>
         /// Tries to teleport agent to landmark.
         /// </summary>
         /// <param name="remoteClient"></param>
@@ -498,8 +490,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <param name="position"></param>
         public void RequestTeleportLandmark(IClientAPI remoteClient, UUID regionID, Vector3 position)
         {
-            GridRegion info = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID);
-
+            GridRegion info = null;
+            try
+            {
+                info = remoteClient.Scene.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID);
+            }
+            catch( Exception ex)
+            {
+                m_log.Warn("[EntityTransferModule]: Error finding landmark's region for user " + remoteClient.Name + ", " + ex.ToString());
+            }
             if (info == null)
             {
                 // can't find the region: Tell viewer and abort
@@ -507,7 +506,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            RequestTeleportLocation(remoteClient, info.RegionHandle, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
+            RequestTeleportLocation(remoteClient, info, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
         }
 
         #endregion
@@ -534,7 +533,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     regionInfo.RegionName, regionInfo.RegionID, regionInfo.RegionLocX / Constants.RegionSize, regionInfo.RegionLocY / Constants.RegionSize);
 
                 RequestTeleportLocation(
-                    client, regionInfo.RegionHandle, uinfo.HomePosition, uinfo.HomeLookAt,
+                    client, regionInfo, uinfo.HomePosition, uinfo.HomeLookAt,
                     (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
             }
             else
@@ -547,7 +546,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX / Constants.RegionSize, Regions[0].RegionLocY / Constants.RegionSize);
 
                     RequestTeleportLocation(
-                        client, Regions[0].RegionHandle, new Vector3(128, 128, 25), new Vector3(128, 128, 128),
+                        client, Regions[0], new Vector3(128, 128, 25), new Vector3(128, 128, 128),
                         (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
                 }
             }
@@ -613,11 +612,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 
                 agent.MakeChildAgent();
+                //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
                 // now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
-                agent.SendOtherAgentsAvatarDataToMe();
-                agent.SendOtherAgentsAppearanceToMe();
+                //agent.SendOtherAgentsAvatarDataToMe();
+                //agent.SendOtherAgentsAppearanceToMe();
 
-                CrossAttachmentsIntoNewRegion(crossingRegion, agent);
+                //Kill the groups here, otherwise they will become ghost attachments 
+                //  and stay in the sim, they'll get readded below into the new sim
+                KillAttachments(agent);
             }
             return agent;
         }
@@ -897,14 +899,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
 
             return successYN;
-        }
-
-        protected bool CrossAttachmentsIntoNewRegion(GridRegion destination, ScenePresence sp)
-        {
-            //Kill the groups here, otherwise they will become ghost attachments 
-            //  and stay in the sim, they'll get readded below into the new sim
-            KillAttachments(sp);
-            return true;
         }
 
         #endregion

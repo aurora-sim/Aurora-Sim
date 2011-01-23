@@ -990,7 +990,6 @@ namespace OpenSim.Services.CapsService
                     }
                 }
 
-
                 //All done
                 ResetFromTransit();
             }
