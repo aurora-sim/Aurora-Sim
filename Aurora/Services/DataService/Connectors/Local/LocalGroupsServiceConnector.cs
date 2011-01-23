@@ -606,7 +606,7 @@ namespace Aurora.Services.DataService
             DirGroupsReplyData dirgroup = new DirGroupsReplyData();
             for (int i = 0; i < retVal.Count; i += 5)
             {
-                if (retVal[i + 3] == "0") // (AllowPublish param) They don't want to be shown in search.. respect this
+                if (retVal[i + 2] == "0") // (ShowInList param) They don't want to be shown in search.. respect this
                     continue;
 
                 if ((queryflags & (uint)DirectoryManager.DirFindFlags.IncludeMature) != (uint)DirectoryManager.DirFindFlags.IncludeMature)
