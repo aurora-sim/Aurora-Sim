@@ -302,6 +302,11 @@ namespace OpenSim.Services.Connectors
             return m_LocalService.GetNeighbors(region);
         }
 
+        public List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance)
+        {
+            return m_LocalService.GetNeighbors(region, userDrawDistance);
+        }
+
         public virtual List<GridRegion> GetNeighbors(RegionInfo region)
         {
             List<GridRegion> neighbors = m_LocalService.GetNeighbors(region);

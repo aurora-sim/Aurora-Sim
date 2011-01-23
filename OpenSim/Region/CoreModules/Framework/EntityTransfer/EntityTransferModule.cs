@@ -606,28 +606,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Enable Child Agent
 
-        /// <summary>
-        /// This informs a single neighboring region about agent "avatar".
-        /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
-        /// </summary>
-        public void EnableChildAgent(ScenePresence sp, GridRegion region)
-        {
-            m_log.DebugFormat("[ENTITY TRANSFER]: Enabling child agent in new neighour {0}", region.RegionName);
-
-            AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
-            agent.startpos = new Vector3(128, 128, 70);
-            agent.child = true;
-            agent.Appearance = sp.Appearance;
-
-            IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
-            if (eq != null)
-            {
-                eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, agent);
-                return;
-            }
-        }
-
         #endregion
 
         #region Enable Child Agents
