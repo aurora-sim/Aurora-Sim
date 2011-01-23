@@ -97,14 +97,15 @@ namespace Aurora.Services.DataService
 
             ulong groupPowers = 296868139497678;
 
+            UUID officersRole = UUID.Random();
             //Add officers role to group
-            AddRoleToGroup(founderID, groupID, UUID.Zero, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
+            AddRoleToGroup(founderID, groupID, officersRole, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
 
             //Add owner role to group
 			AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, OwnerPowers);
 
             //Add owner to the group as owner
-            AddAgentToGroup(founderID, groupID, OwnerRoleID);
+            AddAgentToGroup(founderID, founderID, groupID, OwnerRoleID);
 
 			SetAgentGroupSelectedRole(founderID, groupID, OwnerRoleID);
 
@@ -136,7 +137,7 @@ namespace Aurora.Services.DataService
 			});
 		}
 
-        public void AddAgentToGroup(UUID AgentID, UUID GroupID, UUID RoleID)
+        public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             if (data.Query(new string[] {
 				"AgentID",
@@ -169,10 +170,10 @@ namespace Aurora.Services.DataService
             }
 
             // Make sure they're in the Everyone role
-            AddAgentToRole(AgentID, AgentID, GroupID, UUID.Zero);
+            AddAgentToRole(requestingAgentID, AgentID, GroupID, UUID.Zero);
             // Make sure they're in specified role, if they were invited
             if (RoleID != UUID.Zero)
-                AddAgentToRole(AgentID, AgentID, GroupID, RoleID);
+                AddAgentToRole(requestingAgentID, AgentID, GroupID, RoleID);
             //Set the role they were invited to as their selected role
             SetAgentGroupSelectedRole(AgentID, GroupID, RoleID);
             SetAgentActiveGroup(AgentID, GroupID);
@@ -547,7 +548,11 @@ namespace Aurora.Services.DataService
             {
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
                 if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMemberLimited))
+                {
+                    m_log.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
+                        " to group " + GroupID + ", but did not have permissions to do so!");
                     return;
+                }
             }
 
             List<string> query = data.Query(new string[] {
@@ -556,9 +561,10 @@ namespace Aurora.Services.DataService
 				"GroupID"
 			}, new object[] {
 				AgentID,
-				GroupID,
-				RoleID
+				RoleID,
+				GroupID
 			}, "osgrouprolemembership", "count(AgentID)");
+            //Make sure they arn't already in this role
             if (query[0] == "0")
             {
                 data.Insert("osgrouprolemembership", new string[] {

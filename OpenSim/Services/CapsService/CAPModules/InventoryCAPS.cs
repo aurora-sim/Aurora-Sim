@@ -118,7 +118,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleFetchInventory(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
+            //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 

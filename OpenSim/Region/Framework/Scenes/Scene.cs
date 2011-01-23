@@ -868,7 +868,7 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID Password = agent.OtherInformation["CapsPassword"].AsUUID();
                     regionCaps.AddSEEDCap("", "", Password);
                 }
-                m_log.Info("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
+                m_log.Debug("[NewAgentConnection]: Adding Caps Url for region " + RegionInfo.RegionName +
                      " @" + capsUrl + " for agent " + agent.AgentID);
                 responseMap["CapsUrl"] = capsUrl;
             }
@@ -890,13 +890,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
                 if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
             }
+
             ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
             float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
             //Keep users from being underground
             if (agent.startpos.Z < groundHeight)
-            {
                 agent.startpos.Z = groundHeight;
-            }
 
             //Add the circuit at the end
             AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
@@ -1037,9 +1036,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    m_log.DebugFormat(
-                        "[SCENE]: Removing {0} from region {1}",
-                        presence.Name, RegionInfo.RegionName);
                     INeighborService service = RequestModuleInterface<INeighborService>();
                     if (service != null)
                         service.CloseAllNeighborAgents(presence.UUID, RegionInfo.RegionID);

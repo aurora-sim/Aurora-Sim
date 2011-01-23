@@ -311,7 +311,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            GroupsConnector.AddAgentToGroup(AgentID, GroupID, RoleID);
+            GroupsConnector.AddAgentToGroup(requestingAgentID, AgentID, GroupID, RoleID);
         }
 
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)

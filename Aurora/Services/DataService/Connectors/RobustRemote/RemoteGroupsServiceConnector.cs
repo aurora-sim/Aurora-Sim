@@ -153,7 +153,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void AddAgentToGroup(UUID AgentID, UUID GroupID, UUID RoleID)
+        public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -161,6 +161,7 @@ namespace Aurora.Services.DataService
             sendData["AgentID"] = AgentID;
             sendData["GroupID"] = GroupID;
             sendData["RoleID"] = RoleID;
+            sendData["RequestingAgentID"] = requestingAgentID;
 
             string reqString = WebUtils.BuildXmlResponse(sendData);
 

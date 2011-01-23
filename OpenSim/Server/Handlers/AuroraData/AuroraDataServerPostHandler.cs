@@ -476,8 +476,9 @@ namespace OpenSim.Server.Handlers.AuroraData
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
+            UUID RequestingAgentID = UUID.Parse(request["RequestingAgentID"].ToString());
 
-            GroupsServiceConnector.AddAgentToGroup(AgentID, GroupID, RoleID);
+            GroupsServiceConnector.AddAgentToGroup(RequestingAgentID, AgentID, GroupID, RoleID);
 
             return SuccessResult();
         }
