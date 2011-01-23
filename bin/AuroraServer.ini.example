@@ -1,23 +1,21 @@
 [Network]
     http_listener_port = 8003
-	
+    
 [DatabaseService]
     StorageProvider = "OpenSim.Data.MySQL.dll"
     ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;"
-	
+    
 [AuroraData]
     ; Local Data Manager Config
     PluginModule = MySQL
     ;ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*;"
-	
+    
 [Includes]
     ;; Start Aurora with no HG services enabled
-    Include-NoHG = AuroraServerConfiguration/Main.ini
-	;; Start Aurora with HG services enabled
-    ;Include-NoHG = AuroraServerConfiguration/HGMain.ini
-	
-	;;Other .ini files to add...
-	Include-AssetService = AuroraServerConfiguration/AssetService.ini
+    Include-Main = AuroraServerConfiguration/Main.ini
+    
+    ;;Other .ini files to add...
+    Include-AssetService = AuroraServerConfiguration/AssetService.ini
     Include-Login = AuroraServerConfiguration/Login.ini
     Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
@@ -28,26 +26,27 @@
     ;; The CAPS service deals with setting up inventory and other parts of the client that need security, we don't want anyone to be able to access things that they do not have clearance to access
 
     ;; For more info, see AuroraDocs/CAPSService.txt
-	;; This allows applications to add CAPS to the CAPSService remotely, and should NOT be enabled unless you know what you are doing
-    ;Password =
     ;; 127.0.0.1 should be your IP address or DNS
     HostName = http://127.0.0.1
+    
+    ;;The port for this service to run on
     Port = 8007
-	
-[LibraryService]
-    LibraryName = "OpenSim Library"
-    DefaultLibrary = "./inventory/Libraries.xml"
-	
+
+[LibraryModule]
+    ;;  Set this if you want to change the name of the Aurora Library
+    LibraryName = Aurora Library
+    LibraryOwnerName = "Library Owner"
+    
 [PresenceService]
     ;; Should multiple logins of users be enabled?
     AllowDuplicatePresences = true
     ;; Should we check the last time that the user was reported when getting presence data and log out non responsive ones?
     CheckLastSeen = true
-	
+    
 [AuthenticationService]
     ;; Should we check user passwords? If this is set to false, there will be NO password checking.
     AuthenticateUsers = true
-	
+    
 [GridService]
     ; Realm = "regions"
 
@@ -59,7 +58,32 @@
     ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
     ;; (replace spaces with underscore)
     AllowDuplicateNames = false
-	
+    
     ;; Disable the checking of session ID's in the Grid Service
     ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
     DisableSessionID = false;
+    
+[NeighborService]
+    ;; ##
+    ;; ## Security
+    ;; ##
+    
+    ;; TODO!
+    
+    ;; ##
+    ;; ## Region Child Agent Settings
+    ;; ##
+
+    ;; How many regions away should we allow child agents
+    ;; This sets the number of regions in any direction we can see. The default is to be able to see in any direction 1 region. You can set this number to 2 or greater so that you can see X regions in every direction from the sim the agent is in. For example, if you have a 4 by 4 region setup, and you wish to be able to see into all of them, you would set the setting to 4 so that you can see across all of your regions. This is figured by the region in the southwest corner region position's X - the max region position's X, which in our test case is 4.
+    ;; Default: 1
+    RegionSightSize = 1
+    
+    ;; Another way to change how many regions the agent can see into is to let the distance depend on how far the Draw Distance is set in the viewer.
+    ;; This option will allow you to see into any regions nearby within your draw distance (configurable per user).
+    ;; Default: false
+    UseVariableRegionSightDistance = false
+    
+    ;; The maximum distance the user is allowed to see based on their draw distance (only works if UseVariableRegionSightDistance is enabled)
+    ;; Default: 512 (meters)
+    MaxDistanceVariableRegionSightDistance = 512
