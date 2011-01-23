@@ -978,6 +978,8 @@ namespace OpenSim.Services.CapsService
                             //Ok... the agent exists... so lets assume that it worked?
                             service.GetNeighbors(ourRegion);
                             service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                            //Make sure to set the result correctly as well
+                            result = true;
                         }
                     }
                     else

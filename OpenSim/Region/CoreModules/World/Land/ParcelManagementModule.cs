@@ -717,7 +717,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject fullSimParcel = new LandObject(UUID.Zero, false, m_scene);
 
             fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, (int)Constants.RegionSize, (int)Constants.RegionSize));
-            fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+            IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (connector != null)
+                fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
+            else
+                fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             fullSimParcel.SetInfoID();
             AddLandObject(fullSimParcel);

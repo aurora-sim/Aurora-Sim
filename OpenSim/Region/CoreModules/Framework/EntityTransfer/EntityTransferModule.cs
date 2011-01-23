@@ -353,9 +353,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 //Fix the position
                 agent.Position = position;
 
-                // Let's set this to true tentatively. This does not trigger OnChildAgent
-                sp.IsChildAgent = true;
-
                 IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
@@ -379,9 +376,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 // Well, this is it. The agent is over there.
                 KillEntity(sp.Scene, sp);
 
-                // Now let's make it officially a child agent
-                sp.MakeChildAgent();
-
                 // Clean up any dropped attachments
                 sp.Scene.CleanDroppedAttachments();
 
@@ -394,9 +388,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         sp.Scene.RegionInfo.RegionLocY, finalDestination.RegionLocY))
                     {
                         Thread.Sleep(1000);
+                        // Fix this so that when we close, we don't have the wrong type
+                        sp.IsChildAgent = false;
                         //Wait a bit for the agent to leave this region, then close them
                         sp.Scene.IncomingCloseAgent(sp.UUID);
                     }
+                    else
+                        sp.MakeChildAgent();
                 }
             }
             else
