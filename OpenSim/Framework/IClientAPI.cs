@@ -1081,13 +1081,6 @@ namespace OpenSim.Framework
         void ProcessInPacket(Packet NewPack);
         void Close();
         void Kick(string message);
-        
-        /// <summary>
-        /// Start processing for this client.
-        /// </summary>
-        void Start();
-        
-        void Stop();
 
         //     void ActivateGesture(UUID assetId, UUID gestureId);
 

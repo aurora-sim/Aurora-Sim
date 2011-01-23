@@ -2172,16 +2172,6 @@ namespace Aurora.BotManager
             
         }
 
-        void IClientAPI.Start()
-        {
-            
-        }
-
-        void IClientAPI.Stop()
-        {
-            
-        }
-
         void IClientAPI.SendWearables(AvatarWearable[] wearables, int serial)
         {
             

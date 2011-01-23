@@ -354,9 +354,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // Well, this is it. The agent is over there.
             KillEntity(sp.Scene, sp);
 
-            // Clean up any dropped attachments
-            sp.Scene.CleanDroppedAttachments();
-
             INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
             if (service != null)
             {

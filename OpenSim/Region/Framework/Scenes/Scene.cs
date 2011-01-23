@@ -617,40 +617,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        #region Primitives Methods
-
-        public void CleanDroppedAttachments()
-        {
-            List<SceneObjectGroup> objectsToDelete =
-                    new List<SceneObjectGroup>();
-
-            lock (m_cleaningAttachments)
-            {
-                ForEachSOG(delegate(SceneObjectGroup grp)
-                {
-                    if (grp.RootPart.Shape.PCode == 0 && grp.RootPart.Shape.State != 0 && (!objectsToDelete.Contains(grp)))
-                    {
-                        ScenePresence sp = GetScenePresence(grp.OwnerID);
-                        if (sp == null)
-                        {
-                            objectsToDelete.Add(grp);
-                            return;
-                        }
-                    }
-                });
-            }
-
-            foreach (SceneObjectGroup grp in objectsToDelete)
-            {
-                m_log.WarnFormat("[Scene]: Deleting dropped attachment {0} of user {1}", grp.UUID, grp.OwnerID);
-            }
-            IBackupModule backup = RequestModuleInterface<IBackupModule>();
-            if (backup != null)
-                backup.DeleteSceneObjects(objectsToDelete.ToArray(), true);
-        }
-
-        #endregion
-
         #region Add/Remove Avatar Methods
 
         /// <summary>
@@ -964,11 +930,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
-            AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
             if (vialogin)
             {
-                CleanDroppedAttachments();
                 //Make sure that users are not logging into bad positions in the sim
                 if (agent.startpos.X < 0f || agent.startpos.Y < 0f ||
                     agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
@@ -991,6 +955,8 @@ namespace OpenSim.Region.Framework.Scenes
                     agent.startpos.Z = groundHeight;
                 }
             }
+            //Add the circuit at the end
+            AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
             m_log.InfoFormat(
                 "[ConnectionBegin]: Region {0} authenticated and authorized incoming {1} agent {2} (circuit code {3})",
@@ -1177,8 +1143,6 @@ namespace OpenSim.Region.Framework.Scenes
                     try { client.SendKillObject(presence.Scene.RegionInfo.RegionHandle, new ISceneEntity[] { presence }); }
                     catch (NullReferenceException) { }
                 });
-
-            CleanDroppedAttachments();
 
             try
             {

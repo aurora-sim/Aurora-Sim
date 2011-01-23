@@ -755,14 +755,8 @@ namespace Aurora.BotManager
         {
         }
 
-        public void Start()
-        {
-        }
         public void SendAvatarInterestsReply(IClientAPI sender,UUID targetID, uint profileWantToMask, string wanttext, uint skillsmask, string skillstext, string languages){
         	
-        }
-        public void Stop()
-        {
         }
 
         // private uint m_circuitCode;

@@ -549,11 +549,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        public void Stop()
-        {
-
-        }
-
         #endregion Client Methods
 
         #region Packet Handling
@@ -690,11 +685,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         #endregion Packet Handling
-
-        public virtual void Start()
-        {
-            m_scene.AddNewClient(this);
-        }
 
         public void ActivateGesture(UUID assetId, UUID gestureId)
         {
