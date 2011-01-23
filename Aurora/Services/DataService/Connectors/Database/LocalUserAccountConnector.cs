@@ -137,11 +137,11 @@ namespace Aurora.Services.DataService
             if (words.Length > 2)
                 return new UserAccount[0];
 
-            List<string> retVal;
-            if (words.Length == 1)
-                retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') and (FirstName like '%" + words[0] + " %' or LastName like '%" + words[1] + "%')", m_realm, "*");
-            else
-                retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') and (FirstName like '%" + words[0] + "%' or LastName like '%" + words[1] + "%')", m_realm, "*");
+            List<string> retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') and (FirstName like '%" + words[0] + "%' " + 
+                ((words.Length == 1) ? 
+                    " or LastName like '%" + words[0]
+                    : " and LastName like '%" + words[1])
+                     + "%')", m_realm, "*");
 
             ParseQuery(retVal, ref data);
 
