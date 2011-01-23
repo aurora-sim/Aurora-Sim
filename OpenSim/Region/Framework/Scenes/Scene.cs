@@ -399,7 +399,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                 MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
-                Util.VariableRegionSight = aurorastartupConfig.GetBoolean("UseVariableRegionSightDistance", Util.VariableRegionSight);
                 m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                 CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
                 //Region specific is still honored here, the RegionInfo checks for it

@@ -219,20 +219,16 @@ namespace OpenSim.Services.CapsService
         #region Server ONLY messages
 
         //
+        //
         // Region > CapsService EventQueueMessages ONLY
         // These are NOT sent to the client under ANY circumstances!
         //
+        //
 
-        public virtual void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, AgentData data, uint TeleportFlags)
+        public virtual void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle, int DrawDistance, AgentCircuitData circuit)
         {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, neighbors, circuit, TeleportFlags, data, null, 0);
+            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, circuit);
             Enqueue(item, avatarID, RegionHandle);
-        }
-
-        public virtual bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle, int DrawDistance, GridRegion region, AgentCircuitData circuit, AgentData data, uint TeleportFlags, byte[] IPAddress, int Port)
-        {
-            OSD item = EventQueueHelper.EnableChildAgents(DrawDistance, new GridRegion[1] { region }, circuit, TeleportFlags, data, IPAddress, Port);
-            return TryEnqueue(item, avatarID, RegionHandle);
         }
 
         public virtual bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
@@ -402,38 +398,10 @@ namespace OpenSim.Services.CapsService
 
                         AgentCircuitData circuitData = new AgentCircuitData();
                         circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
-
-                        OSDArray neighborsArray = (OSDArray)body["Regions"];
-                        GridRegion[] neighbors = new GridRegion[neighborsArray.Count];
-
-                        int i = 0;
-                        foreach (OSD r in neighborsArray)
-                        {
-                            GridRegion region = new GridRegion();
-                            region.FromOSD((OSDMap)r);
-                            neighbors[i] = region;
-                            i++;
-                        }
-                        uint TeleportFlags = body["TeleportFlags"].AsUInteger();
-
-                        AgentData data = null;
-                        if (body.ContainsKey("AgentData"))
-                        {
-                            data = new AgentData();
-                            data.Unpack((OSDMap)body["AgentData"]);
-                        }
-
-                        byte[] IPAddress = null;
-                        if(body.ContainsKey("IPAddress"))
-                            IPAddress = body["IPAddress"].AsBinary();
-                        int Port = 0;
-                        if (body.ContainsKey("Port"))
-                            Port = body["Port"].AsInteger();
-
+                        
                         //Now do the creation
                         //Don't send it to the client at all, so return here
-                        return EnableChildAgents(DrawDistance, neighbors, circuitData, TeleportFlags, data,
-                            IPAddress, Port);
+                        return EnableChildAgents(DrawDistance, circuitData);
                     }
                     else if (map.ContainsKey("message") && map["message"] == "EstablishAgentCommunication")
                     {
@@ -723,31 +691,30 @@ namespace OpenSim.Services.CapsService
 
         #region EnableChildAgents
 
-        public bool EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
-            AgentCircuitData circuit, uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
+        public bool EnableChildAgents(int DrawDistance, AgentCircuitData circuit)
         {
             int count = 0;
             bool informed = true;
-            foreach (GridRegion neighbor in neighbors)
+            INeighborService neighborService = m_service.Registry.RequestModuleInterface<INeighborService>();
+            if (neighborService != null)
             {
-                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+                uint x, y;
+                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);
 
-                if (neighbor.RegionHandle != m_service.RegionHandle)
+                foreach (GridRegion neighbor in neighbors)
                 {
-                    byte[] endAddress = IPAddress;
-                    int endPort = Port;
-                    if (endAddress == null)
+                    //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+
+                    if (neighbor.RegionHandle != m_service.RegionHandle)
                     {
-                        //We need to find the IP then
-                        IPEndPoint endPoint = neighbor.ExternalEndPoint;
-                        endAddress = endPoint.Address.GetAddressBytes();
-                        endPort = endPoint.Port;
+                        if (!InformClientOfNeighbor(circuit.Copy(), neighbor,
+                            (uint)TeleportFlags.Default, null))
+                            informed = false;
                     }
-                    if (!InformClientOfNeighbor(circuit.Copy(), neighbor, TeleportFlags, data,
-                        endAddress, endPort))
-                        informed = false;
+                    count++;
                 }
-                count++;
             }
             return informed;
         }
@@ -762,8 +729,8 @@ namespace OpenSim.Services.CapsService
         /// <param name="a"></param>
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
-        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor, 
-            uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
+        private bool InformClientOfNeighbor(AgentCircuitData circuitData, GridRegion neighbor,
+            uint TeleportFlags, AgentData agentData)
         {
             m_log.Info("[EventQueueService]: Starting to inform client about neighbor " + neighbor.RegionName);
 
@@ -809,7 +776,8 @@ namespace OpenSim.Services.CapsService
                 if (GridService != null)
                 {
                     neighbor = GridService.GetRegionByUUID(UUID.Zero, neighbor.RegionID);
-                    bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData, TeleportFlags, data, out reason);
+                    bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
+                        TeleportFlags, agentData, out reason);
                     if (regionAccepted)
                     {
                         //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
@@ -828,13 +796,18 @@ namespace OpenSim.Services.CapsService
                             //We 'could' call Enqueue directly... but its better to just let it go and do it this way
                             IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
-                            EQService.EnableSimulator(neighbor.RegionHandle, IPAddress, Port, m_service.AgentID, m_service.RegionHandle);
+                            EQService.EnableSimulator(neighbor.RegionHandle,
+                                neighbor.ExternalEndPoint.Address.GetAddressBytes(), 
+                                neighbor.ExternalEndPoint.Port, m_service.AgentID, m_service.RegionHandle);
 
                             // ES makes the client send a UseCircuitCode message to the destination, 
                             // which triggers a bunch of things there.
                             // So let's wait
                             Thread.Sleep(300);
-                            EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle, IPAddress, Port, otherRegionService.UrlToInform, m_service.RegionHandle);
+                            EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle,
+                                neighbor.ExternalEndPoint.Address.GetAddressBytes(),
+                                neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform,
+                                m_service.RegionHandle);
 
                             m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
                         }
@@ -935,8 +908,7 @@ namespace OpenSim.Services.CapsService
 
                 //Inform the client of the neighbor if needed
                 if (!InformClientOfNeighbor(circuit, destination, TeleportFlags,
-                    agentData, destination.ExternalEndPoint.Address.GetAddressBytes(),
-                    destination.ExternalEndPoint.Port))
+                    agentData))
                     return false;
 
                 uint x, y;

@@ -101,6 +101,13 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetNeighbors(GridRegion region);
 
         /// <summary>
+        /// Get an uncached list of neighbors based on draw distance if enabled
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance);
+
+        /// <summary>
         /// Close all the child agents of the given AgentID in the neighbors
         /// </summary>
         /// <param name="AgentID"></param>

@@ -80,8 +80,6 @@ namespace OpenSim.Framework
         /// <summary>Thread pool used for Util.FireAndForget if
         /// FireAndForgetMethod.SmartThreadPool is used</summary>
         private static SmartThreadPool m_ThreadPool;
-
-        public static bool VariableRegionSight = false;
         public static int NumberofScenes = 0;
 
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.

@@ -464,26 +464,13 @@ namespace OpenSim.Services.CapsService
             return message;
         }
 
-        public static OSD EnableChildAgents(int DrawDistance, GridRegion[] neighbors,
-            AgentCircuitData circuit, uint TeleportFlags, AgentData data, byte[] IPAddress, int Port)
+        public static OSD EnableChildAgents(int DrawDistance, AgentCircuitData circuit)
         {
             OSDMap llsdBody = new OSDMap();
 
             llsdBody.Add("DrawDistance", DrawDistance);
-            OSDArray regionsArray = new OSDArray();
-            foreach (GridRegion r in neighbors)
-            {
-                regionsArray.Add(r.ToOSD());
-            }
-            llsdBody.Add("Regions", regionsArray);
-            if(IPAddress != null)
-                llsdBody.Add("IPAddress", IPAddress);
-            if(Port != 0) //0 is the eqivilent of null
-                llsdBody.Add("Port", Port);
             llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
-            llsdBody.Add("TeleportFlags", TeleportFlags);
-            if(data != null)
-                llsdBody.Add("AgentData", data.Pack());
+            
             return buildEvent("EnableChildAgents", llsdBody);
         }
 

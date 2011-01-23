@@ -26,6 +26,8 @@ namespace OpenSim.Services.Connectors
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         private bool CloseLocalRegions = true;
         private int RegionViewSize = 1;
+        private bool VariableRegionSight = false;
+        private int MaxVariableRegionSight = 512;
 
         public Dictionary<UUID, List<GridRegion>> Neighbors
         {
@@ -57,6 +59,8 @@ namespace OpenSim.Services.Connectors
             IConfig neighborService = config.Configs["NeighborService"];
             if (neighborService != null)
             {
+                VariableRegionSight = neighborService.GetBoolean("UseVariableRegionSightDistance", VariableRegionSight);
+                MaxVariableRegionSight = neighborService.GetInt("MaxDistanceForVariableRegionSightDistance", MaxVariableRegionSight);
                 RegionViewSize = neighborService.GetInt("RegionSightSize", RegionViewSize);
                 RegionViewSize *= Constants.RegionSize;
                 //This option is the opposite of the config to make it easier on the user
@@ -242,7 +246,7 @@ namespace OpenSim.Services.Connectors
                     //Now add the agent to the reigon that is coming up
                     IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule>();
                     if (transferModule != null)
-                        transferModule.EnableChildAgent(agent, otherRegion);
+                        transferModule.EnableChildAgents(agent);
                 }
             });
         }
@@ -316,6 +320,36 @@ namespace OpenSim.Services.Connectors
                 neighbors = FindNewNeighbors(region);
                 m_KnownNeighbors[region.RegionID] = neighbors;
             }
+            return neighbors;
+        }
+
+        /// <summary>
+        /// Get an uncached list of neighbors based on draw distance if enabled
+        /// </summary>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        public List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance)
+        {
+            List<GridRegion> neighbors = new List<GridRegion>();
+            if (VariableRegionSight && userDrawDistance != 0)
+            {
+                //Enforce the max draw distance
+                if (userDrawDistance > MaxVariableRegionSight)
+                    userDrawDistance = MaxVariableRegionSight;
+
+                //Query how many regions fit in this size
+                int xMin = (int)(region.RegionLocX) - (int)(userDrawDistance);
+                int xMax = (int)(region.RegionLocX) + (int)(userDrawDistance);
+                int yMin = (int)(region.RegionLocX) - (int)(userDrawDistance);
+                int yMax = (int)(region.RegionLocX) + (int)(userDrawDistance);
+
+                //Ask the grid service about the range
+                neighbors = m_gridService.GetRegionRange(region.ScopeID,
+                    xMin, xMax, yMin, yMax);
+            }
+            else //Just get the cached list
+                neighbors = GetNeighbors(region);
+
             return neighbors;
         }
 

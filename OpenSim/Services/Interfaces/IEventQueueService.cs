@@ -82,6 +82,7 @@ namespace OpenSim.Services.Interfaces
 
         /// <summary>
         /// This is a region > CapsService message ONLY, this should never be sent to the client.
+        /// This enables child agents in the given neighbors
         /// </summary>
         /// <param name="avatarID"></param>
         /// <param name="RegionHandle"></param>
@@ -89,20 +90,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="neighbors"></param>
         /// <param name="circuit"></param>
         void EnableChildAgentsReply(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion[] neighbors, AgentCircuitData circuit, 
-            AgentData data, uint TeleportFlags);
-
-        /// <summary>
-        /// This is a region > CapsService message ONLY, this should never be sent to the client.
-        /// </summary>
-        /// <param name="avatarID"></param>
-        /// <param name="RegionHandle"></param>
-        /// <param name="DrawDistance"></param>
-        /// <param name="neighbors"></param>
-        /// <param name="circuit"></param>
-        bool TryEnableChildAgents(UUID avatarID, ulong RegionHandle,
-            int DrawDistance, GridRegion region, AgentCircuitData circuit,
-            AgentData data, uint TeleportFlags, byte[] IPAddress, int Port);
+            int DrawDistance, AgentCircuitData circuit);
 
         /// <summary>
         /// Tell the EventQueueService to cross this agent

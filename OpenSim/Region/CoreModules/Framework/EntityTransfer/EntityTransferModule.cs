@@ -54,8 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected bool m_Enabled = false;
         protected List<Scene> m_scenes = new List<Scene>();
-        public Dictionary<Scene, bool[,]> DirectionsToBlockChildAgents = new Dictionary<Scene,bool[,]>();
-
+        
         #endregion
 
         #region ISharedRegionModule
@@ -98,41 +97,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             scene.RegisterModuleInterface<IEntityTransferModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
-
-            DirectionsToBlockChildAgents[scene] = new bool[3, 3];
-            DirectionsToBlockChildAgents[scene].Initialize();
-            IConfig regionConfig = scene.Config.Configs[scene.RegionInfo.RegionName];
-            if (regionConfig != null)
-            {
-                #region Block Child Agents config
-
-                //   [{0,2}, {1, 2}, {2,2}]
-                //   [{0,1}, {1, 1}, {2,1}]  1,1 is the current region
-                //   [{0,0}, {1, 0}, {2,0}]
-
-                //SouthWest
-                DirectionsToBlockChildAgents[scene][0, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthWest", false);
-                //South
-                DirectionsToBlockChildAgents[scene][1, 0] = regionConfig.GetBoolean("BlockChildAgentsSouth", false);
-                //SouthEast
-                DirectionsToBlockChildAgents[scene][2, 0] = regionConfig.GetBoolean("BlockChildAgentsSouthEast", false);
-
-
-                //West
-                DirectionsToBlockChildAgents[scene][0, 1] = regionConfig.GetBoolean("BlockChildAgentsWest", false);
-                //East
-                DirectionsToBlockChildAgents[scene][2, 1] = regionConfig.GetBoolean("BlockChildAgentsEast", false);
-
-
-                //NorthWest
-                DirectionsToBlockChildAgents[scene][0, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthWest", false);
-                //North
-                DirectionsToBlockChildAgents[scene][1, 2] = regionConfig.GetBoolean("BlockChildAgentsNorth", false);
-                //NorthEast
-                DirectionsToBlockChildAgents[scene][2, 2] = regionConfig.GetBoolean("BlockChildAgentsNorthEast", false);
-
-                #endregion
-            }
         }
 
         public virtual void Close()
@@ -192,7 +156,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Teleport(sp, reg, position, lookAt, teleportFlags);
         }
 
-        public virtual void Teleport(ScenePresence sp, GridRegion reg, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void Teleport(ScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             string reason = "";
 
@@ -205,9 +169,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             try
             {
-                long XShift = (reg.RegionLocX - sp.Scene.RegionInfo.RegionLocX);
-                long YShift = (reg.RegionLocY - sp.Scene.RegionInfo.RegionLocY);
-                if (reg.RegionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
+                long XShift = (finalDestination.RegionLocX - sp.Scene.RegionInfo.RegionLocX);
+                long YShift = (finalDestination.RegionLocY - sp.Scene.RegionInfo.RegionLocY);
+                if (finalDestination.RegionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
                     (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
                     sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
@@ -253,13 +217,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         sp.ControllingClient.SendTeleportFailed(reason);
                         return;
                     }
-                    GridRegion finalDestination = GetFinalDestination(reg);
-                    if (finalDestination == null)
-                    {
-                        m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is having problems. Unable to teleport agent.");
-                        sp.ControllingClient.SendTeleportFailed("Problem at destination");
-                        return;
-                    }
                     //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Final destination is x={0} y={1} uuid={2}",
                     //    finalDestination.RegionLocX / Constants.RegionSize, finalDestination.RegionLocY / Constants.RegionSize, finalDestination.RegionID);
 
@@ -275,7 +232,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     //
                     // This is it
                     //
-                    DoTeleport(sp, reg, finalDestination, position, lookAt, teleportFlags);
+                    DoTeleport(sp, finalDestination, position, lookAt, teleportFlags);
                     //
                     //
                     //
@@ -288,10 +245,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
         }
 
-        public virtual void DoTeleport(ScenePresence sp, GridRegion reg, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
+        public virtual void DoTeleport(ScenePresence sp, GridRegion finalDestination, Vector3 position, Vector3 lookAt, uint teleportFlags)
         {
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "sending_dest");
-            if (reg == null || finalDestination == null)
+            if (finalDestination == null)
             {
                 sp.ControllingClient.SendTeleportFailed("Unable to locate destination");
                 return;
@@ -301,8 +258,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 "[ENTITY TRANSFER MODULE]: Request Teleport to {0}:{1}/{2}",
                 finalDestination.ServerURI, finalDestination.RegionName, position);
 
-            int newRegionX = reg.RegionLocX;
-            int newRegionY = reg.RegionLocY;
+            int newRegionX = finalDestination.RegionLocX;
+            int newRegionY = finalDestination.RegionLocY;
             int oldRegionX = sp.Scene.RegionInfo.RegionLocX;
             int oldRegionY = sp.Scene.RegionInfo.RegionLocY;
 
@@ -333,10 +290,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IEventQueueService eq = sp.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
             {
-                //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication 
-                //  messages if they need to be called
-                //This sends the TeleportFinish event and deals with the callback
-                //  messages if they need to be called
+                //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
+                //  messages if they need to be called and deals with the callback
                 if (!eq.TeleportAgent(sp.UUID, (int)sp.DrawDistance,
                     agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle))
                 {
@@ -387,11 +342,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 client.SendKillObject(scene.RegionInfo.RegionHandle, grp);
             });
-        }
-
-        protected virtual GridRegion GetFinalDestination(GridRegion region)
-        {
-            return region;
         }
 
         #endregion
@@ -642,6 +592,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             ScenePresence agent = icon.EndInvoke(iar);
 
             // If the cross was successful, this agent is a child agent
+            // Otherwise, put them back in the scene
             if (!agent.IsChildAgent)
                 agent.RestoreInCurrentScene();
 
@@ -672,11 +623,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, new GridRegion[1] { region }, agent, null,
-                    (uint)TeleportFlags.Default);
+                    (int)sp.DrawDistance, agent);
                 return;
             }
         }
+
         #endregion
 
         #region Enable Child Agents
@@ -687,28 +638,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         public virtual void EnableChildAgents(ScenePresence sp)
         {
-            List<GridRegion> neighbors = new List<GridRegion>();
-            RegionInfo m_regionInfo = sp.Scene.RegionInfo;
-
-            if (Util.VariableRegionSight && sp.DrawDistance != 0)
-            {
-                int xMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
-                int xMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
-                int yMin = (int)(m_regionInfo.RegionLocX) - (int)(sp.DrawDistance * Constants.RegionSize);
-                int yMax = (int)(m_regionInfo.RegionLocX) + (int)(sp.DrawDistance * Constants.RegionSize);
-
-                neighbors = sp.Scene.GridService.GetRegionRange(m_regionInfo.ScopeID,
-                    xMin, xMax, yMin, yMax);
-            }
-            else
-            {
-                INeighborService service = sp.Scene.RequestModuleInterface<INeighborService>();
-                if (service != null)
-                {
-                    neighbors = service.GetNeighbors(sp.Scene.RegionInfo);
-                }
-            }
-            
             AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
             agent.startpos = new Vector3(128, 128, 70);
             agent.child = true;
@@ -718,40 +647,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (eq != null)
             {
                 eq.EnableChildAgentsReply(agent.AgentID, sp.Scene.RegionInfo.RegionHandle,
-                    (int)sp.DrawDistance, neighbors.ToArray(), agent, null, (uint)TeleportFlags.Default);
+                    (int)sp.DrawDistance, agent);
             }
-        }
-
-        private List<ulong> NewNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)
-        {
-            return currentNeighbours.FindAll(delegate(ulong handle) { return !previousNeighbours.Contains(handle); });
-        }
-
-        private List<ulong> OldNeighbours(List<ulong> currentNeighbours, List<ulong> previousNeighbours)
-        {
-            return previousNeighbours.FindAll(delegate(ulong handle) { return !currentNeighbours.Contains(handle); });
-        }
-
-        private List<ulong> NeighbourHandles(Scene currentScene, List<GridRegion> neighbours)
-        {
-            List<ulong> handles = new List<ulong>();
-            foreach (GridRegion reg in neighbours)
-            {
-                int x = currentScene.RegionInfo.RegionLocX - reg.RegionLocX;
-                int y = currentScene.RegionInfo.RegionLocY - reg.RegionLocY;
-                if ((x < 2 && x > -2) && (x < 2 && x > -2)) //We only check in the nearby regions for now
-                {
-                    //Offset for the array so that it fixes
-                    //One offset from what it should be, as the DirectionsToBlockChildAgents starts at 0
-                    x = x > 1 ? 2 : x == 0 ? 1 : 0;
-                    y = y > 1 ? 2 : y == 0 ? 1 : 0;
-                    if (!DirectionsToBlockChildAgents[currentScene][x, y]) //Not blocked, so false
-                        handles.Add(reg.RegionHandle);
-                }
-                else
-                    handles.Add(reg.RegionHandle);
-            }
-            return handles;
         }
 
         #endregion
