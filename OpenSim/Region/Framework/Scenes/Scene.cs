@@ -699,13 +699,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_eventManager.TriggerOnNewPresence(sp);
 
-            // HERE!!! Do the initial attachments right here
-            if (vialogin)
-            {
-                sp.IsChildAgent = false;
-                Util.FireAndForget(delegate(object o) { sp.RezAttachments(); });
-            }
-
             m_clientManager.Add(client);
             SubscribeToClientEvents(client);
 

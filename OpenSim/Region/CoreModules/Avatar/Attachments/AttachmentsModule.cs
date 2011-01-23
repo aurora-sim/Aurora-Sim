@@ -409,9 +409,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = m_scene.InventoryService.GetItem(item);
                 att.SetFromItemID(itemID);
-                presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID);
-
-                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                if(presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
         }
 

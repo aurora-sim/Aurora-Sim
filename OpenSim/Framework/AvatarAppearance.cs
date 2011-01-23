@@ -420,10 +420,22 @@ namespace OpenSim.Framework
             m_attachments[attach.AttachPoint].Add(attach);
         }
 
-        internal void ReplaceAttachment(AvatarAttachment attach)
+        /// <summary>
+        /// Replace the attachment
+        /// </summary>
+        /// <param name="attach"></param>
+        /// <returns>Whether attachments changed</returns>
+        internal bool ReplaceAttachment(AvatarAttachment attach)
         {
+            bool result = true;
+            if (m_attachments.ContainsKey(attach.AttachPoint))
+            {
+                if (m_attachments[attach.AttachPoint].Contains(attach))
+                    result = false;
+            }
             m_attachments[attach.AttachPoint] = new List<AvatarAttachment>();
             m_attachments[attach.AttachPoint].Add(attach);
+            return result;
         }
 
         /// <summary>
@@ -432,16 +444,16 @@ namespace OpenSim.Framework
         /// operation otherwise we replace whatever is
         /// currently attached at the attachpoint
         /// </summary>
-        public void SetAttachment(int attachpoint, UUID item, UUID asset)
+        public bool SetAttachment(int attachpoint, UUID item, UUID asset)
         {
             if (attachpoint == 0)
-                return;
+                return false;
 
             if (item == UUID.Zero)
             {
                 if (m_attachments.ContainsKey(attachpoint))
                     m_attachments.Remove(attachpoint);
-                return;
+                return true;
             }
 
             // check if this is an append or a replace, 0x80 marks it as an append
@@ -450,10 +462,12 @@ namespace OpenSim.Framework
                 // strip the append bit
                 int point = attachpoint & 0x7F;
                 AppendAttachment(new AvatarAttachment(point, item, asset));
+                //It got added, so it changed
+                return true;
             }
             else
             {
-                ReplaceAttachment(new AvatarAttachment(attachpoint, item, asset));
+                return ReplaceAttachment(new AvatarAttachment(attachpoint, item, asset));
             }
         }
 

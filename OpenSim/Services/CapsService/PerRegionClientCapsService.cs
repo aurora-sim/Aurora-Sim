@@ -227,7 +227,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
-                m_log.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl + ", informing URL " + UrlToInform);
+                m_log.Debug("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl + ", informing URL " + UrlToInform);
                 if (request != "")
                 {
                     OSD osdRequest = OSDParser.DeserializeLLSDXml(request);

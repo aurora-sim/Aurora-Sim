@@ -833,60 +833,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns>
         /// true if the crossing itself was successful, false on failure
         /// </returns>
-        protected bool CrossAttachmentIntoNewRegion(GridRegion destination, SceneObjectGroup grp, UUID userID, UUID ItemID)
-        {
-            bool successYN = false;
-            grp.RootPart.ClearUpdateScheduleOnce();
-            if (destination != null)
-            {
-                if (grp.Scene != null && grp.Scene.SimulationService != null)
-                    successYN = grp.Scene.SimulationService.CreateObject(destination, userID, ItemID);
-
-                if (successYN)
-                {
-                    // We remove the object here
-                    try
-                    {
-                        IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
-                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[ENTITY TRANSFER MODULE]: Exception deleting the old object left behind on a border crossing for {0}, {1}",
-                            grp, e);
-                    }
-                }
-                else
-                {
-                    if (!grp.IsDeleted)
-                    {
-                        if (grp.RootPart.PhysActor != null)
-                        {
-                            grp.RootPart.PhysActor.CrossingFailure();
-                        }
-                    }
-
-                    m_log.ErrorFormat("[ENTITY TRANSFER MODULE]: Prim crossing failed for {0}", grp);
-                }
-            }
-            else
-            {
-                m_log.Error("[ENTITY TRANSFER MODULE]: destination was unexpectedly null in Scene.CrossPrimGroupIntoNewRegion()");
-            }
-
-            return successYN;
-        }
-
-        /// <summary>
-        /// Move the given scene object into a new region
-        /// </summary>
-        /// <param name="newRegionHandle"></param>
-        /// <param name="grp">Scene Object Group that we're crossing</param>
-        /// <returns>
-        /// true if the crossing itself was successful, false on failure
-        /// </returns>
         protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp)
         {
             bool successYN = false;
@@ -955,31 +901,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected bool CrossAttachmentsIntoNewRegion(GridRegion destination, ScenePresence sp)
         {
-            List<SceneObjectGroup> m_attachments = sp.Attachments;
-            lock (m_attachments)
-            {
-                //Kill the groups here, otherwise they will become ghost attachments 
-                //  and stay in the sim, they'll get readded below into the new sim
-                KillAttachments(sp);
-
-                foreach (SceneObjectGroup gobj in m_attachments)
-                {
-                    // If the prim group is null then something must have happened to it!
-                    if (gobj != null && gobj.RootPart != null)
-                    {
-                        // Set the parent localID to 0 so it transfers over properly.
-                        gobj.RootPart.SetParentLocalId(0);
-                        gobj.AbsolutePosition = gobj.RootPart.AttachedPos;
-                        gobj.RootPart.IsAttachment = false;
-                        //gobj.RootPart.LastOwnerID = gobj.GetFromAssetID();
-                        m_log.InfoFormat("[ENTITY TRANSFER MODULE]: Sending attachment {0} to region {1}", gobj.UUID, destination.RegionName);
-                        CrossAttachmentIntoNewRegion(destination, gobj, sp.UUID, gobj.RootPart.FromItemID);
-                    }
-                }
-                m_attachments.Clear();
-
-                return true;
-            }
+            //Kill the groups here, otherwise they will become ghost attachments 
+            //  and stay in the sim, they'll get readded below into the new sim
+            KillAttachments(sp);
+            return true;
         }
 
         #endregion

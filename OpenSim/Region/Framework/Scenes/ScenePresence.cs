@@ -763,29 +763,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called when an agent teleports into a region, or if an
         /// agent crosses into this region from a neighbor over the border
         /// </summary>
-        public void MakeRootAgent(Vector3 pos, bool isFlying)
+        public void MakeRootAgent(bool isFlying)
         {
             m_log.DebugFormat(
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
 
-            //m_log.DebugFormat("[SCENE]: known regions in {0}: {1}", Scene.RegionInfo.RegionName, KnownChildRegionHandles.Count);
-
-            // Moved this from SendInitialData to ensure that m_appearance is initialized
-            // before the inventory is processed in MakeRootAgent. This fixes a race condition
-            // related to the handling of attachments
-            //m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
-
-            string reason;
-            //Get a good position and make sure that we exist in the grid
-            if (!Scene.Permissions.AllowedIncomingTeleport(UUID, pos, out pos, out reason))
-            {
-                m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
-                    ", reason: " + reason);
-                return;
-            }
-
-            AbsolutePosition = pos;
+            //Rez the attachments for the user
+            Util.FireAndForget(delegate(object o) { RezAttachments(); });
 
             AddToPhysicalScene(isFlying, false);
             
@@ -1032,6 +1017,18 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
+            string reason;
+            Vector3 pos;
+            //Get a good position and make sure that we exist in the grid
+            if (!Scene.Permissions.AllowedIncomingTeleport(UUID, AbsolutePosition, out pos, out reason))
+            {
+                m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
+                    ", reason: " + reason);
+                return;
+            }
+
+            AbsolutePosition = pos;
+
             Vector3 look = Velocity;
             if ((look.X == 0) && (look.Y == 0) && (look.Z == 0))
             {
@@ -1055,7 +1052,7 @@ namespace OpenSim.Region.Framework.Scenes
             IsChildAgent = false;
 
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-            MakeRootAgent(AbsolutePosition, m_flying);
+            MakeRootAgent(m_flying);
 
             //Send updates to everyone about us
             SendAvatarDataToAllAgents();
