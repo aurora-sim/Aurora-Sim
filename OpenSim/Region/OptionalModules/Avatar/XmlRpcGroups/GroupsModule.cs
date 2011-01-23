@@ -1549,7 +1549,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // UDP version doesn't seem to behave nicely.  But we're going to send it out here
             // with an empty group membership to hopefully remove groups being displayed due
             // to the core Groups Stub
-            remoteClient.SendGroupMembership(new GroupMembershipData[0]);
             IScenePresence sp = null;
             remoteClient.Scene.TryGetScenePresence(dataForAgentID, out sp);
             remoteClient.SendAvatarDataImmediate((ScenePresence)sp);
