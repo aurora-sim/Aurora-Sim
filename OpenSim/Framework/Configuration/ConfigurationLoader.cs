@@ -58,7 +58,7 @@ namespace OpenSim.Framework
         /// </summary>
         protected bool showIniLoading = false;
 
-        public string defaultIniFile = "OpenSim.ini";
+        public string defaultIniFile = "Aurora.ini";
 
         public string iniFilePath = "";
 
@@ -91,7 +91,7 @@ namespace OpenSim.Framework
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
             //2) That inifile may be used with or without inimaster being used.
-            //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Opensim.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
+            //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Aurora.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
             
             if (IsUri(masterFileName))
             {

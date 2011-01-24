@@ -61,6 +61,8 @@ namespace OpenSim.Server.Handlers.Simulation
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
                 return;
+
+            bool secure = handlerConfig.GetBoolean("SecureSimulation", true);
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
@@ -68,12 +70,15 @@ namespace OpenSim.Server.Handlers.Simulation
             string path = "/" + UUID.Random().ToString() + "/agent/";
 
             IGridRegisterModule registerModule = registry.RequestModuleInterface<IGridRegisterModule>();
-            if (registerModule != null)
+            if (registerModule != null && secure)
                 registerModule.AddGenericInfo("SimulationAgent", path);
             else
+            {
+                secure = false;
                 path = "/agent/";
+            }
 
-            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService()).Handler);
+            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), secure).Handler);
             server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService()).Handler);
         }
 

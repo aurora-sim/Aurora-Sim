@@ -272,7 +272,7 @@ namespace Aurora.Simulation.Base
                         m_crashLog.WriteLine(msg);
                     }
 
-                    File.Copy("OpenSim.ini", Path.Combine(m_crashDir, log + "_OpenSim.ini"), true);
+                    File.Copy("aurora.ini", Path.Combine(m_crashDir, log + "aurora.ini"), true);
                 }
                 catch (Exception e2)
                 {

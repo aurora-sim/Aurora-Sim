@@ -135,7 +135,7 @@ namespace Flotsam.RegionModules.AssetCache
                     IConfig assetConfig = config.Configs["AssetCache"];
                     if (assetConfig == null)
                     {
-                        //m_log.Warn("[FLOTSAM ASSET CACHE]: AssetCache missing from OpenSim.ini, using defaults.");
+                        //m_log.Warn("[FLOTSAM ASSET CACHE]: AssetCache missing from Aurora.ini, using defaults.");
                         //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
                         return;
                     }

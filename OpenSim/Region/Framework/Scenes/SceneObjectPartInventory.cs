@@ -243,6 +243,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     item.LastOwnerID = item.OwnerID;
                     item.OwnerID = ownerId;
+                    item.PermsMask = 0;
+                    item.PermsGranter = UUID.Zero;
                 }
             }
         }
@@ -1159,6 +1161,8 @@ namespace OpenSim.Region.Framework.Scenes
                     item.BasePermissions &= item.NextPermissions;
                     item.EveryonePermissions &= item.NextPermissions;
                     item.OwnerChanged = true;
+                    item.PermsMask = 0;
+                    item.PermsGranter = UUID.Zero;
                 }
             }
         }

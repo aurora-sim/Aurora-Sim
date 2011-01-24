@@ -52,7 +52,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     public class GroupsModule : ISharedRegionModule, IGroupsModule
     {
         /// <summary>
-        /// ; To use this module, you must specify the following in your OpenSim.ini
+        /// ; To use this module, you must specify the following in your Aurora.ini
         /// [GROUPS]
         /// Enabled = true
         /// 

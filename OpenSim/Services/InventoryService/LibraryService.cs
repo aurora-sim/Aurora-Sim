@@ -56,6 +56,7 @@ namespace OpenSim.Services.InventoryService
 
         private string[] libOwnerName = new string[2] { "Library", "Owner"};
         private string pLibName = "Aurora Library";
+        private bool m_enabled = false;
 
         public InventoryFolderImpl LibraryRootFolder
         {
@@ -84,28 +85,29 @@ namespace OpenSim.Services.InventoryService
             IConfig libConfig = config.Configs["LibraryService"];
             if (libConfig != null)
             {
+                m_enabled = true;
                 pLibName = libConfig.GetString("LibraryName", pLibName);
                 pLibOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
+
+                libOwnerName = pLibOwnerName.Split(' ');
+                if (libOwnerName.Length != 2)
+                {
+                    //Reset it if it isn't the right length
+                    libOwnerName = new string[2] { "Library", "Owner" };
+                }
+
+                //m_log.Debug("[LIBRARY]: Starting library service...");
+
+                m_LibraryRootFolder = new InventoryFolderImpl();
+                m_LibraryRootFolder.Owner = libOwner;
+                m_LibraryRootFolder.ID = new UUID("00000112-000f-0000-0000-000100bba000");
+                m_LibraryRootFolder.Name = pLibName;
+                m_LibraryRootFolder.ParentID = UUID.Zero;
+                m_LibraryRootFolder.Type = (short)8;
+                m_LibraryRootFolder.Version = (ushort)1;
+
+                registry.RegisterModuleInterface<ILibraryService>(this);
             }
-
-            libOwnerName = pLibOwnerName.Split(' ');
-            if (libOwnerName.Length != 2)
-            {
-                //Reset it if it isn't the right length
-                libOwnerName = new string[2] { "Library", "Owner"};
-            }
-
-            //m_log.Debug("[LIBRARY]: Starting library service...");
-
-            m_LibraryRootFolder = new InventoryFolderImpl();
-            m_LibraryRootFolder.Owner = libOwner;
-            m_LibraryRootFolder.ID = new UUID("00000112-000f-0000-0000-000100bba000");
-            m_LibraryRootFolder.Name = pLibName;
-            m_LibraryRootFolder.ParentID = UUID.Zero;
-            m_LibraryRootFolder.Type = (short)8;
-            m_LibraryRootFolder.Version = (ushort)1;
-
-            registry.RegisterModuleInterface<ILibraryService>(this);
         }
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
@@ -114,6 +116,8 @@ namespace OpenSim.Services.InventoryService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            if (!m_enabled)
+                return;
             LoadLibraries(registry);
         }
 

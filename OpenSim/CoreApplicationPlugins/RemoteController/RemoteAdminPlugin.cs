@@ -77,7 +77,7 @@ namespace OpenSim.CoreApplicationPlugins
         {
             if (m_config == null)
             {
-                string errorMessage = String.Format("[RADMIN] {0}: Remote admin request denied! Please set [RemoteAdmin]enabled=true in OpenSim.ini in order to enable remote admin functionality", requestName);
+                string errorMessage = String.Format("[RADMIN] {0}: Remote admin request denied! Please set [RemoteAdmin]enabled=true in aurora.ini in order to enable remote admin functionality", requestName);
                 m_log.Error(errorMessage);
                 throw new ApplicationException(errorMessage);
             }
@@ -461,7 +461,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>region_name</term>
         ///       <description>desired region name</description></item>
         /// <item><term>region_id</term>
@@ -498,7 +498,7 @@ namespace OpenSim.CoreApplicationPlugins
         ///       already exist)</description></item>
         /// <item><term>region_file</term>
         ///       <description>The name of the file to persist the region specifications to.
-        /// If omitted, the region_file_template setting from OpenSim.ini will be used. (optional)</description></item>
+        /// If omitted, the region_file_template setting from Aurora.ini will be used. (optional)</description></item>
         /// </list>
         ///
         /// XmlRpcCreateRegionMethod returns
@@ -610,7 +610,7 @@ namespace OpenSim.CoreApplicationPlugins
                     string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
                     try
                     {
-                        // OpenSim.ini can specify a different regions dir
+                        // Aurora.ini can specify a different regions dir
                         IConfig config = m_configSource.Configs["RegionStartup"];
                         if (config != null)
                         {
@@ -764,7 +764,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>region_name</term>
         ///       <description>desired region name</description></item>
         /// <item><term>region_id</term>
@@ -831,7 +831,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>region_name</term>
         ///       <description>desired region name</description></item>
         /// <item><term>region_id</term>
@@ -923,7 +923,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>region_name</term>
         ///       <description>desired region name</description></item>
         /// <item><term>region_id</term>
@@ -1024,7 +1024,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>user_firstname</term>
         ///       <description>avatar's first name</description></item>
         /// <item><term>user_lastname</term>
@@ -1148,7 +1148,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>user_firstname</term>
         ///       <description>avatar's first name</description></item>
         /// <item><term>user_lastname</term>
@@ -1239,7 +1239,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>user_firstname</term>
         ///       <description>avatar's first name (cannot be changed)</description></item>
         /// <item><term>user_lastname</term>
@@ -1828,7 +1828,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 string defaultAppearanceFileName = null;
 
-                //m_config may be null if RemoteAdmin configuration secition is missing or disabled in OpenSim.ini
+                //m_config may be null if RemoteAdmin configuration secition is missing or disabled in Aurora.ini
                 if (m_config != null)
                 {
                     defaultAppearanceFileName = m_config.GetString("default_appearance", "default_appearance.xml");
@@ -2137,7 +2137,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>filename</term>
         ///       <description>file name of the OAR file</description></item>
         /// <item><term>region_uuid</term>
@@ -2239,7 +2239,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <list type="table">
         /// <listheader><term>parameter name</term><description>description</description></listheader>
         /// <item><term>password</term>
-        ///       <description>admin password as set in OpenSim.ini</description></item>
+        ///       <description>admin password as set in Aurora.ini</description></item>
         /// <item><term>filename</term>
         ///       <description>file name for the OAR file</description></item>
         /// <item><term>region_uuid</term>

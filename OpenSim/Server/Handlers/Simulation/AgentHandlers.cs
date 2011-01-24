@@ -52,12 +52,14 @@ namespace OpenSim.Server.Handlers.Simulation
         private ISimulationService m_SimulationService;
 
         protected bool m_Proxy = false;
+        protected bool m_secure = true;
 
         public AgentHandler() { }
 
-        public AgentHandler(ISimulationService sim)
+        public AgentHandler(ISimulationService sim, bool secure)
         {
             m_SimulationService = sim;
+            m_secure = secure;
         }
 
         public Hashtable Handler(Hashtable request)
@@ -78,7 +80,9 @@ namespace OpenSim.Server.Handlers.Simulation
             UUID agentID;
             UUID regionID;
             string action;
-            string uri = ((string)request["uri"]).Remove(0, 37); //Remove the secure UUID from the uri
+            string uri = ((string)request["uri"]);
+            if(m_secure)
+                uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action))
             {
                 m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);

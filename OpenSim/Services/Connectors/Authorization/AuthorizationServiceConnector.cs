@@ -69,7 +69,7 @@ namespace OpenSim.Services.Connectors
             IConfig authorizationConfig = config.Configs["AuthorizationService"];
             if (authorizationConfig == null)
             {
-                //m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService missing from OpenSim.ini");
+                //m_log.Info("[AUTHORIZATION CONNECTOR]: AuthorizationService missing from Aurora.ini");
                 throw new Exception("Authorization connector init error");
             }
 

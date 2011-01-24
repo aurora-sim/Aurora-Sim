@@ -211,7 +211,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 if ((m_groupsServerURI == null) ||
                     (m_groupsServerURI == string.Empty))
                 {
-                    m_log.ErrorFormat("Please specify a valid Simian Server for GroupsServerURI in OpenSim.ini, [Groups]");
+                    m_log.ErrorFormat("Please specify a valid Simian Server for GroupsServerURI in Aurora.ini, [Groups]");
                     m_connectorEnabled = false;
                     return;
                 }

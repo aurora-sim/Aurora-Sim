@@ -41,7 +41,7 @@ using OpenSim.Region.Physics.Manager;
  * 
  *  - Add a new value to the UpdatePrioritizationSchemes enum.
  *  - Specify this new value in the [InterestManagement] section of your
- *    OpenSim.ini. The name in the config file must match the enum value name
+ *    Aurora.ini. The name in the config file must match the enum value name
  *    (although it is not case sensitive).
  *  - Write a new GetPriorityBy*() method in this class.
  *  - Add a new entry to the switch statement in GetUpdatePriority() that calls

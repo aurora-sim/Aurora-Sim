@@ -611,14 +611,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
             {
-                m_log.Warn("[PHYSICS]: The capsule size you specified in opensim.ini is invalid!  Setting it to the smallest possible size!");
+                m_log.Warn("[PHYSICS]: The capsule size you specified in aurora.ini is invalid!  Setting it to the smallest possible size!");
                 CAPSULE_LENGTH = 1.2f;
 
             }
 
             if (CAPSULE_RADIUS <= 0)
             {
-                m_log.Warn("[PHYSICS]: The capsule size you specified in opensim.ini is invalid!  Setting it to the normal size!");
+                m_log.Warn("[PHYSICS]: The capsule size you specified in aurora.ini is invalid!  Setting it to the normal size!");
                 CAPSULE_RADIUS = 0.37f;
 
             }

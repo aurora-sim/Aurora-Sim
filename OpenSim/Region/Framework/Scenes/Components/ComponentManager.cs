@@ -133,6 +133,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             if (m_hasStarted) //This only needs removed once
             {
                 SceneObjectSerializer.RemoveSerializer("Components");
+                m_hasStarted = false;
             }
         }
 
