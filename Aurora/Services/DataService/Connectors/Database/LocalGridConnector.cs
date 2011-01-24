@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
                 data.FromOSD(map);
 
                 //Check whether it should be down
-                if (data.LastSeen > Util.UnixTimeSinceEpoch() + (1000 * 6))
+                if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000 * 6)))
                     data.Access |= (int)SimAccess.Down;
 
                 regionData.Add(data);

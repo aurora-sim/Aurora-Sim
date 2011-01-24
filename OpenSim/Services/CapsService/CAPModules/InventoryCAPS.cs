@@ -94,7 +94,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
+            //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -106,7 +106,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleFetchLibDescendents(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
+            //m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
@@ -149,7 +149,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleFetchLib(string request, UUID AgentID)
         {
-            m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
+            //m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
             OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 

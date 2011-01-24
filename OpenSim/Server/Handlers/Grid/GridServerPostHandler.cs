@@ -161,7 +161,7 @@ namespace OpenSim.Server.Handlers.Grid
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID HANDLER]: Exception {0}", e);
+                m_log.WarnFormat("[GRID HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();
@@ -798,6 +798,8 @@ namespace OpenSim.Server.Handlers.Grid
         /// <returns></returns>
         private GridRegion CleanRegion(GridRegion region)
         {
+            if (region == null)
+                return null;
             region.Flags = 0;
             region.SessionID = UUID.Zero;
             region.LastSeen = 0;

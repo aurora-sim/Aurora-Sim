@@ -602,10 +602,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #endregion
 
-        #region Enable Child Agent
-
-        #endregion
-
         #region Enable Child Agents
 
         /// <summary>

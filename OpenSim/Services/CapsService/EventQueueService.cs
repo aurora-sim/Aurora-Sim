@@ -797,7 +797,7 @@ namespace OpenSim.Services.CapsService
                             IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                             EQService.EnableSimulator(neighbor.RegionHandle,
-                                neighbor.ExternalEndPoint.Address.GetAddressBytes(), 
+                                neighbor.ExternalEndPoint.Address.GetAddressBytes(),
                                 neighbor.ExternalEndPoint.Port, m_service.AgentID, m_service.RegionHandle);
 
                             // ES makes the client send a UseCircuitCode message to the destination, 
@@ -814,13 +814,13 @@ namespace OpenSim.Services.CapsService
                     }
                     else
                     {
-                        m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: The Grid Service did not exist");
+                        m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                         return false;
                     }
                 }
                 else
                 {
-                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
+                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: The Grid Service did not exist");
                     return false;
                 }
                 return true;
