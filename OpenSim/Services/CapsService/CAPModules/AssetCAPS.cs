@@ -381,7 +381,7 @@ namespace OpenSim.Services.CapsService
                 //m_log.Debug("[CAPS]: UploadBakedTexture Request in region: " +
                 //        m_regionName);
 
-                string uploaderPath = Util.RandomClass.Next(1000, 8000).ToString("0000");
+                string uploaderPath = UUID.Random().ToString();
                 string uploadpath = m_service.CreateCAPS("Upload" + uploaderPath, uploaderPath);
                 BakedTextureUploader uploader =
                     new BakedTextureUploader(uploadpath, "Upload" + uploaderPath,

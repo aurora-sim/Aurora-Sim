@@ -528,33 +528,38 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: Received an accept invite notice.");
 
                         // and the sessionid is the role
-                        m_groupData.AddAgentToGroup(GetRequestingAgentID(remoteClient), inviteInfo.AgentID, inviteInfo.GroupID, inviteInfo.RoleID);
+                        string[] name = inviteInfo.FromAgentName.Split(' ');
+                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(UUID.Zero, name[0], name[1]);
+                        if (account != null)
+                        {
+                            m_groupData.AddAgentToGroup(account.PrincipalID, inviteInfo.AgentID, inviteInfo.GroupID, inviteInfo.RoleID);
 
-                        GridInstantMessage msg = new GridInstantMessage();
-                        msg.imSessionID = UUID.Zero.Guid;
-                        msg.fromAgentID = UUID.Zero.Guid;
-                        msg.toAgentID = inviteInfo.AgentID.Guid;
-                        msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
-                        msg.fromAgentName = "Groups";
-                        msg.message = string.Format("You have been added to the group.");
-                        msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.MessageBox;
-                        msg.fromGroup = false;
-                        msg.offline = (byte)0;
-                        msg.ParentEstateID = 0;
-                        msg.Position = Vector3.Zero;
-                        msg.RegionID = UUID.Zero.Guid;
-                        msg.binaryBucket = new byte[0];
+                            GridInstantMessage msg = new GridInstantMessage();
+                            msg.imSessionID = UUID.Zero.Guid;
+                            msg.fromAgentID = UUID.Zero.Guid;
+                            msg.toAgentID = inviteInfo.AgentID.Guid;
+                            msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
+                            msg.fromAgentName = "Groups";
+                            msg.message = string.Format("You have been added to the group.");
+                            msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.MessageBox;
+                            msg.fromGroup = false;
+                            msg.offline = (byte)0;
+                            msg.ParentEstateID = 0;
+                            msg.Position = Vector3.Zero;
+                            msg.RegionID = UUID.Zero.Guid;
+                            msg.binaryBucket = new byte[0];
 
-                        OutgoingInstantMessage(msg, inviteInfo.AgentID);
+                            OutgoingInstantMessage(msg, inviteInfo.AgentID);
 
-                        //WTH??? noone but the invitee needs to know
-                        //UpdateAllClientsWithGroupInfo(inviteInfo.AgentID);
-                        SendAgentGroupDataUpdate(remoteClient);
-                        // XTODO: If the inviter is still online, they need an agent dataupdate 
-                        // and maybe group membership updates for the invitee
-                        // Reply: why do they need that? they will get told about the new user when they reopen the groups panel
+                            //WTH??? noone but the invitee needs to know
+                            //UpdateAllClientsWithGroupInfo(inviteInfo.AgentID);
+                            SendAgentGroupDataUpdate(remoteClient);
+                            // XTODO: If the inviter is still online, they need an agent dataupdate 
+                            // and maybe group membership updates for the invitee
+                            // Reply: why do they need that? they will get told about the new user when they reopen the groups panel
 
-                        m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
+                            m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
+                        }
                     }
 
                     // Reject

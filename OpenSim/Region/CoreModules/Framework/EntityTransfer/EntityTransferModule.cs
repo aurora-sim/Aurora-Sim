@@ -263,8 +263,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             int oldRegionX = sp.Scene.RegionInfo.RegionLocX;
             int oldRegionY = sp.Scene.RegionInfo.RegionLocY;
 
-            ulong destinationHandle = finalDestination.RegionHandle;
-
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
 
             // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
