@@ -644,7 +644,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Make sure the appearanace is updated
             if (aCircuit != null)
                 sp.Appearance = aCircuit.Appearance;
-            sp.IsChildAgent = aCircuit.child
+            sp.IsChildAgent = aCircuit.child;
 
             m_clientManager.Add(client);
             SubscribeToClientEvents(client);
