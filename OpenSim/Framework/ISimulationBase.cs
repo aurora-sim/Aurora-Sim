@@ -50,6 +50,34 @@ namespace OpenSim.Framework
         void RunStartupCommands();
         void HandleShow(string mod, string[] cmd);
         void RunCommandScript(string p);
+
+        /// <summary>
+        /// Shut down the simulation and close
+        /// </summary>
+        /// <param name="shouldForceExit">Runs Environment.Exit(0) if true</param>
         void Shutdown(bool shouldForceExit);
+
+        /// <summary>
+        /// Make a copy of the simulation base
+        /// </summary>
+        /// <returns></returns>
+        ISimulationBase Copy();
+
+        /// <summary>
+        /// Start the base with the given parametsr
+        /// </summary>
+        /// <param name="originalConfigSource">The settings parsed from the command line</param>
+        /// <param name="configSource">The .ini config</param>
+        void Initialize(IConfigSource originalConfigSource, IConfigSource configSource);
+
+        /// <summary>
+        /// Start up any modules and run the HTTP server
+        /// </summary>
+        void Startup();
+
+        /// <summary>
+        /// Start console processing
+        /// </summary>
+        void Run();
     }
 }

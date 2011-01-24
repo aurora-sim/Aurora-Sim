@@ -72,7 +72,7 @@ namespace Aurora.Simulation.Base
         public static string m_crashDir = "crashes";
 
         //could move our main function into OpenSimMain and kill this class
-        public static void BaseMain(string[] args, string defaultIniFile, SimulationBase simBase)
+        public static void BaseMain(string[] args, string defaultIniFile, ISimulationBase simBase)
         {
             // First line, hook the appdomain to the crash reporter
             AppDomain.CurrentDomain.UnhandledException +=
@@ -167,11 +167,11 @@ namespace Aurora.Simulation.Base
                 //Always run once, then disable this
                 Running = false;
                 //Initialize the sim base now
-                Startup(configSource, m_configSource, simBase);
+                Startup(configSource, m_configSource, simBase.Copy());
             }
         }
 
-        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, SimulationBase simBase)
+        public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource, ISimulationBase simBase)
         {
             //Get it ready to run
             simBase.Initialize(originalConfigSource, configSource);
@@ -190,9 +190,9 @@ namespace Aurora.Simulation.Base
 
                     m_log.Error(mes);
                     handleException(mes, ex);
+                    //Just clean it out as good as we can
+                    simBase.Shutdown(false);
                 }
-                //Just clean it out as good as we can
-                simBase.Shutdown(false);
                 //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
                 return;
             }

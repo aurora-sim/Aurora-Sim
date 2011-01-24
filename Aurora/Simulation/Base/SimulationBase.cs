@@ -173,6 +173,11 @@ namespace Aurora.Simulation.Base
             AddPluginCommands();
         }
 
+        public virtual ISimulationBase Copy()
+        {
+            return new SimulationBase();
+        }
+
         /// <summary>
         /// Run the console now that we are all done with startup
         /// </summary>
