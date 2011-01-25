@@ -24,13 +24,13 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string DefaultConnectionString)
         {
             if (simBase.ConfigSource.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -50,35 +50,47 @@ namespace Aurora.Services.DataService
         {
             List<MuteList> Mutes = new List<MuteList>();
             Dictionary<string, OSDMap> Map;
-            if (SimianUtils.GetGenericEntries(PrincipalID, "MuteList", m_ServerURI, out Map))
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                foreach (object OSDMap in Map.Values)
+                if (SimianUtils.GetGenericEntries(PrincipalID, "MuteList", m_ServerURI, out Map))
                 {
-                    MuteList mute = new MuteList();
-                    mute.FromOSD((OSDMap)OSDMap);
-                    Mutes.Add(mute);
-                }
+                    foreach (object OSDMap in Map.Values)
+                    {
+                        MuteList mute = new MuteList();
+                        mute.FromOSD((OSDMap)OSDMap);
+                        Mutes.Add(mute);
+                    }
 
-                return Mutes.ToArray();
+                    return Mutes.ToArray();
+                }
             }
             return null;
         }
 
         public void UpdateMute(MuteList mute, UUID PrincipalID)
         {
-            SimianUtils.AddGeneric(PrincipalID, "MuteList", mute.MuteID.ToString(), Util.DictionaryToOSD(mute.ToKeyValuePairs()), m_ServerURI);
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                SimianUtils.AddGeneric(PrincipalID, "MuteList", mute.MuteID.ToString(), Util.DictionaryToOSD(mute.ToKeyValuePairs()), m_ServerURI);
+            }
         }
 
         public void DeleteMute(UUID muteID, UUID PrincipalID)
         {
-            SimianUtils.RemoveGenericEntry(PrincipalID, "MuteList", muteID.ToString(), m_ServerURI);
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                SimianUtils.RemoveGenericEntry(PrincipalID, "MuteList", muteID.ToString(), m_ServerURI);
+            }
         }
 
         public bool IsMuted(UUID PrincipalID, UUID PossibleMuteID)
         {
-            OSDMap map = null;
-            if (SimianUtils.GetGenericEntry(PrincipalID, "MuteList", PossibleMuteID.ToString(), m_ServerURI, out map))
-                return true;
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                OSDMap map = null;
+                if (SimianUtils.GetGenericEntry(PrincipalID, "MuteList", PossibleMuteID.ToString(), m_ServerURI, out map))
+                    return true;
+            }
             return false;
         }
 

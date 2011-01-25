@@ -24,15 +24,15 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -70,9 +70,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -99,9 +102,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -120,9 +126,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -143,9 +152,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -167,9 +179,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -194,9 +209,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -223,9 +241,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -246,9 +267,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -273,9 +297,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -298,9 +325,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -324,9 +354,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -346,9 +379,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -370,9 +406,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -394,9 +433,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -417,28 +459,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupRecord group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupRecord((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupRecord group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupRecord((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -462,28 +506,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupProfileData group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupProfileData((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupProfileData group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupProfileData((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -507,28 +553,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupMembershipData group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupMembershipData((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupMembershipData group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupMembershipData((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -552,28 +600,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        bool group = false;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is bool)
-                            {
-                                group = Convert.ToBoolean(f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            bool group = false;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is bool)
+                                {
+                                    group = Convert.ToBoolean(f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -596,17 +646,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        // Success
-                        return UUID.Parse(replyData["A"].ToString());
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            // Success
+                            return UUID.Parse(replyData["A"].ToString());
+                        }
                     }
                 }
             }
@@ -630,28 +683,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupInviteInfo group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupInviteInfo((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupInviteInfo group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupInviteInfo((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -675,28 +730,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupMembersData group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupMembersData((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupMembersData group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupMembersData((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -719,28 +776,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        GroupNoticeInfo group = null;
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                group = new GroupNoticeInfo((Dictionary<string, object>)f);
-                            }
-                        }
-                        // Success
-                        return group;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            GroupNoticeInfo group = null;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    group = new GroupNoticeInfo((Dictionary<string, object>)f);
+                                }
+                            }
+                            // Success
+                            return group;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -763,28 +822,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupMembershipData> Groups = new List<GroupMembershipData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupMembershipData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupMembershipData> Groups = new List<GroupMembershipData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupMembershipData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -809,28 +870,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<DirGroupsReplyData> Groups = new List<DirGroupsReplyData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new DirGroupsReplyData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<DirGroupsReplyData> Groups = new List<DirGroupsReplyData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new DirGroupsReplyData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -854,28 +917,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupRolesData> Groups = new List<GroupRolesData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupRolesData> Groups = new List<GroupRolesData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -898,28 +963,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupRolesData> Groups = new List<GroupRolesData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupRolesData> Groups = new List<GroupRolesData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -942,28 +1009,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupMembersData> Groups = new List<GroupMembersData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupMembersData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupMembersData> Groups = new List<GroupMembersData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupMembersData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -986,28 +1055,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupRoleMembersData> Groups = new List<GroupRoleMembersData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupRoleMembersData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupRoleMembersData> Groups = new List<GroupRoleMembersData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupRoleMembersData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -1030,28 +1101,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupNoticeData> Groups = new List<GroupNoticeData>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupNoticeData((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupNoticeData> Groups = new List<GroupNoticeData>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupNoticeData((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -1073,28 +1146,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        List<GroupInviteInfo> Groups = new List<GroupInviteInfo>();
-                        foreach (object f in replyvalues)
-                        {
-                            if (f is Dictionary<string, object>)
-                            {
-                                Groups.Add(new GroupInviteInfo((Dictionary<string, object>)f));
-                            }
-                        }
-                        // Success
-                        return Groups;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            List<GroupInviteInfo> Groups = new List<GroupInviteInfo>();
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    Groups.Add(new GroupInviteInfo((Dictionary<string, object>)f));
+                                }
+                            }
+                            // Success
+                            return Groups;
+                        }
+                    }
                 }
             }
             catch (Exception e)

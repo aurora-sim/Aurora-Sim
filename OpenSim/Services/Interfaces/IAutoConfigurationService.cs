@@ -7,16 +7,15 @@ namespace OpenSim.Services.Interfaces
     /// <summary>
     /// This service helps to automate the remote grid mode for users so that they do not have to input so many URLs
     /// </summary>
-    public interface IAutoConfigurationService
+    public interface IConfigurationService
     {
         /// <summary>
         /// Find the 'key' from the auto config service.
-        /// First it will check for the key in the response it got from the AutoConfigurationInHandler, 
-        ///   then check from the IConfig found by configurationSource.
+        /// First it will check for the key in the response it got from the ConfigurationInHandler, 
+        ///   then check from the IConfig found in 'Configuration'.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="configurationSource"></param>
-        /// <returns></returns>
-        string FindValueOf(string key, string configurationSource);
+        /// <param name="key">A generic key to check for URLs</param>
+        /// <returns>A list of URLs that are registered for this key</returns>
+        List<string> FindValueOf(string key);
     }
 }

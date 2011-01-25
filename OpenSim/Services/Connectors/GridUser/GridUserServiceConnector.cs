@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        private List<string> m_ServerURIs = new List<string>();
 
         #region IGridUserService
 
@@ -224,14 +224,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridUserHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("GridUserServerURI", "GridUserService");
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[GRID USER CONNECTOR]: No Server URI named in section GridUserService");
-                throw new Exception("Grid connector init error");
-            }
-            m_ServerURI = serviceURI;
-
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IGridUserService>(this);
         }
 

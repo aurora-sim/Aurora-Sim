@@ -54,8 +54,7 @@ namespace OpenSim.Services.CapsService
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        private string m_serverURL = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         /// <summary>
         /// This holds events that havn't been sent yet as the client hasn't called the CapsHandler and sent the EventQueue password.
@@ -82,6 +81,7 @@ namespace OpenSim.Services.CapsService
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
@@ -91,10 +91,6 @@ namespace OpenSim.Services.CapsService
 
         public override void PostStart(IConfigSource config, IRegistryCore registry)
         {
-            string url = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("EventQueueServiceURI", "EventQueueService");
-            //Clean it up a bit
-            url = url.EndsWith("/") ? url.Remove(url.Length - 1) : url;
-            m_serverURL = url + "/CAPS/EQMPOSTER";
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 
@@ -251,30 +247,35 @@ namespace OpenSim.Services.CapsService
 
                 request.Add("Events", events);
 
-                OSDMap reply = WebUtils.PostToService(m_serverURL, request);
-                if (reply != null)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    OSDMap result = null;
-                    try
+                    OSDMap reply = WebUtils.PostToService(m_ServerURI + "/CAPS/EQMPOSTER", request);
+                    if (reply != null)
                     {
-                        if(reply["_RawResult"] != "")
-                            result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
-                    }
-                    catch
-                    {
-                    }
-
-                    bool success = result == null ? false : result["success"].AsBoolean();
-                    if (!success)
-                    {
-                        //We need to save the EQMs so that we can try again later
-                        foreach (OSD o in events)
+                        OSDMap result = null;
+                        try
                         {
-                            if(o != null)
-                                m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
+                            if (reply["_RawResult"] != "")
+                                result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
                         }
+                        catch
+                        {
+                        }
+
+                        bool success = result == null ? false : result["success"].AsBoolean();
+                        if (!success)
+                        {
+                            //We need to save the EQMs so that we can try again later
+                            foreach (OSD o in events)
+                            {
+                                if (o != null)
+                                    m_eventsNotSentPasswordDoesNotExist[avatarID][regionHandle].Add(o);
+                            }
+                        }
+                        else
+                            return success;
                     }
-                    return success;
+                    return false;
                 }
             }
             catch (Exception e)

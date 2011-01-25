@@ -24,14 +24,14 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -113,14 +113,17 @@ namespace Aurora.Services.DataService
 
         private OSDMap PostData(UUID userID, NameValueCollection nvc)
         {
-            OSDMap response = WebUtils.PostToService(m_ServerURI, nvc);
-            if (response["Success"].AsBoolean() && response["User"] is OSDMap)
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                return (OSDMap)response["User"];
-            }
-            else
-            {
-                m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
+                OSDMap response = WebUtils.PostToService(m_ServerURI, nvc);
+                if (response["Success"].AsBoolean() && response["User"] is OSDMap)
+                {
+                    return (OSDMap)response["User"];
+                }
+                else
+                {
+                    m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
+                }
             }
 
             return null;

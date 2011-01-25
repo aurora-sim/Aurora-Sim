@@ -23,15 +23,15 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("ProfileConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -58,38 +58,40 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    if (reply != string.Empty)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return null;
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                        IUserProfileInfo profile = null;
-                        foreach (object f in replyData.Values)
+                        if (replyData != null)
                         {
-                            if (f is Dictionary<string, object>)
+                            if (!replyData.ContainsKey("result"))
+                                return null;
+
+                            IUserProfileInfo profile = null;
+                            foreach (object f in replyData.Values)
                             {
-                                profile = new IUserProfileInfo();
-                                profile.FromKVP((Dictionary<string, object>)f);
+                                if (f is Dictionary<string, object>)
+                                {
+                                    profile = new IUserProfileInfo();
+                                    profile.FromKVP((Dictionary<string, object>)f);
+                                }
+                                else
+                                    m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received invalid response type {1}",
+                                        PrincipalID, f.GetType());
                             }
-                            else
-                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received invalid response type {1}",
-                                    PrincipalID, f.GetType());
+                            // Success
+                            return profile;
                         }
-                        // Success
-                        return profile;
+
+                        else
+                            m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received null response",
+                                PrincipalID);
                     }
-
-                    else
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: GetProfile {0} received null response",
-                            PrincipalID);
-
                 }
             }
             catch (Exception e)
@@ -111,30 +113,33 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    if (reply != string.Empty)
                     {
-                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                            {
+                                m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
+                                    Profile.PrincipalID);
+                                return false;
+                            }
+                        }
+
+                        else
                         {
                             m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
                                 Profile.PrincipalID);
                             return false;
                         }
-                    }
 
-                    else
-                    {
-                        m_log.DebugFormat("[AuroraRemoteProfileConnector]: UpdateProfile {0} received null response",
-                            Profile.PrincipalID);
-                        return false;
                     }
-
                 }
                 return true;
             }

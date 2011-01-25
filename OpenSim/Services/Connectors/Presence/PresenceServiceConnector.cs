@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        private List<string> m_ServerURIs = new List<string>();
 
         #region IPresenceService
 
@@ -389,16 +389,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("PresenceServerURI",
-                        "PresenceService");
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[PRESENCE CONNECTOR]: No Server URI named in section PresenceService");
-                throw new Exception("Presence connector init error");
-            }
-            m_ServerURI = serviceURI;
-
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IPresenceService>(this);
         }
 

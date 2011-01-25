@@ -23,15 +23,15 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -63,9 +63,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -84,37 +87,39 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        LandData land = null;
-                        foreach (object f in replyvalues)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
                         {
-                            if (f is Dictionary<string, object>)
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            LandData land = null;
+                            foreach (object f in replyvalues)
                             {
-                                land = new LandData();
-                                land.FromKVP((Dictionary<string, object>)f);
-                                break;
+                                if (f is Dictionary<string, object>)
+                                {
+                                    land = new LandData();
+                                    land.FromKVP((Dictionary<string, object>)f);
+                                    break;
+                                }
+                                else
+                                    m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received invalid response type {1}",
+                                        InfoUUID, f.GetType());
                             }
-                            else
-                                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received invalid response type {1}",
-                                    InfoUUID, f.GetType());
+                            // Success
+                            return land;
                         }
-                        // Success
-                        return land;
+
+                        else
+                            m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received null response",
+                                InfoUUID);
                     }
-
-                    else
-                        m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: GetParcelInfo {0} received null response",
-                            InfoUUID);
-
                 }
             }
             catch (Exception e)
@@ -136,22 +141,25 @@ namespace Aurora.Services.DataService
             List<LandData> Land = new List<LandData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            LandData land = new LandData();
-                            land.FromKVP(valuevalue);
-                            Land.Add(land);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                LandData land = new LandData();
+                                land.FromKVP(valuevalue);
+                                Land.Add(land);
+                            }
                         }
                     }
                 }
@@ -178,21 +186,24 @@ namespace Aurora.Services.DataService
             List<DirPlacesReplyData> Land = new List<DirPlacesReplyData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            DirPlacesReplyData land = new DirPlacesReplyData(valuevalue);
-                            Land.Add(land);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                DirPlacesReplyData land = new DirPlacesReplyData(valuevalue);
+                                Land.Add(land);
+                            }
                         }
                     }
                 }
@@ -220,21 +231,24 @@ namespace Aurora.Services.DataService
             List<DirLandReplyData> Land = new List<DirLandReplyData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            DirLandReplyData land = new DirLandReplyData(valuevalue);
-                            Land.Add(land);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                DirLandReplyData land = new DirLandReplyData(valuevalue);
+                                Land.Add(land);
+                            }
                         }
                     }
                 }
@@ -260,21 +274,24 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
-                            Events.Add(direvent);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
+                                Events.Add(direvent);
+                            }
                         }
                     }
                 }
@@ -299,21 +316,24 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
-                            Events.Add(direvent);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
+                                Events.Add(direvent);
+                            }
                         }
                     }
                 }
@@ -340,21 +360,24 @@ namespace Aurora.Services.DataService
             List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            DirClassifiedReplyData classified = new DirClassifiedReplyData(valuevalue);
-                            Classifieds.Add(classified);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                DirClassifiedReplyData classified = new DirClassifiedReplyData(valuevalue);
+                                Classifieds.Add(classified);
+                            }
                         }
                     }
                 }
@@ -377,21 +400,24 @@ namespace Aurora.Services.DataService
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            EventData eventdata = new EventData(valuevalue);
-                            return eventdata;
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                EventData eventdata = new EventData(valuevalue);
+                                return eventdata;
+                            }
                         }
                     }
                 }
@@ -414,22 +440,25 @@ namespace Aurora.Services.DataService
             List<Classified> Classifieds = new List<Classified>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            Classified classified = new Classified();
-                            classified.FromKVP(valuevalue);
-                            Classifieds.Add(classified);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                Classified classified = new Classified();
+                                classified.FromKVP(valuevalue);
+                                Classifieds.Add(classified);
+                            }
                         }
                     }
                 }

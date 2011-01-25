@@ -45,7 +45,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        private List<string> m_ServerURIs = new List<string>();
 
         public Hashtable HandleDirectoryRequest(Hashtable requestBody)
         {
@@ -83,10 +83,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("FreeswitchServiceURL",
-                    "FreeSwitchVoice");
-            m_ServerURI = serviceURI.TrimEnd('/') + "/region-config";
-
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IFreeswitchService>(this);
         }
 

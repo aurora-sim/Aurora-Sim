@@ -48,7 +48,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        private List<string> m_ServerURIs = new List<string>();
 
         #region IAvatarService
 
@@ -333,16 +333,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AvatarServerURI",
-                        "AvatarService");
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[AVATAR CONNECTOR]: No Server URI named in section AvatarService");
-                throw new Exception("Avatar connector init error");
-            }
-            m_ServerURI = serviceURI;
-
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IAvatarService>(this);
         }
 

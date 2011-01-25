@@ -23,16 +23,16 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
         private ExpiringCache<UUID, IAgentInfo> m_cache = new ExpiringCache<UUID, IAgentInfo>();
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -63,39 +63,41 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/auroradata",
+                            reqString);
+                    if (reply != string.Empty)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return null;
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                        foreach (object f in replyvalues)
+                        if (replyData != null)
                         {
-                            if (f is Dictionary<string, object>)
+                            if (!replyData.ContainsKey("result"))
+                                return null;
+
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            foreach (object f in replyvalues)
                             {
-                                agent = new IAgentInfo();
-                                agent.FromKVP((Dictionary<string, object>)f);
-                                m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0,30,0));
+                                if (f is Dictionary<string, object>)
+                                {
+                                    agent = new IAgentInfo();
+                                    agent.FromKVP((Dictionary<string, object>)f);
+                                    m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0, 30, 0));
+                                }
+                                else
+                                    m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
+                                        PrincipalID, f.GetType());
                             }
-                            else
-                                m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
-                                    PrincipalID, f.GetType());
+                            // Success
+                            return agent;
                         }
-                        // Success
-                        return agent;
+
+                        else
+                            m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
+                                PrincipalID);
                     }
-
-                    else
-                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
-                            PrincipalID);
-
                 }
             }
             catch (Exception e)

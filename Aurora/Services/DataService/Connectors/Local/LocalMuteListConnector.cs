@@ -33,8 +33,8 @@ namespace Aurora.Services.DataService
             else
             {
                 //Check to make sure that something else exists
-                string m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI == "") //Blank, not set up
+                List<string> m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURI.Count == 0) //Blank, not set up
                 {
                     OpenSim.Framework.Console.MainConsole.Instance.Output("[AuroraDataService]: Falling back on local connector for " + "MuteListConnector", "None");
                     GD = GenericData;

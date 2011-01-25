@@ -23,15 +23,15 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -58,22 +58,25 @@ namespace Aurora.Services.DataService
             List<GridInstantMessage> Messages = new List<GridInstantMessage>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            GridInstantMessage message = new GridInstantMessage();
-                            message.FromKVP(valuevalue);
-                            Messages.Add(message);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                GridInstantMessage message = new GridInstantMessage();
+                                message.FromKVP(valuevalue);
+                                Messages.Add(message);
+                            }
                         }
                     }
                 }
@@ -96,9 +99,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {

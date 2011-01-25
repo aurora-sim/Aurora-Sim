@@ -22,17 +22,17 @@ namespace Aurora.Services.DataService
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "SimianConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 
                 //If blank, no connector
-                if (m_ServerURI != string.Empty)
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -50,26 +50,36 @@ namespace Aurora.Services.DataService
 
         public void AddTelehub(Telehub telehub, UUID SessionID)
         {
-            SimianUtils.AddGeneric(telehub.RegionID, "RegionTelehub", SessionID.ToString(), telehub.ToOSD(), m_ServerURI);
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                SimianUtils.AddGeneric(telehub.RegionID, "RegionTelehub", SessionID.ToString(), telehub.ToOSD(), m_ServerURI);
+            }
         }
 
         public void RemoveTelehub(UUID regionID, UUID SessionID)
         {
-            SimianUtils.RemoveGenericEntry(regionID, "RegionTelehub", SessionID.ToString(), m_ServerURI);
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                SimianUtils.RemoveGenericEntry(regionID, "RegionTelehub", SessionID.ToString(), m_ServerURI);
+            }
         }
 
         public Telehub FindTelehub(UUID regionID)
         {
-            Dictionary<string, OSDMap> maps = new Dictionary<string,OSDMap>();
-            SimianUtils.GetGenericEntries(regionID, "RegionTelehub", m_ServerURI, out maps);
-            
-            List<OSDMap> listMaps = new List<OSDMap>(maps.Values);
-            if (listMaps.Count == 0)
-                return null;
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                Dictionary<string, OSDMap> maps = new Dictionary<string, OSDMap>();
+                SimianUtils.GetGenericEntries(regionID, "RegionTelehub", m_ServerURI, out maps);
 
-            Telehub t = new Telehub();
-            t.FromOSD(listMaps[0]);
-            return t;
+                List<OSDMap> listMaps = new List<OSDMap>(maps.Values);
+                if (listMaps.Count == 0)
+                    continue;
+
+                Telehub t = new Telehub();
+                t.FromOSD(listMaps[0]);
+                return t;
+            }
+            return null;
         }
 
         #endregion

@@ -23,15 +23,15 @@ namespace Aurora.Services.DataService
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = "";
+        private List<string> m_ServerURIs = new List<string>();
 
         public void Initialize(IGenericData unneeded, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
             if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "RemoteConnector")
             {
-                m_ServerURI = simBase.ApplicationRegistry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("RemoteServerURI", "AuroraData");
-                if (m_ServerURI != "")
+                m_ServerURIs = simBase.ApplicationRegistry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                if (m_ServerURIs.Count != 0)
                     DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -58,22 +58,25 @@ namespace Aurora.Services.DataService
             List<MuteList> Mutes = new List<MuteList>();
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    foreach (object f in replyData)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                        if (value.Value is Dictionary<string, object>)
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        foreach (object f in replyData)
                         {
-                            Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                            MuteList mute = new MuteList();
-                            mute.FromKVP(valuevalue);
-                            Mutes.Add(mute);
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            if (value.Value is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
+                                MuteList mute = new MuteList();
+                                mute.FromKVP(valuevalue);
+                                Mutes.Add(mute);
+                            }
                         }
                     }
                 }
@@ -97,9 +100,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
                         m_ServerURI + "/auroradata",
                         reqString);
+                }
             }
             catch (Exception e)
             {
@@ -119,9 +125,12 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                }
             }
             catch (Exception e)
             {
@@ -141,13 +150,16 @@ namespace Aurora.Services.DataService
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-                    return bool.Parse(replyData["Muted"].ToString());
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI + "/auroradata",
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        return bool.Parse(replyData["Muted"].ToString());
+                    }
                 }
             }
             catch (Exception e)

@@ -11,9 +11,9 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using log4net;
 
-namespace OpenSim.Services.Connectors.AutoConfiguration
+namespace OpenSim.Services.Connectors.ConfigurationService
 {
-    public class AutoConfigurationService : IAutoConfigurationService, IApplicationPlugin
+    public class ConfigurationService : IConfigurationService, IApplicationPlugin
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -29,19 +29,19 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
         public void Initialize(ISimulationBase openSim)
         {
             //Register by default as this only gets used in remote grid mode
-            openSim.ApplicationRegistry.RegisterModuleInterface<IAutoConfigurationService>(this);
+            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
 
             m_config = openSim.ConfigSource;
 
             IConfig handlerConfig = m_config.Configs["Handlers"];
-            if (handlerConfig.GetString("AutoConfigurationHandler", "") != Name)
+            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
                 return;
 
-            IConfig autoConfig = m_config.Configs["AutoConfiguration"];
+            IConfig autoConfig = m_config.Configs["Configuration"];
             if (autoConfig == null)
                 return;
 
-            string serverURL = autoConfig.GetString("AutoConfigurationURL", "");
+            string serverURL = autoConfig.GetString("ConfigurationURL", "");
             //Clean up the URL so that it isn't too hard for users
             serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
             serverURL += "/autoconfig";
@@ -49,7 +49,7 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
 
             if (resp == "")
             {
-                m_log.ErrorFormat("[AutoConfiguration]: Failed to find the configuration for {0}! This may break this startup!", serverURL);
+                m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}! This may break this startup!", serverURL);
                 return;
             }
 
@@ -80,16 +80,20 @@ namespace OpenSim.Services.Connectors.AutoConfiguration
         {
         }
 
-        public string FindValueOf(string key, string configurationSource)
+        public List<string> FindValueOf(string key)
         {
+            List<string> keys = new List<string>();
+
             if (m_autoConfig.ContainsKey(key))
-                return m_autoConfig[key].AsString();
-
-            IConfig config = m_config.Configs[configurationSource];
-            if (config == null)
-                return "";
-
-            return config.GetString(key, "");
+            {
+                keys.Add(m_autoConfig[key].AsString());
+            }
+            else
+            {
+                //We can safely assume that because we are registered, this will not be null
+                keys.Add(m_config.Configs["Configuration"].GetString(key, ""));
+            }
+            return keys;
         }
     }
 }

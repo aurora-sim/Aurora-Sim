@@ -43,11 +43,11 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Server.Handlers
 {
-    public class AutoConfigurationPostHandler : BaseStreamHandler
+    public class ConfigurationPostHandler : BaseStreamHandler
     {
         private OSDMap m_configMap;
 
-        public AutoConfigurationPostHandler(OSDMap configMap) :
+        public ConfigurationPostHandler(OSDMap configMap) :
                 base("POST", "/autoconfig")
         {
             m_configMap = configMap;

@@ -45,7 +45,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_ServerURI = String.Empty;
+        private List<string> m_ServerURIs = new List<string>();
 
         public bool CheckExists(UUID principalID)
         {
@@ -145,16 +145,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            string serviceURI = registry.RequestModuleInterface<IAutoConfigurationService>().FindValueOf("AuthenticationServerURI",
-                        "AuthenticationService");
-
-            if (serviceURI == String.Empty)
-            {
-                m_log.Error("[AUTH CONNECTOR]: No Server URI named in section AuthenticationService");
-                throw new Exception("Authentication connector init error");
-            }
-            m_ServerURI = serviceURI;
-
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
