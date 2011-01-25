@@ -3721,7 +3721,7 @@ namespace OpenSim.Region.Framework.Scenes
                     UpdateFlags |= PrimUpdateFlags.Sound;
                 if (ParticleSystem != null && ParticleSystem.Length != 0)
                     UpdateFlags |= PrimUpdateFlags.Particles;
-                if (CurrentMediaVersion != "x-mv:0000000001/00000000-0000-0000-0000-000000000000")
+                if (MediaUrl != "" && MediaUrl != null)
                     UpdateFlags |= PrimUpdateFlags.MediaURL;
 
                 //Make sure that we send this! Otherwise, the client will only see one prim

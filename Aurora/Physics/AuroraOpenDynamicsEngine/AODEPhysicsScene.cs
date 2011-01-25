@@ -1253,7 +1253,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 p2colobj = true;
                             break;
                         default:
-                            p2colgnd = true;
+                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
+                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
+                                p2colgnd = true;
                             break;
                         }
                     }

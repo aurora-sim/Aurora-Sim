@@ -287,18 +287,19 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                     primId, m_scene.RegionInfo.RegionName);
                 return string.Empty;
             }
-            
-            if (null == part.Shape.Media)
-                return string.Empty;
-            
+
             ObjectMediaResponse resp = new ObjectMediaResponse();
-            
+
             resp.PrimID = primId;
-            
-            lock (part.Shape.Media)
-                resp.FaceMedia = part.Shape.Media.ToArray();
-            
-            resp.Version = part.MediaUrl;
+            resp.FaceMedia = new OpenSim.Framework.PrimitiveBaseShape.MediaList().ToArray();
+            resp.Version = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
+            if (null != part.Shape.Media)
+            {
+                lock (part.Shape.Media)
+                    resp.FaceMedia = part.Shape.Media.ToArray();
+
+                resp.Version = part.MediaUrl;
+            }
            
             string rawResp = OSDParser.SerializeLLSDXmlString(resp.Serialize());
             

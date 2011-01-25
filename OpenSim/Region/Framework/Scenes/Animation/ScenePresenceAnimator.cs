@@ -342,7 +342,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Falling/Floating/Landing
 
-            if (actor == null && !jumping && move.Z == 0 || (actor != null && (!actor.CollidingObj || !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
+            if (actor == null && !jumping && move.Z == 0 || (actor != null && (!actor.CollidingObj && !actor.CollidingGround) && m_scenePresence.Velocity.Z < -2))
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if(m_animTickFall == 0)
