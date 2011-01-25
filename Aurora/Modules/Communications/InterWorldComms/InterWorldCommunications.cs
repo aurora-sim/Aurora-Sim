@@ -19,7 +19,7 @@ using log4net;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.DataManager;
+using DataManager = Aurora.DataManager.DataManager;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
@@ -28,17 +28,35 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IConfig m_config;
-        private IRegistryCore m_registry;
-        private bool m_Enabled = false;
-        private List<Connection> Connections;
+        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        /// <summary>
+        /// The 'AuroraInterWorldConnectors' config 
+        /// </summary>
+        protected IConfig m_config;
+        /// <summary>
+        /// The registry where we can get services
+        /// </summary>
+        protected IRegistryCore m_registry;
+        /// <summary>
+        /// Whether we are enabled or not
+        /// </summary>
+        protected bool m_Enabled = false;
+        /// <summary>
+        /// All connections that we have to other hosts
+        /// (Before sending the initial connection requests, 
+        ///   this MAY contain connections that we do not currently have)
+        /// </summary>
+        protected List<Connection> Connections;
+        /// <summary>
+        /// The class that sends requests to other hosts
+        /// </summary>
         public IWCOutgoingConnections OutgoingPublicComms;
 
         #endregion
 
-        public string Name { get { return "InterWorldCommunications"; } }
-
+        /// <summary>
+        /// Send an initial request to get secure Urls from any and all connections we have
+        /// </summary>
         private void ContactOtherServers()
         {
             List<Connection> NewConnections = new List<Connection>();
@@ -52,10 +70,18 @@ namespace Aurora.Modules
             Connections = NewConnections;
         }
 
+        /// <summary>
+        /// Query the database for any connections that we have stored
+        /// </summary>
+        /// <returns></returns>
         private List<Connection> BuildConnections()
         {
-            //We can't get the connections from the database yet
-            return new List<Connection>();
+            List<Connection> connections = new List<Connection>();
+            //Ask the database for the connectors
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (genericsConnector != null)
+                connections = genericsConnector.GetGenerics<Connection>(UUID.Zero, "InterWorldConnections", new Connection());
+            return connections;
         }
 
         #region ISharedRegionStartupModule Members
@@ -65,6 +91,8 @@ namespace Aurora.Modules
             m_config = source.Configs["AuroraInterWorldConnectors"];
             if (m_config != null)
                 m_Enabled = m_config.GetBoolean("Enabled", false);
+
+            m_registry = openSimBase.ApplicationRegistry;
 
             if (m_Enabled)
                 scene.RegisterModuleInterface<InterWorldCommunications>(this);
@@ -102,11 +130,8 @@ namespace Aurora.Modules
         #endregion
     }
 
-    #region Public connectors
-
     /// <summary>
-    /// This deals with making a secure connection with another instance.
-    /// It calls IWCIncomingPublicConnections on the foreign server.
+    /// This class deals with sending requests to other hosts
     /// </summary>
     public class IWCOutgoingConnections
     {
@@ -153,9 +178,7 @@ namespace Aurora.Modules
     }
 
     /// <summary>
-    /// This deals with connections that want to become secure with the current instance.
-    /// This handler is not secure and is public and is called by IWCOutgoingPublicConnections on the foreign server.
-    /// This handler sets up IWCIncomingPrivateConnection, which is secured and protected.
+    /// This class deals with incoming requests (secure and insecure) from other hosts
     /// </summary>
     public class IWCIncomingConnections : BaseStreamHandler
     {
@@ -219,10 +242,12 @@ namespace Aurora.Modules
         #endregion
     }
 
-    #endregion
-
     #region Connector classes
 
+    /// <summary>
+    /// The base Connection class
+    /// This deals with saving info about other hosts so that we can contact them
+    /// </summary>
     public class Connection : IDataTransferable
     {
         /// <summary>
@@ -284,6 +309,10 @@ namespace Aurora.Modules
         }
     }
 
+    /// <summary>
+    /// The trust level enum
+    /// Tells how much we trust another host
+    /// </summary>
     public enum TrustLevel : int
     {
         Full = 4,
