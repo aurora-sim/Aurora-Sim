@@ -1,3 +1,17 @@
+Aurora contributors (Thanks for all the patches :))
+
+Revolution Smythe
+Mahakala Dharmapala
+Ubit Umarov
+Kristen Mynx
+Whitestar Magic
+Major Rasputin
+Quilz
+Skidz Tweak
+
+
+------------------ OpenSim ------------------
+
 The following people have contributed to OpenSim (Thank you 
 for your effort!)
 
