@@ -61,17 +61,21 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "authenticate";
 
-            string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
                     WebUtils.BuildQueryString(sendData));
 
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
-                    reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
+                        reply);
 
-            if (replyData["Result"].ToString() != "Success")
-                return String.Empty;
+                if (replyData["Result"].ToString() != "Success")
+                    return String.Empty;
 
-            return replyData["Token"].ToString();
+                return replyData["Token"].ToString();
+            }
+            return "";
         }
 
         public bool Verify(UUID principalID, string token, int lifetime)
@@ -83,16 +87,18 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "verify";
 
-            string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
                     WebUtils.BuildQueryString(sendData));
 
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
-                    reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
+                        reply);
 
-            if (replyData["Result"].ToString() != "Success")
-                return false;
-
+                if (replyData["Result"].ToString() != "Success")
+                    return false;
+            }
             return true;
         }
 
@@ -104,15 +110,18 @@ namespace OpenSim.Services.Connectors
 
             sendData["METHOD"] = "release";
 
-            string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/auth/plain",
                     WebUtils.BuildQueryString(sendData));
 
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
-                    reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
+                        reply);
 
-            if (replyData["Result"].ToString() != "Success")
-                return false;
+                if (replyData["Result"].ToString() != "Success")
+                    return false;
+            }
 
             return true;
         }

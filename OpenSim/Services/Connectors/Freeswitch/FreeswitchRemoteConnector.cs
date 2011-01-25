@@ -29,6 +29,7 @@ using log4net;
 using System;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using Nini.Config;
 using OpenSim.Framework;
@@ -61,9 +62,13 @@ namespace OpenSim.Services.Connectors
 
         public string GetJsonConfig()
         {
-            m_log.DebugFormat("[FREESWITCH CONNECTOR]: Requesting config from {0}", m_ServerURI);
-            return SynchronousRestFormsRequester.MakeRequest("GET",
-                    m_ServerURI, String.Empty);
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                m_log.DebugFormat("[FREESWITCH CONNECTOR]: Requesting config from {0}", m_ServerURI);
+                return SynchronousRestFormsRequester.MakeRequest("GET",
+                        m_ServerURI, String.Empty);
+            }
+            return "";
         }
 
         #region IService Members

@@ -121,13 +121,16 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/accounts",
                         reqString);
-                if (reply == null || (reply != null && reply == string.Empty))
-                {
-                    m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received null or empty reply");
-                    return null;
+                    if (reply == null || (reply != null && reply == string.Empty))
+                    {
+                        m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received null or empty reply");
+                        return null;
+                    }
                 }
             }
             catch (Exception e)
@@ -201,13 +204,16 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/accounts",
                         reqString);
-                if (reply == null || (reply != null && reply == string.Empty))
-                {
-                    m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccount received null or empty reply");
-                    return null;
+                    if (reply == null || (reply != null && reply == string.Empty))
+                    {
+                        m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccount received null or empty reply");
+                        return null;
+                    }
                 }
             }
             catch (Exception e)
@@ -236,26 +242,29 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/accounts",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData.ContainsKey("result"))
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/accounts",
+                            reqString);
+                    if (reply != string.Empty)
                     {
-                        if (replyData["result"].ToString().ToLower() == "success")
-                            return true;
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData.ContainsKey("result"))
+                        {
+                            if (replyData["result"].ToString().ToLower() == "success")
+                                return true;
+                            else
+                                return false;
+                        }
                         else
-                            return false;
+                            m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
+
                     }
                     else
-                        m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
-
+                        m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount received empty reply");
                 }
-                else
-                    m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount received empty reply");
             }
             catch (Exception e)
             {

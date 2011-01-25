@@ -48,15 +48,6 @@ namespace OpenSim.Services.Connectors
 
         private List<string> m_ServerURIs = new List<string>();
 
-        public XInventoryServicesConnector(string Url)
-        {
-            m_ServerURI = Url;
-        }
-
-        public XInventoryServicesConnector()
-        {
-        }
-
         public virtual bool CreateUserInventory(UUID principalID)
         {
             Dictionary<string,object> ret = MakeRequest("CREATEUSERINVENTORY",
@@ -511,14 +502,18 @@ namespace OpenSim.Services.Connectors
         {
             sendData["METHOD"] = method;
 
-            string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                     m_ServerURI + "/xinventory",
                     WebUtils.BuildQueryString(sendData));
 
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
-                    reply);
+                Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(
+                        reply);
 
-            return replyData;
+                return replyData;
+            }
+            return null;
         }
 
         private InventoryFolderBase BuildFolder(Dictionary<string,object> data)

@@ -58,33 +58,35 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "Register";
 
-            OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
-            if (result["Success"].AsBoolean())
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                try
+                OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
+                if (result["Success"].AsBoolean())
                 {
-                    OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
-                    if (r is OSDMap)
+                    try
                     {
-                        OSDMap innerresult = (OSDMap)r;
-                        if (innerresult["Result"].AsString() == "")
+                        OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                        if (r is OSDMap)
                         {
-                            SessionID = innerresult["SecureSessionID"].AsUUID();
-                            return "";
-                        }
-                        else
-                        {
-                            SessionID = UUID.Zero;
-                            return innerresult["Result"].AsString();
+                            OSDMap innerresult = (OSDMap)r;
+                            if (innerresult["Result"].AsString() == "")
+                            {
+                                SessionID = innerresult["SecureSessionID"].AsUUID();
+                                return "";
+                            }
+                            else
+                            {
+                                SessionID = UUID.Zero;
+                                return innerresult["Result"].AsString();
+                            }
                         }
                     }
+                    catch (Exception)//JsonException
+                    {
+                        m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
+                    }
                 }
-                catch(Exception)//JsonException
-                {
-                    m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
-                }
-            }
-
+            } 
             SessionID = UUID.Zero;
             return OldRegisterRegion(regionInfo);
         }
@@ -105,35 +107,38 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                    if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "success"))
-                    {
-                        return String.Empty;
-                    }
-                    else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
-                        return replyData["Message"].ToString();
-                    }
-                    else if (!replyData.ContainsKey("Result"))
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
+                        if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "success"))
+                        {
+                            return String.Empty;
+                        }
+                        else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
+                        {
+                            m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"].ToString());
+                            return replyData["Message"].ToString();
+                        }
+                        else if (!replyData.ContainsKey("Result"))
+                        {
+                            m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
+                        }
+                        else
+                        {
+                            m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"].ToString());
+                            return "Unexpected result " + replyData["Result"].ToString();
+                        }
+
                     }
                     else
-                    {
-                        m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"].ToString());
-                        return "Unexpected result " + replyData["Result"].ToString();
-                    }
-
+                        m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
                 }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
             }
             catch (Exception e)
             {
@@ -150,16 +155,19 @@ namespace OpenSim.Services.Connectors
             map["SecureSessionID"] = SecureSessionID;
             map["Method"] = "UpdateMap";
 
-            OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
-            if (result["Success"].AsBoolean())
+            foreach (string m_ServerURI in m_ServerURIs)
             {
-                try
+                OSDMap result = WebUtils.PostToService(m_ServerURI + "/grid", map);
+                if (result["Success"].AsBoolean())
                 {
-                    OSDMap innerresult = (OSDMap)result["_Result"];
-                    return innerresult["Result"].AsString();
-                }
-                catch
-                {
+                    try
+                    {
+                        OSDMap innerresult = (OSDMap)result["_Result"];
+                        return innerresult["Result"].AsString();
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             return "Error communicating with grid service";
@@ -176,19 +184,22 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
-
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                    if ((replyData["Result"] != null) && (replyData["Result"].ToString().ToLower() == "success"))
-                        return true;
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if ((replyData["Result"] != null) && (replyData["Result"].ToString().ToLower() == "success"))
+                            return true;
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: DeregisterRegion received null reply");
                 }
-                else
-                    m_log.DebugFormat("[GRID CONNECTOR]: DeregisterRegion received null reply");
             }
             catch (Exception e)
             {
@@ -213,9 +224,30 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            reqString);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+                        //m_log.DebugFormat("[GRID CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
+                        foreach (object r in rinfosList)
+                        {
+                            if (r is Dictionary<string, object>)
+                            {
+                                GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                                rinfos.Add(rinfo);
+                            }
+                        }
+                    }
+                    else
+                        m_log.DebugFormat("[GRID CONNECTOR]: GetNeighbours {0}, {1} received null response",
+                            scopeID, regionID);
+                }
             }
             catch (Exception e)
             {
@@ -223,24 +255,7 @@ namespace OpenSim.Services.Connectors
                 return rinfos;
             }
 
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-            if (replyData != null)
-            {
-                Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                //m_log.DebugFormat("[GRID CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
-                foreach (object r in rinfosList)
-                {
-                    if (r is Dictionary<string, object>)
-                    {
-                        GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
-                        rinfos.Add(rinfo);
-                    }
-                }
-            }
-            else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetNeighbours {0}, {1} received null response",
-                    scopeID, regionID);
+            
 
             return rinfos;
         }
@@ -257,9 +272,12 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
+                }
             }
             catch (Exception e)
             {
@@ -303,9 +321,12 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
+                }
             }
             catch (Exception e)
             {
@@ -347,9 +368,12 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
+                }
             }
             catch (Exception e)
             {
@@ -390,9 +414,12 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
+                }
             }
             catch (Exception e)
             {
@@ -442,11 +469,14 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                }
             }
             catch (Exception e)
             {
@@ -492,11 +522,14 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                }
             }
             catch (Exception e)
             {
@@ -544,11 +577,14 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                }
             }
             catch (Exception e)
             {
@@ -596,11 +632,14 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                }
             }
             catch (Exception e)
             {
@@ -646,11 +685,14 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
 
-                //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                }
             }
             catch (Exception e)
             {
@@ -696,9 +738,12 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        WebUtils.BuildQueryString(sendData));
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            WebUtils.BuildQueryString(sendData));
+                }
             }
             catch (Exception e)
             {
@@ -741,29 +786,31 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            reqString);
+                    if (reply != string.Empty)
                     {
-                        multipleMapItemReply items = new multipleMapItemReply();
-                        if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            multipleMapItemReply items = new multipleMapItemReply();
+                            if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
+                                return items;
+
+                            items = new multipleMapItemReply((replyData["MapItems"]) as Dictionary<string, object>);
+
+                            // Success
                             return items;
+                        }
 
-                        items = new multipleMapItemReply((replyData["MapItems"]) as Dictionary<string, object>);
-                        
-                        // Success
-                        return items;
+                        else
+                            m_log.DebugFormat("[GRID CONNECTOR]: GetMapItems {0} received null response",
+                                regionHandle);
                     }
-
-                    else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetMapItems {0} received null response",
-                            regionHandle);
-
                 }
             }
             catch (Exception e)
@@ -783,12 +830,14 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "removeagent";
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            string reply = "";
             try
             {
-                reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/grid",
-                        reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                            m_ServerURI + "/grid",
+                            reqString);
+                }
             }
             catch (Exception e)
             {
@@ -810,9 +859,12 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                AsynchronousRestObjectRequester.MakeRequest("POST",
-                    m_ServerURI + "/grid",
-                    reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                        m_ServerURI + "/grid",
+                        reqString);
+                }
             }
             catch (Exception e)
             {
@@ -826,7 +878,7 @@ namespace OpenSim.Services.Connectors
 
         public string GridServiceURL
         {
-            get { return m_ServerURI; }
+            get { return m_ServerURIs[0]; }
         }
 
         #endregion

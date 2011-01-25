@@ -123,26 +123,29 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/griduser",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData.ContainsKey("result"))
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/griduser",
+                            reqString);
+                    if (reply != string.Empty)
                     {
-                        if (replyData["result"].ToString().ToLower() == "success")
-                            return true;
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData.ContainsKey("result"))
+                        {
+                            if (replyData["result"].ToString().ToLower() == "success")
+                                return true;
+                            else
+                                return false;
+                        }
                         else
-                            return false;
+                            m_log.DebugFormat("[GRID USER CONNECTOR]: SetPosition reply data does not contain result field");
+
                     }
                     else
-                        m_log.DebugFormat("[GRID USER CONNECTOR]: SetPosition reply data does not contain result field");
-
+                        m_log.DebugFormat("[GRID USER CONNECTOR]: SetPosition received empty reply");
                 }
-                else
-                    m_log.DebugFormat("[GRID USER CONNECTOR]: SetPosition received empty reply");
             }
             catch (Exception e)
             {
@@ -162,9 +165,12 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                AsynchronousRestObjectRequester.MakeRequest("POST",
-                    m_ServerURI + "/griduser",
-                    reqString);
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    AsynchronousRestObjectRequester.MakeRequest("POST",
+                        m_ServerURI + "/griduser",
+                        reqString);
+                }
             }
             catch (Exception e)
             {
@@ -178,25 +184,27 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI + "/griduser",
-                        reqString);
-                if (reply != string.Empty)
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-                    GridUserInfo guinfo = null;
-
-                    if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                            m_ServerURI + "/griduser",
+                            reqString);
+                    if (reply != string.Empty)
                     {
-                        if (replyData["result"] is Dictionary<string, object>)
-                            guinfo = new GridUserInfo((Dictionary<string, object>)replyData["result"]);
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        GridUserInfo guinfo = null;
+
+                        if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
+                        {
+                            if (replyData["result"] is Dictionary<string, object>)
+                                guinfo = new GridUserInfo((Dictionary<string, object>)replyData["result"]);
+                        }
+
+                        return guinfo;
                     }
-
-                    return guinfo;
-
+                    else
+                        m_log.DebugFormat("[GRID USER CONNECTOR]: Loggedin received empty reply");
                 }
-                else
-                    m_log.DebugFormat("[GRID USER CONNECTOR]: Loggedin received empty reply");
             }
             catch (Exception e)
             {
