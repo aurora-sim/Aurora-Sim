@@ -60,7 +60,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_udpServer = new LLUDPServer(listenIP, ref port, proxyPortOffsetParm, allow_alternate_port, configSource, circuitManager);
         }
 
-        public void NetworkStop()
+        public void Stop()
         {
             m_udpServer.Stop();
         }
@@ -78,11 +78,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Start()
         {
             m_udpServer.Start();
-        }
-
-        public void Stop()
-        {
-            m_udpServer.Stop();
         }
     }
 

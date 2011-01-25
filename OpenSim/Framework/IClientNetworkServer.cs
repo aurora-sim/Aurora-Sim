@@ -38,11 +38,10 @@ namespace OpenSim.Framework
             IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, 
             AgentCircuitManager authenticateClass);
 
-        void NetworkStop();
+        void Stop();
         bool HandlesRegion(uint x, uint y);
         void AddScene(IScene x);
 
         void Start();
-        void Stop();
     }
 }

@@ -189,6 +189,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             // Check control flags
             bool heldForward =
                 (((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) || ((controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS));
+            bool yawPos = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS) == AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS;
+            bool yawNeg = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG;
             bool heldBack = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG;
             bool heldLeft = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS;
             bool heldRight = (controlFlags & AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG;
@@ -210,7 +212,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             bool jumping = m_animTickJump != 0;
             float fallVelocity = (actor != null) ? actor.Velocity.Z : 0.0f;
 
-            if (heldTurnLeft && !heldForward &&
+            if (heldTurnLeft && yawPos && !heldForward &&
                 !heldBack && !jumping && actor != null &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&
@@ -218,7 +220,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             {
                 return "TURNLEFT";
             }
-            if (heldTurnRight && !heldForward &&
+            if (heldTurnRight && yawNeg && !heldForward &&
                 !heldBack && !jumping && actor != null &&
                 !actor.Flying && move.Z == 0 &&
                 fallVelocity == 0.0f && !heldUp &&

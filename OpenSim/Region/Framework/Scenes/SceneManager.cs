@@ -669,7 +669,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (foundClientServer)
             {
-                m_clientServers[clientServerElement].NetworkStop();
+                m_clientServers[clientServerElement].Stop();
                 m_clientServers.RemoveAt(clientServerElement);
             }
         }
