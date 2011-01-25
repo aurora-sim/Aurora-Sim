@@ -837,7 +837,7 @@ namespace OpenSim.Services.CapsService
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
         {
             //We arn't going to deal with CallbackURLs
-            //SetCallbackURL(cAgent, crossingRegion.RegionID);
+            SetCallbackURL(cAgent, crossingRegion);
 
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
@@ -846,6 +846,10 @@ namespace OpenSim.Services.CapsService
                 IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
                 if (GridService != null)
                 {
+                    //Set the user in transit so that we block duplicate tps and reset any cancelations
+                    if (!SetUserInTransit())
+                        return false;
+
                     crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
                     if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                     {
@@ -859,29 +863,26 @@ namespace OpenSim.Services.CapsService
                     EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
                                        m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
 
-                    /* bool callWasCanceled = false;
-                    if (!WaitForCallback(circuit.AgentID, out callWasCanceled))
-                    {
+                    bool result = WaitForCallback();
+                    if (!result)
                         m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
-                        ResetFromTransit(circuit.AgentID);
-
-                        // Yikes! We should just have a ref to scene here.
-                        EnableChildAgents(agent);
-
-                        return false;
-                    }*/
-
-                    // Next, let's close the child agent connections that are too far away.
-                    INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                    if (service != null)
+                    else
                     {
-                        uint x, y;
-                        Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                        GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                        service.GetNeighbors(ourRegion);
-                        service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                        // Next, let's close the child agent connections that are too far away.
+                        INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                        if (service != null)
+                        {
+                            uint x, y;
+                            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                            GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                            service.GetNeighbors(ourRegion);
+                            service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                        }
                     }
-                    return true;
+
+                    //All done
+                    ResetFromTransit();
+                    return result;
                 }
             }
             return false;
@@ -1018,6 +1019,18 @@ namespace OpenSim.Services.CapsService
             //If we made it through the whole loop, we havn't been canceled,
             //    as we either have timed out or made it, so no checks are needed
             callWasCanceled = false;
+            return m_service.ClientCaps.CallbackHasCome;
+        }
+
+        protected bool WaitForCallback()
+        {
+            int count = 100;
+            while (!m_service.ClientCaps.CallbackHasCome && count > 0)
+            {
+                //m_log.Debug("  >>> Waiting... " + count);
+                Thread.Sleep(100);
+                count--;
+            }
             return m_service.ClientCaps.CallbackHasCome;
         }
 

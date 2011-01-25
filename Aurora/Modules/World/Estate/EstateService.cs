@@ -358,7 +358,7 @@ namespace Aurora.Modules
             }
 
             //Check that we are not underground as well
-            float posZLimit = (float)m_scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y];
+            float posZLimit = (float)scene.RequestModuleInterface<ITerrainChannel>()[(int)Position.X, (int)Position.Y];
 
             if (posZLimit >= (Position.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
             {
@@ -485,7 +485,7 @@ namespace Aurora.Modules
             else
             {
                 //If they are owner, they don't have to have permissions checked
-                if (!m_scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+                if (!scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
                 {
                     if (ILO.LandData.LandingType == 2) //Blocked, force this person off this land
                     {
@@ -533,20 +533,20 @@ namespace Aurora.Modules
             }
 
             //Can only enter prelude regions once!
-            int flags = m_scene.GridService.GetRegionFlags(m_scene.RegionInfo.ScopeID, m_scene.RegionInfo.RegionID);
+            int flags = scene.GridService.GetRegionFlags(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
             //We assume that our own region isn't null....
             if (agentInfo != null)
             {
                 if (((flags & (int)Aurora.Framework.RegionFlags.Prelude) == (int)Aurora.Framework.RegionFlags.Prelude) && agentInfo != null)
                 {
-                    if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + m_scene.RegionInfo.RegionID))
+                    if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + scene.RegionInfo.RegionID))
                     {
                         reason = "You may not enter this region as you have already been to this prelude region.";
                         return false;
                     }
                     else
                     {
-                        agentInfo.OtherAgentInformation.Add("Prelude" + m_scene.RegionInfo.RegionID, OSD.FromInteger((int)IAgentFlags.PastPrelude));
+                        agentInfo.OtherAgentInformation.Add("Prelude" + scene.RegionInfo.RegionID, OSD.FromInteger((int)IAgentFlags.PastPrelude));
                         AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
                     }
                 }
@@ -803,7 +803,7 @@ namespace Aurora.Modules
         private bool FindUnBannedParcel(Vector3 Position, ScenePresence Sp, UUID AgentID, out ILandObject ILO, out Vector3 newPosition, out string reason)
         {
             ILO = null;
-            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            IParcelManagementModule parcelManagement = Sp.Scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
