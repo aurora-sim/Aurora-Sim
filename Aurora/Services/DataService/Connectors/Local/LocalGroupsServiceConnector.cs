@@ -371,7 +371,7 @@ namespace Aurora.Services.DataService
             if (Membership.Count == 0)
                 return null;
 
-            List<string> GroupRole = data.Query(new string[] { "RoleID" }, new object[] { Membership[3] }, "osrole", "Title, Powers");
+            List<string> GroupRole = data.Query(new string[] { "GroupID", "RoleID" }, new object[] { GroupID, Membership[3] }, "osrole", "Title, Powers");
             if (GroupRole.Count == 0)
                 return null;
             GMD.AcceptNotices = int.Parse(Membership[0]) == 1;
