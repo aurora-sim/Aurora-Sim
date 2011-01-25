@@ -42,6 +42,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="m_OpenSimBase"></param>
         void Close(Scene scene);
 
+        /// <summary>
+        /// Fired once when the entire instance is fully started up
+        /// </summary>
         void StartupComplete();
     }
 }
