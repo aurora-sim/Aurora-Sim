@@ -86,7 +86,8 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
             if (m_autoConfig.ContainsKey(key))
             {
-                keys.Add(m_autoConfig[key].AsString());
+                string[] configKeys = m_autoConfig[key].AsString().Split(',');
+                keys.AddRange(configKeys);
             }
             else
             {
