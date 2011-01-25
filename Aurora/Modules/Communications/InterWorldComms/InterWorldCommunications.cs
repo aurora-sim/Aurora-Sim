@@ -84,6 +84,57 @@ namespace Aurora.Modules
             return connections;
         }
 
+        /// <summary>
+        /// Check the given incoming connection and make sure that we have a session for them
+        ///   as well as a correct password.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public bool VerifyIncomingConnection(Connection connection)
+        {
+            Connection verifiedConnection = FindConnectionBySessionHash(connection);
+            if (verifiedConnection == null)
+                //We don't have a connection to them with this session hash, lock them out!
+                return false;
+            
+            //Now check that they have the correct password
+            if(verifiedConnection.Password != connection.Password)
+                return false;
+
+            //They have the right password and we have a session for them... let them in
+            return true;
+        }
+
+        /// <summary>
+        /// This connection has been verified, add it to the database
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public bool UpdateIncomingConnection(Connection connection)
+        {
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (genericsConnector != null)
+            {
+                genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", connection.SessionHash, connection.ToOSD());
+                return true;
+            }
+            else
+                return false;
+        }
+
+        private Connection FindConnectionBySessionHash(Connection connection)
+        {
+            foreach (Connection c in Connections)
+            {
+                if (c.SessionHash == connection.SessionHash)//This is the connection we are looking for
+                {
+                    return c;
+                }
+            }
+            //No connection found
+            return null;
+        }
+
         #region ISharedRegionStartupModule Members
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -151,7 +202,9 @@ namespace Aurora.Modules
         /// <param name="connection">Foreign server to connect to</param>
         public Connection AskOtherServerForConnection(Connection connector)
         {
-            OSDMap reply = WebUtils.PostToService(connector.URL, connector.ToOSD());
+            OSDMap request = connector.ToOSD();
+            request["Method"] = "Query";
+            OSDMap reply = WebUtils.PostToService(connector.URL, request);
             if (reply["Success"].AsBoolean())
             {
                 if (reply["_Result"].Type != OSDType.Map)
@@ -207,21 +260,54 @@ namespace Aurora.Modules
             }
             else
             {
+                if (!args.ContainsKey("Method"))
+                {
+                    string Method = args["Method"].AsString();
+                    if (Method == "Query")
+                        return Query(args);
+                }
             }
             return FailureResult();
         }
 
         /// <summary>
-        /// This deals with incoming requests to add this server to their map.
-        /// This refuses or successfully allows the foreign server to interact with
-        /// this region.
+        /// This is the initial request to join this host
+        /// We need to verify passwords and add sessionHashes to our database
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        private byte[] NewConnection(Dictionary<string, object> request)
+        private byte[] Query(OSDMap request)
         {
             Connection connector = new Connection();
-            return Return(null);
+            //Pull the connection info out of the request
+            connector.FromOSD(request);
+
+            //Lets make sure that they are allowed to connect to us
+            if (!IWC.VerifyIncomingConnection(connector))
+                return FailureResult();
+
+            //Update them in the database so that they can connect again later
+            if (!IWC.UpdateIncomingConnection(connector))
+                return FailureResult();
+
+            BuildSecureUrlsForConnection(connector);
+
+            OSDMap result = connector.ToOSD();
+            result["Result"] = "Successful";
+
+            return Return(result);
+        }
+
+        /// <summary>
+        /// Create secure Urls that only us and the sim that called us know of
+        /// This Urls is used to add/remove agents and other information from the other sim
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        private Connection BuildSecureUrlsForConnection(Connection c)
+        {
+            //TODO:
+            return c;
         }
 
         #region Misc
@@ -251,23 +337,23 @@ namespace Aurora.Modules
     public class Connection : IDataTransferable
     {
         /// <summary>
-        /// Our TrustLevel of the host
+        /// Our TrustLevel of the host (target)
         /// </summary>
         public TrustLevel TrustLevel;
         /// <summary>
-        /// Our Session hash that identifies us
+        /// Our Session hash that identifies us (host)
         /// </summary>
         public string SessionHash;
         /// <summary>
-        /// The password of the host that this will connect to
+        /// Our Password that is used to authenticate us (host)
         /// </summary>
         public string Password;
         /// <summary>
-        /// The (base, unsecure) Url of the host we are connecting to
+        /// The (base, unsecure) Url of the host (target) we are connecting to
         /// </summary>
         public string URL;
         /// <summary>
-        /// Secure Urls that the host has given us to be able to contact it
+        /// Secure Urls that the host (target) has given us to be able to contact it
         /// </summary>
         public OSDMap SecureUrls = new OSDMap();
 
