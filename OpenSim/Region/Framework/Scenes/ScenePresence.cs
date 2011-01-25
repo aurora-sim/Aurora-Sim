@@ -2249,12 +2249,12 @@ namespace OpenSim.Region.Framework.Scenes
                     //direc *= 0.95f;
                     //More decay on the Z, otherwise flying up and down is a bit hard
 
-
-                    //                    direc.Z = direc.Z * 0.5f; this does not acumulate and is just a constant
-
+                    //                     this does not acumulate and is just a constant
+                    direc.Z = direc.Z * 0.5f;
+                    
                     //It'll stop the physics engine from decaying, which makes it look bad
-                    //                    if (direc != Vector3.Zero)  let avas be stopped !!
-                    PhysicsActor.SetMovementForce(direc);
+                    //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
+                        PhysicsActor.SetMovementForce(direc);
                 }
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
                 if (reporter != null)
@@ -2285,7 +2285,7 @@ namespace OpenSim.Region.Framework.Scenes
             //        }
             //    }
             //}
-            if (Scene.UseSelectionParticles && SendEffectPackets > 7)
+            if (!IsChildAgent && Scene.UseSelectionParticles && SendEffectPackets > 7)
             {
                 SendViewerEffects();
                 SendEffectPackets = -1;

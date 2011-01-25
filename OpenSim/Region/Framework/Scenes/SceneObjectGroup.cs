@@ -2579,6 +2579,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                             if (neighborRegion != null)
                             {
+                                OffsetForNewRegion(val);
                                 IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
                                     transferModule.CrossGroupToNewRegion(this, val, neighborRegion);
