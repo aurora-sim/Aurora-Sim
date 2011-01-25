@@ -12,6 +12,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using Nini.Config;
 using Aurora.Framework;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Aurora.Simulation.Base;
@@ -54,35 +55,9 @@ namespace Aurora.Modules
 
         #endregion
 
-        /// <summary>
-        /// Send an initial request to get secure Urls from any and all connections we have
-        /// </summary>
-        private void ContactOtherServers()
-        {
-            List<Connection> NewConnections = new List<Connection>();
-            foreach (Connection connection in Connections)
-            {
-                Connection newConn = OutgoingPublicComms.AskOtherServerForConnection(connection);
-                if (newConn != null)
-                    NewConnections.Add(newConn);
-            }
-            //Fix the list with the newly updated ones
-            Connections = NewConnections;
-        }
+        #region Public members
 
-        /// <summary>
-        /// Query the database for any connections that we have stored
-        /// </summary>
-        /// <returns></returns>
-        private List<Connection> BuildConnections()
-        {
-            List<Connection> connections = new List<Connection>();
-            //Ask the database for the connectors
-            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (genericsConnector != null)
-                connections = genericsConnector.GetGenerics<Connection>(UUID.Zero, "InterWorldConnections", new Connection());
-            return connections;
-        }
+        #region Verify and update connections
 
         /// <summary>
         /// Check the given incoming connection and make sure that we have a session for them
@@ -122,6 +97,65 @@ namespace Aurora.Modules
                 return false;
         }
 
+        #endregion
+
+        #region Remove connections
+
+        /// <summary>
+        /// Remove the given connection from the database
+        /// </summary>
+        /// <param name="connection"></param>
+        public void RemoveConnection(Connection connection)
+        {
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (genericsConnector != null)
+            {
+                genericsConnector.RemoveGeneric(UUID.Zero, "InterWorldConnections", connection.SessionHash);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Private members
+
+        #region Contact and build connections
+
+        /// <summary>
+        /// Send an initial request to get secure Urls from any and all connections we have
+        /// </summary>
+        private void ContactOtherServers()
+        {
+            List<Connection> NewConnections = new List<Connection>();
+            foreach (Connection connection in Connections)
+            {
+                Connection newConn = OutgoingPublicComms.QueryRemoteHost(connection);
+                if (newConn != null)
+                    NewConnections.Add(newConn);
+            }
+            //Fix the list with the newly updated ones
+            Connections = NewConnections;
+        }
+
+        /// <summary>
+        /// Query the database for any connections that we have stored
+        /// </summary>
+        /// <returns></returns>
+        private List<Connection> BuildConnections()
+        {
+            List<Connection> connections = new List<Connection>();
+            //Ask the database for the connectors
+            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (genericsConnector != null)
+                connections = genericsConnector.GetGenerics<Connection>(UUID.Zero, "InterWorldConnections", new Connection());
+            return connections;
+        }
+
+        #endregion
+
+        #region Find Connections
+
         private Connection FindConnectionBySessionHash(Connection connection)
         {
             foreach (Connection c in Connections)
@@ -134,6 +168,10 @@ namespace Aurora.Modules
             //No connection found
             return null;
         }
+
+        #endregion
+
+        #endregion
 
         #region ISharedRegionStartupModule Members
 
@@ -176,7 +214,33 @@ namespace Aurora.Modules
             Connections = BuildConnections();
 
             ContactOtherServers();
+
+            AddConsoleCommands();
         }
+
+        #endregion
+
+        #region Console Commands
+
+        private void AddConsoleCommands()
+        {
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "add connection", "add connection",
+                "Add an IWC connection to another host.", AddIWCConnection);
+            MainConsole.Instance.Commands.AddCommand("IWC", true, "remove connection", "remove connection",
+                "Remove an IWC connection from another host.", RemoveIWCConnection);
+        }
+
+        #region Commands
+
+        private void AddIWCConnection(string module, string[] cmds)
+        {
+        }
+
+        private void RemoveIWCConnection(string module, string[] cmds)
+        {
+        }
+
+        #endregion
 
         #endregion
     }
@@ -195,21 +259,20 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// This contacts the foreign server and sends all the SimMaps of the local regions 
-        /// to the foreign server. This will either get back a refused connection, or a 
-        /// successful connection with a List of SimMap's that are that server's local regions
+        /// Query the given host (by connection) and verify that we can connect to it.
         /// </summary>
-        /// <param name="connection">Foreign server to connect to</param>
-        public Connection AskOtherServerForConnection(Connection connector)
+        /// <param name="connector">The host to connect to</param>
+        /// <returns>The connection that has been recieved from the host</returns>
+        public Connection QueryRemoteHost(Connection connection)
         {
-            OSDMap request = connector.ToOSD();
+            OSDMap request = connection.ToOSD();
             request["Method"] = "Query";
-            OSDMap reply = WebUtils.PostToService(connector.URL, request);
+            OSDMap reply = WebUtils.PostToService(connection.URL, request);
             if (reply["Success"].AsBoolean())
             {
                 if (reply["_Result"].Type != OSDType.Map)
                 {
-                    m_log.Warn("[IWC]: Unable to connect successfully to " + connector.URL + ", connection did not have all the required data.");
+                    m_log.Warn("[IWC]: Unable to connect successfully to " + connection.URL + ", connection did not have all the required data.");
                     return null;
                 }
                 OSDMap innerReply = (OSDMap)reply["_Result"];
@@ -217,16 +280,27 @@ namespace Aurora.Modules
                 {
                     Connection c = new Connection();
                     c.FromOSD(innerReply);
-                    m_log.Error("[IWC]: Connected successfully to " + connector.URL);
+                    m_log.Error("[IWC]: Connected successfully to " + connection.URL);
                     return c;
                 }
-                m_log.Warn("[IWC]: Unable to connect successfully to " + connector.URL + ", " + innerReply["Result"]);
+                m_log.Warn("[IWC]: Unable to connect successfully to " + connection.URL + ", " + innerReply["Result"]);
             }
             else
             {
-                m_log.Warn("[IWC]: Unable to connect successfully to " + connector.URL);
+                m_log.Warn("[IWC]: Unable to connect successfully to " + connection.URL);
             }
             return null;
+        }
+
+        public void DeleteRemoteHost(Connection connection)
+        {
+            OSDMap request = connection.ToOSD();
+            request["Method"] = "Delete";
+            OSDMap reply = WebUtils.PostToService(connection.URL, request);
+            if (!reply["Success"].AsBoolean())
+            {
+                m_log.Warn("[IWC]: Failed to delete remote host @ " + connection.URL);
+            }
         }
     }
 
@@ -265,6 +339,8 @@ namespace Aurora.Modules
                     string Method = args["Method"].AsString();
                     if (Method == "Query")
                         return Query(args);
+                    if (Method == "Delete")
+                        return Delete(args);
                 }
             }
             return FailureResult();
@@ -299,6 +375,27 @@ namespace Aurora.Modules
         }
 
         /// <summary>
+        /// This is a request to remove the remote host from our list of current connections.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private byte[] Delete(OSDMap request)
+        {
+            Connection connector = new Connection();
+            //Pull the connection info out of the request
+            connector.FromOSD(request);
+
+            //Make sure that they are verified to connect
+            if (!IWC.VerifyIncomingConnection(connector))
+                return FailureResult();
+
+            //Remove them from our list of connections
+            IWC.RemoveConnection(connector);
+
+            return SuccessfulResult();
+        }
+
+        /// <summary>
         /// Create secure Urls that only us and the sim that called us know of
         /// This Urls is used to add/remove agents and other information from the other sim
         /// </summary>
@@ -316,6 +413,13 @@ namespace Aurora.Modules
         {
             OSDMap result = new OSDMap();
             result["Result"] = "Failure";
+            return Return(result);
+        }
+
+        private byte[] SuccessfulResult()
+        {
+            OSDMap result = new OSDMap();
+            result["Result"] = "Successful";
             return Return(result);
         }
 
