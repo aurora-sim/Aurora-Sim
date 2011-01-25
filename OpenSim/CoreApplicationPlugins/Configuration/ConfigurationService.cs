@@ -91,7 +91,8 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             else
             {
                 //We can safely assume that because we are registered, this will not be null
-                keys.Add(m_config.Configs["Configuration"].GetString(key, ""));
+                string[] configKeys = m_config.Configs["Configuration"].GetString(key, "").Split(',');
+                keys.AddRange(configKeys);
             }
             return keys;
         }
