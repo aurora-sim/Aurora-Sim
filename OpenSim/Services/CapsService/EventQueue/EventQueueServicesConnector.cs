@@ -143,21 +143,9 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
         {
-            try
-            {
-                //Do this async so that we don't kill the sim while waiting for this to be sent
-                //TODO: Maybe have a thread that runs through this and sends them off instead of doing fire and forget?
-                Util.FireAndForget(delegate(object o)
-                {
-                    TryEnqueue(ev, avatarID, regionHandle);
-                });
-            } 
-            catch(Exception e)
-            {
-                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
-                return false;
-            }
-            
+            //Do this async so that we don't kill the sim while waiting for this to be sent
+            AddToQueue(ev, avatarID, regionHandle, true);
+
             return true;
         }
 
@@ -176,21 +164,14 @@ namespace OpenSim.Services.CapsService
             }
         }
 
-        /// <summary>
-        /// Add an EQ message into the queue on the remote EventQueueService 
-        /// </summary>
-        /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
-        /// <param name="regionHandle"></param>
-        /// <returns></returns>
-        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool async)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
+            
+            if (ev == null)
+                return false;
             try
             {
-                if (ev == null)
-                    return false;
-
                 lock (m_eventsNotSentPasswordDoesNotExist)
                 {
                     //Make sure these exist
@@ -214,9 +195,8 @@ namespace OpenSim.Services.CapsService
                 request.Add("AgentID", avatarID);
                 request.Add("RegionHandle", regionHandle);
                 request.Add("Password", Password);
-                //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
-
                 OSDArray events = new OSDArray();
+                //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
                 events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event
 
                 //Clear the queue above if the password was just found now
@@ -235,9 +215,7 @@ namespace OpenSim.Services.CapsService
                             if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
                                 events.Add(EQMessage);
                             else
-                            {
                                 m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
-                            }
                         }
                         catch (Exception e)
                         {
@@ -253,43 +231,69 @@ namespace OpenSim.Services.CapsService
 
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    OSDMap reply = WebUtils.PostToService(m_ServerURI + "/CAPS/EQMPOSTER", request);
-                    if (reply != null)
+                    if (async)
                     {
-                        OSDMap result = null;
-                        try
-                        {
-                            if (reply["_RawResult"] != "")
-                                result = (OSDMap)OSDParser.DeserializeJson(reply["_RawResult"]);
-                        }
-                        catch
-                        {
-                        }
-
-                        bool success = result == null ? false : result["success"].AsBoolean();
-                        if (!success)
-                        {
-                            //We need to save the EQMs so that we can try again later
-                            foreach (OSD o in events)
+                        AsynchronousRestObjectRequester.MakeRequest("POST", m_ServerURI + "/CAPS/EQMPOSTER",
+                            OSDParser.SerializeJsonString(request),
+                            delegate(string resp)
                             {
-                                if (o != null)
-                                    lock(m_eventsNotSentPasswordDoesNotExist)
-                                        m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, o);
-                            }
-                        }
-                        else
-                            return success;
+                                return RequestHandler(resp, events, avatarID, regionHandle);
+                            });
+
+                        return true;
                     }
-                    return false;
+                    else
+                    {
+                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI + "/CAPS/EQMPOSTER",
+                            OSDParser.SerializeJsonString(request));
+                        return RequestHandler(resp, events, avatarID, regionHandle);
+                    }
                 }
             }
             catch (Exception e)
             {
                 m_log.Error("[EVENTQUEUE] Caught exception: " + e.ToString());
-                return false;
             }
 
             return false;
+        }
+
+        public bool RequestHandler(string response, OSDArray events, UUID avatarID, ulong RegionHandle)
+        {
+            OSD r = OSDParser.DeserializeJson(response);
+            if (r.Type == OSDType.Map)
+            {
+                OSDMap result = (OSDMap)r;
+                if (result != null)
+                {
+                    bool success = result["success"].AsBoolean();
+                    if (!success)
+                    {
+                        //We need to save the EQMs so that we can try again later
+                        foreach (OSD o in events)
+                        {
+                            if (o != null)
+                                lock (m_eventsNotSentPasswordDoesNotExist)
+                                    m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(RegionHandle, o);
+                        }
+                    }
+                    else
+                        return success;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Add an EQ message into the queue on the remote EventQueueService 
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <param name="avatarID"></param>
+        /// <param name="regionHandle"></param>
+        /// <returns></returns>
+        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        {
+            return AddToQueue(ev, avatarID, regionHandle, false);
         }
 
         #endregion

@@ -1062,7 +1062,7 @@ namespace OpenSim.Region.Framework.Scenes
             presence.ControllingClient.Close();
             if (presence.ParentID != UUID.Zero)
             {
-                presence.StandUp(true);
+                presence.StandUp();
             }
 
             try

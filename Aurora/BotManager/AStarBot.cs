@@ -168,7 +168,7 @@ namespace Aurora.BotManager
             int finishY = (int)finishVector.Y - cornerStoneY;
             int finishZ = 25;
 
-            m_Sp.StandUp(true); //Can't follow a path if sitting
+            m_Sp.StandUp(); //Can't follow a path if sitting
 
             IsFollowing = false; //Turn off following
 
@@ -205,7 +205,7 @@ namespace Aurora.BotManager
 
         public void FollowAvatar(string avatarName)
         {
-            m_Sp.StandUp(true); //Can't follow if sitting
+            m_Sp.StandUp(); //Can't follow if sitting
             IsFollowing = true;
             FollowName = avatarName;
             FollowID = UUID.Zero;

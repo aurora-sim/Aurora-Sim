@@ -617,11 +617,13 @@ namespace Aurora.Modules
                 {
                     if (group.RootPart.SitTargetAvatar.Count != 0)
                     {
-                        foreach (UUID avID in group.RootPart.SitTargetAvatar)
+                        UUID[] ids = new UUID[group.RootPart.SitTargetAvatar.Count];
+                        group.RootPart.SitTargetAvatar.CopyTo(ids);
+                        foreach (UUID avID in ids)
                         {
                             ScenePresence SP = m_scene.GetScenePresence(avID);
                             if (SP != null)
-                                SP.StandUp(false);
+                                SP.StandUp();
                         }
                     }
                 }

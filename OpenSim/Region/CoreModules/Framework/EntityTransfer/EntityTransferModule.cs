@@ -268,7 +268,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
             // both regions
             if (sp.ParentID != UUID.Zero)
-                sp.StandUp(true);
+                sp.StandUp();
 
             //Make sure that all attachments are ready for the teleport
             sp.ValidateAttachments();

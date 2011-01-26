@@ -124,7 +124,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector4 CollisionPlane = Vector4.UnitW;
 
         private bool m_updateflag;
-        private byte m_movementflag;
+        private uint m_movementflag;
         public bool m_velocityIsDecaying = false;
         public bool m_overrideUserInput = false;
         public double m_endForceTime = 0;
@@ -139,8 +139,6 @@ namespace OpenSim.Region.Framework.Scenes
         private SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
         private Vector3 m_requestedSitOffset = new Vector3();
-
-        private Vector3 m_LastFinitePos;
 
         private float m_sitAvatarHeight = 2.0f;
 
@@ -255,18 +253,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         public SceneObjectPart SelectedUUID
         {
-            set { m_SelectedUUID = value; }
             get { return m_SelectedUUID; }
+            set { m_SelectedUUID = value; }
         }
         public byte[] EffectColor
         {
-            set { m_EffectColor = value; }
             get { return m_EffectColor; }
+            set { m_EffectColor = value; }
         }
         public bool IsSelecting
         {
-            set { m_IsSelecting = value; }
             get { return m_IsSelecting; }
+            set { m_IsSelecting = value; }
         }
 
         /// <summary>
@@ -274,26 +272,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public PhysicsActor PhysicsActor
         {
-            set { m_physicsActor = value; }
             get { return m_physicsActor; }
+            set { m_physicsActor = value; }
         }
 
-        public byte MovementFlag
+        public uint MovementFlag
         {
-            set { m_movementflag = value; }
             get { return m_movementflag; }
+            set { m_movementflag = value; }
         }
 
         public bool Updated
         {
-            set { m_updateflag = value; }
             get { return m_updateflag; }
+            set { m_updateflag = value; }
         }
 
         public bool Invulnerable
         {
-            set { m_invulnerable = value; }
             get { return m_invulnerable; }
+            set { m_invulnerable = value; }
         }
 
         /// <summary>
@@ -746,16 +744,6 @@ namespace OpenSim.Region.Framework.Scenes
             return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
         }
 
-        /// <summary>
-        /// Send updates to the client about prims which have been placed on the update queue.  We don't
-        /// necessarily send updates for all the parts on the queue, e.g. if an updates with a more recent
-        /// timestamp has already been sent.
-        /// </summary>
-        public void SendPrimUpdates(object state)
-        {
-            m_sceneViewer.SendPrimUpdates();
-        }
-
         #region Status Methods
 
         /// <summary>
@@ -919,10 +907,6 @@ namespace OpenSim.Region.Framework.Scenes
             catch { }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="pos"></param>
         public void Teleport(Vector3 pos)
         {
             m_overrideUserInput = false;
@@ -1121,20 +1105,10 @@ namespace OpenSim.Region.Framework.Scenes
                 RemoveFromPhysicalScene();
                 m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error #9999902");
 
-                m_pos = m_LastFinitePos;
-                if (!m_pos.IsFinite())
-                {
-                    m_pos.X = 127f;
-                    m_pos.Y = 127f;
-                    m_pos.Z = 127f;
-                    m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error #9999903");
-                }
-
-                AddToPhysicalScene(false, false);
-            }
-            else
-            {
-                m_LastFinitePos = m_pos;
+                m_pos = new Vector3(m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2,
+                    128);
+                //Make them fly so that they don't just fall
+                AddToPhysicalScene(true, false);
             }
 
             #endregion Sanity Checking
@@ -1169,7 +1143,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
             {
-                StandUp(true);
+                StandUp();
             }
 
             //m_log.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
@@ -1199,13 +1173,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_autopilotMoving)
                 CheckAtSitTarget();
 
-            if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0)
-            {
-                SitGround = true;
-            }
-
             // In the future, these values might need to go global.
             // Here's where you get them.
+            SitGround = (flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0;
             m_AgentControlFlags = flags;
             m_headrotation = agentData.HeadRotation;
             m_state = agentData.State;
@@ -1296,34 +1266,27 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 bResetMoveToPosition = true;
                                 DCFlagKeyPressed = true;
-                                try
-                                {
-                                    agent_control_v3 += dirVectors[i];
-                                    //m_log.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
-                                }
-                                catch (IndexOutOfRangeException)
-                                {
-                                    // Why did I get this?
-                                }
+                                agent_control_v3 += dirVectors[i];
+                                //m_log.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
 
-                                if ((m_movementflag & (byte)(uint)DCF) == 0)
+                                if ((m_movementflag & (uint)DCF) == 0)
                                 {
                                     if (DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
                                     {
                                         m_movementflag |= (byte)nudgehack;
                                     }
-                                    m_movementflag += (byte)(uint)DCF;
+                                    m_movementflag += (uint)DCF;
                                     update_movementflag = true;
                                 }
                             }
                             else
                             {
-                                if ((m_movementflag & (byte)(uint)DCF) != 0 ||
+                                if ((m_movementflag & (uint)DCF) != 0 ||
                                     ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
-                                    && ((m_movementflag & (byte)nudgehack) == nudgehack))
+                                    && ((m_movementflag & nudgehack) == nudgehack))
                                     ) // This or is for Nudge forward
                                 {
-                                    m_movementflag -= ((byte)(uint)DCF);
+                                    m_movementflag -= ((uint)DCF);
 
                                     update_movementflag = true;
                                     /*
@@ -1402,26 +1365,26 @@ namespace OpenSim.Region.Framework.Scenes
                                 // one of left/right/back/forward.
                                 if (LocalVectorToTarget2D.Y > 0)//MoveLeft
                                 {
-                                    m_movementflag += (byte)(uint)Dir_ControlFlags.DIR_CONTROL_FLAG_LEFT;
+                                    m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_LEFT;
                                     //AgentControlFlags
                                     AgentControlFlags |= (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_LEFT;
                                     update_movementflag = true;
                                 }
                                 else if (LocalVectorToTarget2D.Y < 0) //MoveRight
                                 {
-                                    m_movementflag += (byte)(uint)Dir_ControlFlags.DIR_CONTROL_FLAG_RIGHT;
+                                    m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_RIGHT;
                                     AgentControlFlags |= (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_RIGHT;
                                     update_movementflag = true;
                                 }
                                 if (LocalVectorToTarget2D.X < 0) //MoveBack
                                 {
-                                    m_movementflag += (byte)(uint)Dir_ControlFlags.DIR_CONTROL_FLAG_BACK;
+                                    m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_BACK;
                                     AgentControlFlags |= (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_BACK;
                                     update_movementflag = true;
                                 }
                                 else if (LocalVectorToTarget2D.X > 0) //Move Forward
                                 {
-                                    m_movementflag += (byte)(uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
+                                    m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
                                     AgentControlFlags |= (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
                                     update_movementflag = true;
                                 }
@@ -1565,8 +1528,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Perform the logic necessary to stand the avatar up.  This method also executes
         /// the stand animation.
         /// </summary>
-        /// <param name="RemoveFromSittingList">Should we remove ourselves from the prim's sit list</param>
-        public void StandUp(bool RemoveFromSittingList)
+        public void StandUp()
         {
             SitGround = false;
 
@@ -1587,18 +1549,15 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 UnRegisterControlEventsToScript(LocalId, taskID);
                                 taskIDict[taskID].PermsMask &= ~(
-                                    2048 | //PERMISSION_CONTROL_CAMERA
-                                    4); // PERMISSION_TAKE_CONTROLS
+                                    (int)ScriptPermission.ControlCamera |
+                                    (int)ScriptPermission.TakeControls);
                             }
                         }
 
                     }
                     // Reset sit target.
-                    if (RemoveFromSittingList)
-                    {
-                        if (part.GetAvatarOnSitTarget().Contains(UUID))
-                            part.RemoveAvatarOnSitTarget(UUID);
-                    }
+                    if (part.GetAvatarOnSitTarget().Contains(UUID))
+                        part.RemoveAvatarOnSitTarget(UUID);
 
                     m_parentPosition = part.GetWorldPosition();
                     Vector3 MovePos = new Vector3();
@@ -1820,7 +1779,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
         {
             if (m_parentID != UUID.Zero)
-                StandUp(true);
+                StandUp();
 
             m_nextSitAnimation = "SIT";
             
@@ -1855,7 +1814,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
         {
             if (m_parentID != UUID.Zero)
-                StandUp(true);
+                StandUp();
 
             if (!String.IsNullOrEmpty(sitAnimation))
             {
@@ -2086,7 +2045,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Util.FireAndForget(SendPrimUpdates);
             //We 'could' do this async... but we don't do anything else here, so why?
-            SendPrimUpdates(0);
+            m_sceneViewer.SendPrimUpdates();
             //if (!IsChildAgent)
             //{
             //    if (m_parentID != UUID.Zero)

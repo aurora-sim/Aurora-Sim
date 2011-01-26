@@ -286,5 +286,108 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
             }
         }
+
+        public delegate bool RequestComplete(string response);
+
+        public static void MakeRequest(string verb, string requestUrl, string obj, RequestComplete handle)
+        {
+            WebRequest request = WebRequest.Create(requestUrl);
+            request.Method = verb;
+            string respstring = String.Empty;
+
+            using (MemoryStream buffer = new MemoryStream())
+            {
+                if ((verb == "POST") || (verb == "PUT"))
+                {
+                    request.ContentType = "text/www-form-urlencoded";
+
+                    int length = 0;
+                    using (StreamWriter writer = new StreamWriter(buffer))
+                    {
+                        writer.Write(obj);
+                        writer.Flush();
+                    }
+
+                    length = (int)obj.Length;
+                    request.ContentLength = length;
+
+                    try
+                    {
+                        request.BeginGetRequestStream(delegate(IAsyncResult res)
+                        {
+                            Stream requestStream = request.EndGetRequestStream(res);
+
+                            requestStream.Write(buffer.ToArray(), 0, length);
+                            requestStream.Close();
+                        }, null);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e.ToString(), requestUrl);
+                        return;
+                    }
+                    finally
+                    {
+                    }
+
+                    WebResponse response = null;
+                    request.BeginGetResponse(delegate(IAsyncResult res2)
+                    {
+                        try
+                        {
+                            // If the server returns a 404, this appears to trigger a System.Net.WebException even though that isn't
+                            // documented in MSDN
+                            response = request.EndGetResponse(res2);
+
+                            Stream respStream = null;
+                            try
+                            {
+                                respStream = response.GetResponseStream();
+                                using (StreamReader reader = new StreamReader(respStream))
+                                {
+                                    respstring = reader.ReadToEnd();
+                                }
+                            }
+                            catch (System.InvalidOperationException)
+                            {
+                            }
+                            finally
+                            {
+                                respStream.Close();
+                                response.Close();
+                            }
+                            handle(respstring);
+                        }
+                        catch (WebException e)
+                        {
+                            if (e.Status == WebExceptionStatus.ProtocolError)
+                            {
+                                if (e.Response is HttpWebResponse)
+                                {
+                                    HttpWebResponse httpResponse = (HttpWebResponse)e.Response;
+
+                                    if (httpResponse.StatusCode != HttpStatusCode.NotFound)
+                                    {
+                                        // We don't appear to be handling any other status codes, so log these feailures to that
+                                        // people don't spend unnecessary hours hunting phantom bugs.
+                                        m_log.DebugFormat(
+                                            "[ASYNC REQUEST]: Request {0} {1} failed with unexpected status code {2}",
+                                            verb, requestUrl, httpResponse.StatusCode);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.Message);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with exception {2}", verb, requestUrl, e);
+                        }
+                    }, null);
+                }
+            }
+        }
     }
 }
