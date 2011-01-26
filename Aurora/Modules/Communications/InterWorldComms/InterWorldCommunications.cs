@@ -339,7 +339,7 @@ namespace Aurora.Modules
                     string Method = args["Method"].AsString();
                     if (Method == "Query")
                         return Query(args);
-                    if (Method == "Delete")
+                    else if (Method == "Delete")
                         return Delete(args);
                 }
             }
@@ -404,6 +404,7 @@ namespace Aurora.Modules
         private Connection BuildSecureUrlsForConnection(Connection c)
         {
             //TODO:
+            c.SecureUrls["TeleportAgent"] = "";
             return c;
         }
 
