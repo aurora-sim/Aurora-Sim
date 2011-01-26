@@ -10,7 +10,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Server.Handlers
 {
-    public class AutoConfigurationInHandler : IService
+    public class ConfigurationInHandler : IService
     {
         private OSDMap configMap = new OSDMap();
         private IConfig m_config = null;
