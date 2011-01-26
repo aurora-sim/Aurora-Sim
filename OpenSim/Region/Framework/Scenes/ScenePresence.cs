@@ -1013,7 +1013,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called upon a very important packet sent from the client,
         /// so it's client-controlled. Never call this method directly.
         /// </summary>
-        public void CompleteMovement(IClientAPI client)
+        private void CompleteMovement(IClientAPI client)
         {
             //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
@@ -1852,190 +1852,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
         
-        public void SitRayCastAvatarPosition(SceneObjectPart part)
-        {
-            Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-            Vector3 StartRayCastPosition = AbsolutePosition;
-            Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-            float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastAvatarPositionResponse);
-        }
-
-        public void SitRayCastAvatarPositionResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
-        {
-            SceneObjectPart part =  FindNextAvailableSitTarget(m_requestedSitTargetUUID);
-            if (part != null)
-            {
-                if (hitYN)
-                {
-                    if (collisionPoint.ApproxEquals(m_requestedSitOffset + part.AbsolutePosition, 0.2f))
-                    {
-                        SitRaycastFindEdge(collisionPoint, normal);
-                        m_log.DebugFormat("[SIT]: Raycast Avatar Position succeeded at point: {0}, normal:{1}", collisionPoint, normal);
-                    }
-                    else
-                    {
-                        SitRayCastAvatarPositionCameraZ(part);
-                    }
-                }
-                else
-                {
-                    SitRayCastAvatarPositionCameraZ(part);
-                }
-            }
-            else
-            {
-                ControllingClient.SendAlertMessage("Sit position no longer exists");
-                m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitOffset = Vector3.Zero;
-            }
-
-        }
-
-        public void SitRayCastAvatarPositionCameraZ(SceneObjectPart part)
-        {
-            // Next, try to raycast from the camera Z position
-            Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-            Vector3 StartRayCastPosition = AbsolutePosition; StartRayCastPosition.Z = CameraPosition.Z;
-            Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-            float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
-        }
-
-        public void SitRayCastAvatarPositionCameraZResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
-        {
-            SceneObjectPart part = FindNextAvailableSitTarget(m_requestedSitTargetUUID);
-            if (part != null)
-            {
-                if (hitYN)
-                {
-                    if (collisionPoint.ApproxEquals(m_requestedSitOffset + part.AbsolutePosition, 0.2f))
-                    {
-                        SitRaycastFindEdge(collisionPoint, normal);
-                        m_log.DebugFormat("[SIT]: Raycast Avatar Position + CameraZ succeeded at point: {0}, normal:{1}", collisionPoint, normal);
-                    }
-                    else
-                    {
-                        SitRayCastCameraPosition(part);
-                    }
-                }
-                else
-                {
-                    SitRayCastCameraPosition(part);
-                }
-            }
-            else
-            {
-                ControllingClient.SendAlertMessage("Sit position no longer exists");
-                m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitOffset = Vector3.Zero;
-            }
-
-        }
-
-        public void SitRayCastCameraPosition(SceneObjectPart part)
-        {
-            // Next, try to raycast from the camera position
-            Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-            Vector3 StartRayCastPosition = CameraPosition;
-            Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-            float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastCameraPositionResponse);
-        }
-
-        public void SitRayCastCameraPositionResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
-        {
-            SceneObjectPart part = FindNextAvailableSitTarget(m_requestedSitTargetUUID);
-            if (part != null)
-            {
-                if (hitYN)
-                {
-                    if (collisionPoint.ApproxEquals(m_requestedSitOffset + part.AbsolutePosition, 0.2f))
-                    {
-                        SitRaycastFindEdge(collisionPoint, normal);
-                        m_log.DebugFormat("[SIT]: Raycast Camera Position succeeded at point: {0}, normal:{1}", collisionPoint, normal);
-                    }
-                    else
-                    {
-                        SitRayHorizontal(part);
-                    }
-                }
-                else
-                {
-                    SitRayHorizontal(part);
-                }
-            }
-            else
-            {
-                ControllingClient.SendAlertMessage("Sit position no longer exists");
-                m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitOffset = Vector3.Zero;
-            }
-
-        }
-
-        public void SitRayHorizontal(SceneObjectPart part)
-        {
-            // Next, try to raycast from the avatar position to fwd
-            Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-            Vector3 StartRayCastPosition = CameraPosition;
-            Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-            float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-            m_scene.SceneGraph.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastHorizontalResponse);
-        }
-
-        public void SitRayCastHorizontalResponse(bool hitYN, Vector3 collisionPoint, uint localid, float pdistance, Vector3 normal)
-        {
-            SceneObjectPart part = FindNextAvailableSitTarget(m_requestedSitTargetUUID);
-            if (part != null)
-            {
-                if (hitYN)
-                {
-                    if (collisionPoint.ApproxEquals(m_requestedSitOffset + part.AbsolutePosition, 0.2f))
-                    {
-                        SitRaycastFindEdge(collisionPoint, normal);
-                        m_log.DebugFormat("[SIT]: Raycast Horizontal Position succeeded at point: {0}, normal:{1}", collisionPoint, normal);
-                        // Next, try to raycast from the camera position
-                        //Vector3 EndRayCastPosition = part.AbsolutePosition + m_requestedSitOffset;
-                        //Vector3 StartRayCastPosition = CameraPosition;
-                        //Vector3 direction = Vector3.Normalize(EndRayCastPosition - StartRayCastPosition);
-                        //float distance = Vector3.Distance(EndRayCastPosition, StartRayCastPosition);
-                        //m_scene.PhysicsScene.RaycastWorld(StartRayCastPosition, direction, distance, SitRayCastResponseAvatarPosition);
-                    }
-                    else
-                    {
-                        ControllingClient.SendAlertMessage("Sit position not accessable.");
-                        m_requestedSitTargetUUID = UUID.Zero;
-                        m_requestedSitOffset = Vector3.Zero;
-                    }
-                }
-                else
-                {
-                    ControllingClient.SendAlertMessage("Sit position not accessable.");
-                    m_requestedSitTargetUUID = UUID.Zero;
-                    m_requestedSitOffset = Vector3.Zero;
-                }
-            }
-            else
-            {
-                ControllingClient.SendAlertMessage("Sit position no longer exists");
-                m_requestedSitTargetUUID = UUID.Zero;
-                m_requestedSitOffset = Vector3.Zero;
-            }
-
-        }
-
-        private void SitRaycastFindEdge(Vector3 collisionPoint, Vector3 collisionNormal)
-        {
-            //int i = 0;
-            //throw new NotImplementedException();
-            //m_requestedSitTargetUUID = UUID.Zero;
-            //m_requestedSitTargetID = 0;
-            //m_requestedSitOffset = Vector3.Zero;
-
-            SendSitResponse(ControllingClient, m_requestedSitTargetUUID, collisionPoint - m_requestedSitOffset, Quaternion.Identity);
-        }
-        
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
         {
             if (m_parentID != UUID.Zero)
@@ -2650,7 +2466,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsInTransit)
             {
-                if (pos2.X < 0f || pos2.Y < 0f || pos2.Z < 0f ||
+                if (pos2.X < 0f || pos2.Y < 0f ||
                     pos2.X > Scene.RegionInfo.RegionSizeX || pos2.Y > Scene.RegionInfo.RegionSizeY)
                 {
                     //If we are headed out of the region, make sure we have a region there
@@ -2724,11 +2540,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void NotInTransit()
         {
             m_inTransit = false;
-        }
-
-        public void RestoreInCurrentScene()
-        {
-            AddToPhysicalScene(false, false); // not exactly false
         }
 
         private void Reset()
@@ -2934,13 +2745,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Groups???
         }
 
-        public bool CopyAgent(out IAgentData agent)
-        {
-            agent = new AgentData();
-            CopyTo((AgentData)agent);
-            return true;
-        }
-
         #endregion Child Agent Updates
 
         #region Physics
@@ -2957,14 +2761,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_creatingPhysicalRepresentation)
                 return;
 
+            //Set this so we don't do it multiple times
+            m_creatingPhysicalRepresentation = true;
+
             if (m_appearance.AvatarHeight == 0)
                 m_appearance.SetHeight();
 
             if (m_appearance.AvatarHeight != 0)
                 m_avHeight = m_appearance.AvatarHeight;
-
-            //Set this so we don't do it multiple times
-            m_creatingPhysicalRepresentation = true;
 
             PhysicsScene scene = m_scene.SceneGraph.PhysicsScene;
 
@@ -3023,19 +2827,20 @@ namespace OpenSim.Region.Framework.Scenes
             CollisionPlane = Vector4.UnitW;
 
             //Fire events for attachments
-            foreach (SceneObjectGroup att in Attachments)
+            SceneObjectGroup[] attachments = new SceneObjectGroup[Attachments.Count];
+            Attachments.CopyTo(attachments);
+            foreach (SceneObjectGroup att in attachments)
             {
                 att.FireAttachmentCollisionEvents(e);
             }
 
-            Dictionary<uint, ContactPoint> collissionswith = collisionData.m_objCollisionList;
             List<uint> thisHitColliders = new List<uint>();
             List<uint> endedColliders = new List<uint>();
             List<uint> startedColliders = new List<uint>();
 
             // calculate things that started colliding this time
             // and build up list of colliders this time
-            foreach (uint localid in collissionswith.Keys)
+            foreach (uint localid in coldata.Keys)
             {
                 thisHitColliders.Add(localid);
                 if (!m_lastColliders.Contains(localid))

@@ -1007,7 +1007,10 @@ namespace OpenSim.Region.Framework.Scenes
             if ((sp != null) && (!sp.IsChildAgent))
             {
                 sp.IsChildAgent = true;
-                return sp.CopyAgent(out agent);
+                AgentData data = new AgentData();
+                sp.CopyTo(data);
+                agent = data;
+                return true;
             }
 
             return false;

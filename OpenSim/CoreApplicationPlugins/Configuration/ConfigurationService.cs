@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
@@ -31,6 +32,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             //Register by default as this only gets used in remote grid mode
             openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
 
+            string resp = "";
             m_config = openSim.ConfigSource;
 
             IConfig handlerConfig = m_config.Configs["Handlers"];
@@ -41,16 +43,21 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             if (autoConfig == null)
                 return;
 
-            string serverURL = autoConfig.GetString("ConfigurationURL", "");
-            //Clean up the URL so that it isn't too hard for users
-            serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
-            serverURL += "/autoconfig";
-            string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURL, "");
-
-            if (resp == "")
+            while (resp == "")
             {
-                m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}! This may break this startup!", serverURL);
-                return;
+
+                string serverURL = autoConfig.GetString("ConfigurationURL", "");
+                //Clean up the URL so that it isn't too hard for users
+                serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
+                serverURL += "/autoconfig";
+                resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURL, "");
+
+                if (resp == "")
+                {
+                    m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}!"
+                    + " This may break this startup!", serverURL);
+                    MainConsole.Instance.CmdPrompt("Press enter when you are ready to continue.");
+                }
             }
 
             m_autoConfig = (OSDMap)OSDParser.DeserializeJson(resp);

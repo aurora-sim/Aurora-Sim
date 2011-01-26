@@ -592,7 +592,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             // If the cross was successful, this agent is a child agent
             // Otherwise, put them back in the scene
             if (!agent.IsChildAgent)
-                agent.RestoreInCurrentScene();
+            {
+                bool m_flying = ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+                agent.AddToPhysicalScene(m_flying, false);
+            }
 
             // In any case
             agent.NotInTransit();
