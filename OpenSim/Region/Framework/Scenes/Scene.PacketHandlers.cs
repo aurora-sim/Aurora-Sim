@@ -138,7 +138,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     if (!foundPrim)
                     {
-                        //remoteClient.SendKillObject(
+                        //Send a kill packet to the viewer so it doesn't come up again
+                        remoteClient.SendKillObject(RegionInfo.RegionHandle, new uint[1] { primLocalID });
                     }
                 }
             }

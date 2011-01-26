@@ -1135,9 +1135,13 @@ namespace Aurora.BotManager
 
         public event GroupProposalBallotRequest OnGroupProposalBallotRequest;
 
-        #pragma warning restore 67
+#pragma warning restore 67
 
         public void SendKillObject(ulong regionHandle, ISceneEntity[] localIDs)
+        {
+        }
+
+        public void SendKillObject(ulong regionHandle, uint[] localIDs)
         {
         }
 

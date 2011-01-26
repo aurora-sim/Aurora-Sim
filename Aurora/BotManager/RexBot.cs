@@ -2190,6 +2190,10 @@ namespace Aurora.BotManager
         {
         }
 
+        void IClientAPI.SendKillObject(ulong regionHandle, uint[] localIDs)
+        {
+        }
+
         void IClientAPI.SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs)
         {
         }

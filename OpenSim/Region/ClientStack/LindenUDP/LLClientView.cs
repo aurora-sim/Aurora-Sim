@@ -1593,6 +1593,30 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(kill, ThrottleOutPacketType.Task);
         }
 
+        public void SendKillObject(ulong regionHandle, uint[] entities)
+        {
+            if (entities.Length == 0)
+                return; //........... why!
+
+            //            m_log.DebugFormat("[CLIENT]: Sending KillObjectPacket to {0} for {1} in {2}", Name, localID, regionHandle);
+
+            KillObjectPacket kill = (KillObjectPacket)PacketPool.Instance.GetPacket(PacketType.KillObject);
+            kill.ObjectData = new KillObjectPacket.ObjectDataBlock[entities.Length];
+            int i = 0;
+            foreach (uint entity in entities)
+            {
+                m_killRecord.Add(entity);
+                KillObjectPacket.ObjectDataBlock block = new KillObjectPacket.ObjectDataBlock();
+                block.ID = entity;
+                kill.ObjectData[i] = block;
+                i++;
+            }
+            kill.Header.Reliable = true;
+            kill.Header.Zerocoded = true;
+
+            OutPacket(kill, ThrottleOutPacketType.Task);
+        }
+
         /// <summary>
         /// Send information about the items contained in a folder to the client.
         ///
