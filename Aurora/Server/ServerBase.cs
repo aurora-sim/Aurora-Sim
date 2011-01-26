@@ -74,5 +74,10 @@ namespace Aurora.Server
             base.Startup();
             m_log.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
 		}
+
+        public override ISimulationBase Copy()
+        {
+            return new AuroraBase();
+        }
     }
 }

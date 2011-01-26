@@ -168,9 +168,12 @@ namespace OpenSim.Services.CapsService
         /// <param name="RegionHandle"></param>
         public void ClearEventQueue(UUID avatarID, ulong RegionHandle)
         {
-            if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
-            m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(RegionHandle);
+            lock (m_eventsNotSentPasswordDoesNotExist)
+            {
+                if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                    m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
+                m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(RegionHandle);
+            }
         }
 
         /// <summary>
@@ -188,16 +191,22 @@ namespace OpenSim.Services.CapsService
                 if (ev == null)
                     return false;
 
-                //Make sure these exist
-                if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
-                    m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
+                lock (m_eventsNotSentPasswordDoesNotExist)
+                {
+                    //Make sure these exist
+                    if (!m_eventsNotSentPasswordDoesNotExist.ContainsKey(avatarID))
+                        m_eventsNotSentPasswordDoesNotExist.Add(avatarID, new EventQueueClient());
+                }
 
                 UUID Password;
                 if (!FindAndPopulateEQMPassword(avatarID, regionHandle, out Password))
                 {
-                    m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, OSDParser.SerializeLLSDXmlString(ev));
+                    lock (m_eventsNotSentPasswordDoesNotExist)
+                    {
+                        m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, OSDParser.SerializeLLSDXmlString(ev));
+                    }
                     m_log.Info("[EventQueueServiceConnector]: Could not find password for agent " + avatarID +
-                        ", all Caps will fail if this is not resolved!");
+                                ", all Caps will fail if this is not resolved!");
                     return false;
                 }
 
@@ -212,30 +221,33 @@ namespace OpenSim.Services.CapsService
 
                 //Clear the queue above if the password was just found now
                 //Fire all of them sync for now... if this becomes a large problem, we can deal with it later
-                foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID].GetEvents(regionHandle))
+                lock (m_eventsNotSentPasswordDoesNotExist)
                 {
-                    try
+                    foreach (OSD EQMessage in m_eventsNotSentPasswordDoesNotExist[avatarID].GetEvents(regionHandle))
                     {
-                        if (EQMessage == null)
-                            continue;
-                        //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
-                        //  because we can't
-                        OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
-                        if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
-                            events.Add(EQMessage);
-                        else
+                        try
                         {
-                            m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
+                            if (EQMessage == null)
+                                continue;
+                            //We do NOT enqueue disable simulator as it will kill things badly, and they get in here
+                            //  because we can't
+                            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(EQMessage.AsString());
+                            if (!map.ContainsKey("message") || (map.ContainsKey("message") && map["message"] != "DisableSimulator"))
+                                events.Add(EQMessage);
+                            else
+                            {
+                                m_log.Warn("[EventQueueServicesConnector]: Found DisableSimulator in the not sent queue, not sending");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.Error("[EVENTQUEUE] Caught event not found exception: " + e.ToString());
+                            return false;
                         }
                     }
-                    catch (Exception e)
-                    {
-                        m_log.Error("[EVENTQUEUE] Caught event not found exception: " + e.ToString());
-                        return false;
-                    }
+                    //Clear it for now... we'll readd if it fails
+                    m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(regionHandle);
                 }
-                //Clear it for now... we'll readd if it fails
-                m_eventsNotSentPasswordDoesNotExist[avatarID].ClearEvents(regionHandle);
 
                 request.Add("Events", events);
 
@@ -261,7 +273,8 @@ namespace OpenSim.Services.CapsService
                             foreach (OSD o in events)
                             {
                                 if (o != null)
-                                    m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, o);
+                                    lock(m_eventsNotSentPasswordDoesNotExist)
+                                        m_eventsNotSentPasswordDoesNotExist[avatarID].AddNewEvent(regionHandle, o);
                             }
                         }
                         else
