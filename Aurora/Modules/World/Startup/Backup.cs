@@ -74,6 +74,11 @@ namespace Aurora.Modules
         public void Close(Scene scene)
         {
             m_log.Info("[BackupModule]: Persisting changed objects in scene " + scene.RegionInfo.RegionName + "...");
+            while (m_backup[scene].IsBackingUp)
+            {
+                //Wait until other threads are done with backup before backing up so that we get everything
+                Thread.Sleep(100);
+            }
             m_backup[scene].ProcessPrimBackupTaints(true, false);
         }
 
@@ -286,6 +291,15 @@ namespace Aurora.Modules
             {
                 get { return m_LoadingPrims; }
                 set { m_LoadingPrims = value; }
+            }
+
+            /// <summary>
+            /// Are we currently backing up?
+            /// </summary>
+            public bool IsBackingUp
+            {
+                get { return m_backingup; }
+                set { m_backingup = value; }
             }
 
             /// <summary>
