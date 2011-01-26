@@ -129,12 +129,14 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         public void RemoveRegion(Scene scene)
         {
-            scene.UnregisterModuleInterface<IComponentManager>(this);
+            //Commented out until we can verify that objects arn't requiring this as backup does need this,
+            //   but shouldn't backup come before this?
+            /*scene.UnregisterModuleInterface<IComponentManager>(this);
             if (m_hasStarted) //This only needs removed once
             {
                 SceneObjectSerializer.RemoveSerializer("Components");
                 m_hasStarted = false;
-            }
+            }*/
         }
 
         public void RegionLoaded(Scene scene)
