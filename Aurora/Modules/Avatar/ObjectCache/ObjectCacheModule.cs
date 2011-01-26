@@ -141,11 +141,20 @@ namespace Aurora.Modules
 
         public Dictionary<uint, uint> DeserializeAgentCache(string osdMap)
         {
-            OSDMap cachedMap = (OSDMap)OSDParser.DeserializeJson(osdMap);
             Dictionary<uint, uint> cache = new Dictionary<uint, uint>();
-            foreach (KeyValuePair<string, OSD> kvp in cachedMap)
+            try
             {
-                cache[uint.Parse(kvp.Key)] = kvp.Value.AsUInteger();
+                OSDMap cachedMap = (OSDMap)OSDParser.DeserializeJson(osdMap);
+                foreach (KeyValuePair<string, OSD> kvp in cachedMap)
+                {
+                    cache[uint.Parse(kvp.Key)] = kvp.Value.AsUInteger();
+                }
+            }
+            catch
+            {
+                //It has an error, destroy the cache
+                //null will tell the caller that it errored out and needs to be removed
+                cache = null;
             }
             return cache;
         }
@@ -179,6 +188,12 @@ namespace Aurora.Modules
             if (file != "") //New file
             {
                 Dictionary<uint, uint> cache = DeserializeAgentCache(file);
+                if (cache == null)
+                {
+                    //Something went wrong, delete the file
+                    Directory.Delete(m_filePath + AgentID + ".oc");
+                    return;
+                }
                 lock (ObjectCacheAgents)
                 {
                     ObjectCacheAgents[AgentID] = cache;
