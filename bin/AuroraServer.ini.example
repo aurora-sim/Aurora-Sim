@@ -11,7 +11,7 @@
     ;ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*;"
     
 [Includes]
-    ;; Start Aurora with no HG services enabled
+    ;; Main configuration
     Include-Main = AuroraServerConfiguration/Main.ini
     
     ;;Other .ini files to add...
@@ -32,7 +32,7 @@
     ;;The port for this service to run on
     Port = 8007
 
-[LibraryModule]
+[LibraryService]
     ;;  Set this if you want to change the name of the Aurora Library
     LibraryName = Aurora Library
     LibraryOwnerName = "Library Owner"
@@ -64,11 +64,6 @@
     DisableSessionID = false;
     
 [NeighborService]
-    ;; ##
-    ;; ## Security
-    ;; ##
-    
-    ;; TODO!
     
     ;; ##
     ;; ## Region Child Agent Settings

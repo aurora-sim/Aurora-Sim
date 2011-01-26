@@ -55,7 +55,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 if (resp == "")
                 {
                     m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}!"
-                    + " This may break this startup!", serverURL);
+                        + " This may break this startup!", serverURL);
                     MainConsole.Instance.CmdPrompt("Press enter when you are ready to continue.");
                 }
             }

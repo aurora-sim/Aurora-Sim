@@ -291,7 +291,7 @@ namespace OpenSim.Framework
             if (changed)
             {
                 Serial++;
-                m_log.Info("[Appearance]: Incrementing Serial (Textures) to " + Serial);
+                m_log.Debug("[Appearance]: Incrementing Serial (Textures) to " + Serial);
             }
 
             m_texture = textureEntry;
@@ -330,7 +330,7 @@ namespace OpenSim.Framework
             {
                 SetHeight();
                 Serial++;
-                m_log.Info("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
+                m_log.Debug("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
             }
 
             return changed;

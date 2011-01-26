@@ -116,8 +116,6 @@ namespace OpenSim.Services.InventoryService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if (!m_enabled)
-                return;
             LoadLibraries(registry);
         }
 
@@ -141,6 +139,8 @@ namespace OpenSim.Services.InventoryService
         public void LoadLibraries(IRegistryCore registry)
         {
             LoadPreviouslyLoadedArchives(registry);
+            if (!m_enabled)
+                return;
             List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
             try
             {
