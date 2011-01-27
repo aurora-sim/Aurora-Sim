@@ -757,9 +757,6 @@ namespace OpenSim.Region.Framework.Scenes
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
 
-            //Rez the attachments for the user
-            Util.FireAndForget(delegate(object o) { RezAttachments(); });
-
             AddToPhysicalScene(isFlying, false);
             
             if (m_forceFly)
@@ -2578,7 +2575,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.Position = AbsolutePosition;
             cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;
-            // Don't copy the size; it is inferred from apearance parameters
+            // Don't copy the size; it is inferred from appearance parameters
             //cAgent.Size = new Vector3(0, 0, m_avHeight);
             cAgent.AtAxis = m_CameraAtAxis;
             cAgent.LeftAxis = m_CameraLeftAxis;
@@ -2588,12 +2585,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Throttles 
             float multiplier = 1;
-            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighborService>().Neighbors[m_scene.RegionInfo.RegionID].Count;
+            int innacurateNeighbors = m_scene.RequestModuleInterface<INeighborService>().GetNeighbors(m_scene.RegionInfo).Count;
             if (innacurateNeighbors != 0)
             {
                 multiplier = 1f / innacurateNeighbors;
             }
-            if (multiplier <= 0f)
+            if (multiplier <= 0.25f)
             {
                 multiplier = 0.25f;
             }
@@ -2606,7 +2603,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //This is checked by the other sim, so we don't have to validate it at all
             //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
-                cAgent.GodLevel = (byte)m_godLevel;
+            cAgent.GodLevel = (byte)m_godLevel;
             //else 
             //    cAgent.GodLevel = (byte) 0;
 
@@ -2614,7 +2611,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.DrawDistance = DrawDistance;
             cAgent.AlwaysRun = m_setAlwaysRun;
             cAgent.SentInitialWearables = m_InitialHasWearablesBeenSent;
-            
+
             cAgent.Appearance = new AvatarAppearance(m_appearance);
 
             lock (scriptedcontrols)
@@ -2630,15 +2627,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Animations
-            try
-            {
-                if(Animator != null)
-                    cAgent.Anims = Animator.Animations.ToArray();
-            }
-            catch { }
-
-            // cAgent.GroupID = ??
-            // Groups???
+            if (Animator != null)
+                cAgent.Anims = Animator.Animations.ToArray();
         }
 
         public void CopyFrom(AgentData cAgent)
@@ -2700,9 +2690,6 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.Animations.FromArray(cAgent.Anims);
             }
             catch {  }
-
-            //cAgent.GroupID = ??
-            //Groups???
         }
 
         #endregion Child Agent Updates
@@ -2932,91 +2919,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_attachments.Add(gobj);
             }
         }
-        
-        /// <summary>
-        /// Get the scene object attached to the given point.
-        /// </summary>
-        /// <param name="attachmentPoint"></param>
-        /// <returns>Returns an empty list if there were no attachments at the point.</returns>
-        public List<SceneObjectGroup> GetAttachments(int attachmentPoint)
-        {
-            List<SceneObjectGroup> attachments = new List<SceneObjectGroup>();
-            
-            lock (m_attachments)
-            {
-                foreach (SceneObjectGroup so in m_attachments)
-                {
-                    if (attachmentPoint == so.RootPart.AttachmentPoint)
-                        attachments.Add(so);
-                }
-            }
-            
-            return attachments;
-        }
-
-        public bool HasAttachments()
-        {
-            return m_attachments.Count > 0;
-        }
-
-        public bool HasScriptedAttachments()
-        {
-            lock (m_attachments)
-            {
-                foreach (SceneObjectGroup gobj in m_attachments)
-                {
-                    if (gobj != null)
-                    {
-                        if (gobj.RootPart.Inventory.ContainsScripts())
-                            return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public void RemoveAttachment(SceneObjectGroup gobj)
-        {
-            lock (m_attachments)
-            {
-                if (m_attachments.Contains(gobj))
-                {
-                    m_attachments.Remove(gobj);
-                }
-            }
-        }
-
-        public void ValidateAttachments()
-        {
-            lock (m_attachments)
-            {
-                IAttachmentsModule module = Scene.RequestModuleInterface<IAttachmentsModule>();
-                SceneObjectGroup[] att = new SceneObjectGroup[m_attachments.Count];
-                lock (m_attachments)
-                    m_attachments.CopyTo(att);
-                List<SceneObjectGroup> attachments = new List<SceneObjectGroup>(att);
-                for (int i = 0; i < attachments.Count; i++)
-                {
-                    if (attachments[i] == null)
-                    {
-                        ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        attachments.RemoveAt(i);
-                        continue;
-                    }
-                    if (attachments[i].IsDeleted)
-                    {
-                        ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        module.DetachObject(attachments[i].LocalId, ControllingClient);
-                        continue;
-                    }
-                    //Save it and prep it for transfer
-                    module.DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, ControllingClient, false);
-                }
-                Appearance.GetAttachments();
-                lock(m_attachments)
-                    m_attachments = attachments;
-            }
-        }
 
         /// <summary>
         /// Send a script event to this scene presence's attachments
@@ -3037,49 +2939,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                         m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
                     }
-                }
-            }
-        }
-        
-        /// <summary>
-        /// RezAttachments. This should only be called upon login on the first region.
-        /// Attachment rezzings on crossings and TPs are done in a different way.
-        /// </summary>
-        public void RezAttachments()
-        {
-            if (null == m_appearance)
-            {
-                m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", UUID);
-                return;
-            }
-
-            List<AvatarAttachment> attachments = m_appearance.GetAttachments();
-            foreach (AvatarAttachment attach in attachments)
-            {
-                if (m_isDeleted)
-                    return;
-
-                int p = attach.AttachPoint;
-                UUID itemID = attach.ItemID;
-
-                //UUID assetID = attach.AssetID;
-                // For some reason assetIDs are being written as Zero's in the DB -- need to track tat down
-                // But they're not used anyway, the item is being looked up for now, so let's proceed.
-                //if (UUID.Zero == assetID) 
-                //{
-                //    m_log.DebugFormat("[ATTACHMENT]: Cannot rez attachment in point {0} with itemID {1}", p, itemID);
-                //    continue;
-                //}
-
-                try
-                {
-                    IAttachmentsModule attachModule = m_scene.RequestModuleInterface<IAttachmentsModule>();
-                    if (attachModule != null)
-                        attachModule.RezSingleAttachmentFromInventory(ControllingClient, itemID, p);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
                 }
             }
         }

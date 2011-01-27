@@ -6485,12 +6485,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 flags |= ScriptBaseClass.AGENT_ALWAYS_RUN;
             }
-
-            if (agent.HasAttachments())
+            IAttachmentsModule attachMod = World.RequestModuleInterface<IAttachmentsModule>();
+            if (attachMod != null)
             {
-                flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
-                if (agent.HasScriptedAttachments())
-                    flags |= ScriptBaseClass.AGENT_SCRIPTED;
+                List<SceneObjectGroup> att = attachMod.GetAttachmentsForAvatar(agent.UUID);
+                if (att.Count > 0)
+                {
+                    flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
+                    foreach (SceneObjectGroup gobj in att)
+                    {
+                        if (gobj != null)
+                        {
+                            if (gobj.RootPart.Inventory.ContainsScripts())
+                            {
+                                flags |= ScriptBaseClass.AGENT_SCRIPTED;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             if ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0)

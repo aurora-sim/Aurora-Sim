@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
@@ -135,5 +136,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="sog"></param>
         /// <param name="pos"></param>
         void UpdateAttachmentPosition(IClientAPI client, SceneObjectGroup sog, Vector3 pos);
+
+        /// <summary>
+        /// Get a list of the given avatar's attachments
+        /// </summary>
+        /// <param name="avatarID"></param>
+        /// <returns></returns>
+        List<SceneObjectGroup> GetAttachmentsForAvatar(UUID avatarID);
     }
 }

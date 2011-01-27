@@ -1100,16 +1100,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (avatar == null)
                 return;
 
-            avatar.RemoveAttachment(this);
-
-            Vector3 detachedpos = new Vector3(127f,127f,127f);
-            if (avatar == null)
-                return;
-
-            detachedpos = avatar.AbsolutePosition;
             RootPart.FromItemID = UUID.Zero;
 
-            AbsolutePosition = detachedpos;
+            AbsolutePosition = avatar.AbsolutePosition;
             m_rootPart.AttachedAvatar = UUID.Zero;
             //Anakin Lohner bug #3839 
             lock (m_partsLock)
@@ -1136,14 +1129,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DetachToInventoryPrep()
         {
-            ScenePresence avatar = m_scene.GetScenePresence(m_rootPart.AttachedAvatar);
-            //Vector3 detachedpos = new Vector3(127f, 127f, 127f);
-            if (avatar != null)
-            {
-                //detachedpos = avatar.AbsolutePosition;
-                avatar.RemoveAttachment(this);
-            }
-
             m_rootPart.AttachedAvatar = UUID.Zero;
             //Anakin Lohner bug #3839 
             lock (m_partsLock)

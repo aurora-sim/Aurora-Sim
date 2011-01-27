@@ -58,6 +58,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.RegisterModuleInterface<IAttachmentsModule>(this);
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnMakeRootAgent += MakeRootAgent;
         }
 
         public void RemoveRegion(Scene scene)
@@ -65,6 +66,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.UnregisterModuleInterface<IAttachmentsModule>(this);
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnMakeRootAgent -= MakeRootAgent;
         }
 
         public void RegionLoaded(Scene scene) 
@@ -75,6 +77,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public void Close()
         {
             RemoveRegion(m_scene);
+        }
+
+        public void MakeRootAgent(ScenePresence presence)
+        {
+            Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
+        }
+
+        public void MakeChildAgent(ScenePresence presence)
+        {
+            foreach (AvatarAttachment att in presence.Appearance.GetAttachments())
+            {
+                //Don't fire events as we just want to remove them
+                DetachSingleAttachmentToInv(att.ItemID, presence.ControllingClient, false);
+            }
         }
 
         public void SubscribeToClientEvents(IClientAPI client)
@@ -93,15 +109,33 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             client.OnObjectAttach -= AttachObject;
             client.OnObjectDetach -= DetachObject;
             client.OnDetachAttachmentIntoInv -= ShowDetachInUserInventory;
+        }
 
-            //Remove all attachments on the avatar
-            ScenePresence SP = m_scene.GetScenePresence(client.AgentId);
-            if (!SP.IsChildAgent)
+        /// <summary>
+        /// RezAttachments. This should only be called upon login on the first region.
+        /// Attachment rezzings on crossings and TPs are done in a different way.
+        /// </summary>
+        public void RezAttachments(ScenePresence presence)
+        {
+            if (null == presence.Appearance)
             {
-                foreach (AvatarAttachment att in SP.Appearance.GetAttachments())
+                m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
+                return;
+            }
+
+            List<AvatarAttachment> attachments = presence.Appearance.GetAttachments();
+            foreach (AvatarAttachment attach in attachments)
+            {
+                int p = attach.AttachPoint;
+                UUID itemID = attach.ItemID;
+
+                try
                 {
-                    //Don't fire events as we just want to remove them
-                    DetachSingleAttachmentToInv(att.ItemID, client, false);
+                    RezSingleAttachmentFromInventory(presence.ControllingClient, itemID, p, true);
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
                 }
             }
         }
@@ -676,6 +710,36 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // it get cleaned up
             so.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
             so.HasGroupChanged = false;
+        }
+
+        public List<SceneObjectGroup> GetAttachmentsForAvatar(UUID avatarID)
+        {
+            List<SceneObjectGroup> attachments = new List<SceneObjectGroup>();
+
+
+            return attachments;
+        }
+
+        public void ValidateAttachments(UUID avatarID)
+        {
+            List<SceneObjectGroup> attachments = GetAttachmentsForAvatar(avatarID);
+            ScenePresence presence = m_scene.GetScenePresence(avatarID);
+            if (presence == null)
+                return;
+            if (attachments.Count > 0)
+            {
+                for (int i = 0; i < attachments.Count; i++)
+                {
+                    if (attachments[i].IsDeleted)
+                    {
+                        presence.ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
+                        DetachObject(attachments[i].LocalId, presence.ControllingClient);
+                        continue;
+                    }
+                    //Save it and prep it for transfer
+                    DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, presence.ControllingClient, false);
+                }
+            }
         }
     }
 }
