@@ -1079,6 +1079,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else if (QIS.functionName == "collision")
                 QIS.ID.CollisionInQueue = false;
+            else if (QIS.functionName == "collision_end")
+                QIS.ID.CollisionInQueue = false;
             else if (QIS.functionName == "moving_end")
                 QIS.ID.MovingInQueue = false;
             else if (QIS.functionName == "touch")
