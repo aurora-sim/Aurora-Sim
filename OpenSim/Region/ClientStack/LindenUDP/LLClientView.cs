@@ -1553,8 +1553,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     continue;
                 }
 
-                if (entity is SceneObjectPart &&
-                    ((SceneObjectPart)entity).IsAttachment)
+                if ((entity is SceneObjectPart &&
+                    ((SceneObjectPart)entity).IsAttachment) ||
+                    (entity is SceneObjectGroup &&
+                    ((SceneObjectGroup)entity).RootPart.IsAttachment))
                 {
                     // Do nothing
                 }

@@ -96,10 +96,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             //Remove all attachments on the avatar
             ScenePresence SP = m_scene.GetScenePresence(client.AgentId);
-            foreach (AvatarAttachment att in SP.Appearance.GetAttachments())
+            if (!SP.IsChildAgent)
             {
-                //Don't fire events as we just want to remove them
-                DetachSingleAttachmentToInv(att.ItemID, client, false);
+                foreach (AvatarAttachment att in SP.Appearance.GetAttachments())
+                {
+                    //Don't fire events as we just want to remove them
+                    DetachSingleAttachmentToInv(att.ItemID, client, false);
+                }
             }
         }
 
@@ -500,9 +503,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     group = (SceneObjectGroup)entity;
                     if (group.GetFromItemID() == itemID)
                     {
-                        m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
-                        
-                        group.DetachToInventoryPrep();
+                        if (fireEvent)
+                        {
+                            m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
+
+                            group.DetachToInventoryPrep();
+                        }
                         
                         m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
                         
