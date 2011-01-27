@@ -4888,7 +4888,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llSetText(string text, LSL_Vector color, double alpha)
+        public void llSetText(string text, LSL_Vector color, LSL_Float alpha)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             

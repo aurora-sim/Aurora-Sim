@@ -1586,10 +1586,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    if (rootpart.PhysActor != null)
-                    {
-                        rootpart.SetMoveToTarget(true, target, tau);
-                    }
+                    rootpart.SetMoveToTarget(true, target, tau);
                 }
             }
         }

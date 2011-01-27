@@ -344,7 +344,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetSoundQueueing(int queue);
               void llSetSoundRadius(double radius);
               void llSetStatus(int status, int value);
-              void llSetText(string text, LSL_Vector color, double alpha);
+              void llSetText(string text, LSL_Vector color, LSL_Float alpha);
               DateTime llSetTexture(string texture, int face);
               void llSetTextureAnim(int mode, int face, int sizex, int sizey, double start, double length, double rate);
               void llSetTimerEvent(double sec);

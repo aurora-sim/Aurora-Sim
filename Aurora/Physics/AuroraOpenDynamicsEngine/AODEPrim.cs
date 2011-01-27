@@ -1509,7 +1509,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         //  if velocity is zero, use position control; otherwise, velocity control
 
-                        if (_target_velocity.ApproxEquals(Vector3.Zero, 0.1f))
+                        if (_target_velocity.ApproxEquals(Vector3.Zero, 0.05f))
                             {
                             //  keep track of where we stopped.  No more slippin' & slidin'
 

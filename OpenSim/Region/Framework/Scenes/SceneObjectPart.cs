@@ -349,17 +349,21 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        //For Non Physical llMoveToTarget
+        private Vector3 m_initialPIDLocation = Vector3.Zero;
+
         [XmlIgnore]
         public Vector3 PIDTarget
         {
             get
             {
-                return PhysActor.PIDTarget;
+                return GetComponentState("PIDTarget").AsVector3();
             }
             set
             {
                 SetComponentState("PIDTarget", value);
-                PhysActor.PIDTarget = value;
+                if (PhysActor != null)
+                    PhysActor.PIDTarget = value;
             }
         }
 
@@ -368,12 +372,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return PhysActor.PIDActive;
+                return GetComponentState("PIDActive").AsBoolean();
             }
             set
             {
                 SetComponentState("PIDActive", value);
-                PhysActor.PIDActive = value;
+                if(PhysActor != null)
+                    PhysActor.PIDActive = value;
             }
         }
 
@@ -387,7 +392,8 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SetComponentState("PIDTau", value);
-                PhysActor.PIDTau = value;
+                if (PhysActor != null)
+                    PhysActor.PIDTau = value;
             }
         }
         
@@ -1917,73 +1923,73 @@ namespace OpenSim.Region.Framework.Scenes
             FixGroupPositionComum(true, value, single);
             }
 
-        public void FixGroupPositionComum(bool UpdatePrimActor,Vector3 value, bool single)
-            {
+        public void FixGroupPositionComum(bool UpdatePrimActor, Vector3 value, bool single)
+        {
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
             bool TriggerMoving_End = false;
             if (m_groupPosition != value)
-                {
+            {
                 TriggerMoving_End = true;
                 TriggerScriptMovingStartEvent();
-                }
+            }
 
             m_groupPosition = value;
 
             PhysicsActor actor = PhysActor;
 
             if (actor != null)
-                {
+            {
                 if (actor.PhysicsActorType != (int)ActorTypes.Prim)  // for now let other times get updates
-                    {
+                {
                     UpdatePrimActor = true;
                     single = false;
-                    }
+                }
                 if (UpdatePrimActor)
-                    {
+                {
                     try
-                        {
+                    {
                         // Root prim actually goes at Position
                         if (_parentID == 0)
-                            {
+                        {
                             actor.Position = value;
                             m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                            }
+                        }
                         else if (single || !actor.IsPhysical)
-                            {
+                        {
                             // To move the child prim in respect to the group position and rotation we have to calculate
                             actor.Position = GetWorldPosition();
                             actor.Orientation = GetWorldRotation();
                             m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(actor);
-                            }
+                        }
 
                         // Tell the physics engines that this prim changed.
 
-                        }
+                    }
                     catch (Exception e)
-                        {
+                    {
                         m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
-                        }
                     }
                 }
+            }
 
             if (m_sitTargetAvatar.Count != 0)
-                {
+            {
                 foreach (UUID avID in m_sitTargetAvatar)
-                    {
+                {
                     if (m_parentGroup != null)
-                        {
+                    {
                         ScenePresence avatar;
                         if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
-                            {
+                        {
                             avatar.ParentPosition = GetWorldPosition();
-                            }
                         }
                     }
                 }
+            }
             if (TriggerMoving_End)
                 TriggerScriptMovingEndEvent();
-            }
+        }
 
         public void ResetExpire()
         {
@@ -2713,6 +2719,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (Enabled)
             {
+                m_initialPIDLocation = AbsolutePosition;
                 PIDTarget = target;
                 PIDTau = tau;
                 PIDActive = true;
@@ -2720,6 +2727,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 PIDActive = false;
+                m_initialPIDLocation = Vector3.Zero;
             }
         }
 
@@ -5513,6 +5521,38 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
+                if (PhysActor == null)
+                {
+                    //Non physical PID movement
+                    // Has to be phantom and physical
+                    if (PIDActive && ((Flags & PrimFlags.Phantom) != 0) &&
+                        ((Flags & PrimFlags.Physics) != 0))
+                    {
+                        Vector3 _target_velocity =
+                                new Vector3(
+                                    (float)(PIDTarget.X - m_initialPIDLocation.X) * (PIDTau * ParentGroup.Scene.SceneGraph.PhysicsScene.StepTime * 0.75f),
+                                    (float)(PIDTarget.Y - m_initialPIDLocation.Y) * (PIDTau * ParentGroup.Scene.SceneGraph.PhysicsScene.StepTime * 0.75f),
+                                    (float)(PIDTarget.Z - m_initialPIDLocation.Z) * (PIDTau * ParentGroup.Scene.SceneGraph.PhysicsScene.StepTime * 0.75f)
+                                    );
+                        if (PIDTarget.ApproxEquals(AbsolutePosition, 0.1f))
+                        {
+                            ParentGroup.SetAbsolutePosition(false, PIDTarget + _target_velocity);
+                            this.ScheduleTerseUpdate();
+                            //End the movement
+                            SetMoveToTarget(false, Vector3.Zero, 0);
+                        }
+                        else
+                        {
+                            ParentGroup.SetAbsolutePosition(false, AbsolutePosition + _target_velocity);
+                            this.ScheduleTerseUpdate();
+                        }
+                    }
+                }
+                else
+                {
+                    //Reset the PID attributes
+
+                }
                 if (APIDTarget != Quaternion.Identity)
                 {
                     if (Single.IsNaN(APIDTarget.W) == true)
