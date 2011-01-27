@@ -153,7 +153,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     anim, m_scenePresence.ControllingClient.NextAnimationSequenceNumber, m_scenePresence.UUID))
                 {
                     // 16384 is CHANGED_ANIMATION
-                    m_scenePresence.SendScriptEventToAttachments("changed", new Object[] { (int)Changed.ANIMATION});
+                    IAttachmentsModule attMod = m_scenePresence.Scene.RequestModuleInterface<IAttachmentsModule>();
+                    if (attMod != null)
+                        attMod.SendScriptEventToAttachments(m_scenePresence.UUID, "changed", new Object[] { (int)Changed.ANIMATION });
                     SendAnimPack();
                 }
             }

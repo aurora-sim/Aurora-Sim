@@ -6488,8 +6488,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IAttachmentsModule attachMod = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachMod != null)
             {
-                List<SceneObjectGroup> att = attachMod.GetAttachmentsForAvatar(agent.UUID);
-                if (att.Count > 0)
+                SceneObjectGroup[] att = attachMod.GetAttachmentsForAvatar(agent.UUID);
+                if (att.Length > 0)
                 {
                     flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
                     foreach (SceneObjectGroup gobj in att)

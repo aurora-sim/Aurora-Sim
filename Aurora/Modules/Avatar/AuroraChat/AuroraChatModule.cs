@@ -447,7 +447,9 @@ namespace Aurora.Modules
                             fromName = avatar.Name;
                             fromID = c.Sender.AgentId;
                             //Always send this so it fires on typing start and end
-                            avatar.SendScriptEventToAttachments("changed", new object[] { Changed.STATE });
+                            IAttachmentsModule attMod = scene.RequestModuleInterface<IAttachmentsModule>();
+                            if(attMod != null)
+                                attMod.SendScriptEventToAttachments(avatar.UUID, "changed", new object[] { Changed.STATE });
                         }
                         else
                             fromID = c.SenderUUID;

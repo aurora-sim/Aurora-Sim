@@ -105,16 +105,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
         protected ScenePresenceAnimator m_animator;
 
-        /// <value>
-        /// The scene objects attached to this avatar.  Do not change this list directly - use methods such as
-        /// AddAttachment() and RemoveAttachment().  Lock this list when performing any read operations upon it.
-        /// </value>
-        public List<SceneObjectGroup> Attachments
-        {
-            get { return m_attachments; }
-        }
-        protected List<SceneObjectGroup> m_attachments = new List<SceneObjectGroup>();
-
         private Dictionary<UUID, ScriptControllers> scriptedcontrols = new Dictionary<UUID, ScriptControllers>();
         private ScriptControlled IgnoredControls = ScriptControlled.CONTROL_ZERO;
         private ScriptControlled LastCommands = ScriptControlled.CONTROL_ZERO;
@@ -758,19 +748,19 @@ namespace OpenSim.Region.Framework.Scenes
                 Name, m_scene.RegionInfo.RegionName);
 
             AddToPhysicalScene(isFlying, false);
-            
+
             if (m_forceFly)
                 m_physicsActor.Flying = true;
             else if (m_flyDisabled)
                 m_physicsActor.Flying = false;
-            
+
             // Don't send an animation pack here, since on a region crossing this will sometimes cause a flying 
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
             // elsewhere anyway
             // Animator.SendAnimPack();
 
             m_scene.SceneGraph.SwapRootChildAgent(false);
-            
+
             // On the next prim update, all objects will be sent
             //
             m_sceneViewer.Reset();
@@ -784,7 +774,9 @@ namespace OpenSim.Region.Framework.Scenes
                     presence.Animator.SendAnimPackToClient(ControllingClient);
             });
 
-            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
+            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attMod != null)
+                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
 
@@ -862,7 +854,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             // FIXME: Set m_rootRegionHandle to the region handle of the scene this agent is moving into
 
-            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
+            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attMod != null)
+                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
 
             Reset();
@@ -922,7 +916,9 @@ namespace OpenSim.Region.Framework.Scenes
                     SetHeight(m_appearance.AvatarHeight);
             }
 
-            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
+            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attMod != null)
+                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
             SendTerseUpdateToAllClients();
         }
 
@@ -943,7 +939,9 @@ namespace OpenSim.Region.Framework.Scenes
                     SetHeight(m_appearance.AvatarHeight);
             }
 
-            SendScriptEventToAttachments("changed", new Object[] { Changed.TELEPORT });
+            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attMod != null)
+                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
             SendTerseUpdateToAllClients();
         }
 
@@ -2501,17 +2499,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void Reset()
         {
-            lock (m_attachments)
-            {
-                // Delete attachments from scene
-                // Don't try to save, as this thread won't live long
-                // enough to complete the save. This would cause no copy
-                // attachments to poof!
-                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                if (backup != null)
-                    backup.DeleteSceneObjects(m_attachments.ToArray(), true);
-                m_attachments.Clear();
-            }
             //Reset the parcel UUID for the user
             currentParcelUUID = UUID.Zero;
             // Put the child agent back at the center
@@ -2774,11 +2761,14 @@ namespace OpenSim.Region.Framework.Scenes
             CollisionPlane = Vector4.UnitW;
 
             //Fire events for attachments
-            SceneObjectGroup[] attachments = new SceneObjectGroup[Attachments.Count];
-            Attachments.CopyTo(attachments);
-            foreach (SceneObjectGroup att in attachments)
+            IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attModule != null)
             {
-                att.FireAttachmentCollisionEvents(e);
+                SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(UUID);
+                foreach (SceneObjectGroup grp in attachments)
+                {
+                    grp.FireAttachmentCollisionEvents(e);
+                }
             }
 
             List<uint> thisHitColliders = new List<uint>();
@@ -2878,18 +2868,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void Close()
         {
-            lock (m_attachments)
-            {
-                // Delete attachments from scene
-                // Don't try to save, as this thread won't live long
-                // enough to complete the save. This would cause no copy
-                // attachments to poof!
-                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                if (backup != null)
-                    backup.DeleteSceneObjects(m_attachments.ToArray(), true);
-                m_attachments.Clear();
-            }
-
             m_sceneViewer.Reset();
 
             RemoveFromPhysicalScene();
@@ -2908,42 +2886,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_sceneViewer.QueuePartForUpdate(part, flags);
         }
-
-        #region Attachments
-
-        public void AddAttachment(SceneObjectGroup gobj)
-        {
-            gobj.IsDeleted = false;
-            lock (m_attachments)
-            {
-                m_attachments.Add(gobj);
-            }
-        }
-
-        /// <summary>
-        /// Send a script event to this scene presence's attachments
-        /// </summary>
-        /// <param name="eventName">The name of the event</param>
-        /// <param name="args">The arguments for the event</param>
-        public void SendScriptEventToAttachments(string eventName, Object[] args)
-        {
-            lock (m_attachments)
-            {
-                IScriptModule[] scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
-                foreach (SceneObjectGroup grp in m_attachments)
-                {
-                    foreach (IScriptModule m in scriptEngines)
-                    {
-                        if (m == null) // No script engine loaded
-                            continue;
-
-                        m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
-                    }
-                }
-            }
-        }
-
-        #endregion
 
         #region Script Controls
 

@@ -142,6 +142,20 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="avatarID"></param>
         /// <returns></returns>
-        List<SceneObjectGroup> GetAttachmentsForAvatar(UUID avatarID);
+        SceneObjectGroup[] GetAttachmentsForAvatar(UUID avatarID);
+
+        /// <summary>
+        /// Send a script event to all attachments
+        /// </summary>
+        /// <param name="avatarID"></param>
+        /// <param name="eventName"></param>
+        /// <param name="args"></param>
+        void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args);
+
+        /// <summary>
+        /// Validate the current avatar's attachments and prep them for leaving the region
+        /// </summary>
+        /// <param name="uUID"></param>
+        void ValidateAttachments(UUID uUID);
     }
 }

@@ -122,6 +122,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
                 return;
             }
+            
+            //Create the avatar attachments plugin for the av
+            AvatarAttachments attachmentsPlugin = new AvatarAttachments(presence);
 
             List<AvatarAttachment> attachments = presence.Appearance.GetAttachments();
             foreach (AvatarAttachment attach in attachments)
@@ -237,7 +240,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 UUID itemID = UUID.Zero;
                 if (sp != null)
                 {
-                    foreach (SceneObjectGroup grp in sp.Attachments)
+                    SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
+                    foreach (SceneObjectGroup grp in attachments)
                     {
                         if (grp.GetAttachmentPoint() == (byte)AttachmentPt)
                         {
@@ -682,7 +686,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             so.RootPart.SetParentLocalId(avatar.LocalId);
             so.SetAttachmentPoint(Convert.ToByte(attachmentpoint));
 
-            avatar.AddAttachment(so);
+            AvatarAttachments attPlugin = avatar.RequestModuleInterface<AvatarAttachments>();
+            if (attPlugin != null)
+                attPlugin.AddAttachment(so);
 
             // Killing it here will cause the client to deselect it
             // It then reappears on the avatar, deselected
@@ -712,23 +718,52 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             so.HasGroupChanged = false;
         }
 
-        public List<SceneObjectGroup> GetAttachmentsForAvatar(UUID avatarID)
+        public SceneObjectGroup[] GetAttachmentsForAvatar(UUID avatarID)
         {
-            List<SceneObjectGroup> attachments = new List<SceneObjectGroup>();
+            SceneObjectGroup[] attachments = new SceneObjectGroup[0];
 
+            ScenePresence presence = m_scene.GetScenePresence(avatarID);
+            if (presence != null)
+            {
+                AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
+                if (attPlugin != null)
+                    attachments = attPlugin.Get();
+            }
 
             return attachments;
         }
 
+        /// <summary>
+        /// Send a script event to this scene presence's attachments
+        /// </summary>
+        /// <param name="avatarID">The avatar to fire the event for</param>
+        /// <param name="eventName">The name of the event</param>
+        /// <param name="args">The arguments for the event</param>
+        public void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args)
+        {
+            SceneObjectGroup[] attachments = GetAttachmentsForAvatar(avatarID);
+            IScriptModule[] scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
+            foreach (SceneObjectGroup grp in attachments)
+            {
+                foreach (IScriptModule m in scriptEngines)
+                {
+                    if (m == null) // No script engine loaded
+                        continue;
+
+                    m.PostObjectEvent(grp.RootPart.UUID, eventName, args);
+                }
+            }
+        }
+
         public void ValidateAttachments(UUID avatarID)
         {
-            List<SceneObjectGroup> attachments = GetAttachmentsForAvatar(avatarID);
+            SceneObjectGroup[] attachments = GetAttachmentsForAvatar(avatarID);
             ScenePresence presence = m_scene.GetScenePresence(avatarID);
             if (presence == null)
                 return;
-            if (attachments.Count > 0)
+            if (attachments.Length > 0)
             {
-                for (int i = 0; i < attachments.Count; i++)
+                for (int i = 0; i < attachments.Length; i++)
                 {
                     if (attachments[i].IsDeleted)
                     {
@@ -739,6 +774,44 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //Save it and prep it for transfer
                     DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, presence.ControllingClient, false);
                 }
+            }
+        }
+
+        private class AvatarAttachments
+        {
+            private List<SceneObjectGroup> m_attachments = new List<SceneObjectGroup>();
+            private ScenePresence m_presence;
+
+            public AvatarAttachments(ScenePresence SP)
+            {
+                m_presence = SP;
+                m_presence.RegisterModuleInterface<AvatarAttachments>(this);
+            }
+
+            public void AddAttachment(SceneObjectGroup attachment)
+            {
+                lock (m_attachments)
+                {
+                    m_attachments.Add(attachment);
+                }
+            }
+
+            public void RemoveAttachment(SceneObjectGroup attachment)
+            {
+                lock (m_attachments)
+                {
+                    m_attachments.Remove(attachment);
+                }
+            }
+
+            public SceneObjectGroup[] Get()
+            {
+                SceneObjectGroup[] attachments = new SceneObjectGroup[m_attachments.Count];
+                lock (m_attachments)
+                {
+                    m_attachments.CopyTo(attachments);
+                }
+                return attachments;
             }
         }
     }
