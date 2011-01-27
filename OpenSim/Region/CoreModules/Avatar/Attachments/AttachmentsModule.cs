@@ -93,6 +93,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             client.OnObjectAttach -= AttachObject;
             client.OnObjectDetach -= DetachObject;
             client.OnDetachAttachmentIntoInv -= ShowDetachInUserInventory;
+
+            //Remove all attachments on the avatar
+            ScenePresence SP = m_scene.GetScenePresence(client.AgentId);
+            foreach (AvatarAttachment att in SP.Appearance.GetAttachments())
+            {
+                //Don't fire events as we just want to remove them
+                DetachSingleAttachmentToInv(att.ItemID, client, false);
+            }
         }
 
         /// <summary>
@@ -201,7 +209,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         }
                     }
                     if (itemID != UUID.Zero)
-                        DetachSingleAttachmentToInv(itemID, remoteClient);
+                        DetachSingleAttachmentToInv(itemID, remoteClient, true);
                 }
 
                 if (group.GetFromItemID() == UUID.Zero)
@@ -436,7 +444,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
-            DetachSingleAttachmentToInv(itemID, remoteClient);
+            DetachSingleAttachmentToInv(itemID, remoteClient, true);
         }
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
@@ -475,12 +483,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
         // To LocalId or UUID, *THAT* is the question. How now Brown UUID??
-        protected void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient)
+        protected void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent)
         {
             if (itemID == UUID.Zero) // If this happened, someone made a mistake....
                 return;
 
-            // We can NOT use the dictionries here, as we are looking
+            // We can NOT use the dictionaries here, as we are looking
             // for an entity by the fromAssetID, which is NOT the prim UUID
             EntityBase[] detachEntities = m_scene.Entities.GetEntities();
             SceneObjectGroup group;

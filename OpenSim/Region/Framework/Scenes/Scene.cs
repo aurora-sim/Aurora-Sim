@@ -148,8 +148,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile bool shuttingdown = false;
 
-        private object m_cleaningAttachments = new object();
-
         private bool m_UseSelectionParticles = true;
         public bool CheckForObjectCulling = false;
         private string m_DefaultObjectName = "Primitive";
