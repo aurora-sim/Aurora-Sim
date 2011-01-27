@@ -606,7 +606,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             // when those complete, the new appearance will be sent
             sp.Appearance = avatAppearance;
             //Send the wearables HERE so that the client knows what it is wearing
-            sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
+            //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
             //  (handled above) and that takes care of it
         }
