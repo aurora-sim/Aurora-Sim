@@ -121,6 +121,14 @@ namespace OpenSim.Region.Framework.Interfaces
         void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient);
 
         /// <summary>
+        /// Detach the attachment into the users inventory 
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <param name="remoteClient"></param>
+        /// <param name="fireEvent"></param>
+        void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent);
+
+        /// <summary>
         /// Update the position of an attachment
         /// </summary>
         /// <param name="client"></param>

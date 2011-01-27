@@ -2990,22 +2990,30 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_attachments)
             {
-                for (int i = 0; i < m_attachments.Count; i++)
+                IAttachmentsModule module = Scene.RequestModuleInterface<IAttachmentsModule>();
+                SceneObjectGroup[] att = new SceneObjectGroup[m_attachments.Count];
+                lock (m_attachments)
+                    m_attachments.CopyTo(att);
+                List<SceneObjectGroup> attachments = new List<SceneObjectGroup>(att);
+                for (int i = 0; i < attachments.Count; i++)
                 {
-                    if (m_attachments[i] == null)
+                    if (attachments[i] == null)
                     {
                         ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        m_attachments.RemoveAt(i);
+                        attachments.RemoveAt(i);
                         continue;
                     }
-                    if (m_attachments[i].IsDeleted)
+                    if (attachments[i].IsDeleted)
                     {
                         ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        IAttachmentsModule module = Scene.RequestModuleInterface<IAttachmentsModule>();
-                        module.DetachObject(m_attachments[i].LocalId, ControllingClient);
+                        module.DetachObject(attachments[i].LocalId, ControllingClient);
                         continue;
                     }
+                    //Save it and prep it for transfer
+                    module.DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, ControllingClient, false);
                 }
+                lock(m_attachments)
+                    m_attachments = attachments;
             }
         }
 

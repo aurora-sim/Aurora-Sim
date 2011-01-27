@@ -483,7 +483,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
         // To LocalId or UUID, *THAT* is the question. How now Brown UUID??
-        protected void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent)
+        public void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent)
         {
             if (itemID == UUID.Zero) // If this happened, someone made a mistake....
                 return;
