@@ -37,17 +37,6 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IAttachmentsModule
     {
         /// <summary>
-        /// Attach an object to an avatar from the world.
-        /// </summary>
-        /// <param name="controllingClient"></param>
-        /// <param name="localID"></param>
-        /// <param name="attachPoint"></param>
-        /// <param name="rot"></param>
-        /// <param name="silent"></param>
-        void AttachObject(
-            IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent);
-
-        /// <summary>
         /// Attach an object to an avatar.
         /// </summary>
         /// <param name="controllingClient"></param>
@@ -56,17 +45,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="rot"></param>
         /// <param name="attachPos"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
-        bool AttachObject(
+        bool AttachObjectFromInworldObject(
             IClientAPI remoteClient, SceneObjectGroup grp, int AttachmentPt);
-
-        /// <summary>
-        /// Rez an attachment from user inventory and change inventory status to match.
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
-        /// <param name="AttachmentPt"></param>
-        /// <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
-        UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
         /// <summary>
         /// Rez an attachment from user inventory
@@ -81,17 +61,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns>The uuid of the scene object that was attached.  Null if the scene object could not be found</returns>
         UUID RezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt, bool updateInventoryStatus);
-
-        /// <summary>
-        /// Rez multiple attachments from a user's inventory
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="header"></param>
-        /// <param name="objects"></param>
-        void RezMultipleAttachmentsFromInventory(
-            IClientAPI remoteClient,
-            RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
-            RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects);
 
         /// <summary>
         /// Detach an object from the avatar.

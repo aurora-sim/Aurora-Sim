@@ -271,7 +271,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 sp.StandUp();
 
             //Make sure that all attachments are ready for the teleport
-            sp.ValidateAttachments();
+            IAttachmentsModule attModule = sp.Scene.RequestModuleInterface<IAttachmentsModule>();
+            if(attModule != null)
+                attModule.ValidateAttachments(sp.UUID);
 
             AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
             agentCircuit.startpos = position;
@@ -529,7 +531,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (crossingRegion != null)
             {
                 //Make sure that all attachments are ready for the teleport
-                agent.ValidateAttachments();
+                IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
+                if (attModule != null)
+                    attModule.ValidateAttachments(agent.UUID);
                 pos = pos + (agent.Velocity);
 
                 AgentData cAgent = new AgentData();
@@ -571,16 +575,21 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         private void KillAttachments(ScenePresence agent)
         {
-            foreach (SceneObjectGroup grp in agent.Attachments)
+            IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attModule != null)
             {
-                //Kill in all clients as it will be readded in the other region
-                KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());
-                //Now remove it from the Scene so that it will not come back
-                agent.Scene.SceneGraph.DeleteEntity(grp);
-                //And from storage as well
-                IBackupModule backup = agent.Scene.RequestModuleInterface<IBackupModule>();
-                if(backup != null)
-                    backup.DeleteFromStorage(grp.UUID);
+                SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(agent.UUID);
+                foreach (SceneObjectGroup grp in attachments)
+                {
+                    //Kill in all clients as it will be readded in the other region
+                    KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());
+                    //Now remove it from the Scene so that it will not come back
+                    agent.Scene.SceneGraph.DeleteEntity(grp);
+                    //And from storage as well
+                    IBackupModule backup = agent.Scene.RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                        backup.DeleteFromStorage(grp.UUID);
+                }
             }
         }
 
@@ -790,11 +799,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IAttachmentsModule attachMod = scene.RequestModuleInterface<IAttachmentsModule>();
             if (sp != null && attachMod != null)
             {
-                m_log.DebugFormat(
-                        "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
-                int attPt = sp.Appearance.GetAttachpoint(itemID);
-                attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt);
-                return true;
+                //m_log.DebugFormat(
+                //        "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
+                //int attPt = sp.Appearance.GetAttachpoint(itemID);
+                //attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt, true);
+                //return true;
             }
 
             return false;
@@ -874,32 +883,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return false;
             }
 
-            if (sceneObject.IsAttachmentCheckFull()) // Attachment
-            {
-                sceneObject.RootPart.AddFlag(PrimFlags.TemporaryOnRez);
-                sceneObject.RootPart.AddFlag(PrimFlags.Phantom);
-
-                // Fix up attachment Parent Local ID
-                ScenePresence sp = scene.GetScenePresence(sceneObject.OwnerID);
-                if (sp != null)
-                {
-                    scene.SceneGraph.AddPrimToScene(sceneObject);
-
-                    m_log.DebugFormat(
-                        "[EntityTransferModule]: Received attachment {0}, inworld asset id {1}", sceneObject.GetFromItemID(), sceneObject.UUID);
-                    m_log.DebugFormat(
-                        "[EntityTransferModule]: Attach to avatar {0} at position {1}", sp.UUID, sceneObject.AbsolutePosition);
-
-                    IAttachmentsModule attachModule = scene.RequestModuleInterface<IAttachmentsModule>();
-                    if (attachModule != null)
-                        attachModule.AttachObject(sp.ControllingClient, sceneObject.LocalId, 0, false);
-
-                    sceneObject.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                    return true;
-                }
-            }
-            else
+            if (!sceneObject.IsAttachmentCheckFull()) // Not Attachment
             {
                 if (!scene.Permissions.CanObjectEntry(sceneObject.UUID,
                         true, sceneObject.AbsolutePosition, sceneObject.OwnerID))

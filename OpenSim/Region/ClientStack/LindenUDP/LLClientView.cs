@@ -81,7 +81,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event SetAppearance OnSetAppearance;
         public event AvatarNowWearing OnAvatarNowWearing;
         public event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
-        public event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;
         public event UUIDNameRequest OnDetachAttachmentIntoInv;
         public event ObjectAttach OnObjectAttach;
         public event ObjectDeselect OnObjectDetach;
@@ -6226,7 +6225,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool HandleRezMultipleAttachmentsFromInv(IClientAPI sender, Packet Pack)
         {
-            RezMultipleAttachmentsFromInv handlerRezMultipleAttachments = OnRezMultipleAttachmentsFromInv;
+            RezSingleAttachmentFromInv handlerRezMultipleAttachments = OnRezSingleAttachmentFromInv;
 
             if (handlerRezMultipleAttachments != null)
             {
@@ -6239,8 +6238,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         return true;
                 }
                 #endregion
-                handlerRezMultipleAttachments(this, rez.HeaderData,
-                                              rez.ObjectData);
+
+                foreach (RezMultipleAttachmentsFromInvPacket.ObjectDataBlock obj in rez.ObjectData)
+                {
+                    handlerRezMultipleAttachments(this, obj.ItemID, obj.AttachmentPt);
+                }
             }
 
             return true;

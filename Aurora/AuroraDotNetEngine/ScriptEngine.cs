@@ -729,9 +729,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (obj is ScenePresence)
             {
                 //Get all the scripts in the attachments and run through the loop
-                foreach (SceneObjectGroup grp in ((ScenePresence)obj).Attachments)
+                IAttachmentsModule attModule = ((ScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule>();
+                if (attModule != null)
                 {
-                    activeScripts += GetActiveScripts(grp);
+                    SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
+                    foreach (SceneObjectGroup grp in attachments)
+                    {
+                        activeScripts += GetActiveScripts(grp);
+                    }
                 }
             }
             else //Ask the protection module how many Scripts there are
@@ -756,9 +761,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (obj is ScenePresence)
             {
                 //Get all the scripts in the attachments
-                foreach (SceneObjectGroup grp in ((ScenePresence)obj).Attachments)
+                IAttachmentsModule attModule = ((ScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule>();
+                if (attModule != null)
                 {
-                    totalScripts += GetTotalScripts(grp);
+                    SceneObjectGroup[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
+                    foreach (SceneObjectGroup grp in attachments)
+                    {
+                        totalScripts += GetTotalScripts(grp);
+                    }
                 }
             }
             else //Ask the protection module how many Scripts there are

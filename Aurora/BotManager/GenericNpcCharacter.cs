@@ -249,7 +249,6 @@ namespace Aurora.BotManager
         public event UpdateUserInfo OnUpdateUserInfo;
 
         public event RetrieveInstantMessages OnRetrieveInstantMessages;
-        public event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;
         public event SpinStart OnSpinStart;
         public event SpinStop OnSpinStop;
         public event SpinObject OnSpinUpdate;

@@ -42,6 +42,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 {
     public class AttachmentsModule : IAttachmentsModule, INonSharedRegionModule
     {
+        #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected Scene m_scene = null;
@@ -49,6 +51,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public string Name { get { return "Attachments Module"; } }
         public Type ReplaceableInterface { get { return null; } }
         public IAvatarFactory AvatarFactory = null;
+
+        #endregion
+
+        #region INonSharedRegionModule Methods
 
         public void Initialise(IConfigSource source) { }
 
@@ -79,6 +85,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             RemoveRegion(m_scene);
         }
 
+        #endregion
+
+        #region Client Methods
+
         public void MakeRootAgent(ScenePresence presence)
         {
             Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
@@ -93,29 +103,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        public void SubscribeToClientEvents(IClientAPI client)
+        protected void SubscribeToClientEvents(IClientAPI client)
         {
             client.OnRezSingleAttachmentFromInv += RezSingleAttachmentFromInventory;
-            client.OnRezMultipleAttachmentsFromInv += RezMultipleAttachmentsFromInventory;
             client.OnObjectAttach += AttachObject;
             client.OnObjectDetach += DetachObject;
             client.OnDetachAttachmentIntoInv += ShowDetachInUserInventory;
         }
 
-        public void UnsubscribeFromClientEvents(IClientAPI client)
+        protected void UnsubscribeFromClientEvents(IClientAPI client)
         {
             client.OnRezSingleAttachmentFromInv -= RezSingleAttachmentFromInventory;
-            client.OnRezMultipleAttachmentsFromInv -= RezMultipleAttachmentsFromInventory;
             client.OnObjectAttach -= AttachObject;
             client.OnObjectDetach -= DetachObject;
             client.OnDetachAttachmentIntoInv -= ShowDetachInUserInventory;
         }
 
-        /// <summary>
-        /// RezAttachments. This should only be called upon login on the first region.
-        /// Attachment rezzings on crossings and TPs are done in a different way.
-        /// </summary>
-        public void RezAttachments(ScenePresence presence)
+        protected void RezAttachments(ScenePresence presence)
         {
             if (null == presence.Appearance)
             {
@@ -143,14 +147,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        /// <summary>
-        /// Called by client
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="objectLocalID"></param>
-        /// <param name="AttachmentPt"></param>
-        /// <param name="silent"></param>
-        public void AttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
+        protected UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, int AttachmentPt)
+        {
+            return RezSingleAttachmentFromInventory(remoteClient, itemID, AttachmentPt, true);
+        }
+
+        protected void AttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
         {
             m_log.Debug("[ATTACHMENTS MODULE]: Invoking AttachObject");
 
@@ -173,7 +175,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 AttachmentPt &= 0x7f;
 
                 // Calls attach with a Zero position
-                if (AttachObject(remoteClient, part.ParentGroup, AttachmentPt))
+                if (AttachObjectFromInworldObject(remoteClient, part.ParentGroup, AttachmentPt))
                 {
                     m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
 
@@ -191,7 +193,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        public bool AttachObject(IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
+        #endregion
+
+        #region Public Methods
+
+        public bool AttachObjectFromInworldObject(IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
         {
             Vector3 attachPos = group.AbsolutePosition;
 
@@ -282,22 +288,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             return true;
         }
 
-        public void RezMultipleAttachmentsFromInventory(
-            IClientAPI remoteClient,
-            RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
-            RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects)
-        {
-            foreach (RezMultipleAttachmentsFromInvPacket.ObjectDataBlock obj in objects)
-            {
-                RezSingleAttachmentFromInventory(remoteClient, obj.ItemID, obj.AttachmentPt);
-            }
-        }
-
-        public UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, int AttachmentPt)
-        {
-            return RezSingleAttachmentFromInventory(remoteClient, itemID, AttachmentPt, true);
-        }
-
         public UUID RezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt, bool updateInventoryStatus)
         {
@@ -324,6 +314,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             else
                 return att.UUID;
         }
+
+        #endregion
 
         protected SceneObjectGroup RezSingleAttachmentFromInventoryInternal(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt)
@@ -352,7 +344,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // This will throw if the attachment fails
                     try
                     {
-                        AttachObject(remoteClient, objatt, AttachmentPt);
+                        AttachObjectFromInworldObject(remoteClient, objatt, AttachmentPt);
                     }
                     catch
                     {

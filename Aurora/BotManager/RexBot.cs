@@ -928,12 +928,6 @@ namespace Aurora.BotManager
             remove {  }
         }
 
-        event RezMultipleAttachmentsFromInv IClientAPI.OnRezMultipleAttachmentsFromInv
-        {
-            add {  }
-            remove {  }
-        }
-
         event UUIDNameRequest IClientAPI.OnDetachAttachmentIntoInv
         {
             add {  }

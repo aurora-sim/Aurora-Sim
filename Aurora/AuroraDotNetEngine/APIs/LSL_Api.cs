@@ -3809,7 +3809,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
                 if (attachmentsModule != null)
-                    attachmentsModule.AttachObject(
+                    attachmentsModule.AttachObjectFromInworldObject(
                         presence.ControllingClient, grp,
                         attachment);
             }
