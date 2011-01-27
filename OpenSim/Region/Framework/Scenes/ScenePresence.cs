@@ -3012,6 +3012,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //Save it and prep it for transfer
                     module.DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, ControllingClient, false);
                 }
+                Appearance.GetAttachments();
                 lock(m_attachments)
                     m_attachments = attachments;
             }

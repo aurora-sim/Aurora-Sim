@@ -369,8 +369,8 @@ namespace Aurora.Modules
             {
                 foreach (SceneObjectGroup group in groups)
                 {
-                    if (group.IsAttachment)
-                        continue;
+                    //if (group.IsAttachment)
+                    //    continue;
 
                     DeleteSceneObject(group, true);
                 }
