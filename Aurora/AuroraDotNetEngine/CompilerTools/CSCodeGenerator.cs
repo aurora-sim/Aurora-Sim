@@ -2064,6 +2064,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             string retstr = "";
 
+            bool dump = FuncCallsMarc();
+
             if (IsParentEnumerable)
             {
                 retstr += GenerateLine("{ ");
@@ -2086,7 +2088,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 foreach (SYMBOL kid in rs.kids)
                     retstr += GenerateNode(kid);
             }
-
+            if (dump)
+                return DumpFunc(dump) + retstr;
             return retstr.ToString();
         }
 
@@ -2673,7 +2676,6 @@ default
             string rettype = "void";
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
-
 /* suspended.. API fails with IEnums
             else if (IenFunctions.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
