@@ -305,18 +305,11 @@ namespace Aurora.Simulation.Base
             uint httpSSLPort = 9001;
             bool HttpUsesSSL = false;
             string HttpSSLCN = "localhost";
-            try
+            if (m_config.Configs["SSLConfig"] != null)
             {
-                if (m_config.Configs["SSLConfig"] != null)
-                {
-                    httpSSLPort =
-                        (uint)m_config.Configs["SSLConfig"].GetInt("http_listener_sslport", (int)9001);
-                    HttpUsesSSL = m_config.Configs["SSLConfig"].GetBoolean("http_listener_ssl", false);
-                    HttpSSLCN = m_config.Configs["SSLConfig"].GetString("http_listener_cn", "localhost");
-                }
-            }
-            catch
-            {
+                httpSSLPort = m_config.Configs["SSLConfig"].GetUInt("http_listener_sslport", (int)9001);
+                HttpUsesSSL = m_config.Configs["SSLConfig"].GetBoolean("http_listener_ssl", false);
+                HttpSSLCN = m_config.Configs["SSLConfig"].GetString("http_listener_cn", "localhost");
             }
             m_BaseHTTPServer = GetHttpServer(m_Port, HttpUsesSSL, httpSSLPort, HttpSSLCN);
 

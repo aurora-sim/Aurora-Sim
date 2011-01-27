@@ -1091,10 +1091,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 presence.Close();
             }
-            catch (NullReferenceException)
-            {
-                //We can safely ignore null reference exceptions.  It means the avatar are dead and cleaned up anyway.
-            }
             catch (Exception e)
             {
                 m_log.Error("[SCENE] Scene.cs:RemoveClient exception: " + e.ToString());

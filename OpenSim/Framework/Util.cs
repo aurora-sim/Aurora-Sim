@@ -160,6 +160,19 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
+        /// Get the distance between two 3d vectors (excluding Z)
+        /// </summary>
+        /// <param name="a">A 3d vector</param>
+        /// <param name="b">A 3d vector</param>
+        /// <returns>The distance between the two vectors</returns>
+        public static double GetFlatDistanceTo(Vector3 a, Vector3 b)
+        {
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            return Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>
         /// Returns true if the distance beween A and B is less than amount. Significantly faster than GetDistanceTo since it eliminates the Sqrt.
         /// </summary>
         /// <param name="a"></param>

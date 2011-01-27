@@ -1318,7 +1318,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (bAllowUpdateMoveToPosition && (m_moveToPositionInProgress && !m_autopilotMoving))
                     {
                         //Check the error term of the current position in relation to the target position
-                        if (Util.GetDistanceTo(AbsolutePosition, m_moveToPositionTarget) <= 0.5f)
+                        if (Util.GetFlatDistanceTo(AbsolutePosition, m_moveToPositionTarget) <= 0.5f)
                         {
                             // we are close enough to the target
                             m_moveToPositionTarget = Vector3.Zero;
@@ -1496,6 +1496,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 m_moveToPositionInProgress = true;
                 m_moveToPositionTarget = new Vector3(locx, locy, locz);
+                m_log.Warn("Moving to " + m_moveToPositionTarget);
             }
             catch (Exception ex)
             {

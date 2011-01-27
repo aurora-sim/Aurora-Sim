@@ -5398,6 +5398,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             {
                                 applied_linear_impulse *= m_host.GetWorldRotation();
                             }
+                            //Put a limit on it...
+                            int MaxPush = (int)pusheeav.PhysicsActor.Mass * 25;
+
+                            if (applied_linear_impulse.X > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.X = MaxPush;
+                            if (applied_linear_impulse.X < 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.X = -MaxPush;
+
+                            if (applied_linear_impulse.Y > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Y = MaxPush;
+                            if (applied_linear_impulse.Y < 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Y = -MaxPush;
+
+                            if (applied_linear_impulse.Z > 0 &&
+                                Math.Abs(applied_linear_impulse.X) > MaxPush)
+                                applied_linear_impulse.Z = MaxPush;
+                            if (applied_linear_impulse.Z < 0 &&
+                                Math.Abs(applied_linear_impulse.Z) > MaxPush)
+                                applied_linear_impulse.Z = -MaxPush;
+
                             pusheeav.PhysicsActor.AddForce(applied_linear_impulse, true);
                         }
                     }
