@@ -10809,11 +10809,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_itemID, m_host.UUID, 0);
-            if (detectedParams == null) return DateTime.Now; // only works on the first detected avatar
 
-            ScenePresence avatar = World.GetScenePresence(detectedParams.Key);
+            UUID avatarID = m_host.OwnerID;
+            DetectParams detectedParams = m_ScriptEngine.GetDetectParams(m_host.UUID, m_itemID, 0);
+            // only works on the first detected avatar
+            //This only works in touch events or if the item is attached to the avatar
+            if (detectedParams == null && !m_host.IsAttachment) return DateTime.Now; 
+
+            if (detectedParams != null)
+                avatarID = detectedParams.Key;
+
+            ScenePresence avatar = World.GetScenePresence(avatarID);
             if (avatar != null)
             {
                 Aurora.Framework.IMuteListModule module = m_host.ParentGroup.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule>();
@@ -10823,7 +10829,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     foreach (Aurora.Framework.MuteList mute in module.GetMutes(avatar.UUID, out cached))
                     {
                         if (mute.MuteID == m_host.OwnerID)
-                            return DateTime.Now;
+                            return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
                     }
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
