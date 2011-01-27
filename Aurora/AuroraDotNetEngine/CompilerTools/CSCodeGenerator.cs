@@ -2289,7 +2289,17 @@ default
         private string GenerateStateChange(StateChange sc)
         {
             //State is in the LSL_Api because it requires a ref to the ScriptEngine, which we can't have in the ScriptBase
-            return Generate(String.Format("((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\")", sc.NewState), sc);
+            string retStr = GenerateLine("try", null);
+            retStr += GenerateLine("{", null);
+            retStr += Generate(
+                 String.Format("((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\");", sc.NewState)
+                 , sc);
+            retStr += GenerateLine("}", null);
+            retStr += GenerateLine("catch", null);
+            retStr += GenerateLine("{", null);
+            retStr += GenerateLine("yield break;", null);
+            retStr += GenerateLine("}", null);
+            return retStr;
         }
 
         /// <summary>
