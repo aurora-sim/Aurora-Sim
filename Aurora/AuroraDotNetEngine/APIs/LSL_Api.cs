@@ -7549,13 +7549,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID av = new UUID();
             if (!UUID.TryParse(avatar,out av))
             {
-                LSLError("First parameter to llDialog needs to be a key");
-                return DateTime.Now;
-            }
-            if (buttons.Length < 1)
-            {
-                LSLError("No less than 1 button can be shown");
-                return DateTime.Now;
+                //Silently accepted in in SL NOTE: it does sleep though!
+                //LSLError("First parameter to llDialog needs to be a key");
+                return PScriptSleep(1000);
             }
             if (buttons.Length > 12)
             {
@@ -7577,6 +7573,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 buts[i] = buttons.Data[i].ToString();
             }
+            if (buts.Length == 0)
+                buts = new string[1] { "OK" };
 
             dm.SendDialogToUser(
                 av, m_host.Name, m_host.UUID, m_host.OwnerID,
