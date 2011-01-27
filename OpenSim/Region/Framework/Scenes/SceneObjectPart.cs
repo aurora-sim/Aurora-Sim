@@ -3723,6 +3723,8 @@ namespace OpenSim.Region.Framework.Scenes
                     UpdateFlags |= PrimUpdateFlags.Particles;
                 if (MediaUrl != "" && MediaUrl != null)
                     UpdateFlags |= PrimUpdateFlags.MediaURL;
+                if (ParentGroup.RootPart.IsAttachment)
+                    UpdateFlags |= PrimUpdateFlags.AttachmentPoint;
 
                 //Make sure that we send this! Otherwise, the client will only see one prim
                 if (m_parentGroup != null)

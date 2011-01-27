@@ -3756,6 +3756,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                 Flags |= CompressedFlags.TextureAnimation;
                             if (updateFlags.HasFlag(PrimUpdateFlags.NameValue) || ((SceneObjectPart)update.Value.Entity).IsAttachment)
                                 Flags |= CompressedFlags.HasNameValues;
+                            if (((SceneObjectPart)update.Value.Entity).IsAttachment)
+                                Flags |= CompressedFlags.HasParent;
 
                             compressedUpdateBlocks.Value.Add(CreateCompressedUpdateBlock((SceneObjectPart)update.Value.Entity, Flags, updateFlags));
                         }
@@ -4847,7 +4849,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             if ((updateFlags & CompressedFlags.HasParent) != 0)
             {
-                Utils.UIntToBytes(part.ParentID, objectData, i);
+                if (part.IsAttachment)
+                {
+                    ScenePresence us = m_scene.GetScenePresence(this.AgentId);
+                    Utils.UIntToBytes(us.LocalId, objectData, i);
+                }
+                else
+                    Utils.UIntToBytes(part.ParentID, objectData, i);
                 i += 4;
             }
             if ((updateFlags & CompressedFlags.Tree) != 0)
@@ -4855,7 +4863,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 objectData[i] = part.Shape.State; //Tree type
                 i++;
             }
-            else if ((updateFlags & CompressedFlags.ScratchPad) != 0)
+
+            if ((updateFlags & CompressedFlags.ScratchPad) != 0)
             {
                 //Remove the flag, we have no clue what to do with this
                 updateFlags &= ~(CompressedFlags.ScratchPad);
