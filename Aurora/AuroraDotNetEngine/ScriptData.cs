@@ -74,7 +74,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             NextEventDelay.Add("land_collision", 0);
             NextEventDelay.Add("land_collision_end", 0);
             NextEventDelay.Add("land_collision_start", 0);
-            NextEventDelay.Add("link_message", 0);
+            //Don't limit link_message, too important!
+            //NextEventDelay.Add("link_message", 0);
             NextEventDelay.Add("listen", 0);
             NextEventDelay.Add("money", 0);
             NextEventDelay.Add("moving_end", 0);
