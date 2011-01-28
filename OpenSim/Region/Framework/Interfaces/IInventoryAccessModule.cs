@@ -39,6 +39,15 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data);
         UUID DeleteToInventory(DeRezAction action, UUID folderID, List<SceneObjectGroup> objectGroups, UUID agentId, out UUID itemID);
+
+        /// <summary>
+        /// Create a SceneObjectGroup representation of an asset xml of the given item
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="itemID"></param>
+        /// <returns></returns>
+        SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID);
+
         SceneObjectGroup RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
                                     UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
                                     bool RezSelected, bool RemoveItem, UUID fromTaskID, bool attachment);

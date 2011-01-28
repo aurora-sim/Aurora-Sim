@@ -89,12 +89,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Client Methods
 
-        public void MakeRootAgent(ScenePresence presence)
+        protected void MakeRootAgent(ScenePresence presence)
         {
             Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
         }
 
-        public void MakeChildAgent(ScenePresence presence)
+        protected void MakeChildAgent(ScenePresence presence)
         {
             foreach (AvatarAttachment att in presence.Appearance.GetAttachments())
             {
@@ -163,29 +163,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (part == null)
                     return;
 
-                if (!m_scene.Permissions.CanTakeObject(part.UUID, remoteClient.AgentId))
-                {
-                     remoteClient.SendAgentAlertMessage(
-                         "You don't have sufficient permissions to attach this object", false);
-                     return;
-                }
-
-                // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
-                // be removed when that functionality is implemented in opensim
-                AttachmentPt &= 0x7f;
-
                 // Calls attach with a Zero position
-                if (AttachObjectFromInworldObject(remoteClient, part.ParentGroup, AttachmentPt))
-                {
-                    m_scene.EventManager.TriggerOnAttach(objectLocalID, part.ParentGroup.GetFromItemID(), remoteClient.AgentId);
-
-                    m_log.Info(
-                        "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
-                        + ", AttachmentPoint: " + AttachmentPt);
-
-                    if (AvatarFactory != null)
-                        AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-                }
+                AttachObjectFromInworldObject(objectLocalID, remoteClient, part.ParentGroup, AttachmentPt);
             }
             catch (Exception e)
             {
@@ -197,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Public Methods
 
-        public bool AttachObjectFromInworldObject(IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
+        public bool AttachObjectFromInworldObject(uint localID, IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
         {
             Vector3 attachPos = group.AbsolutePosition;
 
@@ -276,6 +255,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
 
                 AttachToAgent(sp, group, AttachmentPt, attachPos);
+
+                m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
+
+                m_log.Info(
+                    "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
+                    + ", AttachmentPoint: " + AttachmentPt);
+
+                if (AvatarFactory != null)
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
             else
             {
@@ -344,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // This will throw if the attachment fails
                     try
                     {
-                        AttachObjectFromInworldObject(remoteClient, objatt, AttachmentPt);
+                        AttachObjectFromInworldObject(objatt.LocalId, remoteClient, objatt, AttachmentPt);
                     }
                     catch
                     {
@@ -455,6 +443,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
+        #region Detach
+
         public void DetachObject(uint objectLocalID, IClientAPI remoteClient)
         {
             SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
@@ -561,6 +551,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
             }
         }
+
+        #endregion
 
         public void UpdateAttachmentPosition(IClientAPI client, SceneObjectGroup sog, Vector3 pos)
         {
