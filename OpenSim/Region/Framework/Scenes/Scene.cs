@@ -714,7 +714,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnUndo += m_sceneGraph.HandleUndo;
             client.OnRedo += m_sceneGraph.HandleRedo;
             client.OnObjectDescription += m_sceneGraph.PrimDescription;
-            client.OnObjectDrop += m_sceneGraph.DropObject;
             client.OnObjectIncludeInSearch += m_sceneGraph.MakeObjectSearchable;
             client.OnObjectOwner += m_sceneGraph.ObjectOwner;
             client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
@@ -783,7 +782,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnUndo -= m_sceneGraph.HandleUndo;
             client.OnRedo -= m_sceneGraph.HandleRedo;
             client.OnObjectDescription -= m_sceneGraph.PrimDescription;
-            client.OnObjectDrop -= m_sceneGraph.DropObject;
             client.OnObjectIncludeInSearch -= m_sceneGraph.MakeObjectSearchable;
             client.OnObjectOwner -= m_sceneGraph.ObjectOwner;
             client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;

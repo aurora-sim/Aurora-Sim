@@ -107,25 +107,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         {
             foreach (AvatarAttachment att in presence.Appearance.GetAttachments())
             {
-                //Don't fire events as we just want to remove them
-                DetachSingleAttachmentToInv(att.ItemID, presence.ControllingClient, false);
+                //Don't fire events as we just want to remove them 
+                //  and we don't want to remove the attachment from the av either
+                DetachSingleAttachmentToInventoryInternal(att.ItemID, presence.ControllingClient, false);
             }
         }
 
         protected void SubscribeToClientEvents(IClientAPI client)
         {
             client.OnRezSingleAttachmentFromInv += ClientRezSingleAttachmentFromInventory;
-            client.OnObjectAttach += AttachObject;
-            client.OnObjectDetach += DetachObject;
-            client.OnDetachAttachmentIntoInv += ShowDetachInUserInventory;
+            client.OnObjectAttach += ClientAttachObject;
+            client.OnObjectDetach += ClientDetachObject;
+            client.OnObjectDrop += ClientDropObject;
+            client.OnDetachAttachmentIntoInv += DetachSingleAttachmentToInventory;
+            client.OnUpdatePrimGroupPosition += ClientUpdateAttachmentPosition;
         }
 
         protected void UnsubscribeFromClientEvents(IClientAPI client)
         {
             client.OnRezSingleAttachmentFromInv -= ClientRezSingleAttachmentFromInventory;
-            client.OnObjectAttach -= AttachObject;
-            client.OnObjectDetach -= DetachObject;
-            client.OnDetachAttachmentIntoInv -= ShowDetachInUserInventory;
+            client.OnObjectAttach -= ClientAttachObject;
+            client.OnObjectDetach -= ClientDetachObject;
+            client.OnObjectDrop -= ClientDropObject;
+            client.OnDetachAttachmentIntoInv -= DetachSingleAttachmentToInventory;
+            client.OnUpdatePrimGroupPosition -= ClientUpdateAttachmentPosition;
         }
 
         protected void RezAttachments(ScenePresence presence)
@@ -166,7 +171,24 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             return att.UUID;
         }
 
-        protected void AttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
+        protected void ClientDetachObject(uint objectLocalID, IClientAPI remoteClient)
+        {
+            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            if (group != null)
+            {
+                //group.DetachToGround();
+                DetachSingleAttachmentToInventory(group.GetFromItemID(), remoteClient);
+            }
+        }
+
+        protected void ClientDropObject(uint objectLocalID, IClientAPI remoteClient)
+        {
+            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            if (group != null)
+                DetachSingleAttachmentToGround(group.UUID, remoteClient);
+        }
+
+        protected void ClientAttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
         {
             m_log.Debug("[ATTACHMENTS MODULE]: Invoking AttachObject");
 
@@ -375,7 +397,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     }
                 }
                 if (itemID != UUID.Zero)
-                    DetachSingleAttachmentToInv(itemID, remoteClient, true);
+                    DetachSingleAttachmentToInventory(itemID, remoteClient);
             }
             itemID = group.GetFromItemID();
 
@@ -445,17 +467,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Detach
 
-        public void DetachObject(uint objectLocalID, IClientAPI remoteClient)
-        {
-            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
-            if (group != null)
-            {
-                //group.DetachToGround();
-                ShowDetachInUserInventory(group.GetFromItemID(), remoteClient);
-            }
-        }
-
-        public void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient)
+        public void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient)
         {
             ScenePresence presence;
             if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
@@ -467,7 +479,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
-            DetachSingleAttachmentToInv(itemID, remoteClient, true);
+            DetachSingleAttachmentToInventoryInternal(itemID, remoteClient, true);
         }
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
@@ -506,7 +518,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
         // To LocalId or UUID, *THAT* is the question. How now Brown UUID??
-        public void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent)
+        protected void DetachSingleAttachmentToInventoryInternal(UUID itemID, IClientAPI remoteClient, bool fireEvent)
         {
             if (itemID == UUID.Zero) // If this happened, someone made a mistake....
                 return;
@@ -564,23 +576,61 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #endregion
 
-        public void UpdateAttachmentPosition(IClientAPI client, SceneObjectGroup sog, Vector3 pos)
+        protected void ClientUpdateAttachmentPosition(uint objectLocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            // If this is an attachment, then we need to save the modified
-            // object back into the avatar's inventory. First we save the
-            // attachment point information, then we update the relative 
-            // positioning (which caused this method to get driven in the
-            // first place. Then we have to mark the object as NOT an
-            // attachment. This is necessary in order to correctly save
-            // and retrieve GroupPosition information for the attachment.
-            // Then we save the asset back into the appropriate inventory
-            // entry. Finally, we restore the object's attachment status.
-            byte attachmentPoint = (byte)sog.RootPart.AttachmentPoint;
-            sog.UpdateGroupPosition(pos, true);
-            sog.RootPart.IsAttachment = false;
-            sog.AbsolutePosition = sog.RootPart.AttachedPos;
-            UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
-            sog.SetAttachmentPoint(attachmentPoint);
+            SceneObjectGroup group = m_scene.GetGroupByPrim(objectLocalID);
+            if (group != null)
+            {
+                if (group.IsAttachment || (group.RootPart.Shape.PCode == 9 && group.RootPart.Shape.State != 0))
+                {
+                    //Move has edit permission as well
+                    if (m_scene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
+                    {
+                        //Only deal with attachments!
+                        UpdateAttachmentPosition(remoteClient, group.GetFromItemID(), pos);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update the position of the given attachment
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="ItemID"></param>
+        /// <param name="pos"></param>
+        public void UpdateAttachmentPosition(IClientAPI client, UUID ItemID, Vector3 pos)
+        {
+            SceneObjectGroup[] attachments = GetAttachmentsForAvatar(client.AgentId);
+            SceneObjectGroup sog = null;
+            //Find the attachment we are trying to edit by ItemID
+            foreach (SceneObjectGroup grp in attachments)
+            {
+                if (grp.GetFromItemID() == ItemID)
+                {
+                    sog = grp;
+                    break;
+                }
+            }
+
+            if (sog != null)
+            {
+                // If this is an attachment, then we need to save the modified
+                // object back into the avatar's inventory. First we save the
+                // attachment point information, then we update the relative 
+                // positioning (which caused this method to get driven in the
+                // first place. Then we have to mark the object as NOT an
+                // attachment. This is necessary in order to correctly save
+                // and retrieve GroupPosition information for the attachment.
+                // Then we save the asset back into the appropriate inventory
+                // entry. Finally, we restore the object's attachment status.
+                byte attachmentPoint = (byte)sog.RootPart.AttachmentPoint;
+                sog.UpdateGroupPosition(pos, true);
+                sog.RootPart.IsAttachment = false;
+                sog.AbsolutePosition = sog.RootPart.AttachedPos;
+                UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
+                sog.SetAttachmentPoint(attachmentPoint);
+            }
         }
 
         /// <summary>
@@ -594,7 +644,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <param name="grp"></param>
         /// <param name="itemID"></param>
         /// <param name="agentID"></param>
-        public void UpdateKnownItem(IClientAPI remoteClient, SceneObjectGroup grp, UUID itemID, UUID agentID)
+        protected void UpdateKnownItem(IClientAPI remoteClient, SceneObjectGroup grp, UUID itemID, UUID agentID)
         {
             if (grp != null)
             {
@@ -707,6 +757,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             so.HasGroupChanged = false;
         }
 
+        /// <summary>
+        /// Get all of the attachments for the given avatar
+        /// </summary>
+        /// <param name="avatarID">The avatar whose attachments will be returned</param>
+        /// <returns>The avatar's attachments as SceneObjectGroups</returns>
         public SceneObjectGroup[] GetAttachmentsForAvatar(UUID avatarID)
         {
             SceneObjectGroup[] attachments = new SceneObjectGroup[0];
@@ -744,6 +799,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
+        /// <summary>
+        /// Make sure that all attachments are ready to be transfered to a new region
+        /// Note: this will remove broken attachments
+        /// </summary>
+        /// <param name="avatarID">The avatar who's attachments will be checked</param>
         public void ValidateAttachments(UUID avatarID)
         {
             SceneObjectGroup[] attachments = GetAttachmentsForAvatar(avatarID);
@@ -757,11 +817,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     if (attachments[i].IsDeleted)
                     {
                         presence.ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        DetachObject(attachments[i].LocalId, presence.ControllingClient);
+                        DetachSingleAttachmentToInventory(attachments[i].GetFromItemID(), presence.ControllingClient);
                         continue;
                     }
                     //Save it and prep it for transfer
-                    DetachSingleAttachmentToInv(attachments[i].RootPart.FromItemID, presence.ControllingClient, false);
+                    DetachSingleAttachmentToInventoryInternal(attachments[i].RootPart.FromItemID, presence.ControllingClient, false);
                 }
             }
         }

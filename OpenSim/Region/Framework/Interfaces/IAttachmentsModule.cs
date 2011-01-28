@@ -60,16 +60,6 @@ namespace OpenSim.Region.Framework.Interfaces
             IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
         /// <summary>
-        /// Detach an object from the avatar.
-        /// </summary>
-        ///
-        /// This method is called in response to a client's detach request, so we only update the information in
-        /// inventory
-        /// <param name="objectLocalID"></param>
-        /// <param name="remoteClient"></param>
-        void DetachObject(uint objectLocalID, IClientAPI remoteClient);
-
-        /// <summary>
         /// Detach the given item to the ground.
         /// </summary>
         /// <param name="itemID"></param>
@@ -85,23 +75,15 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="remoteClient">
         /// A <see cref="IClientAPI"/>
         /// </param>
-        void ShowDetachInUserInventory(UUID itemID, IClientAPI remoteClient);
-
-        /// <summary>
-        /// Detach the attachment into the users inventory 
-        /// </summary>
-        /// <param name="itemID"></param>
-        /// <param name="remoteClient"></param>
-        /// <param name="fireEvent"></param>
-        void DetachSingleAttachmentToInv(UUID itemID, IClientAPI remoteClient, bool fireEvent);
+        void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient);
 
         /// <summary>
         /// Update the position of an attachment
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="sog"></param>
-        /// <param name="pos"></param>
-        void UpdateAttachmentPosition(IClientAPI client, SceneObjectGroup sog, Vector3 pos);
+        /// <param name="client">The client whose attachment we are to move</param>
+        /// <param name="ItemID">The itemID of the object to move</param>
+        /// <param name="pos">The new position of the attachment</param>
+        void UpdateAttachmentPosition(IClientAPI client, UUID ItemID, Vector3 pos);
 
         /// <summary>
         /// Get a list of the given avatar's attachments

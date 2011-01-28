@@ -3853,7 +3853,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
             if (attachmentsModule != null)
-                attachmentsModule.ShowDetachInUserInventory(itemID, presence.ControllingClient);
+                attachmentsModule.DetachSingleAttachmentToInventory(itemID, presence.ControllingClient);
         }
 
         public void llTakeCamera(string avatar)

@@ -226,22 +226,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicalPrim--;
         }
 
-        public void DropObject(uint LocalID, IClientAPI remoteClient)
-        {
-            EntityBase entity;
-            IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
-            if (TryGetEntity(LocalID, out entity) && attachModule != null)
-                attachModule.DetachSingleAttachmentToGround(entity.UUID, remoteClient);
-        }
-
-        protected internal void DetachObject(uint LocalID, IClientAPI remoteClient)
-        {
-            EntityBase entity;
-            IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
-            if (TryGetEntity(LocalID, out entity) && attachModule != null)
-                attachModule.ShowDetachInUserInventory(((SceneObjectGroup)entity).GetFromItemID(), remoteClient);
-        }
-
         protected internal void HandleUndo(IClientAPI remoteClient, UUID primId)
         {
             if (primId != UUID.Zero)
@@ -1172,24 +1156,22 @@ namespace OpenSim.Region.Framework.Scenes
             EntityBase entity;
             if (TryGetEntity(LocalID, out entity))
             {
-                //Move has edit permission as well
-                if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                if (((SceneObjectGroup)entity).IsAttachment || (((SceneObjectGroup)entity).RootPart.Shape.PCode == 9 && ((SceneObjectGroup)entity).RootPart.Shape.State != 0))
                 {
-                    if (((SceneObjectGroup)entity).IsAttachment || (((SceneObjectGroup)entity).RootPart.Shape.PCode == 9 && ((SceneObjectGroup)entity).RootPart.Shape.State != 0))
-                    {
-                        IAttachmentsModule attachModule = m_parentScene.RequestModuleInterface<IAttachmentsModule>();
-                        if (attachModule != null)
-                            attachModule.UpdateAttachmentPosition(remoteClient, ((SceneObjectGroup)entity), pos);
-                    }
-                    else
-                    {
-                        ((SceneObjectGroup)entity).UpdateGroupPosition(pos, SaveUpdate);
-                    }
+                    //We don't deal with attachments, they handle themselves in the IAttachmentModule
                 }
                 else
                 {
-                    ScenePresence SP = GetScenePresence(remoteClient.AgentId);
-                    ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    //Move has edit permission as well
+                    if (m_parentScene.Permissions.CanMoveObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
+                    {
+                        ((SceneObjectGroup)entity).UpdateGroupPosition(pos, SaveUpdate);
+                    }
+                    else
+                    {
+                        ScenePresence SP = GetScenePresence(remoteClient.AgentId);
+                        ((SceneObjectGroup)entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
+                    }
                 }
             }
         }
