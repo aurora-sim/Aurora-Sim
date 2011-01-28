@@ -311,16 +311,64 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
             if (invAccess != null)
             {
-                SceneObjectGroup objatt = invAccess.RezObject(remoteClient,
-                    itemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
-                    false, false, remoteClient.AgentId, true);
-
-                //                m_log.DebugFormat(
-                //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
-                //                    objatt.Name, remoteClient.Name, AttachmentPt);
+                SceneObjectGroup objatt = invAccess.CreateObjectFromInventory(remoteClient,
+                    itemID);
 
                 if (objatt != null)
                 {
+                    InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                    item = m_scene.InventoryService.GetItem(item);
+
+                    objatt.RootPart.Flags |= PrimFlags.Phantom;
+                    objatt.RootPart.IsAttachment = true;
+                    objatt.SetFromItemID(itemID);
+
+                    // Since renaming the item in the inventory does not affect the name stored
+                    // in the serialization, transfer the correct name from the inventory to the
+                    // object itself before we rez.
+                    objatt.RootPart.Name = item.Name;
+                    objatt.RootPart.Description = item.Description;
+
+                    List<SceneObjectPart> partList = new List<SceneObjectPart>(objatt.ChildrenList);
+
+                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                    if (objatt.RootPart.OwnerID != item.Owner)
+                    {
+                        //Need to kill the for sale here
+                        objatt.RootPart.ObjectSaleType = 0;
+                        objatt.RootPart.SalePrice = 10;
+
+                        if (m_scene.Permissions.PropagatePermissions())
+                        {
+                            if ((item.CurrentPermissions & 8) != 0)
+                            {
+                                foreach (SceneObjectPart part in partList)
+                                {
+                                    part.EveryoneMask = item.EveryOnePermissions;
+                                    part.NextOwnerMask = item.NextPermissions;
+                                    part.GroupMask = 0; // DO NOT propagate here
+                                }
+                            }
+
+                            objatt.ApplyNextOwnerPermissions();
+                        }
+                    }
+
+                    foreach (SceneObjectPart part in partList)
+                    {
+                        if (part.OwnerID != item.Owner)
+                        {
+                            part.LastOwnerID = part.OwnerID;
+                            part.OwnerID = item.Owner;
+                            part.Inventory.ChangeInventoryOwner(item.Owner);
+                        }
+                    }
+                    objatt.RootPart.TrimPermissions();
+
+                    //                m_log.DebugFormat(
+                    //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
+                    //                    objatt.Name, remoteClient.Name, AttachmentPt);
+
                     // Loading the inventory from XML will have set this, but
                     // there is no way the object could have changed yet,
                     // since scripts aren't running yet. So, clear it here.
@@ -338,7 +386,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     {
                         // Make sure the object doesn't stick around and bail
                         IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                        if(backup != null)
+                        if (backup != null)
                             backup.DeleteSceneObjects(new SceneObjectGroup[1] { objatt }, true);
                         return null;
                     }

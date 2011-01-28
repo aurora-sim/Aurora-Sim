@@ -107,7 +107,7 @@ namespace OpenSim.Region.RegionCombinerModule
             IInventoryAccessModule module = m_rootScene.RequestModuleInterface<IInventoryAccessModule>();
             if(module != null)
                 module.RezObject(remoteclient, itemid, rayend, raystart, raytargetid, bypassraycast,
-                                  rayendisintersection, rezselected, removeitem, fromtaskid, false);
+                                  rayendisintersection, rezselected, removeitem, fromtaskid);
         }
         /// <summary>
         /// Fixes position based on the region the AddPrimShape event came in on
