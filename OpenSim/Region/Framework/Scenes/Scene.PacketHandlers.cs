@@ -100,6 +100,13 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
+                EntityBase entitybase;
+                //Check for avies! They arn't prims!
+                if (m_sceneGraph.TryGetEntity(primLocalID, out entitybase))
+                {
+                    if (entitybase is ScenePresence)
+                        continue;
+                }
                 if (entity != null)
                     EntitiesToUpdate.Add(entity);
                 else
@@ -109,7 +116,13 @@ namespace OpenSim.Region.Framework.Scenes
                     bool foundPrim = false;
                     foreach (EntityBase ent in EntityList)
                     {
-                        if (ent is SceneObjectGroup)
+                        //Make sure it isn't an avatar
+                        if (ent is ScenePresence)
+                        {
+                            foundPrim = true;
+                            break;
+                        }
+                        else if (ent is SceneObjectGroup)
                         {
                             if (((SceneObjectGroup)ent).LocalId == primLocalID)
                             {
