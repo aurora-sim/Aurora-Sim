@@ -48,6 +48,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected Scene m_scene = null;
         protected bool m_allowMultipleAttachments = true;
+        protected int m_maxNumberOfAttachments = 38;
 
         public string Name { get { return "Attachments Module"; } }
         public Type ReplaceableInterface { get { return null; } }
@@ -61,6 +62,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         {
             if (source.Configs["Attachments"] != null)
             {
+                m_maxNumberOfAttachments = source.Configs["Attachments"].GetInt("MaxNumberOfAttachments", m_maxNumberOfAttachments);
                 m_allowMultipleAttachments = source.Configs["Attachments"].GetBoolean("EnableMultipleAttachments", m_allowMultipleAttachments);
             }
         }
@@ -532,6 +534,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         protected void FindAttachmentPoint(IClientAPI remoteClient, uint localID, SceneObjectGroup group,
             int AttachmentPt, InventoryItemBase item)
         {
+            //Make sure that we arn't over the limit of attachments
+            SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
+            if (attachments.Length + 1 > m_maxNumberOfAttachments)
+            {
+                //Too many
+                remoteClient.SendAgentAlertMessage(
+                    "You are wearing too many attachments. Take one off to attach this object", false);
+
+                return;
+            }
             Vector3 attachPos = group.AbsolutePosition;
             if(!m_allowMultipleAttachments)
                 AttachmentPt &= 0x7f; //Disable it!
@@ -587,7 +599,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //If the numbers are the same, it wants to have the old attachment taken off
             if ((AttachmentPt & 0x7f) == AttachmentPt) 
             {
-                SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
                 foreach (SceneObjectGroup grp in attachments)
                 {
                     if (grp.GetAttachmentPoint() == (byte)AttachmentPt)
@@ -616,6 +627,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if (UUID.Zero == itemID)
             {
                 m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
+                remoteClient.SendAgentAlertMessage(
+                    "Unable to save attachment. Error inventory item ID.", false);
                 return;
             }
 
