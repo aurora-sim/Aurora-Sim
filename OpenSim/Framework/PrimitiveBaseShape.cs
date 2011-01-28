@@ -1198,13 +1198,24 @@ namespace OpenSim.Framework
         {
             byte[] data = new byte[16];
 
-            // Alpha channel in color is intensity
-            Color4 tmpColor = new Color4(_lightColorR,_lightColorG,_lightColorB,_lightIntensity);
+            try
+            {
 
-            tmpColor.GetBytes().CopyTo(data, 0);
-            Utils.FloatToBytes(_lightRadius).CopyTo(data, 4);
-            Utils.FloatToBytes(_lightCutoff).CopyTo(data, 8);
-            Utils.FloatToBytes(_lightFalloff).CopyTo(data, 12);
+                if (_lightIntensity > 1)
+                    _lightIntensity = 1;
+
+                // Alpha channel in color is intensity
+                Color4 tmpColor = new Color4(_lightColorR, _lightColorG, _lightColorB, _lightIntensity);
+
+                tmpColor.GetBytes().CopyTo(data, 0);
+                Utils.FloatToBytes(_lightRadius).CopyTo(data, 4);
+                Utils.FloatToBytes(_lightCutoff).CopyTo(data, 8);
+                Utils.FloatToBytes(_lightFalloff).CopyTo(data, 12);
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("Error GetLightBytes: " + ex.ToString());
+            }
 
             return data;
         }
