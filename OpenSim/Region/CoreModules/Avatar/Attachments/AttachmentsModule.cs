@@ -235,7 +235,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             SceneObjectGroup group, int AttachmentPt)
         {
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
-                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt);
+                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, null);
             else
             {
                 remoteClient.SendAgentAlertMessage(
@@ -328,7 +328,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
                     //                    objatt.Name, remoteClient.Name, AttachmentPt);
 
-                    FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt);
+                    FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, item);
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 4 == AttachedRez
@@ -520,8 +520,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Internal Methods
 
+        /// <summary>
+        /// Attach the object to the avatar
+        /// </summary>
+        /// <param name="remoteClient">The client that is having the attachment done</param>
+        /// <param name="localID">The localID (SceneObjectPart) that is being attached (for the attach script event)</param>
+        /// <param name="group">The group (SceneObjectGroup) that is being attached</param>
+        /// <param name="AttachmentPt">The point to where the attachment will go</param>
+        /// <param name="item">If this is not null, it saves a query in this method to the InventoryService
+        /// This is the Item that the object is in (if it is in one yet)</param>
         protected void FindAttachmentPoint(IClientAPI remoteClient, uint localID, SceneObjectGroup group,
-            int AttachmentPt)
+            int AttachmentPt, InventoryItemBase item)
         {
             Vector3 attachPos = group.AbsolutePosition;
             if(!m_allowMultipleAttachments)
@@ -603,7 +612,26 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
                         groups, remoteClient.AgentId, out itemID);
             }
-            ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
+
+            if (UUID.Zero == itemID)
+            {
+                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
+                return;
+            }
+
+            // XXYY!!
+            if (item != null)
+            {
+                item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                item = m_scene.InventoryService.GetItem(item);
+            }
+
+            //Update the ItemID with the new item
+            group.SetFromItemID(item.ID);
+
+            //If we updated the attachment, we need to save the change
+            if (presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
             group.RootPart.AttachedAvatar = presence.UUID;
 
@@ -656,54 +684,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             group.RootPart.RemFlag(PrimFlags.TemporaryOnRez);
             group.HasGroupChanged = false;
 
-            if (AvatarFactory != null)
-                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-
             m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
-        }
-
-        /// <summary>
-        /// Update the user inventory to reflect an attachment
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="AttachmentPt"></param>
-        /// <param name="itemID"></param>
-        /// <param name="att"></param>
-        protected void ShowAttachInUserInventory(
-            IClientAPI remoteClient, int AttachmentPt, UUID itemID, SceneObjectGroup att)
-        {
-            //            m_log.DebugFormat(
-            //                "[USER INVENTORY]: Updating attachment {0} for {1} at {2} using item ID {3}", 
-            //                att.Name, remoteClient.Name, AttachmentPt, itemID);
-
-            if (UUID.Zero == itemID)
-            {
-                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
-                return;
-            }
-
-            if (0 == AttachmentPt)
-            {
-                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error attachment point.");
-                return;
-            }
-
-            if (null == att.RootPart)
-            {
-                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment for a prim without the rootpart!");
-                return;
-            }
-
-            ScenePresence presence;
-            if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
-            {
-                // XXYY!!
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
-                att.SetFromItemID(itemID);
-                if(presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-            }
         }
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
