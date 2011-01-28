@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void SubscribeToClientEvents(IClientAPI client)
         {
-            client.OnRezSingleAttachmentFromInv += RezSingleAttachmentFromInventory;
+            client.OnRezSingleAttachmentFromInv += ClientRezSingleAttachmentFromInventory;
             client.OnObjectAttach += AttachObject;
             client.OnObjectDetach += DetachObject;
             client.OnDetachAttachmentIntoInv += ShowDetachInUserInventory;
@@ -113,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void UnsubscribeFromClientEvents(IClientAPI client)
         {
-            client.OnRezSingleAttachmentFromInv -= RezSingleAttachmentFromInventory;
+            client.OnRezSingleAttachmentFromInv -= ClientRezSingleAttachmentFromInventory;
             client.OnObjectAttach -= AttachObject;
             client.OnObjectDetach -= DetachObject;
             client.OnDetachAttachmentIntoInv -= ShowDetachInUserInventory;
@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 try
                 {
-                    RezSingleAttachmentFromInventory(presence.ControllingClient, itemID, p, true);
+                    RezSingleAttachmentFromInventory(presence.ControllingClient, itemID, p);
                 }
                 catch (Exception e)
                 {
@@ -147,9 +147,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        protected UUID RezSingleAttachmentFromInventory(IClientAPI remoteClient, UUID itemID, int AttachmentPt)
+        protected UUID ClientRezSingleAttachmentFromInventory(
+            IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
-            return RezSingleAttachmentFromInventory(remoteClient, itemID, AttachmentPt, true);
+            SceneObjectGroup att = RezSingleAttachmentFromInventory(remoteClient, itemID, AttachmentPt);
+
+            if (null == att)
+                return UUID.Zero;
+            return att.UUID;
         }
 
         protected void AttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
@@ -176,87 +181,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region Public Methods
 
-        public bool AttachObjectFromInworldObject(uint localID, IClientAPI remoteClient, SceneObjectGroup group, int AttachmentPt)
+        public bool AttachObjectFromInworldObject(uint localID, IClientAPI remoteClient,
+            SceneObjectGroup group, int AttachmentPt)
         {
-            Vector3 attachPos = group.AbsolutePosition;
-
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
             {
-                // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
-                // be removed when that functionality is implemented in opensim
-                AttachmentPt &= 0x7f;
+                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt);
 
-                // If the attachment point isn't the same as the one previously used
-                // set it's offset position = 0 so that it appears on the attachment point
-                // and not in a weird location somewhere unknown.
-                if (AttachmentPt != 0 && AttachmentPt != (int)group.GetAttachmentPoint())
-                {
-                    attachPos = Vector3.Zero;
-                }
+                //Delete the object inworld to inventory
 
-                // AttachmentPt 0 means the client chose to 'wear' the attachment.
-                /*if (AttachmentPt == 0)
-                {
-                    // Check object for stored attachment point
-                    AttachmentPt = (int)group.GetAttachmentPoint();
-                    attachPos = group.GetAttachmentPos();
-                }*/
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
+                UUID itemID;
 
-                if (AttachmentPt == 0)
-                {
-                    // Check object for older stored attachment point
-                    AttachmentPt = group.RootPart.Shape.State;
-                    //attachPos = group.AbsolutePosition;
-                }
-
-                // if we still didn't find a suitable attachment point.......
-                if (AttachmentPt == 0)
-                {
-                    // Stick it on right hand with Zero Offset from the attachment point.
-                    AttachmentPt = (int)AttachmentPoint.RightHand;
-                    attachPos = Vector3.Zero;
-                }
-
-                group.SetAttachmentPoint((byte)AttachmentPt);
-                group.AbsolutePosition = attachPos;
-
-                // Remove any previous attachments
-                ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
-                UUID itemID = UUID.Zero;
-                if (sp != null)
-                {
-                    SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
-                    foreach (SceneObjectGroup grp in attachments)
-                    {
-                        if (grp.GetAttachmentPoint() == (byte)AttachmentPt)
-                        {
-                            itemID = grp.GetFromItemID();
-                            break;
-                        }
-                    }
-                    if (itemID != UUID.Zero)
-                        DetachSingleAttachmentToInv(itemID, remoteClient, true);
-                }
-
-                if (group.GetFromItemID() == UUID.Zero)
-                {
-                    List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
-                    groups.Add(group);
-                    IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                    if(inventoryAccess != null)
-                        inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
-                            groups, remoteClient.AgentId, out itemID);
-                }
-                else
-                {
-                    itemID = group.GetFromItemID();
-                }
-
-                ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
-
-                AttachToAgent(sp, group, AttachmentPt, attachPos);
-
-                m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
+                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                if (inventoryAccess != null)
+                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
+                        groups, remoteClient.AgentId, out itemID);
 
                 m_log.Info(
                     "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
@@ -276,38 +216,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             return true;
         }
 
-        public UUID RezSingleAttachmentFromInventory(
-            IClientAPI remoteClient, UUID itemID, int AttachmentPt, bool updateInventoryStatus)
+        public SceneObjectGroup RezSingleAttachmentFromInventory(
+            IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
             m_log.DebugFormat(
                 "[ATTACHMENTS MODULE]: Rezzing attachment to point {0} from item {1} for {2}",
                 (AttachmentPoint)AttachmentPt, itemID, remoteClient.Name);
-
-            // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
-            // be removed when that functionality is implemented in opensim
-            AttachmentPt &= 0x7f;
-
-            SceneObjectGroup att = RezSingleAttachmentFromInventoryInternal(remoteClient, itemID, AttachmentPt);
-
-            if (updateInventoryStatus)
-            {
-                if (att == null)
-                    ShowDetachInUserInventory(itemID, remoteClient);
-                else
-                    ShowAttachInUserInventory(att, remoteClient, itemID, AttachmentPt);
-            }
-
-            if (null == att)
-                return UUID.Zero;
-            else
-                return att.UUID;
-        }
-
-        #endregion
-
-        protected SceneObjectGroup RezSingleAttachmentFromInventoryInternal(
-            IClientAPI remoteClient, UUID itemID, int AttachmentPt)
-        {
             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
             if (invAccess != null)
             {
@@ -316,6 +230,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 if (objatt != null)
                 {
+                    #region Set up object for attachment status
+
                     InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                     item = m_scene.InventoryService.GetItem(item);
 
@@ -365,6 +281,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     }
                     objatt.RootPart.TrimPermissions();
 
+                    #endregion
+
                     //                m_log.DebugFormat(
                     //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
                     //                    objatt.Name, remoteClient.Name, AttachmentPt);
@@ -380,29 +298,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // This will throw if the attachment fails
                     try
                     {
-                        AttachObjectFromInworldObject(objatt.LocalId, remoteClient, objatt, AttachmentPt);
+                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt);
                     }
                     catch
                     {
-                        // Make sure the object doesn't stick around and bail
-                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
-                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { objatt }, true);
                         return null;
                     }
-
-                    if (tainted)
-                        objatt.HasGroupChanged = true;
-
-                    objatt.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 4 == AttachedRez
                     objatt.CreateScriptInstances(0, true, 4, UUID.Zero);
                     objatt.ResumeScripts();
 
-                    // Do this last so that event listeners have access to all the effects of the attachment
-                    m_scene.EventManager.TriggerOnAttach(objatt.LocalId, itemID, remoteClient.AgentId);
+                    if (tainted)
+                        objatt.HasGroupChanged = true;
+
+                    objatt.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 }
                 else
                 {
@@ -417,34 +328,73 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             return null;
         }
 
-        /// <summary>
-        /// Update the user inventory to the attachment of an item
-        /// </summary>
-        /// <param name="att"></param>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
-        /// <param name="AttachmentPt"></param>
-        /// <returns></returns>
-        protected UUID ShowAttachInUserInventory(
-            SceneObjectGroup att, IClientAPI remoteClient, UUID itemID, int AttachmentPt)
+        #endregion
+
+        protected void FindAttachmentPoint(IClientAPI remoteClient, uint localID, SceneObjectGroup group,
+            int AttachmentPt)
         {
-            //            m_log.DebugFormat(
-            //                "[ATTACHMENTS MODULE]: Updating inventory of {0} to show attachment of {1} (item ID {2})", 
-            //                remoteClient.Name, att.Name, itemID);
+            Vector3 attachPos = group.AbsolutePosition;
+            // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
+            // be removed when that functionality is implemented in opensim
+            AttachmentPt &= 0x7f;
 
-            if (!att.IsDeleted)
-                AttachmentPt = att.RootPart.AttachmentPoint;
-
-            ScenePresence presence;
-            if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
+            // If the attachment point isn't the same as the one previously used
+            // set it's offset position = 0 so that it appears on the attachment point
+            // and not in a weird location somewhere unknown.
+            if (AttachmentPt != 0 && AttachmentPt != (int)group.GetAttachmentPoint())
             {
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
-
-                presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID /*att.UUID*/);
+                attachPos = Vector3.Zero;
             }
 
-            return att.UUID;
+            // AttachmentPt 0 means the client chose to 'wear' the attachment.
+            /*if (AttachmentPt == 0)
+            {
+                // Check object for stored attachment point
+                AttachmentPt = (int)group.GetAttachmentPoint();
+                attachPos = group.GetAttachmentPos();
+            }*/
+
+            if (AttachmentPt == 0)
+            {
+                // Check object for older stored attachment point
+                AttachmentPt = group.RootPart.Shape.State;
+                //attachPos = group.AbsolutePosition;
+            }
+
+            // if we still didn't find a suitable attachment point.......
+            if (AttachmentPt == 0)
+            {
+                // Stick it on right hand with Zero Offset from the attachment point.
+                AttachmentPt = (int)AttachmentPoint.RightHand;
+                attachPos = Vector3.Zero;
+            }
+
+            group.SetAttachmentPoint((byte)AttachmentPt);
+            group.AbsolutePosition = attachPos;
+
+            // Remove any previous attachments
+            ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
+            UUID itemID = UUID.Zero;
+            if (sp != null)
+            {
+                SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
+                foreach (SceneObjectGroup grp in attachments)
+                {
+                    if (grp.GetAttachmentPoint() == (byte)AttachmentPt)
+                    {
+                        itemID = grp.GetFromItemID();
+                        break;
+                    }
+                }
+                if (itemID != UUID.Zero)
+                    DetachSingleAttachmentToInv(itemID, remoteClient, true);
+            }
+
+            ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
+
+            AttachToAgent(sp, group, AttachmentPt, attachPos);
+
+            m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
         }
 
         /// <summary>

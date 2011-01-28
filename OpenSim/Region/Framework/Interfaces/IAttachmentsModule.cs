@@ -55,12 +55,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="itemID"></param>
         /// <param name="AttachmentPt"></param>
         /// <param name="updateinventoryStatus">
-        /// If true, we also update the user's inventory to show that the attachment is set.  If false, we do not.
-        /// False is required so that we don't attempt to update information when a user enters a scene with the
-        /// attachment already correctly set up in inventory.
-        /// <returns>The uuid of the scene object that was attached.  Null if the scene object could not be found</returns>
-        UUID RezSingleAttachmentFromInventory(
-            IClientAPI remoteClient, UUID itemID, int AttachmentPt, bool updateInventoryStatus);
+        /// <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
+        SceneObjectGroup RezSingleAttachmentFromInventory(
+            IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
         /// <summary>
         /// Detach an object from the avatar.
