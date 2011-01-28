@@ -2329,8 +2329,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             part.UpdateRotation(rot);
             // Update rotation does not move the object in the physics scene if it's a linkset.
 
-//KF:  Do NOT use this next line if using ODE physics engine. This need a switch based on .ini Phys Engine type
-//          part.ParentGroup.AbsolutePosition = part.ParentGroup.AbsolutePosition;
+            //KF:  Do NOT use this next line if using ODE physics engine.
+            //   This need a switch based on .ini Phys Engine type
+            //part.ParentGroup.ResetChildPrimPhysicsPositions()
             
             // So, after thinking about this for a bit, the issue with the part.ParentGroup.AbsolutePosition = part.ParentGroup.AbsolutePosition line
             // is it isn't compatible with vehicles because it causes the vehicle body to have to be broken down and rebuilt

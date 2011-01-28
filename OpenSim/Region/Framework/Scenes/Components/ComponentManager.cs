@@ -125,6 +125,10 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("TextureAnimation");
             RegisterComponent(com);
+            com = new DefaultComponents("SavedAttachedPos");
+            RegisterComponent(com);
+            com = new DefaultComponents("SavedAttachmentPoint");
+            RegisterComponent(com);
         }
 
         public void RemoveRegion(Scene scene)

@@ -489,6 +489,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (user == UUID.Zero)
                 return false;
 
+            if (user == objectOwner)
+                return true; //Same person, implicit trust
+
             if (m_friendsModule == null)
                 return false;
 
@@ -719,8 +722,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 //                currentUser);
             
             // Group members should be able to edit group objects
-            if ((group.GroupID != UUID.Zero) 
-                && ((m_scene.GetSceneObjectPart(objId).GroupMask & (uint)PermissionMask.Modify) != 0) 
+            SceneObjectPart part = m_scene.GetSceneObjectPart(objId);
+            if ((group.GroupID != UUID.Zero)
+                && (part != null && (part.GroupMask & (uint)PermissionMask.Modify) != 0) 
                 && IsGroupMember(group.GroupID, currentUser, (ulong)OpenMetaverse.GroupPowers.ObjectManipulate))
             {
                 // Return immediately, so that the administrator can shares group objects

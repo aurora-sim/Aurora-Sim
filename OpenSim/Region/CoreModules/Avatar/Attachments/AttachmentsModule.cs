@@ -544,9 +544,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 return;
             }
-            Vector3 attachPos = group.AbsolutePosition;
+            Vector3 attachPos = group.GetAttachmentPos();
             if(!m_allowMultipleAttachments)
                 AttachmentPt &= 0x7f; //Disable it!
+
+            //Did the attachment change position or attachment point?
+            bool changedPositionPoint = false;
 
             // If the attachment point isn't the same as the one previously used
             // set it's offset position = 0 so that it appears on the attachment point
@@ -555,6 +558,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if ((AttachmentPt & 0x7f) != 0 && (AttachmentPt & 0x7f) != (int)group.GetAttachmentPoint())
             {
                 attachPos = Vector3.Zero;
+                changedPositionPoint = true;
             }
             else
             {
@@ -582,8 +586,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     AttachmentPt = (int)AttachmentPoint.RightHand;
                     //Default location
                     attachPos = Vector3.Zero;
+                    changedPositionPoint = true;
                 }
             }
+
+            group.HasGroupChanged = changedPositionPoint;
 
             //Update where we are put
             group.SetAttachmentPoint((byte)AttachmentPt);
@@ -676,20 +683,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //
             if (group.IsSelected)
             {
-                m_scene.ForEachClient(delegate(IClientAPI client)
-                {
-                    client.SendKillObject(m_scene.RegionInfo.RegionHandle, new ISceneEntity[] { group.RootPart });
-                });
                 foreach (SceneObjectPart part in group.ChildrenList)
                 {
                     part.CreateSelected = true;
                 }
             }
+            //Kill the previous entity so that it will be selected
+            SendKillEntity(group.RootPart);
 
             //NOTE: This MUST be here, otherwise we limit full updates during attachments when they are selected and it will block the first update.
             // So until that is changed, this MUST stay. The client will instantly reselect it, so this value doesn't stay borked for long.
             group.IsSelected = false;
 
+            //Now recreate it so that it is selected
             group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
             // In case it is later dropped again, don't let
@@ -698,6 +704,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             group.HasGroupChanged = false;
 
             m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
+        }
+
+        protected void SendKillEntity(SceneObjectPart rootPart)
+        {
+            m_scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(m_scene.RegionInfo.RegionHandle, new ISceneEntity[] { rootPart });
+            });
         }
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.

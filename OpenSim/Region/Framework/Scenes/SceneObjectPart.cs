@@ -463,10 +463,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_SavedAttachedPos;
+                return GetComponentState("SavedAttachedPos").AsVector3();
             }
             set
             {
+                SetComponentState("SavedAttachedPos", value);
                 m_SavedAttachedPos = value;
             }
         }
@@ -479,10 +480,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return m_savedAttachmentPoint;
+                return GetComponentState("SavedAttachmentPoint").AsInteger();
             }
             set
             {
+                SetComponentState("SavedAttachmentPoint", value);
                 m_savedAttachmentPoint = value;
             }
         }
