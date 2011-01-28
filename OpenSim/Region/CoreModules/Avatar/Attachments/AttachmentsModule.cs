@@ -47,6 +47,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected Scene m_scene = null;
+        protected bool m_allowMultipleAttachments = true;
 
         public string Name { get { return "Attachments Module"; } }
         public Type ReplaceableInterface { get { return null; } }
@@ -56,7 +57,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         #region INonSharedRegionModule Methods
 
-        public void Initialise(IConfigSource source) { }
+        public void Initialise(IConfigSource source)
+        {
+            if (source.Configs["Attachments"] != null)
+            {
+                m_allowMultipleAttachments = source.Configs["Attachments"].GetBoolean("EnableMultipleAttachments", m_allowMultipleAttachments);
+            }
+        }
 
         public void AddRegion(Scene scene)
         {
@@ -306,22 +313,21 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             int AttachmentPt)
         {
             Vector3 attachPos = group.AbsolutePosition;
-            // TODO: this short circuits multiple attachments functionality  in  LL viewer 2.1+ and should
-            // be removed when that functionality is implemented in opensim
-            AttachmentPt &= 0x7f;
+            if(!m_allowMultipleAttachments)
+                AttachmentPt &= 0x7f; //Disable it!
 
             // If the attachment point isn't the same as the one previously used
             // set it's offset position = 0 so that it appears on the attachment point
             // and not in a weird location somewhere unknown.
             //Simplier terms: the attachment point changed, set it to the default 0,0,0 location
-            if (AttachmentPt != 0 && AttachmentPt != (int)group.GetAttachmentPoint())
+            if ((AttachmentPt & 0x7f) != 0 && (AttachmentPt & 0x7f) != (int)group.GetAttachmentPoint())
             {
                 attachPos = Vector3.Zero;
             }
             else
             {
                 // AttachmentPt 0 means the client chose to 'wear' the attachment.
-                if (AttachmentPt == 0)
+                if ((AttachmentPt & 0x7f) == 0)
                 {
                     // Check object for stored attachment point
                     AttachmentPt = (int)group.GetSavedAttachmentPoint();
@@ -329,7 +335,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
 
                 //Check state afterwards... use the newer GetSavedAttachmentPoint and Pos above first
-                if (AttachmentPt == 0)
+                if ((AttachmentPt & 0x7f) == 0)
                 {
                     // Check object for older stored attachment point
                     AttachmentPt = group.RootPart.Shape.State;
@@ -338,7 +344,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 // if we still didn't find a suitable attachment point, force it to the default
                 //This happens on the first time an avatar 'wears' an object
-                if (AttachmentPt == 0)
+                if ((AttachmentPt & 0x7f) == 0)
                 {
                     // Stick it on right hand with Zero Offset from the attachment point.
                     AttachmentPt = (int)AttachmentPoint.RightHand;
@@ -355,7 +361,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // Remove any previous attachments
             ScenePresence sp = m_scene.GetScenePresence(remoteClient.AgentId);
             UUID itemID = UUID.Zero;
-            if (sp != null)
+            //Check for multiple attachment bits
+            //If the numbers are the same, it wants to have the old attachment taken off
+            if (sp != null && ((AttachmentPt & 0x7f) == AttachmentPt)) 
             {
                 SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
                 foreach (SceneObjectGroup grp in attachments)
@@ -520,6 +528,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                             m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
 
                             group.DetachToInventoryPrep();
+                        }
+
+                        ScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+                        if (presence != null)
+                        {
+                            AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
+                            if (attModule != null)
+                            {
+                                attModule.RemoveAttachment(group);
+                            }
                         }
                         
                         m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
