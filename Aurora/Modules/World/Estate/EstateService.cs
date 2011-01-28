@@ -342,7 +342,7 @@ namespace Aurora.Modules
             }
 
             //Make sure that this user is inside the region as well
-            if (Position.X < 0f || Position.Y < 0f || Position.Z < 0f ||
+            if (Position.X < 0f || Position.Y < 0f || 
                 Position.X > scene.RegionInfo.RegionSizeX || Position.Y > scene.RegionInfo.RegionSizeY)
             {
                 m_log.WarnFormat(
@@ -368,14 +368,7 @@ namespace Aurora.Modules
             IAgentConnector AgentConnector = DataManager.DataManager.RequestPlugin<IAgentConnector>();
             IAgentInfo agentInfo = null;
             if (AgentConnector != null)
-            {
                 agentInfo = AgentConnector.GetAgent(userID);
-                if (agentInfo == null)
-                {
-                    AgentConnector.CreateNewAgent(userID);
-                    agentInfo = AgentConnector.GetAgent(userID);
-                }
-            }
 
             ILandObject ILO = null;
             IParcelManagementModule parcelManagement = scene.RequestModuleInterface<IParcelManagementModule>();

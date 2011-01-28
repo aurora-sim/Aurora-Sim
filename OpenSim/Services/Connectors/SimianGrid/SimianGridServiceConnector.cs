@@ -113,7 +113,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (registry is Scene)
             {
                 Scene s = (Scene)registry;
-                m_scenes.Add(s.RegionInfo.RegionID, s);
+                m_scenes[s.RegionInfo.RegionID] = s;
             }
         }
 
