@@ -313,35 +313,43 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // If the attachment point isn't the same as the one previously used
             // set it's offset position = 0 so that it appears on the attachment point
             // and not in a weird location somewhere unknown.
+            //Simplier terms: the attachment point changed, set it to the default 0,0,0 location
             if (AttachmentPt != 0 && AttachmentPt != (int)group.GetAttachmentPoint())
             {
                 attachPos = Vector3.Zero;
             }
-
-            // AttachmentPt 0 means the client chose to 'wear' the attachment.
-            /*if (AttachmentPt == 0)
+            else
             {
-                // Check object for stored attachment point
-                AttachmentPt = (int)group.GetAttachmentPoint();
-                attachPos = group.GetAttachmentPos();
-            }*/
+                // AttachmentPt 0 means the client chose to 'wear' the attachment.
+                if (AttachmentPt == 0)
+                {
+                    // Check object for stored attachment point
+                    AttachmentPt = (int)group.GetSavedAttachmentPoint();
+                    attachPos = group.GetAttachmentPos();
+                }
 
-            if (AttachmentPt == 0)
-            {
-                // Check object for older stored attachment point
-                AttachmentPt = group.RootPart.Shape.State;
-                //attachPos = group.AbsolutePosition;
+                //Check state afterwards... use the newer GetSavedAttachmentPoint and Pos above first
+                if (AttachmentPt == 0)
+                {
+                    // Check object for older stored attachment point
+                    AttachmentPt = group.RootPart.Shape.State;
+                    //attachPos = group.AbsolutePosition;
+                }
+
+                // if we still didn't find a suitable attachment point, force it to the default
+                //This happens on the first time an avatar 'wears' an object
+                if (AttachmentPt == 0)
+                {
+                    // Stick it on right hand with Zero Offset from the attachment point.
+                    AttachmentPt = (int)AttachmentPoint.RightHand;
+                    //Default location
+                    attachPos = Vector3.Zero;
+                }
             }
 
-            // if we still didn't find a suitable attachment point.......
-            if (AttachmentPt == 0)
-            {
-                // Stick it on right hand with Zero Offset from the attachment point.
-                AttachmentPt = (int)AttachmentPoint.RightHand;
-                attachPos = Vector3.Zero;
-            }
-
+            //Update where we are put
             group.SetAttachmentPoint((byte)AttachmentPt);
+            //Fix the position with the one we found
             group.AbsolutePosition = attachPos;
 
             // Remove any previous attachments
