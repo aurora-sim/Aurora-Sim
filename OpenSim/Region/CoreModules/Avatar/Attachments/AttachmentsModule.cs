@@ -65,6 +65,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
             m_scene.EventManager.OnMakeRootAgent += MakeRootAgent;
+            m_scene.EventManager.OnMakeChildAgent += MakeChildAgent;
         }
 
         public void RemoveRegion(Scene scene)
@@ -73,6 +74,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
             m_scene.EventManager.OnMakeRootAgent -= MakeRootAgent;
+            m_scene.EventManager.OnMakeChildAgent -= MakeChildAgent;
         }
 
         public void RegionLoaded(Scene scene) 
@@ -185,26 +187,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             SceneObjectGroup group, int AttachmentPt)
         {
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
-            {
                 FindAttachmentPoint(remoteClient, localID, group, AttachmentPt);
-
-                //Delete the object inworld to inventory
-
-                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
-                UUID itemID;
-
-                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                if (inventoryAccess != null)
-                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
-                        groups, remoteClient.AgentId, out itemID);
-
-                m_log.Info(
-                    "[ATTACHMENTS MODULE]: Saving avatar attachment. AgentID: " + remoteClient.AgentId
-                    + ", AttachmentPoint: " + AttachmentPt);
-
-                if (AvatarFactory != null)
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-            }
             else
             {
                 remoteClient.SendAgentAlertMessage(
@@ -297,33 +280,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
                     //                    objatt.Name, remoteClient.Name, AttachmentPt);
 
-                    // Loading the inventory from XML will have set this, but
-                    // there is no way the object could have changed yet,
-                    // since scripts aren't running yet. So, clear it here.
-                    objatt.HasGroupChanged = false;
-                    bool tainted = false;
-                    if (AttachmentPt != 0 && AttachmentPt != objatt.GetAttachmentPoint())
-                        tainted = true;
-
-                    // This will throw if the attachment fails
-                    try
-                    {
-                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
+                    FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt);
 
                     // Fire after attach, so we don't get messy perms dialogs
                     // 4 == AttachedRez
                     objatt.CreateScriptInstances(0, true, 4, UUID.Zero);
                     objatt.ResumeScripts();
-
-                    if (tainted)
-                        objatt.HasGroupChanged = true;
-
-                    objatt.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                 }
                 else
                 {
@@ -399,10 +361,24 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (itemID != UUID.Zero)
                     DetachSingleAttachmentToInv(itemID, remoteClient, true);
             }
+            itemID = group.GetFromItemID();
 
+            if (itemID == UUID.Zero)
+            {
+                //Delete the object inworld to inventory
+
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
+                
+                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                if (inventoryAccess != null)
+                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
+                        groups, remoteClient.AgentId, out itemID);
+            }
             ShowAttachInUserInventory(remoteClient, AttachmentPt, itemID, group);
-
             AttachToAgent(sp, group, AttachmentPt, attachPos);
+
+            if (AvatarFactory != null)
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
             m_scene.EventManager.TriggerOnAttach(localID, group.GetFromItemID(), remoteClient.AgentId);
         }
@@ -653,11 +629,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             //                m_log.DebugFormat("[ATTACHMENTS MODULE]: Adding attachment {0} to avatar {1}", Name, avatar.Name);
 
-            // Remove from database and parcel prim count
-            IBackupModule backup = so.Scene.RequestModuleInterface<IBackupModule>();
-            if (backup != null)
-                backup.DeleteFromStorage(so.UUID);
-
             so.RootPart.AttachedAvatar = avatar.UUID;
 
             //Anakin Lohner bug #3839 
@@ -784,7 +755,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 lock (m_attachments)
                 {
-                    m_attachments.Add(attachment);
+                    if(!m_attachments.Contains(attachment))
+                        m_attachments.Add(attachment);
                 }
             }
 
@@ -792,7 +764,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 lock (m_attachments)
                 {
-                    m_attachments.Remove(attachment);
+                    if (m_attachments.Contains(attachment))
+                        m_attachments.Remove(attachment);
                 }
             }
 
