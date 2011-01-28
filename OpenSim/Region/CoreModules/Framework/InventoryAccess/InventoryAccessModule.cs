@@ -619,6 +619,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     {
                         part.IsLoading = false;
                     }
+                    return group;
                 }
             }
             doc = null;

@@ -280,6 +280,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         }
                     }
                     objatt.RootPart.TrimPermissions();
+                    objatt.RootPart.IsAttachment = true;
+                    objatt.IsDeleted = false;
+
+                    //NOTE: we MUST do this manually, otherwise it will never be added!
+                    //We also have to reset the IDs!
+                    foreach (SceneObjectPart part in partList)
+                    {
+                        part.ResetEntityIDs();
+                    }
+                    m_scene.Entities.Add(objatt);
 
                     #endregion
 
