@@ -775,6 +775,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
                         backup.DeleteSceneObjects(new SceneObjectGroup[1] { group }, true);
+                    return; //All done, end
                 }
             }
         }

@@ -3947,8 +3947,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetAttachmentPoint(int AttachmentPoint)
         {
             //Update the saved if needed
-            this.SavedAttachedPos = this.AttachedPos;
-            this.SavedAttachmentPoint = this.AttachmentPoint;
+            if (AttachmentPoint == 0 && this.AttachmentPoint != 0)
+            {
+                this.SavedAttachedPos = this.AttachedPos;
+                this.SavedAttachmentPoint = this.AttachmentPoint;
+            }
 
             this.AttachmentPoint = AttachmentPoint;
 

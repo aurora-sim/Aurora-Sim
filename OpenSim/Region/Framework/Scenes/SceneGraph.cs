@@ -1291,8 +1291,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     ((SceneObjectGroup)group).SetPartName(Util.CleanString(name), LocalID);
-                    ((SceneObjectGroup)group).HasGroupChanged = true;
-                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.ClickAction);
+                    ((SceneObjectGroup)group).ScheduleGroupUpdate(PrimUpdateFlags.FindBest);
                 }
             }
         }
