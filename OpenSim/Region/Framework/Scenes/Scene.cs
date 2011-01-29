@@ -27,37 +27,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Text;
 using System.Threading;
-using System.Timers;
-using System.Xml;
+using System.Reflection;
+using log4net;
 using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Console;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Region.Physics.Manager;
-using Timer = System.Timers.Timer;
-using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.DataManager;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes.Animation;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public partial class Scene : RegistryCore, IScene
+    public class Scene : RegistryCore, IScene
     {
         #region Fields
+
+        private static readonly ILog m_log
+            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public List<SceneObjectGroup> PhysicsReturns = new List<SceneObjectGroup>();
 
@@ -380,8 +370,6 @@ namespace OpenSim.Region.Framework.Scenes
                     conn.RemoveLandObject;
             }
 
-            EventManager.OnClosingClient += UnSubscribeToClientEvents;
-
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
             #region Region Config
@@ -638,7 +626,6 @@ namespace OpenSim.Region.Framework.Scenes
             sp.IsChildAgent = aCircuit.child;
 
             m_clientManager.Add(client);
-            SubscribeToClientEvents(client);
 
             //Trigger events
             m_eventManager.TriggerOnNewPresence(sp);
@@ -657,42 +644,6 @@ namespace OpenSim.Region.Framework.Scenes
                 monitor.AddSuccessfulLogin();
             }
         }
-
-        #region Subscribing and Unsubscribing to client events
-
-        /// <summary>
-        /// Register for events from the client
-        /// </summary>
-        /// <param name="client">The IClientAPI of the connected client</param>
-        public virtual void SubscribeToClientEvents(IClientAPI client)
-        {
-            SubscribeToClientGridEvents(client);
-        }
-
-        public virtual void SubscribeToClientGridEvents(IClientAPI client)
-        {
-            client.OnNameFromUUIDRequest += HandleUUIDNameRequest;
-            client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
-            client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
-        }
-
-        /// <summary>
-        /// Unsubscribe the client from events.
-        /// </summary>
-        /// <param name="client">The IClientAPI of the client</param>
-        public virtual void UnSubscribeToClientEvents(IClientAPI client)
-        {
-            UnSubscribeToClientGridEvents(client);
-        }
-
-        public virtual void UnSubscribeToClientGridEvents(IClientAPI client)
-        {
-            client.OnNameFromUUIDRequest -= HandleUUIDNameRequest;
-            client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
-            client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
-        }
-
-        #endregion
 
         #endregion
 

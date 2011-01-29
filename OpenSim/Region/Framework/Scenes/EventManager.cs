@@ -342,28 +342,6 @@ namespace OpenSim.Region.Framework.Scenes
         public event RegionUp OnRegionUp;
         public event RegionUp OnRegionDown;
 
-        public class MoneyTransferArgs : EventArgs
-        {
-            public UUID sender;
-            public UUID receiver;
-
-            // Always false. The SL protocol sucks.
-            public bool authenticated = false;
-
-            public int amount;
-            public int transactiontype;
-            public string description;
-
-            public MoneyTransferArgs(UUID asender, UUID areceiver, int aamount, int atransactiontype, string adescription)
-            {
-                sender = asender;
-                receiver = areceiver;
-                amount = aamount;
-                transactiontype = atransactiontype;
-                description = adescription;
-            }
-        }
-
         public class LandBuyArgs : EventArgs
         {
             public UUID agentId = UUID.Zero;
@@ -400,11 +378,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public delegate void MoneyTransferEvent(Object sender, MoneyTransferArgs e);
-
         public delegate bool LandBuy(LandBuyArgs e);
 
-        public event MoneyTransferEvent OnMoneyTransfer;
         public event LandBuy OnValidateBuyLand;
 
         public void TriggerOnAttach(uint localID, UUID itemID, UUID avatarID)
@@ -717,27 +692,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnBackup failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerMoneyTransfer(Object sender, MoneyTransferArgs args)
-        {
-            MoneyTransferEvent handlerMoneyTransfer = OnMoneyTransfer;
-            if (handlerMoneyTransfer != null)
-            {
-                foreach (MoneyTransferEvent d in handlerMoneyTransfer.GetInvocationList())
-                {
-                    try
-                    {
-                        d(sender, args);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerMoneyTransfer failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

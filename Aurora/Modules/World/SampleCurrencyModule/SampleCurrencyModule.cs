@@ -157,6 +157,11 @@ namespace Aurora.OptionalModules
             return true;
         }
 
+        public void ProcessMoneyTransferRequest(UUID source, UUID destination, int amount,
+                                                        int transactiontype, string description)
+        {
+        }
+
         #endregion
 
         /// <summary>
@@ -168,6 +173,7 @@ namespace Aurora.OptionalModules
             // Subscribe to Money messages
             client.OnEconomyDataRequest += EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest += SendMoneyBalance;
+            client.OnMoneyTransferRequest += ProcessMoneyTransferRequest;
         }
 
         protected void OnClosingClient(IClientAPI client)
@@ -175,6 +181,7 @@ namespace Aurora.OptionalModules
             // Subscribe to Money messages
             client.OnEconomyDataRequest -= EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest -= SendMoneyBalance;
+            client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
         }
 
         /// <summary>

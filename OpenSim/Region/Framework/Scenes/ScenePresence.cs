@@ -674,6 +674,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient.OnAutoPilotGo += DoAutoPilot;
             m_controllingClient.AddGenericPacketHandler("autopilot", DoMoveToPosition);
             m_controllingClient.OnRegionHandleRequest += RegionHandleRequest;
+            m_controllingClient.OnNameFromUUIDRequest += HandleUUIDNameRequest;
         }
 
         private void SetDirectionVectors()
@@ -934,6 +935,15 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Event Handlers
+
+        public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)
+        {
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
+            if (account != null)
+            {
+                remote_client.SendNameReply(uuid, account.FirstName, account.LastName);
+            }
+        }
 
         public void RegionHandleRequest(IClientAPI client, UUID regionID)
         {
