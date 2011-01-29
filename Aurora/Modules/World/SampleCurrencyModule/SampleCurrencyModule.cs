@@ -70,9 +70,12 @@ namespace Aurora.OptionalModules
         {
             get { return 0; }
         }
+#pragma warning disable 67
 
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
+
+#pragma warning restore 67
 
         #region IRegionModuleBase Members
 

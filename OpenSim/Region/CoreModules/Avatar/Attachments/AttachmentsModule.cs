@@ -442,7 +442,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 sog.RootPart.AttachedPos = pos;
                 sog.AbsolutePosition = sog.RootPart.AttachedPos;
                 sog.SetAttachmentPoint(attachmentPoint);
-                UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
+                //Don't update right now, wait until logout
+                //UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
             }
             else
             {
