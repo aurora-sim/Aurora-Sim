@@ -667,8 +667,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
                 {
-                    m_terrainPatchesSent.Add(client.AgentId, new bool[(int)m_scene.RegionInfo.RegionSizeX / 16,
-                        (int)m_scene.RegionInfo.RegionSizeY / 16]);
+                    m_terrainPatchesSent.Add(client.AgentId, new bool[(int)m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize,
+                        (int)m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize]);
                 }
             }
         }
@@ -729,16 +729,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 return;
 
             float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
-            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 16; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
             {
-                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 16; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
                 {
                     //Need to make sure we don't send the same ones over and over
                     if (!m_terrainPatchesSent[presence.UUID][x, y])
                     {
                         double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
-                            new Vector3(x * 16, y * 16, 0));
-                        if (distance < presence.DrawDistance) //Its not a radius, its a diameter
+                            new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                        if (distance < presence.DrawDistance * 2.5) //Its not a radius, its a diameter
                         {
                             //They can see it, send it ot them
                             m_terrainPatchesSent[presence.UUID][x, y] = true;

@@ -16,7 +16,7 @@ using CSJ2K;
 using OpenMetaverse.Rendering;
 using OpenMetaverse.StructuredData;
 using Rednettle.Warp3D;
-using OpenSim.Region.CoreModules.World.WorldMap;
+using OpenSim.Region.CoreModules.World.Warp3DMap;
 using WarpRenderer = global::Warp3D.Warp3D;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
@@ -123,8 +123,17 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             renderer.Render();
             Bitmap bitmap = renderer.Scene.getImage();
 
+            renderer.Scene.removeAllObjects();
+            renderer = null;
+            viewport = null;
+            m_primMesher = null;
+            m_colors.Clear();
+
+            //Force GC to try to clean this mess up
+            GC.GetTotalMemory(true);
+
             if (m_useAntiAliasing)
-                bitmap = ImageUtils.ResizeImage(bitmap, viewport.Width, viewport.Height);
+                bitmap = ImageUtils.ResizeImage(bitmap, width / 2, height / 2);
 
             return bitmap;
         }

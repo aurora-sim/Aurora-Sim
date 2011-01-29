@@ -295,13 +295,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                             m_Friends[agentID] = friendsData;
                         }
                     }
-                    // Inform the friends that this user is online
-                    StatusChange(agentID, true);
+                    //Only update friends and send status changes if the client is logging in
+                    if ((sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID).teleportFlags & 
+                        (uint)TeleportFlags.ViaLogin) != 0)
+                    {
+                        // Inform the friends that this user is online
+                        StatusChange(agentID, true);
 
-                    // Register that we need to send the list of online friends to this user
-                    lock (m_NeedsListOfFriends)
-                        m_NeedsListOfFriends.Add(agentID);
-                    UpdateFriendsCache(agentID);
+                        // Register that we need to send the list of online friends to this user
+                        lock (m_NeedsListOfFriends)
+                            m_NeedsListOfFriends.Add(agentID);
+                        UpdateFriendsCache(agentID);
+                    }
                 }
             );
         }
