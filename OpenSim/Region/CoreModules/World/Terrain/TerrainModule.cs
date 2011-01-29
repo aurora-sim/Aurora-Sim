@@ -172,8 +172,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void ResetTerrain()
         {
             TerrainChannel channel = new TerrainChannel(m_scene);
-            SaveRevertTerrain(channel);
             m_channel = channel;
+            SaveRevertTerrain(channel);
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
             CheckForTerrainUpdates(false, true);
         }

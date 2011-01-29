@@ -45,43 +45,26 @@ namespace OpenSim.Region.Framework.Scenes
         private double[,] map;
         private IScene m_scene;
 
-        public TerrainChannel()
-        {
-            map = new double[Constants.RegionSize, Constants.RegionSize];
-            taint = new bool[Constants.RegionSize / 16,Constants.RegionSize / 16];
-
-            int x;
-            for (x = 0; x < Constants.RegionSize; x++)
-            {
-                int y;
-                for (y = 0; y < Constants.RegionSize; y++)
-                {
-                    map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
-                    double spherFacA = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 50) * 0.01;
-                    double spherFacB = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 100) * 0.001;
-                    if (map[x, y] < spherFacA)
-                        map[x, y] = spherFacA;
-                    if (map[x, y] < spherFacB)
-                        map[x, y] = spherFacB;
-                }
-            }
-        }
-
         public TerrainChannel(IScene scene)
         {
             m_scene = scene;
-            map = new double[Constants.RegionSize, Constants.RegionSize];
-            taint = new bool[Constants.RegionSize / 16, Constants.RegionSize / 16];
+            CreateDefaultTerrain();
+        }
+
+        private void CreateDefaultTerrain()
+        {
+            map = new double[(int)m_scene.RegionInfo.RegionSizeX, (int)m_scene.RegionInfo.RegionSizeY];
+            taint = new bool[(int)m_scene.RegionInfo.RegionSizeX / 16, (int)m_scene.RegionInfo.RegionSizeY / 16];
 
             int x;
-            for (x = 0; x < Constants.RegionSize; x++)
+            for (x = 0; x < (int)m_scene.RegionInfo.RegionSizeX; x++)
             {
                 int y;
-                for (y = 0; y < Constants.RegionSize; y++)
+                for (y = 0; y < (int)m_scene.RegionInfo.RegionSizeY; y++)
                 {
                     map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
-                    double spherFacA = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 50) * 0.01;
-                    double spherFacB = TerrainUtil.SphericalFactor(x, y, Constants.RegionSize / 2.0, Constants.RegionSize / 2.0, 100) * 0.001;
+                    double spherFacA = TerrainUtil.SphericalFactor(x, y, (int)m_scene.RegionInfo.RegionSizeX / 2.0, (int)m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01;
+                    double spherFacB = TerrainUtil.SphericalFactor(x, y, (int)m_scene.RegionInfo.RegionSizeX / 2.0, (int)m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001;
                     if (map[x, y] < spherFacA)
                         map[x, y] = spherFacA;
                     if (map[x, y] < spherFacB)
@@ -94,7 +77,15 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             map = import;
-            taint = new bool[import.GetLength(0),import.GetLength(1)];
+            taint = new bool[Width, Height];
+            if ((Width != scene.RegionInfo.RegionSizeX ||
+                Height != scene.RegionInfo.RegionSizeY) &&
+                (!float.IsInfinity(scene.RegionInfo.RegionSizeX) && //Child regions of a mega-region
+                !float.IsInfinity(scene.RegionInfo.RegionSizeY)))
+            {
+                //We need to fix the map then
+                CreateDefaultTerrain();
+            }
         }
 
         public TerrainChannel(bool createMap, IScene scene)
@@ -102,8 +93,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = scene;
             if (createMap)
             {
-                map = new double[Constants.RegionSize,Constants.RegionSize];
-                taint = new bool[Constants.RegionSize / 16,Constants.RegionSize / 16];
+                map = new double[(int)scene.RegionInfo.RegionSizeX, (int)scene.RegionInfo.RegionSizeY];
+                taint = new bool[(int)scene.RegionInfo.RegionSizeX / 16, (int)scene.RegionInfo.RegionSizeY / 16];
             }
         }
 

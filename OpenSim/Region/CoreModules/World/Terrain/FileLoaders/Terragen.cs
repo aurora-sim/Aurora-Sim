@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
         public ITerrainChannel LoadStream(Stream s)
         {
-            TerrainChannel retval = new TerrainChannel();
+            TerrainChannel retval = new TerrainChannel(true, null);
 
             BinaryReader bs = new BinaryReader(s);
 
