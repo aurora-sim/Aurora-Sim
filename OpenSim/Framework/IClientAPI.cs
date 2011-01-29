@@ -323,14 +323,14 @@ namespace OpenSim.Framework
     public delegate void RequestPayPrice(IClientAPI remoteClient, UUID objectID);
 
     public delegate void ObjectSaleInfo(
-        IClientAPI remoteClient, UUID agentID, UUID sessionID, uint localID, byte saleType, int salePrice);
+        IClientAPI remoteClient, UUID sessionID, uint localID, byte saleType, int salePrice);
 
     public delegate void ObjectBuy(
-        IClientAPI remoteClient, UUID agentID, UUID sessionID, UUID groupID, UUID categoryID, uint localID,
+        IClientAPI remoteClient, UUID sessionID, UUID groupID, UUID categoryID, uint localID,
         byte saleType, int salePrice);
 
     public delegate void BuyObjectInventory(
-        IClientAPI remoteClient, UUID agentID, UUID sessionID, UUID objectID, UUID itemID, UUID folderID);
+        IClientAPI remoteClient, UUID sessionID, UUID objectID, UUID itemID, UUID folderID);
 
     public delegate void ForceReleaseControls(IClientAPI remoteClient, UUID agentID);
 

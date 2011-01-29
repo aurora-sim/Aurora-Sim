@@ -9803,7 +9803,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     in objectSaleInfoPacket.ObjectData)
                 {
                     handlerObjectSaleInfo(this,
-                                          objectSaleInfoPacket.AgentData.AgentID,
                                           objectSaleInfoPacket.AgentData.SessionID,
                                           d.LocalID,
                                           d.SaleType,
@@ -9833,7 +9832,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     in objectBuyPacket.ObjectData)
                 {
                     handlerObjectBuy(this,
-                                     objectBuyPacket.AgentData.AgentID,
                                      objectBuyPacket.AgentData.SessionID,
                                      objectBuyPacket.AgentData.GroupID,
                                      objectBuyPacket.AgentData.CategoryID,

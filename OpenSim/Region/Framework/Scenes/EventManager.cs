@@ -404,11 +404,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void MoneyTransferEvent(Object sender, MoneyTransferArgs e);
 
-        public delegate void LandBuy(Object sender, LandBuyArgs e);
+        public delegate bool LandBuy(LandBuyArgs e);
 
         public event MoneyTransferEvent OnMoneyTransfer;
-        public event LandBuy OnLandBuy;
-        public event LandBuy OnValidateLandBuy;
+        public event LandBuy OnValidateBuyLand;
 
         public void TriggerOnAttach(uint localID, UUID itemID, UUID avatarID)
         {
@@ -1266,16 +1265,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerLandBuy(Object sender, LandBuyArgs args)
+        public bool TriggerValidateBuyLand(LandBuyArgs args)
         {
-            LandBuy handlerLandBuy = OnLandBuy;
+            LandBuy handlerLandBuy = OnValidateBuyLand;
             if (handlerLandBuy != null)
             {
                 foreach (LandBuy d in handlerLandBuy.GetInvocationList())
                 {
                     try
                     {
-                        d(sender, args);
+                        if (!d(args))
+                            return false;
                     }
                     catch (Exception e)
                     {
@@ -1285,27 +1285,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-        }
-
-        public void TriggerValidateLandBuy(Object sender, LandBuyArgs args)
-        {
-            LandBuy handlerValidateLandBuy = OnValidateLandBuy;
-            if (handlerValidateLandBuy != null)
-            {
-                foreach (LandBuy d in handlerValidateLandBuy.GetInvocationList())
-                {
-                    try
-                    {
-                        d(sender, args);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerValidateLandBuy failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
+            return true;
         }
 
         public void TriggerAtTargetEvent(uint localID, uint handle, Vector3 targetpos, Vector3 currentpos)

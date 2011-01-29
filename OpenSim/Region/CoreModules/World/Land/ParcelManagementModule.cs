@@ -325,8 +325,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             m_scene.EventManager.OnParcelPrimCountAdd += EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
-            m_scene.EventManager.OnValidateLandBuy += EventManagerOnValidateLandBuy;
-            m_scene.EventManager.OnLandBuy += EventManagerOnLandBuy;
+            m_scene.EventManager.OnValidateBuyLand += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
             m_scene.EventManager.OnMakeRootAgent += CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement += EventManagerOnSignificantClientMovement;
@@ -362,8 +361,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             m_scene.EventManager.OnParcelPrimCountAdd -= EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= EventManagerOnAvatarEnteringNewParcel;
-            m_scene.EventManager.OnValidateLandBuy -= EventManagerOnValidateLandBuy;
-            m_scene.EventManager.OnLandBuy -= EventManagerOnLandBuy;
+            m_scene.EventManager.OnValidateBuyLand -= EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnNewClient -= EventManagerOnNewClient;
             m_scene.EventManager.OnMakeRootAgent -= CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement -= EventManagerOnSignificantClientMovement;
@@ -1604,33 +1602,20 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #endregion
 
-        public virtual void ProcessParcelBuy(UUID agentId, UUID groupId, bool final, bool groupOwned,
+        public void ProcessParcelBuy(UUID agentId, UUID groupId, bool final, bool groupOwned,
                 bool removeContribution, int parcelLocalID, int parcelArea, int parcelPrice, bool authenticated)
         {
             EventManager.LandBuyArgs args = new EventManager.LandBuyArgs(agentId, groupId, final, groupOwned,
                                                                          removeContribution, parcelLocalID, parcelArea,
                                                                          parcelPrice, authenticated);
 
-            // First, allow all validators a stab at it
-            m_scene.EventManager.TriggerValidateLandBuy(this, args);
-
-            // Then, check validation and transfer
-            m_scene.EventManager.TriggerLandBuy(this, args);
-        }
-
-        // If the economy has been validated by the economy module,
-        // and land has been validated as well, this method transfers
-        // the land ownership
-
-        public void EventManagerOnLandBuy(Object o, EventManager.LandBuyArgs e)
-        {
-            if (e.economyValidated && e.landValidated)
+            ILandObject land = GetLandObject(args.parcelLocalID);
+            if (land != null)
             {
-                ILandObject land = GetLandObject(e.parcelLocalID);
-
-                if (land != null)
+                // Make sure that we do all checking that we can sell this land
+                if (m_scene.EventManager.TriggerValidateBuyLand(args))
                 {
-                    land.UpdateLandSold(e.agentId, e.groupId, e.groupOwned, (uint)e.transactionID, e.parcelPrice, e.parcelArea);
+                    land.UpdateLandSold(args.agentId, args.groupId, args.groupOwned, (uint)args.transactionID, args.parcelPrice, args.parcelArea);
                 }
             }
         }
@@ -1639,7 +1624,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         // be validated. This method validates the right to buy the
         // parcel
 
-        public void EventManagerOnValidateLandBuy(Object o, EventManager.LandBuyArgs e)
+        public bool EventManagerOnValidateLandBuy(EventManager.LandBuyArgs e)
         {
             if (e.landValidated == false)
             {
@@ -1658,8 +1643,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                         e.parcelOwnerID = pOwnerID;
                         e.landValidated = true;
                     }
+                    else
+                        return false;
                 }
+                else
+                    return false;
             }
+            return true;
         }
 
         public void ClientOnParcelDeedToGroup(int parcelLocalID, UUID groupID, IClientAPI remote_client)

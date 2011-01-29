@@ -79,15 +79,28 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
         public void SubscribeToClientEvents(IClientAPI client)
         {
             client.OnObjectSaleInfo += ObjectSaleInfo;
+            client.OnObjectBuy += ObjectBuy;
+            client.OnRequestPayPrice += ObjectRequestPayPrice;
         }
 
         public void UnsubscribeFromClientEvents(IClientAPI client)
         {
             client.OnObjectSaleInfo -= ObjectSaleInfo;
+            client.OnObjectBuy -= ObjectBuy;
+            client.OnRequestPayPrice -= ObjectRequestPayPrice;
+        }
+
+        protected void ObjectRequestPayPrice(IClientAPI client, UUID objectID)
+        {
+            SceneObjectPart task = ((Scene)client.Scene).GetSceneObjectPart(objectID);
+            if (task == null)
+                return;
+
+            client.SendPayPrice(objectID, task.ParentGroup.RootPart.PayPrice);
         }
 
         protected void ObjectSaleInfo(
-            IClientAPI client, UUID agentID, UUID sessionID, uint localID, byte saleType, int salePrice)
+            IClientAPI client, UUID sessionID, uint localID, byte saleType, int salePrice)
         {
             SceneObjectPart part = m_scene.GetSceneObjectPart(localID);
             if (part == null || part.ParentGroup == null)
@@ -97,7 +110,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                 return;
 
             if (part.OwnerID != client.AgentId && (!m_scene.Permissions.IsGod(client.AgentId)))
-                return;
+                return; 
 
             part = part.ParentGroup.RootPart;
 
@@ -107,6 +120,52 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             part.ParentGroup.HasGroupChanged = true;
 
             part.GetProperties(client);
+        }
+
+        protected void ObjectBuy(IClientAPI remoteClient,
+                              UUID sessionID, UUID groupID, UUID categoryID,
+                              uint localID, byte saleType, int salePrice)
+        {
+            // We're actually validating that the client is sending the data
+            // that it should.   In theory, the client should already know what to send here because it'll see it when it
+            // gets the object data.   If the data sent by the client doesn't match the object, the viewer probably has an 
+            // old idea of what the object properties are.   Viewer developer Hazim informed us that the base module 
+            // didn't check the client sent data against the object do any.   Since the base modules are the 
+            // 'crowning glory' examples of good practice..
+
+            SceneObjectPart part = ((Scene)remoteClient.Scene).GetSceneObjectPart(localID);
+            if (part == null)
+            {
+                remoteClient.SendAgentAlertMessage("Unable to buy now. The object was not found.", false);
+                return;
+            }
+
+            // Validate that the client sent the price that the object is being sold for 
+            if (part.SalePrice != salePrice)
+            {
+                remoteClient.SendAgentAlertMessage("Cannot buy at this price. Buy Failed. If you continue to get this relog.", false);
+                return;
+            }
+
+            // Validate that the client sent the proper sale type the object has set 
+            if (part.ObjectSaleType != saleType)
+            {
+                remoteClient.SendAgentAlertMessage("Cannot buy this way. Buy Failed. If you continue to get this relog.", false);
+                return;
+            }
+
+            IMoneyModule moneyMod = remoteClient.Scene.RequestModuleInterface<IMoneyModule>();
+            if (moneyMod != null)
+            {
+                if (!moneyMod.AmountCovered(remoteClient, part.SalePrice))
+                {
+                    remoteClient.SendAgentAlertMessage("You do not have enough money to buy this object.", false);
+                    return;
+                }
+                moneyMod.ApplyCharge(remoteClient.AgentId, part.SalePrice, "Object Purchase");
+            }
+
+            BuyObject(remoteClient, categoryID, localID, saleType, salePrice);
         }
 
         public bool BuyObject(IClientAPI remoteClient, UUID categoryID, uint localID, byte saleType, int salePrice)

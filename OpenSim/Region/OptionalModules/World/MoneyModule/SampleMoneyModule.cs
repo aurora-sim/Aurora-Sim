@@ -176,8 +176,6 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                 scene.EventManager.OnMakeChildAgent += MakeChildAgent;
                 scene.EventManager.OnClientClosed += ClientLoggedOut;
-                scene.EventManager.OnValidateLandBuy += ValidateLandBuy;
-                scene.EventManager.OnLandBuy += processLandBuy;
             }
         }
 
@@ -194,7 +192,7 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             scene.EventManager.OnMakeChildAgent -= MakeChildAgent;
             scene.EventManager.OnClientClosed -= ClientLoggedOut;
             scene.EventManager.OnValidateLandBuy -= ValidateLandBuy;
-            scene.EventManager.OnLandBuy -= processLandBuy;
+            scene.EventManager.OnValidateBuyLand -= processLandBuy;
         }
 
         public void RegionLoaded(Scene scene)
@@ -290,7 +288,6 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             client.OnEconomyDataRequest += EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest += SendMoneyBalance;
             client.OnRequestPayPrice += requestPayPrice;
-            client.OnObjectBuy += ObjectBuy;
             client.OnLogout += ClientClosed;
         }
 
@@ -299,7 +296,6 @@ namespace OpenSim.Region.OptionalModules.World.MoneyModule
             client.OnEconomyDataRequest -= EconomyDataRequestHandler;
             client.OnMoneyBalanceRequest -= SendMoneyBalance;
             client.OnRequestPayPrice -= requestPayPrice;
-            client.OnObjectBuy -= ObjectBuy;
             client.OnLogout -= ClientClosed;
         }
 
