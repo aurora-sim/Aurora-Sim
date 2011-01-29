@@ -116,7 +116,7 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient);
+            Scene scene = ((Scene)remoteClient.Scene);
             EntityBase entity;
             if (scene.Entities.TryGetChildPrimParent(primLocalID, out entity))
             {
@@ -135,7 +135,7 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient);
+            Scene scene = ((Scene)remoteClient.Scene);
             List<ISceneEntity> EntitiesToUpdate = new List<ISceneEntity>();
             SceneObjectPart prim = null;
             foreach (uint primLocalID in primLocalIDs)
@@ -242,7 +242,7 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient);
+            Scene scene = ((Scene)remoteClient.Scene);
             SceneObjectPart part = scene.GetSceneObjectPart(primLocalID);
             //Do this first... As if its null, this wont be fired.
             ScenePresence SP;
@@ -301,7 +301,7 @@ namespace Aurora.Modules
 
         protected void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)
         {
-            Scene scene = ((Scene)remoteClient);
+            Scene scene = ((Scene)remoteClient.Scene);
             // TODO: don't create new blocks if recycling an old packet
             ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
             ScenePresence SP;
