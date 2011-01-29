@@ -48,12 +48,8 @@ namespace OpenSim.Region.RegionCombinerModule
 
         public void ClientConnect(IClientAPI client)
         {
-            m_virtScene.UnSubscribeToClientPrimEvents(client);
-            m_virtScene.UnSubscribeToClientPrimRezEvents(client);
-
-            m_rootScene.SubscribeToClientPrimEvents(client);
-            m_rootScene.UnSubscribeToClientPrimRezEvents(client);
-            m_virtScene.UnSubscribeToClientPrimRezEvents(client);
+            m_virtScene.SceneGraph.UnSubscribeToClientEvents(client);
+            m_rootScene.SceneGraph.SubscribeToClientEvents(client);
 
             IInventoryAccessModule module = m_virtScene.RequestModuleInterface<IInventoryAccessModule>();
             if (module != null) //Remove OnRezObject
