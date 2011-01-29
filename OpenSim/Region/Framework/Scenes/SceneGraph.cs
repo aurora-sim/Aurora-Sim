@@ -97,6 +97,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentScene = parent;
             m_regInfo = regInfo;
 
+            //Subscript to the scene events
+            m_parentScene.EventManager.OnNewClient += SubscribeToClientEvents;
+            m_parentScene.EventManager.OnClosingClient += UnSubscribeToClientEvents;
+
             IConfig aurorastartupConfig = parent.Config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
             {
@@ -115,6 +119,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             Entities.Clear();
+            //Remove the events
+            m_parentScene.EventManager.OnNewClient -= SubscribeToClientEvents;
+            m_parentScene.EventManager.OnClosingClient -= UnSubscribeToClientEvents;
         }
 
         #endregion
@@ -646,6 +653,206 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion ForEach* Methods
 
         #region Client Event handlers
+
+        public void SubscribeToClientEvents(IClientAPI client)
+        {
+            client.OnUpdatePrimGroupPosition += UpdatePrimPosition;
+            client.OnUpdatePrimSinglePosition += UpdatePrimSinglePosition;
+            client.OnUpdatePrimGroupRotation += UpdatePrimRotation;
+            client.OnUpdatePrimGroupMouseRotation += UpdatePrimRotation;
+            client.OnUpdatePrimSingleRotation += UpdatePrimSingleRotation;
+            client.OnUpdatePrimSingleRotationPosition += UpdatePrimSingleRotationPosition;
+            client.OnUpdatePrimScale += UpdatePrimScale;
+            client.OnUpdatePrimGroupScale += UpdatePrimGroupScale;
+            client.OnUpdateExtraParams += UpdateExtraParam;
+            client.OnUpdatePrimShape += UpdatePrimShape;
+            client.OnUpdatePrimTexture += UpdatePrimTexture;
+            client.OnGrabUpdate += MoveObject;
+            client.OnSpinStart += SpinStart;
+            client.OnSpinUpdate += SpinObject;
+
+            client.OnObjectName += PrimName;
+            client.OnObjectClickAction += PrimClickAction;
+            client.OnObjectMaterial += PrimMaterial;
+            client.OnLinkObjects += LinkObjects;
+            client.OnDelinkObjects += DelinkObjects;
+            client.OnObjectDuplicate += DuplicateObject;
+            client.OnUpdatePrimFlags += UpdatePrimFlags;
+            client.OnRequestObjectPropertiesFamily += RequestObjectPropertiesFamily;
+            client.OnObjectPermissions += HandleObjectPermissionsUpdate;
+            client.OnGrabObject += ProcessObjectGrab;
+            client.OnGrabUpdate += ProcessObjectGrabUpdate;
+            client.OnDeGrabObject += ProcessObjectDeGrab; 
+            client.OnUndo += HandleUndo;
+            client.OnRedo += HandleRedo;
+            client.OnObjectDescription += PrimDescription;
+            client.OnObjectIncludeInSearch += MakeObjectSearchable;
+            client.OnObjectOwner += ObjectOwner;
+            client.OnObjectGroupRequest += HandleObjectGroupUpdate;
+
+            client.OnAddPrim += AddNewPrim;
+            client.OnObjectDuplicateOnRay += doObjectDuplicateOnRay;
+        }
+
+        public void UnSubscribeToClientEvents(IClientAPI client)
+        {
+            client.OnUpdatePrimGroupPosition -= UpdatePrimPosition;
+            client.OnUpdatePrimSinglePosition -= UpdatePrimSinglePosition;
+            client.OnUpdatePrimGroupRotation -= UpdatePrimRotation;
+            client.OnUpdatePrimGroupMouseRotation -= UpdatePrimRotation;
+            client.OnUpdatePrimSingleRotation -= UpdatePrimSingleRotation;
+            client.OnUpdatePrimSingleRotationPosition -= UpdatePrimSingleRotationPosition;
+            client.OnUpdatePrimScale -= UpdatePrimScale;
+            client.OnUpdatePrimGroupScale -= UpdatePrimGroupScale;
+            client.OnUpdateExtraParams -= UpdateExtraParam;
+            client.OnUpdatePrimShape -= UpdatePrimShape;
+            client.OnUpdatePrimTexture -= UpdatePrimTexture;
+            client.OnGrabUpdate -= MoveObject;
+            client.OnSpinStart -= SpinStart;
+            client.OnSpinUpdate -= SpinObject;
+            client.OnObjectName -= PrimName;
+            client.OnObjectClickAction -= PrimClickAction;
+            client.OnObjectMaterial -= PrimMaterial;
+            client.OnLinkObjects -= LinkObjects;
+            client.OnDelinkObjects -= DelinkObjects;
+            client.OnObjectDuplicate -= DuplicateObject;
+            client.OnUpdatePrimFlags -= UpdatePrimFlags;
+            client.OnRequestObjectPropertiesFamily -= RequestObjectPropertiesFamily;
+            client.OnObjectPermissions -= HandleObjectPermissionsUpdate;
+            client.OnGrabObject -= ProcessObjectGrab;
+            client.OnGrabUpdate -= ProcessObjectGrabUpdate;
+            client.OnDeGrabObject -= ProcessObjectDeGrab;
+            client.OnUndo -= HandleUndo;
+            client.OnRedo -= HandleRedo;
+            client.OnObjectDescription -= PrimDescription;
+            client.OnObjectIncludeInSearch -= MakeObjectSearchable;
+            client.OnObjectOwner -= ObjectOwner;
+            client.OnObjectGroupRequest -= HandleObjectGroupUpdate;
+            client.OnAddPrim -= AddNewPrim;
+            client.OnObjectDuplicateOnRay -= doObjectDuplicateOnRay;
+        }
+
+        public virtual void ProcessObjectGrab(uint localID, Vector3 offsetPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        {
+            SurfaceTouchEventArgs surfaceArg = null;
+            if (surfaceArgs != null && surfaceArgs.Count > 0)
+                surfaceArg = surfaceArgs[0];
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+            if (TryGetPart(localID, out childPrim))
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                if (obj.RootPart.BlockGrab)
+                    return;
+                // Currently only grab/touch for the single prim
+                // the client handles rez correctly
+                obj.ObjectGrabHandler(localID, offsetPos, remoteClient);
+
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                m_parentScene.EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                // Deliver to the root prim if the touched prim doesn't handle touches
+                // or if we're meant to pass on touches anyway. Don't send to root prim
+                // if prim touched is the root prim as we just did it
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                    else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                }
+            }
+        }
+
+        public virtual void ProcessObjectGrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        {
+            SurfaceTouchEventArgs surfaceArg = null;
+            if (surfaceArgs != null && surfaceArgs.Count > 0)
+                surfaceArg = surfaceArgs[0];
+
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+
+            if (TryGetPart(objectID, out childPrim))
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                if (obj.RootPart.BlockGrab)
+                    return;
+
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                m_parentScene.EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                // Deliver to the root prim if the touched prim doesn't handle touches
+                // or if we're meant to pass on touches anyway. Don't send to root prim
+                // if prim touched is the root prim as we just did it
+
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    }
+                }
+            }
+        }
+
+        public virtual void ProcessObjectDeGrab(uint localID, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        {
+            SurfaceTouchEventArgs surfaceArg = null;
+            if (surfaceArgs != null && surfaceArgs.Count > 0)
+                surfaceArg = surfaceArgs[0];
+
+            ISceneEntity childPrim;
+            SceneObjectPart part;
+            if (TryGetPart(localID, out childPrim))
+            {
+                part = childPrim as SceneObjectPart;
+                SceneObjectGroup obj = part.ParentGroup;
+                // If the touched prim handles touches, deliver it
+                // If not, deliver to root prim
+                m_parentScene.EventManager.TriggerObjectDeGrab(part, part, remoteClient, surfaceArg);
+
+                if ((part.LocalId != obj.RootPart.LocalId))
+                {
+                    const int PASS_IF_NOT_HANDLED = 0;
+                    const int PASS_ALWAYS = 1;
+                    const int PASS_NEVER = 2;
+                    if (part.PassTouch == PASS_NEVER)
+                    {
+                    }
+                    if (part.PassTouch == PASS_ALWAYS)
+                    {
+                        m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                    }
+                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                    {
+                        m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Gets a new rez location based on the raycast and the size of the object that is being rezzed.

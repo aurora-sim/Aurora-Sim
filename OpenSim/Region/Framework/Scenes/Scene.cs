@@ -666,52 +666,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client">The IClientAPI of the connected client</param>
         public virtual void SubscribeToClientEvents(IClientAPI client)
         {
-            SubscribeToClientPrimEvents(client);
-            SubscribeToClientPrimRezEvents(client);
             SubscribeToClientGridEvents(client);
-        }
-
-        public virtual void SubscribeToClientPrimEvents(IClientAPI client)
-        {
-            client.OnUpdatePrimGroupPosition += m_sceneGraph.UpdatePrimPosition;
-            client.OnUpdatePrimSinglePosition += m_sceneGraph.UpdatePrimSinglePosition;
-            client.OnUpdatePrimGroupRotation += m_sceneGraph.UpdatePrimRotation;
-            client.OnUpdatePrimGroupMouseRotation += m_sceneGraph.UpdatePrimRotation;
-            client.OnUpdatePrimSingleRotation += m_sceneGraph.UpdatePrimSingleRotation;
-            client.OnUpdatePrimSingleRotationPosition += m_sceneGraph.UpdatePrimSingleRotationPosition;
-            client.OnUpdatePrimScale += m_sceneGraph.UpdatePrimScale;
-            client.OnUpdatePrimGroupScale += m_sceneGraph.UpdatePrimGroupScale;
-            client.OnUpdateExtraParams += m_sceneGraph.UpdateExtraParam;
-            client.OnUpdatePrimShape += m_sceneGraph.UpdatePrimShape;
-            client.OnUpdatePrimTexture += m_sceneGraph.UpdatePrimTexture;
-            client.OnGrabUpdate += m_sceneGraph.MoveObject;
-            client.OnSpinStart += m_sceneGraph.SpinStart;
-            client.OnSpinUpdate += m_sceneGraph.SpinObject;
-
-            client.OnObjectName += m_sceneGraph.PrimName;
-            client.OnObjectClickAction += m_sceneGraph.PrimClickAction;
-            client.OnObjectMaterial += m_sceneGraph.PrimMaterial;
-            client.OnLinkObjects += m_sceneGraph.LinkObjects;
-            client.OnDelinkObjects += m_sceneGraph.DelinkObjects;
-            client.OnObjectDuplicate += m_sceneGraph.DuplicateObject;
-            client.OnUpdatePrimFlags += m_sceneGraph.UpdatePrimFlags;
-            client.OnRequestObjectPropertiesFamily += m_sceneGraph.RequestObjectPropertiesFamily;
-            client.OnObjectPermissions += m_sceneGraph.HandleObjectPermissionsUpdate;
-            client.OnGrabObject += ProcessObjectGrab;
-            client.OnGrabUpdate += ProcessObjectGrabUpdate;
-            client.OnDeGrabObject += ProcessObjectDeGrab;
-            client.OnUndo += m_sceneGraph.HandleUndo;
-            client.OnRedo += m_sceneGraph.HandleRedo;
-            client.OnObjectDescription += m_sceneGraph.PrimDescription;
-            client.OnObjectIncludeInSearch += m_sceneGraph.MakeObjectSearchable;
-            client.OnObjectOwner += m_sceneGraph.ObjectOwner;
-            client.OnObjectGroupRequest += m_sceneGraph.HandleObjectGroupUpdate;
-        }
-
-        public virtual void SubscribeToClientPrimRezEvents(IClientAPI client)
-        {
-            client.OnAddPrim += m_sceneGraph.AddNewPrim;
-            client.OnObjectDuplicateOnRay += m_sceneGraph.doObjectDuplicateOnRay;
         }
 
         public virtual void SubscribeToClientGridEvents(IClientAPI client)
@@ -727,50 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client">The IClientAPI of the client</param>
         public virtual void UnSubscribeToClientEvents(IClientAPI client)
         {
-            UnSubscribeToClientPrimEvents(client);
-            UnSubscribeToClientPrimRezEvents(client);
             UnSubscribeToClientGridEvents(client);
-        }
-
-        public virtual void UnSubscribeToClientPrimEvents(IClientAPI client)
-        {
-            client.OnUpdatePrimGroupPosition -= m_sceneGraph.UpdatePrimPosition;
-            client.OnUpdatePrimSinglePosition -= m_sceneGraph.UpdatePrimSinglePosition;
-            client.OnUpdatePrimGroupRotation -= m_sceneGraph.UpdatePrimRotation;
-            client.OnUpdatePrimGroupMouseRotation -= m_sceneGraph.UpdatePrimRotation;
-            client.OnUpdatePrimSingleRotation -= m_sceneGraph.UpdatePrimSingleRotation;
-            client.OnUpdatePrimSingleRotationPosition -= m_sceneGraph.UpdatePrimSingleRotationPosition;
-            client.OnUpdatePrimScale -= m_sceneGraph.UpdatePrimScale;
-            client.OnUpdatePrimGroupScale -= m_sceneGraph.UpdatePrimGroupScale;
-            client.OnUpdateExtraParams -= m_sceneGraph.UpdateExtraParam;
-            client.OnUpdatePrimShape -= m_sceneGraph.UpdatePrimShape;
-            client.OnUpdatePrimTexture -= m_sceneGraph.UpdatePrimTexture;
-            client.OnGrabUpdate -= m_sceneGraph.MoveObject;
-            client.OnSpinStart -= m_sceneGraph.SpinStart;
-            client.OnSpinUpdate -= m_sceneGraph.SpinObject;
-            client.OnObjectName -= m_sceneGraph.PrimName;
-            client.OnObjectClickAction -= m_sceneGraph.PrimClickAction;
-            client.OnObjectMaterial -= m_sceneGraph.PrimMaterial;
-            client.OnLinkObjects -= m_sceneGraph.LinkObjects;
-            client.OnDelinkObjects -= m_sceneGraph.DelinkObjects;
-            client.OnObjectDuplicate -= m_sceneGraph.DuplicateObject;
-            client.OnUpdatePrimFlags -= m_sceneGraph.UpdatePrimFlags;
-            client.OnRequestObjectPropertiesFamily -= m_sceneGraph.RequestObjectPropertiesFamily;
-            client.OnObjectPermissions -= m_sceneGraph.HandleObjectPermissionsUpdate;
-            client.OnGrabObject -= ProcessObjectGrab;
-            client.OnDeGrabObject -= ProcessObjectDeGrab;
-            client.OnUndo -= m_sceneGraph.HandleUndo;
-            client.OnRedo -= m_sceneGraph.HandleRedo;
-            client.OnObjectDescription -= m_sceneGraph.PrimDescription;
-            client.OnObjectIncludeInSearch -= m_sceneGraph.MakeObjectSearchable;
-            client.OnObjectOwner -= m_sceneGraph.ObjectOwner;
-            client.OnObjectGroupRequest -= m_sceneGraph.HandleObjectGroupUpdate;
-        }
-
-        public virtual void UnSubscribeToClientPrimRezEvents(IClientAPI client)
-        {
-            client.OnAddPrim -= m_sceneGraph.AddNewPrim;
-            client.OnObjectDuplicateOnRay -= m_sceneGraph.doObjectDuplicateOnRay;
         }
 
         public virtual void UnSubscribeToClientGridEvents(IClientAPI client)
@@ -1080,11 +992,6 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region SceneGraph wrapper methods
-
-        public int GetRootAgentCount()
-        {
-            return m_sceneGraph.GetRootAgentCount();
-        }
 
         /// <summary>
         /// Request a scene presence by UUID. Fast, indexed lookup.

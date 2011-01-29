@@ -418,7 +418,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             List<SensedEntity> sensedEntities = new List<SensedEntity>();
 
             // If nobody about quit fast
-            if (ts.host.ParentGroup.Scene.GetRootAgentCount() == 0)
+            if (ts.host.ParentGroup.Scene.SceneGraph.GetRootAgentCount() == 0)
                 return sensedEntities;
 
             SceneObjectPart SensePoint = ts.host;

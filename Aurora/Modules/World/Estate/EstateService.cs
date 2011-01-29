@@ -646,7 +646,7 @@ namespace Aurora.Modules
 
             EstateSettings ES = scene.RegionInfo.EstateSettings;
 
-            if (scene.RegionInfo.RegionSettings.AgentLimit < scene.GetRootAgentCount() + 1)
+            if (scene.RegionInfo.RegionSettings.AgentLimit < scene.SceneGraph.GetRootAgentCount() + 1)
             {
                 reason = "Too many agents at this time. Please come back later.";
                 return false;

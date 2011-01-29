@@ -6262,7 +6262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
-            return new LSL_Integer(World.GetRootAgentCount());
+            return new LSL_Integer(World.SceneGraph.GetRootAgentCount());
         }
 
         public LSL_Vector llGetRegionCorner()
