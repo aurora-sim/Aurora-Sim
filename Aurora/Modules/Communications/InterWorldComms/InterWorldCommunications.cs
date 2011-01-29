@@ -53,6 +53,11 @@ namespace Aurora.Modules
         /// </summary>
         public IWCOutgoingConnections OutgoingPublicComms;
 
+        public IRegistryCore Registry
+        {
+            get { return m_registry; }
+        }
+
         #endregion
 
         #region Public members
@@ -385,7 +390,9 @@ namespace Aurora.Modules
         /// <returns></returns>
         private IWCCertificate BuildSecureUrlsForConnection(IWCCertificate c)
         {
-            //TODO:
+            IConfigurationService service = IWC.Registry.RequestModuleInterface<IConfigurationService>();
+            //Give the basic Urls that we have
+            c.SecureUrls = service.GetDefaultValues();
             c.SecureUrls["TeleportAgent"] = "";
             return c;
         }

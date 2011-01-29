@@ -19,6 +19,12 @@ namespace OpenSim.Services.Interfaces
         void AddNewUser(UUID userID, OSDMap urls);
 
         /// <summary>
+        /// Get the default url's for this service
+        /// </summary>
+        /// <returns></returns>
+        OSDMap GetDefaultValues();
+
+        /// <summary>
         /// Find the 'key' from the auto config service.
         /// First it will check for the key in the response it got from the ConfigurationInHandler, 
         ///   then check from the IConfig found in 'Configuration'.

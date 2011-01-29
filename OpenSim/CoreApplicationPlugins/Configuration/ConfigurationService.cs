@@ -90,6 +90,11 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         {
         }
 
+        public virtual OSDMap GetDefaultValues()
+        {
+            return m_autoConfig;
+        }
+
         public virtual List<string> FindValueOf(string key)
         {
             List<string> keys = new List<string>();
