@@ -16,22 +16,19 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 {
     public class ConfigurationService : IConfigurationService, IApplicationPlugin
     {
-        private static readonly ILog m_log =
+        protected static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IConfigSource m_config;
         protected OSDMap m_autoConfig = new OSDMap();
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(ISimulationBase openSim)
+        public virtual void Initialize(ISimulationBase openSim)
         {
-            //Register by default as this only gets used in remote grid mode
-            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
-
             string resp = "";
             m_config = openSim.ConfigSource;
 
@@ -39,13 +36,15 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
                 return;
 
+            //Register by default as this only gets used in remote grid mode
+            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
+
             IConfig autoConfig = m_config.Configs["Configuration"];
             if (autoConfig == null)
                 return;
 
             while (resp == "")
             {
-
                 string serverURL = autoConfig.GetString("ConfigurationURL", "");
                 //Clean up the URL so that it isn't too hard for users
                 serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
@@ -87,21 +86,48 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         {
         }
 
-        public List<string> FindValueOf(string key)
+        public virtual void AddNewUser(UUID userID, OSDMap urls)
+        {
+        }
+
+        public virtual List<string> FindValueOf(string key)
         {
             List<string> keys = new List<string>();
 
             if (m_autoConfig.ContainsKey(key))
             {
-                string[] configKeys = m_autoConfig[key].AsString().Split(',');
-                keys.AddRange(configKeys);
+                keys = FindValueOfFromOSDMap(key, m_autoConfig);
             }
             else
             {
-                //We can safely assume that because we are registered, this will not be null
-                string[] configKeys = m_config.Configs["Configuration"].GetString(key, "").Split(',');
-                keys.AddRange(configKeys);
+                keys = FindValueOfFromConfiguration(key);
             }
+            return keys;
+        }
+
+        public virtual List<string> FindValueOf(UUID userID, string key)
+        {
+            return FindValueOf(key);
+        }
+
+        public virtual List<string> FindValueOfFromOSDMap(string key, OSDMap urls)
+        {
+            List<string> keys = new List<string>();
+
+            string[] configKeys = urls[key].AsString().Split(',');
+            keys.AddRange(configKeys);
+
+            return keys;
+        }
+
+        public virtual List<string> FindValueOfFromConfiguration(string key)
+        {
+            List<string> keys = new List<string>();
+
+            //We can safely assume that because we are registered, this will not be null
+            string[] configKeys = m_config.Configs["Configuration"].GetString(key, "").Split(',');
+            keys.AddRange(configKeys);
+
             return keys;
         }
     }

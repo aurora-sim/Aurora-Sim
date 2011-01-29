@@ -187,7 +187,10 @@ namespace Aurora.Modules
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
             string timeUntilExpires = MainConsole.Instance.CmdPrompt("Time until the connection expires (ends, in days)");
+            string trustLevel = MainConsole.Instance.CmdPrompt("Trust level of this connection");
             int timeInDays = int.Parse(timeUntilExpires);
+
+            Connection con = new Connection();
             
             //Build the certificate
             IWCCertificate cert = new IWCCertificate();
@@ -196,6 +199,22 @@ namespace Aurora.Modules
 
             //Add the certificate now
             CertificateVerification.AddCertificate(cert);
+
+            con.Certificate = cert;
+            con.TrustLevel = (TrustLevel)Enum.Parse(typeof(TrustLevel), trustLevel);
+            con.URL = Url;
+
+            cert = OutgoingPublicComms.QueryRemoteHost(con);
+            if (cert != null)
+            {
+                con.Certificate = cert;
+                Connections.Add(con);
+                m_log.Warn("Added connection to " + Url + ".");
+            }
+            else
+            {
+                m_log.Warn("Could not add connection.");
+            }
         }
 
         private void RemoveIWCConnection(string module, string[] cmds)
@@ -401,6 +420,7 @@ namespace Aurora.Modules
     /// <summary>
     /// The base Connection class
     /// This deals with saving info about other hosts so that we can contact them
+    /// This should not be passed to other host, use the IWCCertificate instead
     /// </summary>
     public class Connection : IDataTransferable
     {

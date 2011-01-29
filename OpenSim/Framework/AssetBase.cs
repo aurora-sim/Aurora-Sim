@@ -48,7 +48,7 @@ namespace OpenSim.Framework
     /// Asset class.   All Assets are reference by this class or a class derived from this class
     /// </summary>
     [Serializable]
-    public class AssetBase
+    public class AssetBase : IDisposable
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -234,6 +234,15 @@ namespace OpenSim.Framework
         {
             return FullID.ToString();
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Data = null;
+        }
+
+        #endregion
     }
 
     [Serializable]

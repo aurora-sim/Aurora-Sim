@@ -169,37 +169,41 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         // take too long, as most assets should be cached
         private Bitmap fetchTexture(UUID id)
         {
-            AssetBase asset = m_scene.AssetService.Get(id.ToString());
-            //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
-            if (asset == null) return null;
+            using (AssetBase asset = m_scene.AssetService.Get(id.ToString()))
+            {
+                //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
+                if (asset == null) return null;
 
-            ManagedImage managedImage;
-            Image image;
+                ManagedImage managedImage;
+                Image image;
 
-            try
-            {
-                if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
-                    return new Bitmap(image);
-                else
-                    return null;
-            }
-            catch (DllNotFoundException)
-            {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}", id);
-                
-            }
-            catch (IndexOutOfRangeException)
-            {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
-                
-            }
-            catch (Exception)
-            {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
-                
+                try
+                {
+                    if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                    {
+                        managedImage = null;
+                        return new Bitmap(image);
+                    }
+                    else
+                        return null;
+                }
+                catch (DllNotFoundException)
+                {
+                    m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}", id);
+
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+                }
+                catch (Exception)
+                {
+                    m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+
+                }
             }
             return null;
-            
         }
 
         // Compute the average color of a texture.

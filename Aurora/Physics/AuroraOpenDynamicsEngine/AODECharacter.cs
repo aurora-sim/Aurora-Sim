@@ -916,9 +916,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Avatar to Avatar collisions
                     // Prim to avatar collisions
                     // if target vel is zero why was it here ?
-                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
-                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
-                    vec.Y = -vel.Z * PID_D + (_zeroPosition.Z - tempPos.Z) * PID_P;
+                    //vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P * 2f;
+                    //vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P * 2f;
                     }
                 }
             else

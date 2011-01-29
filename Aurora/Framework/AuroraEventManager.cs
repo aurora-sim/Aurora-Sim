@@ -15,6 +15,14 @@ namespace Aurora.Framework
     /// </summary>
     public class AuroraEventManager
     {
+        /// <summary>
+        /// Events so far:
+        /// 
+        /// DrawDistanceChanged - Changed Draw Distance, param is a ScenePresence
+        /// BanUser - Added a new banned user to the estate bans, param is a UUID of an agent
+        /// UnBanUser - Removed a banned user from the estate bans, param is a UUID of an agent
+        /// 
+        /// </summary>
         public event OnGenericEventHandler OnGenericEvent;
         /// <summary>
         /// Fire a generic event for all modules hooking onto it
