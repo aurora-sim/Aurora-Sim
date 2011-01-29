@@ -713,13 +713,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             //Check friend perms
             if (IsFriendWithPerms(currentUser, objectOwner))
                 permission = true;
-
-//            m_log.DebugFormat(
-//                "[PERMISSIONS]: group.GroupID = {0}, part.GroupMask = {1}, isGroupMember = {2} for {3}", 
-//                group.GroupID,
-//                m_scene.GetSceneObjectPart(objId).GroupMask, 
-//                IsGroupMember(group.GroupID, currentUser, 0), 
-//                currentUser);
             
             // Group members should be able to edit group objects
             SceneObjectPart part = m_scene.GetSceneObjectPart(objId);

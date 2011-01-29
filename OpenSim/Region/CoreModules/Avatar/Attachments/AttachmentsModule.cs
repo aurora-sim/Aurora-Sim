@@ -318,10 +318,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                     //NOTE: we MUST do this manually, otherwise it will never be added!
                     //We also have to reset the IDs!
-                    foreach (SceneObjectPart part in partList)
-                    {
-                        part.ResetEntityIDs();
-                    }
+                    //Note: root first, as we have to set the parentID right!
+                    m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
                     m_scene.Entities.Add(objatt);
 
                     #endregion
@@ -441,9 +439,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 byte attachmentPoint = (byte)sog.RootPart.AttachmentPoint;
                 sog.UpdateGroupPosition(pos, true);
                 sog.RootPart.IsAttachment = false;
+                sog.RootPart.AttachedPos = pos;
                 sog.AbsolutePosition = sog.RootPart.AttachedPos;
-                UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
                 sog.SetAttachmentPoint(attachmentPoint);
+                UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
+            }
+            else
+            {
+                m_log.Warn("[Attachments]: Could not find attachment by ItemID!");
             }
         }
 
@@ -640,7 +643,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
 
             // XXYY!!
-            if (item != null)
+            if (item == null)
             {
                 item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = m_scene.InventoryService.GetItem(item);
@@ -723,49 +726,55 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             // We can NOT use the dictionaries here, as we are looking
             // for an entity by the fromAssetID, which is NOT the prim UUID
-            EntityBase[] detachEntities = m_scene.Entities.GetEntities();
-            SceneObjectGroup group;
-
-            foreach (EntityBase entity in detachEntities)
+            SceneObjectGroup[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
+            
+            foreach (SceneObjectGroup group in attachments)
             {
-                if (entity is SceneObjectGroup)
+                if (group.GetFromItemID() == itemID)
                 {
-                    group = (SceneObjectGroup)entity;
-                    if (group.GetFromItemID() == itemID)
+                    if (fireEvent)
                     {
-                        if (fireEvent)
-                        {
-                            m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
+                        m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
 
-                            group.DetachToInventoryPrep();
-                        }
+                        group.DetachToInventoryPrep();
+                    }
 
-                        ScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
-                        if (presence != null)
-                        {
-                            AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
-                            if (attModule != null)
-                                attModule.RemoveAttachment(group);
-                        }
+                    ScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+                    if (presence != null)
+                    {
+                        AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
+                        if (attModule != null)
+                            attModule.RemoveAttachment(group);
+                    }
 
-                        m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
+                    m_log.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
 
-                        //Update the saved attach points
+                    //Update the saved attach points
+                    if (group.RootPart.AttachedPos != group.RootPart.SavedAttachedPos ||
+                        group.RootPart.SavedAttachmentPoint != group.RootPart.AttachmentPoint)
+                    {
                         group.RootPart.SavedAttachedPos = group.RootPart.AttachedPos;
                         group.RootPart.SavedAttachmentPoint = group.RootPart.AttachmentPoint;
-
-                        // If an item contains scripts, it's always changed.
-                        // This ensures script state is saved on detach
-                        foreach (SceneObjectPart p in group.Parts)
-                            if (p.Inventory.ContainsScripts())
-                                group.HasGroupChanged = true;
-
-                        UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
-
-                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
-                            backup.DeleteSceneObjects(new SceneObjectGroup[1] { group }, true);
+                        //Make sure we get updated
+                        group.HasGroupChanged = true;
                     }
+
+                    // If an item contains scripts, it's always changed.
+                    // This ensures script state is saved on detach
+                    foreach (SceneObjectPart p in group.Parts)
+                    {
+                        if (p.Inventory.ContainsScripts())
+                        {
+                            group.HasGroupChanged = true;
+                            break;
+                        }
+                    }
+
+                    UpdateKnownItem(remoteClient, group, group.GetFromItemID(), group.OwnerID);
+
+                    IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                    if (backup != null)
+                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { group }, true);
                 }
             }
         }
@@ -791,7 +800,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     return;
                 }
 
-                m_log.DebugFormat(
+                m_log.InfoFormat(
                     "[ATTACHMENTS MODULE]: Updating asset for attachment {0}, attachpoint {1}",
                     grp.UUID, grp.GetAttachmentPoint());
 
@@ -819,6 +828,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     // this gets called when the agent logs off!
                     if (remoteClient != null)
                         remoteClient.SendInventoryItemCreateUpdate(item, 0);
+                }
+                else
+                {
+                    m_log.Warn("[AttachmentModule]: Could not find inventory item for attachment to update!");
                 }
             }
         }
