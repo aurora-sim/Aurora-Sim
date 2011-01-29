@@ -175,6 +175,19 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     AddDefaultMonitors();
             }
 
+            public void Close()
+            {
+                if (m_currentScene != null)
+                {
+                    //Kill the stats heartbeat and http handler
+                    m_report.Stop();
+                    MainServer.Instance.RemoveHTTPHandler("POST", "/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
+                }
+                //Remove all monitors/alerts
+                m_alerts.Clear();
+                m_monitors.Clear();
+            }
+
             #endregion
 
             #region Default
@@ -984,10 +997,16 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         public void OnAddedScene(Scene scene)
         {
+            if (m_registry.ContainsKey(scene.RegionInfo.RegionID.ToString()))
+            {
+                //Kill the old!
+                m_registry[scene.RegionInfo.RegionID.ToString()].Close();
+                m_registry.Remove(scene.RegionInfo.RegionID.ToString());
+            }
             //Register all the commands for this region
             MonitorRegistry reg = new MonitorRegistry(this);
             reg.AddScene(scene);
-            m_registry.Add(scene.RegionInfo.RegionID.ToString(), reg);
+            m_registry[scene.RegionInfo.RegionID.ToString()] = reg;
             scene.RegisterModuleInterface<IMonitorModule>(this);
         }
 
