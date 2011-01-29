@@ -359,10 +359,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             newData.ClaimPrice = claimprice;
             newData.SalePrice = 0;
             newData.AuthBuyerID = UUID.Zero;
-            newData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
+            newData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
             m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
 
             SendLandUpdateToAvatarsOverMe(true);
+            //Send a full update to the client as well
+            ScenePresence SP = m_scene.GetScenePresence(avatarID);
+            SendLandUpdateToClient(SP.ControllingClient);
         }
 
         public void DeedToGroup(UUID groupID)
