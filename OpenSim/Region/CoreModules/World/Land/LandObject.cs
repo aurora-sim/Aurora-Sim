@@ -115,7 +115,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             //Make the InfoUUID for this parcel
             uint x = (uint)LandData.UserLocation.X, y = (uint)LandData.UserLocation.Y;
             findPointInParcel(this, ref x, ref y); // find a suitable spot
-            LandData.InfoUUID = Util.BuildFakeParcelID(LandData.RegionHandle, x, y);
+            LandData.InfoUUID = Util.BuildFakeParcelID(m_scene.RegionInfo.RegionHandle, x, y);
         }
 
         // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center

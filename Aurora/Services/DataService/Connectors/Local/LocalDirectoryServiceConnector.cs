@@ -105,6 +105,7 @@ namespace Aurora.Services.DataService
             Values.Add(args.GroupID);
             Values.Add(((args.Flags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory) ? 1 : 0);
             Values.Add(args.SnapshotID);
+            Values.Add(OSDParser.SerializeLLSDXmlString(args.Bitmap));
 
             List<string> Keys = new List<string>();
             Keys.Add("RegionID");
@@ -128,8 +129,33 @@ namespace Aurora.Services.DataService
             Keys.Add("GroupID");
             Keys.Add("ShowInSearch");
             Keys.Add("SnapshotID");
+            Keys.Add("Bitmap");
 
             GD.Replace("searchparcel", Keys.ToArray(), Values.ToArray());
+        }
+
+        private bool[,] ConvertBytesToLandBitmap(byte[] Bitmap)
+        {
+            bool[,] tempConvertMap = new bool[64, 64];
+            tempConvertMap.Initialize();
+            byte tempByte = 0;
+            int x = 0, y = 0, i = 0, bitNum = 0;
+            for (i = 0; i < 512; i++)
+            {
+                tempByte = Bitmap[i];
+                for (bitNum = 0; bitNum < 8; bitNum++)
+                {
+                    bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                    tempConvertMap[x, y] = bit;
+                    x++;
+                    if (x > 63)
+                    {
+                        x = 0;
+                        y++;
+                    }
+                }
+            }
+            return tempConvertMap;
         }
 
         /// <summary>
@@ -139,29 +165,53 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public LandData GetParcelInfo(UUID InfoUUID)
         {
+            //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
             //Get info about a specific parcel somewhere in the metaverse
-            List<string> Query = GD.Query("InfoUUID", InfoUUID, "searchparcel", "*");
+            string query = " InfoUUID LIKE '%" + InfoUUID.ToString().Remove(18, 18) + "%'";
+            List<string> Query = GD.Query(query, "searchparcel", "*");
             //Cant find it, return
             if (Query.Count == 0)
                 return null;
 
+            List<LandData> Lands = new List<LandData>();
             //Parse and return
             LandData LandData = new LandData();
-            LandData.RegionID = UUID.Parse(Query[0]);
-            LandData.GlobalID = UUID.Parse(Query[1]);
-            LandData.LocalID = int.Parse(Query[2]);
-            LandData.UserLocation = new Vector3(float.Parse(Query[3]), float.Parse(Query[4]), float.Parse(Query[5]));
-            LandData.Name = Query[6];
-            LandData.Description = Query[7];
-            LandData.Flags = uint.Parse(Query[8]);
-            LandData.Dwell = int.Parse(Query[9]);
-            LandData.InfoUUID = UUID.Parse(Query[10]);
-            LandData.AuctionID = uint.Parse(Query[13]);
-            LandData.Area = int.Parse(Query[14]);
-            LandData.Maturity = int.Parse(Query[16]);
-            LandData.OwnerID = UUID.Parse(Query[17]);
-            LandData.GroupID = UUID.Parse(Query[18]);
-            LandData.SnapshotID = UUID.Parse(Query[20]);
+            //Add all the parcels belonging to the owner to the list
+            for (int i = 0; i < Query.Count; i += 22)
+            {
+                LandData.RegionID = UUID.Parse(Query[i]);
+                LandData.GlobalID = UUID.Parse(Query[i + 1]);
+                LandData.LocalID = int.Parse(Query[i + 2]);
+                LandData.UserLocation = new Vector3(float.Parse(Query[i + 3]), float.Parse(Query[i + 4]), float.Parse(Query[i + 5]));
+                LandData.Name = Query[i + 6];
+                LandData.Description = Query[i + 7];
+                LandData.Flags = uint.Parse(Query[i + 8]);
+                LandData.Dwell = int.Parse(Query[i + 9]);
+                LandData.InfoUUID = UUID.Parse(Query[i + 10]);
+                LandData.AuctionID = uint.Parse(Query[i + 13]);
+                LandData.Area = int.Parse(Query[i + 14]);
+                LandData.Maturity = int.Parse(Query[i + 16]);
+                LandData.OwnerID = UUID.Parse(Query[i + 17]);
+                LandData.GroupID = UUID.Parse(Query[i + 18]);
+                LandData.SnapshotID = UUID.Parse(Query[i + 20]);
+                LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
+
+                Lands.Add(LandData);
+                LandData = new LandData();
+            }
+            ulong regionHandle;
+            uint x,y;
+            Util.ParseFakeParcelID(InfoUUID, out regionHandle, out x, out y);
+            LandData = null;
+            foreach (LandData land in Lands)
+            {
+                bool[,] bitmap = ConvertBytesToLandBitmap(land.Bitmap);
+                if (bitmap[x / 64, y / 64])
+                {
+                    LandData = land;
+                    break;
+                }
+            }
             return LandData;
         }
 
@@ -181,7 +231,7 @@ namespace Aurora.Services.DataService
             
             LandData LandData = new LandData();
             //Add all the parcels belonging to the owner to the list
-            for (int i = 0; i < Query.Count; i += 21)
+            for (int i = 0; i < Query.Count; i += 22)
             {
                 LandData.RegionID = UUID.Parse(Query[i]);
                 LandData.GlobalID = UUID.Parse(Query[i + 1]);
@@ -198,6 +248,7 @@ namespace Aurora.Services.DataService
                 LandData.OwnerID = UUID.Parse(Query[i + 17]);
                 LandData.GroupID = UUID.Parse(Query[i + 18]);
                 LandData.SnapshotID = UUID.Parse(Query[i + 20]);
+                LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
 
                 Lands.Add(LandData);
                 LandData = new LandData();

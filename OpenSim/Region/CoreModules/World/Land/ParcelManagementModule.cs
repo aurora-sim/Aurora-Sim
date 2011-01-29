@@ -338,6 +338,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnLandObjectAdded += AddLandObject;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
+            if(m_UpdateDirectoryOnTimer)
+                m_scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
 
             m_scene.RegisterModuleInterface<IParcelManagementModule>(this);
         }
@@ -374,6 +376,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnLandObjectAdded -= AddLandObject;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
             m_scene.UnregisterModuleInterface<IParcelManagementModule>(this);
+        }
+
+        private void EventManager_OnStartupComplete(IScene scene, List<string> data)
+        {
+            UpdateDirectoryTimerElapsed(null, null);
         }
 
         private void UpdateDirectoryTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -1915,7 +1922,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     if (info == null)
                     {
-                        m_log.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID);
+                        m_log.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1) {2}", parcelID, X, Y);
                         return;
                     }
                     // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
