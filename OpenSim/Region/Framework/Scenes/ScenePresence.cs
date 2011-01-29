@@ -1114,7 +1114,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraLeftAxis = agentData.CameraLeftAxis;
             m_CameraUpAxis = agentData.CameraUpAxis;
             // The Agent's Draw distance setting
-            m_DrawDistance = agentData.Far;
+            if (agentData.Far != m_DrawDistance)
+            {
+                m_DrawDistance = agentData.Far;
+                //Fire the event
+                Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
+            }
 
             // Check if Client has camera in 'follow cam' or 'build' mode.
             Vector3 camdif = (Vector3.One * m_bodyRot - Vector3.One * CameraRotation);
@@ -2492,6 +2497,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((cAgentData.Throttles != null) && cAgentData.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgentData.Throttles);
+
+            m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
 
             m_sceneViewer.Reprioritize();
             //m_velocity = cAgentData.Velocity;

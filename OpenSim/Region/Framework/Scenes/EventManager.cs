@@ -310,15 +310,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public event SceneObjectDelegate OnSceneObjectLoaded;
         public delegate void SceneObjectDelegate(SceneObjectGroup so);
-        
-        /// <summary>
-        /// Called when a scene object part is cloned within the region.
-        /// </summary>
-        /// <param name="copy"></param>
-        /// <param name="original"></param>
-        /// <param name="userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
-        public event SceneObjectPartCopyDelegate OnSceneObjectPartCopy;
-        public delegate void SceneObjectPartCopyDelegate(SceneObjectPart copy, SceneObjectPart original);
 
         public delegate void RegionUp(GridRegion region);
         public event RegionUp OnRegionUp;

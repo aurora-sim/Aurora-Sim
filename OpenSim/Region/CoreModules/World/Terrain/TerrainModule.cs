@@ -89,7 +89,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
         private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
-        
+        private bool m_sendTerrainUpdatesByViewDistance = false;
+        protected Dictionary<UUID, bool[,]> m_terrainPatchesSent = new Dictionary<UUID, bool[,]>();
+
         #region INonSharedRegionModule Members
 
         /// <summary>
@@ -99,6 +101,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="config">Config for the region</param>
         public void Initialise(IConfigSource config)
         {
+            if (config.Configs["TerrainModule"] != null)
+            {
+                m_sendTerrainUpdatesByViewDistance = config.Configs["TerrainModule"].GetBoolean("SendTerrainByViewDistance", m_sendTerrainUpdatesByViewDistance);
+            }
         }
 
         public void AddRegion(Scene scene)
@@ -116,7 +122,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
-            if(firstScene)
+            m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
+            m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            if (firstScene)
                 AddConsoleCommands();
 
             InstallDefaultEffects();
@@ -135,6 +143,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
+                m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
+                m_scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
                 // remove the interface
                 m_scene.UnregisterModuleInterface<ITerrainModule>(this);
             }
@@ -651,6 +661,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 			client.OnGodlikeMessage += client_onGodlikeMessage;
             client.OnUnackedTerrain += client_OnUnackedTerrain;
             client.OnRegionHandShakeReply += SendLayerData;
+
+            //Add them to the cache
+            lock (m_terrainPatchesSent)
+            {
+                if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
+                {
+                    m_terrainPatchesSent.Add(client.AgentId.UUID, new bool[(int)m_scene.RegionInfo.RegionSizeX / 16,
+                        (int)m_scene.RegionInfo.RegionSizeY / 16]);
+                }
+            }
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -661,6 +681,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             client.OnGodlikeMessage -= client_onGodlikeMessage;
             client.OnUnackedTerrain -= client_OnUnackedTerrain;
             client.OnRegionHandShakeReply -= SendLayerData;
+
+            //Remove them from the cache
+            lock (m_terrainPatchesSent)
+            {
+                m_terrainPatchesSent.Remove(client.AgentId);
+            }
         }
 
         /// <summary>
@@ -669,10 +695,60 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name="RemoteClient">Client to send to</param>
         public void SendLayerData(IClientAPI RemoteClient)
         {
-            Scene scene = (Scene)RemoteClient.Scene;
-            RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(scene));
+            ScenePresence presence = m_scene.GetScenePresence(RemoteClient.AgentId);
+            if (!m_sendTerrainUpdatesByViewDistance)
+            {
+                //Default way, send the full terrain at once
+                RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(RemoteClient.Scene));
+            }
+            else
+            {
+                //Send only what the client can see,
+                //  but the client isn't loaded yet, wait until they get set up
+                //  The first agent update they send will trigger the DrawDistanceChanged event and send the land
+            }
         }
-        
+
+        void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
+        {
+            if (FunctionName == "DrawDistanceChanged")
+            {
+                SendTerrainUpdatesForClient((ScenePresence)parameters);
+            }
+        }
+
+        void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
+        {
+            ScenePresence presence = m_scene.GetScenePresence(remote_client.AgentId);
+            SendTerrainUpdatesForClient(presence);
+        }
+
+        protected void SendTerrainUpdatesForClient(ScenePresence presence)
+        {
+            if (!m_sendTerrainUpdatesByViewDistance)
+                return;
+
+            float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 16; x++)
+            {
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 16; y++)
+                {
+                    //Need to make sure we don't send the same ones over and over
+                    if (!m_terrainPatchesSent[presence.UUID][x, y])
+                    {
+                        double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
+                            new Vector3(x * 16, y * 16, 0));
+                        if (distance < presence.DrawDistance) //Its not a radius, its a diameter
+                        {
+                            //They can see it, send it ot them
+                            m_terrainPatchesSent[presence.UUID][x, y] = true;
+                            presence.ControllingClient.SendLayerData(x, y, serializedMap);
+                        }
+                    }
+                }
+            }
+        }
+
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
