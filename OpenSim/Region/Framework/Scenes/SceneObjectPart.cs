@@ -729,7 +729,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // It's not necessary to persist this
             m_initialScene = scene;
-            Rezzed = DateTime.UtcNow;
 
             m_inventory = new SceneObjectPartInventory(this);
         }
@@ -749,8 +748,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_name = scene.DefaultObjectName;
             m_initialScene = scene;
 
-            Rezzed = DateTime.UtcNow;
-            _creationDate = (int)Utils.DateTimeToUnixTime(Rezzed);
+            _creationDate = (int)Utils.DateTimeToUnixTime(DateTime.Now);
             _ownerID = ownerID;
             _creatorID = _ownerID;
             _lastOwnerID = UUID.Zero;
@@ -3563,6 +3561,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Fix the localID now for the physics engine
             if (m_physActor != null)
                 m_physActor.LocalID = LocalId;
+            //Fix the rezzed attribute
+            Rezzed = DateTime.UtcNow;
             //TODO: Check to make sure the physics engine is fully updated here
 
             //Don't reset this for now

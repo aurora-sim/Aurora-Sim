@@ -590,50 +590,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 EventManagerOnParcelPrimCountUpdate();
             }
             // Go through all updates
-            m_scene.ForEachSOG(delegate(SceneObjectGroup sog)
-            {
-                // Don't abort the whole thing if one entity happens to give us an exception.
-                try
-                {
-                    if (!sog.IsDeleted && !sog.RootPart.IsAttachment)
-                    {
-                        //Check for temp objects as well
-                        if ((sog.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
-                        {
-                            if (sog.RootPart.Expires <= DateTime.Now)
-                                AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "", new List<SceneObjectGroup>() { sog });
-                        }
-
-                        ILandObject parcel = GetLandObject(
-                                sog.RootPart.GroupPosition.X, sog.RootPart.GroupPosition.Y);
-
-                        if (parcel != null && parcel.LandData != null &&
-                                parcel.LandData.OtherCleanTime != 0)
-                        {
-                            if (parcel.LandData.OwnerID != sog.OwnerID &&
-                                    ((parcel.LandData.GroupID == UUID.Zero) || //If there is no group, don't check the groups part
-                                    ((parcel.LandData.GroupID != UUID.Zero) && //If there is a group, check for group rezzed prims and group owned prims
-                                    (parcel.LandData.GroupID != sog.GroupID && ///Allow prims set to the group
-                                    parcel.LandData.GroupID != sog.OwnerID && //Allow group deeded prims!
-                                    parcel.LandData.OwnerID != sog.GroupID) //Allow group deeded prims!
-                                    )))
-                            {
-                                //The prim needs to be checked for auto return
-                                if ((DateTime.UtcNow - sog.RootPart.Rezzed).TotalMinutes >
-                                        parcel.LandData.OtherCleanTime)
-                                {
-                                    AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<SceneObjectGroup>() { sog });
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat(
-                        "[LandManagement]: Failed to check for parcel returns for {0}, {1} - {2}", sog.Name, sog.UUID, e);
-                }
-            });
+            m_scene.ForEachSOG(CheckPrimForAutoReturn);
             lock (m_returns)
             {
                 foreach (KeyValuePair<UUID, ReturnInfo> ret in m_returns)
@@ -680,6 +637,53 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                 }
                 m_returns.Clear();
+            }
+        }
+
+        protected void CheckPrimForAutoReturn(SceneObjectGroup sog)
+        {
+            // Don't abort the whole thing if one entity happens to give us an exception.
+            try
+            {
+                if (!sog.IsDeleted && !sog.RootPart.IsAttachment)
+                {
+                    //Check for temp objects as well
+                    if ((sog.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0)
+                    {
+                        if (sog.RootPart.Expires <= DateTime.Now)
+                            AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "", new List<SceneObjectGroup>() { sog });
+                    }
+
+                    ILandObject parcel = GetLandObject(
+                            sog.RootPart.GroupPosition.X, sog.RootPart.GroupPosition.Y);
+
+                    if (parcel != null && parcel.LandData != null &&
+                            parcel.LandData.OtherCleanTime != 0)
+                    {
+                        if (parcel.LandData.OwnerID != sog.OwnerID &&
+                                ((parcel.LandData.GroupID == UUID.Zero) || //If there is no group, don't check the groups part
+                                ((parcel.LandData.GroupID != UUID.Zero) && //If there is a group, check for group rezzed prims and group owned prims
+                                (parcel.LandData.GroupID != sog.GroupID && ///Allow prims set to the group
+                                parcel.LandData.GroupID != sog.OwnerID && //Allow group deeded prims!
+                                parcel.LandData.OwnerID != sog.GroupID) //Allow group deeded prims!
+                                )) &&
+                            !m_scene.Permissions.IsAdministrator(sog.OwnerID) //Also check for admin/estate status
+                            )
+                        {
+                            //The prim needs to be checked for auto return
+                            if ((DateTime.UtcNow - sog.RootPart.Rezzed).TotalSeconds >
+                                    parcel.LandData.OtherCleanTime * 60)
+                            {
+                                AddReturns(UUID.Zero, sog.Name, sog.AbsolutePosition, "Auto Parcel Return", new List<SceneObjectGroup>() { sog });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat(
+                    "[LandManagement]: Failed to check for parcel returns for {0}, {1} - {2}", sog.Name, sog.UUID, e);
             }
         }
 

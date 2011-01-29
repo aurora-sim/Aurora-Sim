@@ -2007,8 +2007,6 @@ namespace OpenSim.Region.Framework.Scenes
                     child.LocalId = AllocateLocalId();
                 entity.AddChild(child, child.LinkNum);
             }
-            //Force the prim to backup now that it has been added
-            entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
             //Now save the entity that we have 

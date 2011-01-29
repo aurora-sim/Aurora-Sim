@@ -698,6 +698,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (SceneObjectPart part in ChildrenList)
                 {
+                    //It's being rezzed, add it to the scene if it doesn't already have a rez date
+                    if(part.Rezzed != Util.ToDateTime(Util.EnvironmentTickCount()))
+                        part.Rezzed = DateTime.Now;
                     if (part.Shape == null)
                         continue;
 
