@@ -180,88 +180,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ITerrainChannel MakeCopy()
         {
-            return Copy();
-        }
-
-        public TerrainChannel Copy()
-        {
             TerrainChannel copy = new TerrainChannel(false, m_scene);
-            copy.map = (double[,]) map.Clone();
+            copy.map = (double[,])map.Clone();
             copy.taint = (bool[,])taint.Clone();
             return copy;
         }
-
-        public string SaveToXmlString()
-        {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Util.UTF8;
-            using (StringWriter sw = new StringWriter())
-            {
-                using (XmlWriter writer = XmlWriter.Create(sw, settings))
-                {
-                    WriteXml(writer);
-                }
-                string output = sw.ToString();
-                return output;
-            }
-        }
-
-        private void WriteXml(XmlWriter writer)
-        {
-            writer.WriteStartElement(String.Empty, "TerrainMap", String.Empty);
-            ToXml(writer);
-            writer.WriteEndElement();
-        }
-
-        public void LoadFromXmlString(string data)
-        {
-            StringReader sr = new StringReader(data);
-            XmlTextReader reader = new XmlTextReader(sr);
-            reader.Read();
-
-            ReadXml(reader);
-            reader.Close();
-            sr.Close();
-        }
-
-        private void ReadXml(XmlReader reader)
-        {
-            reader.ReadStartElement("TerrainMap");
-            FromXml(reader);
-        }
-
-        private void ToXml(XmlWriter xmlWriter)
-        {
-            float[] mapData = GetFloatsSerialised(null);
-            byte[] buffer = new byte[mapData.Length * 4];
-            for (int i = 0; i < mapData.Length; i++)
-            {
-                byte[] value = BitConverter.GetBytes(mapData[i]);
-                Array.Copy(value, 0, buffer, (i * 4), 4);
-            }
-            XmlSerializer serializer = new XmlSerializer(typeof(byte[]));
-            serializer.Serialize(xmlWriter, buffer);
-        }
-
-        private void FromXml(XmlReader xmlReader)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(byte[]));
-            byte[] dataArray = (byte[])serializer.Deserialize(xmlReader);
-            int index = 0;
-
-            for (int y = 0; y < Height; y++)
-            {
-                for (int x = 0; x < Width; x++)
-                {
-                    float value;
-                    value = BitConverter.ToSingle(dataArray, index);
-                    index += 4;
-                    this[x, y] = (double)value;
-                }
-            }
-        }
-
-
 
         /// <summary>
         /// Gets the average height of the area +2 in both the X and Y directions from the given position

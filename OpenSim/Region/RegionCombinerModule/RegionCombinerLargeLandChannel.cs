@@ -173,16 +173,6 @@ namespace OpenSim.Region.RegionCombinerModule
             return RegionConnections[RegData].MakeCopy();
         }
 
-        public string SaveToXmlString()
-        {
-            return RegionConnections[RegData].SaveToXmlString();
-        }
-
-        public void LoadFromXmlString(string data)
-        {
-            RegionConnections[RegData].LoadFromXmlString(data);
-        }
-
         public float GetNormalizedGroundHeight(float x, float y)
         {
             if (x > 0 && x <= (int)Constants.RegionSize && y > 0 && y <= (int)Constants.RegionSize)
