@@ -134,7 +134,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
             {
                 if (m_scene.TryGetClient(agentID, out client))
                 {
-                    if (!mm.UploadCovered(client, mm.UploadCharge))
+                    if (!mm.ApplyCharge(agentID, mm.UploadCharge, "Asset upload"))
                     {
                         if (client != null)
                             client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
@@ -143,8 +143,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Assets
                         map["state"] = "error";
                         return OSDParser.SerializeLLSDXmlString(map);
                     }
-                    else
-                        mm.ApplyUploadCharge(agentID, mm.UploadCharge, "Asset upload.");
                 }
             }
             // }

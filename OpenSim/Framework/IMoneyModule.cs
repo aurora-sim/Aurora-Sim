@@ -40,12 +40,9 @@ namespace OpenSim.Framework
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                 int amount);
 
-        //int GetBalance(UUID agentID);
         int GetBalance(IClientAPI client);
-        bool UploadCovered(IClientAPI client, int amount);
         bool AmountCovered(IClientAPI client, int amount);
-        void ApplyCharge(UUID agentID, int amount, string text);
-        void ApplyUploadCharge(UUID agentID, int amount, string text);
+        bool ApplyCharge(UUID agentID, int amount, string text);
 
         int UploadCharge { get; }
         int GroupCreationCharge { get; }

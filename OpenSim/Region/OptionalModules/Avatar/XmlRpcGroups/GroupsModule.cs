@@ -946,11 +946,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (money != null)
             {
                 // do the transaction, that is if the agent has got sufficient funds
-                if (!money.AmountCovered(remoteClient, money.GroupCreationCharge)) {
+                if (!money.ApplyCharge(GetRequestingAgentID(remoteClient), money.GroupCreationCharge, "Group Creation"))
+                {
                     remoteClient.SendCreateGroupReply(UUID.Zero, false, "You have got issuficient funds to create a group.");
                     return UUID.Zero;
                 }
-                money.ApplyCharge(GetRequestingAgentID(remoteClient), money.GroupCreationCharge, "Group Creation");
             }
             UUID groupID = m_groupData.CreateGroup(GetRequestingAgentID(remoteClient), name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, GetRequestingAgentID(remoteClient));
 
