@@ -611,11 +611,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 parcel.LandData.OtherCleanTime != 0)
                         {
                             if (parcel.LandData.OwnerID != sog.OwnerID &&
-                                    (parcel.LandData.GroupID != sog.GroupID ||
-                                    parcel.LandData.GroupID != sog.OwnerID || //Allow group deeded prims!
-                                    parcel.LandData.OwnerID != sog.GroupID || //Allow group deeded prims!
-                                    parcel.LandData.GroupID == UUID.Zero))
+                                    ((parcel.LandData.GroupID == UUID.Zero) || //If there is no group, don't check the groups part
+                                    ((parcel.LandData.GroupID != UUID.Zero) && //If there is a group, check for group rezzed prims and group owned prims
+                                    (parcel.LandData.GroupID != sog.GroupID && ///Allow prims set to the group
+                                    parcel.LandData.GroupID != sog.OwnerID && //Allow group deeded prims!
+                                    parcel.LandData.OwnerID != sog.GroupID) //Allow group deeded prims!
+                                    )))
                             {
+                                //The prim needs to be checked for auto return
                                 if ((DateTime.UtcNow - sog.RootPart.Rezzed).TotalMinutes >
                                         parcel.LandData.OtherCleanTime)
                                 {

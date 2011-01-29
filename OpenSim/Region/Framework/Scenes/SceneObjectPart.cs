@@ -5323,9 +5323,7 @@ namespace OpenSim.Region.Framework.Scenes
             // This is what makes vehicle trailers work
             // A script in a child prim re-issues
             // llSetPrimitiveParams(PRIM_TYPE) every few seconds. That
-            // prevents autoreturn. This is not well known. It also works
-            // in SL.
-            //
+            // prevents autoreturn. This also works in SL.
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
