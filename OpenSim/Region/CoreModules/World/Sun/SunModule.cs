@@ -269,7 +269,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        private float GetCurrentTimeAsLindenSunHour()
+        public float GetCurrentTimeAsLindenSunHour()
         {
             if (m_SunFixed)
             {
@@ -400,7 +400,6 @@ namespace OpenSim.Region.CoreModules
                     scene.EventManager.OnFrame += SunUpdate;
                     scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                     scene.EventManager.OnEstateToolsSunUpdate += EstateToolsSunUpdate;
-                    scene.EventManager.OnGetCurrentTimeAsLindenSunHour += GetCurrentTimeAsLindenSunHour;
 
                     ready = true;
 
@@ -439,7 +438,6 @@ namespace OpenSim.Region.CoreModules
             m_scene.EventManager.OnFrame     -= SunUpdate;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
             m_scene.EventManager.OnEstateToolsSunUpdate -= EstateToolsSunUpdate;
-            m_scene.EventManager.OnGetCurrentTimeAsLindenSunHour -= GetCurrentTimeAsLindenSunHour;
         }
 
         public string Name

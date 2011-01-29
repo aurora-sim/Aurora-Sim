@@ -1510,10 +1510,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             if (m_scene.Permissions.CanEditParcel(remote_client.AgentId, land))
                 if (land != null)
-                {
                     land.UpdateLandProperties(args, remote_client);
-                    m_scene.EventManager.TriggerOnParcelPropertiesUpdateRequest(args, localID, remote_client);
-                }
         }
 
         public void ClientOnParcelDivideRequest(int west, int south, int east, int north, IClientAPI remote_client)
@@ -1809,10 +1806,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject land = GetLandObject(parcelID);
 
             if (land != null)
-            {
                 land.UpdateLandProperties(land_update, client);
-                m_scene.EventManager.TriggerOnParcelPropertiesUpdateRequest(land_update, parcelID, client);
-            }
             else
             {
                 m_log.WarnFormat("[LAND] unable to find parcelID {0}", parcelID);

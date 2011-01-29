@@ -351,7 +351,24 @@ namespace OpenSim.Framework
 
         public PrimitiveBaseShape Copy()
         {
-            return (PrimitiveBaseShape) MemberwiseClone();
+            PrimitiveBaseShape copy = (PrimitiveBaseShape)MemberwiseClone();
+            if (Media != null)
+            {
+                PrimitiveBaseShape.MediaList dupeMedia = new PrimitiveBaseShape.MediaList();
+                lock (Media)
+                {
+                    foreach (MediaEntry me in Media)
+                    {
+                        if (me != null)
+                            dupeMedia.Add(MediaEntry.FromOSD(me.GetOSD()));
+                        else
+                            dupeMedia.Add(null);
+                    }
+                }
+
+                copy.Media = dupeMedia;
+            }
+            return copy;
         }
 
         public static PrimitiveBaseShape CreateCylinder(float radius, float heigth)

@@ -152,7 +152,7 @@ namespace Aurora.Modules.World.Auction
             ScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
             IDialogModule module = scene.RequestModuleInterface<IDialogModule>();
 
-            if (module != null && SP != null)
+            if (SP != null)
             {
                 if (scene.Permissions.CanSetHome(SP.UUID))
                 {

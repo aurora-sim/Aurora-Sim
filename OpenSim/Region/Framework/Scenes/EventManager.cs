@@ -89,8 +89,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void OnPermissionErrorDelegate(UUID user, string reason);
 
-        public event ParcelPropertiesUpdateRequest OnParcelPropertiesUpdateRequest;
-
         /// <summary>
         /// Fired when an object is touched/grabbed.
         /// </summary>
@@ -275,9 +273,6 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void ChatBroadcastEvent(Object sender, OSChatMessage chat);
         public event ChatBroadcastEvent OnChatBroadcast;
 
-        public delegate float SunLindenHour();
-        public event SunLindenHour OnGetCurrentTimeAsLindenSunHour;
-
         /// <summary>
         /// Called when oar file has finished loading, although
         /// the scripts may not have started yet
@@ -315,19 +310,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public event SceneObjectDelegate OnSceneObjectLoaded;
         public delegate void SceneObjectDelegate(SceneObjectGroup so);
-        
-        /// <summary>
-        /// Called immediately before an object is saved to storage.
-        /// </summary>
-        /// <param name="persistingSo">
-        /// The scene object being persisted.
-        /// This is actually a copy of the original scene object so changes made here will be saved to storage but will not be kept in memory.
-        /// </param>
-        /// <param name="originalSo">
-        /// The original scene object being persisted.  Changes here will stay in memory but will not be saved to storage on this save.
-        /// </param>
-        public event SceneObjectPreSaveDelegate OnSceneObjectPreSave;
-        public delegate void SceneObjectPreSaveDelegate(SceneObjectGroup persistingSo, SceneObjectGroup originalSo);
         
         /// <summary>
         /// Called when a scene object part is cloned within the region.
@@ -1534,17 +1516,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        // this lets us keep track of nasty script events like timer, etc.
-        public void TriggerTimerEvent(uint objLocalID, double Interval)
-        {
-            throw new NotImplementedException("TriggerTimerEvent was thought to be not used anymore and the registration for the event from scene object part has been commented out due to a memory leak");
-            //handlerScriptTimerEvent = OnScriptTimerEvent;
-            //if (handlerScriptTimerEvent != null)
-            //{
-            //    handlerScriptTimerEvent(objLocalID, Interval);
-            //}
-        }
-
         /// <summary>
         /// Updates the system as to how the position of the sun should be handled.
         /// </summary>
@@ -1571,29 +1542,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
-        }
-
-        public float GetCurrentTimeAsSunLindenHour()
-        {
-            SunLindenHour handlerCurrentTimeAsLindenSunHour = OnGetCurrentTimeAsLindenSunHour;
-            if (handlerCurrentTimeAsLindenSunHour != null)
-            {
-                foreach (SunLindenHour d in handlerCurrentTimeAsLindenSunHour.GetInvocationList())
-                {
-                    try
-                    {
-                        return d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnAttach failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-            
-            return 6;
         }
 
         public void TriggerOarFileLoaded(Guid requestId, string message)
@@ -1922,70 +1870,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnSceneObjectLoaded failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-        
-        public void TriggerOnSceneObjectPreSave(SceneObjectGroup persistingSo, SceneObjectGroup originalSo)
-        {
-            SceneObjectPreSaveDelegate handler = OnSceneObjectPreSave;
-            if (handler != null)
-            {
-                foreach (SceneObjectPreSaveDelegate d in handler.GetInvocationList())
-                {
-                    try
-                    {
-                        d(persistingSo, originalSo);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnSceneObjectPreSave failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        } 
-        
-        public void TriggerOnSceneObjectPartCopy(SceneObjectPart copy, SceneObjectPart original)
-        {
-            SceneObjectPartCopyDelegate handler = OnSceneObjectPartCopy;
-            if (handler != null)
-            {
-                foreach (SceneObjectPartCopyDelegate d in handler.GetInvocationList())
-                {
-                    try
-                    {
-                        d(copy, original);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnSceneObjectPartCopy failed - continuing.  {0} {1}", 
-                            e.Message, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnParcelPropertiesUpdateRequest(LandUpdateArgs args,
-                        int local_id, IClientAPI remote_client)
-        {
-            ParcelPropertiesUpdateRequest handler = OnParcelPropertiesUpdateRequest;
-            if (handler != null)
-            {
-                foreach (ParcelPropertiesUpdateRequest d in handler.GetInvocationList())
-                {
-                    try
-                    {
-                        d(args, local_id, remote_client);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnSceneObjectPartCopy failed - continuing.  {0} {1}", 
                             e.Message, e.StackTrace);
                     }
                 }

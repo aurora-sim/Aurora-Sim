@@ -36,5 +36,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void SetSunParameter(string param, double value);
 
         float GetCurrentSunHour();
+
+        float GetCurrentTimeAsLindenSunHour();
     }
 }

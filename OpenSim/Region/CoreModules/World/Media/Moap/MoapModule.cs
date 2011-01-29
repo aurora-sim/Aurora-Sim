@@ -113,7 +113,6 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             
             m_scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             m_scene.EventManager.OnDeregisterCaps += OnDeregisterCaps;
-            m_scene.EventManager.OnSceneObjectPartCopy += OnSceneObjectPartCopy;
         }
         
         public void Close() 
@@ -123,7 +122,6 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             
             m_scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
             m_scene.EventManager.OnDeregisterCaps -= OnDeregisterCaps;
-            m_scene.EventManager.OnSceneObjectPartCopy -= OnSceneObjectPartCopy;
         }
 
         public void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
@@ -170,26 +168,6 @@ namespace OpenSim.Region.CoreModules.Media.Moap
                 string path = m_omuCapUrls[agentID];
                 m_omuCapUrls.Remove(agentID);
                 m_omuCapUsers.Remove(path);
-            }
-        }
-        
-        protected void OnSceneObjectPartCopy(SceneObjectPart copy, SceneObjectPart original)
-        {
-            if (original.Shape.Media != null)
-            {
-                PrimitiveBaseShape.MediaList dupeMedia = new PrimitiveBaseShape.MediaList();
-                lock (original.Shape.Media)
-                {
-                    foreach (MediaEntry me in original.Shape.Media)
-                    {
-                        if (me != null)
-                            dupeMedia.Add(MediaEntry.FromOSD(me.GetOSD()));
-                        else
-                            dupeMedia.Add(null);
-                    }
-                }
-                
-                copy.Shape.Media = dupeMedia;
             }
         }
             

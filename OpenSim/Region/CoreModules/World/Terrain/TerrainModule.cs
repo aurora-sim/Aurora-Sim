@@ -224,10 +224,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_channel = new TerrainChannel(m_scene);
 
                     m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    //Update the revert map as well
+                    UpdateRevertMap();
                 }
                 else
                 {
                     m_channel = new TerrainChannel(map, m_scene);
+                    FindRevertMap();
                 }
             }
             catch (IOException e)

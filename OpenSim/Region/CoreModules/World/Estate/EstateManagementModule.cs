@@ -1577,7 +1577,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 sun = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
                 if (m_scene.RegionInfo.EstateSettings.UseGlobalTime)
                 {
-                    sun = m_scene.EventManager.GetCurrentTimeAsSunLindenHour() - 6.0f;
+                    ISunModule sunModule = m_scene.RequestModuleInterface<ISunModule>();
+                    if(sunModule != null)
+                        sun = sunModule.GetCurrentSunHour();
                 }
 
                 // 
