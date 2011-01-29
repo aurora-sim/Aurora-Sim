@@ -541,7 +541,7 @@ namespace Aurora.Modules
                 shouldReaddToLoopNow = false;
 
                 if (grp.IsDeleted || grp.IsAttachment ||
-                    grp.RootPart.Shape.State != 0 || grp.UUID == UUID.Zero)
+                    grp.RootPart.Shape.State != 0 || grp.UUID == UUID.Zero || (grp.RootPart.Flags & PrimFlags.Temporary) != 0)
                 {
                     //Do not readd under these circumstances as we don't deal with backing up either of those into sim storage
                     shouldReaddToLoop = false;

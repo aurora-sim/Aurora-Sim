@@ -789,9 +789,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                             ID.EventsProcData.CurExecQIS = (QueueItemStruct)ID.EventsProcData.EventsQueue.Dequeue();
                                             if (ID.VersionID == ID.EventsProcData.CurExecQIS.VersionID)
                                                 {
-                                                ID.EventsProcData.State = (int)ScriptEventsState.InExec;
-                                                ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(200);
-                                                doID = ID;
+                                                    if (!ID.Loading)
+                                                    {
+                                                        ID.EventsProcData.State = (int)ScriptEventsState.InExec;
+                                                        ID.EventsProcData.TimeCheck = DateTime.Now.AddMilliseconds(200);
+                                                        doID = ID;
+                                                    }
+                                                    else
+                                                    {
+                                                        //If the script is loading, we need to wait until it is done, just re-enqueue the event
+                                                        ID.EventsProcData.EventsQueue.Enqueue(ID.EventsProcData.CurExecQIS);
+                                                    }
                                                 }
                                             lock (ScriptIDs)
                                                 {

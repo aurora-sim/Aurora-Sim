@@ -943,6 +943,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <returns></returns>
         private bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
         {
+            if (ID.Loading)
+            {
+                //If the script is loading, enqueue all events
+                return true;
+            }
             //This will happen if the script doesn't compile correctly
             if (ID.Script == null)
             {

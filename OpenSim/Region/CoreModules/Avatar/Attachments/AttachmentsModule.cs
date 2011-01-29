@@ -329,11 +329,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //                    objatt.Name, remoteClient.Name, AttachmentPt);
 
                     FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, item);
-
-                    // Fire after attach, so we don't get messy perms dialogs
-                    // 4 == AttachedRez
-                    objatt.CreateScriptInstances(0, true, 4, UUID.Zero);
-                    objatt.ResumeScripts();
                 }
                 else
                 {
@@ -623,40 +618,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
             itemID = group.GetFromItemID();
 
-            if (itemID == UUID.Zero)
-            {
-                //Delete the object inworld to inventory
-
-                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
-                
-                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                if (inventoryAccess != null)
-                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
-                        groups, remoteClient.AgentId, out itemID);
-            }
-
-            if (UUID.Zero == itemID)
-            {
-                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
-                remoteClient.SendAgentAlertMessage(
-                    "Unable to save attachment. Error inventory item ID.", false);
-                return;
-            }
-
-            // XXYY!!
-            if (item == null)
-            {
-                item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
-            }
-
-            //Update the ItemID with the new item
-            group.SetFromItemID(item.ID);
-
-            //If we updated the attachment, we need to save the change
-            if (presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
-                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-
             group.RootPart.AttachedAvatar = presence.UUID;
 
             //Anakin Lohner bug #3839 
@@ -698,6 +659,49 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //NOTE: This MUST be here, otherwise we limit full updates during attachments when they are selected and it will block the first update.
             // So until that is changed, this MUST stay. The client will instantly reselect it, so this value doesn't stay borked for long.
             group.IsSelected = false;
+
+            if (itemID == UUID.Zero)
+            {
+                //Delete the object inworld to inventory
+
+                List<SceneObjectGroup> groups = new List<SceneObjectGroup>(1) { group };
+
+                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                if (inventoryAccess != null)
+                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
+                        groups, remoteClient.AgentId, out itemID);
+            }
+            else
+            {
+                //it came from an item, we need to start the scripts
+
+                // Fire after attach, so we don't get messy perms dialogs
+                // 4 == AttachedRez
+                group.CreateScriptInstances(0, true, 4, UUID.Zero);
+                group.ResumeScripts();
+            }
+
+            if (UUID.Zero == itemID)
+            {
+                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
+                remoteClient.SendAgentAlertMessage(
+                    "Unable to save attachment. Error inventory item ID.", false);
+                return;
+            }
+
+            // XXYY!!
+            if (item == null)
+            {
+                item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                item = m_scene.InventoryService.GetItem(item);
+            }
+
+            //Update the ItemID with the new item
+            group.SetFromItemID(item.ID);
+
+            //If we updated the attachment, we need to save the change
+            if (presence.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
             //Now recreate it so that it is selected
             group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
