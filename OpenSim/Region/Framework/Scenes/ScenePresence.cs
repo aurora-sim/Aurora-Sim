@@ -232,30 +232,11 @@ namespace OpenSim.Region.Framework.Scenes
         string m_callbackURI;
         UUID m_originRegionID;
 
-        private bool m_IsSelecting = false;
-        private SceneObjectPart m_SelectedUUID = null;
-        private byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
         private UUID CollisionSoundID = UUID.Zero;
 
         #endregion
 
         #region Properties
-
-        public SceneObjectPart SelectedUUID
-        {
-            get { return m_SelectedUUID; }
-            set { m_SelectedUUID = value; }
-        }
-        public byte[] EffectColor
-        {
-            get { return m_EffectColor; }
-            set { m_EffectColor = value; }
-        }
-        public bool IsSelecting
-        {
-            get { return m_IsSelecting; }
-            set { m_IsSelecting = value; }
-        }
 
         /// <summary>
         /// Physical scene representation of this Avatar.
@@ -2056,59 +2037,11 @@ namespace OpenSim.Region.Framework.Scenes
             //        }
             //    }
             //}
-            if (!IsChildAgent && Scene.UseSelectionParticles && SendEffectPackets > 7)
-            {
-                SendViewerEffects();
-                SendEffectPackets = -1;
-            }
-            SendEffectPackets++;
         }
-
-        private int SendEffectPackets = -1;
 
         #endregion
 
         #region Update Client(s)
-
-        /// <summary>
-        /// This sends the little particles to the client if they are selecting something or such
-        /// </summary>
-        public void SendViewerEffects()
-        {
-            if (!IsSelecting)
-                return;
-
-            SceneObjectPart SOP = m_SelectedUUID;
-            if (SOP == null) //This IS nesessary, this is how we can clear this out
-            {
-                IsSelecting = false;
-                return;
-            }
-            
-            ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[1];
-            
-            ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
-            effect.AgentID = UUID;
-            effect.Color = EffectColor;
-            effect.Duration = 0.9f;
-            effect.ID = UUID.Random(); //This seems to be what is passed by SL when its send from the server
-            effect.Type = (int)EffectType.Beam; //Bean is the line from hand to object
-
-            byte[] part = new byte[56];
-            UUID.ToBytes(part, 0);//UUID of av first
-            SOP.UUID.ToBytes(part, 16);//UUID of object
-            SOP.AbsolutePosition.ToBytes(part, 32);//position of object first
-            
-            effect.TypeData = part;
-            effectBlockArray[0] = effect;
-
-            m_scene.ForEachClient(
-                delegate(IClientAPI client)
-                {
-                    client.SendViewerEffect(effectBlockArray);
-                }
-            );
-        }
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence

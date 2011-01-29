@@ -548,7 +548,7 @@ namespace OpenSim.Services.LLLoginService
                         guinfo.HomeRegionID = guinfo.LastRegionID = DefaultRegion.RegionID;
 
                     //Z = 0 so that it fixes it on the region server and puts it on the ground
-                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 0);
+                    guinfo.LastPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
 
                     guinfo.HomeLookAt = guinfo.LastLookAt = new Vector3(0, 0, 0);
 
@@ -730,7 +730,7 @@ namespace OpenSim.Services.LLLoginService
 
             gatekeeper = null;
             where = "home";
-            position = new Vector3(128, 128, 0);
+            position = new Vector3(128, 128, 25);
             lookAt = new Vector3(0, 1, 0);
 
             if (m_GridService == null)

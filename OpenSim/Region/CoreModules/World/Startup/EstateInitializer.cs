@@ -181,60 +181,14 @@ namespace OpenSim.Region.CoreModules
                     if (createNewUser == "yes")
                     {
                         // Create a new account
-                        account = new UserAccount(scene.RegionInfo.ScopeID, first, last, String.Empty);
-                        if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
+                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
+                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+
+                        scene.UserAccountService.CreateUser(first, last, password, email);
+                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
+
+                        if (account != null)
                         {
-                            account.ServiceURLs = new Dictionary<string, object>();
-                            account.ServiceURLs["HomeURI"] = string.Empty;
-                            account.ServiceURLs["GatekeeperURI"] = string.Empty;
-                            account.ServiceURLs["InventoryServerURI"] = string.Empty;
-                            account.ServiceURLs["AssetServerURI"] = string.Empty;
-                        }
-                        account.UserTitle = "";
-
-                        if (scene.UserAccountService.StoreUserAccount(account))
-                        {
-                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
-                            string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
-
-                            account.Email = email;
-                            scene.UserAccountService.StoreUserAccount(account);
-
-                            bool success = false;
-                            success = scene.AuthenticationService.SetPassword(account.PrincipalID, password);
-                            if (!success)
-                            {
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
-                                   first, last);
-                            }
-
-                            GridRegion home = null;
-                            if (scene.GridService != null)
-                            {
-                                List<GridRegion> defaultRegions = scene.GridService.GetDefaultRegions(UUID.Zero);
-                                if (defaultRegions != null && defaultRegions.Count >= 1)
-                                    home = defaultRegions[0];
-
-                                if (scene.GridUserService != null && home != null)
-                                    scene.GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
-                                else
-                                    m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
-                                       first, last);
-
-                            }
-                            else
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
-                                   first, last);
-
-                            if (scene.InventoryService != null)
-                                success = scene.InventoryService.CreateUserInventory(account.PrincipalID);
-                            if (!success)
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
-                                   first, last);
-
-
-                            m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", first, last);
-
                             scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
                             scene.RegionInfo.EstateSettings.Save();
                         }
@@ -263,60 +217,14 @@ namespace OpenSim.Region.CoreModules
                     if (createNewUser == "yes")
                     {
                         // Create a new account
-                        account = new UserAccount(scene.RegionInfo.ScopeID, first, last, String.Empty);
-                        if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
+                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
+                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+
+                        scene.UserAccountService.CreateUser(first, last, password, email);
+                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
+
+                        if (account != null)
                         {
-                            account.ServiceURLs = new Dictionary<string, object>();
-                            account.ServiceURLs["HomeURI"] = string.Empty;
-                            account.ServiceURLs["GatekeeperURI"] = string.Empty;
-                            account.ServiceURLs["InventoryServerURI"] = string.Empty;
-                            account.ServiceURLs["AssetServerURI"] = string.Empty;
-                        }
-                        account.UserTitle = "";
-
-                        if (scene.UserAccountService.StoreUserAccount(account))
-                        {
-                            string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
-                            string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
-
-                            account.Email = email;
-                            scene.UserAccountService.StoreUserAccount(account);
-
-                            bool success = false;
-                            success = scene.AuthenticationService.SetPassword(account.PrincipalID, password);
-                            if (!success)
-                            {
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0} {1}.",
-                                   first, last);
-                            }
-
-                            GridRegion home = null;
-                            if (scene.GridService != null)
-                            {
-                                List<GridRegion> defaultRegions = scene.GridService.GetDefaultRegions(UUID.Zero);
-                                if (defaultRegions != null && defaultRegions.Count >= 1)
-                                    home = defaultRegions[0];
-
-                                if (scene.GridUserService != null && home != null)
-                                    scene.GridUserService.SetHome(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
-                                else
-                                    m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set home for account {0} {1}.",
-                                       first, last);
-
-                            }
-                            else
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to retrieve home region for account {0} {1}.",
-                                   first, last);
-
-                            if (scene.InventoryService != null)
-                                success = scene.InventoryService.CreateUserInventory(account.PrincipalID);
-                            if (!success)
-                                m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to create inventory for account {0} {1}.",
-                                   first, last);
-
-
-                            m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} {1} created successfully", first, last);
-
                             scene.RegionInfo.EstateSettings.EstateOwner = account.PrincipalID;
                             scene.RegionInfo.EstateSettings.Save();
                         }

@@ -77,9 +77,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event OnNewPresenceDelegate OnNewPresence;
 
-        public delegate void OnRemovePresenceDelegate(UUID agentId);
-
-        public event OnRemovePresenceDelegate OnRemovePresence;
+        public event OnNewPresenceDelegate OnRemovePresence;
 
         public delegate void OnParcelPrimCountAddDelegate(SceneObjectGroup obj);
 
@@ -683,16 +681,16 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerOnRemovePresence(UUID agentId)
+        public void TriggerOnRemovePresence(ScenePresence presence)
         {
-            OnRemovePresenceDelegate handlerRemovePresence = OnRemovePresence;
+            OnNewPresenceDelegate handlerRemovePresence = OnRemovePresence;
             if (handlerRemovePresence != null)
             {
-                foreach (OnRemovePresenceDelegate d in handlerRemovePresence.GetInvocationList())
+                foreach (OnNewPresenceDelegate d in handlerRemovePresence.GetInvocationList())
                 {
                     try
                     {
-                        d(agentId);
+                        d(presence);
                     }
                     catch (Exception e)
                     {

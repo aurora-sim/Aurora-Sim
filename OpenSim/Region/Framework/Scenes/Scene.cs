@@ -148,7 +148,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile bool shuttingdown = false;
 
-        private bool m_UseSelectionParticles = true;
         public bool CheckForObjectCulling = false;
         private string m_DefaultObjectName = "Primitive";
         public bool m_usePreJump = true;
@@ -215,11 +214,6 @@ namespace OpenSim.Region.Framework.Scenes
         public string DefaultObjectName
         {
             get { return m_DefaultObjectName; }
-        }
-
-        public bool UseSelectionParticles
-        {
-            get { return m_UseSelectionParticles; }
         }
 
         public float TimeDilation
@@ -395,7 +389,6 @@ namespace OpenSim.Region.Framework.Scenes
             IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
             {
-                m_UseSelectionParticles = aurorastartupConfig.GetBoolean("UseSelectionParticles", true);
                 MaxLowValue = aurorastartupConfig.GetFloat("MaxLowValue", -1000);
                 m_DefaultObjectName = aurorastartupConfig.GetString("DefaultObjectName", m_DefaultObjectName);
                 CheckForObjectCulling = aurorastartupConfig.GetBoolean("CheckForObjectCulling", CheckForObjectCulling);
@@ -692,9 +685,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnUpdateExtraParams += m_sceneGraph.UpdateExtraParam;
             client.OnUpdatePrimShape += m_sceneGraph.UpdatePrimShape;
             client.OnUpdatePrimTexture += m_sceneGraph.UpdatePrimTexture;
-            client.OnObjectRequest += RequestPrim;
-            client.OnObjectSelect += SelectPrim;
-            client.OnObjectDeselect += DeselectPrim;
             client.OnGrabUpdate += m_sceneGraph.MoveObject;
             client.OnSpinStart += m_sceneGraph.SpinStart;
             client.OnSpinUpdate += m_sceneGraph.SpinObject;
@@ -762,9 +752,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnUpdateExtraParams -= m_sceneGraph.UpdateExtraParam;
             client.OnUpdatePrimShape -= m_sceneGraph.UpdatePrimShape;
             client.OnUpdatePrimTexture -= m_sceneGraph.UpdatePrimTexture;
-            client.OnObjectRequest -= RequestPrim;
-            client.OnObjectSelect -= SelectPrim;
-            client.OnObjectDeselect -= DeselectPrim;
             client.OnGrabUpdate -= m_sceneGraph.MoveObject;
             client.OnSpinStart -= m_sceneGraph.SpinStart;
             client.OnSpinUpdate -= m_sceneGraph.SpinObject;
@@ -1073,7 +1060,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_eventManager.TriggerClientClosed(presence.UUID, this);
             m_eventManager.TriggerOnClosingClient(presence.ControllingClient);
-            m_eventManager.TriggerOnRemovePresence(presence.UUID);
+            m_eventManager.TriggerOnRemovePresence(presence);
 
             ForEachClient(
                 delegate(IClientAPI client)
