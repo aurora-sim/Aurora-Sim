@@ -57,65 +57,6 @@ namespace Aurora.Modules
 
         #region Public members
 
-        #region Verify and update connections
-
-        /// <summary>
-        /// Check the given incoming connection and make sure that we have a session for them
-        ///   as well as a correct password.
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <returns></returns>
-        public bool VerifyIncomingConnection(Connection connection)
-        {
-            Connection verifiedConnection = FindConnectionBySessionHash(connection);
-            if (verifiedConnection == null)
-                //We don't have a connection to them with this session hash, lock them out!
-                return false;
-            
-            //Now check that they have the correct password
-            if(verifiedConnection.Password != connection.Password)
-                return false;
-
-            //They have the right password and we have a session for them... let them in
-            return true;
-        }
-
-        /// <summary>
-        /// This connection has been verified, add it to the database
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <returns></returns>
-        public bool UpdateIncomingConnection(Connection connection)
-        {
-            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (genericsConnector != null)
-            {
-                genericsConnector.AddGeneric(UUID.Zero, "InterWorldConnections", connection.SessionHash, connection.ToOSD());
-                return true;
-            }
-            else
-                return false;
-        }
-
-        #endregion
-
-        #region Remove connections
-
-        /// <summary>
-        /// Remove the given connection from the database
-        /// </summary>
-        /// <param name="connection"></param>
-        public void RemoveConnection(Connection connection)
-        {
-            IGenericsConnector genericsConnector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (genericsConnector != null)
-            {
-                genericsConnector.RemoveGeneric(UUID.Zero, "InterWorldConnections", connection.SessionHash);
-            }
-        }
-
-        #endregion
-
         #endregion
 
         #region Private members
@@ -130,9 +71,14 @@ namespace Aurora.Modules
             List<Connection> NewConnections = new List<Connection>();
             foreach (Connection connection in Connections)
             {
-                Connection newConn = OutgoingPublicComms.QueryRemoteHost(connection);
-                if (newConn != null)
-                    NewConnections.Add(newConn);
+                IWCCertificate cert = OutgoingPublicComms.QueryRemoteHost(connection);
+                if (cert != null)
+                {
+                    //Add the new certificate to the connection
+                    Connection newConnection = (Connection)connection.Duplicate();
+                    newConnection.Certificate = cert;
+                    NewConnections.Add(newConnection);
+                }
             }
             //Fix the list with the newly updated ones
             Connections = NewConnections;
@@ -160,7 +106,7 @@ namespace Aurora.Modules
         {
             foreach (Connection c in Connections)
             {
-                if (c.SessionHash == connection.SessionHash)//This is the connection we are looking for
+                if (c.Certificate.SessionHash == connection.Certificate.SessionHash)//This is the connection we are looking for
                 {
                     return c;
                 }
@@ -232,12 +178,30 @@ namespace Aurora.Modules
 
         #region Commands
 
+        /// <summary>
+        /// Add a certificate for the given connection
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmds"></param>
         private void AddIWCConnection(string module, string[] cmds)
         {
+            string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            string timeUntilExpires = MainConsole.Instance.CmdPrompt("Time until the connection expires (ends, in days)");
+            int timeInDays = int.Parse(timeUntilExpires);
+            
+            //Build the certificate
+            IWCCertificate cert = new IWCCertificate();
+            cert.SessionHash = UUID.Random().ToString();
+            cert.ValidUntil = DateTime.Now.AddDays(timeInDays);
+
+            //Add the certificate now
+            CertificateVerification.AddCertificate(cert);
         }
 
         private void RemoveIWCConnection(string module, string[] cmds)
         {
+            string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            //TODO:
         }
 
         #endregion
@@ -263,9 +227,9 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="connector">The host to connect to</param>
         /// <returns>The connection that has been recieved from the host</returns>
-        public Connection QueryRemoteHost(Connection connection)
+        public IWCCertificate QueryRemoteHost(Connection connection)
         {
-            OSDMap request = connection.ToOSD();
+            OSDMap request = connection.Certificate.ToOSD();
             request["Method"] = "Query";
             OSDMap reply = WebUtils.PostToService(connection.URL, request);
             if (reply["Success"].AsBoolean())
@@ -278,7 +242,7 @@ namespace Aurora.Modules
                 OSDMap innerReply = (OSDMap)reply["_Result"];
                 if (innerReply["Result"].AsString() == "Successful")
                 {
-                    Connection c = new Connection();
+                    IWCCertificate c = new IWCCertificate();
                     c.FromOSD(innerReply);
                     m_log.Error("[IWC]: Connected successfully to " + connection.URL);
                     return c;
@@ -294,7 +258,7 @@ namespace Aurora.Modules
 
         public void DeleteRemoteHost(Connection connection)
         {
-            OSDMap request = connection.ToOSD();
+            OSDMap request = connection.Certificate.ToOSD();
             request["Method"] = "Delete";
             OSDMap reply = WebUtils.PostToService(connection.URL, request);
             if (!reply["Success"].AsBoolean())
@@ -354,21 +318,20 @@ namespace Aurora.Modules
         /// <returns></returns>
         private byte[] Query(OSDMap request)
         {
-            Connection connector = new Connection();
+            IWCCertificate Certificate = new IWCCertificate();
             //Pull the connection info out of the request
-            connector.FromOSD(request);
+            Certificate.FromOSD(request);
 
             //Lets make sure that they are allowed to connect to us
-            if (!IWC.VerifyIncomingConnection(connector))
+            if (!CertificateVerification.VerifyCertificate(Certificate))
                 return FailureResult();
 
             //Update them in the database so that they can connect again later
-            if (!IWC.UpdateIncomingConnection(connector))
-                return FailureResult();
+            CertificateVerification.AddCertificate(Certificate);
 
-            BuildSecureUrlsForConnection(connector);
+            BuildSecureUrlsForConnection(Certificate);
 
-            OSDMap result = connector.ToOSD();
+            OSDMap result = Certificate.ToOSD();
             result["Result"] = "Successful";
 
             return Return(result);
@@ -381,16 +344,16 @@ namespace Aurora.Modules
         /// <returns></returns>
         private byte[] Delete(OSDMap request)
         {
-            Connection connector = new Connection();
+            IWCCertificate Certificate = new IWCCertificate();
             //Pull the connection info out of the request
-            connector.FromOSD(request);
+            Certificate.FromOSD(request);
 
             //Make sure that they are verified to connect
-            if (!IWC.VerifyIncomingConnection(connector))
+            if (!CertificateVerification.VerifyCertificate(Certificate))
                 return FailureResult();
 
             //Remove them from our list of connections
-            IWC.RemoveConnection(connector);
+            CertificateVerification.RemoveCertificate(Certificate);
 
             return SuccessfulResult();
         }
@@ -401,7 +364,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        private Connection BuildSecureUrlsForConnection(Connection c)
+        private IWCCertificate BuildSecureUrlsForConnection(IWCCertificate c)
         {
             //TODO:
             c.SecureUrls["TeleportAgent"] = "";
@@ -446,39 +409,28 @@ namespace Aurora.Modules
         /// </summary>
         public TrustLevel TrustLevel;
         /// <summary>
-        /// Our Session hash that identifies us (host)
+        /// The Certificate (for us) of this connection
         /// </summary>
-        public string SessionHash;
-        /// <summary>
-        /// Our Password that is used to authenticate us (host)
-        /// </summary>
-        public string Password;
+        public IWCCertificate Certificate;
         /// <summary>
         /// The (base, unsecure) Url of the host (target) we are connecting to
         /// </summary>
         public string URL;
-        /// <summary>
-        /// Secure Urls that the host (target) has given us to be able to contact it
-        /// </summary>
-        public OSDMap SecureUrls = new OSDMap();
 
         public override void FromOSD(OSDMap map)
         {
             TrustLevel = (TrustLevel)map["TrustLevel"].AsInteger();
-            SessionHash = map["SessionHash"].AsString();
-            Password = map["Password"].AsString();
+            Certificate = new IWCCertificate();
+            Certificate.FromOSD((OSDMap)OSDParser.DeserializeJson(map["Certificate"].AsString()));
             URL = map["URL"].AsString();
-            SecureUrls = (OSDMap)map["SecureUrls"];
         }
 
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
             map.Add("TrustLevel", (int)TrustLevel);
-            map.Add("SessionHash", SessionHash);
-            map.Add("Password", Password);
+            map.Add("Certificate", OSDParser.SerializeJsonString(Certificate.ToOSD()));
             map.Add("URL", URL);
-            map.Add("SecureUrls", SecureUrls);
             return map;
         }
 
@@ -512,5 +464,114 @@ namespace Aurora.Modules
         Low = 1
     }
 
+    public class IWCCertificate : IDataTransferable
+    {
+        protected DateTime m_validUntil;
+        protected string m_SessionHash;
+        protected OSDMap m_SecureUrls = new OSDMap();
+
+        /// <summary>
+        /// The SessionID of the certificate
+        /// This identifies this connection to the other host
+        /// </summary>
+        public string SessionHash
+        {
+            get { return m_SessionHash; }
+            set { m_SessionHash = value; }
+        }
+
+        /// <summary>
+        /// The time the certificate expires
+        /// </summary>
+        public DateTime ValidUntil
+        {
+            get { return m_validUntil; }
+            set { m_validUntil = value; }
+        }
+
+        /// <summary>
+        /// Secure Urls that this certificate is valid for
+        /// </summary>
+        public OSDMap SecureUrls
+        {
+            get { return m_SecureUrls; }
+            set { m_SecureUrls = value; }
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            SessionHash = map["SessionHash"].AsString();
+            ValidUntil = map["ValidUntil"].AsDate();
+            SecureUrls = (OSDMap)map["SecureUrls"];
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map.Add("SessionHash", SessionHash);
+            map.Add("ValidUntil", ValidUntil);
+            map.Add("SecureUrls", SecureUrls);
+            return map;
+        }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            IWCCertificate m = new IWCCertificate();
+            m.FromOSD(ToOSD());
+            return m;
+        }
+    }
+
     #endregion
+
+    public class CertificateVerification
+    {
+        protected static Dictionary<string, IWCCertificate> m_certificates = new Dictionary<string, IWCCertificate>();
+        /// <summary>
+        /// Add (or update) a certificate
+        /// </summary>
+        /// <param name="cert"></param>
+        public static void AddCertificate(IWCCertificate cert)
+        {
+            m_certificates[cert.SessionHash] = cert;
+        }
+
+        /// <summary>
+        /// Check to make sure this IWC Certificate is valid
+        /// </summary>
+        /// <param name="cert"></param>
+        /// <returns></returns>
+        public static bool VerifyCertificate(IWCCertificate cert)
+        {
+            //Make sure we have the certificate
+            if (m_certificates.ContainsKey(cert.SessionHash))
+            {
+                //Now verify that it hasn't expired yet
+                if (DateTime.Now < m_certificates[cert.SessionHash].ValidUntil)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Remove a certificate
+        /// </summary>
+        /// <param name="cert"></param>
+        public static void RemoveCertificate(IWCCertificate cert)
+        {
+            m_certificates.Remove(cert.SessionHash);
+        }
+    }
 }
