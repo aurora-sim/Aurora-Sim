@@ -50,8 +50,6 @@ namespace OpenSim.Region.RegionCombinerModule
         {
             m_virtScene.UnSubscribeToClientPrimEvents(client);
             m_virtScene.UnSubscribeToClientPrimRezEvents(client);
-            
-            m_virtScene.UnSubscribeToClientNetworkEvents(client);
 
             m_rootScene.SubscribeToClientPrimEvents(client);
             m_rootScene.UnSubscribeToClientPrimRezEvents(client);
@@ -65,8 +63,6 @@ namespace OpenSim.Region.RegionCombinerModule
             client.OnRezObject += LocalRezObject;
             
             client.OnObjectDuplicateOnRay += LocalObjectDuplicateOnRay;
-            
-            m_rootScene.SubscribeToClientNetworkEvents(client);
         }
 
         public void ClosingClient(IClientAPI client)

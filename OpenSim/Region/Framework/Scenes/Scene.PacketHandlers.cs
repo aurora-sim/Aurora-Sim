@@ -224,39 +224,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.SendAvatarPickerReply(agent_data, data_args);
         }
 
-        void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)
-        {
-            // TODO: don't create new blocks if recycling an old packet
-            ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[args.Count];
-            ScenePresence SP;
-            TryGetScenePresence(remoteClient.AgentId, out SP);
-            for (int i = 0; i < args.Count; i++)
-            {
-                ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
-                effect.AgentID = args[i].AgentID;
-                effect.Color = args[i].Color;
-                effect.Duration = args[i].Duration;
-                effect.ID = args[i].ID;
-                effect.Type = args[i].Type;
-                effect.TypeData = args[i].TypeData;
-                effectBlockArray[i] = effect;
-                //Save the color
-                if (effect.Type == (int)EffectType.Beam || effect.Type == (int)EffectType.Point 
-                    || effect.Type == (int)EffectType.Sphere)
-                {
-                    Color4 color = new Color4(effect.Color, 0, false);
-                    if (SP != null && !(color.R == 0 && color.G == 0 && color.B == 0))
-                        SP.EffectColor = args[i].Color;
-                }
-            }
-
-            foreach (ScenePresence client in ScenePresences)
-            {
-                if (client.ControllingClient.AgentId != remoteClient.AgentId)
-                    client.ControllingClient.SendViewerEffect(effectBlockArray);
-            }
-        }
-
         public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)
         {
             UserAccount account = UserAccountService.GetUserAccount(RegionInfo.ScopeID, uuid);

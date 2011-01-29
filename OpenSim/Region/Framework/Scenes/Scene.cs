@@ -669,7 +669,6 @@ namespace OpenSim.Region.Framework.Scenes
             SubscribeToClientPrimEvents(client);
             SubscribeToClientPrimRezEvents(client);
             SubscribeToClientGridEvents(client);
-            SubscribeToClientNetworkEvents(client);
         }
 
         public virtual void SubscribeToClientPrimEvents(IClientAPI client)
@@ -722,11 +721,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnAvatarPickerRequest += ProcessAvatarPickerRequest;
         }
 
-        public virtual void SubscribeToClientNetworkEvents(IClientAPI client)
-        {
-            client.OnViewerEffect += ProcessViewerEffect;
-        }
-
         /// <summary>
         /// Unsubscribe the client from events.
         /// </summary>
@@ -736,7 +730,6 @@ namespace OpenSim.Region.Framework.Scenes
             UnSubscribeToClientPrimEvents(client);
             UnSubscribeToClientPrimRezEvents(client);
             UnSubscribeToClientGridEvents(client);
-            UnSubscribeToClientNetworkEvents(client);
         }
 
         public virtual void UnSubscribeToClientPrimEvents(IClientAPI client)
@@ -785,11 +778,6 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnNameFromUUIDRequest -= HandleUUIDNameRequest;
             client.OnMoneyTransferRequest -= ProcessMoneyTransferRequest;
             client.OnAvatarPickerRequest -= ProcessAvatarPickerRequest;
-        }
-
-        public virtual void UnSubscribeToClientNetworkEvents(IClientAPI client)
-        {
-            client.OnViewerEffect -= ProcessViewerEffect;
         }
 
         #endregion
