@@ -123,7 +123,7 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(UUID.Parse(userID), "GridUserServerURI");
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "GridUserServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -166,7 +166,7 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(UUID.Parse(userID), "GridUserServerURI");
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "GridUserServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",

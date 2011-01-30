@@ -392,7 +392,7 @@ namespace Aurora.Modules
         {
             IConfigurationService service = IWC.Registry.RequestModuleInterface<IConfigurationService>();
             //Give the basic Urls that we have
-            c.SecureUrls = service.GetDefaultValues();
+            c.SecureUrls = service.GetValuesFor("default");
             c.SecureUrls["TeleportAgent"] = "";
             return c;
         }

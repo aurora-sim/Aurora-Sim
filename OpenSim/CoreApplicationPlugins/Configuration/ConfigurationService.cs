@@ -21,6 +21,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 MethodBase.GetCurrentMethod().DeclaringType);
         protected IConfigSource m_config;
         protected OSDMap m_autoConfig = new OSDMap();
+        protected Dictionary<string, OSDMap> m_allConfigs = new Dictionary<string, OSDMap>();
 
         public virtual string Name
         {
@@ -59,7 +60,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 }
             }
 
-            m_autoConfig = (OSDMap)OSDParser.DeserializeJson(resp);
+            AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(resp));
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -86,13 +87,33 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         {
         }
 
-        public virtual void AddNewUser(UUID userID, OSDMap urls)
+        public virtual void AddNewUser(string userID, OSDMap urls)
         {
         }
 
-        public virtual OSDMap GetDefaultValues()
+        public virtual void AddNewUrls(string key, OSDMap urls)
+        {
+            foreach (KeyValuePair<string, OSD> kvp in urls)
+            {
+                if (!m_autoConfig.ContainsKey(kvp.Key))
+                    m_autoConfig[kvp.Key] = kvp.Value;
+                else
+                {
+                    //Combine with ',' seperating
+                    m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key].AsString() + "," + kvp.Value.AsString();
+                }
+            }
+            m_allConfigs[key] = urls;
+        }
+
+        public virtual OSDMap GetValues()
         {
             return m_autoConfig;
+        }
+
+        public virtual OSDMap GetValuesFor(string key)
+        {
+            return m_allConfigs[key];
         }
 
         public virtual List<string> FindValueOf(string key)

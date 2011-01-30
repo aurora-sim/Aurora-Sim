@@ -16,13 +16,26 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="urls"></param>
-        void AddNewUser(UUID userID, OSDMap urls);
+        void AddNewUser(string userID, OSDMap urls);
+
+        /// <summary>
+        /// Get all of the url's for this service
+        /// </summary>
+        /// <returns></returns>
+        OSDMap GetValues();
 
         /// <summary>
         /// Get the default url's for this service
         /// </summary>
         /// <returns></returns>
-        OSDMap GetDefaultValues();
+        OSDMap GetValuesFor(string key);
+
+        /// <summary>
+        /// Add a list of new Urls to the default Urls
+        /// </summary>
+        /// <param name="key">Used to pull the Urls out later with GetValuesFor if needed</param>
+        /// <param name="urls"></param>
+        void AddNewUrls(string key, OSDMap urls);
 
         /// <summary>
         /// Find the 'key' from the auto config service.
