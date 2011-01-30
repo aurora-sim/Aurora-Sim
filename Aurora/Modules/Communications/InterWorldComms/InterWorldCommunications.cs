@@ -25,7 +25,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
-    public class InterWorldCommunications : ISharedRegionStartupModule
+    public class InterWorldCommunications : IService
     {
         #region Declares
 
@@ -57,10 +57,6 @@ namespace Aurora.Modules
         {
             get { return m_registry; }
         }
-
-        #endregion
-
-        #region Public members
 
         #endregion
 
@@ -124,53 +120,6 @@ namespace Aurora.Modules
 
         #endregion
 
-        #region ISharedRegionStartupModule Members
-
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
-        {
-            m_config = source.Configs["AuroraInterWorldConnectors"];
-            if (m_config != null)
-                m_Enabled = m_config.GetBoolean("Enabled", false);
-
-            m_registry = openSimBase.ApplicationRegistry;
-
-            if (m_Enabled)
-                scene.RegisterModuleInterface<InterWorldCommunications>(this);
-        }
-
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
-        {
-        }
-
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
-        {
-        }
-
-        public void Close(Scene scene)
-        {
-        }
-
-        public void StartupComplete()
-        {
-            if (!m_Enabled)
-                return;
-
-            //Set up the public connection
-            MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
-
-            //Startup outgoing
-            OutgoingPublicComms = new IWCOutgoingConnections(this);
-
-            //Make our connection strings.
-            Connections = BuildConnections();
-
-            ContactOtherServers();
-
-            AddConsoleCommands();
-        }
-
-        #endregion
-
         #region Console Commands
 
         private void AddConsoleCommands()
@@ -229,6 +178,53 @@ namespace Aurora.Modules
         }
 
         #endregion
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource source, IRegistryCore registry)
+        {
+            m_config = source.Configs["AuroraInterWorldConnectors"];
+            if (m_config != null)
+                m_Enabled = m_config.GetBoolean("Enabled", false);
+
+            m_registry = registry;
+        }
+
+        public void PostInitialize(IConfigSource source, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource source, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource source, IRegistryCore registry)
+        {
+            if (m_Enabled)
+            {
+                registry.RegisterModuleInterface<InterWorldCommunications>(this);
+                //Set up the public connection
+                MainServer.Instance.AddStreamHandler(new IWCIncomingConnections(this));
+
+                //Startup outgoing
+                OutgoingPublicComms = new IWCOutgoingConnections(this);
+
+                //Make our connection strings.
+                Connections = BuildConnections();
+
+                ContactOtherServers();
+
+                AddConsoleCommands();
+            }
+        }
+
+        public void AddNewRegistry(IConfigSource source, IRegistryCore registry)
+        {
+            if (m_Enabled)
+                registry.RegisterModuleInterface<InterWorldCommunications>(this);
+        }
 
         #endregion
     }
