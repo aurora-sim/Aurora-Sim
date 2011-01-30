@@ -353,7 +353,7 @@ namespace OpenSim.Services.Connectors
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 

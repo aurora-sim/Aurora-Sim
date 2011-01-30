@@ -728,6 +728,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (!m_sendTerrainUpdatesByViewDistance)
                 return;
 
+            if (presence == null)
+                return;
+
             float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
             for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
             {
@@ -738,7 +741,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     {
                         double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
                             new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                        if (distance < presence.DrawDistance * 2.5) //Its not a radius, its a diameter
+                        if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                         {
                             //They can see it, send it ot them
                             m_terrainPatchesSent[presence.UUID][x, y] = true;

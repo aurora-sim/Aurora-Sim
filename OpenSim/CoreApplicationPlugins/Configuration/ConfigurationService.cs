@@ -110,7 +110,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
             return keys;
         }
 
-        public virtual List<string> FindValueOf(UUID userID, string key)
+        public virtual List<string> FindValueOf(string userID, string key)
         {
             return FindValueOf(key);
         }

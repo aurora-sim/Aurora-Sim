@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IPresenceService
 
@@ -66,7 +66,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/presence",
@@ -112,7 +113,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/presence",
@@ -157,7 +159,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/presence",
@@ -203,7 +206,8 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
                     m_ServerURI + "/presence",
@@ -231,7 +235,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/presence",
@@ -277,7 +282,8 @@ namespace OpenSim.Services.Connectors
             //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userIDs[0], "PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                         m_ServerURI + "/presence",
@@ -341,7 +347,8 @@ namespace OpenSim.Services.Connectors
             //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userIDs[0], "PresenceServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/presence",
@@ -408,7 +415,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_registry = registry;
             registry.RegisterModuleInterface<IPresenceService>(this);
         }
 

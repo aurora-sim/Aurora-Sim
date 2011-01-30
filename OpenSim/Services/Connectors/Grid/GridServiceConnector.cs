@@ -900,7 +900,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
             registry.RegisterModuleInterface<IGridService>(this);
         }
 

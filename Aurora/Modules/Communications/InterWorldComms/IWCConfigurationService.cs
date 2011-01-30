@@ -15,7 +15,7 @@ namespace Aurora.Modules.Communications.InterWorldComms
 {
     public class IWCConfigurationService : ConfigurationService
     {
-        protected Dictionary<UUID, OSDMap> m_knownUsers = new Dictionary<UUID, OSDMap>();
+        protected Dictionary<string, OSDMap> m_knownUsers = new Dictionary<string, OSDMap>();
 
         public override string Name
         {
@@ -57,12 +57,12 @@ namespace Aurora.Modules.Communications.InterWorldComms
             m_autoConfig = (OSDMap)OSDParser.DeserializeJson(resp); base.Initialize(openSim);
         }
 
-        public override void AddNewUser(UUID userID, OSDMap urls)
+        public override void AddNewUser(string userID, OSDMap urls)
         {
             m_knownUsers[userID] = urls;
         }
 
-        public override List<string> FindValueOf(UUID userID, string key)
+        public override List<string> FindValueOf(string userID, string key)
         {
             if (m_knownUsers.ContainsKey(userID))
             {

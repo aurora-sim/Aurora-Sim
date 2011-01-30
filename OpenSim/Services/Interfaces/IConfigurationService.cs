@@ -41,6 +41,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name="userID">The user who is requesting this info</param>
         /// <param name="key">A generic key to check for URLs</param>
         /// <returns>A list of URLs that are registered for this key</returns>
-        List<string> FindValueOf(UUID userID, string key);
+        List<string> FindValueOf(string userID, string key);
     }
 }

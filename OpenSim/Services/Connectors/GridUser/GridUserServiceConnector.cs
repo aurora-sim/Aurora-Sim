@@ -46,7 +46,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         #region IGridUserService
 
@@ -60,7 +60,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["UserID"] = userID;
 
-            return Get(sendData);
+            return Get(userID, sendData);
 
         }
 
@@ -107,7 +107,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["UserID"] = userID;
 
-            return Get(sendData);
+            return Get(userID, sendData);
         }
 
         #endregion
@@ -123,7 +123,8 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(UUID.Parse(userID), "GridUserServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/griduser",
@@ -165,7 +166,8 @@ namespace OpenSim.Services.Connectors
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(UUID.Parse(userID), "GridUserServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
                         m_ServerURI + "/griduser",
@@ -178,13 +180,14 @@ namespace OpenSim.Services.Connectors
             }
         }
 
-        protected GridUserInfo Get(Dictionary<string, object> sendData)
+        protected GridUserInfo Get(string userID, Dictionary<string, object> sendData)
         {
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "GridUserServerURI");
+                foreach (string m_ServerURI in serverURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
                             m_ServerURI + "/griduser",
@@ -232,7 +235,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("GridUserHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_registry = registry;
             registry.RegisterModuleInterface<IGridUserService>(this);
         }
 

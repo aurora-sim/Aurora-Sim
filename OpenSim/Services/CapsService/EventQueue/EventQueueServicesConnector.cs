@@ -54,7 +54,7 @@ namespace OpenSim.Services.CapsService
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         /// <summary>
         /// This holds events that havn't been sent yet as the client hasn't called the CapsHandler and sent the EventQueue password.
@@ -81,7 +81,7 @@ namespace OpenSim.Services.CapsService
             if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("EventQueueServiceURI");
+            m_registry = registry;
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
@@ -229,11 +229,12 @@ namespace OpenSim.Services.CapsService
 
                 request.Add("Events", events);
 
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "EventQueueServiceURI");
+                foreach (string serverURI in serverURIs)
                 {
                     if (async)
                     {
-                        AsynchronousRestObjectRequester.MakeRequest("POST", m_ServerURI + "/CAPS/EQMPOSTER",
+                        AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
                             OSDParser.SerializeJsonString(request),
                             delegate(string resp)
                             {
@@ -244,7 +245,7 @@ namespace OpenSim.Services.CapsService
                     }
                     else
                     {
-                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI + "/CAPS/EQMPOSTER",
+                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
                             OSDParser.SerializeJsonString(request));
                         return RequestHandler(resp, events, avatarID, regionHandle);
                     }

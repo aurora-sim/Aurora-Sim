@@ -154,7 +154,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 

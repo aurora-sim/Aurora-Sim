@@ -45,8 +45,7 @@ namespace OpenSim.Services.Connectors
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
         private UserAccountCache m_cache = new UserAccountCache();
-
-        private List<string> m_ServerURIs = new List<string>();
+        private IRegistryCore m_registry;
 
         public virtual UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
@@ -64,7 +63,7 @@ namespace OpenSim.Services.Connectors
             sendData["FirstName"] = firstName.ToString();
             sendData["LastName"] = lastName.ToString();
 
-            account = SendAndGetReply(sendData);
+            account = SendAndGetReply(UUID.Zero, sendData);
             if(account != null)
                 m_cache.Cache(account.PrincipalID, account);
             return account;
@@ -81,7 +80,7 @@ namespace OpenSim.Services.Connectors
             sendData["ScopeID"] = scopeID;
             sendData["Email"] = email;
 
-            return SendAndGetReply(sendData);
+            return SendAndGetReply(UUID.Zero, sendData);
         }
 
         public virtual UserAccount GetUserAccount(UUID scopeID, UUID userID)
@@ -100,7 +99,7 @@ namespace OpenSim.Services.Connectors
             sendData["ScopeID"] = scopeID;
             sendData["UserID"] = userID.ToString();
 
-            account = SendAndGetReply(sendData);
+            account = SendAndGetReply(userID, sendData);
             m_cache.Cache(userID, account);
             return account;
         }
@@ -121,6 +120,7 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("UserAccountServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -194,16 +194,17 @@ namespace OpenSim.Services.Connectors
                     sendData[kvp.Key] = kvp.Value.ToString();
             }
 
-            return SendAndGetBoolReply(sendData);
+            return SendAndGetBoolReply(data.PrincipalID, sendData);
         }
 
-        private UserAccount SendAndGetReply(Dictionary<string, object> sendData)
+        private UserAccount SendAndGetReply(UUID avatarID, Dictionary<string, object> sendData)
         {
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -236,12 +237,13 @@ namespace OpenSim.Services.Connectors
 
         }
 
-        private bool SendAndGetBoolReply(Dictionary<string, object> sendData)
+        private bool SendAndGetBoolReply(UUID avatarID, Dictionary<string, object> sendData)
         {
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -291,7 +293,7 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            m_registry = registry;
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
