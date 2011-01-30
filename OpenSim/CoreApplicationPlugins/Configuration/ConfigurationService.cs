@@ -30,20 +30,24 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
         public virtual void Initialize(ISimulationBase openSim)
         {
-            string resp = "";
             m_config = openSim.ConfigSource;
 
             IConfig handlerConfig = m_config.Configs["Handlers"];
             if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
                 return;
 
-            //Register by default as this only gets used in remote grid mode
+            //Register us
             openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
 
-            IConfig autoConfig = m_config.Configs["Configuration"];
+            FindConfiguration(m_config.Configs["Configuration"]);
+        }
+
+        protected void FindConfiguration(IConfig autoConfig)
+        {
             if (autoConfig == null)
                 return;
 
+            string resp = "";
             while (resp == "")
             {
                 string serverURL = autoConfig.GetString("ConfigurationURL", "");
