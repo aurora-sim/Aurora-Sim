@@ -92,61 +92,61 @@ namespace OpenSim.Server.Handlers
 
         private byte[] ProcessEnqueueEQMMessage(OSDMap request)
         {
-            UUID agentID = request["AgentID"].AsUUID();
-            ulong regionHandle = request["RegionHandle"].AsULong();
-            UUID password = request["Password"].AsUUID();
-            OSDArray events = new OSDArray();
-            if(request.ContainsKey("Events"))
-                events = (OSDArray)request["Events"];
-
-            OSD singleEventDepriated = null; //This can be removed later, was only used before 12-1-11
-            if(request.ContainsKey("Event"))
-                singleEventDepriated = request["Event"];
-
-            List<OSD> OSDEvents = new List<OSD>();
-            //Add it if it exists
-            if (singleEventDepriated != null)
-                OSDEvents.Add(singleEventDepriated);
-
-            foreach (OSD ev in events)
-            {
-                OSD Event = OSDParser.DeserializeLLSDXml(ev.AsString());
-                OSDEvents.Add(Event);
-            }
-
             OSDMap response = new OSDMap();
-            IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
-            if (clientCaps != null)
+            response["success"] = false;
+            try
             {
-                IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
-                if (regionClient != null)
+                UUID agentID = request["AgentID"].AsUUID();
+                ulong regionHandle = request["RegionHandle"].AsULong();
+                UUID password = request["Password"].AsUUID();
+                OSDArray events = new OSDArray();
+                if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)
+                    events = (OSDArray)request["Events"];
+
+                List<OSD> OSDEvents = new List<OSD>();
+
+                foreach (OSD ev in events)
                 {
-                    if (regionClient.Password != password)
+                    OSD Event = OSDParser.DeserializeLLSDXml(ev.AsString());
+                    OSDEvents.Add(Event);
+                }
+
+                IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
+                if (clientCaps != null)
+                {
+                    IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
+                    if (regionClient != null)
                     {
-                        m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
-                            agentID + " calling with password " + password + " in region " + regionHandle);
-                        response["success"] = false;
-                    }
-                    else
-                    {
-                        bool enqueueResult = false;
-                        foreach (OSD ev in OSDEvents)
+                        if (regionClient.Password != password)
                         {
-                            enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
-                            if (!enqueueResult) //Break if one fails
-                                break;
+                            m_log.Error("[EventQueueHandler]: Failed to authenticate EventQueueMessage for user " +
+                                agentID + " calling with password " + password + " in region " + regionHandle);
+                            response["success"] = false;
                         }
-                        response["success"] = enqueueResult;
+                        else
+                        {
+                            bool enqueueResult = false;
+                            foreach (OSD ev in OSDEvents)
+                            {
+                                enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
+                                if (!enqueueResult) //Break if one fails
+                                    break;
+                            }
+                            response["success"] = enqueueResult;
+                        }
                     }
                 }
-                else
-                    response["success"] = false;
             }
-            else
+            catch(Exception ex)
+            {
+                m_log.Error("[EQMHandler]: ERROR IN THE HANDLER: " + ex.ToString());
+                response = new OSDMap();
                 response["success"] = false;
-
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(OSDParser.SerializeJsonString(response));
+            }
+            string resp = OSDParser.SerializeJsonString(response);
+            if (resp == "")
+                return new byte[0];
+            return Util.UTF8.GetBytes(resp);
         }
     }
 }

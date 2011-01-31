@@ -376,7 +376,8 @@ namespace OpenSim.Server.Handlers.Simulation
             destination.RegionID = regionID;
 
             if (action.Equals("release"))
-                ReleaseAgent(regionID, id);
+            {
+            }
             else
                 m_SimulationService.CloseAgent(destination, id);
 
@@ -386,11 +387,6 @@ namespace OpenSim.Server.Handlers.Simulation
             responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
 
             m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
-        }
-
-        protected virtual void ReleaseAgent(UUID regionID, UUID id)
-        {
-            m_SimulationService.ReleaseAgent(regionID, id, "");
         }
     }
 }

@@ -228,10 +228,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private Vector3 posLastSignificantMove;
 
-        // For teleports and crossings callbacks
-        string m_callbackURI;
-        UUID m_originRegionID;
-
         private UUID CollisionSoundID = UUID.Zero;
 
         #endregion
@@ -1008,16 +1004,12 @@ namespace OpenSim.Region.Framework.Scenes
             //Put the agent in an allowed area and above the terrain.
             IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
-            {
                 AbsolutePosition = parcelManagement.GetNearestAllowedPosition(this);
-            }
 
             //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
-            if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
-            {
-                //m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
-                Scene.SimulationService.ReleaseAgent(m_originRegionID, UUID, m_callbackURI);
-            }
+            IEventQueueService eventQueueService = Scene.RequestModuleInterface<IEventQueueService>();
+            if (eventQueueService != null)
+                eventQueueService.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle);
 
             IsChildAgent = false;
 
@@ -2570,10 +2562,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CopyFrom(AgentData cAgent)
         {
-            m_originRegionID = cAgent.RegionID;
-
-            m_callbackURI = cAgent.CallbackURI;
-
             m_pos = cAgent.Position;
             Velocity = cAgent.Velocity;
             m_CameraCenter = cAgent.Center;

@@ -186,25 +186,6 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool ReleaseAgent(UUID origin, UUID id, string uri)
-        {
-            foreach (Scene s in m_sceneList)
-            {
-                if (s.RegionInfo.RegionID == origin)
-                {
-                    IEventQueueService eventQueueService = s.RequestModuleInterface<IEventQueueService>();
-                    if (eventQueueService != null)
-                    {
-                        //m_log.Debug("[LOCAL COMMS]: Found region to SendReleaseAgent");
-                        eventQueueService.ArrivedAtDestination(id, s.RegionInfo.RegionHandle);
-                        return true;
-                    }
-                }
-            }
-            m_log.Debug("[LOCAL SIMULATION COMMS]: region not found in ReleaseAgent " + origin);
-            return false;
-        }
-
         public bool CloseAgent(GridRegion destination, UUID id)
         {
             if (destination == null)

@@ -503,6 +503,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 AssetBase asset = new AssetBase(new UUID(uuid), "RandomName", assetType, UUID.Zero.ToString());
                 asset.Data = data;
+                asset.Flags = AssetFlags.Normal;
 
                 m_registry.RequestModuleInterface<IAssetService>().Store(asset);
 

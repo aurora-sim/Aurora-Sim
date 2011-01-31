@@ -110,17 +110,6 @@ namespace OpenSim.Services.Interfaces
         bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent);
 
         /// <summary>
-        /// Message from receiving region to departing region, telling it got contacted by the client.
-        /// When sent over REST, it invokes the opaque uri.
-        /// Grid Server only.
-        /// </summary>
-        /// <param name="regionHandle"></param>
-        /// <param name="id"></param>
-        /// <param name="uri"></param>
-        /// <returns></returns>
-        bool ReleaseAgent(UUID originRegion, UUID id, string uri);
-
-        /// <summary>
         /// Close agent.
         /// Grid Server only.
         /// </summary>

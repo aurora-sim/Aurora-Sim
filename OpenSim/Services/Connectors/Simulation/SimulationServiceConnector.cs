@@ -232,29 +232,6 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool ReleaseAgent(UUID origin, UUID id, string uri)
-        {
-            // Try local first
-            if (m_localBackend.ReleaseAgent(origin, id, uri))
-                return true;
-
-            // else do the remote thing
-            if (!m_localBackend.IsLocalRegion(origin))
-            {
-                try
-                {
-                    OSDMap result = WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[REMOTE SIMULATION CONNECTOR] ReleaseAgent failed with exception; {0}", e.ToString());
-                }
-
-                return true;
-            }
-            return false;
-        }
-
         public bool CloseAgent(GridRegion destination, UUID id)
         {
             // Try local first

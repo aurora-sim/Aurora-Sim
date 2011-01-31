@@ -287,8 +287,6 @@ namespace OpenSim.Framework
         // Scripted
         public ControllerData[] Controllers;
 
-        public string CallbackURI;
-
         public virtual OSDMap Pack()
         {
             // DEBUG ON
@@ -359,9 +357,6 @@ namespace OpenSim.Framework
                     controls.Add(ctl.PackUpdateMessage());
                 args["controllers"] = controls;
             }
-
-            if ((CallbackURI != null) && (!CallbackURI.Equals("")))
-                args["callback_uri"] = OSD.FromString(CallbackURI);
 
             return args;
         }
@@ -525,9 +520,6 @@ namespace OpenSim.Framework
                     }
                 }
             }
-
-            if (args["callback_uri"] != null)
-                CallbackURI = args["callback_uri"].AsString();
         }
 
         public AgentData()

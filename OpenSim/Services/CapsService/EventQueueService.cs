@@ -834,9 +834,6 @@ namespace OpenSim.Services.CapsService
         protected bool CrossAgent(GridRegion crossingRegion, Vector3 pos,
             Vector3 velocity, AgentCircuitData circuit, AgentData cAgent)
         {
-            //We arn't going to deal with CallbackURLs
-            SetCallbackURL(cAgent, crossingRegion);
-
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
             {
@@ -893,9 +890,6 @@ namespace OpenSim.Services.CapsService
         protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance, 
             AgentCircuitData circuit, AgentData agentData)
         {
-            //Set the callback URL
-            SetCallbackURL(agentData, destination);
-
             bool result = false;
 
             ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
@@ -991,13 +985,6 @@ namespace OpenSim.Services.CapsService
 
         #region Callbacks
 
-        protected void SetCallbackURL(AgentData agent, GridRegion region)
-        {
-            string path = "/agent/" + agent.AgentID.ToString() + "/" + region.RegionID.ToString() + "/release/";
-            agent.CallbackURI = m_service.HostUri + path;
-            m_service.ClientCaps.Server.AddHTTPHandler("/agent/", CallbackHandler);
-        }
-
         protected bool WaitForCallback(out bool callWasCanceled)
         {
             int count = 100;
@@ -1032,47 +1019,6 @@ namespace OpenSim.Services.CapsService
             return m_service.ClientCaps.CallbackHasCome;
         }
 
-        public Hashtable CallbackHandler(Hashtable request)
-        {
-            //m_log.Debug("[CONNECTION DEBUGGING]: AgentHandler Called");
-
-            //m_log.Debug("---------------------------");
-            //m_log.Debug(" >> uri=" + request["uri"]);
-            //m_log.Debug(" >> content-type=" + request["content-type"]);
-            //m_log.Debug(" >> http-method=" + request["http-method"]);
-            //m_log.Debug("---------------------------\n");
-
-            Hashtable responsedata = new Hashtable();
-            responsedata["content_type"] = "text/html";
-            responsedata["keepalive"] = false;
-            //Remove it so that it doesn't stay around
-            m_service.ClientCaps.Server.RemoveHTTPHandler("POST", "/agent/");
-
-            UUID agentID;
-            UUID regionID;
-            string action;
-            string uri = ((string)request["uri"]);
-            if (!WebUtils.GetParams(uri, out agentID, out regionID, out action))
-            {
-                m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
-                responsedata["int_response_code"] = 404;
-                responsedata["str_response_string"] = "false";
-
-                return responsedata;
-            }
-
-
-            responsedata["int_response_code"] = HttpStatusCode.OK;
-            OSDMap map = new OSDMap();
-            map["Agent"] = agentID;
-            responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
-
-            m_service.ClientCaps.CallbackHasCome = true;
-
-            m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
-            return responsedata;
-        }
-
         #endregion
 
         #endregion
@@ -1094,7 +1040,10 @@ namespace OpenSim.Services.CapsService
                     List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);
                     foreach (GridRegion region in ourNeighbors)
                     {
-                        SimulationService.UpdateAgent(region, agentpos);
+                        if (!SimulationService.UpdateAgent(region, agentpos))
+                        {
+                            m_log.Info("[EQMService]: Failed to inform " + region.RegionName + " about updating agent. ");
+                        }
                     }
                 }
             }
