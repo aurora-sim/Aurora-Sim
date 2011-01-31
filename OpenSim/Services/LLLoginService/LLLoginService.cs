@@ -142,14 +142,6 @@ namespace OpenSim.Services.LLLoginService
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_GridUserService = registry.RequestModuleInterface<IGridUserService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
@@ -162,7 +154,14 @@ namespace OpenSim.Services.LLLoginService
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_CapsService = registry.RequestModuleInterface<ICapsService>();
+        }
 
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
             if (!Initialized)
             {
                 Initialized = true;
