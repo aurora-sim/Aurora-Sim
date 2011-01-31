@@ -454,7 +454,7 @@ namespace OpenSim.Services.Connectors
             List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
             List<GridRegion> byebyeRegions = new List<GridRegion>();
             GridRegion neighbor = m_gridService.GetRegionByUUID(UUID.Zero, currentRegionID);
-            m_log.DebugFormat(
+            m_log.InfoFormat(
                 "[NeighborService]: Closing child agents. Checking {0} regions in {1}",
                 NeighborsOfCurrentRegion.Count, neighbor.RegionName);
 

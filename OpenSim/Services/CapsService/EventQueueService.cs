@@ -873,7 +873,7 @@ namespace OpenSim.Services.CapsService
                             uint x, y;
                             Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                             GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                            List<GridRegion> service.GetNeighbors(ourRegion);
+                            service.GetNeighbors(ourRegion);
                             service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                         }
                     }
