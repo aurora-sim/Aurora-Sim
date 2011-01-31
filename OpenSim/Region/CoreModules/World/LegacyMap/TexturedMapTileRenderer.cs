@@ -179,13 +179,16 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 try
                 {
-                    if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                    if (asset.Data != null)
                     {
-                        managedImage = null;
-                        return new Bitmap(image);
+                        if (OpenJPEG.DecodeToImage(asset.Data, out managedImage, out image))
+                        {
+                            managedImage = null;
+                            return new Bitmap(image);
+                        }
+                        else
+                            return null;
                     }
-                    else
-                        return null;
                 }
                 catch (DllNotFoundException)
                 {

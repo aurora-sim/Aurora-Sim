@@ -156,6 +156,8 @@ namespace Aurora.Modules
 
             con.Certificate = cert;
             con.TrustLevel = (TrustLevel)Enum.Parse(typeof(TrustLevel), trustLevel);
+            //Be user friendly, add the http:// if needed as well as the final /
+            Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
             Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
             con.URL = Url;
 
