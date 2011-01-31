@@ -102,17 +102,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool LoginsDisabled = true;
 
-        protected IAssetService m_AssetService;
-        protected IInventoryService m_InventoryService;
-        protected IGridService m_GridService;
-        protected ILibraryService m_LibraryService;
-        protected ISimulationService m_simulationService;
-        protected IAuthenticationService m_AuthenticationService;
-        protected IPresenceService m_PresenceService;
-        protected IUserAccountService m_UserAccountService;
-        protected IAvatarService m_AvatarService;
-        protected IGridUserService m_GridUserService;
-
         // Central Update Loop
 
         protected uint m_frame;
@@ -224,17 +213,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_AssetService == null)
-                {
-                    m_AssetService = RequestModuleInterface<IAssetService>();
-
-                    if (m_AssetService == null)
-                    {
-                        throw new Exception("No IAssetService available.");
-                    }
-                }
-
-                return m_AssetService;
+                return RequestModuleInterface<IAssetService>();
             }
         }
 
@@ -242,9 +221,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_AuthenticationService == null)
-                    m_AuthenticationService = RequestModuleInterface<IAuthenticationService>();
-                return m_AuthenticationService;
+                return RequestModuleInterface<IAuthenticationService>();
             }
         }
 
@@ -252,9 +229,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_AvatarService == null)
-                    m_AvatarService = RequestModuleInterface<IAvatarService>();
-                return m_AvatarService;
+                return RequestModuleInterface<IAvatarService>();
             }
         }
 
@@ -262,17 +237,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_GridService == null)
-                {
-                    m_GridService = RequestModuleInterface<IGridService>();
-
-                    if (m_GridService == null)
-                    {
-                        throw new Exception("No IGridService available. This could happen if the config_include folder doesn't exist or if the Aurora.ini [Architecture] section isn't set.  Please also check that you have the correct version of your inventory service dll.  Sometimes old versions of this dll will still exist.  Do a clean checkout and re-create the opensim.ini from the opensim.ini.example.");
-                    }
-                }
-
-                return m_GridService;
+                return RequestModuleInterface<IGridService>();
             }
         }
 
@@ -280,9 +245,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_GridUserService == null)
-                    m_GridUserService = RequestModuleInterface<IGridUserService>();
-                return m_GridUserService;
+                return RequestModuleInterface<IGridUserService>();
             }
         }
 
@@ -290,17 +253,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_InventoryService == null)
-                {
-                    m_InventoryService = RequestModuleInterface<IInventoryService>();
-
-                    if (m_InventoryService == null)
-                    {
-                        throw new Exception("No IInventoryService available. This could happen if the config_include folder doesn't exist or if the Aurora.ini [Architecture] section isn't set.  Please also check that you have the correct version of your inventory service dll.  Sometimes old versions of this dll will still exist.  Do a clean checkout and re-create the opensim.ini from the opensim.ini.example.");
-                    }
-                }
-
-                return m_InventoryService;
+                return RequestModuleInterface<IInventoryService>();
             }
         }
 
@@ -308,9 +261,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_PresenceService == null)
-                    m_PresenceService = RequestModuleInterface<IPresenceService>();
-                return m_PresenceService;
+                return RequestModuleInterface<IPresenceService>();
             }
         }
 
@@ -318,9 +269,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_simulationService == null)
-                    m_simulationService = RequestModuleInterface<ISimulationService>();
-                return m_simulationService;
+                return RequestModuleInterface<ISimulationService>();
             }
         }
 
@@ -328,9 +277,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_UserAccountService == null)
-                    m_UserAccountService = RequestModuleInterface<IUserAccountService>();
-                return m_UserAccountService;
+                return RequestModuleInterface<IUserAccountService>();
             }
         }
 
