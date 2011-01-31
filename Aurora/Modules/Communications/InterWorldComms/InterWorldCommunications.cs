@@ -43,6 +43,14 @@ namespace Aurora.Modules
         /// </summary>
         protected bool m_Enabled = false;
         /// <summary>
+        /// Should connections that come to us that are not authenticated be allowed to connect?
+        /// </summary>
+        public bool m_allowUntrustedConnections = false;
+        /// <summary>
+        /// Untrusted connections automatically get this trust level
+        /// </summary>
+        public TrustLevel m_untrustedConnectionsDefaultTrust = TrustLevel.Low;
+        /// <summary>
         /// All connections that we have to other hosts
         /// (Before sending the initial connection requests, 
         ///   this MAY contain connections that we do not currently have)
@@ -193,7 +201,11 @@ namespace Aurora.Modules
         {
             m_config = source.Configs["AuroraInterWorldConnectors"];
             if (m_config != null)
+            {
                 m_Enabled = m_config.GetBoolean("Enabled", false);
+                m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections", m_allowUntrustedConnections);
+                m_untrustedConnectionsDefaultTrust = (TrustLevel)Enum.Parse(typeof(TrustLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
+            }
 
             m_registry = registry;
         }
@@ -255,7 +267,7 @@ namespace Aurora.Modules
         /// <returns>The connection that has been recieved from the host</returns>
         public IWCCertificate QueryRemoteHost(Connection connection)
         {
-            OSDMap request = connection.Certificate.ToOSD();
+            OSDMap request = connection.Certificate.ToOSD(false);
             request["Method"] = "Query";
             OSDMap reply = WebUtils.PostToService(connection.URL, request);
             if (reply["Success"].AsBoolean())
@@ -284,7 +296,7 @@ namespace Aurora.Modules
 
         public void DeleteRemoteHost(Connection connection)
         {
-            OSDMap request = connection.Certificate.ToOSD();
+            OSDMap request = connection.Certificate.ToOSD(false);
             request["Method"] = "Delete";
             OSDMap reply = WebUtils.PostToService(connection.URL, request);
             if (!reply["Success"].AsBoolean())
@@ -350,14 +362,27 @@ namespace Aurora.Modules
 
             //Lets make sure that they are allowed to connect to us
             if (!CertificateVerification.VerifyCertificate(Certificate))
-                return FailureResult();
+            {
+                //Make sure the other host is not trying to spoof one of our certificates
+                if (CertificateVerification.GetCertificateBySessionHash(Certificate.SessionHash) != null)
+                {
+                    //SPOOF! XXXXXX
+                    return FailureResult();
+                }
+                //This is an untrusted connection otherwise
+                if (!IWC.m_allowUntrustedConnections)
+                    return FailureResult(); //We don't allow them
+
+                //Give them the default untrusted connection level
+                Certificate.TrustLevel = IWC.m_untrustedConnectionsDefaultTrust;
+            }
 
             //Update them in the database so that they can connect again later
             CertificateVerification.AddCertificate(Certificate);
 
             BuildSecureUrlsForConnection(Certificate);
 
-            OSDMap result = Certificate.ToOSD();
+            OSDMap result = Certificate.ToOSD(false);
             result["Result"] = "Successful";
 
             return Return(result);
@@ -458,7 +483,7 @@ namespace Aurora.Modules
         {
             OSDMap map = new OSDMap();
             map.Add("TrustLevel", (int)TrustLevel);
-            map.Add("Certificate", OSDParser.SerializeJsonString(Certificate.ToOSD()));
+            map.Add("Certificate", OSDParser.SerializeJsonString(Certificate.ToOSD(true)));
             map.Add("URL", URL);
             return map;
         }
@@ -498,6 +523,7 @@ namespace Aurora.Modules
         protected DateTime m_validUntil;
         protected string m_SessionHash;
         protected OSDMap m_SecureUrls = new OSDMap();
+        protected TrustLevel m_TrustLevel;
 
         /// <summary>
         /// The SessionID of the certificate
@@ -527,20 +553,37 @@ namespace Aurora.Modules
             set { m_SecureUrls = value; }
         }
 
+        /// <summary>
+        /// Our (this instance) trust of this certificate
+        /// </summary>
+        public TrustLevel TrustLevel
+        {
+            get { return m_TrustLevel; }
+            set { m_TrustLevel = value; }
+        }
+
         public override void FromOSD(OSDMap map)
         {
             SessionHash = map["SessionHash"].AsString();
             ValidUntil = map["ValidUntil"].AsDate();
             SecureUrls = (OSDMap)map["SecureUrls"];
+            if(map.ContainsKey("TrustLevel"))
+                TrustLevel = (TrustLevel)map["TrustLevel"].AsInteger();
         }
 
-        public override OSDMap ToOSD()
+        public OSDMap ToOSD(bool Secure)
         {
             OSDMap map = new OSDMap();
             map.Add("SessionHash", SessionHash);
             map.Add("ValidUntil", ValidUntil);
             map.Add("SecureUrls", SecureUrls);
+            map.Add("TrustLevel", (int)TrustLevel);
             return map;
+        }
+
+        public override OSDMap ToOSD()
+        {
+            return ToOSD(true);
         }
 
         public override Dictionary<string, object> ToKeyValuePairs()
@@ -592,6 +635,18 @@ namespace Aurora.Modules
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Attempt to find a certificate for the given Session Hash
+        /// </summary>
+        /// <param name="SessionHash"></param>
+        /// <returns></returns>
+        public static IWCCertificate GetCertificateBySessionHash(string SessionHash)
+        {
+            IWCCertificate cert = null;
+            m_certificates.TryGetValue(SessionHash, out cert);
+            return cert;
         }
 
         /// <summary>
