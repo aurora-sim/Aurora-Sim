@@ -873,7 +873,7 @@ namespace OpenSim.Services.CapsService
                             uint x, y;
                             Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                             GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                            service.GetNeighbors(ourRegion);
+                            List<GridRegion> service.GetNeighbors(ourRegion);
                             service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
                         }
                     }
@@ -1085,11 +1085,18 @@ namespace OpenSim.Services.CapsService
             INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
             if (service != null)
             {
-                uint x, y;
-                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                service.GetNeighbors(ourRegion);
-                service.SendChildAgentUpdate(agentpos, regionID);
+                ISimulationService SimulationService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+                if (SimulationService != null)
+                {
+                    uint x, y;
+                    Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                    GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                    List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);
+                    foreach (GridRegion region in ourNeighbors)
+                    {
+                        SimulationService.UpdateAgent(region, agentpos);
+                    }
+                }
             }
         }
 
