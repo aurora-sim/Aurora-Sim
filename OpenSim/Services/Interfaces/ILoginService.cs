@@ -49,7 +49,7 @@ namespace OpenSim.Services.Interfaces
     public interface ILoginService
     {
         LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists,
-            string tosAccepted, out UUID secureSession);
+            string tosAccepted, string mac, string clientVersion, out UUID secureSession);
         LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession);
         Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);

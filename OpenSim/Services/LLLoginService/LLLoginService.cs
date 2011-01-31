@@ -278,7 +278,7 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists, string tosAccepted, out UUID secureSession)
+        public LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
             m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0} {1}",
                 firstName, lastName);
@@ -330,6 +330,15 @@ namespace OpenSim.Services.LLLoginService
                 {
                     agentData.CreateNewAgent(account.PrincipalID);
                     agent = agentData.GetAgent(account.PrincipalID);
+                }
+                if (agentData != null && mac != "")
+                {
+                    if (!agentData.CheckMacAndViewer(mac, clientVersion))
+                        return LLFailedLoginResponse.LoginBlockedProblem;
+                }
+                else
+                {
+                    //We tried... might as well skip it
                 }
                 bool AcceptedNewTOS = false;
                 //This gets if the viewer has accepted the new TOS

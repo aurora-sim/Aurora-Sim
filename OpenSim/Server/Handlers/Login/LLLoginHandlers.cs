@@ -96,19 +96,15 @@ namespace OpenSim.Server.Handlers.Login
 
                     //MAC BANNING START
                     string mac = (string)requestData["mac"];
-                    Aurora.Framework.IAgentConnector AgentConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
-                    if (AgentConnector != null && mac != null && clientVersion != null)
-                    {
-                        if (!AgentConnector.CheckMacAndViewer(mac, clientVersion))
-                            return FailedXMLRPCResponse("You have been banned from this grid.");
-                    }
-                    else
-                    {
-                        //We tried... might as well skip it
-                    }
+                    if (mac == "")
+                        return FailedXMLRPCResponse("Bad Viewer Connection.");
+                   
 					string channel = "Unknown";
                     if (requestData.Contains("channel") && requestData["channel"] != null)
                         channel = requestData["channel"].ToString();
+
+                    if (channel == "")
+                        return FailedXMLRPCResponse("Bad Viewer Connection.");
 
                     string id0 = "Unknown";
                     if (requestData.Contains("id0") && requestData["id0"] != null)
@@ -125,7 +121,7 @@ namespace OpenSim.Server.Handlers.Login
                         tosAccepted = requestData["agree_to_tos"].ToString();
                     }
                     reply = m_LocalService.VerifyClient(first, last, passwd, scopeID,
-                        tosExists, tosAccepted, out secureSessionID);
+                        tosExists, tosAccepted, mac, clientVersion, out secureSessionID);
                     if (reply == null)
                     {
                         reply = m_LocalService.Login(first, last, passwd, startLocation, scopeID, clientVersion, channel, mac, id0, remoteClient, requestData, secureSessionID);
@@ -208,11 +204,11 @@ namespace OpenSim.Server.Handlers.Login
                         tosAccepted = map["agree_to_tos"].ToString();
                     }
                     reply = m_LocalService.VerifyClient(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), scopeID,
-                        tosExists, tosAccepted, out secureSessionID);
+                        tosExists, tosAccepted, "", "", out secureSessionID);
                     if (reply == null)
                     {
                         reply = m_LocalService.Login(map["first"].AsString(), map["last"].AsString(), map["passwd"].AsString(), startLocation, scopeID,
-                            map["version"].AsString(), map["channel"].AsString(), map["mac"].AsString(), map["id0"].AsString(), remoteClient, new Hashtable(), secureSessionID);
+                            "", "", "", "", remoteClient, new Hashtable(), secureSessionID);
                     }
                     return reply.ToOSDMap();
                 }
