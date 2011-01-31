@@ -158,7 +158,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public double this[int x, int y]
         {
-            get { return map[x, y]; }
+            get
+            {
+                if (x > 0 && x < Width && y > 0 && y < Height)
+                    return map[x, y];
+                else
+                    return 0;
+            }
             set
             {
                 // Will "fix" terrain hole problems. Although not fantastically.

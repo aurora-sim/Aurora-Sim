@@ -764,6 +764,8 @@ namespace OpenSim.Services.CapsService
                       + CapsUtil.GetCapsSeedPath(CapsBase);
                     //Add the new Seed for this region
                 }
+                else
+                    return true;
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
                 //Add the password too
