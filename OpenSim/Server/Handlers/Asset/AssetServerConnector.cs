@@ -49,6 +49,7 @@ namespace OpenSim.Server.Handlers.Asset
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -62,8 +63,6 @@ namespace OpenSim.Server.Handlers.Asset
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AssetInHandlerPort"));
-
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
 
             IConfig serverConfig = config.Configs[m_ConfigName];
             bool allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;

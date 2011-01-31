@@ -52,12 +52,10 @@ namespace OpenSim.Services.GridService
         private bool m_DeleteOnUnregister = true;
         private static GridService m_RootInstance = null;
         protected IConfigSource m_config;
-        protected static HypergridLinker m_HypergridLinker;
         protected IRegionData m_Database = null;
 
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
-        protected bool m_AllowHypergridMapSearch = false;
         protected bool m_UseSessionID = true;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -76,7 +74,6 @@ namespace OpenSim.Services.GridService
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", false);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
-                m_AllowHypergridMapSearch = gridConfig.GetBoolean("AllowHypergridMapSearch", m_AllowHypergridMapSearch);
             }
 
             if (m_RootInstance == null)
@@ -99,7 +96,6 @@ namespace OpenSim.Services.GridService
                             String.Empty,
                             HandleSetFlags);
                 }
-                m_HypergridLinker = new HypergridLinker(m_config, this, m_Database);
             }
             registry.RegisterModuleInterface<IGridService>(this);
         }
@@ -115,7 +111,6 @@ namespace OpenSim.Services.GridService
         public void PostStart(IConfigSource config, IRegistryCore registry)
         {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
-            m_HypergridLinker.PostInitialize(registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -416,13 +411,6 @@ namespace OpenSim.Services.GridService
                         rinfos.Add(rdata);
                     }
                 }
-            }
-
-            if (m_AllowHypergridMapSearch && (rdatas == null || (rdatas != null && rdatas.Count == 0)) && name.Contains("."))
-            {
-                GridRegion r = m_HypergridLinker.LinkRegion(scopeID, name);
-                if (r != null)
-                    rinfos.Add(r);
             }
 
             return rinfos;

@@ -51,6 +51,7 @@ namespace OpenSim.Server.Handlers.Grid
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_GridService = registry.RequestModuleInterface<IGridService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -64,8 +65,7 @@ namespace OpenSim.Server.Handlers.Grid
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
-            m_GridService = registry.RequestModuleInterface<IGridService>();
-
+            
             GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
             server.AddStreamHandler(handler);
         }

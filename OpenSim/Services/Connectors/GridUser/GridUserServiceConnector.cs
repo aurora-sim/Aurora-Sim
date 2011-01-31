@@ -231,16 +231,16 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridUserHandler", "") != Name)
                 return;
 
             m_registry = registry;
             registry.RegisterModuleInterface<IGridUserService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

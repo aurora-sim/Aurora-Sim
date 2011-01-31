@@ -64,16 +64,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
             CommonInit(config);
             registry.RegisterModuleInterface<IAvatarService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

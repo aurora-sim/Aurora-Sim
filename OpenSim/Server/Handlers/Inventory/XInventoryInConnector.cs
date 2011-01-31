@@ -57,6 +57,7 @@ namespace OpenSim.Server.Handlers.Asset
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -70,8 +71,6 @@ namespace OpenSim.Server.Handlers.Asset
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
-
-            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(m_InventoryService));
         }

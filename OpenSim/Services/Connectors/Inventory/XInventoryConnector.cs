@@ -585,16 +585,16 @@ namespace OpenSim.Services.Connectors
 
         public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
             registry.RegisterModuleInterface<IInventoryService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public virtual void PostStart(IConfigSource config, IRegistryCore registry)

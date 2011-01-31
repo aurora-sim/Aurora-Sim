@@ -411,16 +411,16 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("PresenceHandler", "") != Name)
                 return;
 
             m_registry = registry;
             registry.RegisterModuleInterface<IPresenceService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

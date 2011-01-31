@@ -345,6 +345,10 @@ namespace OpenSim.Services.Connectors
 
         public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
@@ -355,10 +359,6 @@ namespace OpenSim.Services.Connectors
 
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             registry.RegisterModuleInterface<IAssetService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public virtual void PostStart(IConfigSource config, IRegistryCore registry)

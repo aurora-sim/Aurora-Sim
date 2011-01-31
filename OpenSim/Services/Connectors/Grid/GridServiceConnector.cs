@@ -896,16 +896,16 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
             registry.RegisterModuleInterface<IGridService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

@@ -346,16 +346,16 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarHandler", "") != Name)
                 return;
 
             m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
             registry.RegisterModuleInterface<IAvatarService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

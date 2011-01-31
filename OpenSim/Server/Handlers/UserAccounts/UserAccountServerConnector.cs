@@ -48,6 +48,7 @@ namespace OpenSim.Server.Handlers.UserAccounts
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -60,7 +61,6 @@ namespace OpenSim.Server.Handlers.UserAccounts
             if (handlerConfig.GetString("UserAccountInHandler", "") != Name)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
-            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             server.AddStreamHandler(new UserAccountServerPostHandler(m_UserAccountService));
         }
 

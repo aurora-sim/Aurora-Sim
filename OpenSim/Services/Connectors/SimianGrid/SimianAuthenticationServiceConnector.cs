@@ -60,16 +60,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
             CommonInit(config);
             registry.RegisterModuleInterface<IAuthenticationService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

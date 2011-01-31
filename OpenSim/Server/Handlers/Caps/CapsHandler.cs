@@ -24,6 +24,7 @@ namespace OpenSim.Server.Handlers.Caps
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public IHttpServer m_server = null;
+        public ICapsService m_capsService;
         public string Name
         {
             get { return GetType().Name; }
@@ -35,6 +36,7 @@ namespace OpenSim.Server.Handlers.Caps
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_capsService = registry.RequestModuleInterface<ICapsService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -46,7 +48,6 @@ namespace OpenSim.Server.Handlers.Caps
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("CAPSHandler", "") != Name)
                 return;
-            ICapsService m_capsService = registry.RequestModuleInterface<ICapsService>();
 
             string Password = handlerConfig.GetString("CAPSHandlerPassword", String.Empty);
             if (Password != "" & m_capsService != null)

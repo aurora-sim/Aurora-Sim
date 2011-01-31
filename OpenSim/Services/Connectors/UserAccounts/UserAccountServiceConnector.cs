@@ -289,16 +289,16 @@ namespace OpenSim.Services.Connectors
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
 
             m_registry = registry;
             registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)

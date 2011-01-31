@@ -48,6 +48,7 @@ namespace OpenSim.Server.Handlers.Friends
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
+            m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -61,8 +62,7 @@ namespace OpenSim.Server.Handlers.Friends
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
-            m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
-
+            
             server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
         }
 
