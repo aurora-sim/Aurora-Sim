@@ -48,23 +48,48 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 return;
 
             string resp = "";
-            while (resp == "")
+            string serverURL = autoConfig.GetString("ConfigurationURL", "");
+            while (resp == "" && serverURL != "")
             {
-                string serverURL = autoConfig.GetString("ConfigurationURL", "");
-                //Clean up the URL so that it isn't too hard for users
-                serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
-                serverURL += "/autoconfig";
-                resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURL, "");
-
-                if (resp == "")
+                if (serverURL != "")
                 {
-                    m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}!"
-                        + " This may break this startup!", serverURL);
-                    MainConsole.Instance.CmdPrompt("Press enter when you are ready to continue.");
+                    //Clean up the URL so that it isn't too hard for users
+                    serverURL = serverURL.EndsWith("/") ? serverURL.Remove(serverURL.Length - 1) : serverURL;
+                    serverURL += "/autoconfig";
+                    resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURL, "");
+
+                    if (resp == "")
+                    {
+                        m_log.ErrorFormat("[Configuration]: Failed to find the configuration for {0}!"
+                            + " This may break this startup!", serverURL);
+                        MainConsole.Instance.CmdPrompt("Press enter when you are ready to continue.");
+                    }
                 }
             }
+            if (resp == "")
+            {
+                //Get the urls from the config
+                OSDMap request = new OSDMap();
+                GetConfigFor("GridServerURI", request);
+                GetConfigFor("GridUserServerURI", request);
+                GetConfigFor("AssetServerURI", request);
+                GetConfigFor("InventoryServerURI", request);
+                GetConfigFor("AvatarServerURI", request);
+                GetConfigFor("PresenceServerURI", request);
+                GetConfigFor("UserAccountServerURI", request);
+                GetConfigFor("AuthenticationServerURI", request);
+                GetConfigFor("FriendsServerURI", request);
+                GetConfigFor("RemoteServerURI", request);
+                GetConfigFor("EventQueueServiceURI", request);
+                AddNewUrls("default", request);
+            }
+            else
+                AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(resp));
+        }
 
-            AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(resp));
+        public void GetConfigFor(string name, OSDMap request)
+        {
+            request[name] = m_config.Configs["Configuration"].GetString(name, "");
         }
 
         public void ReloadConfiguration(IConfigSource config)

@@ -156,12 +156,16 @@ namespace Aurora.Modules
 
             con.Certificate = cert;
             con.TrustLevel = (TrustLevel)Enum.Parse(typeof(TrustLevel), trustLevel);
+            Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
             con.URL = Url;
 
             cert = OutgoingPublicComms.QueryRemoteHost(con);
             if (cert != null)
             {
                 con.Certificate = cert;
+                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                //Give the Urls to the config service
+                configService.AddNewUrls(cert.SessionHash, cert.SecureUrls);
                 Connections.Add(con);
                 m_log.Warn("Added connection to " + Url + ".");
             }
@@ -318,7 +322,7 @@ namespace Aurora.Modules
             }
             else
             {
-                if (!args.ContainsKey("Method"))
+                if (args.ContainsKey("Method"))
                 {
                     string Method = args["Method"].AsString();
                     if (Method == "Query")
