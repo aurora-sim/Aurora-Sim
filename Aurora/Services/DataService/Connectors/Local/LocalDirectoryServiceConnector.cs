@@ -22,17 +22,19 @@ namespace Aurora.Services.DataService
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
+            GD = GenericData;
+
+            if (source.Configs[Name] != null)
+            {
+                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+                minTimeBeforeNextParcelUpdate = source.Configs[Name].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
+            }
+            GD.ConnectToDatabase(defaultConnectionString);
+
+            DataManager.DataManager.RegisterPlugin(Name+"Local", this);
+
             if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") == "LocalConnector")
             {
-                GD = GenericData;
-
-                if (source.Configs[Name] != null)
-                {
-                    defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-                    minTimeBeforeNextParcelUpdate = source.Configs[Name].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
-                }
-                GD.ConnectToDatabase(defaultConnectionString);
-
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
             else
@@ -138,22 +140,28 @@ namespace Aurora.Services.DataService
         {
             bool[,] tempConvertMap = new bool[64, 64];
             tempConvertMap.Initialize();
-            byte tempByte = 0;
-            int x = 0, y = 0, i = 0, bitNum = 0;
-            for (i = 0; i < 512; i++)
+            try
             {
-                tempByte = Bitmap[i];
-                for (bitNum = 0; bitNum < 8; bitNum++)
+                byte tempByte = 0;
+                int x = 0, y = 0, i = 0, bitNum = 0;
+                for (i = 0; i < 512; i++)
                 {
-                    bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
-                    tempConvertMap[x, y] = bit;
-                    x++;
-                    if (x > 63)
+                    tempByte = Bitmap[i];
+                    for (bitNum = 0; bitNum < 8; bitNum++)
                     {
-                        x = 0;
-                        y++;
+                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                        tempConvertMap[x, y] = bit;
+                        x++;
+                        if (x > 63)
+                        {
+                            x = 0;
+                            y++;
+                        }
                     }
                 }
+            }
+            catch
+            {
             }
             return tempConvertMap;
         }

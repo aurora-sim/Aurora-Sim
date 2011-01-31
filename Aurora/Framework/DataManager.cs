@@ -38,6 +38,23 @@ namespace Aurora.DataManager
         }
 
         /// <summary>
+        /// Request a data plugin from the registry
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T RequestPlugin<T>(string name) where T : IAuroraDataPlugin
+        {
+            if (Plugins.ContainsKey(name))
+            {
+                IAuroraDataPlugin Plugin;
+                Plugins.TryGetValue(name, out Plugin);
+                return (T)Plugin;
+            }
+            //Return null if we can't find it
+            return default(T);
+        }
+
+        /// <summary>
         /// Register a new plugin to the registry
         /// </summary>
         /// <param name="Name"></param>

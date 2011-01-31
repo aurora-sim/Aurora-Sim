@@ -24,15 +24,17 @@ namespace Aurora.Services.DataService
         public void Initialize(IGenericData GenericData, ISimulationBase simBase, string defaultConnectionString)
         {
             IConfigSource source = simBase.ConfigSource;
+            data = GenericData;
+
+            if (source.Configs[Name] != null)
+                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+
+            data.ConnectToDatabase(defaultConnectionString);
+
+            DataManager.DataManager.RegisterPlugin(Name+"Local", this);
+
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
             {
-                data = GenericData;
-
-                if (source.Configs[Name] != null)
-                    defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-
-                data.ConnectToDatabase(defaultConnectionString);
-
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
             else

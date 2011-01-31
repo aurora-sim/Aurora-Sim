@@ -35,14 +35,7 @@ namespace OpenSim.Server.Handlers.AuroraData
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
+            //THIS MUST GO HERE SO THAT IT STARTS IN TIME TO GET THE NON REMOTE CONNECTORS WHEN APPLICABLE
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuroraDataHandler", "") != Name)
                 return;
@@ -51,6 +44,14 @@ namespace OpenSim.Server.Handlers.AuroraData
             m_log.Debug("[AuroraDataConnectors]: Starting...");
 
             server.AddStreamHandler(new AuroraDataServerPostHandler());
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void PostStart(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

@@ -261,7 +261,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IAgentConnector AgentConnector;
         public AgentInfoHandler()
         {
-            AgentConnector = DataManager.RequestPlugin<IAgentConnector>();
+            AgentConnector = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
         }
 
         public byte[] GetAgent(Dictionary<string, object> request)
@@ -291,7 +291,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IAssetConnector AssetConnector;
         public AssetHandler()
         {
-            AssetConnector = DataManager.RequestPlugin<IAssetConnector>();
+            AssetConnector = DataManager.RequestPlugin<IAssetConnector>("IAssetConnectorLocal");
         }
 
         public byte[] FindLSLData(Dictionary<string, object> request)
@@ -397,7 +397,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IGroupsServiceConnector GroupsServiceConnector;
         public GroupsServiceHandler()
         {
-            GroupsServiceConnector = DataManager.RequestPlugin<IGroupsServiceConnector>();
+            GroupsServiceConnector = DataManager.RequestPlugin<IGroupsServiceConnector>("IGroupsServiceConnectorLocal");
         }
 
         public byte[] CreateGroup(Dictionary<string, object> request)
@@ -1005,7 +1005,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IDirectoryServiceConnector DirectoryServiceConnector;
         public DirectoryInfoHandler()
         {
-            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnectorLocal");
         }
 
         public byte[] GetParcelInfo(Dictionary<string, object> request)
@@ -1272,7 +1272,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IEstateConnector EstateConnector;
         public EstateInfoHandler()
         {
-            EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
+            EstateConnector = DataManager.RequestPlugin<IEstateConnector>("IEstateConnectorLocal");
         }
 
         public byte[] GetEstates(Dictionary<string, object> request)
@@ -1465,7 +1465,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IMuteListConnector MuteListConnector;
         public MuteInfoHandler()
         {
-            MuteListConnector = DataManager.RequestPlugin<IMuteListConnector>();
+            MuteListConnector = DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnectorLocal");
         }
 
         public byte[] GetMuteList(Dictionary<string, object> request)
@@ -1594,7 +1594,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IOfflineMessagesConnector OfflineMessagesConnector;
         public OfflineMessagesInfoHandler()
         {
-            OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector>();
+            OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnectorLocal");
         }
 
         public byte[] GetOfflineMessages(Dictionary<string, object> request)
@@ -1697,7 +1697,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IProfileConnector ProfileConnector;
         public ProfileInfoHandler()
         {
-            ProfileConnector = DataManager.RequestPlugin<IProfileConnector>();
+            ProfileConnector = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
         }
 
         public byte[] GetProfile(Dictionary<string, object> request)
@@ -1791,7 +1791,7 @@ namespace OpenSim.Server.Handlers.AuroraData
         IRegionConnector GridConnector;
         public TelehubInfoHandler()
         {
-            GridConnector = DataManager.RequestPlugin<IRegionConnector>();
+            GridConnector = DataManager.RequestPlugin<IRegionConnector>("IRegionConnectorLocal");
         }
 
         private byte[] SuccessResult()
