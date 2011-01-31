@@ -320,8 +320,8 @@ namespace OpenSim.Services.LLLoginService
 
             IAgentInfo agent = null;
 
-            IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
-            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
+            IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
+            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
             //Already tried to find it before this, so its not there at all.
             if (agentData != null)
             {
