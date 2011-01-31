@@ -227,6 +227,7 @@ namespace Aurora.Modules
                 List<LandData> LandObjects = m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID);
                 if (conn != null)
                 {
+                    //Read from the old database as well
                     if (LandObjects.Count != 0)
                     {
                         foreach (LandData land in LandObjects)

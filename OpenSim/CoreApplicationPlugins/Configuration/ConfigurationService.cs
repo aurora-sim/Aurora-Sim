@@ -169,7 +169,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
                 List<string> urls = new List<string>();
                 return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
             }
-            return FindValueOf(userID, key);
+            return FindValueOf(key);
         }
 
         public virtual List<string> FindValueOfFromOSDMap(string key, OSDMap urls)

@@ -734,6 +734,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
             else
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+            m_log.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
+                ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             fullSimParcel.SetInfoID();
             AddLandObject(fullSimParcel);
