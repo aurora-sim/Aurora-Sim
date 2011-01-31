@@ -22,6 +22,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         protected IConfigSource m_config;
         protected OSDMap m_autoConfig = new OSDMap();
         protected Dictionary<string, OSDMap> m_allConfigs = new Dictionary<string, OSDMap>();
+        protected Dictionary<string, OSDMap> m_knownUsers = new Dictionary<string, OSDMap>();
 
         public virtual string Name
         {
@@ -118,6 +119,7 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
         public virtual void AddNewUser(string userID, OSDMap urls)
         {
+            m_knownUsers[userID] = urls;
         }
 
         public virtual void AddNewUrls(string key, OSDMap urls)
@@ -162,7 +164,12 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
         public virtual List<string> FindValueOf(string userID, string key)
         {
-            return FindValueOf(key);
+            if (m_knownUsers.ContainsKey(userID))
+            {
+                List<string> urls = new List<string>();
+                return FindValueOfFromOSDMap(key, m_knownUsers[userID]);
+            }
+            return FindValueOf(userID, key);
         }
 
         public virtual List<string> FindValueOfFromOSDMap(string key, OSDMap urls)
