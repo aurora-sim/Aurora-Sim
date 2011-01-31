@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void CreateDefaultTerrain()
         {
             map = new double[(int)m_scene.RegionInfo.RegionSizeX, (int)m_scene.RegionInfo.RegionSizeY];
-            taint = new bool[(int)m_scene.RegionInfo.RegionSizeX / 16, (int)m_scene.RegionInfo.RegionSizeY / 16];
+            taint = new bool[(int)m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, (int)m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
 
             int x;
             for (x = 0; x < (int)m_scene.RegionInfo.RegionSizeX; x++)
@@ -93,16 +93,23 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene = scene;
             if (createMap)
             {
-                map = new double[(int)scene.RegionInfo.RegionSizeX, (int)scene.RegionInfo.RegionSizeY];
-                taint = new bool[(int)scene.RegionInfo.RegionSizeX / 16, (int)scene.RegionInfo.RegionSizeY / 16];
+                int width = Constants.RegionSize;
+                int height = Constants.RegionSize;
+                if (scene != null)
+                {
+                    width = (int)scene.RegionInfo.RegionSizeX;
+                    height = (int)scene.RegionInfo.RegionSizeY;
+                }
+                map = new double[width, height];
+                taint = new bool[width / Constants.TerrainPatchSize, height / Constants.TerrainPatchSize];
             }
         }
 
         public TerrainChannel(int w, int h, IScene scene)
         {
             m_scene = scene;
-            map = new double[w,h];
-            taint = new bool[w / 16,h / 16];
+            map = new double[w, h];
+            taint = new bool[w / Constants.TerrainPatchSize, h / Constants.TerrainPatchSize];
         }
 
         #region ITerrainChannel Members
@@ -160,7 +167,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (map[x, y] != value)
                 {
-                    taint[x / 16, y / 16] = true;
+                    taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
                     map[x, y] = value;
                 }
             }
@@ -168,9 +175,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool Tainted(int x, int y)
         {
-            if (taint[x / 16, y / 16])
+            if (taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize])
             {
-                taint[x / 16, y / 16] = false;
+                taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = false;
                 return true;
             }
             return false;
