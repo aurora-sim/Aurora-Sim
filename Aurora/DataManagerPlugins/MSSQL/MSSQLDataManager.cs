@@ -646,6 +646,8 @@ namespace Aurora.DataManager.MSSQL
             {
                 case ColumnTypes.Integer11:
                     return "INT(11)";
+                case ColumnTypes.Integer30:
+                    return "INT(30)";
                 case ColumnTypes.Char36:
                     return "CHAR(36)";
                 case ColumnTypes.String:
@@ -761,6 +763,8 @@ namespace Aurora.DataManager.MSSQL
             {
                 case "int(11)":
                     return ColumnTypes.Integer11;
+                case "int(30)":
+                    return ColumnTypes.Integer30;
                 case "integer":
                     return ColumnTypes.Integer11;
                 case "char(36)":

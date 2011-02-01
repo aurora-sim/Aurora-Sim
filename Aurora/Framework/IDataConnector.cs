@@ -103,6 +103,7 @@ namespace Aurora.Framework
         Char36,
         Date,
         Integer11,
+        Integer30,
         String,
         String1,
         String2,
