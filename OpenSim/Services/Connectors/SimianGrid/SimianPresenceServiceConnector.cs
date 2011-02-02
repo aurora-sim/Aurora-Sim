@@ -422,8 +422,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
                 OSDMap user = (OSDMap)userResponse["User"];
 
-                info.Login = user["LastLoginDate"].AsDate();
-                info.Logout = user["LastLogoutDate"].AsDate();
+                info.Login = user["LastLoginDate"].AsInteger();
+                info.Logout = user["LastLogoutDate"].AsInteger();
                 DeserializeLocation(user["HomeLocation"].AsString(), out info.HomeRegionID, out info.HomePosition, out info.HomeLookAt);
 
                 return info;

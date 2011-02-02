@@ -127,8 +127,8 @@ namespace OpenSim.Services.UserAccountService
             info.LastLookAt = Vector3.Parse(d.Data["LastLookAt"]);
 
             info.Online = bool.Parse(d.Data["Online"]);
-            info.Login = Util.ToDateTime(Convert.ToInt32(d.Data["Login"]));
-            info.Logout = Util.ToDateTime(Convert.ToInt32(d.Data["Logout"]));
+            info.Login = Convert.ToInt32(d.Data["Login"]);
+            info.Logout = Convert.ToInt32(d.Data["Logout"]);
 
             return info;
         }

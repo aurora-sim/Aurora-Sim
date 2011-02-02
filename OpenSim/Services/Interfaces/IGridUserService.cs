@@ -48,8 +48,8 @@ namespace OpenSim.Services.Interfaces
         public Vector3 LastLookAt;
         
         public bool Online;
-        public DateTime Login;
-        public DateTime Logout;
+        public int Login;
+        public int Logout;
 
         public GridUserInfo() {}
         
@@ -73,9 +73,9 @@ namespace OpenSim.Services.Interfaces
                 Vector3.TryParse(kvp["LastLookAt"].ToString(), out LastLookAt);
 
             if (kvp.ContainsKey("Login"))
-                DateTime.TryParse(kvp["Login"].ToString(), out Login);
+                int.TryParse(kvp["Login"].ToString(), out Login);
             if (kvp.ContainsKey("Logout"))
-                DateTime.TryParse(kvp["Logout"].ToString(), out Logout);
+                int.TryParse(kvp["Logout"].ToString(), out Logout);
             if (kvp.ContainsKey("Online"))
                 Boolean.TryParse(kvp["Online"].ToString(), out Online);
 

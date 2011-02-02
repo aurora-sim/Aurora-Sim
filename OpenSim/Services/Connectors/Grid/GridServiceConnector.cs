@@ -876,11 +876,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public string GridServiceURL
-        {
-            get { return m_ServerURIs[0]; }
-        }
-
         #endregion
 
         #region IService Members
