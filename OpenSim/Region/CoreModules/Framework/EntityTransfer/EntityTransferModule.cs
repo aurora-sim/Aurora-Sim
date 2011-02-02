@@ -174,7 +174,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 if (finalDestination.RegionHandle == sp.Scene.RegionInfo.RegionHandle || //Take region size into account as well
                     (XShift < sp.Scene.RegionInfo.RegionSizeX && YShift < sp.Scene.RegionInfo.RegionSizeY &&
                     XShift > 0 && YShift > 0 && //Can't have negatively sized regions
-                    sp.Scene.RegionInfo.RegionSizeX != float.PositiveInfinity && sp.Scene.RegionInfo.RegionSizeY != float.PositiveInfinity))
+                    sp.Scene.RegionInfo.RegionSizeX != int.MaxValue && sp.Scene.RegionInfo.RegionSizeY != int.MaxValue))
                 {
                     //First check whether the user is allowed to move at all
                     if (!sp.Scene.Permissions.AllowedOutgoingLocalTeleport(sp.UUID, out reason))

@@ -959,13 +959,13 @@ namespace OpenSim.Region.RegionCombinerModule
                         if (rdata.Offset.Y > offset.Y) offset.Y = rdata.Offset.Y;
 
                         //Infinite so that they cannot have crossings as the root will have to deal with that
-                        rdata.RegionScene.RegionInfo.RegionSizeX = float.PositiveInfinity;
-                        rdata.RegionScene.RegionInfo.RegionSizeY = float.PositiveInfinity;
+                        rdata.RegionScene.RegionInfo.RegionSizeX = int.MaxValue;
+                        rdata.RegionScene.RegionInfo.RegionSizeY = int.MaxValue;
                     }
 
                     //Add the default region size + the offset so that we get the full rectangle
-                    rconn.RegionScene.RegionInfo.RegionSizeX = Constants.RegionSize + offset.X;
-                    rconn.RegionScene.RegionInfo.RegionSizeY = Constants.RegionSize + offset.Y;
+                    rconn.RegionScene.RegionInfo.RegionSizeX = Constants.RegionSize + (int)offset.X;
+                    rconn.RegionScene.RegionInfo.RegionSizeY = Constants.RegionSize + (int)offset.Y;
                 }
             }
         }

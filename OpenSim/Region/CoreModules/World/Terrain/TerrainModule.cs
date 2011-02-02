@@ -667,8 +667,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
                 {
-                    m_terrainPatchesSent.Add(client.AgentId, new bool[(int)m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize,
-                        (int)m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize]);
+                    m_terrainPatchesSent.Add(client.AgentId, new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize,
+                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize]);
                 }
             }
         }

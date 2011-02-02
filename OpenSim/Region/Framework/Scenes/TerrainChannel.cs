@@ -53,18 +53,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void CreateDefaultTerrain()
         {
-            map = new double[(int)m_scene.RegionInfo.RegionSizeX, (int)m_scene.RegionInfo.RegionSizeY];
-            taint = new bool[(int)m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, (int)m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
+            map = new double[m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY];
+            taint = new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
 
             int x;
-            for (x = 0; x < (int)m_scene.RegionInfo.RegionSizeX; x++)
+            for (x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
                 int y;
-                for (y = 0; y < (int)m_scene.RegionInfo.RegionSizeY; y++)
+                for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
                     map[x, y] = TerrainUtil.PerlinNoise2D(x, y, 2, 0.125) * 10;
-                    double spherFacA = TerrainUtil.SphericalFactor(x, y, (int)m_scene.RegionInfo.RegionSizeX / 2.0, (int)m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01;
-                    double spherFacB = TerrainUtil.SphericalFactor(x, y, (int)m_scene.RegionInfo.RegionSizeX / 2.0, (int)m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001;
+                    double spherFacA = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 50) * 0.01;
+                    double spherFacB = TerrainUtil.SphericalFactor(x, y, m_scene.RegionInfo.RegionSizeX / 2.0, m_scene.RegionInfo.RegionSizeY / 2.0, 100) * 0.001;
                     if (map[x, y] < spherFacA)
                         map[x, y] = spherFacA;
                     if (map[x, y] < spherFacB)
@@ -80,8 +80,8 @@ namespace OpenSim.Region.Framework.Scenes
             taint = new bool[Width, Height];
             if ((Width != scene.RegionInfo.RegionSizeX ||
                 Height != scene.RegionInfo.RegionSizeY) &&
-                (!float.IsInfinity(scene.RegionInfo.RegionSizeX) && //Child regions of a mega-region
-                !float.IsInfinity(scene.RegionInfo.RegionSizeY)))
+                (scene.RegionInfo.RegionSizeX != int.MaxValue) && //Child regions of a mega-region
+                (scene.RegionInfo.RegionSizeY != int.MaxValue))
             {
                 //We need to fix the map then
                 CreateDefaultTerrain();
