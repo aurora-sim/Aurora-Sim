@@ -764,11 +764,6 @@ namespace OpenSim.Services.GridService
             return mapItems;
         }
 
-        public string GridServiceURL
-        {
-            get { return "Local"; }
-        }
-
         public class SimMap
         {
             public uint NumberOfAgents;

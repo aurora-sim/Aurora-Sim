@@ -572,10 +572,5 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public void SetRegionUnsafe(UUID r)
         {
         }
-
-        public string GridServiceURL
-        {
-            get { return m_serverUrl; }
-        }
     }
 }

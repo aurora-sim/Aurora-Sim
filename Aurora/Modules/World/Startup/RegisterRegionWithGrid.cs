@@ -127,7 +127,7 @@ namespace Aurora.Modules
             GridSessionID s = null;
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
             if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, new GridSessionID());
+                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", new GridSessionID());
 
             if (s == null)
             {
@@ -144,7 +144,7 @@ namespace Aurora.Modules
                 scene.RegionInfo.GridSecureSessionID = s.SessionID;
 
                 //Save the new SessionID to the database
-                g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", GridService.GridServiceURL, s.ToOSD());
+                g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", s.ToOSD());
             }
             else
             {
