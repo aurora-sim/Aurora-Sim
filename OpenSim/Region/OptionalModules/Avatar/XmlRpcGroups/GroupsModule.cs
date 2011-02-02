@@ -820,7 +820,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     GridUserInfo info = m_sceneList[0].GridUserService.GetGridUserInfo(data[i].AgentID.ToString());
                     if (info != null && !info.Online)
-                        data[i].OnlineStatus = info.Logout.ToShortDateString().ToString();
+                        data[i].OnlineStatus = Util.ToDateTime(info.Logout).ToShortDateString().ToString();
                     else if (info == null)
                         data[i].OnlineStatus = "Unknown";
                 }
