@@ -21,6 +21,10 @@ namespace OpenSim.Services.Connectors
                        MethodBase.GetCurrentMethod().DeclaringType);
 
         private List<Scene> m_Scenes = new List<Scene>();
+        /// <summary>
+        /// Keeps a list of scenes that we have removed from this instance so that we do not send remote messages to them
+        /// </summary>
+        private List<Scene> m_formerScenes = new List<Scene>();
         private IGridService m_gridService = null;
         private ISimulationService m_simService = null;
         private Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
@@ -105,6 +109,9 @@ namespace OpenSim.Services.Connectors
                 if (m_Scenes.Contains(scene))
                 {
                     m_Scenes.Remove(scene);
+                    //Add this scene to the former scenes list
+                    if (!m_formerScenes.Contains(scene))
+                        m_formerScenes.Add(scene);
                 }
             }
         }
@@ -121,6 +128,9 @@ namespace OpenSim.Services.Connectors
                 if (!m_Scenes.Contains(scene))
                 {
                     m_Scenes.Add(scene);
+                    //Remove any formerly removed scenes
+                    if (m_formerScenes.Contains(scene))
+                        m_formerScenes.Remove(scene);
                 }
             }
         }
@@ -388,6 +398,18 @@ namespace OpenSim.Services.Connectors
                         IncomingClosingNeighbor(s, closingNeighbor);
                         //This region knows now, so add it to the list
                         m_informedRegions.Add(n);
+                    }
+                }
+            }
+            //Make sure that the scene isn't in this instance, but is down
+            foreach (Scene s in m_formerScenes)
+            {
+                foreach (GridRegion n in neighbors)
+                {
+                    if (n.RegionID == s.RegionInfo.RegionID)
+                    {
+                        if(!m_informedRegions.Contains(n))
+                            m_informedRegions.Add(n);
                     }
                 }
             }

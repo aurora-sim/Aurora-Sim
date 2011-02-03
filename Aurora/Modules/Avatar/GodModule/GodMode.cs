@@ -166,7 +166,7 @@ namespace Aurora.Modules
         {
             //Check god perms
             ScenePresence Sp = ((Scene)client.Scene).GetScenePresence(client.AgentId);
-            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId) || Sp == null)
+            if (!((Scene)client.Scene).Permissions.IsGod(client.AgentId))
                 return;
 
             //Update their current region with new information
