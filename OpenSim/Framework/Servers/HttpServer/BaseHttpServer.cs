@@ -313,7 +313,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[BASE HTTP SERVER]: OnRequest() failed with {0}{1}", e.Message, e.StackTrace);
+                m_log.ErrorFormat("[BASE HTTP SERVER]: OnRequest() failed with {0}{1}", e.ToString(), e.StackTrace);
             }
         }
 
@@ -497,7 +497,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (IOException e)
                     {
-                        m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.Message);
+                        m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                     }
                     return;
                 }
@@ -766,7 +766,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             string errorMessage
                                 = String.Format(
                                     "Requested method [{0}] from {1} threw exception: {2} {3}",
-                                    methodName, request.RemoteIPEndPoint.Address, e.Message, e.StackTrace);
+                                    methodName, request.RemoteIPEndPoint.Address, e.ToString(), e.StackTrace);
 
                             m_log.ErrorFormat("[BASE HTTP SERVER]: {0}", errorMessage);
 
@@ -814,7 +814,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (Exception ex)
                     {
-                        m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                        m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
                     }
                     finally
                     {
@@ -830,7 +830,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                         }
                         catch (IOException e)
                         {
-                            m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.Message);
+                            m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                         }
                     }
                     return;
@@ -851,7 +851,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
             }
             finally
             {
@@ -867,7 +867,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (IOException e)
                 {
-                    m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.Message);
+                    m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                 }
             }
         }
@@ -903,7 +903,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
             }
 
             if (llsdRequest != null)// && m_defaultLlsdHandler != null)
@@ -964,7 +964,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
             }
             finally
             {
@@ -1224,7 +1224,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 // client.
                 try
                 {
-                    m_log.Warn("[HTTP-AGENT]: Error - " + e.Message);
+                    m_log.Warn("[HTTP-AGENT]: Error - " + e.ToString());
                     response.SendChunked = false;
                     response.KeepAlive = true;
                     response.StatusCode = (int)OSHttpStatusCode.ServerErrorInternalError;
@@ -1513,7 +1513,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[HTTPD]: Error - " + ex.Message);
+                m_log.Warn("[HTTPD]: Error - " + ex.ToString());
             }
             finally
             {
@@ -1533,11 +1533,11 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (IOException e)
                 {
-                    m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.Message);
+                    m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                 }
                 catch (Exception e)
                 {
-                    m_log.Warn("[BASE HTTP SERVER]: New Error in HTTP Server sending: " + e.Message);
+                    m_log.Warn("[BASE HTTP SERVER]: New Error in HTTP Server sending: " + e.ToString());
                 }
             }
         }
@@ -1563,7 +1563,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
             }
             finally
             {
@@ -1599,7 +1599,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception ex)
             {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.Message);
+                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
             }
             finally
             {

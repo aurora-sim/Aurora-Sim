@@ -160,7 +160,7 @@ namespace OpenSim.Server.Handlers.Simulation
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex.Message);
+                m_log.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex.ToString());
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
@@ -187,7 +187,7 @@ namespace OpenSim.Server.Handlers.Simulation
                     }
                     catch (Exception ex)
                     {
-                        m_log.InfoFormat("[OBJECT HANDLER]: exception on setting state for scene object {0}", ex.Message);
+                        m_log.InfoFormat("[OBJECT HANDLER]: exception on setting state for scene object {0}", ex.ToString());
                         // ignore and continue
                     }
                 }

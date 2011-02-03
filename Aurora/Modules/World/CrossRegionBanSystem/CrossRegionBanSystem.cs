@@ -144,7 +144,7 @@ namespace Aurora.Modules
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[CRBS]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[CRBS]: Exception when contacting server: {0}", e.ToString());
             }
             return false;
         }

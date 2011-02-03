@@ -165,7 +165,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.Message);
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.ToString());
                 }
             }
 
@@ -182,7 +182,7 @@ namespace OpenSim.Server.Handlers.Simulation
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.Message);
+                m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.ToString());
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
@@ -276,7 +276,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.Message);
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.ToString());
                     responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                     responsedata["str_response_string"] = "Bad request";
                     return;
@@ -296,7 +296,7 @@ namespace OpenSim.Server.Handlers.Simulation
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.Message);
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.ToString());
                     return;
                 }
                 //agent.Dump();
@@ -346,7 +346,7 @@ namespace OpenSim.Server.Handlers.Simulation
                     }
                     catch (Exception e)
                     {
-                        m_log.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e.Message);
+                        m_log.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e.ToString());
                         responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
                     }

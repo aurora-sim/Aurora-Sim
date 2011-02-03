@@ -670,7 +670,7 @@ namespace Aurora.Simulation.Base
             }
             catch (Exception ex)
             {
-                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex.Message);
+                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex.ToString());
                 return null;
             }
         }

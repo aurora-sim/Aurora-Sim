@@ -102,7 +102,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;

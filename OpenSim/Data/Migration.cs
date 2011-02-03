@@ -151,7 +151,7 @@ namespace OpenSim.Data
                     }
                     catch(Exception e)
                     {
-                        throw new Exception(e.Message + " in SQL: " + sql);
+                        throw new Exception(e.ToString() + " in SQL: " + sql);
                     }
                 }
             }

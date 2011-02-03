@@ -68,7 +68,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
             }
         }
 
@@ -117,7 +117,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return data;
         }

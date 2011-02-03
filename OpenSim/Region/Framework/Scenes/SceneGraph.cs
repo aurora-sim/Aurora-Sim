@@ -605,7 +605,7 @@ namespace OpenSim.Region.Framework.Scenes
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    m_log.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}", e.Message);
+                    m_log.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}", e.ToString());
                 }
             }
         }

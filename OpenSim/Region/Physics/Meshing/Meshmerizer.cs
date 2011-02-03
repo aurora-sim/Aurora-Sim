@@ -96,7 +96,7 @@ namespace OpenSim.Region.Physics.Meshing
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.Message);
+                m_log.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.ToString());
             }
 
         }
@@ -401,7 +401,7 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            m_log.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e.Message);
+                            m_log.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e.ToString());
 
                         }
                         //if (idata != null)
@@ -424,7 +424,7 @@ namespace OpenSim.Region.Physics.Meshing
                             if (cacheSculptMaps && idata != null)
                             {
                                 try { idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp); }
-                                catch (Exception e) { m_log.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " + e.Message); }
+                                catch (Exception e) { m_log.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " + e.ToString()); }
                             }
                         }
                         catch (DllNotFoundException)
@@ -439,7 +439,7 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception ex)
                         {
-                            m_log.Error("[PHYSICS]: Unable to generate a Sculpty physics proxy. Sculpty texture decode failed: " + ex.Message);
+                            m_log.Error("[PHYSICS]: Unable to generate a Sculpty physics proxy. Sculpty texture decode failed: " + ex.ToString());
                             return null;
                         }
                     }

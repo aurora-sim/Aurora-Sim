@@ -65,7 +65,7 @@ namespace Aurora.DataManager
             }
             catch (Exception e)
             {
-                throw new Exception("Could not initialize session:" + System.Environment.NewLine + e.Message + ((e.InnerException != null) ? (System.Environment.NewLine + e.InnerException.Message) : string.Empty));
+                throw new Exception("Could not initialize session:" + System.Environment.NewLine + e.ToString() + ((e.InnerException != null) ? (System.Environment.NewLine + e.InnerException.Message) : string.Empty));
             }
         }
 

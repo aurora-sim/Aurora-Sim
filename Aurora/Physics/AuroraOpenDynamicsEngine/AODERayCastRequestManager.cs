@@ -295,7 +295,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.Message);
+                m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.ToString());
                 return;
             }
 

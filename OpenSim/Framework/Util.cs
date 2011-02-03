@@ -1237,7 +1237,7 @@ namespace OpenSim.Framework
             }
             catch (Exception ex)
             {
-                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex.Message);
+                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex.ToString());
                 return null;
             }
         }
@@ -1407,7 +1407,7 @@ namespace OpenSim.Framework
                 System.Threading.WaitCallback callback = (System.Threading.WaitCallback)ar.AsyncState;
 
                 try { callback.EndInvoke(ar); }
-                catch (Exception ex) { m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex.Message, ex); }
+                catch (Exception ex) { m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex.ToString(), ex); }
 
                 ar.AsyncWaitHandle.Close();
             }

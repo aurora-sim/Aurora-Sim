@@ -422,7 +422,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     {
                         m_log.Error("[Compiler]: Exception while " +
                                     "trying to write script source to file \"" +
-                                    srcFileName + "\": " + ex.Message.ToString());
+                                    srcFileName + "\": " + ex.ToString());
                     }
                 }
             }
@@ -475,7 +475,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     m_log.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex.Message.ToString());
+                                srcFileName + "\": " + ex.ToString());
                 }
 
                 foreach (CompilerError CompErr in results.Errors)

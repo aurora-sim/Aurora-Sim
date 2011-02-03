@@ -1264,7 +1264,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Output(e.Message);
+                MainConsole.Instance.Output(e.ToString());
             }
         }
 

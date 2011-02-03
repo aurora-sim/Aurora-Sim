@@ -90,7 +90,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -158,7 +158,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
         }
 
@@ -197,7 +197,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return null;
         }
@@ -249,7 +249,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -291,7 +291,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return false;
@@ -343,7 +343,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return Regions;
@@ -386,7 +386,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return false;

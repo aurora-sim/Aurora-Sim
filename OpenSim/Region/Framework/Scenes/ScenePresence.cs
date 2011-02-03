@@ -478,7 +478,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[SCENEPRESENCE]: ABSOLUTE POSITION " + e.Message);
+                        m_log.Error("[SCENEPRESENCE]: ABSOLUTE POSITION " + e.ToString());
                     }
                 }
 

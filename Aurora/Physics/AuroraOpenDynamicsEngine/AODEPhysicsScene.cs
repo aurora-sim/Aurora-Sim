@@ -834,7 +834,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.Message);
+                m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.ToString());
                 return;
             }
             m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
@@ -3016,7 +3016,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat("[PHYSICS]: {0}, {1}, {2}", e.Message, e.TargetSite, e);
+                        m_log.ErrorFormat("[PHYSICS]: {0}, {1}, {2}", e.ToString(), e.TargetSite, e);
                         ode.dunlock(world);
                     }
 

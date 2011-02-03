@@ -8586,7 +8586,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception e)
             {
-                throw new Exception("Error in base64Encode" + e.Message);
+                throw new Exception("Error in base64Encode" + e.ToString());
             }
         }
 
@@ -8600,7 +8600,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception e)
             {
-                throw new Exception("Error in base64Decode" + e.Message);
+                throw new Exception("Error in base64Decode" + e.ToString());
             }
         }
 

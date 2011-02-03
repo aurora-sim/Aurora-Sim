@@ -167,7 +167,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     else
                     {
-                        m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.Message);
+                        m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.ToString());
                     }
                 }
                 catch (Exception e)
@@ -275,7 +275,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             }
                             else
                             {
-                                m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.Message);
+                                m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.ToString());
                             }
                         }
                         catch (Exception e)
@@ -378,7 +378,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             }
                             else
                             {
-                                m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.Message);
+                                m_log.ErrorFormat("[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}", verb, requestUrl, e.Status, e.ToString());
                             }
                         }
                         catch (Exception e)

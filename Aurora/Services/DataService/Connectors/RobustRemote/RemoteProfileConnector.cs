@@ -96,7 +96,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.Message);
+                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return false;
         }
