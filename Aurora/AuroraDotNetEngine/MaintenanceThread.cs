@@ -243,7 +243,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                         m_ScriptEngine.ScriptErrorMessages);
 
-                        scene.EventManager.TriggerFinishedStartup("ScriptEngine", new List<string>(){m_ScriptEngine.ScriptFailCount.ToString(),
+                        scene.EventManager.TriggerModuleFinishedStartup("ScriptEngine", new List<string>(){m_ScriptEngine.ScriptFailCount.ToString(),
                                                                     m_ScriptEngine.ScriptErrorMessages}); //Tell that we are done
                     }
                 }

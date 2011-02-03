@@ -100,8 +100,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected AgentCircuitManager m_authenticateHandler;
 
-        public bool LoginsDisabled = true;
-
         // Central Update Loop
 
         protected uint m_frame;
@@ -368,7 +366,7 @@ namespace OpenSim.Region.Framework.Scenes
             #region Startup Complete config
 
             EventManager.OnAddToStartupQueue += AddToStartupQueue;
-            EventManager.OnFinishedStartup += FinishedStartup;
+            EventManager.OnModuleFinishedStartup += FinishedStartup;
             EventManager.OnStartupComplete += StartupComplete;
 
             AddToStartupQueue("Startup");
@@ -1058,13 +1056,7 @@ namespace OpenSim.Region.Framework.Scenes
             GC.Collect();
 
             m_log.Info("[Region]: Startup Complete in region " + RegionInfo.RegionName);
-            IConfig startupConfig = m_config.Configs["Startup"];
-            if (startupConfig == null || !startupConfig.GetBoolean("StartDisabled", false))
-            {
-                m_log.DebugFormat("[Region]: Enabling logins for {0}", RegionInfo.RegionName);
-                LoginsDisabled = false;
-            }
-
+            
             //Tell the SceneManager about it
             m_sceneManager.HandleStartupComplete(this, data);
         }

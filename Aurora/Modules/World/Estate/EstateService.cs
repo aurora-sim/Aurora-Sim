@@ -18,91 +18,61 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class EstateSettingsModule : ISharedRegionModule
+    public class EstateSettingsModule : ISharedRegionStartupModule
     {
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_scene;
+        private List<Scene> m_scenes = new List<Scene>();
         private IRegionConnector RegionConnector;
         private Dictionary<UUID, int> TimeSinceLastTeleport = new Dictionary<UUID, int>();
         private float SecondsBeforeNextTeleport = 3;
         private bool m_enabledBlockTeleportSeconds = false;
         private bool m_enabled = false;
         private string[] BanCriteria = new string[0];
+        private bool LoginsDisabled = true;
+        private bool StartDisabled = false;
 
         private Dictionary<UUID, int> LastTelehub = new Dictionary<UUID, int>();
 
         #endregion
 
         #region ISharedRegionModule
-
-        public void Initialise(IConfigSource source)
-        {
-             IConfig config = source.Configs["EstateSettingsModule"];
-             if (config != null)
-             {
-                 m_enabled = config.GetBoolean("Enabled", true);
-                 m_enabledBlockTeleportSeconds = config.GetBoolean("AllowBlockTeleportsMinTime", true);
-                 SecondsBeforeNextTeleport = config.GetFloat("BlockTeleportsTime", 3);
-
-                 string banCriteriaString = config.GetString("BanCriteria", "");
-                 if (banCriteriaString != "")
-                     BanCriteria = banCriteriaString.Split(',');
-             }
-        }
-
-        public void AddRegion(Scene scene)
-        {
-            if (!m_enabled)
-                return;
-
-            RegionConnector = DataManager.DataManager.RequestPlugin<IRegionConnector>();
-            m_scene = scene;
-
-            scene.EventManager.OnNewClient += OnNewClient;
-            scene.Permissions.OnAllowIncomingAgent += OnAllowedIncomingAgent;
-            scene.Permissions.OnAllowedIncomingTeleport += OnAllowedIncomingTeleport;
-            scene.EventManager.OnClosingClient += OnClosingClient;
-
-            MainConsole.Instance.Commands.AddCommand(this.Name, true,
-                "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
-            MainConsole.Instance.Commands.AddCommand(this.Name, true,
-                "ban user", "ban user", "Bans a user from the current estate", BanUser);
-        }
-
-        public void RemoveRegion(Scene scene)
-        {
-            if (!m_enabled)
-                return;
-
-            scene.EventManager.OnNewClient -= OnNewClient;
-            scene.Permissions.OnAllowIncomingAgent -= OnAllowedIncomingAgent;
-            scene.Permissions.OnAllowedIncomingTeleport -= OnAllowedIncomingTeleport;
-            scene.EventManager.OnClosingClient -= OnClosingClient;
-        }
-
-        public void RegionLoaded(Scene scene)
-        {
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close() { }
-
         public string Name { get { return "EstateSettingsModule"; } }
 
         #endregion
 
         #region Console Commands
+
+        protected void ProcessLoginCommands(string module, string[] cmd)
+        {
+            if (cmd.Length < 2)
+            {
+                MainConsole.Instance.Output("Syntax: login enable|disable|status");
+                return;
+            }
+
+            switch (cmd[1])
+            {
+                case "enable":
+                    if (LoginsDisabled)
+                        m_log.Warn("Enabling Logins");
+                    LoginsDisabled = false;
+                    break;
+                case "disable":
+                    if (!LoginsDisabled)
+                        m_log.Warn("Disabling Logins");
+                    LoginsDisabled = true;
+                    break;
+                case "status":
+                    m_log.Warn("Logins are " + (LoginsDisabled ? "dis" : "en") + "abled.");
+                    break;
+                default:
+                    MainConsole.Instance.Output("Syntax: login enable|disable|status");
+                    break;
+            }
+        }
 
         protected void BanUser(string module, string[] cmdparams)
         {
@@ -145,7 +115,7 @@ namespace Aurora.Modules
         {
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)
-                scene = m_scene;
+                scene = m_scenes[0];
             #region 3 Params needed
             if (cmdparams.Length < 4)
             {
@@ -187,28 +157,28 @@ namespace Aurora.Modules
             if (cmdparams[2] == "AddEstateBan")
             {
                 EstateBan EB = new EstateBan();
-                EB.BannedUserID = m_scene.UserAccountService.GetUserAccount(UUID.Zero,cmdparams[3],cmdparams[4]).PrincipalID;
+                EB.BannedUserID = m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID;
                 scene.RegionInfo.EstateSettings.AddBan(EB);
             }
             if (cmdparams[2] == "AddEstateManager")
             {
-                scene.RegionInfo.EstateSettings.AddEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.AddEstateManager(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "AddEstateAccess")
             {
-                scene.RegionInfo.EstateSettings.AddEstateUser(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.AddEstateUser(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateBan")
             {
-                scene.RegionInfo.EstateSettings.RemoveBan(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.RemoveBan(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateManager")
             {
-                scene.RegionInfo.EstateSettings.RemoveEstateManager(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.RemoveEstateManager(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateAccess")
             {
-                scene.RegionInfo.EstateSettings.RemoveEstateUser(m_scene.UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                scene.RegionInfo.EstateSettings.RemoveEstateUser(m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             #endregion
             scene.RegionInfo.RegionSettings.Save();
@@ -271,7 +241,7 @@ namespace Aurora.Modules
                     if (telehub.TelehubLocX == 0 && telehub.TelehubLocY == 0)
                         return; //No spawns without a telehub
                     telehub.SpawnPos.Add(part.AbsolutePosition - pos); //Spawns are offsets
-                    RegionConnector.AddTelehub(telehub, m_scene.RegionInfo.GridSecureSessionID);
+                    RegionConnector.AddTelehub(telehub, client.Scene.RegionInfo.GridSecureSessionID);
                     SendTelehubInfo(client);
                 }
                 if (parameter1 == "delete")
@@ -584,7 +554,7 @@ namespace Aurora.Modules
                 return false; //NO!
             }
 
-            if (scene.LoginsDisabled)
+            if (LoginsDisabled)
             {
                 reason = "Logins Disabled";
                 return false;
@@ -841,6 +811,92 @@ namespace Aurora.Modules
             newPosition = Position;
             reason = "";
             return true;
+        }
+
+        #endregion
+
+        #region ISharedRegionStartupModule Members
+
+        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+            IConfig config = source.Configs["EstateSettingsModule"];
+            if (config != null)
+            {
+                m_enabled = config.GetBoolean("Enabled", true);
+                m_enabledBlockTeleportSeconds = config.GetBoolean("AllowBlockTeleportsMinTime", true);
+                SecondsBeforeNextTeleport = config.GetFloat("BlockTeleportsTime", 3);
+                StartDisabled = config.GetBoolean("StartDisabled", StartDisabled);
+
+                string banCriteriaString = config.GetString("BanCriteria", "");
+                if (banCriteriaString != "")
+                    BanCriteria = banCriteriaString.Split(',');
+            }
+
+            if (!m_enabled)
+                return;
+
+            m_scenes.Add(scene);
+
+            RegionConnector = DataManager.DataManager.RequestPlugin<IRegionConnector>();
+
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.Permissions.OnAllowIncomingAgent += OnAllowedIncomingAgent;
+            scene.Permissions.OnAllowedIncomingTeleport += OnAllowedIncomingTeleport;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "set regionsetting", "set regionsetting", "Sets a region setting for the given region. Valid params: Maturity - 0(PG),1(Mature),2(Adult); AddEstateBan,RemoveEstateBan,AddEstateManager,RemoveEstateManager - First name, Last name", SetRegionInfoOption);
+            MainConsole.Instance.Commands.AddCommand(this.Name, true,
+                "ban user", "ban user", "Bans a user from the current estate", BanUser);
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login enable",
+                    "login enable",
+                    "Enable simulator logins",
+                    String.Empty,
+                    ProcessLoginCommands);
+
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login disable",
+                    "login disable",
+                    "Disable simulator logins",
+                    String.Empty,
+                    ProcessLoginCommands);
+
+            MainConsole.Instance.Commands.AddCommand("access", true,
+                    "login status",
+                    "login status",
+                    "Show login status",
+                    String.Empty,
+                    ProcessLoginCommands);
+        }
+
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
+        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
+        public void Close(Scene scene)
+        {
+            if (!m_enabled)
+                return;
+
+            m_scenes.Remove(scene);
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.Permissions.OnAllowIncomingAgent -= OnAllowedIncomingAgent;
+            scene.Permissions.OnAllowedIncomingTeleport -= OnAllowedIncomingTeleport;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+        }
+
+        public void StartupComplete()
+        {
+            if (!StartDisabled)
+            {
+                m_log.DebugFormat("[Region]: Enabling logins");
+                LoginsDisabled = false;
+            }
         }
 
         #endregion

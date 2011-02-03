@@ -210,7 +210,7 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void AddToStartupQueue(string name);
         public delegate void FinishedStartup(string name, List<string> data);
         public delegate void StartupComplete(IScene scene, List<string> data);
-        public event FinishedStartup OnFinishedStartup;
+        public event FinishedStartup OnModuleFinishedStartup;
         public event AddToStartupQueue OnAddToStartupQueue;
         public event StartupComplete OnStartupComplete;
         //This is called after OnStartupComplete is done, it should ONLY be registered to the Scene
@@ -1766,9 +1766,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerFinishedStartup(string name, List<string> data)
+        public void TriggerModuleFinishedStartup(string name, List<string> data)
         {
-            FinishedStartup handlerOnFinishedStartup = OnFinishedStartup;
+            FinishedStartup handlerOnFinishedStartup = OnModuleFinishedStartup;
             if (handlerOnFinishedStartup != null)
             {
                 foreach (FinishedStartup d in handlerOnFinishedStartup.GetInvocationList())
