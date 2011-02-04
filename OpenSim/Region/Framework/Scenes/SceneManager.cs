@@ -794,8 +794,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("region", false, "reset region", "reset region", "Reset region to the default terrain, wipe all prims, etc.", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", HandleCreateRegion);
-
             MainConsole.Instance.Commands.AddCommand("region", false, "restart-instance", "restart-instance", "Restarts the instance (as if you closed and re-opened Aurora)", RunCommand);
 
             MainConsole.Instance.Commands.AddCommand("region", false, "command-script", "command-script <script>", "Run a command script from file", RunCommand);
@@ -892,21 +890,6 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             });
-        }
-
-        /// <summary>
-        /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
-        /// </summary>
-        /// <param name="module"></param>
-        /// <param name="cmd">0,1,region name, region XML file</param>
-        private void HandleCreateRegion(string module, string[] cmd)
-        {
-            List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
-            foreach (IRegionLoader loader in regionLoaders)
-            {
-                loader.Initialise(m_config, null, m_OpenSimBase);
-                loader.AddRegion(m_OpenSimBase, cmd);
-            }
         }
 
         /// <summary>

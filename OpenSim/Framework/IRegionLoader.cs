@@ -31,16 +31,36 @@ namespace OpenSim.Framework
 {
     public interface IRegionLoader : IPlugin
     {
-        bool Default { get; }
+        /// <summary>
+        /// This determines whether this plugin will be loaded
+        /// </summary>
+        bool Enabled { get; }
 
-        RegionInfo[] LoadRegions();
-
-        void AddRegion(ISimulationBase baseOS, string[] cmd);
-
-        void UpdateRegionInfo(string oldName, RegionInfo regionInfo);
-
+        /// <summary>
+        /// Starts up the module and loads configs
+        /// </summary>
+        /// <param name="configSource"></param>
+        /// <param name="creator"></param>
+        /// <param name="openSim"></param>
         void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim);
 
+        /// <summary>
+        /// Loads all regions from all enabled plugins
+        /// </summary>
+        /// <returns>All regionInfos loaded</returns>
+        RegionInfo[] LoadRegions();
+
+        /// <summary>
+        /// This updates a Regions info given by the param 'oldName' to the new region info given
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="regionInfo"></param>
+        void UpdateRegionInfo(string oldName, RegionInfo regionInfo);
+
+        /// <summary>
+        /// Delete the given region from the loader
+        /// </summary>
+        /// <param name="regionInfo"></param>
         void DeleteRegion(RegionInfo regionInfo);
     }
 }

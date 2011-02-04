@@ -39,6 +39,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderWebServer : IRegionLoader
     {
+        private bool m_enabled = false;
         public string Name
         {
             get
@@ -47,9 +48,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
-        public bool Default
+        public bool Enabled
         {
-            get { return false; }
+            get { return m_enabled; }
         }
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -59,7 +60,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
         {
             m_configSource = configSource;
-            openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
+            IConfig config = configSource.Configs["RegionStartup"];
+            if (config != null)
+                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+            if(m_enabled)
+                openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
         public RegionInfo[] LoadRegions()
@@ -104,11 +109,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
             }
             return null;
-        }
-
-        public void AddRegion(ISimulationBase baseOS, string[] cmd)
-        {
-            //Can't add regions to remote locations
         }
 
         public void UpdateRegionInfo(string oldName, RegionInfo regionInfo)

@@ -50,11 +50,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private ISimulationBase m_openSim;
         private IRegionCreator m_creator;
         private IConfigSource m_configSource;
+        private bool m_enabled = false;
         private bool m_default = false;
 
-        public bool Default
+        public bool Enabled
         {
-            get { return m_default; }
+            get { return m_enabled; }
         }
 
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
@@ -65,7 +66,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
+            {
+                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+                if (!m_enabled)
+                    return;
                 m_default = config.GetString("Default") == Name;
+
+                //Add the console command if it is the default
+                if (m_default)
+                    MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", AddRegion);
+            }
 
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
@@ -105,11 +115,14 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 return infos;
         }
 
-        public void AddRegion(ISimulationBase baseOS, string[] cmd)
+        /// <summary>
+        /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmd">0,1,region name, region XML file</param>
+        public void AddRegion(string module, string[] cmd)
         {
-            if (!m_default)
-                return;
-            RegionManager manager = new RegionManager(false, baseOS);
+            RegionManager manager = new RegionManager(false, m_openSim);
             System.Windows.Forms.Application.Run(manager);
         }
 

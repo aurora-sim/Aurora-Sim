@@ -46,12 +46,13 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_configSource;
         private bool m_default = true;
+        private bool m_enabled = true;
         private ISimulationBase m_openSim;
         private string m_regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
-        public bool Default
+        public bool Enabled
         {
-            get { return m_default; }
+            get { return m_enabled; }
         }
 
         public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
@@ -61,9 +62,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
             {
-                m_default = config.GetString("Default", Name) == Name; //.ini loader defaults
+                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+                if (!m_enabled)
+                    return;
+                m_default = config.GetString("Default") == Name;
                 m_regionConfigPath = config.GetString("RegionsDirectory", m_regionConfigPath).Trim();
+
+                //Add the console command if it is the default
+                if (m_default)
+                    MainConsole.Instance.Commands.AddCommand("region", false, "create region", "create region", "Create a new region.", AddRegion);
             }
+            
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
@@ -162,7 +171,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
             return null;
         }
-
 
         //Returns true if the source should be updated. Returns false if it does not.
         public bool ReadNiniConfig(RegionInfo region, IConfigSource source, string name)
@@ -335,10 +343,13 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             return NeedsUpdate;
         }
 
-        public void AddRegion(ISimulationBase baseOS, string[] cmd)
+        /// <summary>
+        /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="cmd">0,1,region name, region XML file</param>
+        public void AddRegion(string module, string[] cmd)
         {
-            if (!m_default)
-                return;
             if (cmd.Length < 4)
             {
                 MainConsole.Instance.Output("Usage: create region <region name> <region_file.ini>");
