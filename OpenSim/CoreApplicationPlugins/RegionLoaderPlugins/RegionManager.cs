@@ -294,5 +294,25 @@ namespace Aurora.Modules.RegionLoader
                 source.Save();
             }
         }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            if(CurrentRegionID == UUID.Zero)
+            {
+                MessageBox.Show("Select a region before attempting to delete.");
+                return;
+            }
+            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            if (region != null) //It never should be, but who knows
+            {
+                DialogResult r = Utilities.InputBox("Are you sure?", "Are you sure you want to delete this region?");
+                if (r == DialogResult.OK)
+                {
+                    m_connector.Delete(region);
+                    //Update the regions in the list box as well
+                    RefreshCurrentRegions();
+                }
+            }
+        }
     }
 }

@@ -84,6 +84,9 @@
             this.label31 = new System.Windows.Forms.Label();
             this.RegionToFind = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.StartupNumberBox = new System.Windows.Forms.TextBox();
+            this.button12 = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
             this.DisabledEdit = new System.Windows.Forms.CheckBox();
             this.DisabledHelp = new System.Windows.Forms.Button();
             this.MaturityHelp = new System.Windows.Forms.Button();
@@ -119,9 +122,7 @@
             this.textBox11 = new System.Windows.Forms.TextBox();
             this.label30 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.button12 = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
-            this.StartupNumberBox = new System.Windows.Forms.TextBox();
+            this.button13 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -585,6 +586,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.button13);
             this.tabPage1.Controls.Add(this.groupBox4);
             this.tabPage1.Controls.Add(this.RegionListBox);
             this.tabPage1.Controls.Add(this.UpdateRegion);
@@ -728,6 +730,33 @@
             this.groupBox3.TabIndex = 28;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Region Info";
+            // 
+            // StartupNumberBox
+            // 
+            this.StartupNumberBox.Location = new System.Drawing.Point(247, 291);
+            this.StartupNumberBox.Name = "StartupNumberBox";
+            this.StartupNumberBox.Size = new System.Drawing.Size(157, 20);
+            this.StartupNumberBox.TabIndex = 44;
+            this.StartupNumberBox.Text = "50";
+            // 
+            // button12
+            // 
+            this.button12.Location = new System.Drawing.Point(93, 291);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(21, 20);
+            this.button12.TabIndex = 43;
+            this.button12.Text = "?";
+            this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(6, 295);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(81, 13);
+            this.label13.TabIndex = 42;
+            this.label13.Text = "Startup Number";
             // 
             // DisabledEdit
             // 
@@ -1048,32 +1077,15 @@
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // button12
+            // button13
             // 
-            this.button12.Location = new System.Drawing.Point(93, 291);
-            this.button12.Name = "button12";
-            this.button12.Size = new System.Drawing.Size(21, 20);
-            this.button12.TabIndex = 43;
-            this.button12.Text = "?";
-            this.button12.UseVisualStyleBackColor = true;
-            this.button12.Click += new System.EventHandler(this.button12_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(6, 295);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(81, 13);
-            this.label13.TabIndex = 42;
-            this.label13.Text = "Startup Number";
-            // 
-            // StartupNumberBox
-            // 
-            this.StartupNumberBox.Location = new System.Drawing.Point(247, 291);
-            this.StartupNumberBox.Name = "StartupNumberBox";
-            this.StartupNumberBox.Size = new System.Drawing.Size(157, 20);
-            this.StartupNumberBox.TabIndex = 44;
-            this.StartupNumberBox.Text = "50";
+            this.button13.Location = new System.Drawing.Point(425, 301);
+            this.button13.Name = "button13";
+            this.button13.Size = new System.Drawing.Size(75, 23);
+            this.button13.TabIndex = 36;
+            this.button13.Text = "Delete";
+            this.button13.UseVisualStyleBackColor = true;
+            this.button13.Click += new System.EventHandler(this.button13_Click);
             // 
             // RegionManager
             // 
@@ -1199,5 +1211,6 @@
         private System.Windows.Forms.Button button12;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TextBox StartupNumberBox;
+        private System.Windows.Forms.Button button13;
     }
 }
