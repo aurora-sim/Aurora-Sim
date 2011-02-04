@@ -31,7 +31,12 @@ namespace OpenSim.Services.CapsService
         /// <summary>
         /// A list of all clients and their Client Caps Handlers
         /// </summary>
-        protected Dictionary<UUID, IClientCapsService> m_CapsServices = new Dictionary<UUID, IClientCapsService>();
+        protected Dictionary<UUID, IClientCapsService> m_ClientCapsServices = new Dictionary<UUID, IClientCapsService>();
+
+        /// <summary>
+        /// A list of all regions Caps Services
+        /// </summary>
+        protected Dictionary<ulong, IRegionCapsService> m_RegionCapsServices = new Dictionary<ulong, IRegionCapsService>();
 
         protected IRegistryCore m_registry;
         public IRegistryCore Registry
@@ -106,17 +111,19 @@ namespace OpenSim.Services.CapsService
 
         #region ICapsService members
 
+        #region Client Caps
+
         /// <summary>
         /// Remove the all of the user's CAPS from the system
         /// </summary>
         /// <param name="AgentID"></param>
         public void RemoveCAPS(UUID AgentID)
         {
-            if(m_CapsServices.ContainsKey(AgentID))
+            if(m_ClientCapsServices.ContainsKey(AgentID))
             {
-                IClientCapsService perClient = m_CapsServices[AgentID];
+                IClientCapsService perClient = m_ClientCapsServices[AgentID];
                 perClient.Close();
-                m_CapsServices.Remove(AgentID);
+                m_ClientCapsServices.Remove(AgentID);
             }
         }
 
@@ -156,13 +163,13 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public IClientCapsService GetOrCreateClientCapsService(UUID AgentID)
         {
-            if (!m_CapsServices.ContainsKey(AgentID))
+            if (!m_ClientCapsServices.ContainsKey(AgentID))
             {
                 PerClientBasedCapsService client = new PerClientBasedCapsService();
                 client.Initialise(this, AgentID);
-                m_CapsServices.Add(AgentID, client);
+                m_ClientCapsServices.Add(AgentID, client);
             }
-            return m_CapsServices[AgentID];
+            return m_ClientCapsServices[AgentID];
         }
 
         /// <summary>
@@ -172,10 +179,55 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public IClientCapsService GetClientCapsService(UUID AgentID)
         {
-            if (!m_CapsServices.ContainsKey(AgentID))
+            if (!m_ClientCapsServices.ContainsKey(AgentID))
                 return null;
-            return m_CapsServices[AgentID];
+            return m_ClientCapsServices[AgentID];
         }
+
+        #endregion
+
+        #region Region Caps
+
+        /// <summary>
+        /// Get a region handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        public IRegionCapsService GetCapsForRegion(ulong RegionHandle)
+        {
+            IRegionCapsService service;
+            if (m_RegionCapsServices.TryGetValue(RegionHandle, out service))
+            {
+                return service;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Create a caps handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        public void AddCapsForRegion(ulong RegionHandle)
+        {
+            if (!m_RegionCapsServices.ContainsKey(RegionHandle))
+            {
+                IRegionCapsService service = new PerRegionCapsService();
+                service.Initialise(RegionHandle);
+
+                m_RegionCapsServices.Add(RegionHandle, service);
+            }
+        }
+
+        /// <summary>
+        /// Remove the handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        public void RemoveCapsForRegion(ulong RegionHandle)
+        {
+            if (m_RegionCapsServices.ContainsKey(RegionHandle))
+                m_RegionCapsServices.Remove(RegionHandle);
+        }
+
+        #endregion
 
         #endregion
     }

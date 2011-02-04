@@ -39,6 +39,24 @@ namespace OpenSim.Services.Interfaces
         IRegistryCore Registry { get; }
 
         IHttpServer Server { get; }
+
+        /// <summary>
+        /// Create a caps handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        void AddCapsForRegion(ulong RegionHandle);
+
+        /// <summary>
+        /// Remove the handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        void RemoveCapsForRegion(ulong RegionHandle);
+
+        /// <summary>
+        /// Get a region handler for the given region
+        /// </summary>
+        /// <param name="RegionHandle"></param>
+        IRegionCapsService GetCapsService(ulong regionID);
     }
 
     /// <summary>
@@ -107,14 +125,12 @@ namespace OpenSim.Services.Interfaces
     public interface IRegionCapsService
     {
         ulong RegionHandle { get; }
-        UUID RegionID { get; }
 
         /// <summary>
         /// Initialise the service
         /// </summary>
         /// <param name="regionHandle"></param>
-        /// <param name="regionID"></param>
-        void Initialise(ulong regionHandle, UUID regionID);
+        void Initialise(ulong regionHandle);
 
         /// <summary>
         /// Add this client to the region

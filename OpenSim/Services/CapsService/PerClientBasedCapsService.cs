@@ -79,11 +79,10 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         public void Close()
         {
-            foreach (ulong regionHandle in m_RegionCapsServices.Keys)
+            List<ulong> handles = new List<ulong>(m_RegionCapsServices.Keys);
+            foreach (ulong regionHandle in handles)
             {
-                if (m_RegionCapsServices[regionHandle] == null)
-                    continue;
-                m_RegionCapsServices[regionHandle].Close();
+                RemoveCAPS(regionHandle);
             }
             m_RegionCapsServices.Clear();
         }
@@ -99,6 +98,13 @@ namespace OpenSim.Services.CapsService
                 PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
                 regionClient.Initialise(this, regionHandle, CAPSBase, UrlToInform);
                 m_RegionCapsServices.Add(regionHandle, regionClient);
+
+                //Now add this client to the region caps
+                //Create if needed
+                m_CapsService.AddCapsForRegion(regionHandle);
+                //Now get and add them
+                IRegionCapsService regionCaps = m_CapsService.GetCapsService(regionHandle);
+                regionCaps.AddClientToRegion(regionClient);
             }
         }
 
@@ -142,6 +148,11 @@ namespace OpenSim.Services.CapsService
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
                 return;
+
+            //Remove the agent from the region caps
+            IRegionCapsService regionCaps = m_CapsService.GetCapsService(regionHandle);
+            regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
+
             //Remove all the CAPS handlers
             m_RegionCapsServices[regionHandle].Close();
             m_RegionCapsServices.Remove(regionHandle);
