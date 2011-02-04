@@ -134,15 +134,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
             foreach (Scene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionHandle == destination.RegionHandle)
-                {
-                    //m_log.DebugFormat(
-                    //    "[LOCAL SIMULATION CONNECTOR]: Found region {0} {1} to send AgentUpdate",
-                    //    s.RegionInfo.RegionName, destination.RegionHandle);
-
-                    s.IncomingChildAgentDataUpdate(cAgentData);
-                    return true;
-                }
+                s.IncomingChildAgentDataUpdate(cAgentData);
             }
 
             //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
