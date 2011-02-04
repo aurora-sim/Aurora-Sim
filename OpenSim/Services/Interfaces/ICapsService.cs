@@ -100,4 +100,45 @@ namespace OpenSim.Services.Interfaces
 
         void InformModulesOfRequest();
     }
+
+    /// <summary>
+    /// This interface is per region and keeps track of what agents are in the given region
+    /// </summary>
+    public interface IRegionCapsService
+    {
+        ulong RegionHandle { get; }
+        UUID RegionID { get; }
+
+        /// <summary>
+        /// Initialise the service
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="regionID"></param>
+        void Initialise(ulong regionHandle, UUID regionID);
+
+        /// <summary>
+        /// Add this client to the region
+        /// </summary>
+        /// <param name="service"></param>
+        void AddClientToRegion(IRegionClientCapsService service);
+
+        /// <summary>
+        /// Remove the client from this region
+        /// </summary>
+        /// <param name="service"></param>
+        void RemoveClientFromRegion(IRegionClientCapsService service);
+
+        /// <summary>
+        /// Get an agent's Caps by UUID
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <returns></returns>
+        IRegionClientCapsService GetClient(UUID AgentID);
+
+        /// <summary>
+        /// Get all clients in this region
+        /// </summary>
+        /// <returns></returns>
+        List<IRegionClientCapsService> GetClients();
+    }
 }
