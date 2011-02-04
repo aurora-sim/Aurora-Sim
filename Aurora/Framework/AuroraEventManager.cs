@@ -21,6 +21,7 @@ namespace Aurora.Framework
         /// DrawDistanceChanged - Changed Draw Distance, param is a ScenePresence
         /// BanUser - Added a new banned user to the estate bans, param is a UUID of an agent
         /// UnBanUser - Removed a banned user from the estate bans, param is a UUID of an agent
+        /// SignficantCameraMovement - The Camera has moved a distance that has triggered this update
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

@@ -150,6 +150,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private float m_speedModifier = 1.0f;
 
+        private const float SIGNIFICANT_MOVEMENT = 2.0f;
+
         private Quaternion m_bodyRot= Quaternion.Identity;
 
         private const int LAND_VELOCITYMAG_MAX = 20;
@@ -166,6 +168,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Position of agent's camera in world (region cordinates)
         /// </summary>
         protected Vector3 m_CameraCenter;
+        /// <summary>
+        /// Used for trigging signficant camera movement
+        /// </summary>
+        protected Vector3 m_lastCameraCenter;
         /// <summary>
         /// This is used for reprioritization of updates so that we can reprioritze every time the position gets too different
         /// </summary>
@@ -1095,6 +1101,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             AgentManager.ControlFlags flags = (AgentManager.ControlFlags)agentData.ControlFlags;
             Quaternion bodyRotation = agentData.BodyRotation;
+
+            if (Util.GetFlatDistanceTo(agentData.CameraCenter, m_lastCameraCenter) > SIGNIFICANT_MOVEMENT)
+            {
+                m_lastCameraCenter = agentData.CameraCenter;
+                Scene.AuroraEventManager.FireGenericEventHandler("SignficantCameraMovement", this);
+            }
 
             // Camera location in world.  We'll need to raytrace
             // from this location from time to time.
@@ -2279,7 +2291,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Movement updates for agents in neighboring regions are sent directly to clients.
             // This value only affects how often agent positions are sent to neighbor regions
             // for things such as distance-based update prioritization
-            const float SIGNIFICANT_MOVEMENT = 2.0f;
 
             if (Util.GetDistanceTo(AbsolutePosition, posLastSignificantMove) > SIGNIFICANT_MOVEMENT)
             {
