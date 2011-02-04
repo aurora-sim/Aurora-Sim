@@ -56,7 +56,7 @@ namespace OpenSim.Services.Interfaces
         /// Get a region handler for the given region
         /// </summary>
         /// <param name="RegionHandle"></param>
-        IRegionCapsService GetCapsService(ulong regionID);
+        IRegionCapsService GetCapsForRegion(ulong regionID);
     }
 
     /// <summary>
