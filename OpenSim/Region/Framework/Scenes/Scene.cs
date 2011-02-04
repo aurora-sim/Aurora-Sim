@@ -646,27 +646,6 @@ namespace OpenSim.Region.Framework.Scenes
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;
 
-            //Make sure that users are not logging into bad positions in the sim
-            if (agent.startpos.X < 0f || agent.startpos.Y < 0f ||
-                agent.startpos.X > RegionInfo.RegionSizeX || agent.startpos.Y > RegionInfo.RegionSizeY)
-            {
-                m_log.WarnFormat(
-                    "[Scene]: NewUserConnection was given an illegal position of {0} for avatar {1}. Clamping",
-                    agent.startpos, agent.AgentID);
-
-                if (agent.startpos.X < 0f) agent.startpos.X = 0f;
-                if (agent.startpos.Y < 0f) agent.startpos.Y = 0f;
-
-                if (agent.startpos.X > RegionInfo.RegionSizeX) agent.startpos.X = RegionInfo.RegionSizeX / 2;
-                if (agent.startpos.Y > RegionInfo.RegionSizeY) agent.startpos.Y = RegionInfo.RegionSizeY / 2;
-            }
-
-            ITerrainChannel channel = RequestModuleInterface<ITerrainChannel>();
-            float groundHeight = channel.GetNormalizedGroundHeight(agent.startpos.X, agent.startpos.Y);
-            //Keep users from being underground
-            if (agent.startpos.Z < groundHeight)
-                agent.startpos.Z = groundHeight;
-
             //Add the circuit at the end
             AuthenticateHandler.AddNewCircuit(agent.circuitcode, agent);
 
