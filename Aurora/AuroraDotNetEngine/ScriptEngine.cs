@@ -1486,7 +1486,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<uint, float> topScripts = new Dictionary<uint, float>();
             foreach (ScriptData script in data)
             {
-                topScripts.Add(script.part.ParentGroup.LocalId, script.ScriptScore);
+                if (!topScripts.ContainsKey(script.part.ParentGroup.LocalId))
+                    topScripts.Add(script.part.ParentGroup.LocalId, script.ScriptScore);
+                else
+                    topScripts[script.part.ParentGroup.LocalId] += script.ScriptScore;
             }
             return topScripts;
         }
