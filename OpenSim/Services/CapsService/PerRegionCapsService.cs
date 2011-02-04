@@ -58,12 +58,6 @@ namespace OpenSim.Services.CapsService
             get { return m_RegionHandle; }
         }
 
-        private UUID m_RegionID;
-        public UUID RegionID
-        {
-            get { return m_RegionID; }
-        }
-
         protected Dictionary<UUID, IRegionClientCapsService> m_clientsInThisRegion =
             new Dictionary<UUID, IRegionClientCapsService>();
 
@@ -76,9 +70,8 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name="regionHandle"></param>
         /// <param name="regionID"></param>
-        public void Initialise(ulong regionHandle, UUID regionID)
+        public void Initialise(ulong regionHandle)
         {
-            m_RegionID = regionID;
             m_RegionHandle = regionHandle;
         }
 
