@@ -94,7 +94,12 @@ namespace OpenSim.CoreApplicationPlugins
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
+                if (!loader.Default)
+                    continue;
+                
                 m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
+
+
 
                 RegionInfo[] regionsToLoad = loader.LoadRegions();
                 if (regionsToLoad == null)
