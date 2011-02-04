@@ -339,7 +339,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             AmountOfStartupsLeft++;
-            if (AmountOfStartupsLeft == Util.NumberofScenes)
+            SceneManager m = scene.RequestModuleInterface<SceneManager>();
+            if (AmountOfStartupsLeft == m.AllRegions)
             {
                 //All done!
                 MaintenanceThread.Started = true;

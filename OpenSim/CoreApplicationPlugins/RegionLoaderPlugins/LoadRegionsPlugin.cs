@@ -66,7 +66,6 @@ namespace OpenSim.CoreApplicationPlugins
             if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
                 return;
 
-            MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
             m_openSim.ApplicationRegistry.RegisterModuleInterface<IRegionCreator>(this);
         }
 
@@ -110,7 +109,6 @@ namespace OpenSim.CoreApplicationPlugins
                     throw new Exception();
                 }
                 manager.AllRegions += regionsToLoad.Length;
-                Util.NumberofScenes += regionsToLoad.Length;
                 regions.Add(regionsToLoad);
             }
             foreach (RegionInfo[] regionsToLoad in regions)
@@ -133,18 +131,6 @@ namespace OpenSim.CoreApplicationPlugins
         }
 
         #endregion
-
-        protected void OpenRegionManager(string module, string[] cmdparams)
-        {
-            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
-            thread.Start();
-        }
-
-        protected void StartRegionManagerThread()
-        {
-            RegionManager manager = new RegionManager(false, m_openSim);
-            System.Windows.Forms.Application.Run(manager);
-        }
 
         /// <summary>
         /// Check that region configuration information makes sense.

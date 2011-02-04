@@ -70,6 +70,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
                 if (!m_enabled)
                     return;
+                MainConsole.Instance.Commands.AddCommand("base", false, "open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
                 m_default = config.GetString("Default") == Name;
 
                 //Add the console command if it is the default
@@ -121,6 +122,18 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="module"></param>
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string module, string[] cmd)
+        {
+            RegionManager manager = new RegionManager(false, m_openSim);
+            System.Windows.Forms.Application.Run(manager);
+        }
+
+        protected void OpenRegionManager(string module, string[] cmdparams)
+        {
+            System.Threading.Thread thread = new Thread(StartRegionManagerThread);
+            thread.Start();
+        }
+
+        protected void StartRegionManagerThread()
         {
             RegionManager manager = new RegionManager(false, m_openSim);
             System.Windows.Forms.Application.Run(manager);
