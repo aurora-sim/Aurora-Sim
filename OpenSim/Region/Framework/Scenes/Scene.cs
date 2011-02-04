@@ -305,16 +305,6 @@ namespace OpenSim.Region.Framework.Scenes
             // Load region settings
             m_regInfo.RegionSettings = m_sceneManager.SimulationDataService.LoadRegionSettings(m_regInfo.RegionID);
 
-            //Bind Storage Manager functions to some land manager functions for this scene
-            IParcelServiceConnector conn = DataManager.RequestPlugin<IParcelServiceConnector>();
-            if (conn != null)
-            {
-                EventManager.OnLandObjectAdded +=
-                    conn.StoreLandObject;
-                EventManager.OnLandObjectRemoved +=
-                    conn.RemoveLandObject;
-            }
-
             m_sceneGraph = new SceneGraph(this, m_regInfo);
 
             #region Region Config

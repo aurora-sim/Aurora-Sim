@@ -335,7 +335,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnRequestParcelPrimCountUpdate += EventManagerOnRequestParcelPrimCountUpdate;
             m_scene.EventManager.OnParcelPrimCountTainted += EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
-            m_scene.EventManager.OnLandObjectAdded += AddLandObject;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
             if(m_UpdateDirectoryOnTimer)
@@ -373,7 +372,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.EventManager.OnRequestParcelPrimCountUpdate -= EventManagerOnRequestParcelPrimCountUpdate;
             m_scene.EventManager.OnParcelPrimCountTainted -= EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps -= EventManagerOnRegisterCaps;
-            m_scene.EventManager.OnLandObjectAdded -= AddLandObject;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
             m_scene.UnregisterModuleInterface<IParcelManagementModule>(this);
         }
@@ -402,34 +400,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                     DSC.AddLandObject(p);
                 }
                 //}
-            }
-        }
-
-        public void AddLandObject(LandData parcel)
-        {
-            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-            if (DSC != null)
-            {
-                Vector3 OldUserLocation = parcel.UserLocation;
-                if (parcel.UserLocation == Vector3.Zero)
-                {
-                    //Set it to a position inside the parcel at the ground if it doesn't have one
-                    parcel.UserLocation = GetParcelCenterAtGround(GetLandObject(parcel.LocalID));
-                }
-                if (m_UpdateDirectoryOnUpdate)
-                    //Update search database
-                    DSC.AddLandObject(parcel);
-                else if (m_UpdateDirectoryOnTimer)
-                {
-                    //lock (m_TaintedLandData)
-                    //{
-                    //Tell the timer about it
-                    if (!m_TaintedLandData.Contains(parcel))
-                        m_TaintedLandData.Add(parcel);
-                    //}
-                }
-                //Reset the position 
-                parcel.UserLocation = OldUserLocation;
             }
         }
 
@@ -698,6 +668,34 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region Parcel Add/Remove/Get/Create
 
+        protected void AddLandObjectToSearch(LandData parcel)
+        {
+            IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            if (DSC != null)
+            {
+                Vector3 OldUserLocation = parcel.UserLocation;
+                if (parcel.UserLocation == Vector3.Zero)
+                {
+                    //Set it to a position inside the parcel at the ground if it doesn't have one
+                    parcel.UserLocation = GetParcelCenterAtGround(GetLandObject(parcel.LocalID));
+                }
+                if (m_UpdateDirectoryOnUpdate)
+                    //Update search database
+                    DSC.AddLandObject(parcel);
+                else if (m_UpdateDirectoryOnTimer)
+                {
+                    //lock (m_TaintedLandData)
+                    //{
+                    //Tell the timer about it
+                    if (!m_TaintedLandData.Contains(parcel))
+                        m_TaintedLandData.Add(parcel);
+                    //}
+                }
+                //Reset the position 
+                parcel.UserLocation = OldUserLocation;
+            }
+        }
+
         public void UpdateLandObject(int local_id, LandData data)
         {
             LandData newData = data.Copy();
@@ -708,9 +706,62 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (m_landList.ContainsKey(local_id))
                 {
                     m_landList[local_id].LandData = newData;
+                    AddLandObjectToSearch(data);
+                    IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+                    if (conn != null)
+                        conn.StoreLandObject(data);
                     m_scene.EventManager.TriggerLandObjectAdded(m_landList[local_id].LandData);
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds a land object to the stored list and adds them to the landIDList to what they own
+        /// </summary>
+        /// <param name="new_land">The land object being added</param>
+        public ILandObject AddLandObject(ILandObject land)
+        {
+            return AddLandObject(land, false);
+        }
+
+        protected ILandObject AddLandObject(ILandObject land, bool incomingFromDatabase)
+        {
+            //Don't make a copy unless necessary
+            ILandObject new_land = incomingFromDatabase ? land : land.Copy();
+
+            lock (m_landList)
+            {
+                //Update the localID
+                int newLandLocalID = ++m_lastLandLocalID;
+                new_land.LandData.LocalID = newLandLocalID;
+
+                //Add this parcels area to the region wide area tracker
+                bool[,] landBitmap = new_land.GetLandBitmap();
+                for (int x = 0; x < landArrayMax; x++)
+                {
+                    for (int y = 0; y < landArrayMax; y++)
+                    {
+                        if (landBitmap[x, y])
+                        {
+                            m_landIDList[x, y] = newLandLocalID;
+                        }
+                    }
+                }
+                //Add it to the list of land in this region
+                m_landList.Add(newLandLocalID, new_land);
+            }
+            new_land.ForceUpdateLandInfo();
+            //If it isn't coming in from the database, make sure to save the new parcel and add it to search
+            if (!incomingFromDatabase)
+            {
+                AddLandObjectToSearch(new_land.LandData);
+                IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+                if (conn != null)
+                    conn.StoreLandObject(new_land.LandData);
+            }
+            //Trigger the event for any interested listeners
+            m_scene.EventManager.TriggerLandObjectAdded(new_land.LandData);
+            return new_land;
         }
 
         /// <summary>
@@ -970,38 +1021,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         /// <summary>
-        /// Adds a land object to the stored list and adds them to the landIDList to what they own
-        /// </summary>
-        /// <param name="new_land">The land object being added</param>
-        public ILandObject AddLandObject(ILandObject land)
-        {
-            ILandObject new_land = land.Copy();
-
-            lock (m_landList)
-            {
-                int newLandLocalID = ++m_lastLandLocalID;
-                new_land.LandData.LocalID = newLandLocalID;
-
-                bool[,] landBitmap = new_land.GetLandBitmap();
-                for (int x = 0; x < landArrayMax; x++)
-                {
-                    for (int y = 0; y < landArrayMax; y++)
-                    {
-                        if (landBitmap[x, y])
-                        {
-                            m_landIDList[x, y] = newLandLocalID;
-                        }
-                    }
-                }
-
-                m_landList.Add(newLandLocalID, new_land);
-            }
-            new_land.ForceUpdateLandInfo();
-            m_scene.EventManager.TriggerLandObjectAdded(new_land.LandData);
-            return new_land;
-        }
-
-        /// <summary>
         /// Removes a land object from the list. Will not remove if local_id is still owning an area in landIDList
         /// </summary>
         /// <param name="local_id">Land.localID of the peice of land to remove.</param>
@@ -1022,6 +1041,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         }
                     }
                 }
+                IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+                if (conn != null)
+                    conn.RemoveLandObject(m_landList[local_id].LandData.RegionID, m_landList[local_id].LandData.GlobalID);
 
                 m_scene.EventManager.TriggerLandObjectRemoved(m_landList[local_id].LandData.RegionID, m_landList[local_id].LandData.GlobalID);
                 m_landList.Remove(local_id);
@@ -1282,6 +1304,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             //Now add the new land object
             ILandObject result = AddLandObject(newLand);
+            //Fix the old land object as well
             UpdateLandObject(startLandObject.LandData.LocalID, startLandObject.LandData);
             result.SendLandUpdateToAvatarsOverMe();
             //Update the parcel overlay for ALL clients
@@ -1700,7 +1723,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             new_land.LandData = data;
             new_land.SetLandBitmapFromByteArray();
             new_land.SetInfoID();
-            AddLandObject(new_land);
+            AddLandObject(new_land, true);
         }
 
         public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)

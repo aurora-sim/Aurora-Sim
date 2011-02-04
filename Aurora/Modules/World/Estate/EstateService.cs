@@ -491,7 +491,10 @@ namespace Aurora.Modules
                         }
                     }
                     else if (ILO.LandData.LandingType == 1) //Move to tp spot
-                        newPosition = ILO.LandData.UserLocation;
+                        if (ILO.LandData.UserLocation != Vector3.Zero)
+                            newPosition = ILO.LandData.UserLocation;
+                        else // Dump them at the nearest region corner since they havn't set a landing point
+                            newPosition = parcelManagement.GetNearestRegionEdgePosition(Sp);
                 }
             }
 
