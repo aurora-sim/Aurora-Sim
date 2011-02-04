@@ -103,7 +103,7 @@ namespace OpenSim.Services.CapsService
                 //Create if needed
                 m_CapsService.AddCapsForRegion(regionHandle);
                 //Now get and add them
-                IRegionCapsService regionCaps = m_CapsService.GetCapsService(regionHandle);
+                IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
                 regionCaps.AddClientToRegion(regionClient);
             }
         }
@@ -150,7 +150,7 @@ namespace OpenSim.Services.CapsService
                 return;
 
             //Remove the agent from the region caps
-            IRegionCapsService regionCaps = m_CapsService.GetCapsService(regionHandle);
+            IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
             regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
 
             //Remove all the CAPS handlers
