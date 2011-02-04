@@ -699,6 +699,11 @@ namespace OpenSim.Services.CapsService
                 uint x, y;
                 Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                 GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                if (ourRegion == null)
+                {
+                    m_log.Info("[EQMService]: Failed to inform neighbors about new agent, could not find our region. ");
+                    return false;
+                }
                 List<GridRegion> neighbors = neighborService.GetNeighbors(ourRegion, DrawDistance);
 
                 foreach (GridRegion neighbor in neighbors)
@@ -758,6 +763,9 @@ namespace OpenSim.Services.CapsService
                 if (newAgent)
                 {
                     //Update 21-1-11 (Revolution) This is still very much needed for standalone mode
+                    //The idea behind this is that this is the FIRST setup in standalone mode, so setting it to
+                    //   this sets up the first initial URL, as if it was set as "", it would set it up wrong 
+                    //   initially and all will go wrong from there
                     //Build the full URL
                     SimSeedCap
                         = neighbor.ServerURI
@@ -771,56 +779,45 @@ namespace OpenSim.Services.CapsService
                 //Add the password too
                 circuitData.OtherInformation["CapsPassword"] = otherRegionService.Password;
 
-                //Note: we have to pull the new grid region info as the one from the region cannot be trusted
-                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
-                if (GridService != null)
-                {
-                    neighbor = GridService.GetRegionByUUID(UUID.Zero, neighbor.RegionID);
-                    bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
+                bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);
-                    if (regionAccepted)
+                if (regionAccepted)
+                {
+                    //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
+                    if (reason != "")
                     {
-                        //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
-                        if (reason != "")
-                        {
-                            OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
-                            SimSeedCap = responseMap["CapsUrl"].AsString();
-                        }
-                        //ONLY UPDATE THE SIM SEED HERE
-                        //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
-                        // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
-                        // AND FORCE UPDATING IT HERE WILL BREAK IT.
-                        otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
-                        if (newAgent)
-                        {
-                            //We 'could' call Enqueue directly... but its better to just let it go and do it this way
-                            IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-                            EQService.EnableSimulator(neighbor.RegionHandle,
-                                neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                                neighbor.ExternalEndPoint.Port, m_service.AgentID, m_service.RegionHandle);
-
-                            // ES makes the client send a UseCircuitCode message to the destination, 
-                            // which triggers a bunch of things there.
-                            // So let's wait
-                            Thread.Sleep(300);
-                            EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle,
-                                neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                                neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform,
-                                m_service.RegionHandle);
-
-                            m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
-                        }
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                        SimSeedCap = responseMap["CapsUrl"].AsString();
                     }
-                    else
+                    //ONLY UPDATE THE SIM SEED HERE
+                    //DO NOT PASS THE newSeedCap FROM ABOVE AS IT WILL BREAK THIS CODE
+                    // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
+                    // AND FORCE UPDATING IT HERE WILL BREAK IT.
+                    otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
+                    if (newAgent)
                     {
-                        m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
-                        return false;
+                        //We 'could' call Enqueue directly... but its better to just let it go and do it this way
+                        IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                        EQService.EnableSimulator(neighbor.RegionHandle,
+                            neighbor.ExternalEndPoint.Address.GetAddressBytes(),
+                            neighbor.ExternalEndPoint.Port, m_service.AgentID, m_service.RegionHandle);
+
+                        // ES makes the client send a UseCircuitCode message to the destination, 
+                        // which triggers a bunch of things there.
+                        // So let's wait
+                        Thread.Sleep(300);
+                        EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle,
+                            neighbor.ExternalEndPoint.Address.GetAddressBytes(),
+                            neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform,
+                            m_service.RegionHandle);
+
+                        m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);
                     }
                 }
                 else
                 {
-                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: The Grid Service did not exist");
+                    m_log.Error("[EventQueueService]: Failed to inform client about neighbor " + neighbor.RegionName + ", reason: " + reason);
                     return false;
                 }
                 return true;
@@ -889,7 +886,7 @@ namespace OpenSim.Services.CapsService
 
         #region Teleporting
 
-        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance, 
+        protected bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
             AgentCircuitData circuit, AgentData agentData)
         {
             bool result = false;
@@ -901,9 +898,17 @@ namespace OpenSim.Services.CapsService
                 if (!SetUserInTransit())
                     return false;
 
-                //Inform the client of the neighbor if needed
-                if (!InformClientOfNeighbor(circuit, destination, TeleportFlags,
-                    agentData))
+                //Note: we have to pull the new grid region info as the one from the region cannot be trusted
+                IGridService GridService = m_service.Registry.RequestModuleInterface<IGridService>();
+                if (GridService != null)
+                {
+                    destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
+                    //Inform the client of the neighbor if needed
+                    if (!InformClientOfNeighbor(circuit, destination, TeleportFlags,
+                        agentData))
+                        return false;
+                }
+                else
                     return false;
 
                 uint x, y;
@@ -1039,6 +1044,11 @@ namespace OpenSim.Services.CapsService
                     uint x, y;
                     Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                     GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                    if (ourRegion == null)
+                    {
+                        m_log.Info("[EQMService]: Failed to inform neighbors about updating agent, could not find our region. ");
+                        return;
+                    }
                     List<GridRegion> ourNeighbors = service.GetNeighbors(ourRegion);
                     foreach (GridRegion region in ourNeighbors)
                     {
