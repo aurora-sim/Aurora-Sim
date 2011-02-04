@@ -671,6 +671,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
                     m_terrainPatchesSent.Add(client.AgentId, new bool[xSize,
                         ySize]);
+
+                    ScenePresence agent = m_scene.GetScenePresence(client.AgentId);
+                    if (agent != null && agent.IsChildAgent)
+                    {
+                        //If the avatar is a child agent, we need to send the terrain data initially
+                        EventManager_OnSignificantClientMovement(client);
+                    }
                 }
             }
         }
@@ -713,7 +720,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
         {
-            if (FunctionName == "DrawDistanceChanged")
+            if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
             {
                 SendTerrainUpdatesForClient((ScenePresence)parameters);
             }

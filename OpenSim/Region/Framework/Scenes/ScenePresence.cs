@@ -1102,7 +1102,9 @@ namespace OpenSim.Region.Framework.Scenes
             AgentManager.ControlFlags flags = (AgentManager.ControlFlags)agentData.ControlFlags;
             Quaternion bodyRotation = agentData.BodyRotation;
 
-            if (Util.GetFlatDistanceTo(agentData.CameraCenter, m_lastCameraCenter) > SIGNIFICANT_MOVEMENT)
+            //Check to see whether ray casting needs done
+            // We multiply by 10 so that we don't trigger it when the camera moves slightly (as its 2 meter change)
+            if (Util.GetFlatDistanceTo(agentData.CameraCenter, m_lastCameraCenter) > SIGNIFICANT_MOVEMENT * 10)
             {
                 m_lastCameraCenter = agentData.CameraCenter;
                 Scene.AuroraEventManager.FireGenericEventHandler("SignficantCameraMovement", this);
