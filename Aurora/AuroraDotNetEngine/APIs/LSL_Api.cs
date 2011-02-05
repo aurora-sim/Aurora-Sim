@@ -1997,13 +1997,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID textureID=new UUID();
             int ns = GetNumberOfSides(part);
 
-            if (!UUID.TryParse(texture, out textureID))
-            {
-                textureID=InventoryKey(texture, (int)AssetType.Texture);
-            }
-
-            if (textureID == UUID.Zero)
-                return;
+             textureID = InventoryKey(texture, (int)AssetType.Texture);
+             if (textureID == UUID.Zero)
+             {
+                 if (!UUID.TryParse(texture, out textureID))
+                     return;
+             }
 
             Primitive.TextureEntry tex = part.Shape.Textures;
 
