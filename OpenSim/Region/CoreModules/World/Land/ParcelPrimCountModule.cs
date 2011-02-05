@@ -45,8 +45,11 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int Owner = 0;
         public int Group = 0;
         public int Others = 0;
+        public int Selected = 0;
+        public int Temporary = 0;
         public Dictionary<UUID, int> Users =
                 new Dictionary<UUID, int>();
+        public List<SceneObjectGroup> Objects = new List<SceneObjectGroup>();
         public List<UUID> GroupsInThisParcel = new List<UUID>();
     }
 
@@ -88,6 +91,16 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OnPrimCountAdd;
             m_Scene.EventManager.OnObjectBeingRemovedFromScene +=
                     OnObjectBeingRemovedFromScene;
+            m_Scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
+        }
+
+        void OnGenericEvent(string FunctionName, object parameters)
+        {
+            if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
+            {
+                //Select the object now
+                SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
+            }
         }
 
         public void RegionLoaded(Scene scene)
@@ -152,6 +165,28 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_Tainted = true;
         }
 
+        private void SelectObject(SceneObjectGroup obj, bool IsNowSelected)
+        {
+            if (obj.IsAttachment)
+                return;
+            if (((obj.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0))
+                return;
+
+            Vector3 pos = obj.AbsolutePosition;
+            ILandObject landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(pos.X, pos.Y);
+            LandData landData = landObject.LandData;
+
+            ParcelCounts parcelCounts;
+            if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
+            {
+                int partCount = obj.Parts.Length;
+                if (IsNowSelected)
+                    parcelCounts.Selected += partCount;
+                else
+                    parcelCounts.Selected -= partCount;
+            }
+        }
+
         // NOTE: Call under Taint Lock
         private void AddObject(SceneObjectGroup obj)
         {
@@ -170,37 +205,45 @@ namespace OpenSim.Region.CoreModules.World.Land
                 UUID landOwner = landData.OwnerID;
                 int partCount = obj.Parts.Length;
 
-                m_SimwideCounts[landOwner] += partCount;
-                if (parcelCounts.Users.ContainsKey(obj.OwnerID))
-                    parcelCounts.Users[obj.OwnerID] += partCount;
-                else
-                    parcelCounts.Users[obj.OwnerID] = partCount;
-
-                if (landData.IsGroupOwned)
+                if (parcelCounts.Objects.Contains(obj))
                 {
-                    UUID GroupUUID = obj.GroupID;
-                    if (obj.OwnerID == landData.GroupID)
-                    {
-                        GroupUUID = obj.OwnerID;
-                        parcelCounts.Owner += partCount;
-                    }
-                    else if (obj.GroupID == landData.GroupID)
-                        parcelCounts.Group += partCount;
-                    else
-                        parcelCounts.Others += partCount;
-
-                    //Add it to the list of all groups in this parcel
-                    if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
-                        parcelCounts.GroupsInThisParcel.Add(GroupUUID);
+                    //Well... now what?
                 }
                 else
                 {
-                    if (obj.OwnerID == landData.OwnerID)
-                        parcelCounts.Owner += partCount;
-                    else if (obj.GroupID == landData.GroupID)
-                        parcelCounts.Group += partCount;
+                    parcelCounts.Objects.Add(obj);
+                    m_SimwideCounts[landOwner] += partCount;
+                    if (parcelCounts.Users.ContainsKey(obj.OwnerID))
+                        parcelCounts.Users[obj.OwnerID] += partCount;
                     else
-                        parcelCounts.Others += partCount;
+                        parcelCounts.Users[obj.OwnerID] = partCount;
+
+                    if (landData.IsGroupOwned)
+                    {
+                        UUID GroupUUID = obj.GroupID;
+                        if (obj.OwnerID == landData.GroupID)
+                        {
+                            GroupUUID = obj.OwnerID;
+                            parcelCounts.Owner += partCount;
+                        }
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group += partCount;
+                        else
+                            parcelCounts.Others += partCount;
+
+                        //Add it to the list of all groups in this parcel
+                        if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
+                            parcelCounts.GroupsInThisParcel.Add(GroupUUID);
+                    }
+                    else
+                    {
+                        if (obj.OwnerID == landData.OwnerID)
+                            parcelCounts.Owner += partCount;
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group += partCount;
+                        else
+                            parcelCounts.Others += partCount;
+                    }
                 }
             }
         }
@@ -299,6 +342,20 @@ namespace OpenSim.Region.CoreModules.World.Land
             return 0;
         }
 
+        public int GetSelectedCount(UUID parcelID)
+        {
+            lock (m_TaintLock)
+            {
+                if (m_Tainted)
+                    Recount();
+
+                ParcelCounts counts;
+                if (m_ParcelCounts.TryGetValue(parcelID, out counts))
+                    return counts.Selected;
+            }
+            return 0;
+        }
+
         public int GetSimulatorCount(UUID parcelID)
         {
             lock (m_TaintLock)
@@ -313,6 +370,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (m_SimwideCounts.TryGetValue(owner, out val))
                         return val;
                 }
+            }
+            return 0;
+        }
+
+        public int GetTemporaryCount(UUID parcelID)
+        {
+            lock (m_TaintLock)
+            {
+                if (m_Tainted)
+                    Recount();
+
+                ParcelCounts counts;
+                if (m_ParcelCounts.TryGetValue(parcelID, out counts))
+                    return counts.Temporary;
             }
             return 0;
         }
@@ -403,11 +474,35 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public int Selected
+        {
+            get
+            {
+                return m_Parent.GetSelectedCount(m_ParcelID);
+            }
+        }
+
         public int Simulator
         {
             get
             {
                 return m_Parent.GetSimulatorCount(m_ParcelID);
+            }
+        }
+
+        public int Temporary
+        {
+            get
+            {
+                return m_Parent.GetTemporaryCount(m_ParcelID);
+            }
+        }
+
+        public int Total
+        {
+            get
+            {
+                return this.Group + this.Owner + this.Others;
             }
         }
 
