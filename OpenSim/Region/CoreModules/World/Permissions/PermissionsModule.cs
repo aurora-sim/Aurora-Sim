@@ -1408,18 +1408,21 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return true;
             }
 
-        // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
+            // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
             if (GenericParcelPermission(owner, objectPosition, 0))
             {
                 permission = true;
             }
-            int totalPrims = land.LandData.OwnerPrims + land.LandData.GroupPrims + land.LandData.OtherPrims +
-                                                 land.LandData.SelectedPrims;
-            int parcelPrims = land.GetParcelMaxPrimCount(land);
-            if (totalPrims + objectCount > parcelPrims)
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            if (primCountModule != null)
             {
-                reason = "There are too many prims in this parcel.";
-                return false;
+                IPrimCounts primCounts = primCountModule.GetPrimCounts(land.LandData.GlobalID);
+                int MaxPrimCounts = primCountModule.GetParcelMaxPrimCount(land);
+                if (primCounts.Total + objectCount > MaxPrimCounts)
+                {
+                    reason = "There are too many prims in this parcel.";
+                    return false;
+                }
             }
 
             return permission;

@@ -188,17 +188,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             return newLand;
         }
 
-        public int GetParcelMaxPrimCount(ILandObject thisObject)
-        {
-            // Normal Calculations
-            return (int)Math.Round(((float)LandData.Area / 65536.0f) * (float)m_scene.RegionInfo.ObjectCapacity * (float)m_scene.RegionInfo.RegionSettings.ObjectBonus);
-        }
-
-        public int GetSimulatorMaxPrimCount(ILandObject thisObject)
-        {
-            return m_scene.RegionInfo.ObjectCapacity;
-        }
-
         #endregion
 
         #region Packet Request Handling
@@ -210,29 +199,27 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
-            // In a perfect world, this would have worked.
-            //
-//            if ((landData.Flags & (uint)ParcelFlags.AllowLandmark) != 0)
-//                regionFlags |=  (uint)RegionFlags.AllowLandmark;
-//            if (landData.OwnerID == remote_client.AgentId)
-//                regionFlags |=  (uint)RegionFlags.AllowSetHome;
-
             int seq_id;
             if (snap_selection && (sequence_id == 0))
-            {
                 seq_id = m_lastSeqId;
-            }
             else
             {
                 seq_id = sequence_id;
                 m_lastSeqId = seq_id;
             }
 
+            int MaxPrimCounts = 0;
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            if (primCountModule != null)
+            {
+                MaxPrimCounts = primCountModule.GetParcelMaxPrimCount(this);
+            }
+
             remote_client.SendLandProperties(seq_id,
                     snap_selection, request_result, LandData,
                     (float)m_scene.RegionInfo.RegionSettings.ObjectBonus,
-                    GetParcelMaxPrimCount(this),
-                    GetSimulatorMaxPrimCount(this), regionFlags);
+                    MaxPrimCounts,
+                    m_scene.RegionInfo.ObjectCapacity, regionFlags);
         }
 
         public void UpdateLandProperties(LandUpdateArgs args, IClientAPI remote_client)

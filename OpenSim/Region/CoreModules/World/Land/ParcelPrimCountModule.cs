@@ -187,6 +187,15 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public int GetParcelMaxPrimCount(ILandObject thisObject)
+        {
+            // Normal Calculations
+            return (int)Math.Round(((float)thisObject.LandData.Area / 
+                (m_Scene.RegionInfo.RegionSizeX * m_Scene.RegionInfo.RegionSizeY)) *
+                (float)m_Scene.RegionInfo.ObjectCapacity *
+                (float)m_Scene.RegionInfo.RegionSettings.ObjectBonus);
+        }
+
         // NOTE: Call under Taint Lock
         private void AddObject(SceneObjectGroup obj)
         {

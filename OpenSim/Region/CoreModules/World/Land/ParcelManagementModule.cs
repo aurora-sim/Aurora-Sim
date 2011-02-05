@@ -106,7 +106,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// </value>
         private readonly Dictionary<int, ILandObject> m_landList = new Dictionary<int, ILandObject>();
 
-        private bool m_landPrimCountTainted;
         private int m_lastLandLocalID = ParcelManagementModule.START_LAND_LOCAL_ID;
 
         private bool m_UpdateDirectoryOnUpdate = false;

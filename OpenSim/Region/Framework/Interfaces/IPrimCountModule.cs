@@ -38,6 +38,8 @@ namespace OpenSim.Region.Framework.Interfaces
         void TaintPrimCount();
 
         IPrimCounts GetPrimCounts(UUID parcelID);
+
+        int GetParcelMaxPrimCount(ILandObject thisObject);
     }
 
     public interface IPrimCounts
