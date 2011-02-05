@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public int Temporary = 0;
         public Dictionary<UUID, int> Users =
                 new Dictionary<UUID, int>();
-        public List<SceneObjectGroup> Objects = new List<SceneObjectGroup>();
+        public List<SceneObjectPart> Objects = new List<SceneObjectPart>();
         public List<UUID> GroupsInThisParcel = new List<UUID>();
     }
 
@@ -229,46 +229,48 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
             {
                 UUID landOwner = landData.OwnerID;
-                int partCount = obj.Parts.Length;
 
-                if (parcelCounts.Objects.Contains(obj))
+                foreach (SceneObjectPart child in obj.ChildrenList)
                 {
-                    //Well... now what?
-                }
-                else
-                {
-                    parcelCounts.Objects.Add(obj);
-                    m_SimwideCounts[landOwner] += partCount;
-                    if (parcelCounts.Users.ContainsKey(obj.OwnerID))
-                        parcelCounts.Users[obj.OwnerID] += partCount;
-                    else
-                        parcelCounts.Users[obj.OwnerID] = partCount;
-
-                    if (landData.IsGroupOwned)
+                    if (parcelCounts.Objects.Contains(child))
                     {
-                        UUID GroupUUID = obj.GroupID;
-                        if (obj.OwnerID == landData.GroupID)
-                        {
-                            GroupUUID = obj.OwnerID;
-                            parcelCounts.Owner += partCount;
-                        }
-                        else if (obj.GroupID == landData.GroupID)
-                            parcelCounts.Group += partCount;
-                        else
-                            parcelCounts.Others += partCount;
-
-                        //Add it to the list of all groups in this parcel
-                        if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
-                            parcelCounts.GroupsInThisParcel.Add(GroupUUID);
+                        //Well... now what?
                     }
                     else
                     {
-                        if (obj.OwnerID == landData.OwnerID)
-                            parcelCounts.Owner += partCount;
-                        else if (obj.GroupID == landData.GroupID)
-                            parcelCounts.Group += partCount;
+                        parcelCounts.Objects.Add(child);
+                        m_SimwideCounts[landOwner] += 1;
+                        if (parcelCounts.Users.ContainsKey(obj.OwnerID))
+                            parcelCounts.Users[obj.OwnerID] += 1;
                         else
-                            parcelCounts.Others += partCount;
+                            parcelCounts.Users[obj.OwnerID] = 1;
+
+                        if (landData.IsGroupOwned)
+                        {
+                            UUID GroupUUID = obj.GroupID;
+                            if (obj.OwnerID == landData.GroupID)
+                            {
+                                GroupUUID = obj.OwnerID;
+                                parcelCounts.Owner += 1;
+                            }
+                            else if (obj.GroupID == landData.GroupID)
+                                parcelCounts.Group += 1;
+                            else
+                                parcelCounts.Others += 1;
+
+                            //Add it to the list of all groups in this parcel
+                            if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
+                                parcelCounts.GroupsInThisParcel.Add(GroupUUID);
+                        }
+                        else
+                        {
+                            if (obj.OwnerID == landData.OwnerID)
+                                parcelCounts.Owner += 1;
+                            else if (obj.GroupID == landData.GroupID)
+                                parcelCounts.Group += 1;
+                            else
+                                parcelCounts.Others += 1;
+                        }
                     }
                 }
             }
@@ -290,40 +292,42 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
             {
                 UUID landOwner = landData.OwnerID;
-                int partCount = obj.Parts.Length;
 
-                if (!parcelCounts.Objects.Contains(obj))
+                foreach (SceneObjectPart child in obj.ChildrenList)
                 {
-                    //Well... now what?
-                }
-                else
-                {
-                    parcelCounts.Objects.Remove(obj);
-                    m_SimwideCounts[landOwner] -= partCount;
-                    if (parcelCounts.Users.ContainsKey(obj.OwnerID))
-                        parcelCounts.Users[obj.OwnerID] -= partCount;
-
-                    if (landData.IsGroupOwned)
+                    if (!parcelCounts.Objects.Contains(child))
                     {
-                        UUID GroupUUID = obj.GroupID;
-                        if (obj.OwnerID == landData.GroupID)
-                        {
-                            GroupUUID = obj.OwnerID;
-                            parcelCounts.Owner -= partCount;
-                        }
-                        else if (obj.GroupID == landData.GroupID)
-                            parcelCounts.Group -= partCount;
-                        else
-                            parcelCounts.Others -= partCount;
+                        //Well... now what?
                     }
                     else
                     {
-                        if (obj.OwnerID == landData.OwnerID)
-                            parcelCounts.Owner -= partCount;
-                        else if (obj.GroupID == landData.GroupID)
-                            parcelCounts.Group -= partCount;
+                        parcelCounts.Objects.Remove(child);
+                        m_SimwideCounts[landOwner] -= 1;
+                        if (parcelCounts.Users.ContainsKey(obj.OwnerID))
+                            parcelCounts.Users[obj.OwnerID] -= 1;
+
+                        if (landData.IsGroupOwned)
+                        {
+                            UUID GroupUUID = obj.GroupID;
+                            if (obj.OwnerID == landData.GroupID)
+                            {
+                                GroupUUID = obj.OwnerID;
+                                parcelCounts.Owner -= 1;
+                            }
+                            else if (obj.GroupID == landData.GroupID)
+                                parcelCounts.Group -= 1;
+                            else
+                                parcelCounts.Others -= 1;
+                        }
                         else
-                            parcelCounts.Others -= partCount;
+                        {
+                            if (obj.OwnerID == landData.OwnerID)
+                                parcelCounts.Owner -= 1;
+                            else if (obj.GroupID == landData.GroupID)
+                                parcelCounts.Group -= 1;
+                            else
+                                parcelCounts.Others -= 1;
+                        }
                     }
                 }
             }
