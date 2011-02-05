@@ -98,11 +98,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         void OnGenericEvent(string FunctionName, object parameters)
         {
-            if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
-            {
-                //Select the object now
-                SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
-            }
+            //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
+            //{
+            //    //Select the object now
+            //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
+            //}
         }
 
         public void RegionLoaded(Scene scene)
@@ -271,6 +271,56 @@ namespace OpenSim.Region.CoreModules.World.Land
         // NOTE: Call under Taint Lock
         private void RemoveObject(SceneObjectGroup obj)
         {
+            if (obj.IsAttachment)
+                return;
+            if (((obj.RootPart.Flags & PrimFlags.TemporaryOnRez) != 0))
+                return;
+
+            Vector3 pos = obj.AbsolutePosition;
+            ILandObject landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(pos.X, pos.Y);
+            LandData landData = landObject.LandData;
+
+            ParcelCounts parcelCounts;
+            if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
+            {
+                UUID landOwner = landData.OwnerID;
+                int partCount = obj.Parts.Length;
+
+                if (!parcelCounts.Objects.Contains(obj))
+                {
+                    //Well... now what?
+                }
+                else
+                {
+                    parcelCounts.Objects.Remove(obj);
+                    m_SimwideCounts[landOwner] -= partCount;
+                    if (parcelCounts.Users.ContainsKey(obj.OwnerID))
+                        parcelCounts.Users[obj.OwnerID] -= partCount;
+
+                    if (landData.IsGroupOwned)
+                    {
+                        UUID GroupUUID = obj.GroupID;
+                        if (obj.OwnerID == landData.GroupID)
+                        {
+                            GroupUUID = obj.OwnerID;
+                            parcelCounts.Owner -= partCount;
+                        }
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group -= partCount;
+                        else
+                            parcelCounts.Others -= partCount;
+                    }
+                    else
+                    {
+                        if (obj.OwnerID == landData.OwnerID)
+                            parcelCounts.Owner -= partCount;
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group -= partCount;
+                        else
+                            parcelCounts.Others -= partCount;
+                    }
+                }
+            }
         }
 
         public IPrimCounts GetPrimCounts(UUID parcelID)
