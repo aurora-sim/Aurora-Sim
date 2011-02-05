@@ -3908,9 +3908,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             msg.fromGroup = false;
             msg.offline = (byte)0; 
             msg.ParentEstateID = 0;
-            msg.Position = Vector3.Zero;
+            msg.Position = m_host.AbsolutePosition;
             msg.RegionID = World.RegionInfo.RegionID.Guid;
-            msg.binaryBucket = new byte[0];
+            msg.binaryBucket
+                = Util.StringToBytes256(
+                    "{0}/{1}/{2}/{3}",
+                    World.RegionInfo.RegionName,
+                    (int)Math.Floor(m_host.AbsolutePosition.X),
+                    (int)Math.Floor(m_host.AbsolutePosition.Y),
+                    (int)Math.Floor(m_host.AbsolutePosition.Z));
 
             if (m_TransferModule != null)
             {
