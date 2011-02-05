@@ -796,6 +796,19 @@ namespace OpenSim.Services.CapsService
                 //Add the password too
                 circuitData.OtherInformation["CapsPassword"] = otherRegionService.Password;
 
+                //Offset the child avs position
+                uint x, y;
+                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+
+                circuitData.startpos.X += ((int)x - neighbor.RegionLocX);
+                circuitData.startpos.Y += ((int)y - neighbor.RegionLocY);
+
+                if(agentData != null)
+                {
+                    agentData.Position.X += ((int)x - neighbor.RegionLocX);
+                    agentData.Position.Y += ((int)y - neighbor.RegionLocY);
+                }
+
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);
                 if (regionAccepted)

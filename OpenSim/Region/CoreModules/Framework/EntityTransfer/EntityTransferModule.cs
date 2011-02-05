@@ -620,7 +620,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual void EnableChildAgents(ScenePresence sp)
         {
             AgentCircuitData agent = sp.ControllingClient.RequestClientInfo();
-            agent.startpos = new Vector3(128, 128, 70);
+            agent.startpos = sp.AbsolutePosition;
             agent.child = true;
             agent.Appearance = sp.Appearance;
 

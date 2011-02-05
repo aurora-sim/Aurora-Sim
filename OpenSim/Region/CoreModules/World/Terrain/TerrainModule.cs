@@ -124,6 +124,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
             m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
+            m_scene.EventManager.OnNewPresence += OnNewPresence;
+
             if (firstScene)
                 AddConsoleCommands();
 
@@ -145,6 +147,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
                 m_scene.AuroraEventManager.OnGenericEvent -= AuroraEventManager_OnGenericEvent;
+                m_scene.EventManager.OnNewPresence -= OnNewPresence;
+
                 // remove the interface
                 m_scene.UnregisterModuleInterface<ITerrainModule>(this);
             }
@@ -729,6 +733,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
         {
             ScenePresence presence = m_scene.GetScenePresence(remote_client.AgentId);
+            SendTerrainUpdatesForClient(presence);
+        }
+
+        void OnNewPresence(ScenePresence presence)
+        {
             SendTerrainUpdatesForClient(presence);
         }
 
