@@ -345,10 +345,11 @@ namespace Aurora.Modules
             if (parcelManagement != null)
                 ILO = parcelManagement.GetLandObject(Position.X, Position.Y);
 
-            if (ILO == null) // Can't teleport into a parcel that doesn't exist
+            if (ILO == null)
             {
-                reason = "No land in this region that you can teleport into.";
-                return false;
+                //Can't find land, give them the first parcel in the region and find a good position for them
+                ILO = parcelManagement.AllParcels()[0];
+                Position = parcelManagement.GetParcelCenterAtGround(ILO);
             }
 
             //parcel permissions

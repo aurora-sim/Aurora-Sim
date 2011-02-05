@@ -1002,31 +1002,29 @@ namespace OpenSim.Region.Framework.Scenes
             AbsolutePosition = pos;
 
             Vector3 look = Velocity;
-            if ((look.X == 0) && (look.Y == 0) && (look.Z == 0))
-            {
+            if (look == Vector3.Zero)
                 look = new Vector3(0.99f, 0.042f, 0);
-            }
 
             //Put the agent in an allowed area and above the terrain.
             IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
                 AbsolutePosition = parcelManagement.GetNearestAllowedPosition(this);
 
-            //Leave this HERE so that the callback will occur first and make sure that the sim the agent is coming from won't kill us if the MakeRootAgent takes too long
-            IEventQueueService eventQueueService = Scene.RequestModuleInterface<IEventQueueService>();
-            if (eventQueueService != null)
-                eventQueueService.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle);
-
             IsChildAgent = false;
-
-            bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-            MakeRootAgent(m_flying);
+            
+            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
+            m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
 
             //Send updates to everyone about us
             SendAvatarDataToAllAgents();
 
-            //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
-            m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
+            bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+            MakeRootAgent(m_flying);
+
+            //Tell the EQService that we successfully got here
+            IEventQueueService eventQueueService = Scene.RequestModuleInterface<IEventQueueService>();
+            if (eventQueueService != null)
+                eventQueueService.ArrivedAtDestination(UUID, Scene.RegionInfo.RegionHandle);
 
             IEntityTransferModule m_agentTransfer = m_scene.RequestModuleInterface<IEntityTransferModule>();
             if (m_agentTransfer != null)
@@ -1179,7 +1177,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             PhysicsActor actor = PhysicsActor;
             if (actor == null)
+            {
+                m_log.Debug("Null physical actor in AgentUpdate in " + m_scene.RegionInfo.RegionName);
                 return;
+            }
             
             bool update_movementflag = false;
 
