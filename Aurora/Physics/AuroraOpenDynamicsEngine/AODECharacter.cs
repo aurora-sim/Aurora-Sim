@@ -81,6 +81,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_alwaysRun = false;
         private int m_requestedUpdateFrequency = 0;
         private Vector3 m_taintPosition = Vector3.Zero;
+        private Quaternion m_taintRotation = Quaternion.Identity;
         public uint m_localID = 0;
         public bool m_returnCollisions = false;
         // taints and their non-tainted counterparts
@@ -139,10 +140,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Constructor
 
-        public AuroraODECharacter(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Vector3 size)
+        public AuroraODECharacter(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Quaternion rotation, Vector3 size)
         {
             m_uuid = UUID.Random();
 
+            m_taintRotation = rotation;
             if (pos.IsFinite())
             {
                 if (pos.Z > 9999999f)
@@ -561,9 +563,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override Quaternion Orientation
         {
-            get { return Quaternion.Identity; }
+            get { return m_taintRotation; }
             set
             {
+                m_taintRotation = value;
                 //Matrix3 or = Orientation.ToRotationMatrix();
                 //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
                 //d.BodySetRotation(Body, ref ord);
@@ -671,7 +674,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                d.RFromAxisAndAngle(out m_caprot, 0, 0, 1, (float)(Math.PI / 2));
+                m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
+                d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
             }
 
             d.GeomSetBody(Shell, Body);

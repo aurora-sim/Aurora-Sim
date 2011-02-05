@@ -54,7 +54,7 @@ namespace OpenSim.Region.Physics.Manager
         public abstract void Initialise(IMesher meshmerizer);
         public abstract void PostInitialise(IConfigSource config);
 
-        public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying);
+        public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying);
 
         public abstract void RemoveAvatar(PhysicsActor actor);
 
@@ -271,7 +271,7 @@ namespace OpenSim.Region.Physics.Manager
             {
             }
 
-            public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
+            public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
             {
                 m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
                 return PhysicsActor.Null;

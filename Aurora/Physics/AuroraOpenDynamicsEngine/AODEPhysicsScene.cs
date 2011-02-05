@@ -1616,13 +1616,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Add/Remove Entities
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
         {
             Vector3 pos;
             pos.X = position.X;
             pos.Y = position.Y;
             pos.Z = position.Z;
-            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, size);
+            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, rotation, size);
             newAv.Flying = isFlying;
             newAv.MinimumGroundFlightOffset = minimumGroundFlightOffset;
 
@@ -2947,7 +2947,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         if (geom_name_map.ContainsKey(defect.Shell))
                                             AddAvatar(geom_name_map[defect.Shell], new Vector3(Constants.RegionSize / 2,
                                                 Constants.RegionSize / 2,
-                                                Constants.RegionSize / 2), defect.Size, true);
+                                                Constants.RegionSize / 2), defect.Orientation, defect.Size, true);
                                         defect.Destroy();
                                     }
                                 }

@@ -229,7 +229,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_world.removeCollisionObject(body);
         }
 
-        public override PhysicsActor AddAvatar(string avName, Vector3 position, Vector3 size, bool isFlying)
+        public override PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying)
         {
             lock (BulletLock)
             {

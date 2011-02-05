@@ -2660,7 +2660,7 @@ namespace OpenSim.Region.Framework.Scenes
             if(AddAvHeightToPosition) //This is here so that after teleports, you arrive just slightly higher so that you don't fall through the ground/objects
                 pVec.Z += m_avHeight;
 
-            m_physicsActor = scene.AddAvatar(Firstname + "." + Lastname, pVec,
+            m_physicsActor = scene.AddAvatar(Firstname + "." + Lastname, pVec, Rotation,
                                                  new Vector3(0f, 0f, m_appearance.AvatarHeight), isFlying);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
