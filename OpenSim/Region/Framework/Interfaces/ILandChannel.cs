@@ -70,18 +70,61 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns></returns>
         ILandObject GetLandObject(int localID);
         
-        bool IsLandPrimCountTainted();
+        /// <summary>
+        /// Update the given land object in the cache
+        /// </summary>
+        /// <param name="localID"></param>
+        /// <param name="data"></param>
         void UpdateLandObject(int localID, LandData data);
-        void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
-        void DisableObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
-        void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);
 
+        /// <summary>
+        /// Join all parcels within the given range into one large parcel
+        /// </summary>
+        /// <param name="start_x"></param>
+        /// <param name="start_y"></param>
+        /// <param name="end_x"></param>
+        /// <param name="end_y"></param>
+        /// <param name="attempting_user_id"></param>
         void Join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id);
+
+        /// <summary>
+        /// Subdivide the land area given into a new parcel
+        /// </summary>
+        /// <param name="start_x"></param>
+        /// <param name="start_y"></param>
+        /// <param name="end_x"></param>
+        /// <param name="end_y"></param>
+        /// <param name="attempting_user_id"></param>
         void Subdivide(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id);
 
+        /// <summary>
+        /// Get the nearest region border to the given avatars position
+        /// </summary>
+        /// <param name="avatar"></param>
+        /// <returns></returns>
         Vector3 GetNearestRegionEdgePosition(ScenePresence avatar);
+
+        /// <summary>
+        /// Get the nearest allowed parcel that the given avatarID is allowed in from point (x,y)
+        /// </summary>
+        /// <param name="avatarId"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         ILandObject GetNearestAllowedParcel(UUID avatarId, float x, float y);
+
+        /// <summary>
+        /// Get the nearest allowed position for the given avatar
+        /// </summary>
+        /// <param name="avatar"></param>
+        /// <returns></returns>
         Vector3 GetNearestAllowedPosition(ScenePresence avatar);
+        
+        /// <summary>
+        /// Get the center of a parcel at ground level
+        /// </summary>
+        /// <param name="parcel"></param>
+        /// <returns></returns>
         Vector3 GetParcelCenterAtGround(ILandObject parcel);
 
         /// <summary>

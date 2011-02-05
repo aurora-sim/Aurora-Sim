@@ -125,11 +125,6 @@ public class RegionCombinerLargeLandChannel : IParcelManagementModule
             }
         }
 
-        public bool IsLandPrimCountTainted()
-        {
-            return RootRegionLandChannel.IsLandPrimCountTainted();
-        }
-
         public void UpdateLandObject(int localID, LandData data)
         {
             RootRegionLandChannel.UpdateLandObject(localID, data);
@@ -143,16 +138,6 @@ public class RegionCombinerLargeLandChannel : IParcelManagementModule
         public void Subdivide(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
         {
             RootRegionLandChannel.Subdivide(start_x, start_y, end_x, end_y, attempting_user_id);
-        }
-
-        public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
-        {
-            RootRegionLandChannel.ReturnObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
-        }
-
-        public void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)
-        {
-            RootRegionLandChannel.SetParcelOtherCleanTime(remoteClient, localID, otherCleanTime);
         }
 
         public Vector3 GetNearestRegionEdgePosition(OpenSim.Region.Framework.Scenes.ScenePresence avatar)
@@ -173,11 +158,6 @@ public class RegionCombinerLargeLandChannel : IParcelManagementModule
         public Vector3 GetParcelCenterAtGround(ILandObject parcel)
         {
             return RootRegionLandChannel.GetParcelCenterAtGround(parcel);
-        }
-
-        public void DisableObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
-        {
-            RootRegionLandChannel.DisableObjectsInParcel(localID, returnType, agentIDs, taskIDs, remoteClient);
         }
 
         public void AddReturns(UUID agentID, string objectName, Vector3 position, string reason, List<OpenSim.Region.Framework.Scenes.SceneObjectGroup> deleteGroups)
