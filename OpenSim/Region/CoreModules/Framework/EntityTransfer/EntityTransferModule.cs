@@ -506,10 +506,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public virtual void Cross(ScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
             Scene scene = agent.Scene;
-            //Add the offset as its needed
-            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
-            newposition.X += scene.RegionInfo.RegionLocX - crossingRegion.RegionLocX;
-            newposition.Y += scene.RegionInfo.RegionLocY - crossingRegion.RegionLocY;
+            Vector3 newposition = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);;
 
             CrossAgentToNewRegionDelegate d = CrossAgentToNewRegionAsync;
             d.BeginInvoke(agent, newposition, crossingRegion, isFlying, CrossAgentToNewRegionCompleted, d);

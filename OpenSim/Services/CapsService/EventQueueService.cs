@@ -773,7 +773,12 @@ namespace OpenSim.Services.CapsService
                     //Add the new Seed for this region
                 }
                 else
+                {
+                    //Note: if the agent is already there, send an agent update then
+                    if (agentData != null)
+                        return SimulationService.UpdateAgent(neighbor, agentData);
                     return true;
+                }
                 //Fix the AgentCircuitData with the new CapsUrl
                 circuitData.CapsPath = CapsBase;
                 //Add the password too

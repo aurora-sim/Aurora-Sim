@@ -571,18 +571,6 @@ namespace Aurora.Simulation.Base
                 }
                 try
                 {
-                    //Stop the HTTP server(s)
-                    foreach (BaseHttpServer server in m_Servers.Values)
-                    {
-                        server.Stop();
-                    }
-                }
-                catch
-                {
-                    //Again, just shut down
-                }
-                try
-                {
                     //Close out all the modules
                     CloseModules();
                 }
@@ -598,6 +586,18 @@ namespace Aurora.Simulation.Base
                 catch
                 {
                     //Just shut down already
+                }
+                try
+                {
+                    //Stop the HTTP server(s)
+                    foreach (BaseHttpServer server in m_Servers.Values)
+                    {
+                        server.Stop();
+                    }
+                }
+                catch
+                {
+                    //Again, just shut down
                 }
 
                 if (close)
