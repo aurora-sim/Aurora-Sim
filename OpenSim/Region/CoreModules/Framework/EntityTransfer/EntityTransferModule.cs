@@ -841,9 +841,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, 1, UUID.Zero);
             newObject.RootPart.ParentGroup.ResumeScripts();
 
-            // Do this as late as possible so that listeners have full access to the incoming object
-            scene.EventManager.TriggerOnIncomingSceneObject(newObject);
-
             if (newObject.RootPart.SitTargetAvatar.Count != 0)
             {
                 lock (newObject.RootPart.SitTargetAvatar)

@@ -78,7 +78,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 scene.RegisterModuleInterface<ICombatModule>(this);
                 scene.EventManager.OnNewPresence += NewPresence;
-                scene.EventManager.OnIncomingSceneObject += IncomingSceneObject;
                 scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringParcel;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport += AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport += AllowedTeleports;
@@ -91,7 +90,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 scene.EventManager.OnNewPresence -= NewPresence;
                 scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringParcel;
-                scene.EventManager.OnIncomingSceneObject -= IncomingSceneObject;
                 scene.Permissions.OnAllowedOutgoingLocalTeleport -= AllowedTeleports;
                 scene.Permissions.OnAllowedOutgoingRemoteTeleport -= AllowedTeleports;
             }
@@ -109,10 +107,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                             if (!SP.Invulnerable)
                                 return false;
             return true;
-        }
-
-        void IncomingSceneObject(SceneObjectGroup so)
-        {
         }
 
         void NewPresence(ScenePresence presence)

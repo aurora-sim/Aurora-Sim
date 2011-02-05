@@ -743,6 +743,9 @@ namespace OpenSim.Region.Framework.Scenes
             //Check to make sure we have the sculpty info
             CheckSculptAndLoad();
 
+            //Trigger our event
+            Scene.EventManager.TriggerObjectBeingAddedToScene(this);
+
             if (WSModule != null) 
                 ApplyPhysics(WSModule.AllowPhysicalPrims);
             else

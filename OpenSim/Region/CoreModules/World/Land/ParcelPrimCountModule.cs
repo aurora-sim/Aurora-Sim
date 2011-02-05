@@ -87,7 +87,9 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             m_Scene = scene;
 
-            m_Scene.EventManager.OnIncomingSceneObject +=
+            scene.RegisterModuleInterface<IPrimCountModule>(this);
+
+            m_Scene.EventManager.OnObjectBeingAddedToScene +=
                     OnPrimCountAdd;
             m_Scene.EventManager.OnObjectBeingRemovedFromScene +=
                     OnObjectBeingRemovedFromScene;
@@ -109,6 +111,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void RemoveRegion(Scene scene)
         {
+            m_Scene.UnregisterModuleInterface<IPrimCountModule>(this);
+
+            m_Scene.EventManager.OnObjectBeingAddedToScene -=
+                    OnPrimCountAdd;
+            m_Scene.EventManager.OnObjectBeingRemovedFromScene -=
+                    OnObjectBeingRemovedFromScene;
+            m_Scene.AuroraEventManager.OnGenericEvent -= OnGenericEvent;
+
+            m_Scene = null;
         }
 
         public void Close()

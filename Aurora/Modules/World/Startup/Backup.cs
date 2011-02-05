@@ -199,7 +199,6 @@ namespace Aurora.Modules
                         continue;
                     }
                     group.Scene = m_scene;
-                    m_scene.EventManager.TriggerOnSceneObjectLoaded(group);
 
                     if (group.RootPart == null)
                     {

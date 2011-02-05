@@ -185,12 +185,6 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void OnMakeRootAgentDelegate(ScenePresence presence);
         public event OnMakeRootAgentDelegate OnMakeRootAgent;
 
-        /// <summary>
-        /// Triggered when an object or attachment enters a scene
-        /// </summary>
-        public event OnIncomingSceneObjectDelegate OnIncomingSceneObject;
-        public delegate void OnIncomingSceneObjectDelegate(SceneObjectGroup so);
-
         public delegate void NewInventoryItemUploadComplete(UUID avatarID, UUID assetID, string name, int userlevel);
 
         public event NewInventoryItemUploadComplete OnNewInventoryItemUploadComplete;
@@ -208,16 +202,13 @@ namespace OpenSim.Region.Framework.Scenes
         //This is called after OnStartupComplete is done, it should ONLY be registered to the Scene
         public event StartupComplete OnStartupFullyComplete;
 
-        //        public delegate void ScriptTimerEvent(uint localID, double timerinterval);
-
-        //        public event ScriptTimerEvent OnScriptTimerEvent;
-
         public delegate void EstateToolsSunUpdate(ulong regionHandle, bool FixedTime, bool EstateSun, float LindenHour);
-
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
         public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
+
+        public event ObjectBeingRemovedFromScene OnObjectBeingAddedToScene;
 
         public delegate void IncomingLandDataFromStorage(List<LandData> data);
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
@@ -290,12 +281,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// the avatarID is UUID.Zero (I know, this doesn't make much sense but now it's historical).
         public delegate void Attach(uint localID, UUID itemID, UUID avatarID);
         public event Attach OnAttach;
-
-        /// <summary>
-        /// Called immediately after an object is loaded from storage.
-        /// </summary>
-        public event SceneObjectDelegate OnSceneObjectLoaded;
-        public delegate void SceneObjectDelegate(SceneObjectGroup so);
 
         public delegate void RegionUp(GridRegion region);
         public event RegionUp OnRegionUp;
@@ -630,6 +615,27 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnRemovePresence failed - continuing.  {0} {1}",
+                            e.ToString(), e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerObjectBeingAddedToScene(SceneObjectGroup obj)
+        {
+            ObjectBeingRemovedFromScene handlerObjectBeingAddedToScene = OnObjectBeingAddedToScene;
+            if (handlerObjectBeingAddedToScene != null)
+            {
+                foreach (ObjectBeingRemovedFromScene d in handlerObjectBeingAddedToScene.GetInvocationList())
+                {
+                    try
+                    {
+                        d(obj);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerObjectBeingAddToScene failed - continuing.  {0} {1}",
                             e.ToString(), e.StackTrace);
                     }
                 }
@@ -1044,27 +1050,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnMakeRootAgent failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnIncomingSceneObject(SceneObjectGroup so)
-        {
-            OnIncomingSceneObjectDelegate handlerIncomingSceneObject = OnIncomingSceneObject;
-            if (handlerIncomingSceneObject != null)
-            {
-                foreach (OnIncomingSceneObjectDelegate d in handlerIncomingSceneObject.GetInvocationList())
-                {
-                    try
-                    {
-                        d(so);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnIncomingSceneObject failed - continuing.  {0} {1}",
                             e.ToString(), e.StackTrace);
                     }
                 }
@@ -1743,27 +1728,6 @@ namespace OpenSim.Region.Framework.Scenes
                                 "[EVENT MANAGER]: Delegate for StartupComplete failed - continuing.  {0} {1}",
                                 e.ToString(), e.StackTrace);
                         }
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnSceneObjectLoaded(SceneObjectGroup so)
-        {
-            SceneObjectDelegate handler = OnSceneObjectLoaded;
-            if (handler != null)
-            {
-                foreach (SceneObjectDelegate d in handler.GetInvocationList())
-                {
-                    try
-                    {
-                        d(so);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnSceneObjectLoaded failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
                     }
                 }
             }
