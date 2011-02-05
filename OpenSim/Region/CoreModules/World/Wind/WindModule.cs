@@ -439,22 +439,19 @@ namespace OpenSim.Region.CoreModules
         {
             if (m_ready)
             {
-                if (m_scene.SceneGraph.GetRootAgentCount() > 0)
+                // Ask wind plugin to generate a LL wind array to be cached locally
+                // Try not to update this too often, as it may involve array copies
+                if (m_frame >= (m_frameLastUpdateClientArray + m_frameUpdateRate))
                 {
-                    // Ask wind plugin to generate a LL wind array to be cached locally
-                    // Try not to update this too often, as it may involve array copies
-                    if (m_frame >= (m_frameLastUpdateClientArray + m_frameUpdateRate))
-                    {
-                        windSpeeds = m_activeWindPlugin.WindLLClientArray();
-                        m_frameLastUpdateClientArray = m_frame;
-                    }
-
-                    m_scene.ForEachScenePresence(delegate(ScenePresence sp)
-                    {
-                        if (!sp.IsChildAgent)
-                            sp.ControllingClient.SendWindData(windSpeeds);
-                    });
+                    windSpeeds = m_activeWindPlugin.WindLLClientArray();
+                    m_frameLastUpdateClientArray = m_frame;
                 }
+
+                m_scene.ForEachScenePresence(delegate(ScenePresence sp)
+                {
+                    if (!sp.IsChildAgent)
+                        sp.ControllingClient.SendWindData(windSpeeds);
+                });
             }
         }
         /// <summary>

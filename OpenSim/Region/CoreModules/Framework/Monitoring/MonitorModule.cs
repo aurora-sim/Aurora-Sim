@@ -508,16 +508,21 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[10].StatValue = ScriptMS;
 
                     sb[11].StatID = (uint)Stats.TotalObjects;
-                    sb[11].StatValue = m_currentScene.SceneGraph.GetTotalObjectsCount();
-
                     sb[12].StatID = (uint)Stats.ActiveObjects;
-                    sb[12].StatValue = m_currentScene.SceneGraph.GetActiveObjectsCount();
-
                     sb[13].StatID = (uint)Stats.NumAgentMain;
-                    sb[13].StatValue = m_currentScene.SceneGraph.GetRootAgentCount();
-
                     sb[14].StatID = (uint)Stats.NumAgentChild;
-                    sb[14].StatValue = m_currentScene.SceneGraph.GetChildAgentCount();
+
+                    IEntityCountModule entityCountModule = m_currentScene.RequestModuleInterface<IEntityCountModule>();
+                    if (entityCountModule != null)
+                    {
+                        sb[11].StatValue = entityCountModule.Objects;
+
+                        sb[12].StatValue = entityCountModule.ActiveObjects;
+
+                        sb[13].StatValue = entityCountModule.RootAgents;
+
+                        sb[14].StatValue = entityCountModule.ChildAgents;
+                    }
 
                     sb[15].StatID = (uint)Stats.NumScriptActive;
                     sb[15].StatValue = totalScriptMonitor.ActiveScripts;

@@ -102,15 +102,14 @@ namespace Aurora.Modules
 
         protected void OnMakeRootAgent(ScenePresence presence)
         {
-            //The root agents was already added via OnNewPresence so do not repeat
+            m_rootAgents++;
+            m_childAgents--;
         }
 
         protected void OnNewPresence(ScenePresence presence)
         {
-            if (presence.IsChildAgent)
-                m_childAgents++;
-            else
-                m_rootAgents++;
+            // Why don't we check for root agents? We don't because it will be added in MakeRootAgent and removed from here
+            m_childAgents++;
         }
 
         void OnRemovePresence(ScenePresence presence)

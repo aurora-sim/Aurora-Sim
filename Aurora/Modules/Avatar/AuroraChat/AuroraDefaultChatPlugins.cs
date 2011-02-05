@@ -413,7 +413,9 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     {
                         if (presence.UUID != client.AgentId && !presence.IsChildAgent)
                         {
-                            presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + (((Scene)client.Scene).SceneGraph.GetRootAgentCount() + 1), 1, SP.AbsolutePosition, "System",
+                            IEntityCountModule entityCountModule = client.Scene.RequestModuleInterface<IEntityCountModule>();
+                            if (entityCountModule != null)
+                                presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + (entityCountModule.RootAgents + 1), 1, SP.AbsolutePosition, "System",
                                                                UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                         }
                     }
@@ -449,7 +451,9 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 {
                     if (SP.UUID != clientID && !SP.IsChildAgent)
                     {
-                        SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + scene.SceneGraph.GetRootAgentCount(), 1, SP.AbsolutePosition, "System",
+                        IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
+                        if (entityCountModule != null)
+                            SP.ControllingClient.SendChatMessage(presence.Name + " has left the region. Total Agents: " + entityCountModule.RootAgents, 1, SP.AbsolutePosition, "System",
                                                            UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }

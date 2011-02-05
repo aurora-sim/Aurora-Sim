@@ -2161,8 +2161,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool DeleteEntity(EntityBase entity)
         {
-            if (entity.IsPhysical())
-                RemovePhysicalPrim(entity.ChildrenEntities().Count);
             return RemoveEntity(entity);
         }
 

@@ -26,6 +26,7 @@
  */
 
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
@@ -43,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return m_scene.SceneGraph.GetRootAgentCount();
+            return m_scene.RequestModuleInterface<IEntityCountModule>().RootAgents;
         }
 
         public string GetName()
@@ -53,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + " agent(s)";
+            return m_scene.RequestModuleInterface<IEntityCountModule>().RootAgents + " agent(s)";
         }
 
         #endregion

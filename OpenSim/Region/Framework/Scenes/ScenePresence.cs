@@ -743,8 +743,6 @@ namespace OpenSim.Region.Framework.Scenes
             // elsewhere anyway
             // Animator.SendAnimPack();
 
-            m_scene.SceneGraph.SwapRootChildAgent(false);
-
             // On the next prim update, all objects will be sent
             //
             m_sceneViewer.Reset();
@@ -833,7 +831,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Velocity = new Vector3(0, 0, 0);
 
             IsChildAgent = true;
-            m_scene.SceneGraph.SwapRootChildAgent(true);
             RemoveFromPhysicalScene();
 
             // FIXME: Set m_rootRegionHandle to the region handle of the scene this agent is moving into

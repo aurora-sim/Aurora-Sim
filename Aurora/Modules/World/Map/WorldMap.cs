@@ -307,7 +307,8 @@ namespace Aurora.Modules
                 {
                     //Only one person here, send a zero person response
                     mapItemReply mapitem = new mapItemReply();
-                    if (m_scene.SceneGraph.GetRootAgentCount() <= 1)
+                    IEntityCountModule entityCountModule = m_scene.RequestModuleInterface<IEntityCountModule>();
+                    if (entityCountModule != null && entityCountModule.RootAgents <= 1)
                     {
                         mapitem = new mapItemReply();
                         mapitem.x = (uint)(xstart + 1);

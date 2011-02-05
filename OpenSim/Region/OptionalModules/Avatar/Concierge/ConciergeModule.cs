@@ -320,9 +320,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             if (m_conciergedScenes.Contains(client.Scene))
             {
                 Scene scene = client.Scene as Scene;
-                m_log.DebugFormat("[Concierge]: {0} logs off from {1}", client.Name, scene.RegionInfo.RegionName);
-                AnnounceToAgentsRegion(scene, String.Format(m_announceLeaving, client.Name, scene.RegionInfo.RegionName, scene.SceneGraph.GetRootAgentCount()));
-                UpdateBroker(scene);
+                IEntityCountModule entityCountModule = client.Scene.RequestModuleInterface<IEntityCountModule>();
+                if (entityCountModule != null)
+                {
+                    m_log.DebugFormat("[Concierge]: {0} logs off from {1}", client.Name, scene.RegionInfo.RegionName);
+                    AnnounceToAgentsRegion(scene, String.Format(m_announceLeaving, client.Name, scene.RegionInfo.RegionName, entityCountModule.RootAgents));
+                    UpdateBroker(scene);
+                }
             }
         }
 
@@ -334,9 +338,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
                 Scene scene = agent.Scene;
                 m_log.DebugFormat("[Concierge]: {0} enters {1}", agent.Name, scene.RegionInfo.RegionName);
                 WelcomeAvatar(agent, scene);
-                AnnounceToAgentsRegion(scene, String.Format(m_announceEntering, agent.Name,
-                                                            scene.RegionInfo.RegionName, scene.SceneGraph.GetRootAgentCount()));
-                UpdateBroker(scene);
+                IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
+                if (entityCountModule != null)
+                {
+                    AnnounceToAgentsRegion(scene, String.Format(m_announceEntering, agent.Name,
+                                                                scene.RegionInfo.RegionName, entityCountModule.RootAgents));
+                    UpdateBroker(scene);
+                }
             }
         }
 
@@ -347,9 +355,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             {
                 Scene scene = agent.Scene;
                 m_log.DebugFormat("[Concierge]: {0} leaves {1}", agent.Name, scene.RegionInfo.RegionName);
-                AnnounceToAgentsRegion(scene, String.Format(m_announceLeaving, agent.Name,
-                                                            scene.RegionInfo.RegionName, scene.SceneGraph.GetRootAgentCount()));
-                UpdateBroker(scene);
+                IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
+                if (entityCountModule != null)
+                {
+                    AnnounceToAgentsRegion(scene, String.Format(m_announceLeaving, agent.Name,
+                                                               scene.RegionInfo.RegionName, entityCountModule.RootAgents));
+                    UpdateBroker(scene);
+                }
             }
         }
 
@@ -377,10 +389,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
 
             // create XML sniplet
             StringBuilder list = new StringBuilder();
-            list.Append(String.Format("<avatars count=\"{0}\" region_name=\"{1}\" region_uuid=\"{2}\" timestamp=\"{3}\">\n",
-                                          scene.SceneGraph.GetRootAgentCount(), scene.RegionInfo.RegionName,
-                                          scene.RegionInfo.RegionID,
-                                          DateTime.UtcNow.ToString("s")));
+            IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule>();
+            if (entityCountModule != null)
+            {
+                list.Append(String.Format("<avatars count=\"{0}\" region_name=\"{1}\" region_uuid=\"{2}\" timestamp=\"{3}\">\n",
+                                         entityCountModule.RootAgents, scene.RegionInfo.RegionName,
+                                         scene.RegionInfo.RegionID,
+                                         DateTime.UtcNow.ToString("s")));
+            }
             scene.ForEachScenePresence(delegate(ScenePresence sp)
             {
                 if (!sp.IsChildAgent)

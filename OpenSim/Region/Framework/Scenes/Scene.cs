@@ -813,16 +813,6 @@ namespace OpenSim.Region.Framework.Scenes
                 presence.StandUp();
             }
 
-            try
-            {
-                m_sceneGraph.removeUserCount(!presence.IsChildAgent);
-            }
-            catch (NullReferenceException)
-            {
-                // We don't know which count to remove it from
-                // Avatar is already disposed :/
-            }
-
             m_eventManager.TriggerClientClosed(presence.UUID, this);
             m_eventManager.TriggerOnClosingClient(presence.ControllingClient);
             m_eventManager.TriggerOnRemovePresence(presence);

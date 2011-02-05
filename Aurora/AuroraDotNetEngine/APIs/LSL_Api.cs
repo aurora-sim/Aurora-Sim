@@ -6261,8 +6261,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetRegionAgentCount()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            return new LSL_Integer(World.SceneGraph.GetRootAgentCount());
+            IEntityCountModule entityCountModule = World.RequestModuleInterface<IEntityCountModule>();
+            if (entityCountModule != null)
+                return new LSL_Integer(entityCountModule.RootAgents);
+            else
+                return new LSL_Integer(0);
         }
 
         public LSL_Vector llGetRegionCorner()
