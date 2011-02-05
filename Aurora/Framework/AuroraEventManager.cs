@@ -33,7 +33,7 @@ namespace Aurora.Framework
         /// ObjectChangedOwner - An object's owner was changed
         ///      param is a SceneObjectGroup
         /// ObjectChangedPhysicalStatus - An object's physical status has changed
-        ///      param is a SceneObjectPart
+        ///      param is a SceneObjectGroup
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

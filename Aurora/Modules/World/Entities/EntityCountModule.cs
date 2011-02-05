@@ -18,6 +18,11 @@ namespace Aurora.Modules
         private int m_objects = 0;
         private int m_activeObjects = 0;
 
+        private List<UUID> m_addedObjects = new List<UUID>();
+        private Dictionary<UUID, bool> m_lastAddedPhysicalStatus = new Dictionary<UUID, bool>();
+
+        private object m_objectsLock = new object();
+
         #endregion
 
         #region IEntityCountModule Members
@@ -122,20 +127,64 @@ namespace Aurora.Modules
 
         #endregion
 
+        #region Objects
+
         protected void OnObjectBeingAddedToScene(SceneObjectGroup obj)
         {
+            lock (m_objectsLock)
+            {
+                foreach (SceneObjectPart child in obj.ChildrenList)
+                {
+                    bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+                    if (!m_addedObjects.Contains(child.UUID))
+                    {
+                        m_objects++;
+
+                        //Check physical status now
+                        if (physicalStatus)
+                            m_activeObjects++;
+                        //Add it to the list so that we have a record of it
+                        m_addedObjects.Add(child.UUID);
+                        m_lastAddedPhysicalStatus.Add(child.UUID, physicalStatus);
+                    }
+                    else
+                    {
+                        //Its a dupe! Its a dupe!
+                        if (m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
+                        {
+                            //This was a physical prim at some time... 
+                            //  We need to make sure to update it right
+                            if (physicalStatus != m_lastAddedPhysicalStatus[child.UUID])
+                            {
+                                //It changed... fix the count
+                                if (physicalStatus)
+                                    m_activeObjects++;
+                                else
+                                    m_activeObjects--;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         protected void OnObjectBeingRemovedFromScene(SceneObjectGroup obj)
         {
+            lock (m_objectsLock)
+            {
+            }
         }
 
         protected void OnGenericEvent(string FunctionName, object parameters)
         {
+            //If the object changes physical status, we need to make sure to update the active objects count
             if (FunctionName == "ObjectChangedPhysicalStatus")
             {
+                OnObjectBeingAddedToScene((SceneObjectGroup)parameters);
             }
         }
+
+        #endregion
 
         #endregion
     }
