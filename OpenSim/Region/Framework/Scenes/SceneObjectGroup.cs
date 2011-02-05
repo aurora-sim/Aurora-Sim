@@ -2569,11 +2569,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 if (val.X < 0)
                                     val.X += neighborRegion.RegionSizeX;
                                 if (val.X > Scene.RegionInfo.RegionSizeX)
-                                    val.X += Scene.RegionInfo.RegionSizeX;
+                                    val.X -= Scene.RegionInfo.RegionSizeX;
                                 if (val.Y < 0)
                                     val.Y += neighborRegion.RegionSizeY;
                                 if (val.Y > Scene.RegionInfo.RegionSizeY)
-                                    val.Y += Scene.RegionInfo.RegionSizeY;
+                                    val.Y -= Scene.RegionInfo.RegionSizeY;
 
                                 IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)

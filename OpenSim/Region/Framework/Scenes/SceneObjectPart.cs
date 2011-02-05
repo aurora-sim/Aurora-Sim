@@ -1914,7 +1914,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetGroupPosition(Vector3 value)
             {
-            m_groupPosition = value;
+            m_groupPosition = new Vector3(value.X, value.Y, value.Z);
             }
 
 

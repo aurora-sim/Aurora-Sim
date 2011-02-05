@@ -686,16 +686,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return;
             }
 
-            Vector3 pos = attemptedPosition;
-
-            //TODO: Fix up group transfer as its probably broken
-
-            // Offset the positions for the new region across the border
             Vector3 oldGroupPosition = grp.RootPart.GroupPosition;
-            //grp.OffsetForNewRegion(pos);
-
             // If we fail to cross the border, then reset the position of the scene object on that border.
-            if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp))
+            if (destination != null && !CrossPrimGroupIntoNewRegion(destination, grp, attemptedPosition))
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
                 grp.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
@@ -710,7 +703,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns>
         /// true if the crossing itself was successful, false on failure
         /// </returns>
-        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp)
+        protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, Vector3 attemptedPos)
         {
             bool successYN = false;
             grp.RootPart.ClearUpdateScheduleOnce();
@@ -729,6 +722,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
 
                 SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
+                copiedGroup.SetAbsolutePosition(true, attemptedPos);
                 if (grp.Scene != null && grp.Scene.SimulationService != null)
                     successYN = grp.Scene.SimulationService.CreateObject(destination, copiedGroup);
 
@@ -788,7 +782,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns>False</returns>
         public virtual bool IncomingCreateObject(UUID regionID, UUID userID, UUID itemID)
         {
-            //m_log.DebugFormat(" >>> IncomingCreateObject(userID, itemID) <<< {0} {1}", userID, itemID);
+            /*//m_log.DebugFormat(" >>> IncomingCreateObject(userID, itemID) <<< {0} {1}", userID, itemID);
             Scene scene = GetScene(regionID);
             if (scene == null)
                 return false;
@@ -796,12 +790,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             IAttachmentsModule attachMod = scene.RequestModuleInterface<IAttachmentsModule>();
             if (sp != null && attachMod != null)
             {
-                //m_log.DebugFormat(
-                //        "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
-                //int attPt = sp.Appearance.GetAttachpoint(itemID);
-                //attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt, true);
-                //return true;
-            }
+                m_log.DebugFormat(
+                        "[EntityTransferModule]: Received attachment via new attachment method {0} for agent {1}", itemID, sp.Name);
+                int attPt = sp.Appearance.GetAttachpoint(itemID);
+                attachMod.RezSingleAttachmentFromInventory(sp.ControllingClient, itemID, attPt, true);
+                return true;
+            }*/
 
             return false;
         }
@@ -895,6 +889,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
+                    if(sceneObject.RootPart.IsSelected)
+                        sceneObject.RootPart.CreateSelected = true;
                     sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
                     return true;
                 }

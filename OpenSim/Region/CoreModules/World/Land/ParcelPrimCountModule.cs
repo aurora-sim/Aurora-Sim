@@ -313,6 +313,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             Vector3 pos = obj.AbsolutePosition;
             ILandObject landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(pos.X, pos.Y);
+            if (landObject == null)
+                landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            
+            if (landObject == null)
+                return;
             LandData landData = landObject.LandData;
 
             ParcelCounts parcelCounts;
