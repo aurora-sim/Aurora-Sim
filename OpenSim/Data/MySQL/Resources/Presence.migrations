@@ -21,3 +21,11 @@ BEGIN;
 ALTER TABLE `Presence` ADD COLUMN LastSeen Int(30);
 
 COMMIT;
+
+:VERSION 3         # -------------------------- 
+
+BEGIN;
+
+ALTER TABLE `Presence` change LastSeen LastSeen Int(30);
+
+COMMIT;
