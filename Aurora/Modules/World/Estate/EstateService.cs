@@ -315,7 +315,7 @@ namespace Aurora.Modules
             if (Position.X < 0f || Position.Y < 0f || 
                 Position.X > scene.RegionInfo.RegionSizeX || Position.Y > scene.RegionInfo.RegionSizeY)
             {
-                m_log.WarnFormat(
+                m_log.DebugFormat(
                     "[EstateService]: AllowedIncomingTeleport was given an illegal position of {0} for avatar {1}, {2}. Clamping",
                     Position, Name, userID);
                 //bool changedX = false;

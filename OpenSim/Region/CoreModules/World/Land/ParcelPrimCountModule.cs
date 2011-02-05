@@ -93,34 +93,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OnPrimCountAdd;
             m_Scene.EventManager.OnObjectBeingRemovedFromScene +=
                     OnObjectBeingRemovedFromScene;
+            m_Scene.EventManager.OnLandObjectAdded += OnLandObjectAdded;
+            m_Scene.EventManager.OnLandObjectRemoved += OnLandObjectRemoved;
             m_Scene.AuroraEventManager.OnGenericEvent += OnGenericEvent;
-        }
-
-        void OnGenericEvent(string FunctionName, object parameters)
-        {
-            //The 'select' part of prim counts isn't for this type of selection
-            //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
-            //{
-            //    //Select the object now
-            //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
-            //}
-            if (FunctionName == "ObjectChangedOwner")
-            {
-                TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
-                    (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);
-            }
-            else if (FunctionName == "ObjectEnteringNewParcel")
-            {
-                //Taint the parcels
-                SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
-                UUID newParcel = (UUID)(((Object[])parameters)[1]);
-                UUID oldParcel = (UUID)(((Object[])parameters)[2]);
-                ILandObject oldlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(oldParcel);
-                ILandObject newlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(newParcel);
-
-                TaintPrimCount(oldlandObject);
-                TaintPrimCount(newlandObject);
-            }
         }
 
         public void RegionLoaded(Scene scene)
@@ -135,6 +110,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     OnPrimCountAdd;
             m_Scene.EventManager.OnObjectBeingRemovedFromScene -=
                     OnObjectBeingRemovedFromScene;
+            m_Scene.EventManager.OnLandObjectAdded -= OnLandObjectAdded;
+            m_Scene.EventManager.OnLandObjectRemoved -= OnLandObjectRemoved;
             m_Scene.AuroraEventManager.OnGenericEvent -= OnGenericEvent;
 
             m_Scene = null;
@@ -575,6 +552,45 @@ namespace OpenSim.Region.CoreModules.World.Land
                     m_PrimCounts.Remove(k);
             }
             m_Tainted = false;
+        }
+
+        void OnLandObjectRemoved(UUID RegionID, UUID globalID)
+        {
+            //Taint everything... we don't know what might have hapened
+            TaintPrimCount();
+        }
+
+        void OnLandObjectAdded(LandData newParcel)
+        {
+            //Taint it!
+            TaintPrimCount(m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(newParcel.GlobalID));
+        }
+
+        void OnGenericEvent(string FunctionName, object parameters)
+        {
+            //The 'select' part of prim counts isn't for this type of selection
+            //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
+            //{
+            //    //Select the object now
+            //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
+            //}
+            if (FunctionName == "ObjectChangedOwner")
+            {
+                TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
+                    (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);
+            }
+            else if (FunctionName == "ObjectEnteringNewParcel")
+            {
+                //Taint the parcels
+                SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
+                UUID newParcel = (UUID)(((Object[])parameters)[1]);
+                UUID oldParcel = (UUID)(((Object[])parameters)[2]);
+                ILandObject oldlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(oldParcel);
+                ILandObject newlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(newParcel);
+
+                TaintPrimCount(oldlandObject);
+                TaintPrimCount(newlandObject);
+            }
         }
     }
 
