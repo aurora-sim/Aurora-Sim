@@ -844,33 +844,36 @@ namespace OpenSim.Services.CapsService
                     if (!SetUserInTransit())
                         return false;
 
+                    bool result = false;
+
                     crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
                     if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                     {
                         m_log.Warn("[EventQueue]: Failed to cross agent " + m_service.AgentID + " because region did not accept it. Resetting.");
-                        return false;
                     }
-
-                    IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
-
-                    //Tell the client about the transfer
-                    EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
-                                       m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
-
-                    bool result = WaitForCallback();
-                    if (!result)
-                        m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
                     else
                     {
-                        // Next, let's close the child agent connections that are too far away.
-                        INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
-                        if (service != null)
+                        IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+
+                        //Tell the client about the transfer
+                        EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
+                                           m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
+
+                        result = WaitForCallback();
+                        if (!result)
+                            m_log.Warn("[EntityTransferModule]: Callback never came in crossing agent " + circuit.AgentID + ". Resetting.");
+                        else
                         {
-                            uint x, y;
-                            Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                            GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                            service.GetNeighbors(ourRegion);
-                            service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                            // Next, let's close the child agent connections that are too far away.
+                            INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
+                            if (service != null)
+                            {
+                                uint x, y;
+                                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+                                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                                service.GetNeighbors(ourRegion);
+                                service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                            }
                         }
                     }
 
