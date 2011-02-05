@@ -422,7 +422,7 @@ namespace OpenSim.Services.Connectors
             return m_informedRegions;
         }
 
-        public void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
+        public void SendChildAgentUpdate(IAgentData childAgentUpdate, UUID regionID)
         {
             if (!m_KnownNeighbors.ContainsKey(regionID))
                 return;
@@ -432,7 +432,10 @@ namespace OpenSim.Services.Connectors
                 //Send the updates to all known neighbors
                 foreach (GridRegion region in m_KnownNeighbors[regionID])
                 {
-                    m_simService.UpdateAgent(region, childAgentUpdate);
+                    if (childAgentUpdate is AgentData)
+                        m_simService.UpdateAgent(region, (AgentData)childAgentUpdate);
+                    else
+                        m_simService.UpdateAgent(region, (AgentPosition)childAgentUpdate);
                 }
             });
         }

@@ -75,7 +75,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="childAgentUpdate">The update to send</param>
         /// <param name="regionID">The region the client is currently in</param>
-        void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID);
+        void SendChildAgentUpdate(IAgentData childAgentUpdate, UUID regionID);
 
         /// <summary>
         /// Send a chat message to the surrounding neighbors

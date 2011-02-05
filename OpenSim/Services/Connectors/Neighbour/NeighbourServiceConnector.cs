@@ -249,7 +249,7 @@ namespace OpenSim.Services.Connectors
             return informedRegions;
         }
 
-        public virtual void SendChildAgentUpdate(AgentPosition childAgentUpdate, UUID regionID)
+        public virtual void SendChildAgentUpdate(IAgentData childAgentUpdate, UUID regionID)
         {
             m_LocalService.SendChildAgentUpdate(childAgentUpdate, regionID);
         }

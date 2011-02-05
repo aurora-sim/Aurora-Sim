@@ -123,6 +123,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_requestedSitTargetUUID; }
         }
+
+        private bool m_enqueueSendChildAgentUpdate = false;
+        private DateTime m_enqueueSendChildAgentUpdateTime = new DateTime();
+
         public bool SitGround = false;
         public bool m_InitialHasWearablesBeenSent = false;
 
@@ -339,6 +343,21 @@ namespace OpenSim.Region.Framework.Scenes
         public float DrawDistance
         {
             get { return m_DrawDistance; }
+            set
+            {
+                if (m_DrawDistance != value)
+                {
+                    m_DrawDistance = value;
+                    //Fire the event
+                    Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
+                    if (!IsChildAgent)
+                    {
+                        //Send an update to all child agents if we are a root agent
+                        m_enqueueSendChildAgentUpdate = true;
+                        m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(10);
+                    }
+                }
+            }
         }
 
         protected bool m_allowMovement = true;
@@ -1117,9 +1136,12 @@ namespace OpenSim.Region.Framework.Scenes
             // The Agent's Draw distance setting
             if (agentData.Far != m_DrawDistance)
             {
-                m_DrawDistance = agentData.Far;
+                DrawDistance = agentData.Far;
                 //Fire the event
                 Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
+
+                m_enqueueSendChildAgentUpdate = true;
+                m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(10);
             }
 
             // Check if Client has camera in 'follow cam' or 'build' mode.
@@ -2056,6 +2078,22 @@ namespace OpenSim.Region.Framework.Scenes
             //        }
             //    }
             //}
+            if (m_enqueueSendChildAgentUpdate &&
+                m_enqueueSendChildAgentUpdateTime != new DateTime() &&
+                DateTime.Now > m_enqueueSendChildAgentUpdateTime)
+            {
+                //Send the child agent data update
+                INeighborService neighborService = m_scene.RequestModuleInterface<INeighborService>();
+                if (neighborService != null)
+                {
+                    AgentData data = new AgentData();
+                    this.CopyTo(data);
+                    neighborService.SendChildAgentUpdate(data, m_scene.RegionInfo.RegionID);
+                }
+                //Reset it now
+                m_enqueueSendChildAgentUpdateTime = new DateTime();
+                m_enqueueSendChildAgentUpdate = false;
+            }
         }
 
         #endregion
@@ -2490,7 +2528,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 offset = new Vector3(shiftx, shifty, 0f);
 
-            m_DrawDistance = cAgentData.Far;
+            DrawDistance = cAgentData.Far;
             if (cAgentData.Position != new Vector3(-1f, -1f, -1f)) // UGH!!
                 m_pos = cAgentData.Position + offset;
 
@@ -2521,7 +2559,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.LeftAxis = m_CameraLeftAxis;
             cAgent.UpAxis = m_CameraUpAxis;
 
-            cAgent.Far = m_DrawDistance;
+            cAgent.Far = DrawDistance;
 
             // Throttles 
             float multiplier = 1;
@@ -2581,7 +2619,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraLeftAxis = cAgent.LeftAxis;
             m_CameraUpAxis = cAgent.UpAxis;
 
-            m_DrawDistance = cAgent.Far;
+            DrawDistance = cAgent.Far;
 
             if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
@@ -2593,7 +2631,7 @@ namespace OpenSim.Region.Framework.Scenes
             //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
             //    m_godLevel = cAgent.GodLevel;
             m_speedModifier = cAgent.Speed;
-            m_DrawDistance = cAgent.DrawDistance;
+            DrawDistance = cAgent.DrawDistance;
             m_setAlwaysRun = cAgent.AlwaysRun;
             m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
             m_appearance = new AvatarAppearance(cAgent.Appearance);

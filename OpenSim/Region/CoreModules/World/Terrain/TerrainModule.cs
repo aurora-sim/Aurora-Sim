@@ -738,6 +738,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         void OnNewPresence(ScenePresence presence)
         {
+            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
+            {
+                int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
+                int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
+                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
+                    ySize]);
+            }
             SendTerrainUpdatesForClient(presence);
         }
 
