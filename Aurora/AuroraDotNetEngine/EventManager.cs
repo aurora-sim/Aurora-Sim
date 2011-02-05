@@ -848,14 +848,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void rez_scripts(SceneObjectPart part, TaskInventoryItem[] items,
                 int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
         {
-            List<TaskInventoryItem> ItemsToStart = new List<TaskInventoryItem>();
+            List<LUStruct> ItemsToStart = new List<LUStruct>();
             foreach (TaskInventoryItem item in items)
             {
                 AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
                 if (null == asset)
                 {
                     m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
+                        "[ADNE]: " +
                         "Couldn't start script {0}, {1} since asset ID {2} could not be found",
                         item.Name, item.ItemID, item.AssetID);
                     continue;
@@ -907,30 +907,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
 
-                ItemsToStart.Add(item);
-            }
-
-            List<LUStruct> ItemsToQueue = new List<LUStruct>();
-            foreach (TaskInventoryItem item in ItemsToStart)
-            {
-                AssetBase asset = m_Scenes[0].AssetService.Get(item.AssetID.ToString());
-                if (null == asset)
-                {
-                    m_log.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Couldn't start script {0}, {1} since asset ID {4} could not be found",
-                        item.Name, item.ItemID, item.AssetID);
-                    continue;
-                }
-                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
-
                 LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID, script,
                         startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
                 if (itemToQueue.Action != LUType.Unknown)
-                    ItemsToQueue.Add(itemToQueue);
+                    ItemsToStart.Add(itemToQueue);
             }
-            if (ItemsToQueue.Count != 0)
-                m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToQueue.ToArray(), LoadPriority.FirstStart);
+            if (ItemsToStart.Count != 0)
+                m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
 
         }
         
