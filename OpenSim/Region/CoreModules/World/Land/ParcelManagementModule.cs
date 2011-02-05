@@ -907,7 +907,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
         }
-
+       
         private void CheckEnteringNewParcel(ScenePresence avatar)
         {
             CheckEnteringNewParcel(avatar, false);
@@ -972,7 +972,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                         group.ScheduleGroupTerseUpdate();
                     }
                     else
-                        group.m_lastParcelUUID = over.LandData.GlobalID; //Update the UUID then
+                    {
+                        UUID oldParcelUUID = group.m_lastParcelUUID;
+                        //Update the UUID then
+                        group.m_lastParcelUUID = over.LandData.GlobalID;
+                        //Trigger the event
+                        object[] param = new object[3];
+                        param[0] = group;
+                        param[1] = over.LandData.GlobalID;
+                        param[2] = oldParcelUUID;
+                        m_scene.AuroraEventManager.FireGenericEventHandler("ObjectEnteringNewParcel", param);
+                    }
                 }
             }
         }
@@ -1097,6 +1107,16 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     return m_landList[parcelLocalID];
                 }
+            }
+            return null;
+        }
+
+        public ILandObject GetLandObject(UUID GlobalID)
+        {
+            foreach (ILandObject land in AllParcels())
+            {
+                if (land.LandData.GlobalID == GlobalID)
+                    return land;
             }
             return null;
         }

@@ -57,6 +57,13 @@ namespace OpenSim.Region.Framework.Interfaces
         ILandObject GetLandObject(float x, float y);
 
         /// <summary>
+        /// Get a parcel by GlobalID
+        /// </summary>
+        /// <param name="GlobalID"></param>
+        /// <returns></returns>
+        ILandObject GetLandObject(UUID GlobalID);
+
+        /// <summary>
         /// Get the parcels near the specified point
         /// </summary>
         /// <param name="position"></param>

@@ -324,10 +324,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                     m_log.Warn("[LAND]: Error updating land object " + this.LandData.Name + " in region " + this.m_scene.RegionInfo.RegionName + " : " + ex.ToString());
                 }
             }
-            else
-            {
-                remote_client.SendAlertMessage("You do not have permissions to edit this land");
-            }
         }
 
         public void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area)

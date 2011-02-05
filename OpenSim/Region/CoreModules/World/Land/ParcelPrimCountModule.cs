@@ -109,6 +109,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                 TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
                     (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);
             }
+            else if (FunctionName == "ObjectEnteringNewParcel")
+            {
+                SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
+                UUID newParcel = (UUID)(((Object[])parameters)[1]);
+                UUID oldParcel = (UUID)(((Object[])parameters)[2]);
+                ILandObject oldlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(oldParcel);
+                ILandObject newlandObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(newParcel);
+
+                TaintPrimCount(oldlandObject);
+                TaintPrimCount(newlandObject);
+            }
         }
 
         public void RegionLoaded(Scene scene)
@@ -535,7 +546,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
             }
 
-            m_Scene.ForEachSOG(AddObject);
+            EntityBase[] objlist = m_Scene.Entities.GetEntities();
+            foreach (EntityBase obj in objlist)
+            {
+                try
+                {
+                    if (obj is SceneObjectGroup)
+                        AddObject((SceneObjectGroup)obj);
+                }
+                catch (Exception e)
+                {
+                    // Catch it and move on. This includes situations where splist has inconsistent info
+                    m_log.WarnFormat("[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e.ToString());
+                }
+            }
 
             List<UUID> primcountKeys = new List<UUID>(m_PrimCounts.Keys);
             foreach (UUID k in primcountKeys)
