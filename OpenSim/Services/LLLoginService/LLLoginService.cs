@@ -1148,7 +1148,7 @@ namespace AvatarArchives
             AvatarService = AS;
             InventoryService = IS;
             AssetService = AService;
-            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto (This is the name of the folder that will appear in the client's Clothing folder when the AA is loaded)>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderNameToSaveInto if you need more than one word)", HandleSaveAvatarArchive);
+            MainConsole.Instance.Commands.AddCommand("region", false, "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> [<Snapshot UUID>] [<Public>]", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. To save to the database ensure the name ends with .database. Snapshot is a uuid of the a snapshot of this archive. IsPublic should be a 0 or 1. IsPublic and Snapshot are only saved when saving to the database. )", HandleSaveAvatarArchive);
             MainConsole.Instance.Commands.AddCommand("region", false, "load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
         }
 
@@ -1298,7 +1298,7 @@ namespace AvatarArchives
 
         protected void HandleSaveAvatarArchive(string module, string[] cmdparams)
         {
-            if (cmdparams.Length != 7)
+            if (cmdparams.Length < 7)
             {
                 m_log.Info("[AvatarArchive] Not enough parameters!");
                 return;
@@ -1367,6 +1367,9 @@ namespace AvatarArchives
                 archive.ArchiveXML = ArchiveXML;
                 archive.Name = ArchiveName;
 
+                if ((cmdparams.Length >= 8) && (cmdparams[7].Length == 36)) archive.Snapshot = cmdparams[7];
+                if ((cmdparams.Length >= 9) && (cmdparams[8].Length == 1)) archive.IsPublic = int.Parse(cmdparams[8]);
+				
                 DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
 
                 m_log.Info("[AvatarArchive] Saved archive to database " + cmdparams[5]);
