@@ -1186,6 +1186,8 @@ namespace OpenSim.Region.Framework.Scenes
                     sog.SetOwnerId(groupID);
                     sog.ApplyNextOwnerPermissions();
                 }
+                //Trigger the prim count event so that this parcel gets changed!
+                m_parentScene.AuroraEventManager.FireGenericEventHandler("ChangedOwner", sog);
             }
 
             foreach (uint localID in localIDs)

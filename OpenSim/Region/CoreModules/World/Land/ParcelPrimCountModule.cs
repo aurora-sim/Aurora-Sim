@@ -98,11 +98,17 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         void OnGenericEvent(string FunctionName, object parameters)
         {
+            //The 'select' part of prim counts isn't for this type of selection
             //if (FunctionName == "ObjectSelected" || FunctionName == "ObjectDeselected")
             //{
             //    //Select the object now
             //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
             //}
+            if (FunctionName == "ChangedOwner")
+            {
+                TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
+                    (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);
+            }
         }
 
         public void RegionLoaded(Scene scene)
