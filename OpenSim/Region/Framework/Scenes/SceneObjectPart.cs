@@ -2450,9 +2450,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (PhysActor.IsPhysical) // implies UsePhysics==false for this block
                         {
-                            if (!isNew)
-                                ParentGroup.Scene.SceneGraph.RemovePhysicalPrim(1);
-
                             PhysActor.OnRequestTerseUpdate -= PhysicsRequestingTerseUpdate;
                             PhysActor.OnSignificantMovement -= ParentGroup.CheckForSignificantMovement;
                             PhysActor.OnOutOfBounds -= PhysicsOutOfBounds;
@@ -2495,8 +2492,6 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (UsePhysics)
                             {
-                                ParentGroup.Scene.SceneGraph.AddPhysicalPrim(1);
-
                                 PhysActor.OnRequestTerseUpdate += PhysicsRequestingTerseUpdate;
                                 PhysActor.OnSignificantMovement += ParentGroup.CheckForSignificantMovement;
                                 PhysActor.OnOutOfBounds += PhysicsOutOfBounds;
@@ -2513,6 +2508,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_parentGroup.Scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(PhysActor);
                 }
             }
+            ParentGroup.Scene.AuroraEventManager.FireGenericEventHandler("ObjectChangedPhysicalStatus", this.ParentGroup);
         }
 
         public List<UUID> GetAvatarOnSitTarget()

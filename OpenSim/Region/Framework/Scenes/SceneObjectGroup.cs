@@ -1270,7 +1270,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Apply physics to this group
         /// </summary>
         /// <param name="m_physicalPrim"></param>
-        public void ApplyPhysics(bool m_physicalPrim)
+        public override void ApplyPhysics(bool m_physicalPrim)
         {
             m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
             foreach (SceneObjectPart part in m_partsList)

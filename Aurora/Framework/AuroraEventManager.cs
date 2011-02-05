@@ -30,6 +30,10 @@ namespace Aurora.Framework
         ///      param is a SceneObjectPart
         /// ObjectDeselected - An object has been selected
         ///      param is a SceneObjectPart
+        /// ObjectChangedOwner - An object's owner was changed
+        ///      param is a SceneObjectGroup
+        /// ObjectChangedPhysicalStatus - An object's physical status has changed
+        ///      param is a SceneObjectPart
         /// 
         /// </summary>
         public event OnGenericEventHandler OnGenericEvent;

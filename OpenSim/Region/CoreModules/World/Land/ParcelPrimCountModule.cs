@@ -104,7 +104,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             //    //Select the object now
             //    SelectObject(((SceneObjectPart)parameters).ParentGroup, FunctionName == "ObjectSelected");
             //}
-            if (FunctionName == "ChangedOwner")
+            if (FunctionName == "ObjectChangedOwner")
             {
                 TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
                     (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);

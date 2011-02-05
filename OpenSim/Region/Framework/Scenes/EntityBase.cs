@@ -176,6 +176,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
+        public virtual void ApplyPhysics(bool allowPhysicalPrim)
+        {
+        }
+
         public virtual void ClearChildren()
         {
         }

@@ -57,10 +57,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected RegionInfo m_regInfo;
         protected Scene m_parentScene;
-        protected int m_numRootAgents = 0;
-        protected int m_numPrim = 0;
-        protected int m_numChildAgents = 0;
-        protected int m_physicalPrim = 0;
         protected bool EnableFakeRaycasting = false;
 
         /// <summary>
@@ -223,16 +219,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Entity Methods
 
-        protected internal void AddPhysicalPrim(int number)
-        {
-            m_physicalPrim++;
-        }
-
-        protected internal void RemovePhysicalPrim(int number)
-        {
-            m_physicalPrim--;
-        }
-
         protected internal void HandleUndo(IClientAPI remoteClient, UUID primId)
         {
             if (primId != UUID.Zero)
@@ -292,8 +278,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="presence"></param>
         protected internal void AddScenePresence(ScenePresence presence)
         {
-            m_numChildAgents++;
-
             Entities[presence.UUID] = presence;
 
             lock (m_presenceLock)
@@ -357,75 +341,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.WarnFormat("[SCENE]: Tried to remove non-existent scene presence with agent ID {0} from scene ScenePresences list", agentID);
                 }
             }
-        }
-
-        /// <summary>
-        /// Update user counts for this agent
-        /// </summary>
-        /// <param name="direction_RC_CR_T_F">If true, add a child agent to the count, remove a child agent.
-        /// If false, add a root agent, subtract a child agent</param>
-        protected internal void SwapRootChildAgent(bool direction_RC_CR_T_F)
-        {
-            if (direction_RC_CR_T_F)
-            {
-                m_numRootAgents--;
-                m_numChildAgents++;
-            }
-            else
-            {
-                m_numChildAgents--;
-                m_numRootAgents++;
-            }
-        }
-
-        /// <summary>
-        /// Remove a user from the count
-        /// </summary>
-        /// <param name="TypeRCTF">If true, remove a root agent. If false, remove a child agent.</param>
-        public void removeUserCount(bool TypeRCTF)
-        {
-            if (TypeRCTF)
-            {
-                m_numRootAgents--;
-            }
-            else
-            {
-                m_numChildAgents--;
-            }
-        }
-
-        /// <summary>
-        /// Get the number of child agents in this region
-        /// </summary>
-        /// <returns></returns>
-        public int GetChildAgentCount()
-        {
-            // some network situations come in where child agents get closed twice.
-            if (m_numChildAgents < 0)
-            {
-                m_numChildAgents = 0;
-            }
-
-            return m_numChildAgents;
-        }
-
-        /// <summary>
-        /// Get the number of root agents in this sim
-        /// </summary>
-        /// <returns></returns>
-        public int GetRootAgentCount()
-        {
-            return m_numRootAgents;
-        }
-
-        public int GetTotalObjectsCount()
-        {
-            return m_numPrim;
-        }
-
-        public int GetActiveObjectsCount()
-        {
-            return m_physicalPrim;
         }
 
         #endregion
@@ -1187,7 +1102,7 @@ namespace OpenSim.Region.Framework.Scenes
                     sog.ApplyNextOwnerPermissions();
                 }
                 //Trigger the prim count event so that this parcel gets changed!
-                m_parentScene.AuroraEventManager.FireGenericEventHandler("ChangedOwner", sog);
+                m_parentScene.AuroraEventManager.FireGenericEventHandler("ObjectChangedOwner", sog);
             }
 
             foreach (uint localID in localIDs)
@@ -2230,7 +2145,11 @@ namespace OpenSim.Region.Framework.Scenes
             //Force the prim to backup now that it has been added
             entity.ForcePersistence();
             //Tell the entity that they are being added to a scene
-            entity.AttachToScene(m_parentScene);
+            IOpenRegionSettingsModule WSModule = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
+            if (WSModule != null)
+                entity.ApplyPhysics(WSModule.AllowPhysicalPrims);
+            else
+                entity.ApplyPhysics(true);
             //Now save the entity that we have 
             AddEntity(entity, false);
         }
@@ -2262,7 +2181,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool RemoveEntity(EntityBase entity)
         {
-            m_numPrim -= entity.ChildrenEntities().Count;
             Entities.Remove(entity.UUID);
             Entities.Remove(entity.LocalId);
             return true;
@@ -2276,8 +2194,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool AddEntity(EntityBase entity, bool AllowUpdate)
         {
-            //Update our prim count
-            m_numPrim += entity.ChildrenEntities().Count;
             Entities.Add(entity);
             return true;
         }

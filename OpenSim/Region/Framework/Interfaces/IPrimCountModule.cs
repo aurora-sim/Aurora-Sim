@@ -63,4 +63,13 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         int this[UUID agentID] { get; }
     }
+
+    public interface IEntityCountModule
+    {
+        int RootAgents { get; }
+        int ChildAgents { get; }
+
+        int Objects { get; }
+        int ActiveObjects { get; }
+    }
 }
