@@ -1007,9 +1007,9 @@ namespace OpenSim.Region.Framework.Scenes
                 //This has to be set, otherwise it will break things like rezzing objects in an area where crossing is disabled, but rez isn't
                 sceneObject.m_lastSignificantPosition = pos;
 
+                sceneObject.SetGroup(groupID, null);
                 AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                sceneObject.SetGroup(groupID, null);
             }
 
 
