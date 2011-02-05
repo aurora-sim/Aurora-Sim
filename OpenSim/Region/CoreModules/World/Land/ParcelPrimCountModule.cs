@@ -329,7 +329,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     else
                     {
                         parcelCounts.Objects.Remove(child);
-                        m_SimwideCounts[landOwner] -= 1;
+                        if (m_SimwideCounts.ContainsKey(landOwner))
+                            m_SimwideCounts[landOwner] -= 1;
                         if (parcelCounts.Users.ContainsKey(obj.OwnerID))
                             parcelCounts.Users[obj.OwnerID] -= 1;
 
