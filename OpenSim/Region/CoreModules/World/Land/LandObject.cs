@@ -33,6 +33,7 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Land
 {
@@ -923,7 +924,38 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (primCountModule != null)
                 {
                     IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-                    remote_client.SendLandObjectOwners(LandData, primCounts.Groups, primCounts.GetAllUserCounts());
+                    Dictionary<UUID, LandObjectOwners> owners = new Dictionary<UUID, LandObjectOwners>();
+                    List<UUID> groups = primCounts.Groups;
+                    foreach(SceneObjectPart part in primCounts.Objects)
+                    {
+                        bool newlyAdded = false;
+                        if(!owners.ContainsKey(part.OwnerID))
+                        {
+                            owners.Add(part.OwnerID, new LandObjectOwners());
+                            newlyAdded = true;
+                        }
+                        LandObjectOwners landObj = owners[part.OwnerID];
+                        landObj.Count++;
+                        //Only do all of this once
+                        if(newlyAdded)
+                        {
+                        if (LandData.GroupID == part.OwnerID || groups.Contains(part.OwnerID))
+                            landObj.GroupOwned = true;
+                        else
+                            landObj.GroupOwned = false;
+                        if(landObj.GroupOwned)
+                            landObj.Online = false;
+                        else
+                        {
+                            IPresenceService presenceS = m_scene.RequestModuleInterface<IPresenceService>();
+                            landObj.Online = presenceS.GetAgents(new string[1]{part.OwnerID.ToString()}).Length > 0;
+                        }
+                        landObj.OwnerID = part.OwnerID;
+                        }
+                        if(part.Rezzed > landObj.TimeLastRezzed)
+                            landObj.TimeLastRezzed = part.Rezzed; 
+                    }
+                    remote_client.SendLandObjectOwners(new List<LandObjectOwners>(owners.Values));
                 }
             }
         }

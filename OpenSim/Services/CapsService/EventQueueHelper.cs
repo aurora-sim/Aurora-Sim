@@ -464,6 +464,23 @@ namespace OpenSim.Services.CapsService
             return message;
         }
 
+        public static OSD ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelPropertiesMessage)
+        {
+            OSDMap message = new OSDMap();
+            message.Add("message", OSD.FromString("ParcelObjectOwnersReply"));
+            OSD message_body = parcelPropertiesMessage.Serialize();
+            OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
+            int num = 0;
+            foreach (OSD o in m)
+            {
+                OSDMap innerMap = (OSDMap)o;
+                innerMap["TimeStamp"] = OSD.FromUInteger((uint)Util.ToUnixTime(parcelPropertiesMessage.PrimOwnersBlock[num].TimeStamp));
+                num++;
+            }
+            message.Add("body", message_body);
+            return message;
+        }
+
         public static OSD EnableChildAgents(int DrawDistance, AgentCircuitData circuit)
         {
             OSDMap llsdBody = new OSDMap();

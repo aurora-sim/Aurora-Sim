@@ -904,7 +904,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public void SendCameraConstraint(Vector4 ConstraintPlane)
         {
         }
-        public void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
+        public void SendLandObjectOwners(List<LandObjectOwners> objOwners)
         {
         }
         public void SendLandParcelOverlay(byte[] data, int sequence_id)

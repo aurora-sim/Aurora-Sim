@@ -4384,51 +4384,43 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(cpack, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount)
+        public void SendLandObjectOwners(List<LandObjectOwners> objectOwners)
         {
-            int notifyCount = ownersAndCount.Count;
-            ParcelObjectOwnersReplyPacket pack = (ParcelObjectOwnersReplyPacket)PacketPool.Instance.GetPacket(PacketType.ParcelObjectOwnersReply);
+            int notifyCount = objectOwners.Count;
 
-            if (notifyCount > 0)
+            if (notifyCount > 32)
             {
-                if (notifyCount > 32)
-                {
-                    m_log.InfoFormat(
-                        "[LAND]: Mor e than {0} avatars own prims on this parcel.  Only sending back details of first {0}"
-                        + " - a developer might want to investigate whether this is a hard limit", 32);
+                m_log.InfoFormat(
+                    "[LAND]: Mor e than {0} avatars own prims on this parcel.  Only sending back details of first {0}"
+                    + " - a developer might want to investigate whether this is a hard limit", 32);
 
-                    notifyCount = 32;
-                }
-
-                ParcelObjectOwnersReplyPacket.DataBlock[] dataBlock
-                    = new ParcelObjectOwnersReplyPacket.DataBlock[notifyCount];
-
-                int num = 0;
-                foreach (UUID owner in ownersAndCount.Keys)
-                {
-                    dataBlock[num] = new ParcelObjectOwnersReplyPacket.DataBlock();
-                    dataBlock[num].Count = ownersAndCount[owner];
-
-                    if (land.GroupID == owner || groups.Contains(owner))
-                        dataBlock[num].IsGroupOwned = true;
-
-                    dataBlock[num].OnlineStatus = true;
-                    dataBlock[num].OwnerID = owner;
-
-                    num++;
-
-                    if (num >= notifyCount)
-                        break;
-                }
-
-                pack.Data = dataBlock;
+                notifyCount = 32;
             }
-            else
+
+            OpenMetaverse.Messages.Linden.ParcelObjectOwnersReplyMessage message = new ParcelObjectOwnersReplyMessage();
+            message.PrimOwnersBlock = new ParcelObjectOwnersReplyMessage.PrimOwner[notifyCount];
+
+            int num = 0;
+            foreach (LandObjectOwners owner in objectOwners)
             {
-                pack.Data = new ParcelObjectOwnersReplyPacket.DataBlock[]{new ParcelObjectOwnersReplyPacket.DataBlock()};
+                message.PrimOwnersBlock[num] = new ParcelObjectOwnersReplyMessage.PrimOwner();
+                message.PrimOwnersBlock[num].Count = owner.Count;
+                message.PrimOwnersBlock[num].IsGroupOwned = owner.GroupOwned;
+                message.PrimOwnersBlock[num].OnlineStatus = owner.Online;
+                message.PrimOwnersBlock[num].OwnerID = owner.OwnerID;
+                message.PrimOwnersBlock[num].TimeStamp = owner.TimeLastRezzed;
+
+                num++;
+
+                if (num >= notifyCount)
+                    break;
             }
-            pack.Header.Zerocoded = true;
-            OutPacket(pack, ThrottleOutPacketType.Land);
+
+            IEventQueueService eventQueueService = m_scene.RequestModuleInterface<IEventQueueService>();
+            if (eventQueueService != null)
+            {
+                eventQueueService.ParcelObjectOwnersReply(message, AgentId, m_scene.RegionInfo.RegionHandle);
+            }
         }
 
         #endregion

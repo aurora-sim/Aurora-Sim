@@ -516,6 +516,15 @@ namespace OpenSim.Framework
         public int TextureIndex;
     }
 
+    public class LandObjectOwners
+    {
+        public int Count = 0;
+        public bool GroupOwned = false;
+        public UUID OwnerID = UUID.Zero;
+        public bool Online = false;
+        public DateTime TimeLastRezzed = new DateTime();
+    }
+
     public class DirPlacesReplyData
     {
         public UUID parcelID;
@@ -1257,7 +1266,7 @@ namespace OpenSim.Framework
         void SendLandAccessListData(List<UUID> avatars, uint accessFlag, int localLandID);
         void SendForceClientSelectObjects(List<uint> objectIDs);
         void SendCameraConstraint(Vector4 ConstraintPlane);
-        void SendLandObjectOwners(LandData land, List<UUID> groups, Dictionary<UUID, int> ownersAndCount);
+        void SendLandObjectOwners(List<LandObjectOwners> objOwners);
         void SendLandParcelOverlay(byte[] data, int sequence_id);
 
         #region Parcel Methods

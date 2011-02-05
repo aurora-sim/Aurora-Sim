@@ -195,6 +195,12 @@ namespace OpenSim.Services.CapsService
             Enqueue(item, avatarID, RegionHandle);
         }
 
+        public void ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelMessage, UUID AgentID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.ParcelObjectOwnersReply(parcelMessage);
+            Enqueue(item, AgentID, RegionHandle);
+        }
+
         public virtual void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.GroupMembership(groupUpdate);
