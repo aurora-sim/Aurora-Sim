@@ -486,7 +486,6 @@ namespace OpenSim.Services.CapsService
             OSDMap message = new OSDMap();
             message.Add("message", OSD.FromString("LandStatReply"));
             OSD message_body = statReplyMessage.Serialize();
-            Console.Write(message_body.AsString());
             OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
             int num = 0;
             foreach (OSD o in m)

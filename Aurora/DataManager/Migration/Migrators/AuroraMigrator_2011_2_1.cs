@@ -43,6 +43,20 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Archive", ColumnTypes.Blob),
                 ColDef("Snapshot", ColumnTypes.Char36),
                 ColDef("IsPublic", ColumnTypes.Integer11)));
+
+            //
+            // Change summery:
+            //
+            //   Changes the default length of "Description" and "Title" so that they aren't limited to only 50 chars
+            //
+            RemoveSchema("osrole");
+
+            AddSchema("osrole", ColDefs(ColDef("GroupID", ColumnTypes.String50, true),
+                ColDef("RoleID", ColumnTypes.String50, true),
+                ColDef("Name", ColumnTypes.String512),
+                ColDef("Description", ColumnTypes.String512),
+                ColDef("Title", ColumnTypes.String512),
+                ColDef("Powers", ColumnTypes.String50)));
         }
 
         protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
