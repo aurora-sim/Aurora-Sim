@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -52,6 +53,7 @@ namespace OpenSim.Region.Framework.Interfaces
         int Temporary { get; }
         int Total { get; }
         List<UUID> Groups { get; }
+        List<SceneObjectPart> Objects { get; }
         IUserPrimCounts Users { get; }
 
         Dictionary<UUID, int> GetAllUserCounts();

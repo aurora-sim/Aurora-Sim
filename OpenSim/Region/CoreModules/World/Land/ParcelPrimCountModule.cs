@@ -234,7 +234,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (parcelCounts.Objects.Contains(child))
                     {
-                        //Well... now what?
+                        //Well... replace it then
+                        parcelCounts.Objects.Remove(child);
+                        parcelCounts.Objects.Add(child);
+
+                        if (landData.IsGroupOwned)
+                        {
+                            UUID GroupUUID = obj.GroupID;
+                            if (obj.OwnerID == landData.GroupID)
+                                GroupUUID = obj.OwnerID;
+
+                            //Add it to the list of all groups in this parcel
+                            if (!parcelCounts.GroupsInThisParcel.Contains(GroupUUID))
+                                parcelCounts.GroupsInThisParcel.Add(GroupUUID);
+                        }
                     }
                     else
                     {
@@ -378,6 +391,22 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
             return new List<UUID>();
+        }
+
+        public List<SceneObjectPart> GetParcelObjects(UUID parcelID)
+        {
+            lock (m_TaintLock)
+            {
+                if (m_Tainted)
+                    Recount();
+
+                ParcelCounts counts;
+                if (m_ParcelCounts.TryGetValue(parcelID, out counts))
+                {
+                    return new List<SceneObjectPart>(counts.Objects);
+                }
+            }
+            return new List<SceneObjectPart>();
         }
 
         public int GetOwnerCount(UUID parcelID)
@@ -546,6 +575,16 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public List<UUID> Groups
+        {
+            get { return m_Parent.GetAllGroups(m_ParcelID); }
+        }
+
+        public List<SceneObjectPart> Objects
+        {
+            get { return m_Parent.GetParcelObjects(m_ParcelID); }
+        }
+
         public int Others
         {
             get
@@ -592,11 +631,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 return m_UserPrimCounts;
             }
-        }
-
-        public List<UUID> Groups
-        {
-            get { return m_Parent.GetAllGroups(m_ParcelID); }
         }
 
         public int GetUserCount(UUID userID)

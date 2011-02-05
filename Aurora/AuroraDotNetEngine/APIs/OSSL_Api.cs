@@ -288,23 +288,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (parcelManagement != null)
             {
                 ILandObject LO = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
-
+                IPrimCountModule primCountModule = World.RequestModuleInterface<IPrimCountModule>();
+                IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
                 if (Parameter == 0) // Owner objects
                 {
-                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    foreach (SceneObjectPart obj in primCounts.Objects)
                     {
                         if (obj.OwnerID == LO.LandData.OwnerID)
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<SceneObjectGroup>();
-                            returns[obj.OwnerID].Add(obj);
+                            if(!returns[obj.OwnerID].Contains(obj.ParentGroup))
+                                returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
                     }
                 }
                 if (Parameter == 1) //Everyone elses
                 {
-                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    foreach (SceneObjectPart obj in primCounts.Objects)
                     {
                         if (obj.OwnerID != LO.LandData.OwnerID &&
                             (obj.GroupID != LO.LandData.GroupID ||
@@ -313,20 +315,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<SceneObjectGroup>();
-                            returns[obj.OwnerID].Add(obj);
+                            if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
+                                returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
                     }
                 }
                 if (Parameter == 2) // Group
                 {
-                    foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                    foreach (SceneObjectPart obj in primCounts.Objects)
                     {
                         if (obj.GroupID == LO.LandData.GroupID)
                         {
                             if (!returns.ContainsKey(obj.OwnerID))
                                 returns[obj.OwnerID] =
                                         new List<SceneObjectGroup>();
-                            returns[obj.OwnerID].Add(obj);
+                            if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
+                                returns[obj.OwnerID].Add(obj.ParentGroup);
                         }
                     }
                 }
@@ -352,14 +356,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 ILandObject LO = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
 
-                foreach (SceneObjectGroup obj in LO.PrimsOverMe)
+                IPrimCountModule primCountModule = World.RequestModuleInterface<IPrimCountModule>();
+                IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
+                foreach (SceneObjectPart obj in primCounts.Objects)
                 {
                     if (obj.OwnerID == new UUID(userID.m_string))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
                             returns[obj.OwnerID] =
                                     new List<SceneObjectGroup>();
-                        returns[obj.OwnerID].Add(obj);
+                        if (!returns[obj.OwnerID].Contains(obj.ParentGroup))
+                            returns[obj.OwnerID].Add(obj.ParentGroup);
                     }
                 }
 

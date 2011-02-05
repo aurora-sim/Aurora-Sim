@@ -53,13 +53,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         protected LandData m_landData = new LandData();
         protected Scene m_scene;
-        protected List<SceneObjectGroup> primsOverMe = new List<SceneObjectGroup>();
         protected IParcelManagementModule m_parcelManagementModule;
-        public List<SceneObjectGroup> PrimsOverMe
-        {
-            get { return primsOverMe; }
-            set { primsOverMe = value; }
-        }
 
         public bool[,] LandBitmap
         {
@@ -873,33 +867,38 @@ namespace OpenSim.Region.CoreModules.World.Land
                 List<uint> resultLocalIDs = new List<uint>();
                 try
                 {
-                    lock (primsOverMe)
+                    IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+                    IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
+                    foreach (SceneObjectPart child in primCounts.Objects)
                     {
-                        foreach (SceneObjectGroup obj in primsOverMe)
+                        SceneObjectGroup obj = child.ParentGroup;
+                        if (obj.LocalId > 0)
                         {
-                            if (obj.LocalId > 0)
+                            if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
                             {
-                                if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OWNER && obj.OwnerID == LandData.OwnerID)
-                                {
+                                if (!resultLocalIDs.Contains(obj.LocalId))
                                     resultLocalIDs.Add(obj.LocalId);
-                                }
-                                else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
-                                {
+                            }
+                            else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_GROUP && obj.GroupID == LandData.GroupID && LandData.GroupID != UUID.Zero)
+                            {
+                                if (!resultLocalIDs.Contains(obj.LocalId))
                                     resultLocalIDs.Add(obj.LocalId);
-                                }
-                                else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OTHER &&
-                                         obj.OwnerID != remote_client.AgentId)
-                                {
+                            }
+                            else if (request_type == ParcelManagementModule.LAND_SELECT_OBJECTS_OTHER &&
+                                     obj.OwnerID != remote_client.AgentId)
+                            {
+                                if (!resultLocalIDs.Contains(obj.LocalId))
                                     resultLocalIDs.Add(obj.LocalId);
-                                }
-                                else if (request_type == (int)ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
-                                {
+                            }
+                            else if (request_type == (int)ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
+                            {
+                                if(!resultLocalIDs.Contains(obj.LocalId))
                                     resultLocalIDs.Add(obj.LocalId);
-                                }
                             }
                         }
                     }
-                } catch (InvalidOperationException)
+                }
+                catch (InvalidOperationException)
                 {
                     m_log.Error("[LAND]: Unable to force select the parcel objects. Arr.");
                 }
@@ -936,17 +935,18 @@ namespace OpenSim.Region.CoreModules.World.Land
         public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, int flags)
         {
             List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
-            lock (primsOverMe)
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
+            foreach (SceneObjectPart child in primCounts.Objects)
             {
-                foreach (SceneObjectGroup obj in primsOverMe)
+                SceneObjectGroup obj = child.ParentGroup;
+                if (obj.OwnerID == m_landData.OwnerID)
                 {
-                    if (obj.OwnerID == m_landData.OwnerID)
-                    {
-                        if (flags == 4 && //Scripted
-                            (obj.RootPart.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
-                            continue;
+                    if (flags == 4 && //Scripted
+                        (obj.RootPart.Flags & PrimFlags.Scripted) == PrimFlags.Scripted)
+                        continue;
+                    if(!prims.Contains(obj))
                         prims.Add(obj);
-                    }
                 }
             }
             return prims;
@@ -954,79 +954,88 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client)
         {
-            Dictionary<UUID,List<SceneObjectGroup>> returns =
-                    new Dictionary<UUID,List<SceneObjectGroup>>();
+            Dictionary<UUID, List<SceneObjectGroup>> returns =
+                    new Dictionary<UUID, List<SceneObjectGroup>>();
 
-            lock (primsOverMe)
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
+            if (type == (uint)ObjectReturnType.Owner)
             {
-                if (type == (uint)ObjectReturnType.Owner)
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.OwnerID == m_landData.OwnerID)
                     {
-                        if (obj.OwnerID == m_landData.OwnerID)
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            }
+            else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            {
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.GroupID == m_landData.GroupID)
                     {
-                        if (obj.GroupID == m_landData.GroupID)
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.Other)
+            }
+            else if (type == (uint)ObjectReturnType.Other)
+            {
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.OwnerID != m_landData.OwnerID &&
+                        (obj.GroupID != m_landData.GroupID ||
+                        m_landData.GroupID == UUID.Zero))
                     {
-                        if (obj.OwnerID != m_landData.OwnerID &&
-                            (obj.GroupID != m_landData.GroupID ||
-                            m_landData.GroupID == UUID.Zero))
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.List)
-                {
-                    List<UUID> ownerlist = new List<UUID>(owners);
+            }
+            else if (type == (uint)ObjectReturnType.List)
+            {
+                List<UUID> ownerlist = new List<UUID>(owners);
 
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                foreach (SceneObjectPart child in primCounts.Objects)
+                {
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (ownerlist.Contains(obj.OwnerID))
                     {
-                        if (ownerlist.Contains(obj.OwnerID))
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == 1)
+            }
+            else if (type == 1)
+            {
+                List<UUID> Tasks = new List<UUID>(tasks);
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    List<UUID> Tasks = new List<UUID>(tasks);
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (Tasks.Contains(obj.UUID))
                     {
-                        if (Tasks.Contains(obj.UUID))
-                        {
-                            if (!returns.ContainsKey(obj.OwnerID))
-                                returns[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!returns[obj.OwnerID].Contains(obj))
                             returns[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
             }
@@ -1047,76 +1056,85 @@ namespace OpenSim.Region.CoreModules.World.Land
             Dictionary<UUID, List<SceneObjectGroup>> disabled =
                     new Dictionary<UUID, List<SceneObjectGroup>>();
 
-            lock (primsOverMe)
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
+            if (type == (uint)ObjectReturnType.Owner)
             {
-                if (type == (uint)ObjectReturnType.Owner)
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.OwnerID == m_landData.OwnerID)
                     {
-                        if (obj.OwnerID == m_landData.OwnerID)
-                        {
-                            if (!disabled.ContainsKey(obj.OwnerID))
-                                disabled[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!disabled.ContainsKey(obj.OwnerID))
+                            disabled[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!disabled[obj.OwnerID].Contains(obj))
                             disabled[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            }
+            else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            {
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.GroupID == m_landData.GroupID)
                     {
-                        if (obj.GroupID == m_landData.GroupID)
-                        {
-                            if (!disabled.ContainsKey(obj.OwnerID))
-                                disabled[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!disabled.ContainsKey(obj.OwnerID))
+                            disabled[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!disabled[obj.OwnerID].Contains(obj))
                             disabled[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.Other)
+            }
+            else if (type == (uint)ObjectReturnType.Other)
+            {
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (obj.OwnerID != m_landData.OwnerID &&
+                        (obj.GroupID != m_landData.GroupID ||
+                        m_landData.GroupID == UUID.Zero))
                     {
-                        if (obj.OwnerID != m_landData.OwnerID &&
-                            (obj.GroupID != m_landData.GroupID ||
-                            m_landData.GroupID == UUID.Zero))
-                        {
-                            if (!disabled.ContainsKey(obj.OwnerID))
-                                disabled[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!disabled.ContainsKey(obj.OwnerID))
+                            disabled[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!disabled[obj.OwnerID].Contains(obj))
                             disabled[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == (uint)ObjectReturnType.List)
-                {
-                    List<UUID> ownerlist = new List<UUID>(owners);
+            }
+            else if (type == (uint)ObjectReturnType.List)
+            {
+                List<UUID> ownerlist = new List<UUID>(owners);
 
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                foreach (SceneObjectPart child in primCounts.Objects)
+                {
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (ownerlist.Contains(obj.OwnerID))
                     {
-                        if (ownerlist.Contains(obj.OwnerID))
-                        {
-                            if (!disabled.ContainsKey(obj.OwnerID))
-                                disabled[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!disabled.ContainsKey(obj.OwnerID))
+                            disabled[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!disabled[obj.OwnerID].Contains(obj))
                             disabled[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
-                else if (type == 1)
+            }
+            else if (type == 1)
+            {
+                List<UUID> Tasks = new List<UUID>(tasks);
+                foreach (SceneObjectPart child in primCounts.Objects)
                 {
-                    List<UUID> Tasks = new List<UUID>(tasks);
-                    foreach (SceneObjectGroup obj in primsOverMe)
+                    SceneObjectGroup obj = child.ParentGroup;
+                    if (Tasks.Contains(obj.UUID))
                     {
-                        if (Tasks.Contains(obj.UUID))
-                        {
-                            if (!disabled.ContainsKey(obj.OwnerID))
-                                disabled[obj.OwnerID] =
-                                        new List<SceneObjectGroup>();
+                        if (!disabled.ContainsKey(obj.OwnerID))
+                            disabled[obj.OwnerID] =
+                                    new List<SceneObjectGroup>();
+                        if (!disabled[obj.OwnerID].Contains(obj))
                             disabled[obj.OwnerID].Add(obj);
-                        }
                     }
                 }
             }
