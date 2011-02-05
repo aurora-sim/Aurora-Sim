@@ -57,7 +57,6 @@ namespace OpenSim.Framework
         private int _claimPrice = 0; //Unemplemented
         private UUID _globalID = UUID.Zero;
         private UUID _groupID = UUID.Zero;
-        private int _groupPrims = 0;
         private bool _isGroupOwned = false;
         private byte[] _bitmap = new byte[512];
         private string _description = String.Empty;
@@ -78,16 +77,12 @@ namespace OpenSim.Framework
 
         private string _mediaURL = String.Empty;
         private string _musicURL = String.Empty;
-        private int _otherPrims = 0;
         private UUID _ownerID = UUID.Zero;
-        private int _ownerPrims = 0;
         private List<ParcelManager.ParcelAccessEntry> _parcelAccessList = new List<ParcelManager.ParcelAccessEntry>();
         private float _passHours = 0;
         private int _passPrice = 0;
         private int _salePrice = 0;
-        private int _selectedPrims = 0;
         private int _simwideArea = 0;
-        private int _simwidePrims = 0;
         private UUID _snapshotID = UUID.Zero;
         private Vector3 _userLocation = new Vector3();
         private Vector3 _userLookAt = new Vector3();
@@ -315,19 +310,6 @@ namespace OpenSim.Framework
             }
             set {
                 _groupID = value;
-            }
-        }
-
-        /// <summary>
-        /// Number of SceneObjectPart that are owned by a Group
-        /// </summary>
-        [XmlIgnore]
-        public int GroupPrims {
-            get {
-                return _groupPrims;
-            }
-            set {
-                _groupPrims = value;
             }
         }
 
@@ -578,20 +560,6 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Number of SceneObjectPart that are owned by users who do not own the parcel
-        /// and don't have the 'group.  These are elegable for AutoReturn collection
-        /// </summary>
-        [XmlIgnore]
-        public int OtherPrims {
-            get {
-                return _otherPrims;
-            }
-            set {
-                _otherPrims = value;
-            }
-        }
-
-        /// <summary>
         /// Owner Avatar or Group of the parcel.  Naturally, all land masses must be
         /// owned by someone
         /// </summary>
@@ -601,19 +569,6 @@ namespace OpenSim.Framework
             }
             set {
                 _ownerID = value;
-            }
-        }
-
-        /// <summary>
-        /// Number of SceneObjectPart that are owned by the owner of the parcel
-        /// </summary>
-        [XmlIgnore]
-        public int OwnerPrims {
-            get {
-                return _ownerPrims;
-            }
-            set {
-                _ownerPrims = value;
             }
         }
 
@@ -666,19 +621,6 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Number of SceneObjectPart that are currently selected by avatar
-        /// </summary>
-        [XmlIgnore]
-        public int SelectedPrims {
-            get {
-                return _selectedPrims;
-            }
-            set {
-                _selectedPrims = value;
-            }
-        }
-
-        /// <summary>
         /// Number of meters^2 in the Simulator
         /// </summary>
         [XmlIgnore]
@@ -688,19 +630,6 @@ namespace OpenSim.Framework
             }
             set {
                 _simwideArea = value;
-            }
-        }
-
-        /// <summary>
-        /// Number of SceneObjectPart in the Simulator
-        /// </summary>
-        [XmlIgnore]
-        public int SimwidePrims {
-            get {
-                return _simwidePrims;
-            }
-            set {
-                _simwidePrims = value;
             }
         }
 

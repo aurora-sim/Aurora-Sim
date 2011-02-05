@@ -11242,42 +11242,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else
                 {
-                    if (sim_wide != 0)
+                    IPrimCountModule primCountsModule = World.RequestModuleInterface<IPrimCountModule>();
+                    if (primCountsModule != null)
                     {
-                        if (category == 0)
+                        IPrimCounts primCounts = primCountsModule.GetPrimCounts(land.GlobalID);
+                        if (sim_wide != 0)
                         {
-                            return land.SimwidePrims;
+                            if (category == 0)
+                            {
+                                return primCounts.Simulator;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
                         }
                         else
                         {
-                            return 0;
-                        }
-                    }
-                    else
-                    {
-                        if (category == 0)//Total Prims
-                        {
-                            return 0;//land.
-                        }
-                        else if (category == 1)//Owner Prims
-                        {
-                            return land.OwnerPrims;
-                        }
-                        else if (category == 2)//Group Prims
-                        {
-                            return land.GroupPrims;
-                        }
-                        else if (category == 3)//Other Prims
-                        {
-                            return land.OtherPrims;
-                        }
-                        else if (category == 4)//Selected
-                        {
-                            return land.SelectedPrims;
-                        }
-                        else if (category == 5)//Temp
-                        {
-                            return 0;//land.
+                            if (category == 0)//Total Prims
+                            {
+                                return primCounts.Total;//land.
+                            }
+                            else if (category == 1)//Owner Prims
+                            {
+                                return primCounts.Owner;
+                            }
+                            else if (category == 2)//Group Prims
+                            {
+                                return primCounts.Group;
+                            }
+                            else if (category == 3)//Other Prims
+                            {
+                                return primCounts.Others;
+                            }
+                            else if (category == 4)//Selected
+                            {
+                                return primCounts.Selected;
+                            }
+                            else if (category == 5)//Temp
+                            {
+                                return primCounts.Temporary;//land.
+                            }
                         }
                     }
                 }
@@ -11293,13 +11298,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List ret = new LSL_List();
             if (parcelManagement != null)
             {
-                LandObject land = (LandObject)parcelManagement.GetLandObject((float)pos.x, (float)pos.y);
+                ILandObject land = parcelManagement.GetLandObject((float)pos.x, (float)pos.y);
                 if (land != null)
                 {
-                    foreach (KeyValuePair<UUID, int> detectedParams in land.GetLandObjectOwners())
+                    IPrimCountModule primCountModule = World.RequestModuleInterface<IPrimCountModule>();
+                    if (primCountModule != null)
                     {
-                        ret.Add(detectedParams.Key.ToString());
-                        ret.Add(detectedParams.Value);
+                        IPrimCounts primCounts = primCountModule.GetPrimCounts(land.LandData.GlobalID);
+                        foreach (KeyValuePair<UUID, int> detectedParams in primCounts.GetAllUserCounts())
+                        {
+                            ret.Add(detectedParams.Key.ToString());
+                            ret.Add(detectedParams.Value);
+                        }
                     }
                 }
             }

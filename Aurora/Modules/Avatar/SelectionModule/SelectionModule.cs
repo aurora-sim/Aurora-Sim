@@ -156,14 +156,7 @@ namespace Aurora.Modules
                         {
                             //                            prim.ParentGroup.IsSelected = true;
                             prim.IsSelected = true;
-                            if (!prim.ParentGroup.IsAttachment)
-                            {
-                                if (scene.Permissions.CanEditObject(prim.ParentGroup.UUID, remoteClient.AgentId)
-                                || scene.Permissions.CanMoveObject(prim.ParentGroup.UUID, remoteClient.AgentId))
-                                {
-                                    scene.EventManager.TriggerParcelPrimCountTainted();
-                                }
-                            }
+                            scene.AuroraEventManager.FireGenericEventHandler("ObjectSelected", prim);
                         }
                     }
                 }
@@ -284,19 +277,7 @@ namespace Aurora.Modules
                     part.ParentGroup.ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);
             }
 
-            // If it's not an attachment, and we are allowed to move it,
-            // then we might have done so. If we moved across a parcel
-            // boundary, we will need to recount prims on the parcels.
-            // For attachments, that makes no sense.
-            //
-            if (!isAttachment)
-            {
-                if (scene.Permissions.CanEditObject(
-                        part.UUID, remoteClient.AgentId)
-                        || scene.Permissions.CanMoveObject(
-                        part.UUID, remoteClient.AgentId))
-                    scene.EventManager.TriggerParcelPrimCountTainted();
-            }
+            scene.AuroraEventManager.FireGenericEventHandler("ObjectDeselected", part);
         }
 
         protected void ProcessViewerEffect(IClientAPI remoteClient, List<ViewerEffectEventHandlerArg> args)

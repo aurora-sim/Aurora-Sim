@@ -70,9 +70,6 @@ namespace OpenSim.Region.Framework.Interfaces
         void SendLandObjectOwners(IClientAPI remote_client);
         void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);
         void DisableLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);
-        void ResetLandPrimCounts();
-        void AddPrimToCount(SceneObjectGroup obj);
-        void RemovePrimFromCount(SceneObjectGroup obj);
         void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area);
 
         void DeedToGroup(UUID groupID);

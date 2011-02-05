@@ -53,10 +53,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event ClientMovement OnClientMovement;
 
-        public delegate void OnBackupDelegate(ISimulationDataStore datastore, bool forceBackup);
-
-        public event OnBackupDelegate OnBackup;
-
         public delegate void OnClientConnectCoreDelegate(IClientCore client);
 
         public event OnClientConnectCoreDelegate OnClientConnect;
@@ -78,10 +74,6 @@ namespace OpenSim.Region.Framework.Scenes
         public event OnNewPresenceDelegate OnNewPresence;
 
         public event OnNewPresenceDelegate OnRemovePresence;
-
-        public delegate void OnParcelPrimCountAddDelegate(SceneObjectGroup obj);
-
-        public event OnParcelPrimCountAddDelegate OnParcelPrimCountAdd;
 
         public delegate void OnPluginConsoleDelegate(string[] args);
 
@@ -229,12 +221,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public delegate void IncomingLandDataFromStorage(List<LandData> data);
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
-
-        public delegate void RequestParcelPrimCountUpdate();
-        public event RequestParcelPrimCountUpdate OnRequestParcelPrimCountUpdate;
-
-        public delegate void ParcelPrimCountTainted();
-        public event ParcelPrimCountTainted OnParcelPrimCountTainted;
 
         /// <summary>
         /// RegisterCapsEvent is called by Scene after the Caps object
@@ -644,48 +630,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnRemovePresence failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerOnBackup(ISimulationDataStore dstore, bool forced)
-        {
-            OnBackupDelegate handlerOnAttach = OnBackup;
-            if (handlerOnAttach != null)
-            {
-                foreach (OnBackupDelegate d in handlerOnAttach.GetInvocationList())
-                {
-                    try
-                    {
-                        d(dstore, forced);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnBackup failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerParcelPrimCountAdd(SceneObjectGroup obj)
-        {
-            OnParcelPrimCountAddDelegate handlerParcelPrimCountAdd = OnParcelPrimCountAdd;
-            if (handlerParcelPrimCountAdd != null)
-            {
-                foreach (OnParcelPrimCountAddDelegate d in handlerParcelPrimCountAdd.GetInvocationList())
-                {
-                    try
-                    {
-                        d(obj);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerParcelPrimCountAdd failed - continuing.  {0} {1}",
                             e.ToString(), e.StackTrace);
                     }
                 }
