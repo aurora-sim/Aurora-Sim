@@ -210,6 +210,10 @@ namespace OpenSim.Services.UserAccountService
             }
 
             d.Data["LastRegionID"] = regionID.ToString();
+            //Change to ints to migigate the login into air bugs with non EN_US
+            lastPosition.X = (int)lastPosition.X;
+            lastPosition.Y = (int)lastPosition.Y;
+            lastPosition.Z = (int)lastPosition.Z;
             d.Data["LastPosition"] = lastPosition.ToString();
             d.Data["LastLookAt"] = lastLookAt.ToString();
 
