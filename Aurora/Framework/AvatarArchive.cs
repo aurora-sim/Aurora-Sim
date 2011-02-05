@@ -15,5 +15,15 @@ namespace Aurora.Framework
         /// XML of the archive
         /// </summary>
         public string ArchiveXML;
+		
+		/// <summary>
+        /// uuid of a text that shows off this archive
+        /// </summary>
+        public string Snapshot;
+
+        /// <summary>
+        /// 1 or 0 if its public
+        /// </summary>
+        public int IsPublic;
     }
 }

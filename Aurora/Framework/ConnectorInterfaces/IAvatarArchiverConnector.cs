@@ -22,5 +22,12 @@ namespace Aurora.Framework
         /// <param name="archive">Archive</param>
         /// <param name="Password">Password that will be required to access this archive</param>
 		void SaveAvatarArchive(AvatarArchive archive);
+		
+        /// <summary>
+        /// Gets a list of avatar archives used for the website now only
+        /// </summary>
+        /// <param name="isPublic">IsPublic</param>
+        /// <returns>List of archives</returns>
+        List<AvatarArchive> GetAvatarArchives(bool isPublic);
 	}
 }

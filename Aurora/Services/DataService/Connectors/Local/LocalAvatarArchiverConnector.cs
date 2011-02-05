@@ -5,6 +5,7 @@ using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Console;
 using Nini.Config;
+using System.Data;
 
 namespace Aurora.Services.DataService
 {
@@ -50,6 +51,25 @@ namespace Aurora.Services.DataService
 			return Archive;
 		}
 
+        /// <summary>
+        /// Returns a list object of AvatarArchives. This is being used for wiredux
+        /// </summary>
+        /// <param name="Public"></param>
+        /// <returns></returns>
+        public List<AvatarArchive> GetAvatarArchives(bool isPublic)
+        {
+            List<AvatarArchive> returnValue = new List<AvatarArchive>();
+           IDataReader RetVal = GD.QueryDataFull("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
+            while (RetVal.Read())
+            {
+                AvatarArchive Archive = new AvatarArchive();
+                Archive.Name = RetVal["Name"].ToString();
+                Archive.Snapshot = RetVal["Snapshot"].ToString();
+                Archive.IsPublic = int.Parse(RetVal["IsPublic"].ToString());
+                returnValue.Add(Archive);
+            }
+            return returnValue;
+        }
 		public void SaveAvatarArchive(AvatarArchive archive)
 		{
 			List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
@@ -57,7 +77,9 @@ namespace Aurora.Services.DataService
             {
                 GD.Insert("avatararchives", new object[] {
 					archive.Name,
-					archive.ArchiveXML
+					archive.ArchiveXML,
+                    archive.Snapshot,
+                    archive.IsPublic
 				});
 			}
             else
