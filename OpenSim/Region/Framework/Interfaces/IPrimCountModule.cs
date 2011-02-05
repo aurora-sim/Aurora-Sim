@@ -48,6 +48,7 @@ namespace OpenSim.Region.Framework.Interfaces
         int Simulator { get; }
         int Selected { get; }
         int Temporary { get; }
+        int Total { get; }
         List<UUID> Groups { get; }
         IUserPrimCounts Users { get; }
 

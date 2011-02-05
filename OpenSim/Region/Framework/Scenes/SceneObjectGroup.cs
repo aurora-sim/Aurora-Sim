@@ -1126,7 +1126,6 @@ namespace OpenSim.Region.Framework.Scenes
             HasGroupChanged = true;
             RootPart.Rezzed = DateTime.Now;
             RootPart.RemFlag(PrimFlags.TemporaryOnRez);
-            m_scene.EventManager.TriggerParcelPrimCountTainted();
             m_rootPart.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
@@ -2273,7 +2272,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IBackupModule backup = Scene.RequestModuleInterface<IBackupModule>();
                 if (backup != null)
                     backup.DeleteFromStorage(UUID);
-                m_scene.EventManager.TriggerParcelPrimCountTainted();
             }
 
             if (selectionPart != null)

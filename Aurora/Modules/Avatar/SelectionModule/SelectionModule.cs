@@ -264,14 +264,10 @@ namespace Aurora.Modules
             //            if (part.ParentGroup.RootPart.LocalId != part.LocalId)
             //                return;
 
-            bool isAttachment = false;
-
             //            part.ParentGroup.IsSelected = false;
             part.IsSelected = false;
 
-            if (part.ParentGroup.IsAttachment)
-                isAttachment = true;
-            else //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
+            if (!part.ParentGroup.IsAttachment) //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
             {
                 if (part.ParentGroup.RootPart.AngularVelocity != Vector3.Zero && !part.ParentGroup.IsDeleted)
                     part.ParentGroup.ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.FullUpdate);

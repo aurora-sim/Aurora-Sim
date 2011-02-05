@@ -323,17 +323,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryTimer.Start();
             }
 
-            m_scene.EventManager.OnParcelPrimCountAdd += EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateBuyLand += EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnNewClient += EventManagerOnNewClient;
             m_scene.EventManager.OnMakeRootAgent += CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement += EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnSignificantObjectMovement += EventManagerOnSignificantObjectMovement;
-            m_scene.EventManager.OnObjectBeingRemovedFromScene += EventManagerOnObjectBeingRemovedFromScene;
             m_scene.EventManager.OnIncomingLandDataFromStorage += EventManagerOnIncomingLandDataFromStorage;
-            m_scene.EventManager.OnRequestParcelPrimCountUpdate += EventManagerOnRequestParcelPrimCountUpdate;
-            m_scene.EventManager.OnParcelPrimCountTainted += EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
@@ -360,17 +356,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryTimer = null;
             }
 
-            m_scene.EventManager.OnParcelPrimCountAdd -= EventManagerOnParcelPrimCountAdd;
             m_scene.EventManager.OnAvatarEnteringNewParcel -= EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateBuyLand -= EventManagerOnValidateLandBuy;
             m_scene.EventManager.OnNewClient -= EventManagerOnNewClient;
             m_scene.EventManager.OnMakeRootAgent -= CheckEnteringNewParcel;
             m_scene.EventManager.OnSignificantClientMovement -= EventManagerOnSignificantClientMovement;
             m_scene.EventManager.OnSignificantObjectMovement -= EventManagerOnSignificantObjectMovement;
-            m_scene.EventManager.OnObjectBeingRemovedFromScene -= EventManagerOnObjectBeingRemovedFromScene;
             m_scene.EventManager.OnIncomingLandDataFromStorage -= EventManagerOnIncomingLandDataFromStorage;
-            m_scene.EventManager.OnRequestParcelPrimCountUpdate -= EventManagerOnRequestParcelPrimCountUpdate;
-            m_scene.EventManager.OnParcelPrimCountTainted -= EventManagerOnParcelPrimCountTainted;
             m_scene.EventManager.OnRegisterCaps -= EventManagerOnRegisterCaps;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
             m_scene.UnregisterModuleInterface<IParcelManagementModule>(this);
@@ -562,10 +554,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// </summary>
         protected internal void CheckFrameEvents()
         {
-            if (IsLandPrimCountTainted())
-            {
-                EventManagerOnParcelPrimCountUpdate();
-            }
             // Go through all updates
             m_scene.ForEachSOG(CheckPrimForAutoReturn);
             lock (m_returns)
@@ -1150,88 +1138,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         #endregion
 
         #region Parcel Modification
-
-        public void ResetAllLandPrimCounts()
-        {
-            lock (m_landList)
-            {
-                foreach (LandObject p in m_landList.Values)
-                {
-                    p.ResetLandPrimCounts();
-                }
-            }
-        }
-
-        public void EventManagerOnParcelPrimCountTainted()
-        {
-            m_landPrimCountTainted = true;
-        }
-
-        public bool IsLandPrimCountTainted()
-        {
-            return m_landPrimCountTainted;
-        }
-
-        public void EventManagerOnParcelPrimCountAdd(SceneObjectGroup obj)
-        {
-            Vector3 position = obj.AbsolutePosition;
-            ILandObject landUnderPrim = GetLandObject((int)position.X, (int)position.Y);
-            if (landUnderPrim != null)
-            {
-                landUnderPrim.AddPrimToCount(obj);
-            }
-        }
-
-        public void EventManagerOnObjectBeingRemovedFromScene(SceneObjectGroup obj)
-        {
-            lock (m_landList)
-            {
-                foreach (LandObject p in m_landList.Values)
-                {
-                    p.RemovePrimFromCount(obj);
-                }
-            }
-        }
-
-        public void FinalizeLandPrimCountUpdate()
-        {
-            //Get Simwide prim count for owner
-            int simArea = 0;
-            int simPrims = 0;
-            foreach (LandObject p in AllParcels())
-            {
-                simArea += p.LandData.Area;
-                simPrims += p.LandData.OwnerPrims + p.LandData.OtherPrims + p.LandData.GroupPrims +
-                            p.LandData.SelectedPrims;
-            }
-            foreach (LandObject p in AllParcels())
-            {
-                p.LandData.SimwideArea = simArea;
-                p.LandData.SimwidePrims = simPrims;
-            }
-        }
-
-        public void EventManagerOnParcelPrimCountUpdate()
-        {
-            ResetAllLandPrimCounts();
-            EntityBase[] entities = m_scene.Entities.GetEntities();
-            foreach (EntityBase obj in entities)
-            {
-                if (obj != null)
-                    if ((obj is SceneObjectGroup) && !obj.IsDeleted && !((SceneObjectGroup)obj).IsAttachment)
-                        m_scene.EventManager.TriggerParcelPrimCountAdd((SceneObjectGroup)obj);
-            }
-            FinalizeLandPrimCountUpdate();
-            m_landPrimCountTainted = false;
-        }
-
-        public void EventManagerOnRequestParcelPrimCountUpdate()
-        {
-            ResetAllLandPrimCounts();
-            EventManagerOnParcelPrimCountUpdate();
-            FinalizeLandPrimCountUpdate();
-            m_landPrimCountTainted = false;
-        }
 
         /// <summary>
         /// Subdivides a piece of land

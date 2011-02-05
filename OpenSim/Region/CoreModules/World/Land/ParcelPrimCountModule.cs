@@ -84,12 +84,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             m_Scene = scene;
 
-            m_Scene.EventManager.OnParcelPrimCountAdd +=
-                    OnParcelPrimCountAdd;
+            m_Scene.EventManager.OnIncomingSceneObject +=
+                    OnPrimCountAdd;
             m_Scene.EventManager.OnObjectBeingRemovedFromScene +=
                     OnObjectBeingRemovedFromScene;
-            m_Scene.EventManager.OnParcelPrimCountTainted +=
-                    OnParcelPrimCountTainted;
         }
 
         public void RegionLoaded(Scene scene)
@@ -109,7 +107,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             get { return "PrimCountModule"; }
         }
 
-        private void OnParcelPrimCountAdd(SceneObjectGroup obj)
+        private void OnPrimCountAdd(SceneObjectGroup obj)
         {
             // If we're tainted already, don't bother to add. The next
             // access will cause a recount anyway

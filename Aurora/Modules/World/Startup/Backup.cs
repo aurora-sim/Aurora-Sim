@@ -242,8 +242,6 @@ namespace Aurora.Modules
                 }
                 else
                     m_scene.EventManager.TriggerIncomingLandDataFromStorage(LandObjects);
-
-                m_scene.EventManager.TriggerParcelPrimCountTainted();
             }
 
             internal void FinishStartup()
@@ -380,7 +378,6 @@ namespace Aurora.Modules
                     avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, groups);
                 });
 
-                m_scene.EventManager.TriggerParcelPrimCountTainted();
                 return true;
             }
 

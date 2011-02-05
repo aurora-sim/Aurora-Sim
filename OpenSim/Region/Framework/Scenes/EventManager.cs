@@ -1409,48 +1409,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void TriggerRequestParcelPrimCountUpdate()
-        {
-            RequestParcelPrimCountUpdate handlerRequestParcelPrimCountUpdate = OnRequestParcelPrimCountUpdate;
-            if (handlerRequestParcelPrimCountUpdate != null)
-            {
-                foreach (RequestParcelPrimCountUpdate d in handlerRequestParcelPrimCountUpdate.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerRequestParcelPrimCountUpdate failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerParcelPrimCountTainted()
-        {
-            ParcelPrimCountTainted handlerParcelPrimCountTainted = OnParcelPrimCountTainted;
-            if (handlerParcelPrimCountTainted != null)
-            {
-                foreach (ParcelPrimCountTainted d in handlerParcelPrimCountTainted.GetInvocationList())
-                {
-                    try
-                    {
-                        d();
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerParcelPrimCountTainted failed - continuing.  {0} {1}",
-                            e.ToString(), e.StackTrace);
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Updates the system as to how the position of the sun should be handled.
         /// </summary>
