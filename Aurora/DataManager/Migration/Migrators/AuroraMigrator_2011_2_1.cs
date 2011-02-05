@@ -29,6 +29,20 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("LastLogin", ColumnTypes.String50),
                 ColDef("LastLogout", ColumnTypes.String50),
                 ColDef("Info", ColumnTypes.String512)));
+
+            //
+            // Change summery:
+            //
+            //   remove the old avatararchives and define the new one
+            //
+            //Remove the old name
+            this.RemoveSchema("avatararchives");
+
+            AddSchema("avatararchives", ColDefs(
+                ColDef("Name", ColumnTypes.String50, true),
+                ColDef("Archive", ColumnTypes.Blob),
+                ColDef("Snapshot", ColumnTypes.Char36),
+                ColDef("IsPublic", ColumnTypes.Integer11)));
         }
 
         protected override void DoCreateDefaults(DataSessionProvider sessionProvider, IDataConnector genericData)
