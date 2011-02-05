@@ -136,7 +136,7 @@ namespace Aurora.Modules
                 foreach (SceneObjectPart child in obj.ChildrenList)
                 {
                     bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
-                    if (!m_addedObjects.Contains(child.UUID))
+                    if (!m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
                     {
                         m_objects++;
 
@@ -144,24 +144,21 @@ namespace Aurora.Modules
                         if (physicalStatus)
                             m_activeObjects++;
                         //Add it to the list so that we have a record of it
-                        m_addedObjects.Add(child.UUID);
                         m_lastAddedPhysicalStatus.Add(child.UUID, physicalStatus);
                     }
                     else
                     {
                         //Its a dupe! Its a dupe!
-                        if (m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
+                        //  Check that the physical status has changed
+                        if (physicalStatus != m_lastAddedPhysicalStatus[child.UUID])
                         {
-                            //This was a physical prim at some time... 
-                            //  We need to make sure to update it right
-                            if (physicalStatus != m_lastAddedPhysicalStatus[child.UUID])
-                            {
-                                //It changed... fix the count
-                                if (physicalStatus)
-                                    m_activeObjects++;
-                                else
-                                    m_activeObjects--;
-                            }
+                            //It changed... fix the count
+                            if (physicalStatus)
+                                m_activeObjects++;
+                            else
+                                m_activeObjects--;
+                            //Update the cache
+                            m_lastAddedPhysicalStatus[child.UUID] = physicalStatus;
                         }
                     }
                 }
@@ -172,6 +169,20 @@ namespace Aurora.Modules
         {
             lock (m_objectsLock)
             {
+                foreach (SceneObjectPart child in obj.ChildrenList)
+                {
+                    bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
+                    if (m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
+                    {
+                        m_objects--;
+
+                        //Check physical status now and remove if necessary
+                        if (physicalStatus)
+                            m_activeObjects--;
+                        //Remove our record of it
+                        m_lastAddedPhysicalStatus.Remove(child.UUID);
+                    }
+                }
             }
         }
 
