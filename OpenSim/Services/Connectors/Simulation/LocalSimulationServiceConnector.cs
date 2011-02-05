@@ -138,7 +138,7 @@ namespace OpenSim.Services.Connectors.Simulation
             }
 
             //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
-            return false;
+            return true;
         }
 
         public bool UpdateAgent(GridRegion destination, AgentPosition cAgentData)
