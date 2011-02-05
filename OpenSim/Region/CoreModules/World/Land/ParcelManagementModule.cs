@@ -1206,7 +1206,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_landList[startLandObjectIndex].ForceUpdateLandInfo();
             }
 
-            EventManagerOnParcelPrimCountTainted();
+            IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            //Taint both land objects
+            if (primCountsModule != null)
+            {
+                primCountsModule.TaintPrimCount(newLand);
+                primCountsModule.TaintPrimCount(startLandObject);
+            }
 
             //Now add the new land object
             ILandObject result = AddLandObject(newLand);
@@ -1283,7 +1289,16 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
             masterLandObject.LandData.OwnerID = attempting_user_id;
-            EventManagerOnParcelPrimCountTainted();
+            IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            //Taint both land objects
+            if (primCountsModule != null)
+            {
+                foreach (ILandObject slaveLandObject in selectedLandObjects)
+                {
+                    primCountsModule.TaintPrimCount(slaveLandObject);
+                }
+                primCountsModule.TaintPrimCount(masterLandObject);
+            }
 
             masterLandObject.SendLandUpdateToAvatarsOverMe();
         }

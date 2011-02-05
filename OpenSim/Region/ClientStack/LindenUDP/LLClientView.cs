@@ -4225,6 +4225,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             ParcelPropertiesMessage updateMessage = new ParcelPropertiesMessage();
 
+            IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+            if (primCountModule != null)
+            {
+                IPrimCounts primCounts = primCountModule.GetPrimCounts(landData.GlobalID);
+                updateMessage.GroupPrims = primCounts.Group;
+                updateMessage.OtherPrims = primCounts.Others;
+                updateMessage.OwnerPrims = primCounts.Owner;
+                updateMessage.SelectedPrims = primCounts.Selected;
+                updateMessage.SimWideTotalPrims = primCounts.Simulator;
+                updateMessage.TotalPrims = primCounts.Total;
+            }
+
             updateMessage.AABBMax = landData.AABBMax;
             updateMessage.AABBMin = landData.AABBMin;
             updateMessage.Area = landData.Area;
@@ -4238,7 +4250,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.ClaimDate = Util.ToDateTime(landData.ClaimDate);
             updateMessage.ClaimPrice = landData.ClaimPrice;
             updateMessage.GroupID = landData.GroupID;
-            updateMessage.GroupPrims = landData.GroupPrims;
             updateMessage.IsGroupOwned = landData.IsGroupOwned;
             updateMessage.LandingType = (LandingType) landData.LandingType;
             updateMessage.LocalID = landData.LocalID;
@@ -4252,9 +4263,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.Name = landData.Name;
             updateMessage.OtherCleanTime = landData.OtherCleanTime;
             updateMessage.OtherCount = 0; //TODO: Unimplemented
-            updateMessage.OtherPrims = landData.OtherPrims;
             updateMessage.OwnerID = landData.OwnerID;
-            updateMessage.OwnerPrims = landData.OwnerPrims;
             updateMessage.ParcelFlags = (ParcelFlags) landData.Flags;
             updateMessage.ParcelPrimBonus = simObjectBonusFactor;
             updateMessage.PassHours = landData.PassHours;
@@ -4270,16 +4279,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.RentPrice = 0;
             updateMessage.RequestResult = (ParcelResult) request_result;
             updateMessage.SalePrice = landData.SalePrice;
-            updateMessage.SelectedPrims = landData.SelectedPrims;
             updateMessage.SelfCount = 0; //TODO: Unimplemented
             updateMessage.SequenceID = sequence_id;
             updateMessage.SimWideMaxPrims = simObjectCapacity;
-            updateMessage.SimWideTotalPrims = landData.SimwidePrims;
             updateMessage.SnapSelection = snap_selection;
             updateMessage.SnapshotID = landData.SnapshotID;
-            updateMessage.Status = (ParcelStatus) landData.Status;
-            updateMessage.TotalPrims = landData.OwnerPrims + landData.GroupPrims + landData.OtherPrims +
-                                                 landData.SelectedPrims;
+            updateMessage.Status = (ParcelStatus)landData.Status;
             updateMessage.UserLocation = landData.UserLocation;
             updateMessage.UserLookAt = landData.UserLookAt;
 
