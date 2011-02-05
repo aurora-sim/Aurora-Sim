@@ -632,6 +632,8 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
+	  
+	  <Reference name="System.Drawing"/>
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
