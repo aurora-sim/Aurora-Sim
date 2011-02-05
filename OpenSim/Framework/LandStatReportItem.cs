@@ -25,26 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+using System;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public class LandStatReportItem
     {
-        public float LocationX;
-        public float LocationY;
-        public float LocationZ;
+        public Vector3 Location;
         public string OwnerName;
         public float Score;
         public UUID TaskID;
         public uint TaskLocalID;
         public string TaskName;
-
-        public LandStatReportItem()
-        {
-
-        }
-
+        public DateTime TimeModified;
     }
 }

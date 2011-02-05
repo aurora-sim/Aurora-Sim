@@ -963,13 +963,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
                             if (sog != null)
                             {
                                 LandStatReportItem lsri = new LandStatReportItem();
-                                lsri.LocationX = sog.AbsolutePosition.X;
-                                lsri.LocationY = sog.AbsolutePosition.Y;
-                                lsri.LocationZ = sog.AbsolutePosition.Z;
+                                lsri.Location = sog.AbsolutePosition;
                                 lsri.Score = SceneData[obj];
                                 lsri.TaskID = sog.UUID;
                                 lsri.TaskLocalID = sog.LocalId;
                                 lsri.TaskName = sog.GetPartName(obj);
+                                lsri.TimeModified = sog.RootPart.Rezzed;
                                 OpenSim.Services.Interfaces.UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
                                 if (account != null)
                                     lsri.OwnerName = account.Name;

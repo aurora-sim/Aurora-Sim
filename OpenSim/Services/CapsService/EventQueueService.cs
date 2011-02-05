@@ -201,6 +201,12 @@ namespace OpenSim.Services.CapsService
             Enqueue(item, AgentID, RegionHandle);
         }
 
+        public void LandStatReply(LandStatReplyMessage message, UUID AgentID, ulong RegionHandle)
+        {
+            OSD item = EventQueueHelper.LandStatReply(message);
+            Enqueue(item, AgentID, RegionHandle);
+        }
+
         public virtual void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.GroupMembership(groupUpdate);

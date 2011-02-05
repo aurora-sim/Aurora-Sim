@@ -2494,29 +2494,31 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendLandStatReply(uint reportType, uint requestFlags, uint resultCount, LandStatReportItem[] lsrpia)
         {
-            LandStatReplyPacket lsrp = new LandStatReplyPacket();
-            // LandStatReplyPacket.RequestDataBlock lsreqdpb = new LandStatReplyPacket.RequestDataBlock();
-            LandStatReplyPacket.ReportDataBlock[] lsrepdba = new LandStatReplyPacket.ReportDataBlock[lsrpia.Length];
-            //LandStatReplyPacket.ReportDataBlock lsrepdb = new LandStatReplyPacket.ReportDataBlock();
-            // lsrepdb.
-            lsrp.RequestData.ReportType = reportType;
-            lsrp.RequestData.RequestFlags = requestFlags;
-            lsrp.RequestData.TotalObjectCount = resultCount;
+            LandStatReplyMessage message = new LandStatReplyMessage();
+
+            message.ReportType = reportType;
+            message.RequestFlags = requestFlags;
+            message.TotalObjectCount = resultCount;
+            message.ReportDataBlocks = new LandStatReplyMessage.ReportDataBlock[lsrpia.Length];
             for (int i = 0; i < lsrpia.Length; i++)
             {
-                LandStatReplyPacket.ReportDataBlock lsrepdb = new LandStatReplyPacket.ReportDataBlock();
-                lsrepdb.LocationX = lsrpia[i].LocationX;
-                lsrepdb.LocationY = lsrpia[i].LocationY;
-                lsrepdb.LocationZ = lsrpia[i].LocationZ;
-                lsrepdb.Score = lsrpia[i].Score;
-                lsrepdb.TaskID = lsrpia[i].TaskID;
-                lsrepdb.TaskLocalID = lsrpia[i].TaskLocalID;
-                lsrepdb.TaskName = Util.StringToBytes256(lsrpia[i].TaskName);
-                lsrepdb.OwnerName = Util.StringToBytes256(lsrpia[i].OwnerName);
-                lsrepdba[i] = lsrepdb;
+                LandStatReplyMessage.ReportDataBlock block = new LandStatReplyMessage.ReportDataBlock();
+                block.Location = lsrpia[i].Location;
+                block.MonoScore = lsrpia[i].Score;
+                block.OwnerName = lsrpia[i].OwnerName;
+                block.Score = lsrpia[i].Score;
+                block.TaskID = lsrpia[i].TaskID;
+                block.TaskLocalID = lsrpia[i].TaskLocalID;
+                block.TaskName = lsrpia[i].TaskName;
+                block.TimeStamp = lsrpia[i].TimeModified;
+                message.ReportDataBlocks[i] = block;
             }
-            lsrp.ReportData = lsrepdba;
-            OutPacket(lsrp, ThrottleOutPacketType.Land);
+
+            IEventQueueService eventService = m_scene.RequestModuleInterface<IEventQueueService>();
+            if (eventService != null)
+            {
+                eventService.LandStatReply(message, AgentId, m_scene.RegionInfo.RegionHandle);
+            }
         }
 
         public void SendScriptRunningReply(UUID objectID, UUID itemID, bool running)

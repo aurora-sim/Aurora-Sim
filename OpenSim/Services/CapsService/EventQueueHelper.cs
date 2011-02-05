@@ -481,6 +481,24 @@ namespace OpenSim.Services.CapsService
             return message;
         }
 
+        public static OSD LandStatReply(LandStatReplyMessage statReplyMessage)
+        {
+            OSDMap message = new OSDMap();
+            message.Add("message", OSD.FromString("LandStatReply"));
+            OSD message_body = statReplyMessage.Serialize();
+            Console.Write(message_body.AsString());
+            OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
+            int num = 0;
+            foreach (OSD o in m)
+            {
+                OSDMap innerMap = (OSDMap)o;
+                innerMap["TimeStamp"] = OSD.FromUInteger((uint)Util.ToUnixTime(statReplyMessage.ReportDataBlocks[num].TimeStamp));
+                num++;
+            }
+            message.Add("body", message_body);
+            return message;
+        }
+
         public static OSD EnableChildAgents(int DrawDistance, AgentCircuitData circuit)
         {
             OSDMap llsdBody = new OSDMap();
