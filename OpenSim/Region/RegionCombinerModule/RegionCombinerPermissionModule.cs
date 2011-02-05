@@ -110,6 +110,11 @@ namespace OpenSim.Region.RegionCombinerModule
             return m_rootScene.Permissions.CanEditParcel(user, parcel);
         }
 
+        public bool CanSubdivideParcel(UUID user, ILandObject parcel, Scene scene)
+        {
+            return m_rootScene.Permissions.CanSubdivideParcel(user, parcel);
+        }
+
         public bool CanInstantMessage(UUID user, UUID target, Scene startscene)
         {
             return m_rootScene.Permissions.CanInstantMessage(user, target);

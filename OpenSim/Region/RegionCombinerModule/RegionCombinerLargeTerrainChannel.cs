@@ -96,6 +96,11 @@ public class RegionCombinerLargeLandChannel : IParcelManagementModule
             return RootRegionLandChannel.GetLandObject(localID);
         }
 
+        public ILandObject GetLandObject(UUID GlobalID)
+        {
+            return RootRegionLandChannel.GetLandObject(GlobalID);
+        }
+
         public ILandObject GetLandObject(float x, float y)
         {
             //m_log.DebugFormat("[BIGLANDTESTFLOAT]: <{0},{1}>", x, y);

@@ -2484,7 +2484,7 @@ namespace Aurora.BotManager
             
         }
 
-        public void SendLandObjectOwners(List<LandObjectOwners> objOwners)
+        void IClientAPI.SendLandObjectOwners(List<LandObjectOwners> objOwners)
         {
             
         }

@@ -1200,7 +1200,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             //Check owner
             IClientAPI client;
             m_scene.TryGetClient(attempting_user_id, out client);
-            if (!m_scene.Permissions.CanEditParcel(attempting_user_id, startLandObject) ||
+
+            if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, startLandObject) ||
                 (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                 !m_scene.Permissions.IsGod(attempting_user_id)))
             {
@@ -1282,7 +1283,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             foreach (ILandObject p in selectedLandObjects)
             {
-                if (!m_scene.Permissions.CanEditParcel(attempting_user_id, p) ||
+                if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) ||
                    (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                    !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false)))
                 {

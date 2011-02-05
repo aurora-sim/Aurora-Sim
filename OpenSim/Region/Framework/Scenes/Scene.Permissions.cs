@@ -134,6 +134,7 @@ namespace OpenSim.Region.Framework.Scenes
         public event IsGodHandler OnIsGod;
         public event IsAdministratorHandler OnIsAdministrator;
         public event EditParcelHandler OnEditParcel;
+        public event EditParcelHandler OnSubdivideParcel;
         public event EditParcelPropertiesHandler OnEditParcelProperties;
         public event SellParcelHandler OnSellParcel;
         public event AbandonParcelHandler OnAbandonParcel;
@@ -711,6 +712,21 @@ namespace OpenSim.Region.Framework.Scenes
         public bool CanEditParcel(UUID user, ILandObject parcel)
         {
             EditParcelHandler handler = OnEditParcel;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList();
+                foreach (EditParcelHandler h in list)
+                {
+                    if (h(user, parcel, m_scene) == false)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public bool CanSubdivideParcel(UUID user, ILandObject parcel)
+        {
+            EditParcelHandler handler = OnSubdivideParcel;
             if (handler != null)
             {
                 Delegate[] list = handler.GetInvocationList();

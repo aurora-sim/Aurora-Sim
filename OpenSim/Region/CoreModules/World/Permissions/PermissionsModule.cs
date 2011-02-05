@@ -156,6 +156,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnDeleteObject += CanDeleteObject;
             m_scene.Permissions.OnEditObject += CanEditObject; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnEditParcel += CanEditParcel;
+            m_scene.Permissions.OnSubdivideParcel += CanSubdivideParcel;
             m_scene.Permissions.OnEditParcelProperties += CanEditParcelProperties; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnInstantMessage += CanInstantMessage;
             m_scene.Permissions.OnInventoryTransfer += CanInventoryTransfer; //NOT YET IMPLEMENTED
@@ -1055,6 +1056,14 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         }
 
         private bool CanEditParcel(UUID user, ILandObject parcel, Scene scene)
+        {
+            DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
+            if (m_bypassPermissions) return m_bypassPermissionsValue;
+
+            return GenericParcelOwnerPermission(user, parcel, (ulong)GroupPowers.LandChangeIdentity);
+        }
+
+        private bool CanSubdivideParcel(UUID user, ILandObject parcel, Scene scene)
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;

@@ -111,6 +111,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             else if (FunctionName == "ObjectEnteringNewParcel")
             {
+                //Taint the parcels
                 SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
                 UUID newParcel = (UUID)(((Object[])parameters)[1]);
                 UUID oldParcel = (UUID)(((Object[])parameters)[2]);
