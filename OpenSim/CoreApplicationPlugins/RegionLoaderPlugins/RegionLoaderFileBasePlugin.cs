@@ -239,6 +239,32 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             region.RegionLocX = Convert.ToInt32(locationElements[0]) * Constants.RegionSize;
             region.RegionLocY = Convert.ToInt32(locationElements[1]) * Constants.RegionSize;
 
+            string regionSizeX = config.GetString("RegionSizeX", String.Empty);
+            if (regionSizeX == String.Empty)
+            {
+                NeedsUpdate = true;
+                regionSizeX = MainConsole.Instance.CmdPrompt("Region X Size for region " + name, "256");
+                config.Set("RegionSizeX", location);
+            }
+            region.RegionSizeX = Convert.ToInt32(regionSizeX);
+
+            string regionSizeY = config.GetString("RegionSizeX", String.Empty);
+            if (regionSizeY == String.Empty)
+            {
+                NeedsUpdate = true;
+                regionSizeX = MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256");
+                config.Set("regionSizeY", location);
+            }
+            region.RegionSizeY = Convert.ToInt32(regionSizeY);
+            string regionSizeZ = config.GetString("RegionSizeZ", "1024");
+            //if (regionSizeZ == String.Empty)
+            //{
+            //    NeedsUpdate = true;
+            //    regionSizeX = MainConsole.Instance.CmdPrompt("Region Z Size for region " + name, "1024");
+            //    config.Set("RegionSizeX", location);
+            //}
+            region.RegionSizeZ = Convert.ToInt32(regionSizeZ);
+
             // Internal IP
             IPAddress address;
 

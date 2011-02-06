@@ -295,6 +295,9 @@ namespace OpenSim.Framework
             config.Set("AllowScriptCrossing", AllowScriptCrossing);
             config.Set("TrustBinariesFromForeignSims", TrustBinariesFromForeignSims);
             config.Set("SeeIntoThisSimFromNeighbor", SeeIntoThisSimFromNeighbor);
+            config.Set("RegionSizeX", RegionSizeX);
+            config.Set("RegionSizeY", RegionSizeY);
+            config.Set("RegionSizeZ", RegionSizeZ);
 
             config.Set("NeighborPassword", Password.ToString());
         }
@@ -340,6 +343,9 @@ namespace OpenSim.Framework
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
             args["password"] = OSD.FromUUID(Password);
+            args["region_size_x"] = OSD.FromInteger(RegionSizeX);
+            args["region_size_y"] = OSD.FromInteger(RegionSizeY);
+            args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
             if (secure)
             {
                 args["disabled"] = OSD.FromBoolean(Disabled);
@@ -401,6 +407,14 @@ namespace OpenSim.Framework
                 ScopeID = args["scope_id"].AsUUID();
             if (args["scope_id"] != null)
                 ScopeID = args["scope_id"].AsUUID();
+
+            if (args["region_size_x"] != null)
+                RegionSizeX = args["region_size_x"].AsInteger();
+            if (args["region_size_y"] != null)
+                RegionSizeY = args["region_size_y"].AsInteger();
+            if (args["region_size_z"] != null)
+                RegionSizeZ = args["region_size_z"].AsInteger();
+
             if (args["object_capacity"] != null)
                 m_objectCapacity = args["object_capacity"].AsInteger();
             if (args["region_type"] != null)

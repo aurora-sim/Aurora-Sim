@@ -91,6 +91,9 @@ namespace Aurora.Modules.RegionLoader
             }
             region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
+            region.RegionSizeX = int.Parse(CRegionSizeX.Text);
+            region.RegionSizeY = int.Parse(CRegionSizeY.Text);
+            region.NumberStartup = int.Parse(CStartNum.Text);
 
             m_connector.UpdateRegionInfo(region);
             if (OpenedForCreateRegion)
@@ -132,6 +135,8 @@ namespace Aurora.Modules.RegionLoader
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
             textBox1.Text = region.RegionName;
+            RegionSizeX.Text = region.RegionSizeX.ToString();
+            RegionSizeY.Text = region.RegionSizeY.ToString();
         }
 
         private void Update_Click(object sender, EventArgs e)
@@ -177,6 +182,8 @@ namespace Aurora.Modules.RegionLoader
             region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
             region.NumberStartup = int.Parse(StartupNumberBox.Text);
+            region.RegionSizeX = int.Parse(RegionSizeX.Text);
+            region.RegionSizeY = int.Parse(RegionSizeY.Text);
             m_connector.UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
@@ -207,6 +214,8 @@ namespace Aurora.Modules.RegionLoader
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
             textBox1.Text = region.RegionName;
+            RegionSizeX.Text = region.RegionSizeX.ToString();
+            RegionSizeY.Text = region.RegionSizeY.ToString();
             StartupNumberBox.Text = region.NumberStartup.ToString();
         }
 
@@ -269,6 +278,16 @@ namespace Aurora.Modules.RegionLoader
         private void button12_Click(object sender, EventArgs e)
         {
             MessageBox.Show("This determines the order that your regions are started.");
+        }
+
+        private void RSizeXHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the size of the region in the X (width, west to east) direction.");
+        }
+
+        private void RSizeYHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This is the size of the region in the Y (height, north to south) direction.");
         }
 
         private void Export_Click(object sender, EventArgs e)

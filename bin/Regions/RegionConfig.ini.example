@@ -5,10 +5,12 @@
 ;; *
 [Default Region]
 ;; *
-;; * You MUST change this! It will NOT be done for you!
+;; * You MUST change this RegionUUID! It will NOT be done for you!
 ;; *
 RegionUUID = "11111111-2222-3333-4444-555555555555"
 Location = "1000,1000"
+RegionSizeX = 256
+RegionSizeY = 256
 InternalAddress = "0.0.0.0"
 InternalPort = 9000
 AllowAlternatePorts = False
