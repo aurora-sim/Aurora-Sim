@@ -97,7 +97,7 @@ namespace OpenSim.Services.CapsService
         
         public static OSD CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                       IPEndPoint newRegionExternalEndPoint,
-                                      string capsURL, UUID agentID, UUID sessionID)
+                                      string capsURL, UUID agentID, UUID sessionID, int RegionSizeX, int RegionSizeY)
         {
             OSDArray lookAtArr = new OSDArray(3);
             lookAtArr.Add(OSD.FromReal(lookAt.X));
@@ -129,6 +129,9 @@ namespace OpenSim.Services.CapsService
             regionDataMap.Add("SimIP", OSD.FromBinary(newRegionExternalEndPoint.Address.GetAddressBytes()));
             regionDataMap.Add("SimPort", OSD.FromInteger(newRegionExternalEndPoint.Port));
 
+            regionDataMap.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
+            regionDataMap.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
+
             OSDArray regionDataArr = new OSDArray(1);
             regionDataArr.Add(regionDataMap);
 
@@ -142,7 +145,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD TeleportFinishEvent(
             ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
-            uint locationID, string capsURL, UUID agentID, uint teleportFlags)
+            uint locationID, string capsURL, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY)
         {
             OSDMap info = new OSDMap();
             info.Add("AgentID", OSD.FromUUID(agentID));
@@ -153,6 +156,9 @@ namespace OpenSim.Services.CapsService
             info.Add("SimIP", OSD.FromBinary(regionExternalEndPoint.Address.GetAddressBytes()));
             info.Add("SimPort", OSD.FromInteger(regionExternalEndPoint.Port));
             info.Add("TeleportFlags", OSD.FromBinary(uintToByteArray(teleportFlags)));
+
+            info.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
+            info.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
 
             OSDArray infoArr = new OSDArray();
             infoArr.Add(info);

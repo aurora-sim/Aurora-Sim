@@ -137,20 +137,20 @@ namespace OpenSim.Services.CapsService
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                         IPEndPoint regionExternalEndPoint,
                                         uint locationID,
-                                        UUID avatarID, uint teleportFlags, ulong RegionHandle)
+                                        UUID avatarID, uint teleportFlags, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
             OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, regionExternalEndPoint,
-                                                            locationID, "", avatarID, teleportFlags);
+                                                            locationID, "", avatarID, teleportFlags, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
         public virtual void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                 IPEndPoint newRegionExternalEndPoint,
-                                UUID avatarID, UUID sessionID, ulong RegionHandle)
+                                UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, newRegionExternalEndPoint,
-                                                    "", avatarID, sessionID);
+                                                    "", avatarID, sessionID, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -888,7 +888,9 @@ namespace OpenSim.Services.CapsService
 
                         //Tell the client about the transfer
                         EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
-                                           m_service.AgentID, circuit.SessionID, m_service.RegionHandle);
+                                           m_service.AgentID, circuit.SessionID,
+                                           crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
+                                           m_service.RegionHandle);
 
                         result = WaitForCallback();
                         if (!result)
@@ -952,7 +954,9 @@ namespace OpenSim.Services.CapsService
                 IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                 EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
-                                           4, m_service.AgentID, TeleportFlags, m_service.RegionHandle);
+                                           4, m_service.AgentID, TeleportFlags, 
+                                           destination.RegionSizeX, destination.RegionSizeY, 
+                                           m_service.RegionHandle);
 
                 // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
                 // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
