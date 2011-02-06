@@ -180,13 +180,15 @@ namespace OpenSim.Services.CapsService
             return buildEvent("ScriptRunningReply", body);
         }
 
-        public static OSD EstablishAgentCommunication(UUID agentID, ulong regionhandle, string simIpAndPort, string seedcap)
+        public static OSD EstablishAgentCommunication(UUID agentID, ulong regionhandle, string simIpAndPort, string seedcap, int RegionSizeX, int RegionSizeY)
         {
             OSDMap body = new OSDMap(3);
             body.Add("agent-id", new OSDUUID(agentID));
             body.Add("sim-ip-and-port", new OSDString(simIpAndPort));
             body.Add("seed-capability", new OSDString(seedcap));
             body.Add("region-handle", OSD.FromULong(regionhandle));
+            body.Add("region-size-x", OSD.FromInteger(RegionSizeX));
+            body.Add("region-size-y", OSD.FromInteger(RegionSizeY));
 
             return buildEvent("EstablishAgentCommunication", body);
         }

@@ -127,10 +127,10 @@ namespace OpenSim.Services.CapsService
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, ulong RegionHandle)
+        public virtual void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             IPEndPoint endPoint = new IPEndPoint(new IPAddress(IPAddress), Port);
-            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), CapsUrl);
+            OSD item = EventQueueHelper.EstablishAgentCommunication(avatarID, regionHandle, endPoint.ToString(), CapsUrl, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -839,7 +839,8 @@ namespace OpenSim.Services.CapsService
                         Thread.Sleep(300);
                         EQService.EstablishAgentCommunication(m_service.AgentID, neighbor.RegionHandle,
                             neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                            neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform,
+                            neighbor.ExternalEndPoint.Port, otherRegionService.UrlToInform, neighbor.RegionSizeX,
+                            neighbor.RegionSizeY,
                             m_service.RegionHandle);
 
                         m_log.Info("[EventQueueService]: Completed inform client about neighbor " + neighbor.RegionName);

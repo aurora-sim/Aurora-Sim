@@ -484,14 +484,16 @@ namespace OpenSim.Region.Framework.Scenes
             SendUpdate(
                 grp.RootPart, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, grp.RootPart), UpdateFlags);
 
+            List<SceneObjectPart> children;
             lock (grp.ChildrenList)
             {
-                foreach (SceneObjectPart part in grp.ChildrenList)
-                {
-                    if (part != grp.RootPart)
-                        SendUpdate(
-                            part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
-                }
+                children = new List<SceneObjectPart>(grp.ChildrenList);
+            }
+            foreach (SceneObjectPart part in children)
+            {
+                if (part != grp.RootPart)
+                    SendUpdate(
+                        part, m_presence.Scene.Permissions.GenerateClientFlags(m_presence.UUID, part), UpdateFlags);
             }
         }
 

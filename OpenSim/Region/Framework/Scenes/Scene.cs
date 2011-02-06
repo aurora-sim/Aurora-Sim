@@ -534,6 +534,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// Adding a New Client and Create a Presence for it.
+        /// Called by the LLClientView when the UseCircuitCode packet comes in
+        /// Used by NPCs to add themselves to the Scene
         /// </summary>
         /// <param name="client"></param>
         public void AddNewClient(IClientAPI client)

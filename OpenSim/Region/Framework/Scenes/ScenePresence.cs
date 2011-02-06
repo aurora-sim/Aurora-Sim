@@ -1134,15 +1134,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_CameraLeftAxis = agentData.CameraLeftAxis;
             m_CameraUpAxis = agentData.CameraUpAxis;
             // The Agent's Draw distance setting
-            if (agentData.Far != m_DrawDistance)
-            {
-                DrawDistance = agentData.Far;
-                //Fire the event
-                Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
-
-                m_enqueueSendChildAgentUpdate = true;
-                m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(10);
-            }
+            DrawDistance = agentData.Far;
 
             // Check if Client has camera in 'follow cam' or 'build' mode.
             Vector3 camdif = (Vector3.One * m_bodyRot - Vector3.One * CameraRotation);

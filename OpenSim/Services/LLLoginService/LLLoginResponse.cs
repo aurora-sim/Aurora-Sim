@@ -185,6 +185,8 @@ namespace OpenSim.Services.LLLoginService
         private Int32 circuitCode;
         private uint regionX;
         private uint regionY;
+        private int regionSizeX = Constants.RegionSize;
+        private int regionSizeY = Constants.RegionSize;
 
         // Login
         private string firstname;
@@ -369,6 +371,8 @@ namespace OpenSim.Services.LLLoginService
             SimPort = (uint)endPoint.Port;
             RegionX = (uint)destination.RegionLocX;
             RegionY = (uint)destination.RegionLocY;
+            RegionSizeX = destination.RegionSizeX;
+            RegionSizeY = destination.RegionSizeY;
         }
 
         private void SetDefaultValues()
@@ -482,6 +486,8 @@ namespace OpenSim.Services.LLLoginService
                 responseData["message"] = welcomeMessage;
                 responseData["region_x"] = (Int32)(RegionX);
                 responseData["region_y"] = (Int32)(RegionY);
+                responseData["region_size_x"] = (Int32)(RegionSizeX);
+                responseData["region_size_y"] = (Int32)(RegionSizeY);
 
                 if (searchURL != String.Empty)
                     responseData["search"] = searchURL;
@@ -856,6 +862,18 @@ namespace OpenSim.Services.LLLoginService
         {
             get { return regionY; }
             set { regionY = value; }
+        }
+
+        public int RegionSizeX
+        {
+            get { return regionSizeX; }
+            set { regionSizeX = value; }
+        }
+
+        public int RegionSizeY
+        {
+            get { return regionSizeY; }
+            set { regionSizeY = value; }
         }
 
         public string SunTexture

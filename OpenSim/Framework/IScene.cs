@@ -30,6 +30,7 @@ using System.Net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Console;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Framework
 {
@@ -54,11 +55,25 @@ namespace OpenSim.Framework
     public interface IScene : IRegistryCore
     {
         RegionInfo RegionInfo { get; }
-        
+
         IConfigSource Config { get; }
 
         void AddNewClient(IClientAPI client);
 
         bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
+
+        #region Services
+
+        IAssetService AssetService { get; }
+        IAuthenticationService AuthenticationService { get; }
+        IAvatarService AvatarService { get; }
+        IGridService GridService { get; }
+        IGridUserService GridUserService { get; }
+        IInventoryService InventoryService { get; }
+        IPresenceService PresenceService { get; }
+        ISimulationService SimulationService { get; }
+        IUserAccountService UserAccountService { get; }
+
+        #endregion
     }
 }
