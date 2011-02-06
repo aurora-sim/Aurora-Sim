@@ -1057,7 +1057,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             LayerDataPacket layerpack;
             try
             {
-                layerpack = TerrainCompressor.CreateLandPacket(map, patches);
+                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches,TerrainPatch.LayerType.Land);
                 layerpack.Header.Zerocoded = true;  
                 layerpack.Header.Reliable = true;
 
@@ -1110,7 +1110,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     map :
                     LLHeightFieldMoronize(map);
 
-                LayerDataPacket layerpack = TerrainCompressor.CreateLandPacket(heightmap, patches);
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(heightmap, patches, TerrainPatch.LayerType.Land);
                 
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
@@ -1192,7 +1192,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            LayerDataPacket layerpack = TerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Wind);
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Wind);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Wind);
         }
@@ -1216,7 +1216,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            LayerDataPacket layerpack = TerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Cloud);
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Cloud);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Cloud);
         }

@@ -480,7 +480,6 @@ namespace OpenSim.Services.LLLoginService
                 responseData["initial-outfit"] = initialOutfit;
                 responseData["tutorial_setting"] = tutorial;
                 responseData["start_location"] = startLocation;
-                responseData["seed_capability"] = seedCapability;
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
                 responseData["message"] = welcomeMessage;
