@@ -72,13 +72,15 @@ namespace OpenSim.Services.CapsService
             return llsdEvent;
         }
 
-        public static OSD EnableSimulator(ulong handle, byte[] IPAddress, int Port)
+        public static OSD EnableSimulator(ulong handle, byte[] IPAddress, int Port, int RegionSizeX, int RegionSizeY)
         {
             OSDMap llsdSimInfo = new OSDMap(3);
 
             llsdSimInfo.Add("Handle", new OSDBinary(ulongToByteArray(handle)));
             llsdSimInfo.Add("IP", new OSDBinary(IPAddress));
             llsdSimInfo.Add("Port", new OSDInteger(Port));
+            llsdSimInfo.Add("RegionSizeX", new OSDInteger(RegionSizeX));
+            llsdSimInfo.Add("RegionSizeY", new OSDInteger(RegionSizeY));
 
             OSDArray arr = new OSDArray(1);
             arr.Add(llsdSimInfo);

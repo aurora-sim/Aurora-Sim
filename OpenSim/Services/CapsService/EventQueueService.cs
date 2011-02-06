@@ -121,7 +121,7 @@ namespace OpenSim.Services.CapsService
             Enqueue(item, avatarID, RegionHandle);
         }
 
-        public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, ulong RegionHandle)
+        public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port);
             Enqueue(item, avatarID, RegionHandle);
@@ -831,7 +831,8 @@ namespace OpenSim.Services.CapsService
 
                         EQService.EnableSimulator(neighbor.RegionHandle,
                             neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                            neighbor.ExternalEndPoint.Port, m_service.AgentID, m_service.RegionHandle);
+                            neighbor.ExternalEndPoint.Port, m_service.AgentID,
+                            neighbor.RegionSizeX, neighbor.RegionSizeY, m_service.RegionHandle);
 
                         // ES makes the client send a UseCircuitCode message to the destination, 
                         // which triggers a bunch of things there.
