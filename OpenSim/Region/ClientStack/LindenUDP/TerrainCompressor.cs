@@ -419,22 +419,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static void DCTLine16(float[] linein, float[] lineout, int line)
         {
             float total = 0.0f;
-            int lineSize = line * 32;
+            int lineSize = line * 16;
 
-            for (int n = 0; n < 32; n++)
+            for (int n = 0; n < 16; n++)
             {
                 total += linein[lineSize + n];
             }
 
             lineout[lineSize] = OO_SQRT2 * total;
 
-            for (int u = 1; u < 32; u++)
+            for (int u = 1; u < 16; u++)
             {
                 total = 0.0f;
 
-                for (int n = 0; n < 32; n++)
+                for (int n = 0; n < 16; n++)
                 {
-                    total += linein[lineSize + n] * CosineTable16[u * 32 + n];
+                    total += linein[lineSize + n] * CosineTable16[u * 16 + n];
                 }
 
                 lineout[lineSize + u] = total;
@@ -444,25 +444,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static void DCTColumn16(float[] linein, int[] lineout, int column)
         {
             float total = 0.0f;
-            const float oosob = 2.0f / 32.0f;
+            const float oosob = 2.0f / 16.0f;
 
-            for (int n = 0; n < 32; n++)
+            for (int n = 0; n < 16; n++)
             {
-                total += linein[32 * n + column];
+                total += linein[16 * n + column];
             }
 
             lineout[CopyMatrix16[column]] = (int)(OO_SQRT2 * total * oosob * QuantizeTable16[column]);
 
-            for (int u = 1; u < 32; u++)
+            for (int u = 1; u < 16; u++)
             {
                 total = 0.0f;
 
-                for (int n = 0; n < 32; n++)
+                for (int n = 0; n < 16; n++)
                 {
-                    total += linein[32 * n + column] * CosineTable16[u * 32 + n];
+                    total += linein[16 * n + column] * CosineTable16[u * 16 + n];
                 }
 
-                lineout[CopyMatrix16[32 * u + column]] = (int)(total * oosob * QuantizeTable16[32 * u + column]);
+                lineout[CopyMatrix16[16 * u + column]] = (int)(total * oosob * QuantizeTable16[16 * u + column]);
             }
         }
 
@@ -649,7 +649,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private static int[] CompressPatch(float[,] patchData, TerrainPatch.Header header, int prequant)
         {
-            float[] block = new float[32 * 32];
+            float[] block = new float[16 * 16];
             int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
@@ -660,18 +660,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.QuantWBits |= (prequant - 2) << 4;
 
             int k = 0;
-            for (int j = 0; j < 32; j++)
+            for (int j = 0; j < 16; j++)
             {
-                for (int i = 0; i < 32; i++)
+                for (int i = 0; i < 16; i++)
                     block[k++] = patchData[j, i] * premult - sub;
             }
 
-            float[] ftemp = new float[32 * 32];
-            int[] itemp = new int[32 * 32];
+            float[] ftemp = new float[16 * 16];
+            int[] itemp = new int[16 * 16];
 
-            for (int o = 0; o < 32; o++)
+            for (int o = 0; o < 16; o++)
                 DCTLine16(block, ftemp, o);
-            for (int o = 0; o < 32; o++)
+            for (int o = 0; o < 16; o++)
                 DCTColumn16(ftemp, itemp, o);
 
             return itemp;
@@ -679,7 +679,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant)
         {
-            float[] block = new float[32 * 32];
+            float[] block = new float[16 * 16];
             int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
@@ -690,18 +690,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.QuantWBits |= (prequant - 2) << 4;
 
             int k = 0;
-            for (int j = patchY * 32; j < (patchY + 1) * 32; j++)
+            for (int j = patchY * 16; j < (patchY + 1) * 16; j++)
             {
-                for (int i = patchX * 32; i < (patchX + 1) * 32; i++)
-                    block[k++] = heightmap[j * 512 + i] * premult - sub;
+                for (int i = patchX * 16; i < (patchX + 1) * 16; i++)
+                    block[k++] = heightmap[j * 256 + i] * premult - sub;
             }
 
-            float[] ftemp = new float[32 * 32];
-            int[] itemp = new int[32 * 32];
+            float[] ftemp = new float[16 * 16];
+            int[] itemp = new int[16 * 16];
 
-            for (int o = 0; o < 32; o++)
+            for (int o = 0; o < 16; o++)
                 DCTLine16(block, ftemp, o);
-            for (int o = 0; o < 32; o++)
+            for (int o = 0; o < 16; o++)
                 DCTColumn16(ftemp, itemp, o);
 
             return itemp;
