@@ -363,71 +363,69 @@ namespace OpenSim.Framework
 
         public void UnpackRegionInfoData(OSDMap args)
         {
-            if (args["region_id"] != null)
+            if (args.ContainsKey("region_id"))
                 RegionID = args["region_id"].AsUUID();
-            if (args["region_name"] != null)
+            if (args.ContainsKey("region_name"))
                 RegionName = args["region_name"].AsString();
-            if (args["external_host_name"] != null)
+            if (args.ContainsKey("external_host_name"))
                 ExternalHostName = args["external_host_name"].AsString();
-            if (args["http_port"] != null)
+            if (args.ContainsKey("http_port"))
                 UInt32.TryParse(args["http_port"].AsString(), out m_httpPort);
-            if (args["region_xloc"] != null)
+            if (args.ContainsKey("region_xloc"))
             {
                 int locx;
                 Int32.TryParse(args["region_xloc"].AsString(), out locx);
                 RegionLocX = locx;
             }
-            if (args["region_yloc"] != null)
+            if (args.ContainsKey("region_yloc"))
             {
                 int locy;
                 Int32.TryParse(args["region_yloc"].AsString(), out locy);
                 RegionLocY = locy;
             }
             IPAddress ip_addr = null;
-            if (args["internal_ep_address"] != null)
+            if (args.ContainsKey("internal_ep_address"))
             {
                 IPAddress.TryParse(args["internal_ep_address"].AsString(), out ip_addr);
             }
             int port = 0;
-            if (args["internal_ep_port"] != null)
+            if (args.ContainsKey("internal_ep_port"))
             {
                 Int32.TryParse(args["internal_ep_port"].AsString(), out port);
             }
             InternalEndPoint = new IPEndPoint(ip_addr, port);
-            if (args["allow_alt_ports"] != null)
+            if (args.ContainsKey("allow_alt_ports"))
                 m_allow_alternate_ports = args["allow_alt_ports"].AsBoolean();
-            if (args["region_type"] != null)
+            if (args.ContainsKey("region_type"))
                 m_regionType = args["region_type"].AsString();
-            if (args["password"] != null)
+            if (args.ContainsKey("password"))
                 Password = args["password"].AsUUID();
 
-            if (args["disabled"] != null)
+            if (args.ContainsKey("disabled"))
                 Disabled = args["disabled"].AsBoolean();
-            if (args["scope_id"] != null)
-                ScopeID = args["scope_id"].AsUUID();
-            if (args["scope_id"] != null)
+            if (args.ContainsKey("scope_id"))
                 ScopeID = args["scope_id"].AsUUID();
 
-            if (args["region_size_x"] != null)
+            if (args.ContainsKey("region_size_x"))
                 RegionSizeX = args["region_size_x"].AsInteger();
-            if (args["region_size_y"] != null)
+            if (args.ContainsKey("region_size_y"))
                 RegionSizeY = args["region_size_y"].AsInteger();
-            if (args["region_size_z"] != null)
+            if (args.ContainsKey("region_size_z"))
                 RegionSizeZ = args["region_size_z"].AsInteger();
 
-            if (args["object_capacity"] != null)
+            if (args.ContainsKey("object_capacity"))
                 m_objectCapacity = args["object_capacity"].AsInteger();
-            if (args["region_type"] != null)
+            if (args.ContainsKey("region_type"))
                 RegionType = args["region_type"].AsString();
-            if (args["see_into_this_sim_from_neighbor"] != null)
+            if (args.ContainsKey("see_into_this_sim_from_neighbor"))
                 SeeIntoThisSimFromNeighbor = args["see_into_this_sim_from_neighbor"].AsBoolean();
-            if (args["trust_binaries_from_foreign_sims"] != null)
+            if (args.ContainsKey("trust_binaries_from_foreign_sims"))
                 TrustBinariesFromForeignSims = args["trust_binaries_from_foreign_sims"].AsBoolean();
-            if (args["allow_script_crossing"] != null)
+            if (args.ContainsKey("allow_script_crossing"))
                 AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
-            if (args["allow_physical_prims"] != null)
+            if (args.ContainsKey("allow_physical_prims"))
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
-            if(args["number_startup"] != null)
+            if(args.ContainsKey("number_startup"))
                 NumberStartup = args["number_startup"].AsInteger();
         }
     }
