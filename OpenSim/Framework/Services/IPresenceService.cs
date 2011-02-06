@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,38 +26,49 @@
  */
 
 using System;
-using System.Net;
-using System.Collections.Generic;
-
 using OpenSim.Framework;
+using System.Collections.Generic;
 using OpenMetaverse;
-using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {
-    public interface IGatekeeperService
+    public class PresenceInfo
     {
-        bool LinkRegion(string regionDescriptor, out UUID regionID, out ulong regionHandle, out string externalName, out string imageURL, out string reason);
-        GridRegion GetHyperlinkRegion(UUID regionID);
+        public string UserID;
+        public UUID RegionID;
 
-        bool LoginAgent(AgentCircuitData aCircuit, GridRegion destination, AgentData data, out string reason);
+        public PresenceInfo()
+        {
+        }
 
+        public PresenceInfo(Dictionary<string, object> kvp)
+        {
+            if (kvp.ContainsKey("UserID"))
+                UserID = kvp["UserID"].ToString();
+            if (kvp.ContainsKey("RegionID"))
+                UUID.TryParse(kvp["RegionID"].ToString(), out RegionID);
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["UserID"] = UserID;
+            result["RegionID"] = RegionID.ToString();
+
+            return result;
+        }
     }
 
-    /// <summary>
-    /// HG1.5 only
-    /// </summary>
-    public interface IUserAgentService
+    public interface IPresenceService
     {
-        // called by login service only
-        bool LoginAgentToGrid(AgentCircuitData agent, GridRegion gatekeeper, GridRegion finalDestination, IPEndPoint clientIP, out string reason);
-        // called by simulators
-        bool LoginAgentToGrid(AgentCircuitData agent, GridRegion gatekeeper, GridRegion finalDestination, out string reason);
-        void LogoutAgent(UUID userID, UUID sessionID);
-        GridRegion GetHomeRegion(UUID userID, out Vector3 position, out Vector3 lookAt);
+        bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID);
+        bool LogoutAgent(UUID sessionID);
+        bool LogoutRegionAgents(UUID regionID);
 
-        bool AgentIsComingHome(UUID sessionID, string thisGridExternalName);
-        bool VerifyAgent(UUID sessionID, string token);
-        bool VerifyClient(UUID sessionID, string reportedIP);
+        void ReportAgent(UUID sessionID, UUID regionID);
+
+        PresenceInfo GetAgent(UUID sessionID);
+        PresenceInfo[] GetAgents(string[] userIDs);
+        string[] GetAgentsLocations(string[] userIDs);
     }
 }

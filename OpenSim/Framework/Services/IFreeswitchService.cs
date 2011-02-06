@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,33 +26,14 @@
  */
 
 using System;
+using OpenSim.Framework;
 using System.Collections;
-using System.Collections.Generic;
-using System.Net;
-
-using OpenMetaverse.StructuredData;
-using OpenMetaverse;
-using Aurora.Simulation.Base;
-
 namespace OpenSim.Services.Interfaces
 {
-    public abstract class LoginResponse
+    public interface IFreeswitchService
     {
-        public abstract Hashtable ToHashtable();
-        public abstract OSD ToOSDMap();
-    }
-
-    public abstract class FailedLoginResponse : LoginResponse
-    {
-    }
-
-    public interface ILoginService
-    {
-        LoginResponse VerifyClient(string firstName, string lastName, string passwd, UUID scopeID, bool tosExists,
-            string tosAccepted, string mac, string clientVersion, out UUID secureSession);
-        LoginResponse Login(string firstName, string lastName, string passwd, string startLocation, UUID scopeID,
-            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession);
-        Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);
-        int MinLoginLevel { get; }
+        Hashtable HandleDirectoryRequest(Hashtable requestBody);
+        Hashtable HandleDialplanRequest(Hashtable requestBody);
+        string GetJsonConfig();
     }
 }

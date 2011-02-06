@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,50 +26,24 @@
  */
 
 using System;
-using OpenSim.Framework;
 using System.Collections.Generic;
+
+using OpenSim.Framework;
 using OpenMetaverse;
-using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class PresenceInfo
+    public interface ILibraryService
     {
-        public string UserID;
-        public UUID RegionID;
+        InventoryFolderImpl LibraryRootFolder { get; }
 
-        public PresenceInfo()
-        {
-        }
+        UUID LibraryOwner { get; }
 
-        public PresenceInfo(Dictionary<string, object> kvp)
-        {
-            if (kvp.ContainsKey("UserID"))
-                UserID = kvp["UserID"].ToString();
-            if (kvp.ContainsKey("RegionID"))
-                UUID.TryParse(kvp["RegionID"].ToString(), out RegionID);
-        }
+        string[] LibraryOwnerName { get; }
+        string LibraryName { get; }
 
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["UserID"] = UserID;
-            result["RegionID"] = RegionID.ToString();
-
-            return result;
-        }
+        Dictionary<UUID, InventoryFolderImpl> GetAllFolders();
+        void AddToDefaultInventory(InventoryFolderImpl folder);
     }
 
-    public interface IPresenceService
-    {
-        bool LoginAgent(string userID, UUID sessionID, UUID secureSessionID);
-        bool LogoutAgent(UUID sessionID);
-        bool LogoutRegionAgents(UUID regionID);
-
-        void ReportAgent(UUID sessionID, UUID regionID);
-
-        PresenceInfo GetAgent(UUID sessionID);
-        PresenceInfo[] GetAgents(string[] userIDs);
-        string[] GetAgentsLocations(string[] userIDs);
-    }
 }

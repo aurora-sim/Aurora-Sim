@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,25 +26,55 @@
  */
 
 using System;
-using System.Collections.Generic;
-
-using OpenSim.Framework;
 using OpenMetaverse;
-using Aurora.Simulation.Base;
+using OpenSim.Framework;
+using System.Collections.Generic;
 
 namespace OpenSim.Services.Interfaces
 {
-    public interface ILibraryService
+    public class FriendInfo
     {
-        InventoryFolderImpl LibraryRootFolder { get; }
+        public UUID PrincipalID;
+        public string Friend;
+        public int MyFlags;
+        public int TheirFlags;
 
-        UUID LibraryOwner { get; }
+        public FriendInfo()
+        {
+        }
 
-        string[] LibraryOwnerName { get; }
-        string LibraryName { get; }
+        public FriendInfo(Dictionary<string, object> kvp)
+        {
+            PrincipalID = UUID.Zero;
+            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
+                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
+            Friend = string.Empty;
+            if (kvp.ContainsKey("Friend") && kvp["Friend"] != null)
+                Friend = kvp["Friend"].ToString();
+            MyFlags = 0;
+            if (kvp.ContainsKey("MyFlags") && kvp["MyFlags"] != null)
+                Int32.TryParse(kvp["MyFlags"].ToString(), out MyFlags);
+            TheirFlags = 0;
+            if (kvp.ContainsKey("TheirFlags") && kvp["TheirFlags"] != null)
+                Int32.TryParse(kvp["TheirFlags"].ToString(), out TheirFlags);
+        }
 
-        Dictionary<UUID, InventoryFolderImpl> GetAllFolders();
-        void AddToDefaultInventory(InventoryFolderImpl folder);
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["PrincipalID"] = PrincipalID.ToString();
+            result["Friend"] = Friend;
+            result["MyFlags"] = MyFlags.ToString();
+            result["TheirFlags"] = TheirFlags.ToString();
+
+            return result;
+        }
     }
 
+    public interface IFriendsService
+    {
+        FriendInfo[] GetFriends(UUID PrincipalID);
+        bool StoreFriend(UUID PrincipalID, string Friend, int flags);
+        bool Delete(UUID PrincipalID, string Friend);
+    }
 }

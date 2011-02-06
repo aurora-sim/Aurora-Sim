@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -26,56 +26,37 @@
  */
 
 using System;
-using OpenMetaverse;
-using OpenSim.Framework;
+using System.Net;
 using System.Collections.Generic;
-using Aurora.Simulation.Base;
+
+using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class FriendInfo
+    public interface IGatekeeperService
     {
-        public UUID PrincipalID;
-        public string Friend;
-        public int MyFlags;
-        public int TheirFlags;
+        bool LinkRegion(string regionDescriptor, out UUID regionID, out ulong regionHandle, out string externalName, out string imageURL, out string reason);
+        GridRegion GetHyperlinkRegion(UUID regionID);
 
-        public FriendInfo()
-        {
-        }
+        bool LoginAgent(AgentCircuitData aCircuit, GridRegion destination, AgentData data, out string reason);
 
-        public FriendInfo(Dictionary<string, object> kvp)
-        {
-            PrincipalID = UUID.Zero;
-            if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
-                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
-            Friend = string.Empty;
-            if (kvp.ContainsKey("Friend") && kvp["Friend"] != null)
-                Friend = kvp["Friend"].ToString();
-            MyFlags = 0;
-            if (kvp.ContainsKey("MyFlags") && kvp["MyFlags"] != null)
-                Int32.TryParse(kvp["MyFlags"].ToString(), out MyFlags);
-            TheirFlags = 0;
-            if (kvp.ContainsKey("TheirFlags") && kvp["TheirFlags"] != null)
-                Int32.TryParse(kvp["TheirFlags"].ToString(), out TheirFlags);
-        }
-
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["Friend"] = Friend;
-            result["MyFlags"] = MyFlags.ToString();
-            result["TheirFlags"] = TheirFlags.ToString();
-
-            return result;
-        }
     }
 
-    public interface IFriendsService
+    /// <summary>
+    /// HG1.5 only
+    /// </summary>
+    public interface IUserAgentService
     {
-        FriendInfo[] GetFriends(UUID PrincipalID);
-        bool StoreFriend(UUID PrincipalID, string Friend, int flags);
-        bool Delete(UUID PrincipalID, string Friend);
+        // called by login service only
+        bool LoginAgentToGrid(AgentCircuitData agent, GridRegion gatekeeper, GridRegion finalDestination, IPEndPoint clientIP, out string reason);
+        // called by simulators
+        bool LoginAgentToGrid(AgentCircuitData agent, GridRegion gatekeeper, GridRegion finalDestination, out string reason);
+        void LogoutAgent(UUID userID, UUID sessionID);
+        GridRegion GetHomeRegion(UUID userID, out Vector3 position, out Vector3 lookAt);
+
+        bool AgentIsComingHome(UUID sessionID, string thisGridExternalName);
+        bool VerifyAgent(UUID sessionID, string token);
+        bool VerifyClient(UUID sessionID, string reportedIP);
     }
 }
