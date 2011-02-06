@@ -123,7 +123,7 @@ namespace OpenSim.Services.CapsService
 
         public virtual void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port);
+            OSD item = EventQueueHelper.EnableSimulator(handle, IPAddress, Port, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
