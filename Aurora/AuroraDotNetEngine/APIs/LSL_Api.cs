@@ -6422,7 +6422,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Float mag;
                 if (dir.x > 0)
                 {
-                    mag = (Constants.RegionSize - pos.x) / dir.x;
+                    mag = (World.RegionInfo.RegionSizeX - pos.x) / dir.x;
                 }
                 else
                 {
@@ -6433,7 +6433,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 edge.y = pos.y + (dir.y * mag);
 
-                if (edge.y > Constants.RegionSize || edge.y < 0)
+                if (edge.y > World.RegionInfo.RegionSizeY || edge.y < 0)
                 {
                     // Y goes out of bounds first
                     edge.y = dir.y / Math.Abs(dir.y);
@@ -9955,8 +9955,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             break;
                         }
                         reply = new LSL_Vector(
-                            info.RegionLocX * Constants.RegionSize,
-                            info.RegionLocY * Constants.RegionSize,
+                            info.RegionLocX,
+                            info.RegionLocY,
                             0).ToString();
                         break;
                     case 6: // DATA_SIM_STATUS

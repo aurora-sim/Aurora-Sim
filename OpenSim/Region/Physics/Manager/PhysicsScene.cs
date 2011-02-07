@@ -51,7 +51,7 @@ namespace OpenSim.Region.Physics.Manager
             set;
         }
 
-        public abstract void Initialise(IMesher meshmerizer);
+        public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
         public abstract void PostInitialise(IConfigSource config);
 
         public abstract PhysicsActor AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying);
@@ -262,7 +262,7 @@ namespace OpenSim.Region.Physics.Manager
             private static int m_workIndicator;
 
 
-            public override void Initialise(IMesher meshmerizer)
+            public override void Initialise(IMesher meshmerizer, RegionInfo region)
             {
                 // Does nothing right now
             }

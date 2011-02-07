@@ -336,7 +336,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     float columnRatio = x / (m_scene.RegionInfo.RegionSizeX - 1); // 0 - 1, for interpolation
 
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
-                    int yr = ((int)Constants.RegionSize - 1) - y;
+                    int yr = (m_scene.RegionInfo.RegionSizeY - 1) - y;
 
                     float heightvalue = getHeight(hm, x, y);
                     if (Single.IsInfinity(heightvalue) || Single.IsNaN(heightvalue))
@@ -388,7 +388,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         }
 
                         // Shade the terrain for shadows
-                        if (x < ((int)Constants.RegionSize - 1) && y < ((int)Constants.RegionSize - 1))
+                        if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
                         {
                             float hfvaluecompare = getHeight(hm, x + 1, y + 1); // light from north-east => look at land height there
                             if (Single.IsInfinity(hfvaluecompare) || Single.IsNaN(hfvaluecompare))

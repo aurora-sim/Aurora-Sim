@@ -222,7 +222,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                              ? m_scene.RegionInfo.RegionSizeX - 1
                              : group.AbsolutePosition.X)
                         ,
-                        (group.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeY
+                        (group.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeY)
                             ? m_scene.RegionInfo.RegionSizeY - 1
                             : group.AbsolutePosition.X,
                         group.AbsolutePosition.Z);

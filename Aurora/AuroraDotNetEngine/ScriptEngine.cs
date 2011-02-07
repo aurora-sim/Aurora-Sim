@@ -1393,7 +1393,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 else
                 {
-                    if (pos.X > 0f && pos.X < Constants.RegionSize && pos.Y > 0f && pos.Y < Constants.RegionSize)
+                    if (pos.X > 0f && pos.X < scene.RegionInfo.RegionSizeX && pos.Y > 0f && pos.Y < scene.RegionInfo.RegionSizeY)
                         // The only time parcel != null when an object is inside a region is when
                         // there is nothing behind the landchannel.  IE, no land plugin loaded.
                         return true;

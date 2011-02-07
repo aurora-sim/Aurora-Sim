@@ -685,8 +685,8 @@ namespace Aurora.Modules
                     mapitem = new mapItemReply();
                     
                     //Use global position plus half the sim so that all classifieds are not in the bottom corner
-                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X + (Constants.RegionSize / 2));
-                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y + (Constants.RegionSize / 2));
+                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX / 2));
+                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY / 2));
                     
                     mapitem.id = classified.CreatorUUID;
                     mapitem.name = classified.Name;

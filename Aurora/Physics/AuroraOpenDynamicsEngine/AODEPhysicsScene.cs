@@ -214,6 +214,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private const float m_SkipFramesAtms = 0.40f; // Drop frames gracefully at a 400 ms lag
         private readonly PhysicsActor PANull = new NullPhysicsActor();
         private float step_time = 0.0f;
+        private RegionInfo m_region;
 
         public override float StepTime
         {
@@ -245,7 +246,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private volatile int m_global_contactcount = 0;
 
         private Vector3 m_worldOffset = Vector3.Zero;
-        public Vector2 WorldExtents = new Vector2((int)Constants.RegionSize, (int)Constants.RegionSize);
+        public Vector2 WorldExtents;
         private PhysicsScene m_parentScene = null;
         private int contactsPerCollision = 80;
 
@@ -408,9 +409,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
 
         // Initialize the mesh plugin
-        public override void Initialise(IMesher meshmerizer)
+        public override void Initialise(IMesher meshmerizer, RegionInfo region)
         {
             mesher = meshmerizer;
+            m_region = region;
+            WorldExtents = new Vector2(region.RegionSizeX, region.RegionSizeY);
         }
 
         public override void PostInitialise(IConfigSource config)
@@ -1537,14 +1540,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_worldOffset = offset;
             WorldExtents = new Vector2(extents.X, extents.Y);
             m_parentScene = pScene;
-
         }
 
         // Recovered for use by fly height. Kitto Flora
         public float GetTerrainHeightAtXY(float x, float y)
         {
-            int offsetX = ((int)(x / (int)Constants.RegionSize)) * (int)Constants.RegionSize;
-            int offsetY = ((int)(y / (int)Constants.RegionSize)) * (int)Constants.RegionSize;
+            int offsetX = ((int)(x / m_region.RegionSizeX)) * m_region.RegionSizeX;
+            int offsetY = ((int)(y / m_region.RegionSizeY)) * m_region.RegionSizeY;
             IntPtr heightFieldGeom = IntPtr.Zero;
 
             if (RegionTerrain.TryGetValue(new Vector3(offsetX, offsetY, 0), out heightFieldGeom))
@@ -2945,8 +2947,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     {
                                         RemoveCharacter(defect);
                                         if (geom_name_map.ContainsKey(defect.Shell))
-                                            AddAvatar(geom_name_map[defect.Shell], new Vector3(Constants.RegionSize / 2,
-                                                Constants.RegionSize / 2,
+                                            AddAvatar(geom_name_map[defect.Shell], new Vector3(m_region.RegionSizeX / 2,
+                                                m_region.RegionSizeY / 2,
                                                 Constants.RegionSize / 2), defect.Orientation, defect.Size, true);
                                         defect.Destroy();
                                     }
@@ -3307,11 +3309,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float[,] resultarr = new float[512, 512];
 
             // Filling out the array into its multi-dimensional components
-            for (int y = 0; y < 256; y++)
+            for (int y = 0; y < m_region.RegionSizeY; y++)
             {
-                for (int x = 0; x < 256; x++)
+                for (int x = 0; x < m_region.RegionSizeX; x++)
                 {
-                    resultarr[y, x] = heightMap[y * 256 + x];
+                    resultarr[y, x] = heightMap[y * m_region.RegionSizeX + x];
                 }
             }
 
@@ -3375,17 +3377,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // on single loop.
 
             float[,] resultarr2 = new float[512, 512];
-            for (int y = 0; y < (int)Constants.RegionSize; y++)
+            for (int y = 0; y < m_region.RegionSizeY; y++)
             {
-                for (int x = 0; x < (int)Constants.RegionSize; x++)
+                for (int x = 0; x < m_region.RegionSizeX; x++)
                 {
                     resultarr2[y * 2, x * 2] = resultarr[y, x];
 
-                    if (y < (int)Constants.RegionSize)
+                    if (y < m_region.RegionSizeY)
                     {
-                        if (y + 1 < (int)Constants.RegionSize)
+                        if (y + 1 < m_region.RegionSizeY)
                         {
-                            if (x + 1 < (int)Constants.RegionSize)
+                            if (x + 1 < m_region.RegionSizeX)
                             {
                                 resultarr2[(y * 2) + 1, x * 2] = ((resultarr[y, x] + resultarr[y + 1, x] +
                                                                resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
@@ -3400,11 +3402,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             resultarr2[(y * 2) + 1, x * 2] = resultarr[y, x];
                         }
                     }
-                    if (x < (int)Constants.RegionSize)
+                    if (x < m_region.RegionSizeX)
                     {
-                        if (x + 1 < (int)Constants.RegionSize)
+                        if (x + 1 < m_region.RegionSizeX)
                         {
-                            if (y + 1 < (int)Constants.RegionSize)
+                            if (y + 1 < m_region.RegionSizeY)
                             {
                                 resultarr2[y * 2, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
                                                                resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
@@ -3419,9 +3421,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             resultarr2[y * 2, (x * 2) + 1] = resultarr[y, x];
                         }
                     }
-                    if (x < (int)Constants.RegionSize && y < (int)Constants.RegionSize)
+                    if (x < m_region.RegionSizeX && y < m_region.RegionSizeY)
                     {
-                        if ((x + 1 < (int)Constants.RegionSize) && (y + 1 < (int)Constants.RegionSize))
+                        if ((x + 1 < m_region.RegionSizeX) && (y + 1 < m_region.RegionSizeY))
                         {
                             resultarr2[(y * 2) + 1, (x * 2) + 1] = ((resultarr[y, x] + resultarr[y + 1, x] +
                                                                  resultarr[y, x + 1] + resultarr[y + 1, x + 1]) / 4);
@@ -3600,70 +3602,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
         {
-            float[] _heightmap = new float[(((int)Constants.RegionSize + 2) * ((int)Constants.RegionSize + 2))];
+            float[] _heightmap = new float[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
 
-            uint heightmapWidth = Constants.RegionSize + 1;
-            uint heightmapHeight = Constants.RegionSize + 1;
+            uint heightmapWidth = (uint)m_region.RegionSizeX + 1;
+            uint heightmapHeight = (uint)m_region.RegionSizeY + 1;
 
-            uint heightmapWidthSamples = (uint)Constants.RegionSize + 2;
-
-            uint heightmapHeightSamples = (uint)Constants.RegionSize + 2;
-#pragma warning disable 0162
-            if (Constants.RegionSize == 256)
-            {
-                // -- creating a buffer zone of one extra sample all around - danzor
-                heightmapWidthSamples = 2 * (uint)Constants.RegionSize + 2;
-                heightmapHeightSamples = 2 * (uint)Constants.RegionSize + 2;
-                heightmapWidth++;
-                heightmapHeight++;
-            }
-#pragma warning restore 0162
-            int regionsize = (int)Constants.RegionSize;
+            uint heightmapWidthSamples = 2 * (uint)m_region.RegionSizeX + 2;
+            uint heightmapHeightSamples = 2 * (uint)m_region.RegionSizeY + 2;
+            heightmapWidth++;
+            heightmapHeight++;
             
             float hfmin = 2000;
             float hfmax = -2000;
-            if (regionsize == 256)
-            {
-                //Double resolution
-                _heightmap = new float[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
+            //Double resolution
+                _heightmap = new float[(((m_region.RegionSizeX * 2) + 2) * ((m_region.RegionSizeY * 2) + 2))];
                 heightMap = ResizeTerrain512Interpolation(heightMap);
-                regionsize *= 2;
 
                 for (int x = 0; x < heightmapWidthSamples; x++)
                 {
                     for (int y = 0; y < heightmapHeightSamples; y++)
                     {
-                        int xx = Util.Clip(x - 1, 0, (regionsize - 1) - 1);
-                        int yy = Util.Clip(y - 1, 0, (regionsize - 1) - 1);
+                        int xx = Util.Clip(x - 1, 0, (m_region.RegionSizeX * 2 - 1) - 1);
+                        int yy = Util.Clip(y - 1, 0, (m_region.RegionSizeY * 2 - 1) - 1);
 
 
-                        float val = heightMap[yy * regionsize + xx];
+                        float val = heightMap[yy * m_region.RegionSizeX + xx];
                         _heightmap[x * heightmapWidthSamples + y] = val;
 
                         hfmin = (val < hfmin) ? val : hfmin;
                         hfmax = (val > hfmax) ? val : hfmax;
                     }
                 }
-            }
-            else
-            {
-                for (int x = 0; x < heightmapWidthSamples; x++)
-                {
-                    for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
-                        int xx = Util.Clip(x - 1, 0, regionsize - 1);
-                        int yy = Util.Clip(y - 1, 0, regionsize - 1);
-
-
-                        float val = heightMap[yy * (int)Constants.RegionSize + xx];
-                        _heightmap[x * ((int)Constants.RegionSize + 2) + y] = val;
-
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
-                    }
-                }
-            }
-
+            
             lock (OdeLock)
             {
                 IntPtr GroundGeom = IntPtr.Zero;
@@ -3722,7 +3692,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
                 d.GeomSetRotation(GroundGeom, ref R);
-                d.GeomSetPosition(GroundGeom, (pOffset.X + ((int)Constants.RegionSize * 0.5f)), (pOffset.Y + ((int)Constants.RegionSize * 0.5f)), 0);
+                d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
                 TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
@@ -3771,7 +3741,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (proceed)
                     {
                         m_worldOffset = Vector3.Zero;
-                        WorldExtents = new Vector2((int)Constants.RegionSize, (int)Constants.RegionSize);
+                        WorldExtents = new Vector2(m_region.RegionSizeX, m_region.RegionSizeY);
                         m_parentScene = null;
 
                         foreach (IntPtr g in geomDestroyList)

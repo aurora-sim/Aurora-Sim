@@ -32,6 +32,7 @@ using System.Reflection;
 using Nini.Config;
 using log4net;
 using Aurora.Framework;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Physics.Manager
 {
@@ -66,7 +67,7 @@ namespace OpenSim.Region.Physics.Manager
         /// <param name="meshEngineName"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, string regionName)
+        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, RegionInfo region)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -93,8 +94,8 @@ namespace OpenSim.Region.Physics.Manager
             if (_PhysPlugins.ContainsKey(physEngineName))
             {
                 m_log.Info("[Physics]: Loading physics engine: " + physEngineName);
-                PhysicsScene result = _PhysPlugins[physEngineName].GetScene(regionName);
-                result.Initialise(meshEngine);
+                PhysicsScene result = _PhysPlugins[physEngineName].GetScene(region.RegionName);
+                result.Initialise(meshEngine, region);
                 result.PostInitialise(config);
                 return result;
             }
