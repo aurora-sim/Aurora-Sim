@@ -31,7 +31,7 @@ namespace OpenSim.Framework
     public class Constants
     {
         public const int RegionSize = 256;
-        public const int MaxTerrainSendSize = 256;
+        //public const int MaxTerrainSendSize = 256;
         public const byte TerrainPatchSize = 16;
         public const string DefaultTexture = "89556747-24cb-43ed-920b-47caed15465f";
 
