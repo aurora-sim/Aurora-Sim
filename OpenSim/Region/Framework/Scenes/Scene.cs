@@ -540,45 +540,52 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="client"></param>
         public void AddNewClient(IClientAPI client)
         {
-            System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
-            AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
-            
-            if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
-                return;
-
-            //Create the scenepresence, then update it with any info that we have about it
-            ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
-            lock (m_incomingChildAgentData)
+            try
             {
-                if (m_incomingChildAgentData.ContainsKey(sp.UUID))
+                System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
+                AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
+
+                if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
+                    return;
+
+                //Create the scenepresence, then update it with any info that we have about it
+                ScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence(client);
+                lock (m_incomingChildAgentData)
                 {
-                    //Found info, update the agent then remove it
-                    sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
-                    m_incomingChildAgentData.Remove(sp.UUID);
+                    if (m_incomingChildAgentData.ContainsKey(sp.UUID))
+                    {
+                        //Found info, update the agent then remove it
+                        sp.ChildAgentDataUpdate(m_incomingChildAgentData[sp.UUID]);
+                        m_incomingChildAgentData.Remove(sp.UUID);
+                    }
+                }
+                //Make sure the appearanace is updated
+                if (aCircuit != null)
+                    sp.Appearance = aCircuit.Appearance;
+                sp.IsChildAgent = aCircuit.child;
+
+                m_clientManager.Add(client);
+
+                //Trigger events
+                m_eventManager.TriggerOnNewPresence(sp);
+
+                if (GetScenePresence(client.AgentId) != null)
+                {
+                    EventManager.TriggerOnNewClient(client);
+                    if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
+                        EventManager.TriggerOnClientLogin(client);
+                }
+
+                //Add the client to login stats
+                ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
+                if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 && monitor != null)
+                {
+                    monitor.AddSuccessfulLogin();
                 }
             }
-            //Make sure the appearanace is updated
-            if (aCircuit != null)
-                sp.Appearance = aCircuit.Appearance;
-            sp.IsChildAgent = aCircuit.child;
-
-            m_clientManager.Add(client);
-
-            //Trigger events
-            m_eventManager.TriggerOnNewPresence(sp);
-
-            if (GetScenePresence(client.AgentId) != null)
+            catch(Exception ex)
             {
-                EventManager.TriggerOnNewClient(client);
-                if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
-                    EventManager.TriggerOnClientLogin(client);
-            }
-
-            //Add the client to login stats
-            ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
-            if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 && monitor != null)
-            {
-                monitor.AddSuccessfulLogin();
+                m_log.Warn("[Scene]: Error in AddNewClient: " + ex.ToString());
             }
         }
 

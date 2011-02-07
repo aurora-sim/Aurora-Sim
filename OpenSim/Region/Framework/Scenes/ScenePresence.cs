@@ -2603,59 +2603,66 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CopyFrom(AgentData cAgent)
         {
-            m_pos = cAgent.Position;
-            Velocity = cAgent.Velocity;
-            m_CameraCenter = cAgent.Center;
-            //m_avHeight = cAgent.Size.Z;
-            m_CameraAtAxis = cAgent.AtAxis;
-            m_CameraLeftAxis = cAgent.LeftAxis;
-            m_CameraUpAxis = cAgent.UpAxis;
-
-            DrawDistance = cAgent.Far;
-
-            if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
-                ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
-
-            m_headrotation = cAgent.HeadRotation;
-            m_bodyRot = cAgent.BodyRotation;
-            m_AgentControlFlags = (AgentManager.ControlFlags)cAgent.ControlFlags; 
-
-            //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
-            //    m_godLevel = cAgent.GodLevel;
-            m_speedModifier = cAgent.Speed;
-            DrawDistance = cAgent.DrawDistance;
-            m_setAlwaysRun = cAgent.AlwaysRun;
-            m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
-            m_appearance = new AvatarAppearance(cAgent.Appearance);
-            
             try
             {
-                lock (scriptedcontrols)
+                m_pos = cAgent.Position;
+                Velocity = cAgent.Velocity;
+                m_CameraCenter = cAgent.Center;
+                //m_avHeight = cAgent.Size.Z;
+                m_CameraAtAxis = cAgent.AtAxis;
+                m_CameraLeftAxis = cAgent.LeftAxis;
+                m_CameraUpAxis = cAgent.UpAxis;
+
+                DrawDistance = cAgent.Far;
+
+                if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
+                    ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
+
+                m_headrotation = cAgent.HeadRotation;
+                m_bodyRot = cAgent.BodyRotation;
+                m_AgentControlFlags = (AgentManager.ControlFlags)cAgent.ControlFlags;
+
+                //if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
+                //    m_godLevel = cAgent.GodLevel;
+                m_speedModifier = cAgent.Speed;
+                DrawDistance = cAgent.DrawDistance;
+                m_setAlwaysRun = cAgent.AlwaysRun;
+                m_InitialHasWearablesBeenSent = cAgent.SentInitialWearables;
+                m_appearance = new AvatarAppearance(cAgent.Appearance);
+
+                try
                 {
-                    if (cAgent.Controllers != null)
+                    lock (scriptedcontrols)
                     {
-                        scriptedcontrols.Clear();
-
-                        foreach (ControllerData c in cAgent.Controllers)
+                        if (cAgent.Controllers != null)
                         {
-                            ScriptControllers sc = new ScriptControllers();
-                            sc.itemID = c.ItemID;
-                            sc.ignoreControls = (ScriptControlled)c.IgnoreControls;
-                            sc.eventControls = (ScriptControlled)c.EventControls;
+                            scriptedcontrols.Clear();
 
-                            scriptedcontrols[sc.itemID] = sc;
+                            foreach (ControllerData c in cAgent.Controllers)
+                            {
+                                ScriptControllers sc = new ScriptControllers();
+                                sc.itemID = c.ItemID;
+                                sc.ignoreControls = (ScriptControlled)c.IgnoreControls;
+                                sc.eventControls = (ScriptControlled)c.EventControls;
+
+                                scriptedcontrols[sc.itemID] = sc;
+                            }
                         }
                     }
                 }
+                catch { }
+                // Animations
+                try
+                {
+                    Animator.ResetAnimations();
+                    Animator.Animations.FromArray(cAgent.Anims);
+                }
+                catch { }
             }
-            catch { }
-            // Animations
-            try
+            catch(Exception ex)
             {
-                Animator.ResetAnimations();
-                Animator.Animations.FromArray(cAgent.Anims);
+                m_log.Warn("[ScenePresence]: Error in CopyFrom: " + ex.ToString());
             }
-            catch {  }
         }
 
         #endregion Child Agent Updates

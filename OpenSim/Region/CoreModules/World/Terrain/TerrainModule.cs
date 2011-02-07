@@ -671,11 +671,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
                 {
-                    int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
-                    int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
-                    m_terrainPatchesSent.Add(client.AgentId, new bool[xSize,
-                        ySize]);
-
                     ScenePresence agent = m_scene.GetScenePresence(client.AgentId);
                     if (agent != null && agent.IsChildAgent)
                     {
@@ -738,13 +733,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         void OnNewPresence(ScenePresence presence)
         {
-            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
-            {
-                int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
-                int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
-                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
-                    ySize]);
-            }
             SendTerrainUpdatesForClient(presence);
         }
 
@@ -755,6 +743,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             if (presence == null)
                 return;
+
+            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
+            {
+                int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
+                int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
+                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
+                    ySize]);
+            }
 
             float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
             if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)

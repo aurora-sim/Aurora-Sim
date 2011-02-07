@@ -252,16 +252,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (regionSizeY == String.Empty)
             {
                 NeedsUpdate = true;
-                regionSizeX = MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256");
-                config.Set("regionSizeY", location);
+                regionSizeY = MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256");
+                config.Set("RegionSizeY", location);
             }
             region.RegionSizeY = Convert.ToInt32(regionSizeY);
             string regionSizeZ = config.GetString("RegionSizeZ", "1024");
             //if (regionSizeZ == String.Empty)
             //{
             //    NeedsUpdate = true;
-            //    regionSizeX = MainConsole.Instance.CmdPrompt("Region Z Size for region " + name, "1024");
-            //    config.Set("RegionSizeX", location);
+            //    regionSizeZ = MainConsole.Instance.CmdPrompt("Region Z Size for region " + name, "1024");
+            //    config.Set("RegionSizeZ", location);
             //}
             region.RegionSizeZ = Convert.ToInt32(regionSizeZ);
 
