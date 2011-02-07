@@ -3666,6 +3666,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         hfmax = (val > hfmax) ? val : hfmax;
                     }
                 }
+                _heightmap = new float[(int)Math.Sqrt(heightMap.Length) * (int)Math.Sqrt(heightMap.Length)];
+                for (int x = 0; x < (int)Math.Sqrt(heightMap.Length); x++)
+                {
+                    for (int y = 0; y < (int)Math.Sqrt(heightMap.Length); y++)
+                    {
+                        float val = heightMap[y * (int)Math.Sqrt(heightMap.Length) + x];
+                        _heightmap[y * (int)Math.Sqrt(heightMap.Length) + x] = val;
+
+                        hfmin = (val < hfmin) ? val : hfmin;
+                        hfmax = (val > hfmax) ? val : hfmax;
+                    }
+                }
             }
 
             lock (OdeLock)
