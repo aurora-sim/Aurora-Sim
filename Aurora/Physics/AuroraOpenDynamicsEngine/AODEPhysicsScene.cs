@@ -3309,11 +3309,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float[,] resultarr = new float[512, 512];
 
             // Filling out the array into its multi-dimensional components
-            for (int y = 0; y < m_region.RegionSizeY; y++)
+            for (int y = 0; y < Constants.RegionSize; y++)
             {
-                for (int x = 0; x < m_region.RegionSizeX; x++)
+                for (int x = 0; x < Constants.RegionSize; x++)
                 {
-                    resultarr[y, x] = heightMap[y * Constants.RegionSize + x];
+                    resultarr[y, x] = heightMap[y * m_region.RegionSizeX + x];
                 }
             }
 
@@ -3602,21 +3602,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
         {
-            float[] _heightmap = new float[(((int)Constants.RegionSize + 2) * ((int)Constants.RegionSize + 2))];
+            float[] _heightmap = new float[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
 
-            uint heightmapWidth = Constants.RegionSize + 1;
-            uint heightmapHeight = Constants.RegionSize + 1;
+            int heightmapWidth = (int)Math.Sqrt(heightMap.Length) + 1;
+            int heightmapHeight = (int)Math.Sqrt(heightMap.Length) + 1;
 
-            uint heightmapWidthSamples = (uint)Constants.RegionSize + 2;
+            int heightmapWidthSamples = (int)Math.Sqrt(heightMap.Length) + 2;
 
-            uint heightmapHeightSamples = (uint)Constants.RegionSize + 2;
+            int heightmapHeightSamples = (int)Math.Sqrt(heightMap.Length) + 2;
 #pragma warning disable 0162
             if (Constants.RegionSize == 256 &&
-                m_region.RegionSizeX < Constants.RegionSize && m_region.RegionSizeY < Constants.RegionSize)
+                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
             {
                 // -- creating a buffer zone of one extra sample all around - danzor
-                heightmapWidthSamples = 2 * (uint)Constants.RegionSize + 2;
-                heightmapHeightSamples = 2 * (uint)Constants.RegionSize + 2;
+                heightmapWidthSamples = 2 * Constants.RegionSize + 2;
+                heightmapHeightSamples = 2 * Constants.RegionSize + 2;
                 heightmapWidth++;
                 heightmapHeight++;
             }
@@ -3626,7 +3626,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float hfmin = 2000;
             float hfmax = -2000;
             if (regionsize == 256 && 
-                m_region.RegionSizeX < Constants.RegionSize && m_region.RegionSizeY < Constants.RegionSize)
+                m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
             {
                 //Double resolution
                 _heightmap = new float[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
@@ -3655,12 +3655,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     for (int y = 0; y < heightmapHeightSamples; y++)
                     {
-                        int xx = Util.Clip(x - 1, 0, regionsize - 1);
-                        int yy = Util.Clip(y - 1, 0, regionsize - 1);
+                        int xx = Util.Clip(x - 1, 0, (int)Math.Sqrt(heightMap.Length) - 1);
+                        int yy = Util.Clip(y - 1, 0, (int)Math.Sqrt(heightMap.Length) - 1);
 
 
-                        float val = heightMap[yy * (int)Constants.RegionSize + xx];
-                        _heightmap[x * ((int)Constants.RegionSize + 2) + y] = val;
+                        float val = heightMap[yy * (int)Math.Sqrt(heightMap.Length) + xx];
+                        _heightmap[x * ((int)Math.Sqrt(heightMap.Length) + 2) + y] = val;
 
                         hfmin = (val < hfmin) ? val : hfmin;
                         hfmax = (val > hfmax) ? val : hfmax;

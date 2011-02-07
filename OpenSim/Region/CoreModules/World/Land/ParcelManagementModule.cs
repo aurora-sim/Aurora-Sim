@@ -1648,24 +1648,25 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data)
         {
-            if (data.Count == 0)
-                ResetSimLandObjects();
-            else
+            bool result = false;
+            for (int i = 0; i < data.Count; i++)
             {
-                for (int i = 0; i < data.Count; i++)
-                {
-                    IncomingLandObjectFromStorage(data[i]);
-                }
+                if (PreprocessIncomingLandObjectFromStorage(data[i]))
+                    result = true;
             }
+            if (!result)
+                ResetSimLandObjects();
         }
 
-        public void IncomingLandObjectFromStorage(LandData data)
+        public bool PreprocessIncomingLandObjectFromStorage(LandData data)
         {
             ILandObject new_land = new LandObject(data.OwnerID, data.IsGroupOwned, m_scene);
             new_land.LandData = data;
-            new_land.SetLandBitmapFromByteArray();
             new_land.SetInfoID();
+            if (!new_land.SetLandBitmapFromByteArray())
+                return false;
             AddLandObject(new_land, true);
+            return true;
         }
 
         public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)

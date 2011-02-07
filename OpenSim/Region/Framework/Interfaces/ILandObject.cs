@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void SendAccessList(UUID agentID, UUID sessionID, uint flags, int sequenceID, IClientAPI remote_client);
         void UpdateAccessList(uint flags, List<ParcelManager.ParcelAccessEntry> entries, IClientAPI remote_client);
         void UpdateLandBitmapByteArray();
-        void SetLandBitmapFromByteArray();
+        bool SetLandBitmapFromByteArray();
         bool[,] GetLandBitmap();
         void ForceUpdateLandInfo();
         void SetLandBitmap(bool[,] bitmap);
