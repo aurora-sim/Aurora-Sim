@@ -3627,7 +3627,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
                         float val = heightMap[yy * m_region.RegionSizeX + xx];
-                        _heightmap[x * heightmapWidthSamples + y] = val;
+                        _heightmap[x * (int)Math.Sqrt(_heightmap.Length) + y] = val;
 
                         hfmin = (val < hfmin) ? val : hfmin;
                         hfmax = (val > hfmax) ? val : hfmax;

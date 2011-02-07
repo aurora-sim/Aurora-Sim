@@ -692,7 +692,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             for (int j = patchY * Constants.TerrainPatchSize; j < (patchY + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < (patchX + 1) * Constants.TerrainPatchSize; i++)
-                    block[k++] = heightmap[j * Constants.TerrainPatchSize * Constants.TerrainPatchSize + i] * premult - sub;
+                    block[k++] = heightmap[j * (int)Math.Sqrt(heightmap.Length) + i] * premult - sub;
             }
 
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
