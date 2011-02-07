@@ -239,31 +239,40 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             region.RegionLocX = Convert.ToInt32(locationElements[0]) * Constants.RegionSize;
             region.RegionLocY = Convert.ToInt32(locationElements[1]) * Constants.RegionSize;
 
-            string regionSizeX = config.GetString("RegionSizeX", String.Empty);
-            if (regionSizeX == String.Empty)
+            int regionSizeX = config.GetInt("RegionSizeX", 0);
+            if (regionSizeX == 0)
             {
                 NeedsUpdate = true;
-                regionSizeX = MainConsole.Instance.CmdPrompt("Region X Size for region " + name, "256");
+                while (true)
+                {
+                    if (int.TryParse(MainConsole.Instance.CmdPrompt("Region X Size for region " + name, "256"), out regionSizeX))
+                        break;
+                }
                 config.Set("RegionSizeX", location);
             }
             region.RegionSizeX = Convert.ToInt32(regionSizeX);
 
-            string regionSizeY = config.GetString("RegionSizeX", String.Empty);
-            if (regionSizeY == String.Empty)
+            int regionSizeY = config.GetInt("RegionSizeY", 0);
+            if (regionSizeY == 0)
             {
                 NeedsUpdate = true;
-                regionSizeY = MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256");
+                while(true)
+                {
+                    if(int.TryParse(MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256"), out regionSizeY))
+                        break;
+                }
                 config.Set("RegionSizeY", location);
             }
-            region.RegionSizeY = Convert.ToInt32(regionSizeY);
-            string regionSizeZ = config.GetString("RegionSizeZ", "1024");
+            region.RegionSizeY = regionSizeY;
+
+            int regionSizeZ = config.GetInt("RegionSizeZ", 1024);
             //if (regionSizeZ == String.Empty)
             //{
             //    NeedsUpdate = true;
             //    regionSizeZ = MainConsole.Instance.CmdPrompt("Region Z Size for region " + name, "1024");
             //    config.Set("RegionSizeZ", location);
             //}
-            region.RegionSizeZ = Convert.ToInt32(regionSizeZ);
+            region.RegionSizeZ = regionSizeZ;
 
             // Internal IP
             IPAddress address;
