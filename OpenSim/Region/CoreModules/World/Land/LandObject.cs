@@ -816,13 +816,14 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         private byte[] ConvertLandBitmapToBytes()
         {
-            byte[] tempConvertArr = new byte[512];
+            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
+            byte[] tempConvertArr = new byte[avg * 8];
             byte tempByte = 0;
             int x, y, i, byteNum = 0;
             i = 0;
-            for (y = 0; y < 64; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < 64; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     tempByte = Convert.ToByte(tempByte | Convert.ToByte(LandBitmap[x, y]) << (i++ % 8));
                     if (i % 8 == 0)
@@ -839,11 +840,12 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private bool[,] ConvertBytesToLandBitmap()
         {
+            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
             bool[,] tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempConvertMap.Initialize();
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;
-            for (i = 0; i < 512; i++)
+            for (i = 0; i < avg; i++)
             {
                 tempByte = LandData.Bitmap[i];
                 for (bitNum = 0; bitNum < 8; bitNum++)
@@ -851,7 +853,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
                     tempConvertMap[x, y] = bit;
                     x++;
-                    if (x > 63)
+                    if (x > ((m_scene.RegionInfo.RegionSizeX / 4) - 1))
                     {
                         x = 0;
                         y++;

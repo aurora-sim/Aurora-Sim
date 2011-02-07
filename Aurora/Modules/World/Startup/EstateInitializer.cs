@@ -184,7 +184,7 @@ namespace OpenSim.Region.CoreModules
                         string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
                         string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
 
-                        scene.UserAccountService.CreateUser(first, last, password, email);
+                        scene.UserAccountService.CreateUser(first, last, Util.Md5Hash(password), email);
                         account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
 
                         if (account != null)
@@ -220,7 +220,7 @@ namespace OpenSim.Region.CoreModules
                         string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
                         string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
 
-                        scene.UserAccountService.CreateUser(first, last, password, email);
+                        scene.UserAccountService.CreateUser(first, last, Util.Md5Hash(password), email);
                         account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, first, last);
 
                         if (account != null)
