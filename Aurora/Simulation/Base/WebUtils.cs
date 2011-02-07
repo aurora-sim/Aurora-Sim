@@ -376,7 +376,7 @@ namespace Aurora.Simulation.Base
                                      reqnum, url, method, tickdiff, tickdata);
             }
 
-            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1}", reqnum, errorMessage);
+            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url, data != null ? data.AsString() : "");
             return ErrorResponseMap(errorMessage);
         }
 

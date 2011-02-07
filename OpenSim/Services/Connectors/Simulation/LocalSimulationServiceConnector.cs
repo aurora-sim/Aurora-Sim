@@ -168,7 +168,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
             foreach (Scene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionHandle == destination.RegionHandle)
+                if (s.RegionInfo.RegionID == destination.RegionID)
                 {
                     //m_log.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                     return s.IncomingRetrieveRootAgent(id, out agent);
