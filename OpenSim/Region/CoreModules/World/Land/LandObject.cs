@@ -816,7 +816,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         private byte[] ConvertLandBitmapToBytes()
         {
-            byte[] tempConvertArr = new byte[512];
+            int byteSize = ((m_scene.RegionInfo.RegionSizeX / 4 + m_scene.RegionInfo.RegionSizeY / 4) / 2) * 16;
+            byte[] tempConvertArr = new byte[byteSize];
             byte tempByte = 0;
             int x, y, i, byteNum = 0;
             i = 0;

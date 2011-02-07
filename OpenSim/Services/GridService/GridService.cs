@@ -657,6 +657,12 @@ namespace OpenSim.Services.GridService
         {
             try
             {
+                if (float.IsNaN(number))
+                    return 0;
+                if (float.IsInfinity(number))
+                    return 0;
+                if (number < 0)
+                    number = 0;
                 double n = Math.Round(number, 0); //Remove the decimal
                 string Number = n.ToString();//Round the last
 

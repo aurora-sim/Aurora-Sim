@@ -292,7 +292,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < (patchX + 1) * Constants.TerrainPatchSize; i++)
                 {
-                    float val = heightmap[j * RegionSizeX + i];
+                    float val = heightmap[j * (int)Math.Sqrt(heightmap.Length) + i];
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
