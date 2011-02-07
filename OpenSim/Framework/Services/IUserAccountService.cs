@@ -163,9 +163,9 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
-        /// <param name="password"></param>
+        /// <param name="md5password">MD5 hashed password</param>
         /// <param name="email"></param>
-        void CreateUser(string firstName, string lastName, string password, string email);
+        void CreateUser(string firstName, string lastName, string md5password, string email);
     }
 
     /// <summary>

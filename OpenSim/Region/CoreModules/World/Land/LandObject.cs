@@ -817,7 +817,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private byte[] ConvertLandBitmapToBytes()
         {
             int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
-            byte[] tempConvertArr = new byte[avg * 8];
+            byte[] tempConvertArr = new byte[(avg * avg) / 8];
             byte tempByte = 0;
             int x, y, i, byteNum = 0;
             i = 0;
@@ -845,7 +845,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             tempConvertMap.Initialize();
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;
-            for (i = 0; i < avg; i++)
+            for (i = 0; i < (avg * avg) / 8; i++)
             {
                 tempByte = LandData.Bitmap[i];
                 for (bitNum = 0; bitNum < 8; bitNum++)
