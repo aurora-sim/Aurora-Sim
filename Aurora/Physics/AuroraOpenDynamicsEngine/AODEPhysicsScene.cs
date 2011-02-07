@@ -3651,28 +3651,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                for (int x = 0; x < heightmapWidthSamples; x++)
-                {
-                    for (int y = 0; y < heightmapHeightSamples; y++)
-                    {
-                        int xx = Util.Clip(x - 1, 0, (int)Math.Sqrt(heightMap.Length) - 1);
-                        int yy = Util.Clip(y - 1, 0, (int)Math.Sqrt(heightMap.Length) - 1);
-
-
-                        float val = heightMap[yy * (int)Math.Sqrt(heightMap.Length) + xx];
-                        _heightmap[x * ((int)Math.Sqrt(heightMap.Length) + 2) + y] = val;
-
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
-                    }
-                }
-                _heightmap = new float[(int)Math.Sqrt(heightMap.Length) * (int)Math.Sqrt(heightMap.Length)];
+                heightmapWidth = Constants.RegionSize + 2;
+                heightmapHeight = Constants.RegionSize + 2;
+                heightmapWidthSamples = Constants.RegionSize+2;
+                heightmapHeightSamples = Constants.RegionSize + 2;
+                _heightmap = new float[heightmapWidthSamples * heightmapHeightSamples];
                 for (int x = 0; x < (int)Math.Sqrt(heightMap.Length); x++)
                 {
                     for (int y = 0; y < (int)Math.Sqrt(heightMap.Length); y++)
                     {
-                        float val = heightMap[y * (int)Math.Sqrt(heightMap.Length) + x];
-                        _heightmap[y * (int)Math.Sqrt(heightMap.Length) + x] = val;
+                        int xx = Util.Clip(x - 1, 0, ((int)Math.Sqrt(heightMap.Length) - 1) - 1);
+                        int yy = Util.Clip(y - 1, 0, ((int)Math.Sqrt(heightMap.Length) - 1) - 1);
+
+                        float val = (float)normalHeightMap[xx, yy];
+                        //ODE is evil... flip x and y
+                        _heightmap[x * heightmapWidthSamples + y] = val;
 
                         hfmin = (val < hfmin) ? val : hfmin;
                         hfmax = (val > hfmax) ? val : hfmax;
