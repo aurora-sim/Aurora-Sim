@@ -414,7 +414,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         }
                         //get the data from the original image
                         Color hsvColor = hsv.toColor();
-                        unsafeBMP.SetPixel(x, (255 - y), hsvColor);
+                        unsafeBMP.SetPixel(x, ((m_scene.RegionInfo.RegionSizeY - 1) - y), hsvColor);
                     }
                     else
                     {
@@ -430,7 +430,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         heightvalue = 100f - (heightvalue * 100f) / 19f;  // 0 - 19 => 100 - 0
 
-                        unsafeBMP.SetPixel(x, (255 - y), WATER_COLOR);
+                        unsafeBMP.SetPixel(x, ((m_scene.RegionInfo.RegionSizeY - 1) - y), WATER_COLOR);
                     }
                 }
             }

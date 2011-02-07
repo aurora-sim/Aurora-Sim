@@ -1024,9 +1024,9 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             lock (m_landList)
             {
-                for (int x = 0; x < 64; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    for (int y = 0; y < 64; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                     {
                         if (m_landIDList[x, y] == local_id)
                         {
@@ -1082,9 +1082,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             bool[,] landBitmapSlave = slave.GetLandBitmap();
             lock (m_landList)
             {
-                for (int x = 0; x < 64; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    for (int y = 0; y < 64; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeX / 4; y++)
                     {
                         if (landBitmapSlave[x, y])
                         {

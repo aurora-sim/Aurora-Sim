@@ -635,15 +635,15 @@ namespace OpenSim.Region.CoreModules.World.Land
         private void UpdateAABBAndAreaValues()
         {
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
-            int min_x = 64;
-            int min_y = 64;
+            int min_x = m_scene.RegionInfo.RegionSizeX / 4;
+            int min_y = m_scene.RegionInfo.RegionSizeY / 4;
             int max_x = 0;
             int max_y = 0;
             int tempArea = 0;
             int x, y;
-            for (x = 0; x < 64; x++)
+            for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
             {
-                for (y = 0; y < 64; y++)
+                for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                 {
                     if (LandBitmap[x, y] == true)
                     {
@@ -687,7 +687,9 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <param name="bitmap">64x64 block representing where this land is on a map</param>
         public void SetLandBitmap(bool[,] bitmap)
         {
-            if (bitmap.GetLength(0) != 64 || bitmap.GetLength(1) != 64 || bitmap.Rank != 2)
+            if (bitmap.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 || 
+                bitmap.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 || 
+                bitmap.Rank != 2)
             {
                 //Throw an exception - The bitmap is not 64x64
                 //throw new Exception("Error: Invalid Parcel Bitmap");
@@ -728,7 +730,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         public bool[,] GetSquareLandBitmap(int start_x, int start_y, int end_x, int end_y)
         {
-            bool[,] tempBitmap = new bool[64,64];
+            bool[,] tempBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempBitmap.Initialize();
 
             tempBitmap = ModifyLandBitmapSquare(tempBitmap, start_x, start_y, end_x, end_y, true);
@@ -748,16 +750,18 @@ namespace OpenSim.Region.CoreModules.World.Land
         public bool[,] ModifyLandBitmapSquare(bool[,] land_bitmap, int start_x, int start_y, int end_x, int end_y,
                                               bool set_value)
         {
-            if (land_bitmap.GetLength(0) != 64 || land_bitmap.GetLength(1) != 64 || land_bitmap.Rank != 2)
+            if (land_bitmap.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 || 
+                land_bitmap.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 ||
+                land_bitmap.Rank != 2)
             {
                 //Throw an exception - The bitmap is not 64x64
                 //throw new Exception("Error: Invalid Parcel Bitmap in modifyLandBitmapSquare()");
             }
 
             int x, y;
-            for (y = 0; y < 64; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < 64; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     if (x >= start_x / 4 && x < end_x / 4
                         && y >= start_y / 4 && y < end_y / 4)
@@ -777,21 +781,25 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         public bool[,] MergeLandBitmaps(bool[,] bitmap_base, bool[,] bitmap_add)
         {
-            if (bitmap_base.GetLength(0) != 64 || bitmap_base.GetLength(1) != 64 || bitmap_base.Rank != 2)
+            if (bitmap_base.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 ||
+                bitmap_base.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 ||
+                bitmap_base.Rank != 2)
             {
                 //Throw an exception - The bitmap is not 64x64
                 throw new Exception("Error: Invalid Parcel Bitmap - Bitmap_base in mergeLandBitmaps");
             }
-            if (bitmap_add.GetLength(0) != 64 || bitmap_add.GetLength(1) != 64 || bitmap_add.Rank != 2)
+            if (bitmap_add.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 ||
+                bitmap_add.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 || 
+                bitmap_add.Rank != 2)
             {
                 //Throw an exception - The bitmap is not 64x64
                 throw new Exception("Error: Invalid Parcel Bitmap - Bitmap_add in mergeLandBitmaps");
             }
 
             int x, y;
-            for (y = 0; y < 64; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < 64; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     if (bitmap_add[x, y])
                     {
@@ -812,9 +820,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             byte tempByte = 0;
             int x, y, i, byteNum = 0;
             i = 0;
-            for (y = 0; y < 64; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < 64; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     tempByte = Convert.ToByte(tempByte | Convert.ToByte(LandBitmap[x, y]) << (i++ % 8));
                     if (i % 8 == 0)
@@ -835,7 +843,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             tempConvertMap.Initialize();
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;
-            for (i = 0; i < 512; i++)
+            for (i = 0; i < m_scene.RegionInfo.RegionSizeY / 2; i++)
             {
                 tempByte = LandData.Bitmap[i];
                 for (bitNum = 0; bitNum < 8; bitNum++)
@@ -843,7 +851,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte) 1);
                     tempConvertMap[x, y] = bit;
                     x++;
-                    if (x > 63)
+                    if (x > ((m_scene.RegionInfo.RegionSizeX / 4) - 1))
                     {
                         x = 0;
                         y++;
