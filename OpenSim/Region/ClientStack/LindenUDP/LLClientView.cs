@@ -1057,7 +1057,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             LayerDataPacket layerpack;
             try
             {
-                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches,TerrainPatch.LayerType.Land);
+                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches,TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 layerpack.Header.Zerocoded = true;  
                 layerpack.Header.Reliable = true;
 
@@ -1110,7 +1110,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     map :
                     LLHeightFieldMoronize(map);
 
-                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(heightmap, patches, TerrainPatch.LayerType.Land);
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(heightmap, patches, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
