@@ -3651,10 +3651,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                heightmapWidth = Constants.RegionSize + 2;
-                heightmapHeight = Constants.RegionSize + 2;
-                heightmapWidthSamples = Constants.RegionSize+2;
-                heightmapHeightSamples = Constants.RegionSize + 2;
+                int rSize = (int)Math.Sqrt(heightMap.Length) > Constants.RegionSize ? (int)Math.Sqrt(heightMap.Length) : Constants.RegionSize;
+                heightmapWidth = rSize + 2;
+                heightmapHeight = rSize + 2;
+                heightmapWidthSamples = rSize + 2;
+                heightmapHeightSamples = rSize + 2;
                 _heightmap = new float[heightmapWidthSamples * heightmapHeightSamples];
                 for (int x = 0; x < (int)Math.Sqrt(heightMap.Length); x++)
                 {
