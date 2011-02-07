@@ -3313,7 +3313,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 for (int x = 0; x < m_region.RegionSizeX; x++)
                 {
-                    resultarr[y, x] = heightMap[y * m_region.RegionSizeX + x];
+                    resultarr[y, x] = heightMap[y * Constants.RegionSize + x];
                 }
             }
 
@@ -3611,7 +3611,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             uint heightmapHeightSamples = (uint)Constants.RegionSize + 2;
 #pragma warning disable 0162
-            if (Constants.RegionSize == 256)
+            if (Constants.RegionSize == 256 &&
+                m_region.RegionSizeX < Constants.RegionSize && m_region.RegionSizeY < Constants.RegionSize)
             {
                 // -- creating a buffer zone of one extra sample all around - danzor
                 heightmapWidthSamples = 2 * (uint)Constants.RegionSize + 2;
@@ -3624,7 +3625,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             float hfmin = 2000;
             float hfmax = -2000;
-            if (regionsize == 256)
+            if (regionsize == 256 && 
+                m_region.RegionSizeX < Constants.RegionSize && m_region.RegionSizeY < Constants.RegionSize)
             {
                 //Double resolution
                 _heightmap = new float[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
