@@ -840,9 +840,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private bool[,] ConvertBytesToLandBitmap()
         {
-            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
             bool[,] tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempConvertMap.Initialize();
+            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
+            if (LandData.Bitmap.Length != (avg * avg) / 8) //Are the sizes the same
+            {
+                //The sim size changed, deal with it
+                m_parcelManagementModule.ResetSimLandObjects();
+                return null;
+            }
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;
             for (i = 0; i < (avg * avg) / 8; i++)

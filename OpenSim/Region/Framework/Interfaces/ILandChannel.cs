@@ -85,6 +85,11 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateLandObject(int localID, LandData data);
 
         /// <summary>
+        /// Delete all parcels and create one default parcel that spreads over the entire sim
+        /// </summary>
+        void ResetSimLandObjects();
+
+        /// <summary>
         /// Join all parcels within the given range into one large parcel
         /// </summary>
         /// <param name="start_x"></param>
