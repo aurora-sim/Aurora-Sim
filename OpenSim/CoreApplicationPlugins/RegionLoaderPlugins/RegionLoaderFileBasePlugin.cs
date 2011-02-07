@@ -248,7 +248,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if (int.TryParse(MainConsole.Instance.CmdPrompt("Region X Size for region " + name, "256"), out regionSizeX))
                         break;
                 }
-                config.Set("RegionSizeX", location);
+                config.Set("RegionSizeX", regionSizeX);
             }
             region.RegionSizeX = Convert.ToInt32(regionSizeX);
 
@@ -261,7 +261,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if(int.TryParse(MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256"), out regionSizeY))
                         break;
                 }
-                config.Set("RegionSizeY", location);
+                config.Set("RegionSizeY", regionSizeY);
             }
             region.RegionSizeY = regionSizeY;
 
@@ -270,7 +270,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             //{
             //    NeedsUpdate = true;
             //    regionSizeZ = MainConsole.Instance.CmdPrompt("Region Z Size for region " + name, "1024");
-            //    config.Set("RegionSizeZ", location);
+            //    config.Set("RegionSizeZ", regionSizeZ);
             //}
             region.RegionSizeZ = regionSizeZ;
 
