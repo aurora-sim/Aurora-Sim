@@ -70,7 +70,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_colors.Clear();
 
             Vector3 camPos = new Vector3(127.5f, 127.5f, 221.7025033688163f);
-            Viewport viewport = new Viewport(camPos, -Vector3.UnitZ, 1024f, 0.1f, (int)Constants.RegionSize, (int)Constants.RegionSize, (float)Constants.RegionSize, (float)Constants.RegionSize);
+            Viewport viewport = new Viewport(camPos, -Vector3.UnitZ, 1024f, 0.1f, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
             int width = viewport.Width;
             int height = viewport.Height;

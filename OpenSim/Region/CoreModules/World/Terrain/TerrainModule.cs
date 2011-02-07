@@ -250,15 +250,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             catch (IOException e)
             {
                 m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
-#pragma warning disable 0162
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
-                if ((int)Constants.RegionSize != 256)
+                if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
                 {
                     m_channel = new TerrainChannel(m_scene);
 
                     m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
-#pragma warning restore 0162
             }
             catch (Exception e)
             {
@@ -288,11 +286,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             ITerrainChannel channel = loader.Value.LoadFile(filename);
                             channel.Scene = m_scene;
-                            if (channel.Width != Constants.RegionSize || channel.Height != Constants.RegionSize)
+                            if (channel.Width != m_scene.RegionInfo.RegionSizeX || channel.Height != m_scene.RegionInfo.RegionSizeY)
                             {
                                 // TerrainChannel expects a RegionSize x RegionSize map, currently
                                 throw new ArgumentException(String.Format("wrong size, use a file with size {0} x {1}",
-                                                                          Constants.RegionSize, Constants.RegionSize));
+                                                                          m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
                             }
                             m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                             m_channel = channel;
@@ -623,8 +621,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             ITerrainChannel channel = loader.Value.LoadFile(filename, offsetX, offsetY,
                                                                             fileWidth, fileHeight,
-                                                                            (int) Constants.RegionSize,
-                                                                            (int) Constants.RegionSize);
+                                                                            m_scene.RegionInfo.RegionSizeX,
+                                                                            m_scene.RegionInfo.RegionSizeY);
                             channel.Scene = m_scene;
                             m_channel = channel;
                             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
@@ -1195,28 +1193,28 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
                 if (direction.ToLower().StartsWith("y"))
                 {
-                    for (int x = 0; x < Constants.RegionSize; x++)
+                    for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                     {
-                        for (int y = 0; y < Constants.RegionSize / 2; y++)
+                        for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 2; y++)
                         {
                             double height = tmodule.m_channel[x, y];
-                            double flippedHeight = tmodule.m_channel[x, (int)Constants.RegionSize - 1 - y];
+                            double flippedHeight = tmodule.m_channel[x, m_scene.RegionInfo.RegionSizeY - 1 - y];
                             tmodule.m_channel[x, y] = flippedHeight;
-                            tmodule.m_channel[x, (int)Constants.RegionSize - 1 - y] = height;
+                            tmodule.m_channel[x, m_scene.RegionInfo.RegionSizeY - 1 - y] = height;
 
                         }
                     }
                 }
                 else if (direction.ToLower().StartsWith("x"))
                 {
-                    for (int y = 0; y < Constants.RegionSize; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                     {
-                        for (int x = 0; x < Constants.RegionSize / 2; x++)
+                        for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 2; x++)
                         {
                             double height = tmodule.m_channel[x, y];
-                            double flippedHeight = tmodule.m_channel[(int)Constants.RegionSize - 1 - x, y];
+                            double flippedHeight = tmodule.m_channel[m_scene.RegionInfo.RegionSizeX - 1 - x, y];
                             tmodule.m_channel[x, y] = flippedHeight;
-                            tmodule.m_channel[(int)Constants.RegionSize - 1 - x, y] = height;
+                            tmodule.m_channel[m_scene.RegionInfo.RegionSizeX - 1 - x, y] = height;
 
                         }
                     }

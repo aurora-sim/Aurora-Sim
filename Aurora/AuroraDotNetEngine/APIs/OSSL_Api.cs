@@ -187,8 +187,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer osTerrainSetHeight(int x, int y, double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight", m_host, "OSSL");
-            
-            if (x > ((int)Constants.RegionSize - 1) || x < 0 || y > ((int)Constants.RegionSize - 1) || y < 0)
+
+            if (x > (World.RegionInfo.RegionSizeX - 1) || x < 0 || y > (World.RegionInfo.RegionSizeY - 1) || y < 0)
                 OSSLError("osTerrainSetHeight: Coordinate out of bounds");
 
             if (World.Permissions.CanTerraformLand(m_host.OwnerID, new Vector3(x, y, 0)))
@@ -209,8 +209,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight", m_host, "OSSL");
 
-            
-            if (x > ((int)Constants.RegionSize - 1) || x < 0 || y > ((int)Constants.RegionSize - 1) || y < 0)
+
+            if (x > (World.RegionInfo.RegionSizeX - 1) || x < 0 || y > (World.RegionInfo.RegionSizeY - 1) || y < 0)
                 OSSLError("osTerrainGetHeight: Coordinate out of bounds");
 
             ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();

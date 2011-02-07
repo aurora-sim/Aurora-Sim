@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (x > w - 2)
             {
-                scene = FindScene(map, scenes, Constants.RegionSize, 0);
+                scene = FindScene(map, scenes, map.Scene.RegionInfo.RegionSizeX, 0);
                 if(scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (y > h - 2)
             {
-                scene = FindScene(map, scenes, 0, Constants.RegionSize);
+                scene = FindScene(map, scenes, 0, map.Scene.RegionInfo.RegionSizeY);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -78,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (x < 0.0)
             {
-                scene = FindScene(map, scenes, -Constants.RegionSize, 0);
+                scene = FindScene(map, scenes, -map.Scene.RegionInfo.RegionSizeX, 0);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap
@@ -90,7 +90,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (y < 0.0)
             {
-                scene = FindScene(map, scenes, 0, -Constants.RegionSize);
+                scene = FindScene(map, scenes, 0, -map.Scene.RegionInfo.RegionSizeY);
                 if (scene != null)
                 {
                     //Fix this position in the new heightmap

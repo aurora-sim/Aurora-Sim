@@ -650,8 +650,8 @@ namespace Aurora.Modules
                     mapitem = new mapItemReply();
                     
                     //Use global position plus half the region so that it doesn't always appear in the bottom corner
-                    mapitem.x = (uint)globalPos.X + (Constants.RegionSize / 2);
-                    mapitem.y = (uint)globalPos.Y + (Constants.RegionSize / 2);
+                    mapitem.x = (uint)(globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX / 2));
+                    mapitem.y = (uint)(globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY / 2));
                     
                     mapitem.id = UUID.Random();
                     mapitem.name = eventData.name;

@@ -754,7 +754,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public Vector3 GroupScale()
         {
-            Vector3 minScale = new Vector3(Constants.RegionSize, Constants.RegionSize, Constants.RegionSize);
+            Vector3 minScale = new Vector3(Scene.RegionInfo.RegionSizeX, Scene.RegionInfo.RegionSizeY, 10000);
             Vector3 maxScale = Vector3.Zero;
             Vector3 finalScale = new Vector3(0.5f, 0.5f, 0.5f);
 

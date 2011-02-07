@@ -261,11 +261,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             //The XPTS and YPTS chunks are not needed for square regions
             //but L3DT won't load the terrain file properly without them.
             bs.Write(enc.GetBytes("XPTS"));
-            bs.Write(Convert.ToInt16(Constants.RegionSize));
+            bs.Write(Convert.ToInt16(map.Scene.RegionInfo.RegionSizeX));
             bs.Write(Convert.ToInt16(0));  // necessary padding
 
             bs.Write(enc.GetBytes("YPTS"));
-            bs.Write(Convert.ToInt16(Constants.RegionSize));
+            bs.Write(Convert.ToInt16(map.Scene.RegionInfo.RegionSizeY));
             bs.Write(Convert.ToInt16(0));  // necessary padding
 
             bs.Write(enc.GetBytes("SCAL"));
