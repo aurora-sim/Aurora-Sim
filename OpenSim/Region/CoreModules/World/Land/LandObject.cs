@@ -45,10 +45,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         #region Member Variables
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        #pragma warning disable 0429
-        private const int landArrayMax = ((int)((int)Constants.RegionSize / 4) >= 64) ? (int)((int)Constants.RegionSize / 4) : 64;
-        #pragma warning restore 0429
-        private bool[,] m_landBitmap = new bool[landArrayMax,landArrayMax];
+        private bool[,] m_landBitmap;
 
         private int m_lastSeqId = 0;
 
@@ -89,6 +86,9 @@ namespace OpenSim.Region.CoreModules.World.Land
         public LandObject(UUID owner_id, bool is_group_owned, Scene scene)
         {
             m_scene = scene;
+
+            m_landBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
+
             LandData.Maturity = m_scene.RegionInfo.RegionSettings.Maturity;
             LandData.OwnerID = owner_id;
             if (is_group_owned)
@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns>Returns true if the piece of land contains the specified point</returns>
         public bool ContainsPoint(int x, int y)
         {
-            if (x >= 0 && y >= 0 && x < Constants.RegionSize && y < Constants.RegionSize)
+            if (x >= 0 && y >= 0 && x < m_scene.RegionInfo.RegionSizeX && y < m_scene.RegionInfo.RegionSizeY)
             {
                 return (LandBitmap[x / 4, y / 4] == true);
             }
@@ -487,13 +487,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                 try
                 {
                     over =
-                         m_parcelManagementModule.GetLandObject(Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)),
-                                                          Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
+                         m_parcelManagementModule.GetLandObject(Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, (m_scene.RegionInfo.RegionSizeX - 1)),
+                                                          Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, (m_scene.RegionInfo.RegionSizeY - 1)));
                 }
                 catch (Exception)
                 {
-                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)) + " y: " +
-                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
+                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, (m_scene.RegionInfo.RegionSizeX - 1)) + " y: " +
+                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, (m_scene.RegionInfo.RegionSizeY - 1)));
                 }
 
                 if (over != null)
@@ -511,8 +511,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 else
                 {
-                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, ((int)Constants.RegionSize - 1)) + " y: " +
-                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, ((int)Constants.RegionSize - 1)));
+                    m_log.Warn("[LAND]: " + "unable to get land at x: " + Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.X), 0, (m_scene.RegionInfo.RegionSizeX - 1)) + " y: " +
+                               Util.Clamp<int>((int)Math.Round(avatar.AbsolutePosition.Y), 0, (m_scene.RegionInfo.RegionSizeY - 1)));
                 }
             });
         }
@@ -656,21 +656,21 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
             int tx = min_x * 4;
-            if (tx > ((int)Constants.RegionSize - 1))
-                tx = ((int)Constants.RegionSize - 1);
+            if (tx > (m_scene.RegionInfo.RegionSizeX - 1))
+                tx = (m_scene.RegionInfo.RegionSizeX - 1);
             int ty = min_y * 4;
-            if (ty > ((int)Constants.RegionSize - 1))
-                ty = ((int)Constants.RegionSize - 1);
+            if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
+                ty = (m_scene.RegionInfo.RegionSizeY - 1);
             LandData.AABBMin =
                 new Vector3((float) (min_x * 4), (float) (min_y * 4),
                               (float)heightmap[tx, ty]);
 
             tx = max_x * 4;
-            if (tx > ((int)Constants.RegionSize - 1))
-                tx = ((int)Constants.RegionSize - 1);
+            if (tx > (m_scene.RegionInfo.RegionSizeX - 1))
+                tx = (m_scene.RegionInfo.RegionSizeX - 1);
             ty = max_y * 4;
-            if (ty > ((int)Constants.RegionSize - 1))
-                ty = ((int)Constants.RegionSize - 1);
+            if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
+                ty = (m_scene.RegionInfo.RegionSizeY - 1);
             LandData.AABBMax =
                 new Vector3((float) (max_x * 4), (float) (max_y * 4),
                               (float)heightmap[tx, ty]);
@@ -715,7 +715,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         public bool[,] BasicFullRegionLandBitmap()
         {
-            return GetSquareLandBitmap(0, 0, (int) Constants.RegionSize, (int) Constants.RegionSize);
+            return GetSquareLandBitmap(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
         }
 
         /// <summary>
@@ -831,7 +831,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private bool[,] ConvertBytesToLandBitmap()
         {
-            bool[,] tempConvertMap = new bool[landArrayMax, landArrayMax];
+            bool[,] tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempConvertMap.Initialize();
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;

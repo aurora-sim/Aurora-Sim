@@ -22,7 +22,7 @@ namespace OpenSim.Region.CoreModules
             if (PhysConfig != null)
             {
                 Path = PhysConfig.GetString("PathToPhysicsAssemblies", Path);
-                engine = PhysConfig.GetString("DefaultPhysicsEngine", "OpenDynamicsEngine");
+                engine = PhysConfig.GetString("DefaultPhysicsEngine", "AuroraOpenDynamicsEngine");
                 meshEngine = MeshingConfig.GetString("DefaultMeshingEngine", "Meshmerizer");
                 string regionName = scene.RegionInfo.RegionName.Trim().Replace(' ', '_');
                 string RegionPhysicsEngine = PhysConfig.GetString("Region_" + regionName + "_PhysicsEngine", String.Empty);
@@ -35,13 +35,13 @@ namespace OpenSim.Region.CoreModules
             else
             {
                 //Load Sane defaults
-                engine = "OpenDynamicsEngine";
+                engine = "AuroraOpenDynamicsEngine";
                 meshEngine = "Meshmerizer";
             }
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies(Path);
 
-            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo.RegionName);
+            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo);
             scene.SceneGraph.PhysicsScene = pScene;
         }
 

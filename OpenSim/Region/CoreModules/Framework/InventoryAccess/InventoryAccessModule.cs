@@ -295,12 +295,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 foreach (SceneObjectGroup objectGroup in objectGroups)
                 {
                     Vector3 inventoryStoredPosition = new Vector3
-                                (((objectGroup.AbsolutePosition.X > (int)Constants.RegionSize)
-                                      ? 250
+                                (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
+                                      ? m_scene.RegionInfo.RegionSizeX - 1
                                       : objectGroup.AbsolutePosition.X)
                                  ,
-                                 (objectGroup.AbsolutePosition.Y > (int)Constants.RegionSize)
-                                     ? 250
+                                 (objectGroup.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY)
+                                     ? m_scene.RegionInfo.RegionSizeY - 1
                                      : objectGroup.AbsolutePosition.Y,
                                  objectGroup.AbsolutePosition.Z);
                     GroupMiddle += inventoryStoredPosition;

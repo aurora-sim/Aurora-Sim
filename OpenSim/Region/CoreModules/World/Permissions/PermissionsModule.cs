@@ -1556,10 +1556,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             float X = position.X;
             float Y = position.Y;
 
-            if (X > ((int)Constants.RegionSize - 1))
-                X = ((int)Constants.RegionSize - 1);
-            if (Y > ((int)Constants.RegionSize - 1))
-                Y = ((int)Constants.RegionSize - 1);
+            if (X > (m_scene.RegionInfo.RegionSizeX - 1))
+                X = (m_scene.RegionInfo.RegionSizeX - 1);
+            if (Y > (m_scene.RegionInfo.RegionSizeY - 1))
+                Y = (m_scene.RegionInfo.RegionSizeY - 1);
             if (X < 0)
                 X = 0;
             if (Y < 0)

@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             terrainRenderer.Initialise(m_scene, m_config);
 
-            Bitmap mapbmp = new Bitmap((int)Constants.RegionSize, (int)Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Bitmap mapbmp = new Bitmap(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             terrainRenderer.TerrainToBitmap(mapbmp);
             
             if (drawPrimVolume)
@@ -142,7 +142,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             terrainRenderer.Initialise(m_scene, m_config);
 
             mapBMP = null;
-            terrainBMP = new Bitmap((int)Constants.RegionSize, (int)Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            terrainBMP = new Bitmap(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             terrainBMP = terrainRenderer.TerrainToBitmap(terrainBMP);
 
             mapBMP = terrainBMP;
@@ -344,9 +344,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     int mapdrawendY = (int)(pos.Y + scale.Y);
 
                                     // If object is beyond the edge of the map, don't draw it to avoid errors
-                                    if (mapdrawstartX < 0 || mapdrawstartX > ((int)Constants.RegionSize - 1) || mapdrawendX < 0 || mapdrawendX > ((int)Constants.RegionSize - 1)
-                                                          || mapdrawstartY < 0 || mapdrawstartY > ((int)Constants.RegionSize - 1) || mapdrawendY < 0
-                                                          || mapdrawendY > ((int)Constants.RegionSize - 1))
+                                    if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) || mapdrawendX < 0 || mapdrawendX > (m_scene.RegionInfo.RegionSizeX - 1)
+                                                          || mapdrawstartY < 0 || mapdrawstartY > (m_scene.RegionInfo.RegionSizeY - 1) || mapdrawendY < 0
+                                                          || mapdrawendY > (m_scene.RegionInfo.RegionSizeY - 1))
                                         continue;
 
                                     #region obb face reconstruction part duex
@@ -623,7 +623,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
            // float z = -point3d.z - topos.z;
 
             returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
-            returnpt.Y = (int)(((int)Constants.RegionSize - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
+            returnpt.Y = (int)((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
 
             return returnpt;
         }

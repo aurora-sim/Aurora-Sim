@@ -65,9 +65,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             float low = 255;
             float high = 0;
-            for (int x = 0; x < (int)Constants.RegionSize; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
-                for (int y = 0; y < (int)Constants.RegionSize; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
                     float hmval = (float)hm[x, y];
                     if (hmval < low)
@@ -79,12 +79,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
 
-            for (int x = 0; x < (int)Constants.RegionSize; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
-                for (int y = 0; y < (int)Constants.RegionSize; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
-                    int yr = ((int)Constants.RegionSize - 1) - y;
+                    int yr = (m_scene.RegionInfo.RegionSizeY - 1) - y;
 
                     float heightvalue = (float)hm[x, y];
 
@@ -111,12 +111,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             // .
                             //
                             // Shade the terrain for shadows
-                            if (x < ((int)Constants.RegionSize - 1) && yr < ((int)Constants.RegionSize - 1))
+                            if (x < (m_scene.RegionInfo.RegionSizeX - 1) && yr < (m_scene.RegionInfo.RegionSizeY - 1))
                             {
                                 float hfvalue = (float)hm[x, y];
                                 float hfvaluecompare = 0f;
 
-                                if ((x + 1 < (int)Constants.RegionSize) && (y + 1 < (int)Constants.RegionSize))
+                                if ((x + 1 < m_scene.RegionInfo.RegionSizeX) && (y + 1 < m_scene.RegionInfo.RegionSizeY))
                                 {
                                     hfvaluecompare = (float)hm[x + 1, y + 1]; // light from north-east => look at land height there
                                 }
@@ -181,7 +181,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                     if (ShadowDebugContinue)
                                     {
-                                        if ((x - 1 > 0) && (yr + 1 < (int)Constants.RegionSize))
+                                        if ((x - 1 > 0) && (yr + 1 < m_scene.RegionInfo.RegionSizeY))
                                         {
                                             color = mapbmp.GetPixel(x - 1, yr + 1);
                                             int r = color.R;
@@ -235,7 +235,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 terraincorruptedwarningsaid = true;
                             }
                             Color black = Color.Black;
-                            mapbmp.SetPixel(x, ((int)Constants.RegionSize - y) - 1, black);
+                            mapbmp.SetPixel(x, (m_scene.RegionInfo.RegionSizeY - y) - 1, black);
                         }
                     }
                 }

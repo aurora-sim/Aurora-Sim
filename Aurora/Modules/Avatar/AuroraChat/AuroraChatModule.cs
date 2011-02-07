@@ -499,8 +499,6 @@ namespace Aurora.Modules
             }
         }
 
-        static private Vector3 CenterOfRegion = new Vector3(Constants.RegionSize, Constants.RegionSize, 30);
-
         protected virtual void OnChatBroadcast(Object sender, OSChatMessage c)
         {
             // unless the chat to be broadcast is of type Region, we
@@ -560,7 +558,8 @@ namespace Aurora.Modules
                         (c.ToAgentID != client.AgentId))
                         return;
 
-                    client.SendChatMessage(c.Message, (byte)cType, CenterOfRegion, fromName, fromID,
+                    client.SendChatMessage(c.Message, (byte)cType, new Vector3(client.Scene.RegionInfo.RegionSizeX * 0.5f,
+                        client.Scene.RegionInfo.RegionSizeY * 0.5f, 30), fromName, fromID,
                                            (byte)sourceType, (byte)ChatAudibleLevel.Fully);
                 });
         }

@@ -284,7 +284,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         // the heigthfield might have some jumps in values. Rendered land is smooth, though,
         // as a slope is rendered at that place. So average 4 neighbour values to emulate that.
         private float getHeight(double[,] hm, int x, int y) {
-            if (x < ((int)Constants.RegionSize - 1) && y < ((int)Constants.RegionSize - 1))
+            if (x < (m_scene.RegionInfo.RegionSizeX - 1) && y < (m_scene.RegionInfo.RegionSizeY - 1))
                 return (float)(hm[x, y] * .444 + (hm[x + 1, y] + hm[x, y + 1]) * .222 + hm[x + 1, y +1] * .112);
             else
                 return (float)hm[x, y];
@@ -328,12 +328,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             double[,] hm = heightmap.GetDoubles(m_scene);
 
-            for (int y = 0; y < (int)Constants.RegionSize; y++)
+            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
             {
-                float rowRatio = y / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
-                for (int x = 0; x < (int)Constants.RegionSize; x++)
+                float rowRatio = y / (m_scene.RegionInfo.RegionSizeY - 1); // 0 - 1, for interpolation
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                 {
-                    float columnRatio = x / ((float)Constants.RegionSize - 1); // 0 - 1, for interpolation
+                    float columnRatio = x / (m_scene.RegionInfo.RegionSizeX - 1); // 0 - 1, for interpolation
 
                     // Y flip the cordinates for the bitmap: hf origin is lower left, bm origin is upper left
                     int yr = ((int)Constants.RegionSize - 1) - y;

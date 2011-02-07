@@ -90,15 +90,10 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private Scene m_scene;
 
-        // Minimum for parcels to work is 64m even if we don't actually use them.
-#pragma warning disable 0429
-        private const int landArrayMax = ((int)((int)Constants.RegionSize / 4) >= 64) ? (int)((int)Constants.RegionSize / 4) : 64;
-#pragma warning restore 0429
-
         /// <value>
         /// Local land ids at specified region co-ordinates (region size / 4)
         /// </value>
-        private readonly int[,] m_landIDList = new int[landArrayMax, landArrayMax];
+        private int[,] m_landIDList;
         private bool UseDwell = true;
 
         /// <value>
@@ -169,7 +164,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             Vector3 unitDirection = Vector3.Normalize(direction);
             //Making distance to search go through some sane limit of distance
-            for (float distance = 0; distance < Constants.RegionSize * 2; distance += .5f)
+            int size = m_scene.RegionInfo.RegionSizeX > m_scene.RegionInfo.RegionSizeY ? m_scene.RegionInfo.RegionSizeX : m_scene.RegionInfo.RegionSizeY;
+            for (float distance = 0; distance < size * 2; distance += .5f)
             {
                 Vector3 testPos = Vector3.Add(pos, Vector3.Multiply(unitDirection, distance));
                 if (parcel.ContainsPoint((int)testPos.X, (int)testPos.Y))
@@ -213,9 +209,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             int count = 0;
             float avgx = 0;
             float avgy = 0;
-            for (int x = 0; x < Constants.RegionSize; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
-                for (int y = 0; y < Constants.RegionSize; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
                     //Just keep a running average as we check if all the points are inside or not
                     if (parcel.ContainsPoint(x, y))
@@ -244,31 +240,31 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public Vector3 GetNearestRegionEdgePosition(ScenePresence avatar)
         {
-            float xdistance = avatar.AbsolutePosition.X < Constants.RegionSize / 2 ? avatar.AbsolutePosition.X : Constants.RegionSize - avatar.AbsolutePosition.X;
-            float ydistance = avatar.AbsolutePosition.Y < Constants.RegionSize / 2 ? avatar.AbsolutePosition.Y : Constants.RegionSize - avatar.AbsolutePosition.Y;
+            float xdistance = avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX / 2 ? avatar.AbsolutePosition.X : m_scene.RegionInfo.RegionSizeX - avatar.AbsolutePosition.X;
+            float ydistance = avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY / 2 ? avatar.AbsolutePosition.Y : m_scene.RegionInfo.RegionSizeY - avatar.AbsolutePosition.Y;
 
             //find out what vertical edge to go to
             if (xdistance < ydistance)
             {
-                if (avatar.AbsolutePosition.X < Constants.RegionSize / 2)
+                if (avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX / 2)
                 {
                     return GetPositionAtAvatarHeightOrGroundHeight(avatar, 0.0f, avatar.AbsolutePosition.Y);
                 }
                 else
                 {
-                    return GetPositionAtAvatarHeightOrGroundHeight(avatar, Constants.RegionSize, avatar.AbsolutePosition.Y);
+                    return GetPositionAtAvatarHeightOrGroundHeight(avatar, m_scene.RegionInfo.RegionSizeX, avatar.AbsolutePosition.Y);
                 }
             }
             //find out what horizontal edge to go to
             else
             {
-                if (avatar.AbsolutePosition.Y < Constants.RegionSize / 2)
+                if (avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY / 2)
                 {
                     return GetPositionAtAvatarHeightOrGroundHeight(avatar, avatar.AbsolutePosition.X, 0.0f);
                 }
                 else
                 {
-                    return GetPositionAtAvatarHeightOrGroundHeight(avatar, avatar.AbsolutePosition.X, Constants.RegionSize);
+                    return GetPositionAtAvatarHeightOrGroundHeight(avatar, avatar.AbsolutePosition.X, m_scene.RegionInfo.RegionSizeY);
                 }
             }
         }
@@ -313,6 +309,9 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void AddRegion(Scene scene)
         {
             m_scene = scene;
+
+            m_landIDList = new int[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
+
             m_landIDList.Initialize();
 
             if (m_UpdateDirectoryOnTimer)
@@ -724,9 +723,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 //Add this parcels area to the region wide area tracker
                 bool[,] landBitmap = new_land.GetLandBitmap();
-                for (int x = 0; x < landArrayMax; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    for (int y = 0; y < landArrayMax; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                     {
                         if (landBitmap[x, y])
                         {
@@ -766,7 +765,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             ILandObject fullSimParcel = new LandObject(UUID.Zero, false, m_scene);
 
-            fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, (int)Constants.RegionSize, (int)Constants.RegionSize));
+            fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
             IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (connector != null)
                 fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
@@ -1128,12 +1127,16 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public ILandObject GetLandObject(int x, int y)
         {
-            if (x >= Convert.ToInt32(Constants.RegionSize) || y >= Convert.ToInt32(Constants.RegionSize) || x < 0 || y < 0)
+            if (x >= m_scene.RegionInfo.RegionSizeX || y >= m_scene.RegionInfo.RegionSizeY || x < 0 || y < 0)
             {
-                // These exceptions here will cause a lot of complaints from the users specifically because
-                // they happen every time at border crossings
-                //throw new Exception("Error: Parcel not found at point " + x + ", " + y);
-                return null;
+                if (x >= m_scene.RegionInfo.RegionSizeX)
+                    x = m_scene.RegionInfo.RegionSizeX - 1;
+                if (x < 0)
+                    x = 1;
+                if (y >= m_scene.RegionInfo.RegionSizeY)
+                    y = m_scene.RegionInfo.RegionSizeY - 1;
+                if (y < 0)
+                    y = 1;
             }
 
             lock (m_landIDList)
@@ -1348,11 +1351,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             byte[] byteArray = new byte[LAND_BLOCKS_PER_PACKET];
             int byteArrayCount = 0;
             int sequenceID = 0;
-            int blockmeters = ParcelManagementModule.LAND_OVERLAY_CHUNKS * (int)Constants.RegionSize / (int)Constants.TerrainPatchSize;
-
-            for (int y = 0; y < blockmeters; y++)
+            for (int y = 0; y < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize); y++)
             {
-                for (int x = 0; x < blockmeters; x++)
+                for (int x = 0; x < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize); x++)
                 {
                     byte tempByte = 0; //This represents the byte for the current 4x4
 
