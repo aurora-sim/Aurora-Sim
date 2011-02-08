@@ -36,6 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
@@ -766,11 +767,23 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject fullSimParcel = new LandObject(UUID.Zero, false, m_scene);
 
             fullSimParcel.SetLandBitmap(fullSimParcel.GetSquareLandBitmap(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
+            
             IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (connector != null)
                 fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
             else
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, fullSimParcel.LandData.OwnerID);
+
+            while (fullSimParcel.LandData.OwnerID == UUID.Zero || account == null)
+            {
+                m_log.Warn("[ParcelManagement]: Could not find user for parcel, please give a valid user to make the owner");
+                string userName = MainConsole.Instance.CmdPrompt("User Name:", "");
+                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName.Split(' ')[0], userName.Split(' ')[1]);
+                if(account != null)
+                    fullSimParcel.LandData.OwnerID = account.PrincipalID;
+            }
             m_log.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
                 ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
