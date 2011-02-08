@@ -332,8 +332,10 @@ namespace OpenSim.Services.LLLoginService
                 }
                 if (agentData != null && mac != "")
                 {
-                    if (!agentData.CheckMacAndViewer(mac, clientVersion))
-                        return LLFailedLoginResponse.LoginBlockedProblem;
+                    string reason = "";
+                    if (!agentData.CheckMacAndViewer(mac, clientVersion, out reason))
+                        return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                            reason, false);
                 }
                 else
                 {

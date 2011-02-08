@@ -132,12 +132,13 @@ namespace Aurora.Services.DataService
         /// <param name="Mac"></param>
         /// <param name="viewer"></param>
         /// <returns></returns>
-        public bool CheckMacAndViewer(string Mac, string viewer)
+        public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
             List<string> found = GD.Query("macaddress", Mac, "macban", "*");
             if (found.Count != 0)
             {
                 //Found a mac that matched
+                reason = "Your Mac Address has been banned, please contact a grid administrator.";
                 m_log.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
                 return false;
             }
@@ -146,9 +147,11 @@ namespace Aurora.Services.DataService
             List<string> clientfound = GD.Query("Client", viewer, "bannedviewers", "*");
             if (clientfound.Count != 0)
             {
+                reason = "The viewer you are using has been banned, please use a different viewer.";
                 m_log.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);
                 return false;
             }
+            reason = "";
             return true;
         }
     }

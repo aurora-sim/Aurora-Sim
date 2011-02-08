@@ -118,10 +118,11 @@ namespace Aurora.Services.DataService
             //No creating from sims!
         }
 
-        public bool CheckMacAndViewer(string Mac, string viewer)
+        public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
             //Only local! You should not be calling this!! This method is only called 
             // from LLLoginHandlers.
+            reason = "";
             return false;
         }
 
