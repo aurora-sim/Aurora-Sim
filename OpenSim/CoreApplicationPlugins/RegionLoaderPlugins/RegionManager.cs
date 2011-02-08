@@ -24,18 +24,18 @@ namespace Aurora.Modules.RegionLoader
            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public delegate void NewRegion(RegionInfo info);
         public event NewRegion OnNewRegion;
-        private bool OpenedForCreateRegion = false;
+        private bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
         private ISimulationBase m_OpenSimBase;
         private IRegionInfoConnector m_connector = null;
 
-        public RegionManager(bool create, ISimulationBase baseOpenSim)
+        public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
             m_connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
-            OpenedForCreateRegion = create;
+            KillAfterRegionCreation = killOnCreate;
             InitializeComponent();
-            if (create)
+            if (openCreatePageFirst)
                 tabControl1.SelectedTab = tabPage2;
             RefreshCurrentRegions();
         }
@@ -96,7 +96,7 @@ namespace Aurora.Modules.RegionLoader
             region.NumberStartup = int.Parse(CStartNum.Text);
 
             m_connector.UpdateRegionInfo(region);
-            if (OpenedForCreateRegion)
+            if (KillAfterRegionCreation)
             {
                 System.Windows.Forms.Application.Exit();
                 return;

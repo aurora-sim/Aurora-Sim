@@ -106,7 +106,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (infos.Length == 0 && m_default)
             {
                 //Load up the GUI to make a new region
-                RegionManager manager = new RegionManager(true, m_openSim);
+                RegionManager manager = new RegionManager(true, false, m_openSim);
                 System.Windows.Forms.Application.Run(manager);
                 return LoadRegions();
             }
@@ -123,7 +123,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string module, string[] cmd)
         {
-            RegionManager manager = new RegionManager(false, m_openSim);
+            RegionManager manager = new RegionManager(false, true, m_openSim);
             System.Windows.Forms.Application.Run(manager);
         }
 
@@ -135,7 +135,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void StartRegionManagerThread()
         {
-            RegionManager manager = new RegionManager(false, m_openSim);
+            RegionManager manager = new RegionManager(false, false, m_openSim);
             System.Windows.Forms.Application.Run(manager);
         }
 
