@@ -218,6 +218,7 @@ namespace OpenSim.Services.CapsService
                 m_UrlToInform = UrlToInform;
             if (password != UUID.Zero)
                 m_Password = password;
+            Disabled = false;
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
         }

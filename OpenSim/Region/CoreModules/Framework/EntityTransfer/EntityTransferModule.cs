@@ -541,6 +541,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 else if (xOffset > 0)
                     pos.X -= Constants.RegionSize;
 
+                if (yOffset < 0)
+                    pos.Y += m_scene.RegionInfo.RegionSizeY;
+                else if (yOffset > 0)
+                    pos.Y -= Constants.RegionSize;
+
+                //Make sure that they are within bounds (velocity can push it out of bounds)
+                if (pos.X < 0)
+                    pos.X = 1;
+                if (pos.Y < 0)
+                    pos.Y = 1;
+
+                if (pos.X > crossingRegion.RegionSizeX)
+                    pos.X = crossingRegion.RegionSizeX - 1;
+                if (pos.Y > crossingRegion.RegionSizeY)
+                    pos.Y = crossingRegion.RegionSizeY - 1;
+
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = pos;

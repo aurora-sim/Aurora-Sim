@@ -332,6 +332,7 @@ namespace OpenSim.Services.CapsService
                     {
                         //Recieved a callback
                         m_service.ClientCaps.CallbackHasCome = true;
+                        m_service.Disabled = false;
 
                         //Don't send it to the client
                         return true;
@@ -340,6 +341,7 @@ namespace OpenSim.Services.CapsService
                     {
                         //The user has requested to cancel the teleport, stop them.
                         m_service.ClientCaps.RequestToCancelTeleport = true;
+                        m_service.Disabled = false;
 
                         //Don't send it to the client
                         return true;
@@ -353,6 +355,7 @@ namespace OpenSim.Services.CapsService
                         UUID region = body["Region"].AsUUID();
 
                         SendChildAgentUpdate(pos, region);
+                        m_service.Disabled = false;
                         //Don't send to the client
                         return true;
                     }
@@ -371,6 +374,7 @@ namespace OpenSim.Services.CapsService
 
                         AgentData AgentData = new AgentData();
                         AgentData.Unpack((OSDMap)body["AgentData"]);
+                        m_service.Disabled = false;
 
                         //Don't send to the client
                         return TeleportAgent(destination, TeleportFlags, DrawDistance, Circuit, AgentData);
@@ -388,6 +392,7 @@ namespace OpenSim.Services.CapsService
                         Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
                         AgentData AgentData = new AgentData();
                         AgentData.Unpack((OSDMap)body["AgentData"]);
+                        m_service.Disabled = false;
 
                         //Client doesn't get this
                         return CrossAgent(Region, pos, Vel, Circuit, AgentData);
@@ -442,6 +447,7 @@ namespace OpenSim.Services.CapsService
                         // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                         // AND FORCE UPDATING IT HERE WILL BREAK IT.
                         otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
+                        m_service.Disabled = false;
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["RegionData"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
@@ -459,6 +465,7 @@ namespace OpenSim.Services.CapsService
                         // AS THE CLIENT EXPECTS THE SAME CAPS SEED IF IT HAS BEEN TO THE REGION BEFORE
                         // AND FORCE UPDATING IT HERE WILL BREAK IT.
                         otherRegionService.AddSEEDCap("", SimSeedCap, otherRegionService.Password);
+                        m_service.Disabled = false;
 
                         //Now tell the client about it correctly
                         ((OSDMap)((OSDArray)((OSDMap)map["body"])["Info"])[0])["SeedCapability"] = otherRegionService.CapsUrl;
@@ -880,6 +887,15 @@ namespace OpenSim.Services.CapsService
                     else
                     {
                         IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
+                        uint x, y;
+                        Utils.LongToUInts(m_service.RegionHandle, out x, out y);
+
+                        //Add this for the viewer, but not for the sim, seems to make the viewer happier
+                        int XOffset = crossingRegion.RegionLocX - (int)x;
+                        pos.X += XOffset;
+
+                        int YOffset = crossingRegion.RegionLocY - (int)y;
+                        pos.Y += YOffset;
 
                         IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(crossingRegion.RegionHandle);
                         //Tell the client about the transfer
@@ -897,8 +913,6 @@ namespace OpenSim.Services.CapsService
                             INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
                             if (service != null)
                             {
-                                uint x, y;
-                                Utils.LongToUInts(m_service.RegionHandle, out x, out y);
                                 GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
                                 service.GetNeighbors(ourRegion);
                                 service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
