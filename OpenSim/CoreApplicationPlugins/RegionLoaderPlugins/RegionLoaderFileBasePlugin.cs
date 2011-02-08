@@ -498,6 +498,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
+        public bool FailedToStartRegions(string reason)
+        {
+            //Can't deal with it
+            return false;
+        }
+
         public string Name
         {
             get { return "RegionLoaderFileSystem"; }

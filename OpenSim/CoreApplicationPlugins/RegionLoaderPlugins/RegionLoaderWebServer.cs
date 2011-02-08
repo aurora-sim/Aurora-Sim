@@ -123,5 +123,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public void Dispose()
         {
         }
+
+        public bool FailedToStartRegions(string reason)
+        {
+            //Can't deal with it
+            return false;
+        }
     }
 }

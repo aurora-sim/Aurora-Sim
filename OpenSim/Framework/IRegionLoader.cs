@@ -62,5 +62,11 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="regionInfo"></param>
         void DeleteRegion(RegionInfo regionInfo);
+
+        /// <summary>
+        /// The region loader failed to start this loader's regions, deal with the side effects
+        /// </summary>
+        /// <returns></returns>
+        bool FailedToStartRegions(string reason);
     }
 }

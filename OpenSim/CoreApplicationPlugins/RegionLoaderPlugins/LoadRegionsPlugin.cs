@@ -96,20 +96,31 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (!loader.Enabled)
                     continue;
-                
+
                 m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
 
-                RegionInfo[] regionsToLoad = loader.LoadRegions();
-                if (regionsToLoad == null)
-                    continue;
-
-                if (!CheckRegionsForSanity(regionsToLoad))
+                while (true)
                 {
-                    m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
-                    throw new Exception();
+
+                    RegionInfo[] regionsToLoad = loader.LoadRegions();
+                    if (regionsToLoad == null)
+                        break; //No regions, end
+
+                    string reason;
+                    if (!CheckRegionsForSanity(regionsToLoad, out reason))
+                    {
+                        m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
+                        if (!loader.FailedToStartRegions(reason))
+                            throw new Exception(); //If it doesn't fix it, end the program
+                    }
+                    else
+                    {
+                        //They are sanitized, load them
+                        manager.AllRegions += regionsToLoad.Length;
+                        regions.Add(regionsToLoad);
+                        break;
+                    }
                 }
-                manager.AllRegions += regionsToLoad.Length;
-                regions.Add(regionsToLoad);
             }
             foreach (RegionInfo[] regionsToLoad in regions)
             {
@@ -137,9 +148,10 @@ namespace OpenSim.CoreApplicationPlugins
         /// </summary>
         /// <param name="regions"></param>
         /// <returns>True if we're sane, false if we're insane</returns>
-        private bool CheckRegionsForSanity(RegionInfo[] regions)
+        private bool CheckRegionsForSanity(RegionInfo[] regions, out string reason)
         {
-            if (regions.Length <= 1)
+            reason = "";
+            if (regions.Length < 1)
                 return true;
 
             for (int i = 0; i < regions.Length - 1; i++)
@@ -151,6 +163,7 @@ namespace OpenSim.CoreApplicationPlugins
                         m_log.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same UUID {2}",
                             regions[i].RegionName, regions[j].RegionName, regions[i].RegionID);
+                        reason = "Same UUID for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
                         return false;
                     }
                     else if (
@@ -159,6 +172,7 @@ namespace OpenSim.CoreApplicationPlugins
                         m_log.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same grid location ({2}, {3})",
                             regions[i].RegionName, regions[j].RegionName, regions[i].RegionLocX, regions[i].RegionLocY);
+                        reason = "Same grid location for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
                         return false;
                     }
                     else if (regions[i].InternalEndPoint.Port == regions[j].InternalEndPoint.Port)
@@ -166,6 +180,7 @@ namespace OpenSim.CoreApplicationPlugins
                         m_log.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same internal IP port {2}",
                             regions[i].RegionName, regions[j].RegionName, regions[i].InternalEndPoint.Port);
+                        reason = "Same internal end point for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
                         return false;
                     }
                 }
