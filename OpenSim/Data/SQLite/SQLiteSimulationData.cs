@@ -843,11 +843,11 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadTerrain(UUID regionID, bool revert)
+        public double[,] LoadTerrain(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
         {
             lock (ds)
             {
-                double[,] terret = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                double[,] terret = new double[RegionSizeX, RegionSizeY];
                 terret.Initialize();
 
                 String sql = "";
@@ -905,11 +905,11 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
-        public double[,] LoadWater(UUID regionID, bool revert)
+        public double[,] LoadWater(UUID regionID, bool revert, int RegionSizeX, int RegionSizeY)
         {
             lock (ds)
             {
-                double[,] terret = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                double[,] terret = new double[RegionSizeX, RegionSizeY];
                 terret.Initialize();
 
                 String sql = "";

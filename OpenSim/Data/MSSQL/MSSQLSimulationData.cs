@@ -566,9 +566,9 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadTerrain(UUID regionID, bool Revert)
+        public double[,] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+            double[,] terrain = new double[RegionSizeX, RegionSizeY];
             terrain.Initialize();
 
             string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
@@ -613,9 +613,9 @@ ELSE
         /// </summary>
         /// <param name="regionID">regionID.</param>
         /// <returns></returns>
-        public double[,] LoadWater(UUID regionID, bool Revert)
+        public double[,] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
-            double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+            double[,] terrain = new double[RegionSizeX, RegionSizeY];
             terrain.Initialize();
 
             string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";

@@ -707,7 +707,7 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public double[,] LoadTerrain(UUID regionID, bool Revert)
+        public double[,] LoadTerrain(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
             double[,] terrain = null;
 
@@ -731,7 +731,7 @@ namespace OpenSim.Data.MySQL
                             {
                                 int rev = Convert.ToInt32(reader["Revision"]);
 
-                                terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                                terrain = new double[RegionSizeX, RegionSizeY];
                                 terrain.Initialize();
 
                                 using (MemoryStream mstr = new MemoryStream((byte[])reader["Heightfield"]))
@@ -758,7 +758,7 @@ namespace OpenSim.Data.MySQL
             return terrain;
         }
 
-        public double[,] LoadWater(UUID regionID, bool Revert)
+        public double[,] LoadWater(UUID regionID, bool Revert, int RegionSizeX, int RegionSizeY)
         {
             double[,] terrain = null;
 
@@ -784,7 +784,7 @@ namespace OpenSim.Data.MySQL
                             {
                                 int rev = Convert.ToInt32(reader["Revision"]);
 
-                                terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                                terrain = new double[RegionSizeX, RegionSizeY];
                                 terrain.Initialize();
 
                                 using (MemoryStream mstr = new MemoryStream((byte[])reader["Heightfield"]))

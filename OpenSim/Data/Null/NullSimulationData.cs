@@ -111,12 +111,12 @@ namespace OpenSim.Data.Null
         {
         }
 
-        public double[,] LoadTerrain(UUID regionID, bool RevertMap)
+        public double[,] LoadTerrain(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             return null;
         }
 
-        public double[,] LoadWater(UUID regionID, bool RevertMap)
+        public double[,] LoadWater(UUID regionID, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
             return null;
         }

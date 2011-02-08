@@ -218,7 +218,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveRevertTerrain(ITerrainChannel channel)
         {
-            m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void SaveRevertWater(ITerrainChannel channel)
         {
-            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true);
+                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     map = m_channel.GetDoubles(m_scene);
@@ -260,7 +260,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, true);
+                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     map = m_waterChannel.GetDoubles(m_scene);
@@ -274,7 +274,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
             }
-            return m_channel;
+            return m_waterChannel;
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, false);
+                double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
@@ -325,7 +325,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
-                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false);
+                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
                     m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
