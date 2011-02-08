@@ -533,6 +533,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     attModule.ValidateAttachments(agent.UUID);
                 pos = pos + (agent.Velocity);
 
+                int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
+                int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
+
+                if (xOffset < 0)
+                    pos.X += m_scene.RegionInfo.RegionSizeX;
+                else if (xOffset > 0)
+                    pos.X -= Constants.RegionSize;
+
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = pos;

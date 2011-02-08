@@ -104,6 +104,7 @@ namespace OpenSim.Services.Interfaces
         string UrlToInform { get; }
         String HostUri { get; }
         String CapsUrl { get; }
+        bool Disabled { get; set; }
         IRegistryCore Registry { get; }
         IClientCapsService ClientCaps { get; }
         UUID Password { get; }

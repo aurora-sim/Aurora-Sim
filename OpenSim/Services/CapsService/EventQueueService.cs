@@ -326,6 +326,7 @@ namespace OpenSim.Services.CapsService
                     {
                         //Let this pass through, after the next event queue pass we can remove it
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                        m_service.Disabled = true;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "ArrivedAtDestination")
                     {
@@ -535,6 +536,7 @@ namespace OpenSim.Services.CapsService
                             {
                                 //This will be the last bunch of EQMs that go through, so we can safely die now
                                 m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
+                                m_log.Warn("[EQService]: Disabling Simulator " + m_service.RegionHandle);
                             }
                         }
                     }
@@ -764,7 +766,8 @@ namespace OpenSim.Services.CapsService
                 string newSeedCap = CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath());
                 //Leave this blank so that we can check below so that we use the same Url if the client has already been to that region
                 string SimSeedCap = "";
-                bool newAgent = m_service.ClientCaps.GetCapsService(neighbor.RegionHandle) == null;
+                IRegionClientCapsService oldRegionService = m_service.ClientCaps.GetCapsService(neighbor.RegionHandle);
+                bool newAgent = oldRegionService == null;
                 IRegionClientCapsService otherRegionService = m_service.ClientCaps.GetOrCreateCapsService(neighbor.RegionHandle, newSeedCap, SimSeedCap);
 
                 //ONLY UPDATE THE SIM SEED HERE
@@ -784,7 +787,7 @@ namespace OpenSim.Services.CapsService
                       + CapsUtil.GetCapsSeedPath(CapsBase);
                     //Add the new Seed for this region
                 }
-                else
+                else if(!oldRegionService.Disabled)
                 {
                     //Note: if the agent is already there, send an agent update then
                     if (agentData != null)
@@ -799,15 +802,6 @@ namespace OpenSim.Services.CapsService
                 //Offset the child avs position
                 uint x, y;
                 Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-
-                circuitData.startpos.X += ((int)x - neighbor.RegionLocX);
-                circuitData.startpos.Y += ((int)y - neighbor.RegionLocY);
-
-                if(agentData != null)
-                {
-                    agentData.Position.X += ((int)x - neighbor.RegionLocX);
-                    agentData.Position.Y += ((int)y - neighbor.RegionLocY);
-                }
 
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, circuitData,
                         TeleportFlags, agentData, out reason);

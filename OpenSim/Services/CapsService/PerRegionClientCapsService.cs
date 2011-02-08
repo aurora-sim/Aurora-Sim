@@ -55,6 +55,12 @@ namespace OpenSim.Services.CapsService
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
         private UUID m_Password = UUID.Zero;
+        private bool m_disabled = true;
+        public bool Disabled
+        {
+            get { return m_disabled; }
+            set { m_disabled = value; }
+        }
         public UUID Password
         {
             get { return m_Password; }
