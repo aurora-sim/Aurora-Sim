@@ -387,6 +387,23 @@ namespace OpenSim.Region.Framework.Scenes
                         if (part != part.ParentGroup.RootPart)
                             continue;
 
+                        //Check to make sure this attachment is not a hud. Attachments that are huds are 
+                        //   ONLY sent to the owner, noone else!
+                        if (
+                            (
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottom ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomLeft ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDBottomRight ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDCenter2 ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTop ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopLeft ||
+                            part.ParentGroup.RootPart.Shape.State == (byte)AttachmentPoint.HUDTopRight
+                            )
+                            && 
+                            part.OwnerID != m_presence.UUID)
+                            continue;
+
                         SendUpdate(update.Flags, part.ParentGroup);
                         continue;
                     }
