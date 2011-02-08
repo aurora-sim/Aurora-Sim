@@ -143,7 +143,7 @@ namespace OpenSim.Services.GridService
 
             GridRegion region = regions.Count > 0 ? regions[0] : null;
 
-            if (regionInfos.RegionSizeX > m_maxRegionSize || regionInfos.RegionSizeY > m_maxRegionSize)
+            if (m_maxRegionSize != 0 && (regionInfos.RegionSizeX > m_maxRegionSize || regionInfos.RegionSizeY > m_maxRegionSize))
             {
                 //Too big... kick it out
                 m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
