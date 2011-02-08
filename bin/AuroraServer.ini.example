@@ -63,6 +63,11 @@
     ;; This disables the security behind the Grid Service and allows regions to be registered and deregistered without verifying their identity.
     DisableSessionID = false;
     
+    ;; The maximum size a region can be
+    ;; Note: 0 disables this check
+    ;; Default is 0
+    MaxRegionSize = 0;
+    
 [NeighborService]
     
     ;; ##

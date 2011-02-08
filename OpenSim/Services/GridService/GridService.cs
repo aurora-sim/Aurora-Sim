@@ -57,6 +57,7 @@ namespace OpenSim.Services.GridService
         protected IAuthenticationService m_AuthenticationService = null;
         protected bool m_AllowDuplicateNames = false;
         protected bool m_UseSessionID = true;
+        protected int m_maxRegionSize = 0;
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -71,6 +72,8 @@ namespace OpenSim.Services.GridService
             IConfig gridConfig = config.Configs["GridService"];
             if (gridConfig != null)
             {
+                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
+                m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", 0);
                 m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", true);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", false);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
@@ -125,9 +128,49 @@ namespace OpenSim.Services.GridService
             UUID NeedToDeletePreviousRegion = UUID.Zero;
 
             IConfig gridConfig = m_config.Configs["GridService"];
-            // This needs better sanity testing. What if regionInfo is registering in
-            // overlapping coords?
-            GridRegion region = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
+            
+            //Get the range of this so that we get the full count and make sure that we are not overlapping smaller regions
+            List<GridRegion> regions = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY,
+                regionInfos.RegionLocX + regionInfos.RegionSizeX, regionInfos.RegionLocY + regionInfos.RegionSizeY, regionInfos.ScopeID);
+
+            if (regions.Count > 1)
+            {
+                //More than one region is here... it is overlapping stuff
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
+                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
+                return "Region overlaps another region";
+            }
+
+            GridRegion region = regions.Count > 0 ? regions[0] : null;
+
+            if (regionInfos.RegionSizeX > m_maxRegionSize || regionInfos.RegionSizeY > m_maxRegionSize)
+            {
+                //Too big... kick it out
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
+                    regionInfos.RegionID, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
+                return "Region overlaps another region";
+            }
+
+            if ((region != null) && (region.RegionID != regionInfos.RegionID))
+            {
+                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
+                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
+                return "Region overlaps another region";
+            }
+
+            if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
+                ((region.RegionLocX != regionInfos.RegionLocX) || (region.RegionLocY != regionInfos.RegionLocY)))
+            {
+                if ((region.Flags & (int)RegionFlags.NoMove) != 0)
+                    return "Can't move this region," + region.RegionLocX + "," + region.RegionLocY;
+
+                // Region reregistering in other coordinates. Delete the old entry
+                m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) was previously registered at {2}-{3}. Deleting old entry.",
+                    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
+
+                NeedToDeletePreviousRegion = regionInfos.RegionID;
+            }
+            
             if (region != null)
             {
                 // There is a preexisting record
@@ -165,26 +208,6 @@ namespace OpenSim.Services.GridService
                     if (!m_AuthenticationService.Verify(regionInfos.SessionID, regionInfos.AuthToken, 30))
                         return "Bad authentication";
                 }
-            }
-
-            if ((region != null) && (region.RegionID != regionInfos.RegionID))
-            {
-                m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
-                    regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
-                return "Region overlaps another region";
-            }
-
-            if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
-                ((region.RegionLocX != regionInfos.RegionLocX) || (region.RegionLocY != regionInfos.RegionLocY)))
-            {
-                if ((region.Flags & (int)RegionFlags.NoMove) != 0)
-                    return "Can't move this region," + region.RegionLocX + "," + region.RegionLocY;
-
-                // Region reregistering in other coordinates. Delete the old entry
-                m_log.DebugFormat("[GRID SERVICE]: Region {0} ({1}) was previously registered at {2}-{3}. Deleting old entry.",
-                    regionInfos.RegionName, regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY);
-
-                NeedToDeletePreviousRegion = regionInfos.RegionID;
             }
 
             if (!m_AllowDuplicateNames)
