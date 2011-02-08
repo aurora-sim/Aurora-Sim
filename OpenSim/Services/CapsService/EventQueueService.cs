@@ -135,22 +135,22 @@ namespace OpenSim.Services.CapsService
         }
 
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
-                                        IPEndPoint regionExternalEndPoint,
+                                        IPEndPoint regionExternalEndPoint, string capsURL,
                                         uint locationID,
                                         UUID avatarID, uint teleportFlags, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
             OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, regionExternalEndPoint,
-                                                            locationID, "", avatarID, teleportFlags, RegionSizeX, RegionSizeY);
+                                                            locationID, capsURL, avatarID, teleportFlags, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
         public virtual void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
-                                IPEndPoint newRegionExternalEndPoint,
+                                IPEndPoint newRegionExternalEndPoint, string capsURL,
                                 UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, newRegionExternalEndPoint,
-                                                    "", avatarID, sessionID, RegionSizeX, RegionSizeY);
+                                                    capsURL, avatarID, sessionID, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -881,9 +881,10 @@ namespace OpenSim.Services.CapsService
                     {
                         IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
+                        IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(crossingRegion.RegionHandle);
                         //Tell the client about the transfer
-                        EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint,
-                                           m_service.AgentID, circuit.SessionID,
+                        EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint, otherRegion.CapsUrl,
+                                           m_service.AgentID, circuit.SessionID, 
                                            crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
                                            m_service.RegionHandle);
 
@@ -948,7 +949,9 @@ namespace OpenSim.Services.CapsService
 
                 IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
-                EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint,
+                IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(destination.RegionHandle);
+
+                EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint, otherRegion.CapsUrl,
                                            4, m_service.AgentID, TeleportFlags, 
                                            destination.RegionSizeX, destination.RegionSizeY, 
                                            m_service.RegionHandle);

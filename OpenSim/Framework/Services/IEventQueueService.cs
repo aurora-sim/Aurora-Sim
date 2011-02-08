@@ -60,10 +60,10 @@ namespace OpenSim.Services.Interfaces
         void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
-                                 IPEndPoint regionExternalEndPoint,
+                                 IPEndPoint regionExternalEndPoint, string capsURL,
                                  uint locationID, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
-                         IPEndPoint newRegionExternalEndPoint,
+                         IPEndPoint newRegionExternalEndPoint, string capsURL,
                          UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
         void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle);
         void ChatterboxInvitation(UUID sessionID, string sessionName,

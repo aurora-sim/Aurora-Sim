@@ -131,8 +131,8 @@ namespace OpenSim.Services.CapsService
             regionDataMap.Add("SimIP", OSD.FromBinary(newRegionExternalEndPoint.Address.GetAddressBytes()));
             regionDataMap.Add("SimPort", OSD.FromInteger(newRegionExternalEndPoint.Port));
 
-            regionDataMap.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
-            regionDataMap.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
+            //regionDataMap.Add("RegionSizeX", OSD.FromInteger(RegionSizeX));
+            //regionDataMap.Add("RegionSizeY", OSD.FromInteger(RegionSizeY));
 
             OSDArray regionDataArr = new OSDArray(1);
             regionDataArr.Add(regionDataMap);
