@@ -587,9 +587,9 @@ ELSE
                     {
                         MemoryStream str = new MemoryStream((byte[])reader["Heightfield"]);
                         BinaryReader br = new BinaryReader(str);
-                        for (int x = 0; x < (int)Constants.RegionSize; x++)
+                        for (int x = 0; x < RegionSizeX; x++)
                         {
-                            for (int y = 0; y < (int)Constants.RegionSize; y++)
+                            for (int y = 0; y < RegionSizeY; y++)
                             {
                                 terrain[x, y] = br.ReadDouble();
                             }
@@ -636,9 +636,9 @@ ELSE
                     {
                         MemoryStream str = new MemoryStream((byte[])reader["Heightfield"]);
                         BinaryReader br = new BinaryReader(str);
-                        for (int x = 0; x < (int)Constants.RegionSize; x++)
+                        for (int x = 0; x < RegionSizeX; x++)
                         {
-                            for (int y = 0; y < (int)Constants.RegionSize; y++)
+                            for (int y = 0; y < RegionSizeY; y++)
                             {
                                 terrain[x, y] = br.ReadDouble();
                             }
@@ -944,12 +944,12 @@ VALUES
         /// <returns></returns>
         private static Array serializeTerrain(double[,] val)
         {
-            MemoryStream str = new MemoryStream(((int)Constants.RegionSize * (int)Constants.RegionSize) * sizeof(double));
+            MemoryStream str = new MemoryStream((val.GetLength(0) * val.GetLength(1)) * sizeof(double));
             BinaryWriter bw = new BinaryWriter(str);
 
             // TODO: COMPATIBILITY - Add byte-order conversions
-            for (int x = 0; x < (int)Constants.RegionSize; x++)
-                for (int y = 0; y < (int)Constants.RegionSize; y++)
+            for (int x = 0; x < val.GetLength(0); x++)
+                for (int y = 0; y < val.GetLength(1); y++)
                 {
                     double height = val[x, y];
                     if (height == 0.0)

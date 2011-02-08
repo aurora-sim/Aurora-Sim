@@ -876,9 +876,9 @@ namespace OpenSim.Data.SQLite
                             {
                                 using (BinaryReader br = new BinaryReader(str))
                                 {
-                                    for (int x = 0; x < (int)Constants.RegionSize; x++)
+                                    for (int x = 0; x < RegionSizeX; x++)
                                     {
-                                        for (int y = 0; y < (int)Constants.RegionSize; y++)
+                                        for (int y = 0; y < RegionSizeY; y++)
                                         {
                                             terret[x, y] = br.ReadDouble();
                                         }
@@ -938,9 +938,9 @@ namespace OpenSim.Data.SQLite
                             {
                                 using (BinaryReader br = new BinaryReader(str))
                                 {
-                                    for (int x = 0; x < (int)Constants.RegionSize; x++)
+                                    for (int x = 0; x < RegionSizeX; x++)
                                     {
-                                        for (int y = 0; y < (int)Constants.RegionSize; y++)
+                                        for (int y = 0; y < RegionSizeY; y++)
                                         {
                                             terret[x, y] = br.ReadDouble();
                                         }
@@ -1836,12 +1836,12 @@ namespace OpenSim.Data.SQLite
         /// <returns></returns>
         private Array serializeTerrain(double[,] val)
         {
-            MemoryStream str = new MemoryStream(((int)Constants.RegionSize * (int)Constants.RegionSize) *sizeof (double));
+            MemoryStream str = new MemoryStream((val.GetLength(0) * val.GetLength(1)) * sizeof(double));
             BinaryWriter bw = new BinaryWriter(str);
 
             // TODO: COMPATIBILITY - Add byte-order conversions
-            for (int x = 0; x < (int)Constants.RegionSize; x++)
-                for (int y = 0; y < (int)Constants.RegionSize; y++)
+            for (int x = 0; x < val.GetLength(0); x++)
+                for (int y = 0; y < val.GetLength(1); y++)
                     bw.Write(val[x, y]);
 
             return str.ToArray();
