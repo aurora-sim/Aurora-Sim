@@ -94,13 +94,27 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="ter">HeightField data</param>
         /// <param name="regionID">region UUID</param>
         void StoreTerrain(double[,] terrain, UUID regionID, bool Revert);
-        
+
         /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
         double[,] LoadTerrain(UUID regionID, bool RevertMap);
+
+        /// <summary>
+        /// Store a water revision in region storage
+        /// </summary>
+        /// <param name="ter">HeightField data</param>
+        /// <param name="regionID">region UUID</param>
+        void StoreWater(double[,] terrain, UUID regionID, bool Revert);
+
+        /// <summary>
+        /// Load the latest water revision from region storage
+        /// </summary>
+        /// <param name="regionID">the region UUID</param>
+        /// <returns>Heightfield data</returns>
+        double[,] LoadWater(UUID regionID, bool RevertMap);
 
         /// <summary>
         /// Store the given regions settings (this includes some of the Region/Estate pieces)

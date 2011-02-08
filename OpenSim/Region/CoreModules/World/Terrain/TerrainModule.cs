@@ -81,8 +81,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             new Dictionary<StandardTerrainEffects, ITerrainPaintableEffect>();
 
         private ITerrainChannel m_channel;
+        private ITerrainChannel m_waterChannel;
         private Dictionary<string, ITerrainEffect> m_plugineffects;
         private ITerrainChannel m_revert;
+        private ITerrainChannel m_waterRevert;
         private Scene m_scene;
         private volatile bool m_tainted;
         private const double MAX_HEIGHT = 250;
@@ -181,6 +183,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
+        /// Store the terrain in the persistant data store
+        /// </summary>
+        public void SaveWater()
+        {
+            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+        }
+
+        /// <summary>
         /// Reset the terrain of this region to the default
         /// </summary>
         public void ResetTerrain()
@@ -189,7 +199,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_channel = channel;
             SaveRevertTerrain(channel);
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-            CheckForTerrainUpdates(false, true);
+            CheckForTerrainUpdates(false, true, false);
+        }
+
+        /// <summary>
+        /// Reset the terrain of this region to the default
+        /// </summary>
+        public void ResetWater()
+        {
+            TerrainChannel channel = new TerrainChannel(m_scene);
+            m_waterChannel = channel;
+            SaveRevertWater(m_waterChannel);
+            CheckForTerrainUpdates(false, true, true);
         }
 
         /// <summary>
@@ -198,6 +219,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void SaveRevertTerrain(ITerrainChannel channel)
         {
             m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+        }
+
+        /// <summary>
+        /// Store the revert terrain in the persistant data store
+        /// </summary>
+        public void SaveRevertWater(ITerrainChannel channel)
+        {
+            m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
         }
 
         /// <summary>
@@ -213,6 +242,30 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     map = m_channel.GetDoubles(m_scene);
                     TerrainChannel channel = new TerrainChannel(map, m_scene);
                     SaveRevertTerrain(channel);
+                    return channel;
+                }
+                return new TerrainChannel(map, m_scene);
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
+            }
+            return m_channel;
+        }
+
+        /// <summary>
+        /// Loads the World Revert heightmap
+        /// </summary>
+        public ITerrainChannel LoadRevertWaterMap()
+        {
+            try
+            {
+                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, true);
+                if (map == null)
+                {
+                    map = m_waterChannel.GetDoubles(m_scene);
+                    TerrainChannel channel = new TerrainChannel(map, m_scene);
+                    SaveRevertWater(channel);
                     return channel;
                 }
                 return new TerrainChannel(map, m_scene);
@@ -263,6 +316,46 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
             }
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+        }
+
+        /// <summary>
+        /// Loads the World heightmap
+        /// </summary>
+        public void LoadWorldWaterMap()
+        {
+            try
+            {
+                double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false);
+                if (map == null)
+                {
+                    m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                    m_waterChannel = new TerrainChannel(m_scene);
+
+                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                    //Update the revert map as well
+                    UpdateRevertWaterMap();
+                }
+                else
+                {
+                    m_waterChannel = new TerrainChannel(map, m_scene);
+                    FindRevertWaterMap();
+                }
+            }
+            catch (IOException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
+                if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
+                {
+                    m_waterChannel = new TerrainChannel(m_scene);
+
+                    m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadWaterMap() - Failed with exception " + e.ToString());
+            }
         }
 
         public void UndoTerrain(ITerrainChannel channel)
@@ -583,6 +676,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <summary>
         /// Finds and updates the revert map from the database.
         /// </summary>
+        public void FindRevertWaterMap()
+        {
+            m_waterRevert = LoadRevertWaterMap();
+        }
+
+        /// <summary>
+        /// Saves the current state of the region into the revert map buffer.
+        /// </summary>
+        public void UpdateRevertWaterMap()
+        {
+            m_waterRevert = m_waterChannel.MakeCopy();
+            SaveRevertTerrain(m_waterRevert);
+        }
+
+        /// <summary>
+        /// Finds and updates the revert map from the database.
+        /// </summary>
         public void FindRevertMap()
         {
             m_revert = LoadRevertMap();
@@ -835,7 +945,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         private void CheckForTerrainUpdates()
         {
-            CheckForTerrainUpdates(false, false);
+            CheckForTerrainUpdates(false, false, false);
         }
 
         /// <summary>
@@ -845,18 +955,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// terrain_lower_limit, it will clamp terrain updates between these values
         /// currently invoked by client_OnModifyTerrain only and not the Commander interfaces
         /// <param name="respectEstateSettings">should height map deltas be limited to the estate settings limits</param>
+        /// <param name="forceSendOfTerrainInfo">force send terrain</param>
+        /// <param name="isWater">Check water or terrain</param>
         /// </summary>
-        private void CheckForTerrainUpdates(bool respectEstateSettings, bool forceSendOfTerrainInfo)
+        private void CheckForTerrainUpdates(bool respectEstateSettings, bool forceSendOfTerrainInfo, bool isWater)
         {
+            ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
             bool shouldTaint = false;
-            float[] serialised = m_channel.GetFloatsSerialised(m_scene);
+            float[] serialised = channel.GetFloatsSerialised(m_scene);
             int x;
-            for (x = 0; x < m_channel.Width; x += Constants.TerrainPatchSize)
+            for (x = 0; x < channel.Width; x += Constants.TerrainPatchSize)
             {
                 int y;
-                for (y = 0; y < m_channel.Height; y += Constants.TerrainPatchSize)
+                for (y = 0; y < channel.Height; y += Constants.TerrainPatchSize)
                 {
-                    if (m_channel.Tainted(x, y) || forceSendOfTerrainInfo)
+                    if (channel.Tainted(x, y) || forceSendOfTerrainInfo)
                     {
                         // if we should respect the estate settings then
                         // fixup and height deltas that don't respect them
@@ -865,7 +978,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             // this has been vetoed, so update
                             // what we are going to send to the client
-                            serialised = m_channel.GetFloatsSerialised(m_scene);
+                            serialised = channel.GetFloatsSerialised(m_scene);
                         }
 
                         SendToClients(serialised, x, y);
@@ -979,6 +1092,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             bool god = m_scene.Permissions.IsGod(user);
             bool allowed = false;
+            bool isWater = ((action & 512) == 512); //512 means its modifying water
             if (north == south && east == west)
             {
                 if (m_painteffects.ContainsKey((StandardTerrainEffects) action))
@@ -1014,7 +1128,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
                             m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
 
-                        CheckForTerrainUpdates(!god, false); //revert changes outside estate limits
+                        CheckForTerrainUpdates(!god, false, isWater); //revert changes outside estate limits
                     }
                 }
                 else
@@ -1055,7 +1169,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_floodeffects[(StandardTerrainEffects) action].FloodEffect(
                             m_channel, fillArea, size);
 
-                        CheckForTerrainUpdates(!god, false); //revert changes outside estate limits
+                        CheckForTerrainUpdates(!god, false, isWater); //revert changes outside estate limits
                     }
                 }
                 else

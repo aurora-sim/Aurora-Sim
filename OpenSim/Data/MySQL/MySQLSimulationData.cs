@@ -675,6 +675,38 @@ namespace OpenSim.Data.MySQL
             }
         }
 
+        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        {
+            m_log.Info("[REGION DB]: Storing terrain");
+
+            int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
+
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                {
+                    dbcon.Open();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    {
+                        cmd.CommandText = "delete from terrain where RegionUUID = ?RegionUUID and Revert = ?Revert";
+                        cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+                        cmd.Parameters.AddWithValue("Revert", r);
+
+                        ExecuteNonQuery(cmd);
+
+                        cmd.CommandText = "insert into terrain (RegionUUID, " +
+                            "Revision, Heightfield, Revert) values (?RegionUUID, " +
+                            "1, ?Heightfield, ?Revert)";
+
+                        cmd.Parameters.AddWithValue("Heightfield", SerializeTerrain(water));
+
+                        ExecuteNonQuery(cmd);
+                    }
+                }
+            }
+        }
+
         public double[,] LoadTerrain(UUID regionID, bool Revert)
         {
             double[,] terrain = null;
@@ -690,7 +722,60 @@ namespace OpenSim.Data.MySQL
                         cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
                             "from terrain where RegionUUID = ?RegionUUID and Revert = '" + Revert.ToString() + "'" +
                             "order by Revision desc limit 1";
-                        
+
+                        cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+
+                        using (IDataReader reader = ExecuteReader(cmd))
+                        {
+                            while (reader.Read())
+                            {
+                                int rev = Convert.ToInt32(reader["Revision"]);
+
+                                terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                                terrain.Initialize();
+
+                                using (MemoryStream mstr = new MemoryStream((byte[])reader["Heightfield"]))
+                                {
+                                    using (BinaryReader br = new BinaryReader(mstr))
+                                    {
+                                        for (int x = 0; x < (int)Constants.RegionSize; x++)
+                                        {
+                                            for (int y = 0; y < (int)Constants.RegionSize; y++)
+                                            {
+                                                terrain[x, y] = br.ReadDouble();
+                                            }
+                                        }
+                                    }
+
+                                    //m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return terrain;
+        }
+
+        public double[,] LoadWater(UUID regionID, bool Revert)
+        {
+            double[,] terrain = null;
+
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                {
+                    dbcon.Open();
+
+                    int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    {
+                        cmd.CommandText = "select RegionUUID, Revision, Heightfield " +
+                            "from terrain where RegionUUID = ?RegionUUID and Revert = '" + r + "'" +
+                            "order by Revision desc limit 1";
+
                         cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
 
                         using (IDataReader reader = ExecuteReader(cmd))

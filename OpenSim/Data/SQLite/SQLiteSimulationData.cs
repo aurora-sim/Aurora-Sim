@@ -792,6 +792,53 @@ namespace OpenSim.Data.SQLite
         }
 
         /// <summary>
+        /// Store a terrain revision in region storage
+        /// </summary>
+        /// <param name="ter">terrain heightfield</param>
+        /// <param name="regionID">region UUID</param>
+        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        {
+            int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
+            lock (ds)
+            {
+                int revision = Util.UnixTimeSinceEpoch();
+
+                // This is added to get rid of the infinitely growing
+                // terrain databases which negatively impact on SQLite
+                // over time.  Before reenabling this feature there
+                // needs to be a limitter put on the number of
+                // revisions in the database, as this old
+                // implementation is a DOS attack waiting to happen.
+
+                using (
+                    SqliteCommand cmd =
+                        new SqliteCommand("delete from terrain where RegionUUID=:RegionUUID and Revision <= :Revision and Revert = :Revert",
+                                          m_conn))
+                {
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", r));
+                    cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
+                    cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
+                    cmd.ExecuteNonQuery();
+                }
+
+                // the following is an work around for .NET.  The perf
+                // issues associated with it aren't as bad as you think.
+                m_log.Debug("[SQLITE REGION DB]: Storing terrain revision r" + revision.ToString());
+                String sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert)" +
+                             " values(:RegionUUID, :Revision, :Heightfield, :Revert)";
+
+                using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
+                {
+                    cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
+                    cmd.Parameters.Add(new SqliteParameter(":Revision", revision));
+                    cmd.Parameters.Add(new SqliteParameter(":Heightfield", serializeTerrain(water)));
+                    cmd.Parameters.Add(new SqliteParameter(":Revert", r));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
         /// Load the latest terrain revision from region storage
         /// </summary>
         /// <param name="regionID">the region UUID</param>
@@ -813,6 +860,68 @@ namespace OpenSim.Data.SQLite
                 {
                     sql = "select RegionUUID, Revision, Heightfield from terrain" +
                               " where RegionUUID=:RegionUUID and Revert = 'False' order by Revision desc";
+                }
+
+                using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))
+                {
+                    cmd.Parameters.Add(new SqliteParameter(":RegionUUID", regionID.ToString()));
+
+                    using (IDataReader row = cmd.ExecuteReader())
+                    {
+                        int rev = 0;
+                        if (row.Read())
+                        {
+                            // TODO: put this into a function
+                            using (MemoryStream str = new MemoryStream((byte[])row["Heightfield"]))
+                            {
+                                using (BinaryReader br = new BinaryReader(str))
+                                {
+                                    for (int x = 0; x < (int)Constants.RegionSize; x++)
+                                    {
+                                        for (int y = 0; y < (int)Constants.RegionSize; y++)
+                                        {
+                                            terret[x, y] = br.ReadDouble();
+                                        }
+                                    }
+                                }
+                            }
+                            rev = Convert.ToInt32(row["Revision"]);
+                        }
+                        else
+                        {
+                            m_log.Warn("[SQLITE REGION DB]: No terrain found for region");
+                            return null;
+                        }
+
+                        m_log.Debug("[SQLITE REGION DB]: Loaded terrain revision r" + rev.ToString());
+                    }
+                }
+                return terret;
+            }
+        }
+
+        /// <summary>
+        /// Load the latest terrain revision from region storage
+        /// </summary>
+        /// <param name="regionID">the region UUID</param>
+        /// <returns>Heightfield data</returns>
+        public double[,] LoadWater(UUID regionID, bool revert)
+        {
+            lock (ds)
+            {
+                double[,] terret = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+                terret.Initialize();
+
+                String sql = "";
+                if (revert)
+                {
+                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = '3' order by Revision desc";
+                }
+                else
+                {
+                    sql = "select RegionUUID, Revision, Heightfield from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = '2' order by Revision desc";
                 }
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, m_conn))

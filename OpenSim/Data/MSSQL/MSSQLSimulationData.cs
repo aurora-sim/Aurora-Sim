@@ -609,6 +609,55 @@ ELSE
         }
 
         /// <summary>
+        /// Loads the terrain map.
+        /// </summary>
+        /// <param name="regionID">regionID.</param>
+        /// <returns></returns>
+        public double[,] LoadWater(UUID regionID, bool Revert)
+        {
+            double[,] terrain = new double[(int)Constants.RegionSize, (int)Constants.RegionSize];
+            terrain.Initialize();
+
+            string sql = "select top 1 RegionUUID, Revision, Heightfield from terrain where RegionUUID = @RegionUUID and Revert = @Revert order by Revision desc";
+
+            int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
+
+            using (SqlConnection conn = new SqlConnection(m_connectionString))
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
+            {
+                // MySqlParameter param = new MySqlParameter();
+                cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", r));
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    int rev;
+                    if (reader.Read())
+                    {
+                        MemoryStream str = new MemoryStream((byte[])reader["Heightfield"]);
+                        BinaryReader br = new BinaryReader(str);
+                        for (int x = 0; x < (int)Constants.RegionSize; x++)
+                        {
+                            for (int y = 0; y < (int)Constants.RegionSize; y++)
+                            {
+                                terrain[x, y] = br.ReadDouble();
+                            }
+                        }
+                        rev = (int)reader["Revision"];
+                    }
+                    else
+                    {
+                        _Log.Info("[REGION DB]: No terrain found for region");
+                        return null;
+                    }
+                    //_Log.Info("[REGION DB]: Loaded terrain revision r" + rev);
+                }
+            }
+
+            return terrain;
+        }
+
+        /// <summary>
         /// Stores the terrain map to DB.
         /// </summary>
         /// <param name="terrain">terrain map data.</param>
@@ -637,6 +686,44 @@ ELSE
                 cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
                 cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(terrain)));
                 cmd.Parameters.Add(_Database.CreateParameter("@Revert", Revert.ToString()));
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            _Log.Info("[REGION DB]: Stored terrain revision r " + revision);
+        }
+
+        /// <summary>
+        /// Stores the terrain map to DB.
+        /// </summary>
+        /// <param name="terrain">terrain map data.</param>
+        /// <param name="regionID">regionID.</param>
+        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        {
+            int revision = Util.UnixTimeSinceEpoch();
+
+            int r = Revert ? 3 : 2; //Use numbers so that we can coexist with terrain
+
+            //Delete old terrain map
+            string sql = "delete from terrain where RegionUUID=@RegionUUID and Revert = @Revert";
+            using (SqlConnection conn = new SqlConnection(m_connectionString))
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
+            {
+                cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", r));
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert) values(@RegionUUID, @Revision, @Heightfield, @Revert)";
+
+            using (SqlConnection conn = new SqlConnection(m_connectionString))
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
+            {
+                cmd.Parameters.Add(_Database.CreateParameter("@RegionUUID", regionID));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revision", revision));
+                cmd.Parameters.Add(_Database.CreateParameter("@Heightfield", serializeTerrain(water)));
+                cmd.Parameters.Add(_Database.CreateParameter("@Revert", r));
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }

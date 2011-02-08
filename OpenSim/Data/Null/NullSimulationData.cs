@@ -107,7 +107,16 @@ namespace OpenSim.Data.Null
         {
         }
 
+        public void StoreWater(double[,] water, UUID regionID, bool Revert)
+        {
+        }
+
         public double[,] LoadTerrain(UUID regionID, bool RevertMap)
+        {
+            return null;
+        }
+
+        public double[,] LoadWater(UUID regionID, bool RevertMap)
         {
             return null;
         }

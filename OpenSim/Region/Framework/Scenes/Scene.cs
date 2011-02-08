@@ -202,7 +202,11 @@ namespace OpenSim.Region.Framework.Scenes
         public override string ToString()
         {
             return "Name: " + m_regInfo.RegionName + ", Loc: " +
-                m_regInfo.RegionLocX / Constants.RegionSize + "," + m_regInfo.RegionLocY / Constants.RegionSize + ", Port: " + m_regInfo.InternalEndPoint.Port;
+                m_regInfo.RegionLocX / Constants.RegionSize + "," +
+                m_regInfo.RegionLocY / Constants.RegionSize + ", Size: " +
+                m_regInfo.RegionSizeX + "," +
+                m_regInfo.RegionSizeY + 
+                ", Port: " + m_regInfo.InternalEndPoint.Port;
         }
 
         #region Services
