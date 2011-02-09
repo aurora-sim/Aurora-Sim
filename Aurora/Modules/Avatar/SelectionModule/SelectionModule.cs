@@ -171,49 +171,9 @@ namespace Aurora.Modules
                     EntitiesToUpdate.Add(entity);
                 else
                 {
-                    m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, running through all prims.");
-                    EntityBase[] EntityList = scene.Entities.GetEntities();
-                    bool foundPrim = false;
-                    foreach (EntityBase ent in EntityList)
-                    {
-                        //Make sure it isn't an avatar
-                        if (ent is ScenePresence)
-                        {
-                            foundPrim = true;
-                            break;
-                        }
-                        else if (ent is SceneObjectGroup)
-                        {
-                            if (((SceneObjectGroup)ent).LocalId == primLocalID)
-                            {
-                                ((SceneObjectGroup)ent).IsSelected = true;
-                                EntitiesToUpdate.Add(((SceneObjectGroup)ent).RootPart);
-                                foundPrim = true;
-                                break;
-                            }
-                            else
-                            {
-                                // We also need to check the children of this prim as they
-                                // can be selected as well and send property information
-                                foreach (SceneObjectPart child in ((SceneObjectGroup)ent).ChildrenList)
-                                {
-                                    if (child.LocalId == primLocalID)
-                                    {
-                                        EntitiesToUpdate.Add(child);
-                                        foundPrim = true;
-                                        prim = child;
-                                        break;
-                                    }
-                                }
-                                if (foundPrim) break;
-                            }
-                        }
-                    }
-                    if (!foundPrim)
-                    {
-                        //Send a kill packet to the viewer so it doesn't come up again
-                        remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] { primLocalID });
-                    }
+                    m_log.Error("[SCENEPACKETHANDLER]: Could not find prim in SelectPrim, killing prim.");
+                    //Send a kill packet to the viewer so it doesn't come up again
+                    remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] { primLocalID });
                 }
             }
             if (EntitiesToUpdate.Count != 0)

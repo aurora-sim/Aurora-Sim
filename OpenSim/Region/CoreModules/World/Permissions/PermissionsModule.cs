@@ -456,19 +456,20 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         protected bool IsAdministrator(UUID user)
         {
             if (user == UUID.Zero) return false;
-        
-            if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero)
-            {
-                if (m_scene.RegionInfo.EstateSettings.EstateOwner == user && m_RegionOwnerIsGod)
-                    return true;
-            }
-            
-            if (IsEstateManager(user) && m_RegionManagerIsGod)
+
+            if (m_RegionOwnerIsGod && m_scene.RegionInfo.EstateSettings.EstateOwner == user)
+                return true;
+
+            if (m_RegionManagerIsGod && IsEstateManager(user))
+                return true;
+
+            ScenePresence sp = m_scene.GetScenePresence(user);
+            if (m_ParcelOwnerIsGod && m_parcelManagement != null && sp != null && 
+                m_parcelManagement.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y).LandData.OwnerID == user)
                 return true;
 
             if (m_allowGridGods)
             {
-                ScenePresence sp = m_scene.GetScenePresence(user);
                 if (sp != null)
                 {
                     if (sp.UserLevel >= 200)
