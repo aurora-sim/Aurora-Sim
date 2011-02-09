@@ -2041,7 +2041,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
                     if (direc == Vector3.Zero)
                         PhysicsActor.Velocity = Vector3.Zero;
-                    else
+                    //else
                         PhysicsActor.SetMovementForce(direc);
                 }
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
