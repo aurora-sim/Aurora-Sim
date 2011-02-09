@@ -928,6 +928,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 #endregion
 
         #region Permission Checks
+
         private bool CanAbandonParcel(UUID user, ILandObject parcel, Scene scene)
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
@@ -1407,22 +1408,23 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (m_parcelManagement == null)
                 return true;
             ILandObject land = m_parcelManagement.GetLandObject(objectPosition.X, objectPosition.Y);
-            if (land == null) return false;
+            if (land == null)
+            {
+                reason = "Cannot find land at your current location";
+                return false;
+            }
 
             if ((land.LandData.Flags & ((int)ParcelFlags.CreateObjects)) ==
                 (int)ParcelFlags.CreateObjects)
                 permission = true;
 
             if (IsAdministrator(owner))
-            {
                 return true;
-            }
 
             // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
             if (GenericParcelPermission(owner, objectPosition, 0))
-            {
                 permission = true;
-            }
+
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             if (primCountModule != null)
             {

@@ -876,8 +876,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         //Need to make sure we don't send the same ones over and over
                         if (!m_terrainPatchesSent[presence.UUID][x, y])
                         {
-                            double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
+                            //Check which has less distance, camera or avatar position, both have to be done
+                            double posdistance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
                                 new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                            double camdistance = Util.GetFlatDistanceTo(presence.CameraPosition,
+                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                            //Take the smaller of the two
+                            double distance = posdistance > camdistance ? camdistance : posdistance;
                             if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                             {
                                 //They can see it, send it ot them
