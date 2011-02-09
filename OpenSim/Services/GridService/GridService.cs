@@ -131,7 +131,7 @@ namespace OpenSim.Services.GridService
             
             //Get the range of this so that we get the full count and make sure that we are not overlapping smaller regions
             List<GridRegion> regions = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY,
-                regionInfos.RegionLocX + regionInfos.RegionSizeX, regionInfos.RegionLocY + regionInfos.RegionSizeY, regionInfos.ScopeID);
+                regionInfos.RegionLocX + regionInfos.RegionSizeX - 1, regionInfos.RegionLocY + regionInfos.RegionSizeY - 1, regionInfos.ScopeID);
 
             if (regions.Count > 1)
             {
