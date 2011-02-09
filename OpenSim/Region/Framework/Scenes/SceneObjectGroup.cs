@@ -656,26 +656,29 @@ namespace OpenSim.Region.Framework.Scenes
         /// After a prim is removed, fix the link numbers so that they are correct
         /// </summary>
         private void FixLinkNumbers()
+        {
+            lock (m_partsLock)
             {
-            if (m_partsList.Count == 1)
+                if (m_partsList.Count == 1)
                 {
-                m_partsList[0].LinkNum = 0;
-                return;
+                    m_partsList[0].LinkNum = 0;
+                    return;
                 }
 
-            // has prims so starts at 1
-            int lastSeenLinkNum = 1;
-            m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
-            for (int i = 0; i < m_partsList.Count; i++)
+                // has prims so starts at 1
+                int lastSeenLinkNum = 1;
+                m_partsList.Sort(Scene.SceneGraph.linkSetSorter);
+                for (int i = 0; i < m_partsList.Count; i++)
                 {
-                //If it isn't the same as the last seen +1, fix it
-                if (m_partsList[i].LinkNum != lastSeenLinkNum)
-                    m_partsList[i].LinkNum = lastSeenLinkNum;
+                    //If it isn't the same as the last seen +1, fix it
+                    if (m_partsList[i].LinkNum != lastSeenLinkNum)
+                        m_partsList[i].LinkNum = lastSeenLinkNum;
 
-                //Go onto the next prim
-                lastSeenLinkNum++;
+                    //Go onto the next prim
+                    lastSeenLinkNum++;
                 }
             }
+        }
 
         #endregion
 
@@ -758,18 +761,21 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 maxScale = Vector3.Zero;
             Vector3 finalScale = new Vector3(0.5f, 0.5f, 0.5f);
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                Vector3 partscale = part.Scale;
-                Vector3 partoffset = part.OffsetPosition;
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    Vector3 partscale = part.Scale;
+                    Vector3 partoffset = part.OffsetPosition;
 
-                minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
-                minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
-                minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
+                    minScale.X = (partscale.X + partoffset.X < minScale.X) ? partscale.X + partoffset.X : minScale.X;
+                    minScale.Y = (partscale.Y + partoffset.Y < minScale.Y) ? partscale.Y + partoffset.Y : minScale.Y;
+                    minScale.Z = (partscale.Z + partoffset.Z < minScale.Z) ? partscale.Z + partoffset.Z : minScale.Z;
 
-                maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
-                maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
-                maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
+                    maxScale.X = (partscale.X + partoffset.X > maxScale.X) ? partscale.X + partoffset.X : maxScale.X;
+                    maxScale.Y = (partscale.Y + partoffset.Y > maxScale.Y) ? partscale.Y + partoffset.Y : maxScale.Y;
+                    maxScale.Z = (partscale.Z + partoffset.Z > maxScale.Z) ? partscale.Z + partoffset.Z : maxScale.Z;
+                }
             }
 
             finalScale.X = (minScale.X > maxScale.X) ? minScale.X : maxScale.X;
@@ -1223,13 +1229,16 @@ namespace OpenSim.Region.Framework.Scenes
 
             scriptEvents aggregateScriptEvents = 0;
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                if (part == null)
-                    continue;
-                if (part != RootPart)
-                    part.Flags = objectflagupdate;
-                aggregateScriptEvents |= part.AggregateScriptEvents;
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    if (part == null)
+                        continue;
+                    if (part != RootPart)
+                        part.Flags = objectflagupdate;
+                    aggregateScriptEvents |= part.AggregateScriptEvents;
+                }
             }
 
             m_scriptListens_atTarget = ((aggregateScriptEvents & scriptEvents.at_target) != 0);
@@ -1273,7 +1282,9 @@ namespace OpenSim.Region.Framework.Scenes
         public override void ApplyPhysics(bool m_physicalPrim)
         {
             m_rootPart.ApplyPhysics(m_rootPart.GetEffectiveObjectFlags(), m_rootPart.VolumeDetectActive, m_physicalPrim);
-            foreach (SceneObjectPart part in m_partsList)
+
+            List<SceneObjectPart> m_parts = new List<SceneObjectPart>(m_partsList);
+            foreach (SceneObjectPart part in m_parts)
             {
                 if (part.LocalId != m_rootPart.LocalId)
                 {
@@ -1670,9 +1681,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!IsSelected)
             {
-                foreach (SceneObjectPart part in m_partsList)
+                lock (m_partsLock)
                 {
-                    part.UpdateLookAt();
+                    foreach (SceneObjectPart part in m_partsList)
+                    {
+                        part.UpdateLookAt();
+                    }
                 }
             }
         }
@@ -1711,11 +1725,14 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                if (part != RootPart)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.ScheduleUpdateToAvatar(UpdateFlags, presence);
+                    if (part != RootPart)
+                    {
+                        part.ScheduleUpdateToAvatar(UpdateFlags, presence);
+                    }
                 }
             }
         }
@@ -1729,11 +1746,14 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdate(UpdateFlags);
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                if (part != RootPart)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.ScheduleUpdate(UpdateFlags);
+                    if (part != RootPart)
+                    {
+                        part.ScheduleUpdate(UpdateFlags);
+                    }
                 }
             }
         }
@@ -1746,11 +1766,14 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleTerseUpdate();
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                if (part != RootPart)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    part.ScheduleTerseUpdate();
+                    if (part != RootPart)
+                    {
+                        part.ScheduleTerseUpdate();
+                    }
                 }
             }
         }
@@ -1841,17 +1864,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if a child part with the local ID was not found</returns>
         public SceneObjectPart GetChildPart(uint localID)
         {
-            //lock (m_partsLock)
-            //{
-                foreach (SceneObjectPart part in m_partsList)
+            List<SceneObjectPart> parts = new List<SceneObjectPart>(m_partsList);
+            foreach (SceneObjectPart part in parts)
+            {
+                //m_log.DebugFormat("Found {0}", part.LocalId);
+                if (part.LocalId == localID)
                 {
-                    //m_log.DebugFormat("Found {0}", part.LocalId);
-                    if (part.LocalId == localID)
-                    {
-                        return part;
-                    }
+                    return part;
                 }
-            //}
+            }
 
             return null;
         }
@@ -2491,22 +2512,25 @@ namespace OpenSim.Region.Framework.Scenes
                 prevScale.Z *= z;
                 part.Resize(prevScale);
 
-                foreach (SceneObjectPart obPart in m_partsList)
+                lock (m_partsLock)
                 {
-                    if (obPart.UUID != m_rootPart.UUID)
+                    foreach (SceneObjectPart obPart in m_partsList)
                     {
-                        obPart.IgnoreUndoUpdate = true;
-                        Vector3 currentpos = new Vector3(obPart.OffsetPosition);
-                        currentpos.X *= x;
-                        currentpos.Y *= y;
-                        currentpos.Z *= z;
-                        Vector3 newSize = new Vector3(obPart.Scale);
-                        newSize.X *= x;
-                        newSize.Y *= y;
-                        newSize.Z *= z;
-                        obPart.Resize(newSize);
-                        obPart.UpdateOffSet(currentpos);
-                        obPart.IgnoreUndoUpdate = false;
+                        if (obPart.UUID != m_rootPart.UUID)
+                        {
+                            obPart.IgnoreUndoUpdate = true;
+                            Vector3 currentpos = new Vector3(obPart.OffsetPosition);
+                            currentpos.X *= x;
+                            currentpos.Y *= y;
+                            currentpos.Z *= z;
+                            Vector3 newSize = new Vector3(obPart.Scale);
+                            newSize.X *= x;
+                            newSize.Y *= y;
+                            newSize.Z *= z;
+                            obPart.Resize(newSize);
+                            obPart.UpdateOffSet(currentpos);
+                            obPart.IgnoreUndoUpdate = false;
+                        }
                     }
                 }
 
@@ -2605,9 +2629,12 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     }
                 }
-                foreach (SceneObjectPart part in m_partsList)
+                lock (m_partsLock)
                 {
-                part.FixGroupPositionComum(UpdatePrimActor,val, false);
+                    foreach (SceneObjectPart part in m_partsList)
+                    {
+                        part.FixGroupPositionComum(UpdatePrimActor, val, false);
+                    }
                 }
 
                 //if (m_rootPart.PhysActor != null)
@@ -2721,11 +2748,14 @@ namespace OpenSim.Region.Framework.Scenes
             axDiff *= Quaternion.Inverse(partRotation);
             diff = axDiff;
 
-            foreach (SceneObjectPart obPart in m_partsList)
+            lock (m_partsLock)
             {
-                if (obPart.UUID != m_rootPart.UUID)
+                foreach (SceneObjectPart obPart in m_partsList)
                 {
-                    obPart.FixOffsetPosition((obPart.OffsetPosition + diff),false);
+                    if (obPart.UUID != m_rootPart.UUID)
+                    {
+                        obPart.FixOffsetPosition((obPart.OffsetPosition + diff), false);
+                    }
                 }
             }
 
@@ -2859,31 +2889,34 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.SceneGraph.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
-            foreach (SceneObjectPart childPrim in m_partsList)
+            lock (m_partsLock)
             {
-                if (childPrim.UUID != m_rootPart.UUID)
+                foreach (SceneObjectPart childPrim in m_partsList)
                 {
-                    childPrim.StoreUndoState();
-                    childPrim.IgnoreUndoUpdate = true;
+                    if (childPrim.UUID != m_rootPart.UUID)
+                    {
+                        childPrim.StoreUndoState();
+                        childPrim.IgnoreUndoUpdate = true;
 
-                    // fix rotation
-                    // get in world coords
-                    Quaternion primsRot = old_global_group_rot * childPrim.RotationOffset;
-                    // set new offset as inverse of the one on root
-                    // so world is right
-                    primsRot = Quaternion.Inverse(new_global_group_rot) * primsRot;
-                    // just store it
-                    childPrim.SetRotationOffset(false, primsRot, false);
+                        // fix rotation
+                        // get in world coords
+                        Quaternion primsRot = old_global_group_rot * childPrim.RotationOffset;
+                        // set new offset as inverse of the one on root
+                        // so world is right
+                        primsRot = Quaternion.Inverse(new_global_group_rot) * primsRot;
+                        // just store it
+                        childPrim.SetRotationOffset(false, primsRot, false);
 
-                    // fix position offset
-                    Vector3 axPos = childPrim.OffsetPosition;
-                    axPos *= old_global_group_rot;
-                    axPos *= Quaternion.Inverse(new_global_group_rot);
-                    // store it and let physics know about both changes
-                    childPrim.FixOffsetPosition(axPos,true);
+                        // fix position offset
+                        Vector3 axPos = childPrim.OffsetPosition;
+                        axPos *= old_global_group_rot;
+                        axPos *= Quaternion.Inverse(new_global_group_rot);
+                        // store it and let physics know about both changes
+                        childPrim.FixOffsetPosition(axPos, true);
 
-                    childPrim.ScheduleTerseUpdate();
-                    childPrim.IgnoreUndoUpdate = false;
+                        childPrim.ScheduleTerseUpdate();
+                        childPrim.IgnoreUndoUpdate = false;
+                    }
                 }
             }
 
@@ -3148,9 +3181,12 @@ namespace OpenSim.Region.Framework.Scenes
         public float GetMass()
         {
             float retmass = 0f;
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                retmass += part.GetMass();
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    retmass += part.GetMass();
+                }
             }
             return retmass;
         }
@@ -3162,21 +3198,24 @@ namespace OpenSim.Region.Framework.Scenes
             if ((RootPart.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) != 0)
                 return;
 
-            foreach (SceneObjectPart part in m_partsList)
+            lock (m_partsLock)
             {
-                if (part.Shape == null)
-                    continue;
-                if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
+                foreach (SceneObjectPart part in m_partsList)
                 {
-                    // check if a previously decoded sculpt map has been cached
-                    if (File.Exists(System.IO.Path.Combine("j2kDecodeCache", "smap_" + part.Shape.SculptTexture.ToString())))
+                    if (part.Shape == null)
+                        continue;
+                    if (part.Shape.SculptEntry && part.Shape.SculptTexture != UUID.Zero)
                     {
-                        part.SculptTextureCallback(part.Shape.SculptTexture, null);
-                    }
-                    else
-                    {
-                        m_scene.AssetService.Get(
-                            part.Shape.SculptTexture.ToString(), part, AssetReceived);
+                        // check if a previously decoded sculpt map has been cached
+                        if (File.Exists(System.IO.Path.Combine("j2kDecodeCache", "smap_" + part.Shape.SculptTexture.ToString())))
+                        {
+                            part.SculptTextureCallback(part.Shape.SculptTexture, null);
+                        }
+                        else
+                        {
+                            m_scene.AssetService.Get(
+                                part.Shape.SculptTexture.ToString(), part, AssetReceived);
+                        }
                     }
                 }
             }
