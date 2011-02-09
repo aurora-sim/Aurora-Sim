@@ -2039,6 +2039,9 @@ namespace OpenSim.Region.Framework.Scenes
                     
                     //It'll stop the physics engine from decaying, which makes it look bad
                     //if (this.m_newStyleMovement && direc != Vector3.Zero)//  let avas be stopped !!
+                    if (direc == Vector3.Zero)
+                        PhysicsActor.Velocity = Vector3.Zero;
+                    else
                         PhysicsActor.SetMovementForce(direc);
                 }
                 IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
