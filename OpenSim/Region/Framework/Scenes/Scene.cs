@@ -789,21 +789,28 @@ namespace OpenSim.Region.Framework.Scenes
             ScenePresence presence = m_sceneGraph.GetScenePresence(agentID);
             if (presence != null)
             {
-                // Don't do this to root agents on logout, it's not nice for the viewer
-                // Tell a single agent to disconnect from the region.
-                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
-                if (eq != null)
-                {
-                    //Make sure that the disable simulator packet
-                    eq.DisableSimulator(agentID, RegionInfo.RegionHandle, presence.IsChildAgent);
-                }
                 if (!presence.IsChildAgent)
                 {
                     INeighborService service = RequestModuleInterface<INeighborService>();
                     if (service != null)
                         service.CloseAllNeighborAgents(presence.UUID, RegionInfo.RegionID);
                 }
-                return RemoveAgent(presence);
+                bool RetVal = RemoveAgent(presence);
+
+                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
+                if (eq != null)
+                {
+                    //Make sure that the disable simulator packet doesn't kill root agents right now... it kills the client
+
+                    // Don't do this to root agents on logout, it's not nice for the viewer
+                    // Tell a single agent to disconnect from the region.
+
+                    eq.DisableSimulator(agentID, RegionInfo.RegionHandle, presence.IsChildAgent);
+                    //Don't do this yet... kills the client too soon sometimes... This should be used in the future when we can kill agents safely
+                    //eq.DisableSimulator(agentID, RegionInfo.RegionHandle, true);
+                }
+
+                return RetVal;
             }
 
             // Agent not here
