@@ -990,7 +990,6 @@ namespace OpenSim.Services.LLLoginService
 
             #endregion
 
-            dest = destination;
             if (success)
                 return aCircuit;
             else

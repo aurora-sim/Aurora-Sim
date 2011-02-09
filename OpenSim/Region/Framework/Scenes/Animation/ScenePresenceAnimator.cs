@@ -244,6 +244,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             {
                 // Falling long enough to trigger the animation
                 m_scenePresence.AllowMovement = false;
+                m_scenePresence.PhysicsActor.Velocity = Vector3.Zero;
                 return "STANDUP";
             }
             else if (standupElapsed < BRUSH_TIME &&
