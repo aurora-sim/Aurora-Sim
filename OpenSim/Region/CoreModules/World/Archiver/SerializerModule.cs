@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Xml;
 
 using log4net;
 using Nini.Config;
@@ -92,7 +93,7 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
         public void LoadPrimsFromXml2(IScene scene, string fileName)
         {
             if (scene is Scene)
-                SceneXmlLoader.LoadPrimsFromXml2((Scene)scene, fileName);
+                SceneXmlLoader.LoadPrimsFromXml2((Scene)scene, new XmlTextReader(fileName), true);
         }
 
         public void SavePrimsToXml2(IScene scene, string fileName)

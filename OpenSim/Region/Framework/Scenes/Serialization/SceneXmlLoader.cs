@@ -153,33 +153,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         }
 
         /// <summary>
-        /// Load prims from the xml2 format
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="fileName"></param>
-        public static void LoadPrimsFromXml2(Scene scene, string fileName)
-        {
-            LoadPrimsFromXml2(scene, new XmlTextReader(fileName), false);
-        }
-
-        /// <summary>
-        /// Load prims from the xml2 format
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="reader"></param>
-        /// <param name="startScripts"></param>
-        public static void LoadPrimsFromXml2(Scene scene, TextReader reader, bool startScripts)
-        {
-            LoadPrimsFromXml2(scene, new XmlTextReader(reader), startScripts);
-        }
-
-        /// <summary>
         /// Load prims from the xml2 format.  This method will close the reader
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="reader"></param>
         /// <param name="startScripts"></param>
-        protected static void LoadPrimsFromXml2(Scene scene, XmlTextReader reader, bool startScripts)
+        public static void LoadPrimsFromXml2(Scene scene, XmlTextReader reader, bool startScripts)
         {
             XmlDocument doc = new XmlDocument();
             reader.WhitespaceHandling = WhitespaceHandling.None;
@@ -191,7 +170,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             foreach (XmlNode aPrimNode in rootNode.ChildNodes)
             {
                 SceneObjectGroup obj = CreatePrimFromXml2(scene, aPrimNode.OuterXml);
-                if (obj != null && startScripts)
+                if (obj != null)
                     sceneObjects.Add(obj);
             }
 
@@ -200,8 +179,11 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
                     sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
-                    sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
-                    sceneObject.ResumeScripts();
+                    if (startScripts)
+                    {
+                        sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
+                        sceneObject.ResumeScripts();
+                    }
                 }
             }
         }
