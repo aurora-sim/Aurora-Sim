@@ -73,7 +73,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         protected List<Scene> m_Scenes = new List<Scene>();
 
         protected IPresenceService m_PresenceService = null;
-        protected IFriendsService m_FriendsService = null;
         protected FriendsSimConnector m_FriendsSimConnector;
 
         protected Dictionary<UUID, UserFriendData> m_Friends =
@@ -99,13 +98,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
             get
             {
-                if (m_FriendsService == null)
-                {
-                    if (m_Scenes.Count > 0)
-                        m_FriendsService = m_Scenes[0].RequestModuleInterface<IFriendsService>();
-                }
-
-                return m_FriendsService;
+                return  m_Scenes[0].RequestModuleInterface<IFriendsService>();
             }
         }
 
@@ -151,9 +144,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
             if (!m_enabled)
                 return;
-            if (m_FriendsService == null)
+            if (m_FriendsSimConnector == null)
             {
-                m_FriendsService = scene.RequestModuleInterface<IFriendsService>();
                 m_FriendsSimConnector = new FriendsSimConnector();
             }
 
