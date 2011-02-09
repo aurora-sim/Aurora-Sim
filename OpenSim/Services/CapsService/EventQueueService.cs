@@ -115,9 +115,9 @@ namespace OpenSim.Services.CapsService
 
         #region EventQueue Message Enqueue
 
-        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle)
+        public virtual void DisableSimulator(UUID avatarID, ulong RegionHandle, bool forwardToClient)
         {
-            OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
+            OSD item = EventQueueHelper.DisableSimulator(RegionHandle, forwardToClient);
             Enqueue(item, avatarID, RegionHandle);
         }
 
@@ -326,7 +326,16 @@ namespace OpenSim.Services.CapsService
                     {
                         //Let this pass through, after the next event queue pass we can remove it
                         //m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
-                        m_service.Disabled = true;
+                        if (!m_service.Disabled)
+                        {
+                            m_service.Disabled = true;
+                            OSDMap body = ((OSDMap)map["body"]);
+                            //See whether this needs sent to the client or not
+                            if (!body["KillClient"].AsBoolean())
+                                return true;
+                        }
+                        else //Don't enqueue multiple times
+                            return true;
                     }
                     else if (map.ContainsKey("message") && map["message"] == "ArrivedAtDestination")
                     {

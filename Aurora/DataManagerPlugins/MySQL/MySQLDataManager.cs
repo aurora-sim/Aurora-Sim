@@ -176,7 +176,8 @@ namespace Aurora.DataManager.MySQL
                         {
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                RetVal.Add(reader.GetString(i));
+                                if(reader[i] != DBNull.Value)
+                                    RetVal.Add(reader.GetString(i));
                             }
                         }
                         return RetVal;

@@ -301,9 +301,9 @@ namespace OpenSim.Services.CapsService
 
         #region Overrides
 
-        public override void DisableSimulator(UUID avatarID, ulong RegionHandle)
+        public override void DisableSimulator(UUID avatarID, ulong RegionHandle, bool forwardToClient)
         {
-            OSD item = EventQueueHelper.DisableSimulator(RegionHandle);
+            OSD item = EventQueueHelper.DisableSimulator(RegionHandle, forwardToClient);
             TryEnqueue(item, avatarID, RegionHandle);
 
             //WRONG, COMMENTS LEFT FOR FUTURE PEOPLE TO UNDERSTAND WHY IT IS WRONG

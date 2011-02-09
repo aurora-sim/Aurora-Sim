@@ -493,9 +493,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         }
                                     }
 
-                                    z_sort.Add(part.LocalId, ds);
-                                    z_localIDs.Add(part.LocalId);
-                                    z_sortheights.Add(pos.Z);
+                                    if (!z_localIDs.Contains(part.LocalId))
+                                    {
+                                        z_sort[part.LocalId] = ds;
+                                        z_localIDs.Add(part.LocalId);
+                                        z_sortheights.Add(pos.Z);
+                                    }
                                 } // Object is within 256m Z of terrain
                             } // object is at least a meter wide
                         } // loop over group children

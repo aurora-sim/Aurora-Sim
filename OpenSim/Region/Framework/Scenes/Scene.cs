@@ -790,16 +790,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (presence != null)
             {
                 // Don't do this to root agents on logout, it's not nice for the viewer
-                if (presence.IsChildAgent)
+                // Tell a single agent to disconnect from the region.
+                IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
+                if (eq != null)
                 {
-                    // Tell a single agent to disconnect from the region.
-                    IEventQueueService eq = RequestModuleInterface<IEventQueueService>();
-                    if (eq != null)
-                    {
-                        eq.DisableSimulator(agentID, RegionInfo.RegionHandle);
-                    }
+                    //Make sure that the disable simulator packet
+                    eq.DisableSimulator(agentID, RegionInfo.RegionHandle, presence.IsChildAgent);
                 }
-                else
+                if (!presence.IsChildAgent)
                 {
                     INeighborService service = RequestModuleInterface<INeighborService>();
                     if (service != null)
