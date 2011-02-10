@@ -283,6 +283,11 @@ namespace Aurora.BotManager
         {
         }
 
+        public IPAddress EndPoint
+        {
+            get { return null; }
+        }
+
         protected virtual void OnBotAgentUpdate(uint controlFlag, Quaternion bodyRotation)
         {
             if (OnAgentUpdate != null)

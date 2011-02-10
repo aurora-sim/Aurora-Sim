@@ -77,10 +77,21 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 if (!m_scenes.Contains(scene))
                 {
                     m_scenes.Add(scene);
-                    scene.EventManager.OnClientConnect += OnClientConnect;
+                    scene.EventManager.OnNewClient += EventManager_OnNewClient;
+                    scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
                 }
             }
+        }
+
+        void EventManager_OnClosingClient(IClientAPI client)
+        {
+            client.OnInstantMessage -= OnInstantMessage;
+        }
+
+        void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnInstantMessage += OnInstantMessage;
         }
 
         public void RegionLoaded(Scene scene)
@@ -96,7 +107,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 if (m_TransferModule == null)
                 {
                     m_log.Error("[INSTANT MESSAGE]: No message transfer module, IM will not work!");
-                    scene.EventManager.OnClientConnect -= OnClientConnect;
+                    scene.EventManager.OnNewClient -= EventManager_OnNewClient;
+                    scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
                     m_scenes.Clear();
@@ -113,15 +125,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             lock (m_scenes)
             {
                 m_scenes.Remove(scene);
-            }
-        }
-
-        void OnClientConnect(IClientCore client)
-        {
-            IClientIM clientIM;
-            if (client.TryGet(out clientIM))
-            {
-                clientIM.OnInstantMessage += OnInstantMessage;
             }
         }
 

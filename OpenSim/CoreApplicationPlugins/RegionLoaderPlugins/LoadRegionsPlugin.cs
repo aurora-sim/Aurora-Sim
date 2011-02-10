@@ -44,7 +44,7 @@ using Nini.Config;
 
 namespace OpenSim.CoreApplicationPlugins
 {
-    public class LoadRegionsPlugin : IApplicationPlugin, IRegionCreator
+    public class LoadRegionsPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -61,12 +61,6 @@ namespace OpenSim.CoreApplicationPlugins
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;
-
-            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
-            if (handlerConfig.GetString("LoadRegionsPlugin", "") != Name)
-                return;
-
-            m_openSim.ApplicationRegistry.RegisterModuleInterface<IRegionCreator>(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -92,7 +86,7 @@ namespace OpenSim.CoreApplicationPlugins
             SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             foreach (IRegionLoader loader in regionLoaders)
             {
-                loader.Initialise(m_openSim.ConfigSource, this, m_openSim);
+                loader.Initialise(m_openSim.ConfigSource, m_openSim);
 
                 if (!loader.Enabled)
                     continue;

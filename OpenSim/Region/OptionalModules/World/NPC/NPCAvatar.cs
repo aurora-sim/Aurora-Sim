@@ -61,6 +61,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
             get { return m_scene; }
         }
 
+        public IPAddress EndPoint
+        {
+            get { return null; }
+        }
+
         public void Say(string message)
         {
             SendOnChatFromClient(message, ChatTypeEnum.Say);
