@@ -62,13 +62,16 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         private btGeneric6DofConstraint m_aMotor;
         // private Vector3 m_movementComparision;
         private Vector3 m_position;
+        private Vector3 m_lastPosition;
         private Vector3 m_zeroPosition;
         private bool m_zeroFlag = false;
         private bool m_lastUpdateSent = false;
         private Vector3 m_velocity;
+        private Vector3 m_lastVelocity;
         private Vector3 m_target_velocity;
         //private Vector3 m_acceleration;
         private Vector3 m_rotationalVelocity;
+        private Vector3 m_lastRotationalVelocity;
         private bool m_pidControllerActive = true;
         public float PID_D = 80.0f;
         public float PID_P = 90.0f;
@@ -135,7 +138,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             {
                 m_colliderGroundarr[i] = false;
             }
-            CAPSULE_LENGTH = (size.Z * 1.15f) - CAPSULE_RADIUS * 2.0f;
+            CAPSULE_LENGTH = (size.Z * 1.25f) - CAPSULE_RADIUS * 2.0f;
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
             m_isPhysical = false; // current status: no ODE information exists
             m_tainted_isPhysical = true; // new tainted status: need to create ODE information
@@ -647,6 +650,26 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         }
 
         /// <summary>
+        /// This adds to the force that will be used for moving the avatar in the next physics heartbeat iteration.
+        /// </summary>
+        /// <param name="force"></param>
+        public override void AddMovementForce(Vector3 force)
+        {
+            m_target_velocity = force;
+        }
+
+        /// <summary>
+        /// This sets the force that will be used for moving the avatar in the next physics heartbeat iteration.
+        /// Note: we do accept Vector3.Zero here as that is an overriding stop for the physics engine.
+        /// </summary>
+        /// <param name="force"></param>
+        public override void SetMovementForce(Vector3 force)
+        {
+            m_target_velocity = force;
+            m_pidControllerActive = true;
+        }
+
+        /// <summary>
         /// Adds the force supplied to the Target Velocity
         /// The PID controller takes this target velocity and tries to make it a reality
         /// </summary>
@@ -1023,7 +1046,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             if (m_flying)
             {
                 // Slight PID correction
-                vec.Z += (((-1 * m_parent_scene.gravityz) * m_mass) * 0.06f);
+                vec.Z += (((-1 * m_parent_scene.gravityz) * m_mass) * 0.16f);
 
 
                 //auto fly height. Kitto Flora
@@ -1102,8 +1125,10 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 {
                     m_lastUpdateSent = true;
                     base.RequestPhysicsterseUpdate();
-
                 }
+
+                //Tell any listeners that we've stopped
+                base.TriggerMovementUpdate();
             }
             else
             {
@@ -1129,6 +1154,23 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     m_hackSentFly = false;
                     m_hackSentFall = false;
                 }
+                const float VELOCITY_TOLERANCE = 0.001f;
+                const float POSITION_TOLERANCE = 0.05f;
+
+                //Check to see whether we need to trigger the significant movement method in the presence
+                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
+                    !Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
+                    !Position.ApproxEquals(m_lastPosition, POSITION_TOLERANCE))
+                {
+                    // Update the "last" values
+                    m_lastPosition = Position;
+                    m_lastRotationalVelocity = RotationalVelocity;
+                    m_lastVelocity = Velocity;
+                    base.RequestPhysicsterseUpdate();
+                    base.TriggerSignificantMovement();
+                }
+                //Tell any listeners about the new info
+                base.TriggerMovementUpdate();
             }
             if (Body != null)
             {
