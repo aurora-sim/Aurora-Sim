@@ -106,9 +106,6 @@ namespace OpenSim.Server.Handlers.Grid
                     case "deregister":
                         return Deregister(request);
 
-                    case "get_neighbours":
-                        return GetNeighbours(request);
-
                     case "get_region_by_uuid":
                         return GetRegionByUUID(request);
 
