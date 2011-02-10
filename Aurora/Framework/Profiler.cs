@@ -19,11 +19,11 @@ namespace Aurora.Framework
         private Color BackgroundColor = Color.LightGray;
         private Color BarColor = Color.Aqua;
 
-        public void AddStat(string Name, ProfilerValueInfo info)
+        public void AddStat(string Name, double value)
         {
             if (!Stats.ContainsKey(Name))
                 Stats[Name] = new ProfilerValueManager();
-            Stats[Name].AddStat(info);
+            Stats[Name].AddStat(value);
         }
 
         public ProfilerValueManager GetStat(string Name)
@@ -44,12 +44,12 @@ namespace Aurora.Framework
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            ProfilerValueInfo[] Stats = statManager.GetInfos();
+            double[] Stats = statManager.GetInfos();
 
             for (int i = 0; i < Stats.Length; i++)
             {
                 //Update the scales
-                Stats[i].Value = Stats[i].Value * ScaleFactor;
+                Stats[i] = Stats[i] * ScaleFactor;
             }
 
             for (int x = 200; x > 0; x--)
@@ -84,7 +84,7 @@ namespace Aurora.Framework
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            ProfilerValueInfo[] Stats = statManager.GetInfos();
+            double[] Stats = statManager.GetInfos();
 
             for (int x = 200; x > 0; x--)
             {
@@ -113,14 +113,14 @@ namespace Aurora.Framework
             return (y % 10) == 0;
         }
 
-        private bool IsInGraphBar(int x, int y, ProfilerValueInfo[] Stats, double scaleFactor)
+        private bool IsInGraphBar(int x, int y, double[] Stats, double scaleFactor)
         {
             for (int i = Math.Min(GraphBarsStart.Length - 1, Stats.Length - 1); i >= 0; i--)
             {
                 //Check whether it is between both the start and end
                 if (x > GraphBarsStart[i] && x < GraphBarsEnd[i])
                 {
-                    if (Stats[i].Value >= (y / scaleFactor))
+                    if (Stats[i] >= (y / scaleFactor))
                         return true;
                 }
             }
@@ -130,35 +130,36 @@ namespace Aurora.Framework
 
     public class ProfilerValueManager
     {
-        private ProfilerValueInfo[] infos = new ProfilerValueInfo[10];
+        private double[] infos = new double[10];
         private int lastSet = 0;
         private int zero = 0;
 
-        public void AddStat(ProfilerValueInfo info)
+        public void AddStat(double value)
         {
             lock (infos)
             {
                 if (lastSet != 10)
                 {
-                    infos[lastSet] = info;
+                    infos[lastSet] = value;
                     lastSet++;
                 }
                 else
                 {
                     //Move the 0 value around
-                    infos[zero] = null;
-                    infos[zero] = info;
+                    infos[zero] = value;
                     //Now increment 0 as it isn't where it was before
                     zero++;
+                    if (zero == 10)
+                        zero = 0;
                 }
             }
         }
 
-        public ProfilerValueInfo[] GetInfos()
+        public double[] GetInfos()
         {
             lock (infos)
             {
-                ProfilerValueInfo[] copy = new ProfilerValueInfo[lastSet];
+                double[] copy = new double[lastSet];
                 int ii = zero;
                 for (int i = 0; i < lastSet; i++)
                 {
@@ -178,18 +179,12 @@ namespace Aurora.Framework
             {
                 for (int i = 0; i < lastSet; i++)
                 {
-                    if (infos[i].Value > MaxVal)
-                        MaxVal = infos[i].Value;
+                    if (infos[i] > MaxVal)
+                        MaxVal = infos[i];
                 }
             }
             return MaxVal;
         }
-    }
-
-    public class ProfilerValueInfo
-    {
-        public double Value = 0;
-        public int TimeSet = 0;
     }
 
     public class ProfilerManager

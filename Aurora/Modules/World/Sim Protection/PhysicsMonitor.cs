@@ -231,25 +231,25 @@ namespace Aurora.Modules
                     //Add the stats to the profiler
                     Profiler p = ProfilerManager.GetProfiler();
                     p.AddStat("StatAvatarUpdatePosAndVelocity " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatAvatarUpdatePosAndVelocity });
+                        m_lastPhysicsStats[kvp.Key].StatAvatarUpdatePosAndVelocity);
                     p.AddStat("StatCollisionOptimizedTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatCollisionOptimizedTime });
+                        m_lastPhysicsStats[kvp.Key].StatCollisionOptimizedTime);
                     p.AddStat("StatPhysicsMoveTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatPhysicsMoveTime });
+                        m_lastPhysicsStats[kvp.Key].StatPhysicsMoveTime);
                     p.AddStat("StatPhysicsTaintTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatPhysicsTaintTime });
+                        m_lastPhysicsStats[kvp.Key].StatPhysicsTaintTime);
                     p.AddStat("StatPrimUpdatePosAndVelocity " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatPrimUpdatePosAndVelocity });
+                        m_lastPhysicsStats[kvp.Key].StatPrimUpdatePosAndVelocity);
                     p.AddStat("StatSendCollisionsTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatSendCollisionsTime });
+                        m_lastPhysicsStats[kvp.Key].StatSendCollisionsTime);
                     p.AddStat("StatUnlockedArea " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatUnlockedArea });
+                        m_lastPhysicsStats[kvp.Key].StatUnlockedArea);
                     p.AddStat("StatFindContactsTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatFindContactsTime });
+                        m_lastPhysicsStats[kvp.Key].StatFindContactsTime);
                     p.AddStat("StatContactLoopTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatContactLoopTime });
+                        m_lastPhysicsStats[kvp.Key].StatContactLoopTime);
                     p.AddStat("StatCollisionAccountingTime " + kvp.Key,
-                        new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatCollisionAccountingTime });
+                        m_lastPhysicsStats[kvp.Key].StatCollisionAccountingTime);
                 }
                 m_currentPhysicsStats.Clear();
             }
@@ -306,25 +306,25 @@ namespace Aurora.Modules
                 //Add the stats to the profiler
                 Profiler p = ProfilerManager.GetProfiler();
                 p.AddStat("CurrentStatAvatarUpdatePosAndVelocity " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatAvatarUpdatePosAndVelocity });
+                    ProfilerStats.StatAvatarUpdatePosAndVelocity);
                 p.AddStat("CurrentStatCollisionOptimizedTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatCollisionOptimizedTime });
+                    ProfilerStats.StatCollisionOptimizedTime);
                 p.AddStat("CurrentStatPhysicsMoveTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatPhysicsMoveTime });
+                    ProfilerStats.StatPhysicsMoveTime);
                 p.AddStat("CurrentStatPhysicsTaintTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatPhysicsTaintTime });
+                    ProfilerStats.StatPhysicsTaintTime);
                 p.AddStat("CurrentStatPrimUpdatePosAndVelocity " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatPrimUpdatePosAndVelocity });
+                    ProfilerStats.StatPrimUpdatePosAndVelocity);
                 p.AddStat("CurrentStatSendCollisionsTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatSendCollisionsTime });
+                    ProfilerStats.StatSendCollisionsTime);
                 p.AddStat("CurrentStatUnlockedArea " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatUnlockedArea });
+                    ProfilerStats.StatUnlockedArea);
                 p.AddStat("CurrentStatFindContactsTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatFindContactsTime });
+                    ProfilerStats.StatFindContactsTime);
                 p.AddStat("CurrentStatContactLoopTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatContactLoopTime });
+                    ProfilerStats.StatContactLoopTime);
                 p.AddStat("CurrentStatCollisionAccountingTime " + RegionID,
-                    new ProfilerValueInfo() { Value = ProfilerStats.StatCollisionAccountingTime });
+                    ProfilerStats.StatCollisionAccountingTime);
             }
         }
     }
