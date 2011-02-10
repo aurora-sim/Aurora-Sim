@@ -34,7 +34,6 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 
 namespace Aurora.Modules
 {

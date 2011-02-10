@@ -1067,7 +1067,7 @@ namespace OpenSim.Services.LLLoginService
             }
 
             // As we are creating the agent, we must also initialize the CapsService for the agent
-            bool success = simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
+            bool success = simConnector.CreateAgent(region, aCircuit, (int)TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
             {
                 //Delete the Caps!

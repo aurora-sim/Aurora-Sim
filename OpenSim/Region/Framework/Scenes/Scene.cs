@@ -576,13 +576,13 @@ namespace OpenSim.Region.Framework.Scenes
                 if (GetScenePresence(client.AgentId) != null)
                 {
                     EventManager.TriggerOnNewClient(client);
-                    if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0)
+                    if ((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0)
                         EventManager.TriggerOnClientLogin(client);
                 }
 
                 //Add the client to login stats
                 ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
-                if ((aCircuit.teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0 && monitor != null)
+                if ((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0 && monitor != null)
                 {
                     monitor.AddSuccessfulLogin();
                 }
@@ -612,7 +612,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// also return a reason.</returns>
         public bool NewUserConnection(AgentCircuitData agent, uint teleportFlags, out string reason)
         {
-            bool vialogin = ((teleportFlags & (uint)Constants.TeleportFlags.ViaLogin) != 0);
+            bool vialogin = ((teleportFlags & (uint)TeleportFlags.ViaLogin) != 0);
             reason = String.Empty;
 
             // Don't disable this log message - it's too helpful

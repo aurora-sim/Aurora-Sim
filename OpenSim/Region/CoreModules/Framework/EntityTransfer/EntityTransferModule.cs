@@ -481,7 +481,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                 RequestTeleportLocation(
                     client, regionInfo, uinfo.HomePosition, uinfo.HomeLookAt,
-                    (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
+                    (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
             }
             else
             {
@@ -494,7 +494,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     RequestTeleportLocation(
                         client, Regions[0], new Vector3(128, 128, 25), new Vector3(128, 128, 128),
-                        (uint)(Constants.TeleportFlags.SetLastToTarget | Constants.TeleportFlags.ViaHome));
+                        (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
                 }
             }
         }

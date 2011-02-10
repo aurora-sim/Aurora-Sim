@@ -44,7 +44,6 @@ using OpenSim.Region.Framework.Scenes;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using TPFlags = OpenSim.Framework.Constants.TeleportFlags;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using System.Text.RegularExpressions;
@@ -643,7 +642,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return DateTime.Now;
                     }
                 }
-                presence.ControllingClient.SendTeleportStart((uint)TPFlags.ViaLocation);
+                presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaLocation);
 
                 IEntityTransferModule entityTransfer = World.RequestModuleInterface<IEntityTransferModule>();
                 if (entityTransfer != null)
