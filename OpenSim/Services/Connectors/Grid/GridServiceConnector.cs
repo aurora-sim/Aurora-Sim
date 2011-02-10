@@ -209,57 +209,6 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public virtual List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["SCOPEID"] = scopeID.ToString();
-            sendData["REGIONID"] = regionID.ToString();
-
-            sendData["METHOD"] = "get_neighbours";
-
-            List<GridRegion> rinfos = new List<GridRegion>();
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            string reply = string.Empty;
-            try
-            {
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/grid",
-                            reqString);
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                        //m_log.DebugFormat("[GRID CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
-                        foreach (object r in rinfosList)
-                        {
-                            if (r is Dictionary<string, object>)
-                            {
-                                GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
-                                rinfos.Add(rinfo);
-                            }
-                        }
-                    }
-                    else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetNeighbours {0}, {1} received null response",
-                            scopeID, regionID);
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
-                return rinfos;
-            }
-
-            
-
-            return rinfos;
-        }
-
         public virtual GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

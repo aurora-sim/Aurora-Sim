@@ -188,8 +188,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ode = dode;
             if (!pos.IsFinite())
             {
-                pos = new Vector3(((float)Constants.RegionSize * 0.5f), ((float)Constants.RegionSize * 0.5f),
-                    parent_scene.GetTerrainHeightAtXY(((float)Constants.RegionSize * 0.5f), ((float)Constants.RegionSize * 0.5f)) + 0.5f);
+                pos = new Vector3((parent_scene.Region.RegionSizeX * 0.5f), (parent_scene.Region.RegionSizeY * 0.5f),
+                    parent_scene.GetTerrainHeightAtXY((parent_scene.Region.RegionSizeX * 0.5f), (parent_scene.Region.RegionSizeY * 0.5f)));
                 m_log.Warn("[PHYSICS]: Got nonFinite Object create Position");
             }
             _position = pos;

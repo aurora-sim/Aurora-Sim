@@ -278,46 +278,6 @@ namespace OpenSim.Server.Handlers.Grid
                 return SuccessResult();
             else
                 return FailureResult();
-
-        }
-
-        private byte[] GetNeighbours(Dictionary<string, object> request)
-        {
-            UUID scopeID = UUID.Zero;
-            if (request.ContainsKey("SCOPEID"))
-                UUID.TryParse(request["SCOPEID"].ToString(), out scopeID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no scopeID in request to get neighbours");
-
-            UUID regionID = UUID.Zero;
-            if (request.ContainsKey("REGIONID"))
-                UUID.TryParse(request["REGIONID"].ToString(), out regionID);
-            else
-                m_log.WarnFormat("[GRID HANDLER]: no regionID in request to get neighbours");
-
-            List<GridRegion> rinfos = m_GridService.GetNeighbours(scopeID, regionID);
-            rinfos = CleanRegions(rinfos);
-            //m_log.DebugFormat("[GRID HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
-
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
-                result["result"] = "null";
-            else
-            {
-                int i = 0;
-                foreach (GridRegion rinfo in rinfos)
-                {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
-                    result["region" + i] = rinfoDict;
-                    i++;
-                }
-            }
-
-            string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding();
-            return encoding.GetBytes(xmlString);
-
         }
 
         private byte[] GetRegionByUUID(Dictionary<string, object> request)

@@ -54,13 +54,11 @@ namespace OpenSim.Services.Interfaces
         bool DeregisterRegion(UUID regionID, UUID SessionID);
 
         /// <summary>
-        /// Get information about the regions neighbouring the given co-ordinates (in meters).
+        /// Get a specific region by UUID in the given scope
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
-        List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID);
-
         GridRegion GetRegionByUUID(UUID scopeID, UUID regionID);
 
         /// <summary>
@@ -72,6 +70,12 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         GridRegion GetRegionByPosition(UUID scopeID, int x, int y);
 
+        /// <summary>
+        /// Get the first returning region by name in the given scope
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="regionName"></param>
+        /// <returns></returns>
         GridRegion GetRegionByName(UUID scopeID, string regionName);
 
         /// <summary>
@@ -89,6 +93,15 @@ namespace OpenSim.Services.Interfaces
         /// </returns>
         List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber);
 
+        /// <summary>
+        /// Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="xmin"></param>
+        /// <param name="xmax"></param>
+        /// <param name="ymin"></param>
+        /// <param name="ymax"></param>
+        /// <returns></returns>
         List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax);
 
         List<GridRegion> GetDefaultRegions(UUID scopeID);

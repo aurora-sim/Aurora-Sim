@@ -222,13 +222,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             tempMotionState3 = new btDefaultMotionState(_parent_scene.TransZero);
 
 
-            AxisLockLinearLow = new btVector3(-1 * (int)Constants.RegionSize, -1 * (int)Constants.RegionSize, -1 * (int)Constants.RegionSize);
-            int regionsize = (int)Constants.RegionSize;
-
-            if (regionsize == 256)
-                regionsize = 512;
-
-            AxisLockLinearHigh = new btVector3((int)Constants.RegionSize, (int)Constants.RegionSize, (int)Constants.RegionSize);
+            AxisLockLinearLow = new btVector3(-1 * parent_scene.m_region.RegionSizeX, -1 * parent_scene.m_region.RegionSizeY, -1 * parent_scene.m_region.RegionSizeZ);
+            
+            AxisLockLinearHigh = new btVector3(parent_scene.m_region.RegionSizeX, parent_scene.m_region.RegionSizeY, parent_scene.m_region.RegionSizeZ);
 
             _target_velocity = Vector3.Zero;
             _velocity = Vector3.Zero;
@@ -2593,7 +2589,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                     l_orientation.Z = tempOrientation2.getZ();
                     l_orientation.W = tempOrientation2.getW();
 
-                    if (l_position.X > ((int)Constants.RegionSize - 0.05f) || l_position.X < 0f || l_position.Y > ((int)Constants.RegionSize - 0.05f) || l_position.Y < 0f)
+                    if (l_position.X > (_parent_scene.m_region.RegionSizeX - 0.05f) || l_position.X < 0f || l_position.Y > (_parent_scene.m_region.RegionSizeY - 0.05f) || l_position.Y < 0f)
                     {
                         //base.RaiseOutOfBounds(l_position);
 
@@ -2613,8 +2609,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                             return;
                         }
                     }
-                    if (l_position.X > Constants.RegionSize ||
-                        l_position.Y > Constants.RegionSize ||
+                    if (l_position.X > _parent_scene.m_region.RegionSizeX ||
+                        l_position.Y > _parent_scene.m_region.RegionSizeY ||
                         l_position.Z < 0f)
                     {
                         IsPhysical = false;

@@ -185,8 +185,8 @@ namespace OpenSim.Services.LLLoginService
         private Int32 circuitCode;
         private uint regionX;
         private uint regionY;
-        private int regionSizeX = Constants.RegionSize;
-        private int regionSizeY = Constants.RegionSize;
+        private int regionSizeX;
+        private int regionSizeY;
 
         // Login
         private string firstname;
@@ -392,15 +392,7 @@ namespace OpenSim.Services.LLLoginService
 
             ErrorMessage = "You have entered an invalid name/password combination.  Check Caps/lock.";
             ErrorReason = "key";
-            welcomeMessage = "Welcome to OpenSim!";
-            seedCapability = String.Empty;
-            home = "{'region_handle':[r" + (1000*Constants.RegionSize).ToString() + ",r" + (1000*Constants.RegionSize).ToString() + "], 'position':[r" +
-                   userProfile.homepos.X.ToString() + ",r" + userProfile.homepos.Y.ToString() + ",r" +
-                   userProfile.homepos.Z.ToString() + "], 'look_at':[r" + userProfile.homelookat.X.ToString() + ",r" +
-                   userProfile.homelookat.Y.ToString() + ",r" + userProfile.homelookat.Z.ToString() + "]}";
-            lookAt = "[r0.99949799999999999756,r0.03166859999999999814,r0]";
-            RegionX = (uint) 255232;
-            RegionY = (uint) 254976;
+            welcomeMessage = "Welcome to Aurora!";
 
             SessionID = UUID.Random();
             SecureSessionID = UUID.Random();

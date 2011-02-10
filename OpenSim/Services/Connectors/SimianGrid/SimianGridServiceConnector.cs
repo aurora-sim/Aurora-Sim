@@ -204,34 +204,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return success;
         }
 
-        public List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
-        {
-            const int NEIGHBOR_RADIUS = 128;
-
-            GridRegion region = GetRegionByUUID(scopeID, regionID);
-
-            if (region != null)
-            {
-                List<GridRegion> regions = GetRegionRange(scopeID,
-                    region.RegionLocX - NEIGHBOR_RADIUS, region.RegionLocX + (int)Constants.RegionSize + NEIGHBOR_RADIUS,
-                    region.RegionLocY - NEIGHBOR_RADIUS, region.RegionLocY + (int)Constants.RegionSize + NEIGHBOR_RADIUS);
-
-                for (int i = 0; i < regions.Count; i++)
-                {
-                    if (regions[i].RegionID == regionID)
-                    {
-                        regions.RemoveAt(i);
-                        break;
-                    }
-                }
-
-                m_log.Debug("[SIMIAN GRID CONNECTOR]: Found " + regions.Count + " neighbors for region " + regionID);
-                return regions;
-            }
-
-            return new List<GridRegion>(0);
-        }
-
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
             NameValueCollection requestArgs = new NameValueCollection

@@ -1081,8 +1081,8 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             //  kluge to keep things in bounds.  ODE lets dead avatars drift away (they should be removed!)
             if (vec.X < -10.0f) vec.X = 0.0f;
             if (vec.Y < -10.0f) vec.Y = 0.0f;
-            if (vec.X > (int)Constants.RegionSize + 10.2f) vec.X = (int)Constants.RegionSize + 10.2f;
-            if (vec.Y > (int)Constants.RegionSize + 10.2f) vec.Y = (int)Constants.RegionSize + 10.2f;
+            if (vec.X > m_parent_scene.m_region.RegionSizeX + 10.2f) vec.X = m_parent_scene.m_region.RegionSizeX + 10.2f;
+            if (vec.Y > m_parent_scene.m_region.RegionSizeY + 10.2f) vec.Y = m_parent_scene.m_region.RegionSizeY + 10.2f;
 
             m_position.X = vec.X;
             m_position.Y = vec.Y;

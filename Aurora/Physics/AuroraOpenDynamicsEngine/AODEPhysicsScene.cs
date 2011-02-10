@@ -216,6 +216,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float step_time = 0.0f;
         private RegionInfo m_region;
 
+        public RegionInfo Region
+        {
+            get { return m_region; }
+        }
+
         public override float StepTime
         {
             get { return ODE_STEPSIZE; }
@@ -2949,7 +2954,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         if (geom_name_map.ContainsKey(defect.Shell))
                                             AddAvatar(geom_name_map[defect.Shell], new Vector3(m_region.RegionSizeX / 2,
                                                 m_region.RegionSizeY / 2,
-                                                Constants.RegionSize / 2), defect.Orientation, defect.Size, true);
+                                                m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true);
                                         defect.Destroy();
                                     }
                                 }

@@ -38,6 +38,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
     {
         private List<BasicActor> _actors = new List<BasicActor>();
         private float[] _heightMap;
+        private RegionInfo m_region;
 
         //protected internal string sceneIdentifier;
 
@@ -48,6 +49,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void Initialise(IMesher meshmerizer, RegionInfo region)
         {
+            m_region = region;
         }
 
         public override void PostInitialise(IConfigSource config)
@@ -119,25 +121,25 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 {
                     actorPosition.Y = 0.1F;
                 }
-                else if (actor.Position.Y >= Constants.RegionSize)
+                else if (actor.Position.Y >= m_region.RegionSizeY)
                 {
-                    actorPosition.Y = ((int)Constants.RegionSize - 0.1f);
+                    actorPosition.Y = (m_region.RegionSizeY - 0.1f);
                 }
 
                 if (actor.Position.X < 0)
                 {
                     actorPosition.X = 0.1F;
                 }
-                else if (actor.Position.X >= Constants.RegionSize)
+                else if (actor.Position.X >= m_region.RegionSizeX)
                 {
-                    actorPosition.X = ((int)Constants.RegionSize - 0.1f);
+                    actorPosition.X = (m_region.RegionSizeX - 0.1f);
                 }
 
-                float height = _heightMap[(int)actor.Position.Y * Constants.RegionSize + (int)actor.Position.X] + actor.Size.Z;
+                float height = _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] + actor.Size.Z;
                 if (actor.Flying)
                 {
                     if (actor.Position.Z + (actor.Velocity.Z*timeStep) <
-                        _heightMap[(int)actor.Position.Y * Constants.RegionSize + (int)actor.Position.X] + 2)
+                        _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] + 2)
                     {
                         actorPosition.Z = height;
                         actorVelocity.Z = 0;

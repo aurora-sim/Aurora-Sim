@@ -806,7 +806,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // This may need to be updated to the maximum draw distance possible..
                 // We might (and probably will) be checking for prim creation from other sims
                 // when the camera crosses the border.
-                float idist = Constants.RegionSize;
+                float idist = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / 2;
                 if (inter.HitTF)
                 {
                     // We need to find the closest prim to return to the testcaller along the ray

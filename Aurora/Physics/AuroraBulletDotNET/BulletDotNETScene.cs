@@ -67,6 +67,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
         public btVector3 VectorZero;
         public btQuaternion QuatIdentity;
         public btTransform TransZero;
+        public RegionInfo m_region;
 
         public float geomDefaultDensity = 10.000006836f;
 
@@ -107,7 +108,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
 
         // private IConfigSource m_config;
         private readonly btVector3 worldAabbMin = new btVector3(-10f, -10f, 0);
-        private readonly btVector3 worldAabbMax = new btVector3((int)Constants.RegionSize + 10f, (int)Constants.RegionSize + 10f, 9000);
+        private btVector3 worldAabbMax;
 
         public IMesher mesher;
         private ContactAddedCallbackHandler m_CollisionInterface;
@@ -143,12 +144,13 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             QuatIdentity = new btQuaternion(0, 0, 0, 1);
             TransZero = new btTransform(QuatIdentity, VectorZero);
             m_gravity = new btVector3(0, 0, gravityz);
-            _origheightmap = new float[(int)Constants.RegionSize * (int)Constants.RegionSize];
         }
 
         public override void Initialise(IMesher meshmerizer, RegionInfo region)
         {
             mesher = meshmerizer;
+            m_region = region;
+            _origheightmap = new float[m_region.RegionSizeX * m_region.RegionSizeY];
         }
 
         public override void PostInitialise(IConfigSource config)
@@ -205,6 +207,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             }
             lock (BulletLock)
             {
+                worldAabbMax = new btVector3(m_region.RegionSizeX + 10f, m_region.RegionSizeY + 10f, m_region.RegionSizeZ);
                 m_broadphase = new btAxisSweep3(worldAabbMin, worldAabbMax, 16000);
                 m_collisionConfiguration = new btDefaultCollisionConfiguration();
                 m_solver = new btSequentialImpulseConstraintSolver();
@@ -555,11 +558,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             hfmin = 0;
             hfmax = 256;
 
-            m_terrainShape = new btHeightfieldTerrainShape((int)Constants.RegionSize, (int)Constants.RegionSize, heightMap,
+            m_terrainShape = new btHeightfieldTerrainShape(m_region.RegionSizeX, m_region.RegionSizeY, heightMap,
                                                            1.0f, hfmin, hfmax, (int)btHeightfieldTerrainShape.UPAxis.Z,
                                                            (int)btHeightfieldTerrainShape.PHY_ScalarType.PHY_FLOAT, false);
-            float AabbCenterX = Constants.RegionSize/2f;
-            float AabbCenterY = Constants.RegionSize/2f;
+            float AabbCenterX = m_region.RegionSizeX / 2f;
+            float AabbCenterY = m_region.RegionSizeY / 2f;
 
             float AabbCenterZ = 0;
             float temphfmin, temphfmax;
@@ -774,11 +777,11 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             // Is there any reason that we don't do this in ScenePresence?
             // The only physics engine that benefits from it in the physics plugin is this one
 
-            if (x > (int)Constants.RegionSize || y > (int)Constants.RegionSize ||
+            if (x > m_region.RegionSizeX || y > m_region.RegionSizeY ||
                 x < 0.001f || y < 0.001f)
                 return 0;
 
-            return _origheightmap[(int)y * Constants.RegionSize + (int)x];
+            return _origheightmap[(int)y * m_region.RegionSizeY + (int)x];
         }
         // End recovered. Kitto Flora
 

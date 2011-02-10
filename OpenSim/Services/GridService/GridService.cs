@@ -366,28 +366,6 @@ namespace OpenSim.Services.GridService
             return m_Database.Delete(regionID);
         }
 
-        public List<GridRegion> GetNeighbours(UUID scopeID, UUID regionID)
-        {
-            List<GridRegion> rinfos = new List<GridRegion>();
-            GridRegion region = m_Database.Get(regionID, scopeID);
-            if (region != null)
-            {
-                // Not really? Maybe?
-                List<GridRegion> rdatas = m_Database.Get(region.RegionLocX - (int)Constants.RegionSize - 1, region.RegionLocY - (int)Constants.RegionSize - 1, 
-                    region.RegionLocX + (int)Constants.RegionSize + 1, region.RegionLocY + (int)Constants.RegionSize + 1, scopeID);
-
-                foreach (GridRegion rdata in rdatas)
-                    if (rdata.RegionID != regionID)
-                    {
-                        if ((rdata.Flags & (int)RegionFlags.Hyperlink) == 0) // no hyperlinks as neighbours
-                            rinfos.Add(rdata);
-                    }
-
-                m_log.DebugFormat("[GRID SERVICE]: region {0} has {1} neighours", region.RegionName, rinfos.Count);
-            }
-            return rinfos;
-        }
-
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
             return m_Database.Get(regionID, scopeID);
