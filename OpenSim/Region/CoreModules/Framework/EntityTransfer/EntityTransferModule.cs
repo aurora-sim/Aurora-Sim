@@ -531,7 +531,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                     attModule.ValidateAttachments(agent.UUID);
-                pos = pos + (agent.Velocity);
 
                 int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
                 int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;

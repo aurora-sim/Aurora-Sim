@@ -318,34 +318,34 @@ namespace Aurora.Modules
                 m_log.DebugFormat(
                     "[EstateService]: AllowedIncomingTeleport was given an illegal position of {0} for avatar {1}, {2}. Clamping",
                     Position, Name, userID);
-                //bool changedX = false;
-                //bool changedY = false;
+                bool changedX = false;
+                bool changedY = false;
                 while (Position.X < 0)
                 {
                     Position.X += scene.RegionInfo.RegionSizeX;
-                    //changedX = true;
+                    changedX = true;
                 }
                 while (Position.X > scene.RegionInfo.RegionSizeX)
                 {
                     Position.X -= scene.RegionInfo.RegionSizeX;
-                    //changedX = true;
+                    changedX = true;
                 }
 
                 while (Position.Y < 0)
                 {
                     Position.Y += scene.RegionInfo.RegionSizeY;
-                    //changedY = true;
+                    changedY = true;
                 }
                 while (Position.Y > scene.RegionInfo.RegionSizeY)
                 {
                     Position.Y -= scene.RegionInfo.RegionSizeY;
-                    //changedY = true;
+                    changedY = true;
                 }
 
-                //if (changedX)
-                //Position.X = scene.RegionInfo.RegionSizeX - Position.X;
-                //if(changedY)
-                //Position.Y = scene.RegionInfo.RegionSizeY - Position.Y;
+                if (changedX)
+                    Position.X = scene.RegionInfo.RegionSizeX - Position.X;
+                if(changedY)
+                    Position.Y = scene.RegionInfo.RegionSizeY - Position.Y;
             }
 
             //Check that we are not underground as well
