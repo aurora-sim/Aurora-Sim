@@ -4111,7 +4111,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int j = 0;
 
             returnblock[j].Parameter = Utils.StringToBytes(estateID.ToString()); j++;
-            returnblock[j].Parameter = Utils.StringToBytes(((int)Constants.EstateAccessCodex.EstateBans).ToString()); j++;
+
+            returnblock[j].Parameter = Utils.StringToBytes(((int)EstateTools.EstateAccessReplyDelta.EstateBans).ToString()); j++;
             returnblock[j].Parameter = Utils.StringToBytes("0"); j++;
             returnblock[j].Parameter = Utils.StringToBytes("0"); j++;
             returnblock[j].Parameter = Utils.StringToBytes(BannedUsers.Count.ToString()); j++;

@@ -83,17 +83,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     estateOwner);
 
             remote_client.SendEstateList(invoice,
-                    (int)Constants.EstateAccessCodex.EstateManagers,
+                    (int)EstateTools.EstateAccessReplyDelta.EstateManagers,
                     m_scene.RegionInfo.EstateSettings.EstateManagers,
                     m_scene.RegionInfo.EstateSettings.EstateID);
 
             remote_client.SendEstateList(invoice,
-                    (int)Constants.EstateAccessCodex.AccessOptions,
+                    (int)EstateTools.EstateAccessReplyDelta.AllowedUsers,
                     m_scene.RegionInfo.EstateSettings.EstateAccess,
                     m_scene.RegionInfo.EstateSettings.EstateID);
 
             remote_client.SendEstateList(invoice,
-                    (int)Constants.EstateAccessCodex.AllowedGroups,
+                    (int)EstateTools.EstateAccessReplyDelta.AllowedGroups,
                     m_scene.RegionInfo.EstateSettings.EstateGroups,
                     m_scene.RegionInfo.EstateSettings.EstateID);
 
@@ -629,10 +629,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
             if ((estateAccessType & 1024) == 0) //1024 means more than one is being sent   
             {
-                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AccessOptions, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
-                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.AllowedUsers, m_scene.RegionInfo.EstateSettings.EstateAccess, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.AllowedGroups, m_scene.RegionInfo.EstateSettings.EstateGroups, m_scene.RegionInfo.EstateSettings.EstateID);
                 remote_client.SendBannedUserList(invoice, m_scene.RegionInfo.EstateSettings.EstateBans, m_scene.RegionInfo.EstateSettings.EstateID);
-                remote_client.SendEstateList(invoice, (int)Constants.EstateAccessCodex.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
+                remote_client.SendEstateList(invoice, (int)EstateTools.EstateAccessReplyDelta.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateManagers, m_scene.RegionInfo.EstateSettings.EstateID);
             }
         }
 

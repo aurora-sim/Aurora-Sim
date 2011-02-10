@@ -854,8 +854,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
             {
-                //int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
-                //int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.MaxTerrainSendSize / Constants.TerrainPatchSize;
                 int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
                 int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
                 m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
@@ -866,12 +864,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
             {
                 for (int x = 0; x <
-                    m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize/* &&
-                    x < (Constants.MaxTerrainSendSize / Constants.TerrainPatchSize)*/; x++) //Make sure that we don't send past what viewers like
+                    m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
                 {
                     for (int y = 0; y <
-                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize/* &&
-                    y < (Constants.MaxTerrainSendSize / Constants.TerrainPatchSize)*/; y++) //Make sure that we don't send past what viewers like
+                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
                     {
                         //Need to make sure we don't send the same ones over and over
                         if (!m_terrainPatchesSent[presence.UUID][x, y])
