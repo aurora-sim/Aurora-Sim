@@ -251,6 +251,7 @@ namespace Aurora.Modules
                     p.AddStat("StatCollisionAccountingTime " + kvp.Key,
                         new ProfilerValueInfo() { Value = m_lastPhysicsStats[kvp.Key].StatCollisionAccountingTime });
                 }
+                m_currentPhysicsStats.Clear();
             }
             m_lastUpdated = DateTime.Now;
         }

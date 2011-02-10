@@ -44,30 +44,7 @@ namespace Aurora.Framework
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            ProfilerValueInfo[] Stats = new ProfilerValueInfo[10];
-            int count = 0;
-            foreach (ProfilerValueInfo info in statManager.GetInfos())
-            {
-                if (info != null)
-                {
-                    Stats[count] = info;
-                    count++;
-                }
-            }
-            if (count != Stats.Length)
-            {
-                ProfilerValueInfo[] newStats = new ProfilerValueInfo[count];
-                count = 0;
-                foreach (ProfilerValueInfo info in Stats)
-                {
-                    if (info != null)
-                    {
-                        newStats[count] = info;
-                        count++;
-                    }
-                }
-                Stats = newStats;
-            }
+            ProfilerValueInfo[] Stats = statManager.GetInfos();
 
             for (int i = 0; i < Stats.Length; i++)
             {
@@ -107,30 +84,7 @@ namespace Aurora.Framework
 
             double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
-            ProfilerValueInfo[] Stats = new ProfilerValueInfo[10];
-            int count = 0;
-            foreach (ProfilerValueInfo info in statManager.GetInfos())
-            {
-                if (info != null)
-                {
-                    Stats[count] = info;
-                    count++;
-                }
-            }
-            if (count != Stats.Length)
-            {
-                ProfilerValueInfo[] newStats = new ProfilerValueInfo[count];
-                count = 0;
-                foreach (ProfilerValueInfo info in Stats)
-                {
-                    if (info != null)
-                    {
-                        newStats[count] = info;
-                        count++;
-                    }
-                }
-                Stats = newStats;
-            }
+            ProfilerValueInfo[] Stats = statManager.GetInfos();
 
             for (int x = 200; x > 0; x--)
             {
@@ -178,6 +132,8 @@ namespace Aurora.Framework
     {
         private ProfilerValueInfo[] infos = new ProfilerValueInfo[10];
         private int lastSet = 0;
+        private int zero = 0;
+
         public void AddStat(ProfilerValueInfo info)
         {
             lock (infos)
@@ -188,7 +144,13 @@ namespace Aurora.Framework
                     lastSet++;
                 }
                 else
-                    ShiftLeft(info);
+                {
+                    //Move the 0 value around
+                    infos[zero] = null;
+                    infos[zero] = info;
+                    //Now increment 0 as it isn't where it was before
+                    zero++;
+                }
             }
         }
 
@@ -196,7 +158,16 @@ namespace Aurora.Framework
         {
             lock (infos)
             {
-                return (ProfilerValueInfo[])infos.Clone();
+                ProfilerValueInfo[] copy = new ProfilerValueInfo[lastSet];
+                int ii = zero;
+                for (int i = 0; i < lastSet; i++)
+                {
+                    copy[i] = infos[ii];
+                    ii++;
+                    if (ii > lastSet)
+                        ii = 0;
+                }
+                return copy;
             }
         }
 
@@ -212,16 +183,6 @@ namespace Aurora.Framework
                 }
             }
             return MaxVal;
-        }
-
-        private void ShiftLeft(ProfilerValueInfo info)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                if (i != 0)
-                    infos[i - 1] = infos[i];
-            }
-            infos[9] = info;
         }
     }
 

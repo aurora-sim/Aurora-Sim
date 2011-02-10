@@ -319,7 +319,10 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if(o != null)
                     ComponentsBody.Add(component.Name, o);
             }
-            return OSDParser.SerializeJsonString(ComponentsBody);
+            string result = OSDParser.SerializeJsonString(ComponentsBody);
+            ComponentsBody.Clear();
+
+            return result;
         }
 
         #endregion
@@ -331,8 +334,6 @@ namespace OpenSim.Region.Framework.Scenes.Components
             string components = reader.ReadElementContentAsString("Components", String.Empty);
             if (components != "")
             {
-                //m_log.Info("[COMPONENTMANAGER]: Found components for SOP " + obj.Name + " > " + components);
-
                 try
                 {
                     DeserializeComponents(obj, components);
