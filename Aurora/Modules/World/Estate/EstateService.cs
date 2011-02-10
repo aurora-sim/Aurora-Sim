@@ -681,38 +681,34 @@ namespace Aurora.Modules
                 }
                 if (Sp != null)
                 {
-                    IClientIPEndpoint ipEndpoint;
-                    if (((IClientCore)Sp.ControllingClient).TryGet(out ipEndpoint))
+                    IPAddress end = Sp.ControllingClient.EndPoint;
+                    IPHostEntry rDNS = null;
+                    try
                     {
-                        IPAddress end = ipEndpoint.EndPoint;
-                        IPHostEntry rDNS = null;
-                        try
+                        rDNS = Dns.GetHostEntry(end);
+                    }
+                    catch (System.Net.Sockets.SocketException)
+                    {
+                        m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
+                        rDNS = null;
+                    }
+                    if (ban.BannedHostIPMask == agent.IPAddress ||
+                            (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
+                                end.ToString().StartsWith(ban.BannedHostIPMask))
+                    {
+                        //Ban the new user
+                        ES.AddBan(new EstateBan()
                         {
-                            rDNS = Dns.GetHostEntry(end);
-                        }
-                        catch (System.Net.Sockets.SocketException)
-                        {
-                            m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
-                            rDNS = null;
-                        }
-                        if (ban.BannedHostIPMask == agent.IPAddress ||
-                                (rDNS != null && rDNS.HostName.Contains(ban.BannedHostIPMask)) ||
-                                    end.ToString().StartsWith(ban.BannedHostIPMask))
-                        {
-                            //Ban the new user
-                            ES.AddBan(new EstateBan()
-                            {
-                                EstateID = ES.EstateID,
-                                BannedHostIPMask = agent.IPAddress,
-                                BannedUserID = agent.AgentID,
-                                BannedHostAddress = agent.IPAddress,
-                                BannedHostNameMask = agent.IPAddress
-                            });
-                            ES.Save();
+                            EstateID = ES.EstateID,
+                            BannedHostIPMask = agent.IPAddress,
+                            BannedUserID = agent.AgentID,
+                            BannedHostAddress = agent.IPAddress,
+                            BannedHostNameMask = agent.IPAddress
+                        });
+                        ES.Save();
 
-                            reason = "Banned from this region.";
-                            return false;
-                        }
+                        reason = "Banned from this region.";
+                        return false;
                     }
                 }
                 i++;

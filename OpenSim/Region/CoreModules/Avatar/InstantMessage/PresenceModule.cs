@@ -47,26 +47,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        //public event PresenceChange OnPresenceChange;
-        //public event BulkPresenceData OnBulkPresenceData;
-
         protected List<Scene> m_Scenes = new List<Scene>();
-
-        protected IPresenceService m_PresenceService = null;
-
-        protected IPresenceService PresenceService
-        {
-            get
-            {
-                if (m_PresenceService == null)
-                {
-                    if (m_Scenes.Count > 0)
-                        m_PresenceService = m_Scenes[0].RequestModuleInterface<IPresenceService>();
-                }
-
-                return m_PresenceService;
-            }
-        }
 
         public void Initialise(IConfigSource config)
         {
@@ -128,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             IClientAPI client = (IClientAPI)sender;
             m_log.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
 
-            PresenceInfo[] status = PresenceService.GetAgents(args.ToArray());
+            PresenceInfo[] status = m_Scenes[0].RequestModuleInterface<IPresenceService>().GetAgents(args.ToArray());
 
             List<UUID> online = new List<UUID>();
             List<UUID> offline = new List<UUID>();

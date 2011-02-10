@@ -120,14 +120,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     {
                         if (sessionID == controllingClient.SessionId)
                         {
-                            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, agentID);
-                            if (account != null)
-                            {
-                                if (account.UserLevel > 0)
-                                    sp.GodLevel = account.UserLevel;
-                                else
-                                    sp.GodLevel = 250;
-                            }
+                            sp.GodLevel = sp.UserLevel;
 
                             m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
                             sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
@@ -137,7 +130,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                 else
                 {
                     if (m_dialogModule != null)
-                        m_dialogModule.SendAlertToUser(agentID, "Request for god powers denied");
+                        m_dialogModule.SendAlertToUser(agentID, "Request for god powers denied. This request has been logged.");
+                    m_log.Info("[GODS]: God powers requested by " + sp.Name + ", user is not allowed to have god powers");
                 }
             }
         }
@@ -194,15 +188,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                             m_scene.IncomingCloseAgent(sp.UUID);
                         }
                     }
-                    
-                    if (kickflags == 1)
+                    else if (kickflags == 1)
                     {
                         sp.Frozen = true;
                         m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));
                         m_dialogModule.SendAlertToUser(godID, "User Frozen");
                     }
-                    
-                    if (kickflags == 2)
+                    else if (kickflags == 2)
                     {
                         sp.Frozen = false;
                         m_dialogModule.SendAlertToUser(agentID, Utils.BytesToString(reason));

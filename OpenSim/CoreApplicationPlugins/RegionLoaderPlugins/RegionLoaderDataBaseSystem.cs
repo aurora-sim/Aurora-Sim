@@ -48,7 +48,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ISimulationBase m_openSim;
-        private IRegionCreator m_creator;
         private IConfigSource m_configSource;
         private bool m_enabled = false;
         private bool m_default = false;
@@ -58,10 +57,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_enabled; }
         }
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
+        public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
-            m_creator = creator;
             m_openSim = openSim;
             
             IConfig config = configSource.Configs["RegionStartup"];
@@ -145,7 +143,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 //Load the file loader and set it up and make sure that we pull any regions from it
                 RegionLoaderFileSystem system = new RegionLoaderFileSystem();
-                system.Initialise(m_configSource, m_creator, m_openSim);
+                system.Initialise(m_configSource, m_openSim);
                 RegionInfo[] regionsToConvert = system.LoadRegions();
                 if (regionsToConvert == null)
                     return;

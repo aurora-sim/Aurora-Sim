@@ -796,6 +796,8 @@ namespace OpenSim.Framework
 
         IScene Scene { get; }
 
+        IPAddress EndPoint { get; }
+
         // [Obsolete("LLClientView Specific - Replace with ???")]
         int NextAnimationSequenceNumber { get; }
 

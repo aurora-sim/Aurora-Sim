@@ -272,7 +272,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// The current user god level
+        /// The User Level the client has (taken from UserAccount)
         /// </summary>
         public int UserLevel
         {
@@ -280,7 +280,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// The max god level the user can have
+        /// The current status of god level in the client
         /// </summary>
         public int GodLevel
         {

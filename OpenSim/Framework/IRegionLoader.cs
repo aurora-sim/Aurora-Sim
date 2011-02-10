@@ -40,9 +40,8 @@ namespace OpenSim.Framework
         /// Starts up the module and loads configs
         /// </summary>
         /// <param name="configSource"></param>
-        /// <param name="creator"></param>
         /// <param name="openSim"></param>
-        void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim);
+        void Initialise(IConfigSource configSource, ISimulationBase openSim);
 
         /// <summary>
         /// Loads all regions from all enabled plugins

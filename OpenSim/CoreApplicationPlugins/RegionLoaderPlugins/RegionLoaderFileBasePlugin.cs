@@ -55,7 +55,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_enabled; }
         }
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
+        public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
             m_openSim = openSim;

@@ -57,7 +57,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         private IConfigSource m_configSource;
 
-        public void Initialise(IConfigSource configSource, IRegionCreator creator, ISimulationBase openSim)
+        public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
             IConfig config = configSource.Configs["RegionStartup"];

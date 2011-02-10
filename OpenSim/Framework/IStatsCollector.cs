@@ -43,7 +43,6 @@ namespace OpenSim.Framework
     }
 
     public delegate void SendStatResult(SimStats stats);
-    public delegate void YourStatsAreWrong();
 
     public interface IMonitorModule
     {
@@ -51,11 +50,6 @@ namespace OpenSim.Framework
         /// Event that gives others the SimStats class that is being sent out to the client
         /// </summary>
         event SendStatResult OnSendStatsResult;
-
-        /// <summary>
-        /// Event that tells others that their stats are incorrect and need to be recalculated
-        /// </summary>
-        event YourStatsAreWrong OnStatsIncorrect;
 
         /// <summary>
         /// Get a monitor module by the RegionID (key parameter, can be "" to get the base monitors) and Name of the monitor

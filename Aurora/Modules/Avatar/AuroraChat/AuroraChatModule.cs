@@ -162,7 +162,6 @@ namespace Aurora.Modules
                 scene.EventManager.OnNewClient += OnNewClient;
                 scene.EventManager.OnClosingClient += OnClosingClient;
                 scene.EventManager.OnRegisterCaps += RegisterCaps;
-                scene.EventManager.OnClientConnect += OnClientConnect;
                 scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
 
                 scene.RegisterModuleInterface<IMuteListModule>(this);
@@ -188,7 +187,6 @@ namespace Aurora.Modules
                 if (m_TransferModule == null)
                 {
                     m_log.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
-                    scene.EventManager.OnClientConnect -= OnClientConnect;
 
                     m_scenes.Clear();
                     m_enabled = false;
@@ -204,7 +202,6 @@ namespace Aurora.Modules
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
                 scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnClientConnect -= OnClientConnect;
                 scene.EventManager.OnRegisterCaps -= RegisterCaps;
                 scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
@@ -240,6 +237,7 @@ namespace Aurora.Modules
             client.OnMuteListRequest -= OnMuteListRequest;
             client.OnUpdateMuteListEntry -= OnMuteListUpdate;
             client.OnRemoveMuteListEntry -= OnMuteListRemove;
+            client.OnInstantMessage -= OnInstantMessage;
             //Tell all client plugins that the user left
             foreach (IChatPlugin plugin in AllChatPlugins)
             {
@@ -253,6 +251,7 @@ namespace Aurora.Modules
             client.OnMuteListRequest += OnMuteListRequest;
             client.OnUpdateMuteListEntry += OnMuteListUpdate;
             client.OnRemoveMuteListEntry += OnMuteListRemove;
+            client.OnInstantMessage += OnInstantMessage;
 
             //Tell all the chat plugins about the new user
             foreach (IChatPlugin plugin in AllChatPlugins)
@@ -957,19 +956,6 @@ namespace Aurora.Modules
                     return scene;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Hook up the IMs from the client
-        /// </summary>
-        /// <param name="client"></param>
-        void OnClientConnect(IClientCore client)
-        {
-            IClientIM clientIM;
-            if (client.TryGet(out clientIM))
-            {
-                clientIM.OnInstantMessage += OnInstantMessage;
-            }
         }
 
         /// <summary>

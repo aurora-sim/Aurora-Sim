@@ -102,7 +102,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         #region Events
 
         public event SendStatResult OnSendStatsResult;
-        public event YourStatsAreWrong OnStatsIncorrect;
 
         #endregion
 
@@ -1051,15 +1050,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             if (handlerSendStatResult != null)
             {
                 handlerSendStatResult(simStats);
-            }
-        }
-
-        public void SendYourStatsAreWrong()
-        {
-            YourStatsAreWrong handlerStatsIncorrect = OnStatsIncorrect;
-            if (handlerStatsIncorrect != null)
-            {
-                handlerStatsIncorrect();
             }
         }
 

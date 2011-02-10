@@ -57,7 +57,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// Handles new client connections
     /// Constructor takes a single Packet and authenticates everything
     /// </summary>
-    public class LLClientView : IClientAPI, IClientCore, IClientIM, IClientChat, IClientIPEndpoint, IStatsCollector
+    public class LLClientView : IClientAPI, IClientCore, IStatsCollector
     {
         /// <value>
         /// Debug packet level.  See OpenSim.RegisterConsoleCommands() for more details.
@@ -440,10 +440,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public LLClientView(EndPoint remoteEP, Scene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
             UUID agentId, UUID sessionId, uint circuitCode)
         {
-            RegisterInterface<IClientIM>(this);
-            RegisterInterface<IClientChat>(this);
-            RegisterInterface<IClientIPEndpoint>(this);
-
             InitDefaultAnimations();
 
             m_scene = scene;
