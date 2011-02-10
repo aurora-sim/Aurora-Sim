@@ -334,12 +334,12 @@ namespace OpenSim.Server.Handlers.Simulation
             IAgentData agent = null;
             bool result = m_SimulationService.RetrieveAgent(destination, id, out agent);
             OSDMap map = null;
+            string strBuffer = "";
             if (result)
             {
                 if (agent != null) // just to make sure
                 {
                     map = agent.Pack();
-                    string strBuffer = "";
                     try
                     {
                         strBuffer = OSDParser.SerializeJsonString(map);
@@ -350,22 +350,23 @@ namespace OpenSim.Server.Handlers.Simulation
                         responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
                     }
-
-                    responsedata["content_type"] = "application/json";
-                    responsedata["int_response_code"] = HttpStatusCode.OK;
-                    responsedata["str_response_string"] = strBuffer;
                 }
                 else
                 {
-                    responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
-                    responsedata["str_response_string"] = "Internal error";
+                    map = new OSDMap();
+                    map["Result"] = "Internal error";
                 }
             }
             else
             {
-                responsedata["int_response_code"] = HttpStatusCode.NotFound;
-                responsedata["str_response_string"] = "Not Found";
+                map = new OSDMap();
+                map["Result"] = "Not Found";
             }
+            strBuffer = OSDParser.SerializeJsonString(map);
+
+            responsedata["content_type"] = "application/json";
+            responsedata["int_response_code"] = HttpStatusCode.OK;
+            responsedata["str_response_string"] = strBuffer;
         }
 
         protected void DoAgentDelete(Hashtable request, Hashtable responsedata, UUID id, string action, UUID regionID)
