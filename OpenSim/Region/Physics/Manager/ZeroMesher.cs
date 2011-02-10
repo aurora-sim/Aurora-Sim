@@ -74,5 +74,9 @@ namespace OpenSim.Region.Physics.Manager
 
             return null;
         }
+
+        public void RemoveMesh(ulong key)
+        {
+        }
     }
 }

@@ -2161,7 +2161,9 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             _parent_scene.SetUsingGImpact();
             if (oldMesh != null)
             {
+                //Make sure to tell the mesher that this mesh is dead too!
                 oldMesh.releasePinned();
+                _parent_scene.mesher.RemoveMesh(oldMesh.Key);
                 oldMesh = null;
             }
 

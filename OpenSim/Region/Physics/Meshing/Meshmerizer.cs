@@ -113,9 +113,9 @@ namespace OpenSim.Region.Physics.Meshing
         /// <param name="minZ"></param>
         /// <param name="maxZ"></param>
         /// <returns></returns>
-        private static Mesh CreateSimpleBoxMesh(float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
+        private static Mesh CreateSimpleBoxMesh(float minX, float maxX, float minY, float maxY, float minZ, float maxZ, ulong key)
         {
-            Mesh box = new Mesh();
+            Mesh box = new Mesh(key);
             List<Vertex> vertices = new List<Vertex>();
             // bottom
 
@@ -160,7 +160,7 @@ namespace OpenSim.Region.Physics.Meshing
         /// </summary>
         /// <param name="meshIn"></param>
         /// <returns></returns>
-        private static Mesh CreateBoundingBoxMesh(Mesh meshIn)
+        private static Mesh CreateBoundingBoxMesh(Mesh meshIn, ulong key)
         {
             float minX = float.MaxValue;
             float maxX = float.MinValue;
@@ -183,7 +183,7 @@ namespace OpenSim.Region.Physics.Meshing
                 }
             }
 
-            return CreateSimpleBoxMesh(minX, maxX, minY, maxY, minZ, maxZ);
+            return CreateSimpleBoxMesh(minX, maxX, minY, maxY, minZ, maxZ, key);
         }
 
         private void ReportPrimError(string message, string primName, PrimMesh primMesh)
@@ -256,7 +256,7 @@ namespace OpenSim.Region.Physics.Meshing
         }
 
 
-        private Mesh CreateMeshFromPrimMesher(string primName, PrimitiveBaseShape primShape, Vector3 size, float lod)
+        private Mesh CreateMeshFromPrimMesher(string primName, PrimitiveBaseShape primShape, Vector3 size, float lod, ulong key)
         {
             PrimMesh primMesh;
             PrimMesher.SculptMesh sculptMesh;
@@ -610,7 +610,7 @@ namespace OpenSim.Region.Physics.Meshing
                 vertices.Add(new Vertex(c.X, c.Y, c.Z));
             }
 
-            Mesh mesh = new Mesh();
+            Mesh mesh = new Mesh(key);
             // Add the corresponding triangles to the mesh
             for (int i = 0; i < numFaces; i++)
             {
@@ -623,6 +623,11 @@ namespace OpenSim.Region.Physics.Meshing
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod)
         {
             return CreateMesh(primName, primShape, size, lod, false);
+        }
+
+        public void RemoveMesh(ulong key)
+        {
+            m_uniqueMeshes.Remove(key);
         }
 
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
@@ -641,7 +646,7 @@ namespace OpenSim.Region.Physics.Meshing
             if (size.Y < 0.01f) size.Y = 0.01f;
             if (size.Z < 0.01f) size.Z = 0.01f;
 
-            mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod);
+            mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod, key);
 
             if (mesh != null)
             {
@@ -651,7 +656,7 @@ namespace OpenSim.Region.Physics.Meshing
                 m_log.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
                             minSizeForComplexMesh.ToString() + " - creating simple bounding box");
 #endif
-                    mesh = CreateBoundingBoxMesh(mesh);
+                    mesh = CreateBoundingBoxMesh(mesh, key);
                     mesh.DumpRaw(baseDir, primName, "Z extruded");
                 }
 

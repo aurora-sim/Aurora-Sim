@@ -46,16 +46,22 @@ namespace OpenSim.Region.Physics.Meshing
         IntPtr m_indicesPtr = IntPtr.Zero;
         int m_indexCount = 0;
         public float[] m_normals;
-
-        public Mesh()
+        private ulong m_key;
+        public ulong Key
         {
+            get { return m_key; }
+        }
+
+        public Mesh(ulong key)
+        {
+            m_key = key;
             m_vertices = new Dictionary<Vertex, int>();
             m_triangles = new List<Triangle>();
         }
 
         public Mesh Clone()
         {
-            Mesh result = new Mesh();
+            Mesh result = new Mesh(Key);
 
             foreach (Triangle t in m_triangles)
             {

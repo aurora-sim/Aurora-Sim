@@ -36,6 +36,7 @@ namespace OpenSim.Region.Physics.Manager
     {
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod);
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
+        void RemoveMesh(ulong key);
     }
 
     public interface IVertex
@@ -54,5 +55,6 @@ namespace OpenSim.Region.Physics.Manager
         void releasePinned();
         void Append(IMesh newMesh);
         void TransformLinear(float[,] matrix, float[] offset);
+        ulong Key { get; }
     }
 }
