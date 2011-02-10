@@ -120,7 +120,16 @@ namespace Aurora.Services.DataService
         public List<LandData> LoadLandObjects(UUID regionID)
         {
             //Load all from the database
-            List<LandData> AllLandObjects = GenericUtils.GetGenerics<LandData>(regionID, "LandData", GD, new LandData());
+            List<LandData> AllLandObjects = new List<LandData>();
+            try
+            {
+                AllLandObjects = GenericUtils.GetGenerics<LandData>(regionID, "LandData", GD, new LandData());
+            }
+            catch(Exception ex)
+            {
+                AllLandObjects = new List<LandData>();
+                OpenSim.Framework.Console.MainConsole.Instance.Output("[ParcelService]: Failed to load parcels, " + ex.ToString());
+            }
             for (int i = 0; i < AllLandObjects.Count; i++)
             {
                 BuildParcelAccessList(AllLandObjects[i]);
