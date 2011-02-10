@@ -108,6 +108,7 @@ namespace OpenSim.Services.Interfaces
         IRegistryCore Registry { get; }
         IClientCapsService ClientCaps { get; }
         UUID Password { get; }
+        bool RootAgent { get; set; }
 
         void Initialise(IClientCapsService clientCapsService, ulong regionHandle, string capsBase, string urlToInform);
         void Close();

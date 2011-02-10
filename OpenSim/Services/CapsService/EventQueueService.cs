@@ -332,7 +332,11 @@ namespace OpenSim.Services.CapsService
                             OSDMap body = ((OSDMap)map["body"]);
                             //See whether this needs sent to the client or not
                             if (!body["KillClient"].AsBoolean())
+                            {
+                                //This is very risky... but otherwise the user doesn't get cleaned up...
+                                m_service.ClientCaps.RemoveCAPS(m_service.RegionHandle);
                                 return true;
+                            }
                         }
                         else //Don't enqueue multiple times
                             return true;
@@ -922,6 +926,10 @@ namespace OpenSim.Services.CapsService
                             INeighborService service = m_service.Registry.RequestModuleInterface<INeighborService>();
                             if (service != null)
                             {
+                                //Fix the root agent status
+                                otherRegion.RootAgent = true;
+                                m_service.RootAgent = false;
+
                                 GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
                                 service.GetNeighbors(ourRegion);
                                 service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
@@ -1006,6 +1014,10 @@ namespace OpenSim.Services.CapsService
                         }
                         else
                         {
+                            //Fix the root agent status
+                            otherRegion.RootAgent = true;
+                            m_service.RootAgent = false;
+
                             //Ok... the agent exists... so lets assume that it worked?
                             service.GetNeighbors(ourRegion);
                             service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
@@ -1015,6 +1027,10 @@ namespace OpenSim.Services.CapsService
                     }
                     else
                     {
+                        //Fix the root agent status
+                        otherRegion.RootAgent = true;
+                        m_service.RootAgent = false;
+
                         // Next, let's close the child agent connections that are too far away.
                         service.GetNeighbors(ourRegion);
                         service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);

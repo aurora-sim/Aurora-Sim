@@ -111,6 +111,13 @@ namespace OpenSim.Services.CapsService
             get { return m_clientCapsService.AgentID; }
         }
 
+        protected bool m_isRootAgent = false;
+        public bool RootAgent
+        {
+            get { return m_isRootAgent; }
+            set { m_isRootAgent = value; }
+        }
+
         protected IClientCapsService m_clientCapsService;
         public IClientCapsService ClientCaps
         {

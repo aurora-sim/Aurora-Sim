@@ -10,6 +10,7 @@ using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
+using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Scenes;
@@ -100,11 +101,30 @@ namespace OpenSim.Services.CapsService
             }
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
+
+            MainConsole.Instance.Commands.AddCommand("capsService", false, "show users experimental", "show users experimental", "Shows all users in the grid, experimental!", ShowUsers);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<ICapsService>(this);
+        }
+
+        #endregion
+
+        #region Console Commands
+
+        protected void ShowUsers(string module, string[] cmd)
+        {
+            bool showChildAgents = cmd.Length == 4 ? cmd[3] == "all" : false;
+            foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
+            {
+                foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
+                {
+                    if((clientCaps.RootAgent || showChildAgents) && !clientCaps.Disabled)
+                        m_log.InfoFormat("Region - {0}, User {1}, {2}", regionCaps.RegionHandle, clientCaps.AgentID, clientCaps.RootAgent ? "Root Agent" : "Child Agent");
+                }
+            }
         }
 
         #endregion
@@ -140,8 +160,14 @@ namespace OpenSim.Services.CapsService
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
+            
+            //Fix the root agent status
+            clientService.RootAgent = true;
+
+            //Add the seed handlers, use "" for both so that we don't overwrite anything, as it is added above in the GetOrCreate
             clientService.AddSEEDCap("", "", clientService.Password);
 
+            //Trigger events, if they exist
             SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
             if (regionManager != null)
             {
