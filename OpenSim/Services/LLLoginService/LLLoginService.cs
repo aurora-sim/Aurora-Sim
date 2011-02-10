@@ -714,7 +714,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle);
+                capsSeedPath = m_CapsService.CreateCAPS(AgentID, SimcapsSeedPath, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true);
                 m_log.Debug("[NewAgentConnection]: Adding Caps Url for grid" +
                      " @" + capsSeedPath + " calling URL " + SimcapsSeedPath + " for agent " + aCircuit.AgentID);
             }
@@ -1060,7 +1060,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
-                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, "", CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle);
+                string ServerCapsSeedPath = m_CapsService.CreateCAPS(aCircuit.AgentID, "", CapsUtil.GetCapsSeedPath(ServerCapsBase), region.RegionHandle, true);
 
                 regionClientCaps = m_CapsService.GetClientCapsService(aCircuit.AgentID).GetCapsService(region.RegionHandle);
                 aCircuit.OtherInformation["CapsPassword"] = regionClientCaps.Password;
@@ -1069,7 +1069,11 @@ namespace OpenSim.Services.LLLoginService
             // As we are creating the agent, we must also initialize the CapsService for the agent
             bool success = simConnector.CreateAgent(region, aCircuit, (int)Constants.TeleportFlags.ViaLogin, null, out reason);
             if (!success) // If it failed, do not set up any CapsService for the client
+            {
+                //Delete the Caps!
+                m_CapsService.RemoveCAPS(aCircuit.AgentID);
                 return success;
+            }
 
             if (m_CapsService != null && reason != "")
             {

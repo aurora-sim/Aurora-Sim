@@ -102,7 +102,7 @@ namespace OpenSim.Services.CapsService
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
 
-            MainConsole.Instance.Commands.AddCommand("capsService", false, "show users experimental", "show users experimental", "Shows all users in the grid, experimental!", ShowUsers);
+            MainConsole.Instance.Commands.AddCommand("capsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
@@ -116,12 +116,12 @@ namespace OpenSim.Services.CapsService
 
         protected void ShowUsers(string module, string[] cmd)
         {
-            bool showChildAgents = cmd.Length == 4 ? cmd[3] == "all" : false;
+            bool showChildAgents = cmd.Length == 3 ? cmd[2] == "all" : false;
             foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
             {
                 foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
                 {
-                    if((clientCaps.RootAgent || showChildAgents) && !clientCaps.Disabled)
+                    if((clientCaps.RootAgent || showChildAgents))
                         m_log.InfoFormat("Region - {0}, User {1}, {2}", regionCaps.RegionHandle, clientCaps.AgentID, clientCaps.RootAgent ? "Root Agent" : "Child Agent");
                 }
             }
@@ -154,15 +154,16 @@ namespace OpenSim.Services.CapsService
         /// <param name="SimCAPS"></param>
         /// <param name="CAPS"></param>
         /// <param name="regionHandle"></param>
+        /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle)
+        public string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, UrlToInform);
             
             //Fix the root agent status
-            clientService.RootAgent = true;
+            clientService.RootAgent = IsRootAgent;
 
             //Add the seed handlers, use "" for both so that we don't overwrite anything, as it is added above in the GetOrCreate
             clientService.AddSEEDCap("", "", clientService.Password);

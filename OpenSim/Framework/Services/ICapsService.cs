@@ -25,8 +25,9 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SimCAPS">The CAPS request on the region the user is being added to</param>
         /// <param name="CAPS">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
         /// <param name="regionHandle">The region handle of the region the user is being added to</param>
+        /// <param name="IsRootAgent">Whether this new Caps agent is a root agent in the sim</param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle);
+        string CreateCAPS(UUID AgentID, string UrlToInform, string CAPSBase, ulong regionHandle, bool IsRootAgent);
 
         IClientCapsService GetOrCreateClientCapsService(UUID AgentID);
         IClientCapsService GetClientCapsService(UUID AgentID);
