@@ -271,29 +271,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get { return m_iscolliding; }
             set
-                {
-                if (value)
-                    {
-                    m_colliderfilter +=2;
-                    if (m_colliderfilter > 2)
-                        m_colliderfilter = 2;
-                    }
-                else
-                    {
-                    m_colliderfilter--;
-                    if (m_colliderfilter < 0)
-                        m_colliderfilter = 0;
-                    }
-
-                if (m_colliderfilter == 0)
-                    m_iscolliding = false;
-                else
-                    m_iscolliding = true;
-
-//                if (m_iscolliding)
-//                    m_log.Warn("col");
-                m_wascolliding = m_iscolliding;
-                }
+            {
+                m_iscolliding = value;
+            }
         }
 
         /// <summary>
@@ -304,24 +284,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscollidingGround; }
             set
             {
-                
-                if (value)
-                    {
-                    m_colliderGroundfilter +=2;
-                    if (m_colliderGroundfilter > 2)
-                        m_colliderGroundfilter = 2;
-                    }
-                else
-                    {
-                    m_colliderGroundfilter--;
-                    if (m_colliderGroundfilter < 0)
-                        m_colliderGroundfilter = 0;
-                    }
-
-                if (m_colliderGroundfilter == 0)
-                    m_iscollidingGround = false;
-                else
-                    m_iscollidingGround = true;
+                m_iscollidingGround = value;
 
 //                if (m_iscollidingGround)
 //                    m_log.Warn("colgnd");
@@ -338,33 +301,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscollidingObj; }
             set
             {
-            if (value)
-                {
-                m_colliderObjectfilter += 2; // there are 2 falses per false
-                if (m_colliderObjectfilter > 2)
-                    m_colliderObjectfilter = 2;
-                }
-            else
-                {
-                m_colliderObjectfilter--;
-                if (m_colliderObjectfilter < 0)
-                    m_colliderObjectfilter = 0;
-                }
-
-            if (m_colliderGroundfilter == 0)
-                m_iscollidingObj = false;
-            else
-                m_iscollidingObj = true;
-
-//            if (m_iscollidingObj)
-//                m_log.Warn("colobj");
-/*
                 m_iscollidingObj = value;
-                if (m_iscollidingObj)
-                    m_pidControllerActive = false;
-                else
-                    m_pidControllerActive = true;
- */
+
+                //            if (m_iscollidingObj)
+                //                m_log.Warn("colobj");
+                /*
+                                m_iscollidingObj = value;
+                                if (m_iscollidingObj)
+                                    m_pidControllerActive = false;
+                                else
+                                    m_pidControllerActive = true;
+                 */
             }
         }
 
