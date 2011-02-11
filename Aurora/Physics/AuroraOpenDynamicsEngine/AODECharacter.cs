@@ -1131,7 +1131,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z) < 0.03) && !flying && vec.Z != 0))
+                    if (((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z - (_parent_scene.gravityz * m_mass)) < 0.03) && !flying && vec.Z != 0))
                     {
                         //m_log.Warn("Nulling Velo: " + vec.ToString());
                         vec = new Vector3(0, 0, 0);

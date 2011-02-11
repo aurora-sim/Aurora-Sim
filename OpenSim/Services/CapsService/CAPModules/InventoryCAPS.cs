@@ -94,92 +94,132 @@ namespace OpenSim.Services.CapsService
 
         public string HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
-            //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
+            try
+            {
+                //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            OSDArray foldersrequested = (OSDArray)map["folders"];
+                OSDArray foldersrequested = (OSDArray)map["folders"];
 
-            string response = FetchInventoryReply(foldersrequested, AgentID, false);
-            return response;
+                string response = FetchInventoryReply(foldersrequested, AgentID, false);
+                return response;
+            }
+            catch(Exception ex)
+            {
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+            }
+            OSDMap rmap = new OSDMap();
+            rmap["folders"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlString(rmap);
         }
 
         public string HandleFetchLibDescendents(string request, UUID AgentID)
         {
-            //m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
+            try
+            {
+                //m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
 
-            OSDArray foldersrequested = (OSDArray)map["folders"];
+                OSDArray foldersrequested = (OSDArray)map["folders"];
 
-            string response = FetchInventoryReply(foldersrequested, AgentID, true);
-            return response;
+                string response = FetchInventoryReply(foldersrequested, AgentID, true);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+            }
+            OSDMap rmap = new OSDMap();
+            rmap["folders"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlString(rmap);
         }
 
         public string HandleFetchInventory(string request, UUID AgentID)
         {
-            //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
-
-            OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
-
-            OSDArray foldersrequested = (OSDArray)requestmap["items"];
-
-            string response = "";
-            OSDMap map = new OSDMap();
-            //We have to send the agent_id in the main map as well as all the items
-            map.Add("agent_id", OSD.FromUUID(AgentID));
-
-            OSDArray items = new OSDArray();
-            for (int i = 0; i < foldersrequested.Count; i++)
+            try
             {
-                OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                UUID item_id = requestedFolders["item_id"].AsUUID();
-                InventoryItemBase item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                if (item != null)
-                {
-                    items.Add(ConvertInventoryItem(item, owner_id));
-                }
-            }
-            map.Add("items", items);
+                //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
-            response = OSDParser.SerializeLLSDXmlString(map);
-            return response;
+                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+
+                OSDArray foldersrequested = (OSDArray)requestmap["items"];
+
+                string response = "";
+                OSDMap map = new OSDMap();
+                //We have to send the agent_id in the main map as well as all the items
+                map.Add("agent_id", OSD.FromUUID(AgentID));
+
+                OSDArray items = new OSDArray();
+                for (int i = 0; i < foldersrequested.Count; i++)
+                {
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    UUID item_id = requestedFolders["item_id"].AsUUID();
+                    InventoryItemBase item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                    if (item != null)
+                    {
+                        items.Add(ConvertInventoryItem(item, owner_id));
+                    }
+                }
+                map.Add("items", items);
+
+                response = OSDParser.SerializeLLSDXmlString(map);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+            }
+            OSDMap rmap = new OSDMap();
+            rmap["items"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlString(rmap);
         }
 
         public string HandleFetchLib(string request, UUID AgentID)
         {
-            //m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
-
-            OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
-
-            OSDArray foldersrequested = (OSDArray)requestmap["items"];
-
-            string response = "";
-            OSDMap map = new OSDMap();
-            map.Add("agent_id", OSD.FromUUID(AgentID));
-            OSDArray items = new OSDArray();
-            for (int i = 0; i < foldersrequested.Count; i++)
+            try
             {
-                OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                UUID item_id = requestedFolders["item_id"].AsUUID();
-                InventoryItemBase item = null;
-                if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
-                {
-                    item = m_libraryService.LibraryRootFolder.FindItem(item_id);
-                }
-                if (item == null) //Try normal inventory them
-                    item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
-                if (item != null)
-                {
-                    items.Add(ConvertInventoryItem(item, owner_id));
-                }
-            }
-            map.Add("items", items);
+                //m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
-            response = OSDParser.SerializeLLSDXmlString(map);
-            return response;
+                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+
+                OSDArray foldersrequested = (OSDArray)requestmap["items"];
+
+                string response = "";
+                OSDMap map = new OSDMap();
+                map.Add("agent_id", OSD.FromUUID(AgentID));
+                OSDArray items = new OSDArray();
+                for (int i = 0; i < foldersrequested.Count; i++)
+                {
+                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
+                    UUID owner_id = requestedFolders["owner_id"].AsUUID();
+                    UUID item_id = requestedFolders["item_id"].AsUUID();
+                    InventoryItemBase item = null;
+                    if (m_libraryService != null && m_libraryService.LibraryRootFolder != null)
+                    {
+                        item = m_libraryService.LibraryRootFolder.FindItem(item_id);
+                    }
+                    if (item == null) //Try normal inventory them
+                        item = m_inventoryService.GetItem(new InventoryItemBase(item_id, owner_id));
+                    if (item != null)
+                    {
+                        items.Add(ConvertInventoryItem(item, owner_id));
+                    }
+                }
+                map.Add("items", items);
+
+                response = OSDParser.SerializeLLSDXmlString(map);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+            }
+            OSDMap rmap = new OSDMap();
+            rmap["folders"] = new OSDArray();
+            return OSDParser.SerializeLLSDXmlString(rmap);
         }
 
         /// <summary>

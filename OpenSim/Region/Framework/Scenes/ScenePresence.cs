@@ -1999,29 +1999,34 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (direc.Z > 2.0f)
                     {
-                        if (direc.Z < 2.5f)
-                            direc.Z = 2.5f;
-                        if (m_scene.m_usePreJump && !IsJumping)
+                        if (Velocity.Z <= .25 && Velocity.Z >= -0.25)
                         {
-                            //AllowMovement = false;
-                            IsJumping = true;
-                            PreJumpForce = direc;
-                            Animator.TrySetMovementAnimation("PREJUMP");
-                            //Leave this here! Otherwise jump will sometimes not occur...
-                            return;
-                        }
-                        else if (PreJumpForce.Equals(Vector3.Zero))
-                        {
-                            direc.X *= 2;
-                            direc.Y *= 2;
-                            if (direc.X == 0 && direc.Y == 0)
-                                direc.Z *= 2f;
-                            else
-                                direc.Z *= 3f;
+                            if (direc.Z < 2.5f)
+                                direc.Z = 2.5f;
+                            if (m_scene.m_usePreJump && !IsJumping)
+                            {
+                                //AllowMovement = false;
+                                IsJumping = true;
+                                PreJumpForce = direc;
+                                Animator.TrySetMovementAnimation("PREJUMP");
+                                //Leave this here! Otherwise jump will sometimes not occur...
+                                return;
+                            }
+                            else if (PreJumpForce.Equals(Vector3.Zero))
+                            {
+                                direc.X *= 2;
+                                direc.Y *= 2;
+                                if (direc.X == 0 && direc.Y == 0)
+                                    direc.Z *= 2f;
+                                else
+                                    direc.Z *= 3f;
 
-                            if (!IsJumping)
-                                Animator.TrySetMovementAnimation("JUMP");
+                                if (!IsJumping)
+                                    Animator.TrySetMovementAnimation("JUMP");
+                            }
                         }
+                        else //Jumping while moving vertically... stop it
+                            return;
                     }
                 }
 
