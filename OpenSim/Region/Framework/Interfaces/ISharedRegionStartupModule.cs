@@ -12,6 +12,7 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         /// <summary>
         /// Initialise and load the configs of the module
+        /// This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="source"></param>
@@ -20,6 +21,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         /// <summary>
         /// PostInitialise the module
+        /// This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="source"></param>
@@ -33,6 +35,14 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="source"></param>
         /// <param name="openSimBase"></param>
         void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+
+        /// <summary>
+        /// Do the functions of the module and set up any necessary functions
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="source"></param>
+        /// <param name="openSimBase"></param>
+        void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
         /// Close the module and remove all references to it

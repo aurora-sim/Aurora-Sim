@@ -56,6 +56,10 @@ namespace Aurora.Modules
             RegisterRegionWithGrid(scene);
         }
 
+        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
         public void StartupComplete()
         {
             foreach (Scene scene in m_scenes)

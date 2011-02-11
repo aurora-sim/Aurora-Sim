@@ -53,6 +53,10 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
+        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
         public void StartupComplete()
         {
         }

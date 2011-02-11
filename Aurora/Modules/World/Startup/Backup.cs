@@ -63,6 +63,10 @@ namespace Aurora.Modules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
+        }
+
+        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
             m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();
         }

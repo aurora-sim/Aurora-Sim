@@ -162,10 +162,6 @@ namespace OpenSim.Region.CoreModules
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-        }
-
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
-        {
             //Now make sure we have an owner and that the owner's account exists on the grid
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, scene.RegionInfo.EstateSettings.EstateOwner);
             while (scene.RegionInfo.EstateSettings.EstateOwner == UUID.Zero && MainConsole.Instance != null)
@@ -248,7 +244,15 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
+        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
         public void StartupComplete()
+        {
+        }
+
+        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 

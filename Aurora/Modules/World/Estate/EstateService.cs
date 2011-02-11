@@ -901,6 +901,10 @@ namespace Aurora.Modules
         {
         }
 
+        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        {
+        }
+
         public void Close(Scene scene)
         {
             if (!m_enabled)
