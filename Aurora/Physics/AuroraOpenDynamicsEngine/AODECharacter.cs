@@ -902,8 +902,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             //  if velocity is zero, use position control; otherwise, velocity control
-            if (_target_velocity.X == 0.0f && _target_velocity.Y == 0.0f && _target_velocity.Z == 0.0f &&
-                Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
+            if (_target_velocity == Vector3.Zero &&
+                Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05 && (this.m_iscollidingGround || this.m_iscollidingObj || this.flying))
                 //This is so that if we get moved by something else, it will update us in the client
                 {
                 //  keep track of where we stopped.  No more slippin' & slidin'
@@ -1131,7 +1131,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 veloc = d.BodyGetLinearVel(Body);
                     //Stop us from fidgiting if we have a small velocity
-                    if (((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z - (_parent_scene.gravityz * m_mass)) < 0.03) && !flying && vec.Z != 0))
+                    if (_zeroFlag && ((Math.Abs(vec.X) < 0.09 && Math.Abs(vec.Y) < 0.09 && Math.Abs(vec.Z - (_parent_scene.gravityz * m_mass)) < 0.03) && !flying && vec.Z != 0))
                     {
                         //m_log.Warn("Nulling Velo: " + vec.ToString());
                         vec = new Vector3(0, 0, 0);
@@ -1139,7 +1139,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     //Reduce insanely small values to 0 if the velocity isn't going up
-                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.6)
+                    if (Math.Abs(vec.Z) < 0.01 && veloc.Z < 0.6 && _zeroFlag)
                     {
                         if (veloc.Z != 0)
                         {
