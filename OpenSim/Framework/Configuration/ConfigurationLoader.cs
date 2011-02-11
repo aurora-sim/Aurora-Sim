@@ -85,8 +85,15 @@ namespace OpenSim.Framework
             string masterFileName =
                 startupConfig.GetString("inimaster", String.Empty);
 
-            string iniFileName =
-                startupConfig.GetString("inifile", defaultIniFile);
+            string iniGridName =
+                startupConfig.GetString("inigrid", String.Empty);
+
+            if(iniGridName == string.Empty) //Read the old name then
+                iniGridName =
+                    startupConfig.GetString("inifile", String.Empty);
+
+            string iniSimName =
+                startupConfig.GetString("inisim", defaultIniFile);
 
             //Be mindful of these when modifying...
             //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
@@ -107,22 +114,45 @@ namespace OpenSim.Framework
                         File.Exists(masterFilePath) &&
                         (!sources.Contains(masterFilePath)))
                     sources.Add(masterFilePath);
-                if (iniFileName == "") //Then it doesn't exist and we need to set this
+                if (iniGridName == "") //Then it doesn't exist and we need to set this
+                    iniFilePath = masterFilePath;
+                if (iniSimName == "") //Then it doesn't exist and we need to set this
                     iniFilePath = masterFilePath;
             }
 
-            if (iniFileName != "")
+            if (iniGridName != "")
             {
-                if (IsUri(iniFileName))
+                if (IsUri(iniGridName))
                 {
-                    if (!sources.Contains(iniFileName))
-                        sources.Add(iniFileName);
-                    iniFilePath = iniFileName;
+                    if (!sources.Contains(iniGridName))
+                        sources.Add(iniGridName);
+                    iniFilePath = iniGridName;
                 }
                 else
                 {
                     iniFilePath = Path.GetFullPath(
-                            Path.Combine(Util.configDir(), iniFileName));
+                            Path.Combine(Util.configDir(), iniGridName));
+
+                    if (File.Exists(iniFilePath))
+                    {
+                        if (!sources.Contains(iniFilePath))
+                            sources.Add(iniFilePath);
+                    }
+                }
+            }
+
+            if (iniSimName != "")
+            {
+                if (IsUri(iniSimName))
+                {
+                    if (!sources.Contains(iniSimName))
+                        sources.Add(iniSimName);
+                    iniFilePath = iniSimName;
+                }
+                else
+                {
+                    iniFilePath = Path.GetFullPath(
+                            Path.Combine(Util.configDir(), iniSimName));
 
                     if (File.Exists(iniFilePath))
                     {

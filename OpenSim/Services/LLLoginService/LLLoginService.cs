@@ -529,9 +529,10 @@ namespace OpenSim.Services.LLLoginService
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.GridProblem;
                 }
+
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
-                    List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(UUID.Zero);
+                    List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
                     GridRegion DefaultRegion = null;
                     if (DefaultRegions.Count == 0)
                         DefaultRegion = destination;
@@ -540,7 +541,7 @@ namespace OpenSim.Services.LLLoginService
 
                     if (m_DefaultHomeRegion != "" && guinfo.HomeRegionID == UUID.Zero)
                     {
-                        GridRegion newHomeRegion = m_GridService.GetRegionByName(UUID.Zero, m_DefaultHomeRegion);
+                        GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
                         if (newHomeRegion == null)
                             guinfo.HomeRegionID = guinfo.LastRegionID = DefaultRegion.RegionID;
                         else
@@ -620,15 +621,8 @@ namespace OpenSim.Services.LLLoginService
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = string.Empty;
-                GridRegion dest;
                 AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, account, avappearance, session, secureSession, position, where,
-                    clientIP, out where, out reason, out dest);
-                destination = dest;
-                if (requestData.ContainsKey("id0"))
-                    id0 = (string)requestData["id0"];
-                string platform = "";
-                if (requestData.ContainsKey("platform"))
-                    platform = (string)requestData["platform"];
+                    clientIP, out where, out reason, out destination);
 
                 if (aCircuit == null)
                 {
@@ -677,7 +671,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2} {3}", firstName, lastName, e.ToString(), e.StackTrace);
+                m_log.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} {1}: {2} {3}", firstName, lastName, e.ToString());
                 if (m_PresenceService != null)
                     m_PresenceService.LogoutAgent(session);
                 return LLFailedLoginResponse.InternalError;
@@ -911,24 +905,6 @@ namespace OpenSim.Services.LLLoginService
                 //// can be: last, home, safe, url
                 //response.StartLocation = "url";
 
-            }
-
-        }
-
-        private string hostName = string.Empty;
-        private int port = 0;
-
-        protected void SetHostAndPort(string url)
-        {
-            try
-            {
-                Uri uri = new Uri(url);
-                hostName = uri.Host;
-                port = uri.Port;
-            }
-            catch
-            {
-                m_log.WarnFormat("[LLLogin SERVICE]: Unable to parse GatekeeperURL {0}", url);
             }
         }
 
