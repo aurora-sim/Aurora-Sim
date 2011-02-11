@@ -620,7 +620,7 @@ namespace Aurora.Services.DataService
                 Values.Add(c.Category);
                 Values.Add(c.SimName);
                 Values.Add(c.ClassifiedUUID);
-                Values.Add(OSDParser.SerializeJsonString(map));
+                Values.Add(OSDParser.SerializeJsonString(o));
                 GD.Insert("profileclassifieds", Values.ToArray());
             }
         }
