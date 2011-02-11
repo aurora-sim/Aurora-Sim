@@ -1254,13 +1254,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             p2colobj = true;
                             break;
                         case (int)ActorTypes.Prim:
-                            Vector3 tmp = p2.Velocity;
-                            if (tmp.X > 0 &&
-                                tmp.Y > 0 &&
-                                tmp.Z > 0)
-                                p2colobj = true;
+                            p2colobj = true;
                             break;
                         default:
+                            //This is required for some really weird reason... the heightmap collides every time...
                             float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
                             if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
                                 p2colgnd = true;
