@@ -744,6 +744,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 module.FinishStartup(scene, m_config, m_OpenSimBase);
             }
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.PostFinishStartup(scene, m_config, m_OpenSimBase);
+            }
         }
 
         public void StartupCompleteModules()

@@ -75,7 +75,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool flying = false;
         private bool m_iscolliding = false;
         private bool m_iscollidingGround = false;
-        private bool m_wascolliding = false;
         private bool m_wascollidingGround = false;
         private bool m_iscollidingObj = false;
         private bool m_alwaysRun = false;
@@ -104,10 +103,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // private CollisionLocker ode;
 
         private string m_name = String.Empty;
-
-        int m_colliderfilter = 0;
-        int m_colliderGroundfilter = 0;
-        int m_colliderObjectfilter = 0;
 
         // Default we're a Character
         private CollisionCategories m_collisionCategories = (CollisionCategories.Character);
@@ -176,10 +171,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // m_StandUpRotation =
             //     new d.Matrix3(0.5f, 0.7071068f, 0.5f, -0.7071068f, 0f, 0.7071068f, 0.5f, -0.7071068f,
             //                   0.5f);
-
-            m_colliderfilter = 0;
-            m_colliderGroundfilter = 0;
-            m_colliderObjectfilter = 0;
 
             CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
