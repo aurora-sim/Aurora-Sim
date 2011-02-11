@@ -166,8 +166,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_filterCollisions = false;
 
-        private d.NearCallback nearCallback;
-        public d.TriCallback triCallback;
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
@@ -377,8 +375,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             OdeLock = new Object();
             ode = dode;
-            nearCallback = near;
-            triCallback = TriCallback;
             lock (OdeLock)
             {
                 // Create the world and the first space
@@ -779,7 +775,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // contact points in the space
                 try
                 {
-                    d.SpaceCollide2(g1, g2, IntPtr.Zero, nearCallback);
+                    d.SpaceCollide2(g1, g2, IntPtr.Zero, near);
                 }
                 catch (AccessViolationException)
                 {
@@ -1243,7 +1239,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                p2col = true;
+                    p2col = true;
                 }
 
                 if (p2col)
@@ -1265,9 +1261,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                     }
 
-                p2.CollidingObj = p2colobj;
-                p2.CollidingGround = p2colgnd;
-                p2.IsColliding = p2col;
+                //These get cleared out before we start colliding...
+                // if we set them here just as near comes in,
+                // we have issues, since they overwrite each other.
+                if(!p2.CollidingObj)
+                    p2.CollidingObj = p2colobj;
+                if (!p2.CollidingGround)
+                    p2.CollidingGround = p2colgnd;
+                if (!p2.IsColliding)
+                    p2.IsColliding = p2col;
 
                 if (count > geomContactPointsStartthrottle)
                 {
@@ -1476,7 +1478,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // and we'll run it again on all of them.
                     try
                     {
-                        d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
+                        d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, near);
                     }
                     catch (AccessViolationException)
                     {
@@ -1493,13 +1495,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (chr.Body != IntPtr.Zero && d.BodyIsEnabled(chr.Body) &&
                         (!chr.m_disabled) && (!chr.m_frozen))
                     {
+                        //Fix colliding atributes!
+                        chr.IsColliding = false;
+                        chr.CollidingGround = false;
+                        chr.CollidingObj = false;
+
                         try
                         {
                             lock (chr)
                             {
                                 if (space != IntPtr.Zero && chr.prim_geom != IntPtr.Zero)
                                 {
-                                    d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, nearCallback);
+                                    d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, near);
                                 }
                                 else
                                 {
