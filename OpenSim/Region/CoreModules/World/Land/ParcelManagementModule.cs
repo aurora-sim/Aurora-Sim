@@ -771,7 +771,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (connector != null)
                 fullSimParcel.LandData.OwnerID = connector.LoadEstateSettings(m_scene.RegionInfo.RegionID).EstateOwner;
-            else
+            if (fullSimParcel.LandData.OwnerID == UUID.Zero)
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, fullSimParcel.LandData.OwnerID);
@@ -780,6 +780,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.Warn("[ParcelManagement]: Could not find user for parcel, please give a valid user to make the owner");
                 string userName = MainConsole.Instance.CmdPrompt("User Name:", "");
+                if (userName == "" && userName.Split(' ').Length < 2)
+                {
+                    m_log.Warn("Put in a valid username with a space inbetween.");
+                    continue;
+                }
                 account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName.Split(' ')[0], userName.Split(' ')[1]);
                 if(account != null)
                     fullSimParcel.LandData.OwnerID = account.PrincipalID;
