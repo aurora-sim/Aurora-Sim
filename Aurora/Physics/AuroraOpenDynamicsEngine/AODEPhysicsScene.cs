@@ -3670,17 +3670,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 heightmapWidthSamples = rSize + 2;
                 heightmapHeightSamples = rSize + 2;
                 _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
-                for (int x = 0; x < sqrtOfHeightMap; x++)
+                for (int x = 0; x < heightmapWidthSamples; x++)
                 {
-                    for (int y = 0; y < sqrtOfHeightMap; y++)
+                    for (int y = 0; y < heightmapHeightSamples; y++)
                     {
                         //Some notes on this part
                         //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
                         // so we subtract one so that we can put the heightmap in correctly
-                        int xx = Util.Clip(x - 1, 0, (sqrtOfHeightMap - 1) - 1);
-                        int yy = Util.Clip(y - 1, 0, (sqrtOfHeightMap - 1) - 1);
+                        int xx = Util.Clip(x - 1, 0, rSize-1);
+                        int yy = Util.Clip(y - 1, 0, rSize-1);
 
-                        double val = normalHeightMap[xx, yy];
+                        float val = heightMap[yy * rSize + xx];
                         //ODE is evil... flip x and y
                         _heightmap[(x * heightmapWidthSamples) + y] = val;
 
@@ -3712,7 +3712,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 0, sqrtOfHeightMap, sqrtOfHeightMap,
+                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
                                                  heightmapWidthSamples, heightmapHeightSamples, scale,
                                                  offset, thickness, wrap);
 
@@ -3747,7 +3747,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
                 d.GeomSetRotation(GroundGeom, ref R);
-                d.GeomSetPosition(GroundGeom, (pOffset.X + ((int)Constants.RegionSize * 0.5f)), (pOffset.Y + ((int)Constants.RegionSize * 0.5f)), 0);
+                d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
                 TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);

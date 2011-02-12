@@ -1364,6 +1364,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
+        private void InterfaceSavePhysics(string module, string[] cmd)
+        {
+            List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+
+            foreach (TerrainModule tmodule in m)
+            {
+                tmodule.m_scene.SceneGraph.PhysicsScene.SetTerrain(tmodule.m_channel.GetFloatsSerialised(tmodule.m_scene), tmodule.m_channel.GetDoubles(tmodule.m_scene));
+            }
+        }
+
         private void InterfaceBakeTerrain(string module, string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
@@ -1687,6 +1697,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain save",
                 "terrain save <FileName>", "Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
                                           supportedFileExtensions, InterfaceSaveFile);
+
+            MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain physics update",
+                "terrain physics update", "Update the physics map", InterfaceSavePhysics);
 
             MainConsole.Instance.Commands.AddCommand("TerrainModule", true, "terrain load",
                 "terrain load <FileName>", "Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
