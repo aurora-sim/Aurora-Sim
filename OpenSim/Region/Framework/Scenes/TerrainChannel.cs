@@ -181,7 +181,8 @@ namespace OpenSim.Region.Framework.Scenes
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
                     //m_tainted = true;
                     map[x, y] = value;
-                    m_cachedMap[y * map.GetLength(0) + x] = (float)value;
+                    if(m_cachedMap != null)
+                        m_cachedMap[y * map.GetLength(0) + x] = (float)value;
                 }
             }
         }
