@@ -1123,10 +1123,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //Only send 10 at a time
             for (int i = 0; i < x.Length; i += MaxPatches)
             {
+                int Size = (x.Length - i) - 10 > 0 ? 10 : (x.Length - i);
                 try
                 {
                     //Find the size for the array
-                    int Size = (x.Length - i) - 10 > 0 ? 10 : (x.Length - i);
                     int[] xTemp = new int[Size];
                     int[] yTemp = new int[Size];
 
@@ -1142,7 +1142,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     if (layerpack.Length > 1000) // Oversize packet was created
                     {
-                        for (int xa = 0; xa < 10; xa++)
+                        for (int xa = 0; xa < Size; xa++)
                         {
                             // Send oversize packet in individual patches
                             //
@@ -1156,7 +1156,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 catch (OverflowException)
                 {
-                    for (int xa = 0; xa < 10; xa++)
+                    for (int xa = 0; xa < Size; xa++)
                     {
                         // Send oversize packet in individual patches
                         //
@@ -1165,7 +1165,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    for (int xa = 0; xa < 10; xa++)
+                    for (int xa = 0; xa < Size; xa++)
                     {
                         // Bad terrain, send individual chunks
                         //

@@ -415,7 +415,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                     {
                                         for (int y = offsetY; y < offsetY + channel.Height; y++)
                                         {
-                                            m_channel[x, y] = channel[x, y];
+                                            m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                         }
                                     }
                                 }
@@ -423,12 +423,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             m_channel = channel;
                             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
                             UpdateRevertMap();
-                            if (channel.Width != m_scene.RegionInfo.RegionSizeX || channel.Height != m_scene.RegionInfo.RegionSizeY)
-                            {
-                                // TerrainChannel expects a RegionSize x RegionSize map, currently
-                                throw new ArgumentException(String.Format("wrong size, use a file with size {0} x {1}",
-                                                                          m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
-                            }
                         }
                         catch (NotImplementedException)
                         {
@@ -573,7 +567,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                 {
                                     m_channel = channel;
                                     m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-                                    UpdateRevertMap();
                                 }
                                 else
                                 {
@@ -591,11 +584,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                         {
                                             for (int y = offsetY; y < offsetY + channel.Height; y++)
                                             {
-                                                m_channel[x, y] = channel[x, y];
+                                                m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                             }
                                         }
                                     }
                                 }
+                                UpdateRevertMap();
                             }
                         }
                         catch (NotImplementedException)
