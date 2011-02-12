@@ -140,8 +140,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             }
                         }
                     }
-                }
                 m_FunctionPerms[function] = FunctionPerms;
+                }
             }
 
             // If the list is null, then the value was true / undefined

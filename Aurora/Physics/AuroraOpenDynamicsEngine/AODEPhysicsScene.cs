@@ -3616,12 +3616,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             float[] _heightmap = new float[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
 
-            int heightmapWidth = (int)Math.Sqrt(heightMap.Length) + 1;
-            int heightmapHeight = (int)Math.Sqrt(heightMap.Length) + 1;
+            int sqrtOfHeightMap = (int)Math.Sqrt(heightMap.Length);
+            int heightmapWidth = sqrtOfHeightMap + 1;
+            int heightmapHeight = sqrtOfHeightMap + 1;
 
-            int heightmapWidthSamples = (int)Math.Sqrt(heightMap.Length) + 2;
+            int heightmapWidthSamples = sqrtOfHeightMap + 2;
 
-            int heightmapHeightSamples = (int)Math.Sqrt(heightMap.Length) + 2;
+            int heightmapHeightSamples = sqrtOfHeightMap + 2;
 #pragma warning disable 0162
             if (Constants.RegionSize == 256 &&
                 m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
@@ -3663,22 +3664,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                int rSize = (int)Math.Sqrt(heightMap.Length) > Constants.RegionSize ? (int)Math.Sqrt(heightMap.Length) : Constants.RegionSize;
+                int rSize = sqrtOfHeightMap > Constants.RegionSize ? sqrtOfHeightMap : Constants.RegionSize;
                 heightmapWidth = rSize + 2;
                 heightmapHeight = rSize + 2;
                 heightmapWidthSamples = rSize + 2;
                 heightmapHeightSamples = rSize + 2;
                 _heightmap = new float[heightmapWidthSamples * heightmapHeightSamples];
-                for (int x = 0; x < (int)Math.Sqrt(heightMap.Length); x++)
+                for (int x = 0; x < sqrtOfHeightMap; x++)
                 {
-                    for (int y = 0; y < (int)Math.Sqrt(heightMap.Length); y++)
+                    for (int y = 0; y < sqrtOfHeightMap; y++)
                     {
-                        int xx = Util.Clip(x - 1, 0, ((int)Math.Sqrt(heightMap.Length) - 1) - 1);
-                        int yy = Util.Clip(y - 1, 0, ((int)Math.Sqrt(heightMap.Length) - 1) - 1);
+                        //Some notes on this part
+                        //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
+                        // so we subtract one so that we can put the heightmap in correctly
+                        int xx = Util.Clip(x - 1, 0, (sqrtOfHeightMap - 1) - 1);
+                        int yy = Util.Clip(y - 1, 0, (sqrtOfHeightMap - 1) - 1);
 
                         float val = (float)normalHeightMap[xx, yy];
                         //ODE is evil... flip x and y
-                        _heightmap[x * heightmapWidthSamples + y] = val;
+                        _heightmap[(x * heightmapWidthSamples) + y] = val;
 
                         hfmin = (val < hfmin) ? val : hfmin;
                         hfmax = (val > hfmax) ? val : hfmax;

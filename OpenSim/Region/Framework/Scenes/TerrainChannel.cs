@@ -165,7 +165,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (x > 0 && x < Width && y > 0 && y < Height)
+                if (x >= 0 && x < Width && y >= 0 && y < Height)
                     return map[x, y];
                 else
                     return 0;
