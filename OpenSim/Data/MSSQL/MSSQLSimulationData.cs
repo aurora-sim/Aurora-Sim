@@ -582,7 +582,6 @@ ELSE
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    int rev;
                     if (reader.Read())
                     {
                         byte[] heightMap = (byte[])reader["Heightfield"];
