@@ -685,7 +685,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int k = 0;
             int sqrt = (int)Math.Sqrt(heightmap.Length);
-            OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY);
+            //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY);
 
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {

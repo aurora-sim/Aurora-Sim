@@ -585,16 +585,16 @@ ELSE
                     int rev;
                     if (reader.Read())
                     {
-                        MemoryStream str = new MemoryStream((byte[])reader["Heightfield"]);
-                        BinaryReader br = new BinaryReader(str);
+                        byte[] heightMap = (byte[])reader["Heightfield"];
+                        int i = 0;
                         for (int x = 0; x < RegionSizeX; x++)
                         {
                             for (int y = 0; y < RegionSizeY; y++)
                             {
-                                terrain[x, y] = br.ReadDouble();
+                                terrain[x, y] = BitConverter.ToDouble(heightMap, i % sizeof(double));
+                                i += sizeof(double);
                             }
                         }
-                        rev = (int)reader["Revision"];
                     }
                     else
                     {

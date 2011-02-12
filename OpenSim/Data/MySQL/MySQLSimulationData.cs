@@ -734,20 +734,15 @@ namespace OpenSim.Data.MySQL
                                 terrain = new double[RegionSizeX, RegionSizeY];
                                 terrain.Initialize();
 
-                                using (MemoryStream mstr = new MemoryStream((byte[])reader["Heightfield"]))
+                                byte[] heightMap = (byte[])reader["Heightfield"];
+                                int i = 0;
+                                for (int x = 0; x < RegionSizeX; x++)
                                 {
-                                    using (BinaryReader br = new BinaryReader(mstr))
+                                    for (int y = 0; y < RegionSizeY; y++)
                                     {
-                                        for (int x = 0; x < RegionSizeX; x++)
-                                        {
-                                            for (int y = 0; y < RegionSizeY; y++)
-                                            {
-                                                terrain[x, y] = br.ReadDouble();
-                                            }
-                                        }
+                                        terrain[x, y] = BitConverter.ToDouble(heightMap, i % sizeof(double));
+                                        i += sizeof(double);
                                     }
-
-                                    //m_log.InfoFormat("[REGION DB]: Loaded terrain revision r{0}", rev);
                                 }
                             }
                         }

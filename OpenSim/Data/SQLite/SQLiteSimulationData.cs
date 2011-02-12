@@ -871,18 +871,14 @@ namespace OpenSim.Data.SQLite
                         int rev = 0;
                         if (row.Read())
                         {
-                            // TODO: put this into a function
-                            using (MemoryStream str = new MemoryStream((byte[])row["Heightfield"]))
+                            byte[] heightMap = (byte[])row["Heightfield"];
+                            int i = 0;
+                            for (int x = 0; x < RegionSizeX; x++)
                             {
-                                using (BinaryReader br = new BinaryReader(str))
+                                for (int y = 0; y < RegionSizeY; y++)
                                 {
-                                    for (int x = 0; x < RegionSizeX; x++)
-                                    {
-                                        for (int y = 0; y < RegionSizeY; y++)
-                                        {
-                                            terret[x, y] = br.ReadDouble();
-                                        }
-                                    }
+                                    terret[x, y] = BitConverter.ToDouble(heightMap, i % sizeof(double));
+                                    i += sizeof(double);
                                 }
                             }
                             rev = Convert.ToInt32(row["Revision"]);
