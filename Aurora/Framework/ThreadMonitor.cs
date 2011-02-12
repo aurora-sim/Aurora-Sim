@@ -97,23 +97,31 @@ namespace Aurora.Framework
         protected bool CallAndWait(int timeout, Heartbeat enumerator)
         {
             bool RetVal = false;
-            //The action to fire
-            FireEvent wrappedAction = delegate(Heartbeat en)
+            if (timeout == 0)
             {
-                en();
+                enumerator();
                 RetVal = true;
-            };
-
-            //Async the action (yeah, this is bad, but otherwise we can't abort afaik)
-            IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
-            if (((timeout != 0) && !result.IsCompleted) &&
-                (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
-            {
-                return false;
             }
             else
             {
-                wrappedAction.EndInvoke(result);
+                //The action to fire
+                FireEvent wrappedAction = delegate(Heartbeat en)
+                {
+                    en();
+                    RetVal = true;
+                };
+
+                //Async the action (yeah, this is bad, but otherwise we can't abort afaik)
+                IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
+                if (((timeout != 0) && !result.IsCompleted) &&
+                    (!result.AsyncWaitHandle.WaitOne(timeout, false) || !result.IsCompleted))
+                {
+                    return false;
+                }
+                else
+                {
+                    wrappedAction.EndInvoke(result);
+                }
             }
             //Return what we got
             return RetVal;
