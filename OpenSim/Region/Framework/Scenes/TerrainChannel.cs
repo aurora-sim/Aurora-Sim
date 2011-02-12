@@ -152,6 +152,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             m_cachedMap = heights;
+            m_tainted = false;
             return heights;
         }
 
