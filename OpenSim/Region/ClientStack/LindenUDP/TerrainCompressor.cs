@@ -98,7 +98,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// for this simulator. For example if 1 and 17 are specified, patches
         /// x=1,y=0 and x=1,y=1 are sent</param>
         /// <returns></returns>
-        public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] patches, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
+        public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] x, int[] y, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
             layer.LayerID.Type = (byte)type;
@@ -114,8 +114,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bitpack.PackBits(header.PatchSize, 8);
             bitpack.PackBits((int)header.Type, 8);
 
-            for (int i = 0; i < patches.Length; i++)
-                CreatePatchFromHeightmap(bitpack, heightmap, patches[i] % (RegionSizeX / Constants.TerrainPatchSize), (patches[i] - (patches[i] % (RegionSizeX / Constants.TerrainPatchSize))) / (Constants.TerrainPatchSize), RegionSizeX, RegionSizeY);
+            for (int i = 0; i < x.Length; i++)
+                CreatePatchFromHeightmap(bitpack, heightmap, x[i], y[i], RegionSizeX, RegionSizeY);
 
             bitpack.PackBits(END_OF_PATCHES, 8);
 

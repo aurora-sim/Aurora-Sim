@@ -1043,16 +1043,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="py">Y coordinate for patches 0..15</param>
         public void SendLayerPacket(float[] map, int y, int x)
         {
-            int[] patches = new int[4];
-            patches[0] = x + 0 + y * 16;
-            patches[1] = x + 1 + y * 16;
-            patches[2] = x + 2 + y * 16;
-            patches[3] = x + 3 + y * 16;
+            int[] xs = new int[] { x + 0, x + 1, x + 2, x + 3 };
+            int[] ys = new int[] { y,y,y,y };
 
             LayerDataPacket layerpack;
             try
             {
-                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches,TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xs, ys, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 layerpack.Header.Zerocoded = true;  
                 layerpack.Header.Reliable = true;
 
@@ -1100,9 +1097,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             try
             {
-                int[] patches = new int[] { py * 16 + px };
+                int[] x = new int[] { px };
+                int[] y = new int[] { py };
                 
-                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
