@@ -58,7 +58,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         protected Scene m_scene;
         protected Stream m_loadStream;
-        protected Guid m_requestId;
         protected string m_errorMessage;
         protected HashSet<AssetBase> AssetsToAdd = new HashSet<AssetBase>();
         protected bool AssetSaverIsRunning = false;
@@ -81,8 +80,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </summary>
         private IDictionary<UUID, bool> m_validUserUuids = new Dictionary<UUID, bool>();
 
-        public ArchiveReadRequest(Scene scene, string loadPath, bool merge, bool skipAssets, Guid requestId)
+        private int m_offsetX = 0;
+        private int m_offsetY = 0;
+        private int m_offsetZ = 0;
+
+        public ArchiveReadRequest(Scene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
         {
+            m_offsetX = offsetX;
+            m_offsetY = offsetY;
+            m_offsetZ = offsetZ;
             m_scene = scene;
 
             try
@@ -100,16 +106,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_errorMessage = String.Empty;
             m_merge = merge;
             m_skipAssets = skipAssets;
-            m_requestId = requestId;
         }
 
-        public ArchiveReadRequest(Scene scene, Stream loadStream, bool merge, bool skipAssets, Guid requestId)
+        public ArchiveReadRequest(Scene scene, Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
         {
+            m_offsetX = offsetX;
+            m_offsetY = offsetY;
+            m_offsetZ = offsetZ;
             m_scene = scene;
             m_loadStream = loadStream;
             m_merge = merge;
             m_skipAssets = skipAssets;
-            m_requestId = requestId;
         }
 
         /// <summary>
@@ -240,6 +247,12 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             }
                         }
 
+                        //Add the offsets of the region
+                        Vector3 newPos = new Vector3(sceneObject.AbsolutePosition.X + m_offsetX,
+                            sceneObject.AbsolutePosition.Y + m_offsetY,
+                            sceneObject.AbsolutePosition.Z + m_offsetZ);
+                        sceneObject.SetAbsolutePosition(false, newPos);
+
                         if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
                         {
                             groupsToBackup.Add(sceneObject);
@@ -294,7 +307,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 m_log.ErrorFormat(
                     "[ARCHIVER]: Aborting load with error in archive file {0}.  {1}", filePath, e);
                 m_errorMessage += e.ToString();
-                m_scene.EventManager.TriggerOarFileLoaded(m_requestId, m_errorMessage);
+                m_scene.EventManager.TriggerOarFileLoaded(UUID.Zero.Guid, m_errorMessage);
                 return;
             }
             finally
@@ -371,7 +384,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
             m_validUserUuids.Clear();
-            m_scene.EventManager.TriggerOarFileLoaded(m_requestId, m_errorMessage);
+            m_scene.EventManager.TriggerOarFileLoaded(UUID.Zero.Guid, m_errorMessage);
         }
 
         /// <summary>

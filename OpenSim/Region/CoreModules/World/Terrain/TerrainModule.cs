@@ -760,9 +760,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_backingUp = true;
                         Util.FireAndForget(delegate(object o)
                         {
+                            m_tainted = false;
                             m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
                             SaveTerrain();
-                            m_tainted = false;
                             m_backingUp = false;
                         });
                     }

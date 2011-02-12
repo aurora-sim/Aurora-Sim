@@ -95,7 +95,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// assets are already known to be present in the grid's asset service.
         /// </param>
         /// <param name="requestId">If supplied, this request Id is later returned in the saved event</param>
-        void DearchiveRegion(string loadPath, bool merge, bool skipAssets, Guid requestId);
+        void DearchiveRegion(string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ);
         
         /// <summary>
         /// Dearchive a region from a stream.  This replaces the existing scene. 
@@ -122,6 +122,6 @@ namespace OpenSim.Region.Framework.Interfaces
         /// assets are already known to be present in the grid's asset service.
         /// </param
         /// <param name="requestId">If supplied, this request Id is later returned in the saved event</param>
-        void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, Guid requestId);
+        void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ);
     }
 }

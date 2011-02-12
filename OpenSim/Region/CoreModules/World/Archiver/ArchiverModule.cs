@@ -97,9 +97,34 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             bool skipAssets = false;
             
             OptionSet options = new OptionSet().Add("m|merge", delegate (string v) { mergeOar = v != null; });
-            options.Add("s|skip-assets", delegate (string v) { skipAssets = v != null; });
+            options.Add("s|skip-assets", delegate(string v) { skipAssets = v != null; });
             
             List<string> mainParams = options.Parse(cmdparams);
+
+            int offsetX = 0;
+            int offsetY = 0;
+            int offsetZ = 0;
+
+            int i = 0;
+            foreach (string param in mainParams)
+            {
+                if (param.StartsWith("OffsetX"))
+                {
+                    string retVal = param.Remove(0, 8);
+                    int.TryParse(retVal, out offsetX);
+                }
+                if (param.StartsWith("OffsetY"))
+                {
+                    string retVal = param.Remove(0, 8);
+                    int.TryParse(retVal, out offsetY);
+                }
+                if (param.StartsWith("OffsetZ"))
+                {
+                    string retVal = param.Remove(0, 8);
+                    int.TryParse(retVal, out offsetZ);
+                }
+                i++;
+            }
           
 //            m_log.DebugFormat("MERGE OAR IS [{0}]", mergeOar);
 //
@@ -108,11 +133,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             
             if (mainParams.Count > 2)
             {
-                DearchiveRegion(mainParams[2], mergeOar, skipAssets, Guid.Empty);
+                DearchiveRegion(mainParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ);
             }
             else
             {
-                DearchiveRegion(DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets, Guid.Empty);
+                DearchiveRegion(DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets, offsetX, offsetY, offsetZ);
             }
         }
 
@@ -157,25 +182,25 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public void DearchiveRegion(string loadPath)
         {
-            DearchiveRegion(loadPath, false, false, Guid.Empty);
+            DearchiveRegion(loadPath, false, false, 0, 0, 0);
         }
-        
-        public void DearchiveRegion(string loadPath, bool merge, bool skipAssets, Guid requestId)
+
+        public void DearchiveRegion(string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
         {
             m_log.InfoFormat(
                 "[ARCHIVER]: Loading archive to region {0} from {1}", m_scene.RegionInfo.RegionName, loadPath);
             
-            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, requestId).DearchiveRegion();
+            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX, offsetY, offsetZ).DearchiveRegion();
         }
         
         public void DearchiveRegion(Stream loadStream)
         {
-            DearchiveRegion(loadStream, false, false, Guid.Empty);
+            DearchiveRegion(loadStream, false, false, 0, 0, 0);
         }
-        
-        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, Guid requestId)
+
+        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
         {
-            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, requestId).DearchiveRegion();
+            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ).DearchiveRegion();
         }
     }
 }
