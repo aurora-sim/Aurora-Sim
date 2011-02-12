@@ -283,9 +283,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float zmin = 99999999.0f;
 
             int sqrt = (int)Math.Sqrt(heightmap.Length);
-            for (int j = patchY * Constants.TerrainPatchSize; j < RegionSizeY; j++)
+            for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
-                for (int i = patchX * Constants.TerrainPatchSize; i < RegionSizeX; i++)
+                for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
                 {
                     float val = heightmap[j * sqrt + i];
                     if (val > zmax) zmax = val;
@@ -355,12 +355,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             wbits += 1;
 
             header.QuantWBits &= 0xf0;
-
-            if (wbits > 17 || wbits < 2)
-            {
-                Logger.Log("Bits needed per word in EncodePatchHeader() are outside the allowed range",
-                    Helpers.LogLevel.Error);
-            }
 
             header.QuantWBits |= (wbits - 2);
 
@@ -685,7 +679,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int k = 0;
             int sqrt = (int)Math.Sqrt(heightmap.Length);
-            //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY);
+            //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY + ","+
+            //    patchX * Constants.TerrainPatchSize + "," + 
+            //    ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize + "," +
+            //    patchY * Constants.TerrainPatchSize + "," +
+            //    ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize);
 
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
