@@ -33,7 +33,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ITerrainModule
     {
-        void LoadFromFile(string filename);
+        void LoadFromFile(string filename, int offsetX, int offsetY);
         void SaveToFile(string filename);
         void ModifyTerrain(UUID user, Vector3 pos, byte size, byte action, UUID agentId);
 
@@ -52,6 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="stream"></param>
         void LoadFromStream(string filename, Stream stream);
         void LoadFromStream(string filename, System.Uri pathToTerrainHeightmap);
+        void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY);
         /// <summary>
         /// Save a terrain to a stream.
         /// </summary>

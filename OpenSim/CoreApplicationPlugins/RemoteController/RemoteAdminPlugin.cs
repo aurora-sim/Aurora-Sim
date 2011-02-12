@@ -357,7 +357,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else
                 {
-                    terrainModule.LoadFromFile(file);
+                    terrainModule.LoadFromFile(file, 0, 0);
                 }
                 responseData["success"] = false;
 

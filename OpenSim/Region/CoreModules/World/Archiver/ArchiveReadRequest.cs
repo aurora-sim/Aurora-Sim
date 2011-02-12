@@ -575,7 +575,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
 
             MemoryStream ms = new MemoryStream(data);
-            terrainModule.LoadFromStream(terrainPath, ms);
+            terrainModule.LoadFromStream(terrainPath, ms, m_offsetX, m_offsetY);
             ms.Close();
 
             m_log.DebugFormat("[ARCHIVER]: Restored terrain {0}", terrainPath);

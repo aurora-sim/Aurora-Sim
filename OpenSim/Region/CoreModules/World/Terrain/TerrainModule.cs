@@ -368,7 +368,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// Loads a terrain file from disk and installs it in the scene.
         /// </summary>
         /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
-        public void LoadFromFile(string filename)
+        public void LoadFromFile(string filename, int offsetX, int offsetY)
         {
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
             {
@@ -380,15 +380,41 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             ITerrainChannel channel = loader.Value.LoadFile(filename);
                             channel.Scene = m_scene;
+                            if (m_channel.Height == channel.Height &&
+                                    m_channel.Width == channel.Width)
+                            {
+                                m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                            }
+                            else
+                            {
+                                //Make sure it is in bounds
+                                if ((offsetX + channel.Width) > m_channel.Width ||
+                                        (offsetY + channel.Height) > m_channel.Height)
+                                {
+                                    m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                    return;
+                                }
+                                else
+                                {
+                                    //Merge the terrains together at the specified offset
+                                    for (int x = offsetX; x < offsetX + channel.Width; x++)
+                                    {
+                                        for (int y = offsetY; y < offsetY + channel.Height; y++)
+                                        {
+                                            m_channel[x, y] = channel[x, y];
+                                        }
+                                    }
+                                }
+                            }
+                            m_channel = channel;
+                            m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+                            UpdateRevertMap();
                             if (channel.Width != m_scene.RegionInfo.RegionSizeX || channel.Height != m_scene.RegionInfo.RegionSizeY)
                             {
                                 // TerrainChannel expects a RegionSize x RegionSize map, currently
                                 throw new ArgumentException(String.Format("wrong size, use a file with size {0} x {1}",
                                                                           m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
                             }
-                            m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
-                            m_channel = channel;
-                            UpdateRevertMap();
                         }
                         catch (NotImplementedException)
                         {
@@ -478,9 +504,84 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             if (channel != null)
                             {
                                 channel.Scene = m_scene;
-                                m_channel = channel;
-                                m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
-                                UpdateRevertMap();
+                                if (m_channel.Height == channel.Height &&
+                                    m_channel.Width == channel.Width)
+                                {
+                                    m_channel = channel;
+                                    m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+                                    UpdateRevertMap();
+                                }
+                                else
+                                {
+                                    m_log.Warn("[TerrainModule]: Got request to load terrain that was not the correct size!");
+                                    return;
+                                }
+                            }
+                        }
+                        catch (NotImplementedException)
+                        {
+                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
+                                        " parser does not support file loading. (May be save only)");
+                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                    }
+
+                    CheckForTerrainUpdates();
+                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    return;
+                }
+            }
+            m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
+            throw new TerrainException(String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
+        }
+
+        /// <summary>
+        /// Loads a terrain file from a stream and installs it in the scene.
+        /// </summary>
+        /// <param name="filename">Filename to terrain file. Type is determined by extension.</param>
+        /// <param name="stream"></param>
+        public void LoadFromStream(string filename, Stream stream, int offsetX, int offsetY)
+        {
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+            {
+                if (filename.EndsWith(loader.Key))
+                {
+                    lock (m_scene)
+                    {
+                        try
+                        {
+                            ITerrainChannel channel = loader.Value.LoadStream(stream);
+                            if (channel != null)
+                            {
+                                channel.Scene = m_scene;
+                                if (m_channel.Height == channel.Height &&
+                                    m_channel.Width == channel.Width)
+                                {
+                                    m_channel = channel;
+                                    m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
+                                    UpdateRevertMap();
+                                }
+                                else
+                                {
+                                    //Make sure it is in bounds
+                                    if ((offsetX + channel.Width) > m_channel.Width ||
+                                            (offsetY + channel.Height) > m_channel.Height)
+                                    {
+                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        //Merge the terrains together at the specified offset
+                                        for (int x = offsetX; x < offsetX + channel.Width; x++)
+                                        {
+                                            for (int y = offsetY; y < offsetY + channel.Height; y++)
+                                            {
+                                                m_channel[x, y] = channel[x, y];
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         catch (NotImplementedException)
@@ -1331,10 +1432,28 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void InterfaceLoadFile(string module, string[] cmd)
         {
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+            int offsetX = 0;
+            int offsetY = 0;
+
+            int i = 0;
+            foreach (string param in cmd)
+            {
+                if (param.StartsWith("OffsetX"))
+                {
+                    string retVal = param.Remove(0, 8);
+                    int.TryParse(retVal, out offsetX);
+                }
+                else if (param.StartsWith("OffsetY"))
+                {
+                    string retVal = param.Remove(0, 8);
+                    int.TryParse(retVal, out offsetY);
+                }
+                i++;
+            }
 
             foreach (TerrainModule tmodule in m)
             {
-                tmodule.LoadFromFile(cmd[2]);
+                tmodule.LoadFromFile(cmd[2], offsetX, offsetY);
                 tmodule.CheckForTerrainUpdates();
             }
         }
