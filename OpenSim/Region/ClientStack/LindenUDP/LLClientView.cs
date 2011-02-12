@@ -1126,7 +1126,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 try
                 {
                     //Find the size for the array
-                    int Size = x.Length - 10 > 0 ? 10 : x.Length;
+                    int Size = (x.Length - i) - 10 > 0 ? 10 : (x.Length - i);
                     int[] xTemp = new int[Size];
                     int[] yTemp = new int[Size];
 
