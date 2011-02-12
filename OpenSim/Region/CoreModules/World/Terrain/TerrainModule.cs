@@ -1207,8 +1207,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
                         
                         //revert changes outside estate limits
-                        if (!god)
-                            LimitChannelChanges();
+                        CheckForTerrainUpdates(!god, false, false);
                     }
                 }
                 else
@@ -1250,8 +1249,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             m_channel, fillArea, size);
 
                         //revert changes outside estate limits
-                        if (!god)
-                            LimitChannelChanges();
+                        CheckForTerrainUpdates(!god, false, false);
                     }
                 }
                 else
