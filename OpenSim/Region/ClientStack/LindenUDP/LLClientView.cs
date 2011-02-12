@@ -1018,12 +1018,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private void DoSendLayerData(object o)
         {
             float[] map = (float[])o;
-            map = LLHeightFieldMoronize(map);
             try
             {
-                for (int y = 0; y < 16; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
                 {
-                    for (int x = 0; x < 16; x += 4)
+                    for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x += 4)
                     {
                         SendLayerPacket(map, y, x);
                         //Thread.Sleep(35);
@@ -1094,19 +1093,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Sends a specified patch to a client
         /// </summary>
-        /// <param name="px">Patch coordinate (x) 0..15</param>
-        /// <param name="py">Patch coordinate (y) 0..15</param>
+        /// <param name="px">Patch coordinate (x) 0..regionSize/16</param>
+        /// <param name="py">Patch coordinate (y) 0..regionSize/16</param>
         /// <param name="map">heightmap</param>
         public void SendLayerData(int px, int py, float[] map)
         {
             try
             {
                 int[] patches = new int[] { py * 16 + px };
-                float[] heightmap = (map.Length == 65536) ?
-                    map :
-                    LLHeightFieldMoronize(map);
-
-                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(heightmap, patches, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                
+                LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, patches, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
@@ -1114,38 +1110,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_log.Error("[CLIENT]: SendLayerData() Failed with exception: " + e.Message, e);
             }
-        }
-
-        /// <summary>
-        /// Munges heightfield into the LLUDP backed in restricted heightfield.
-        /// </summary>
-        /// <param name="map">float array in the base; Constants.RegionSize</param>
-        /// <returns>float array in the base 256</returns>
-        internal float[] LLHeightFieldMoronize(float[] map)
-        {
-            //if (map.Length == 65536)
-                return map;
-            /*else
-            {
-                float[] returnmap = new float[65536];
-
-                if (map.Length < 65535)
-                {
-                    // rebase the vector stride to 256
-                    for (int i = 0; i < Constants.RegionSize; i++)
-                        Array.Copy(map, i * (int)Constants.RegionSize, returnmap, i * 256, (int)Constants.RegionSize);
-                }
-                else
-                {
-                    for (int i = 0; i < 256; i++)
-                        Array.Copy(map, i * (int)Constants.RegionSize, returnmap, i * 256, 256);
-                }
-
-                //Array.Copy(map,0,returnmap,0,(map.Length < 65536)? map.Length : 65536);
-
-                return returnmap;
-            }*/
-
         }
 
         /// <summary>

@@ -115,7 +115,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bitpack.PackBits((int)header.Type, 8);
 
             for (int i = 0; i < patches.Length; i++)
-                CreatePatchFromHeightmap(bitpack, heightmap, patches[i] % Constants.TerrainPatchSize, (patches[i] - (patches[i] % Constants.TerrainPatchSize)) / Constants.TerrainPatchSize, RegionSizeX, RegionSizeY);
+                CreatePatchFromHeightmap(bitpack, heightmap, patches[i] % (RegionSizeX / Constants.TerrainPatchSize), (patches[i] - (patches[i] % (RegionSizeX / Constants.TerrainPatchSize))) / (Constants.TerrainPatchSize), RegionSizeX, RegionSizeY);
 
             bitpack.PackBits(END_OF_PATCHES, 8);
 
@@ -221,19 +221,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// from 0 to 15</param>
         public static void CreatePatchFromHeightmap(BitPack output, float[] heightmap, int x, int y, int RegionSizeX, int RegionSizeY)
         {
-            //if (heightmap.Length != 256 * 256)
-            //    throw new ArgumentException("Heightmap data must be 256x256");
-
-            //if (x < 0 || x > 15 || y < 0 || y > 15)
-            //    throw new ArgumentException("X and Y patch offsets must be from 0 to 15");
-
             TerrainPatch.Header header = PrescanPatch(heightmap, x, y, RegionSizeX, RegionSizeY);
             header.QuantWBits = 136;
             header.PatchIDs = (y & 0x1F);
             header.PatchIDs += (x << 5);
 
             // NOTE: No idea what prequant and postquant should be or what they do
-            int[] patch = CompressPatch(heightmap, x, y, header, 10);
+            int[] patch = CompressPatch(heightmap, x, y, header, 10, RegionSizeX, RegionSizeY);
             int wbits = EncodePatchHeader(output, header, patch);
             EncodePatch(output, patch, 0, wbits);
         }
@@ -288,11 +282,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float zmax = -99999999.0f;
             float zmin = 99999999.0f;
 
-            for (int j = patchY * Constants.TerrainPatchSize; j < (patchY + 1) * Constants.TerrainPatchSize; j++)
+            int sqrt = (int)Math.Sqrt(heightmap.Length);
+            for (int j = patchY * Constants.TerrainPatchSize; j < RegionSizeY; j++)
             {
-                for (int i = patchX * Constants.TerrainPatchSize; i < (patchX + 1) * Constants.TerrainPatchSize; i++)
+                for (int i = patchX * Constants.TerrainPatchSize; i < RegionSizeX; i++)
                 {
-                    float val = heightmap[j * (int)Math.Sqrt(heightmap.Length) + i];
+                    float val = heightmap[j * sqrt + i];
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
@@ -676,9 +671,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return itemp;
         }
 
-        private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant)
+        private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant, int RegionSizeX, int RegionSizeY)
         {
-            float[] block = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
+            float[] block = new float[RegionSizeX];
             int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
@@ -689,10 +684,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.QuantWBits |= (prequant - 2) << 4;
 
             int k = 0;
-            for (int j = patchY * Constants.TerrainPatchSize; j < (patchY + 1) * Constants.TerrainPatchSize; j++)
+            int sqrt = (int)Math.Sqrt(heightmap.Length);
+            OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY);
+
+            for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
-                for (int i = patchX * Constants.TerrainPatchSize; i < (patchX + 1) * Constants.TerrainPatchSize; i++)
-                    block[k++] = heightmap[j * (int)Math.Sqrt(heightmap.Length) + i] * premult - sub;
+                for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
+                    block[k++] = heightmap[j * sqrt + i] * premult - sub;
             }
 
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
