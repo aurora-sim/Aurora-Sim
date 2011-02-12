@@ -877,7 +877,7 @@ namespace OpenSim.Data.SQLite
                             {
                                 for (int y = 0; y < RegionSizeY; y++)
                                 {
-                                    terret[x, y] = BitConverter.ToDouble(heightMap, i % sizeof(double));
+                                    terret[x, y] = BitConverter.ToDouble(heightMap, i);
                                     i += sizeof(double);
                                 }
                             }
@@ -1830,17 +1830,22 @@ namespace OpenSim.Data.SQLite
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>
-        private Array serializeTerrain(double[,] val)
+        private byte[] serializeTerrain(double[,] val)
         {
-            MemoryStream str = new MemoryStream((val.GetLength(0) * val.GetLength(1)) * sizeof(double));
-            BinaryWriter bw = new BinaryWriter(str);
+            byte[] array = new byte[val.GetLength(0) * val.GetLength(1) * sizeof(double)];
 
             // TODO: COMPATIBILITY - Add byte-order conversions
+            int i = 0;
             for (int x = 0; x < val.GetLength(0); x++)
+            {
                 for (int y = 0; y < val.GetLength(1); y++)
-                    bw.Write(val[x, y]);
+                {
+                    Array.Copy(BitConverter.GetBytes(val[x,y]), 0, array, i, sizeof(double));
+                    i += sizeof(double);
+                }
+            }
 
-            return str.ToArray();
+            return array;
         }
 
         /// <summary>

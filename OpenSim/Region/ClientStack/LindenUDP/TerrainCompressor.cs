@@ -679,11 +679,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int k = 0;
             int sqrt = (int)Math.Sqrt(heightmap.Length);
-            //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY + ","+
-            //    patchX * Constants.TerrainPatchSize + "," + 
-            //    ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize + "," +
-            //    patchY * Constants.TerrainPatchSize + "," +
-            //    ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize);
+            OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY + ","+
+                patchX * Constants.TerrainPatchSize + "," + 
+                ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize + "," +
+                patchY * Constants.TerrainPatchSize + "," +
+                ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize);
 
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {

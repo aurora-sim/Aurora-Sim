@@ -198,7 +198,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_activeJoint = new Dictionary<String, PhysicsJoint>();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
-        private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, float[]>();
+        private readonly Dictionary<IntPtr, double[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, double[]>();
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
 
@@ -3614,7 +3614,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
         {
-            float[] _heightmap = new float[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
+            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
 
             int sqrtOfHeightMap = (int)Math.Sqrt(heightMap.Length);
             int heightmapWidth = sqrtOfHeightMap + 1;
@@ -3636,13 +3636,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #pragma warning restore 0162
             int regionsize = (int)Constants.RegionSize;
 
-            float hfmin = 2000;
-            float hfmax = -2000;
+            double hfmin = 2000;
+            double hfmax = -2000;
             if (regionsize == 256 && 
                 m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
             {
                 //Double resolution
-                _heightmap = new float[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
+                _heightmap = new double[((((int)Constants.RegionSize * 2) + 2) * (((int)Constants.RegionSize * 2) + 2))];
                 heightMap = ResizeTerrain512Interpolation(heightMap);
                 regionsize *= 2;
 
@@ -3669,7 +3669,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 heightmapHeight = rSize + 2;
                 heightmapWidthSamples = rSize + 2;
                 heightmapHeightSamples = rSize + 2;
-                _heightmap = new float[heightmapWidthSamples * heightmapHeightSamples];
+                _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
                 for (int x = 0; x < sqrtOfHeightMap; x++)
                 {
                     for (int y = 0; y < sqrtOfHeightMap; y++)
@@ -3680,7 +3680,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         int xx = Util.Clip(x - 1, 0, (sqrtOfHeightMap - 1) - 1);
                         int yy = Util.Clip(y - 1, 0, (sqrtOfHeightMap - 1) - 1);
 
-                        float val = (float)normalHeightMap[xx, yy];
+                        double val = normalHeightMap[xx, yy];
                         //ODE is evil... flip x and y
                         _heightmap[(x * heightmapWidthSamples) + y] = val;
 
@@ -3708,15 +3708,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 const float scale = 1.0f;
                 const float offset = 0.0f;
-                const float thickness = 0.1f;
+                const float thickness = 0.2f;
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-                d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 0, heightmapWidth, heightmapHeight,
-                                                 (int)heightmapWidthSamples, (int)heightmapHeightSamples, scale,
+                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 0, sqrtOfHeightMap, sqrtOfHeightMap,
+                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
                                                  offset, thickness, wrap);
 
-                d.GeomHeightfieldDataSetBounds(HeightmapData, hfmin - 1, hfmax + 1);
+                d.GeomHeightfieldDataSetBounds(HeightmapData, (float)hfmin - 2, (float)hfmax + 2);
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)

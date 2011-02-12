@@ -590,7 +590,7 @@ ELSE
                         {
                             for (int y = 0; y < RegionSizeY; y++)
                             {
-                                terrain[x, y] = BitConverter.ToDouble(heightMap, i % sizeof(double));
+                                terrain[x, y] = BitConverter.ToDouble(heightMap, i);
                                 i += sizeof(double);
                             }
                         }
