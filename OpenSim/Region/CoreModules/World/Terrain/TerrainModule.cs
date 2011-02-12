@@ -995,8 +995,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     if (channel.Tainted(x, y) || forceSendOfTerrainInfo)
                     {
-                        xs.Add(x);
-                        ys.Add(y);
+                        xs.Add(x / Constants.TerrainPatchSize);
+                        ys.Add(y / Constants.TerrainPatchSize);
                         shouldTaint = true;
                     }
                 }
