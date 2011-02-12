@@ -947,7 +947,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (prim_geom == IntPtr.Zero)
                 {
-                    SetGeom(d.CreateTriMesh(m_targetSpace, _triMeshData, parent_scene.TriCallback, null, null));
+                    SetGeom(d.CreateTriMesh(m_targetSpace, _triMeshData, parent_scene.triCallback, null, null));
                 }
             }
             catch (AccessViolationException)

@@ -166,6 +166,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool m_filterCollisions = false;
 
+        private d.NearCallback nearCallback;
+        public d.TriCallback triCallback;
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
@@ -375,6 +377,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             OdeLock = new Object();
             ode = dode;
+            nearCallback = near;
+            triCallback = TriCallback;
             lock (OdeLock)
             {
                 // Create the world and the first space
@@ -775,7 +779,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // contact points in the space
                 try
                 {
-                    d.SpaceCollide2(g1, g2, IntPtr.Zero, near);
+                    d.SpaceCollide2(g1, g2, IntPtr.Zero, nearCallback);
                 }
                 catch (AccessViolationException)
                 {
@@ -1478,7 +1482,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // and we'll run it again on all of them.
                     try
                     {
-                        d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, near);
+                        d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
                     }
                     catch (AccessViolationException)
                     {
@@ -1506,7 +1510,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 if (space != IntPtr.Zero && chr.prim_geom != IntPtr.Zero)
                                 {
-                                    d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, near);
+                                    d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, nearCallback);
                                 }
                                 else
                                 {
