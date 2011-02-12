@@ -1130,10 +1130,30 @@ namespace OpenSim.Framework
         void SendGenericMessage(string method, List<string> message);
         void SendGenericMessage(string method, List<byte[]> message);
 
+        /// <summary>
+        /// Send the entire terrain map to the client
+        /// </summary>
+        /// <param name="map"></param>
         void SendLayerData(float[] map);
+
+
+        /// <summary>
+        /// Send one patch to the client
+        /// Note: x and y variables are NOT positions, they are terrain patches!
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
         void SendLayerData(int px, int py, float[] map);
+
+        /// <summary>
+        /// Send an array of patches to the client
+        /// Note: all x and y variables are NOT positions, they are terrain patches!
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
         void SendLayerData(int[] x, int[] y, float[] map);
-        void SendLayerPacket(float[] map, int x, int y);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);

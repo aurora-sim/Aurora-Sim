@@ -1133,10 +1133,6 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendLayerPacket(float[] map, int x, int y)
-        {
-        }
-
 		public void StopFlying(ISceneEntity presence)
         {
         }

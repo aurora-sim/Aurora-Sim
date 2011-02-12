@@ -1158,10 +1158,6 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendLayerPacket(float[] map, int x, int y)
-        {
-        }
-
         public void SendTeleportProgress(string reason)
         {
         }

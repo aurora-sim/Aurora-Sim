@@ -2232,11 +2232,6 @@ namespace Aurora.BotManager
 
         }
 
-        void IClientAPI.SendLayerPacket(float[] map, int x, int y)
-        {
-            
-        }
-
         void IClientAPI.SendWindData(Vector2[] windSpeeds)
         {
             

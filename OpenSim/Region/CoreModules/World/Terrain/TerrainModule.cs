@@ -869,11 +869,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     ySize]);
             }
 
-            float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
+            List<int> xs = new List<int>();
+            List<int> ys = new List<int>();
             if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
             {
-                List<int> xs = new List<int>();
-                List<int> ys = new List<int>();
                 for (int x = 0; x <
                     m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
                 {
@@ -902,8 +901,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         }
                     }
                 }
-                //Send all the patches at once
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedMap);
             }
             else
             {
@@ -923,12 +920,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             {
                                 //They can see it, send it ot them
                                 m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                presence.ControllingClient.SendLayerData(x, y, serializedMap);
+                                xs.Add(x);
+                                ys.Add(y);
                             }
                         }
                     }
                 }
             }
+            float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
+            //Send all the patches at once
+            presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedMap);
         }
 
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
