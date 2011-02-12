@@ -461,7 +461,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             EntityBase presenceEntity;
             if (m_scene.Entities.TryGetValue(client.AgentId, out presenceEntity) && presenceEntity is ScenePresence)
             {
-                SendParcelOverlay(client);
+                Util.FireAndForget(delegate(object o)
+                {
+                    SendParcelOverlay(client);
+                });
             }
         }
 

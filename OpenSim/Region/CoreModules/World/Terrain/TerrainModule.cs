@@ -1205,8 +1205,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         StoreUndoState();
                         m_painteffects[(StandardTerrainEffects) action].PaintEffect(
                             m_channel, allowMask, west, south, height, size, seconds, BrushSize, m_scenes);
-
-                        CheckForTerrainUpdates(!god, false, isWater); //revert changes outside estate limits
+                        
+                        //revert changes outside estate limits
+                        if (!god)
+                            LimitChannelChanges();
                     }
                 }
                 else
@@ -1247,7 +1249,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         m_floodeffects[(StandardTerrainEffects) action].FloodEffect(
                             m_channel, fillArea, size);
 
-                        CheckForTerrainUpdates(!god, false, isWater); //revert changes outside estate limits
+                        //revert changes outside estate limits
+                        if (!god)
+                            LimitChannelChanges();
                     }
                 }
                 else
