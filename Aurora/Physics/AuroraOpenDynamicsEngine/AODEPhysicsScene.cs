@@ -199,7 +199,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, float[]>();
-        private readonly Dictionary<IntPtr, double[,]> NormalTerrainHeightFieldHeights = new Dictionary<IntPtr, double[,]>();
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
 
@@ -1566,7 +1565,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (heightFieldGeom != IntPtr.Zero)
                 {
-                    if (NormalTerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
+                    if (TerrainHeightFieldHeights.ContainsKey(heightFieldGeom))
                     {
 
                         //int index;
@@ -1586,7 +1585,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //if (index < NormalTerrainHeightFieldHeights[heightFieldGeom].Length)
                         //{
                             //m_log.DebugFormat("x{0} y{1} = {2}", x, y, (float)TerrainHeightFieldHeights[heightFieldGeom][index]);
-                            return (float)NormalTerrainHeightFieldHeights[heightFieldGeom][(int)x, (int)y];
+                        return (float)TerrainHeightFieldHeights[heightFieldGeom][((int)y * m_region.RegionSizeX) + (int)x];
                         //}
 
                         //else
@@ -3699,7 +3698,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     RegionTerrain.Remove(pOffset);
                     TerrainHeightFieldHeights.Remove(GroundGeom);
-                    NormalTerrainHeightFieldHeights.Remove(GroundGeom);
                     actor_name_map.Remove(GroundGeom);
                     geom_name_map.Remove(GroundGeom);
                 }
@@ -3749,7 +3747,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
                 TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
-                NormalTerrainHeightFieldHeights.Add(GroundGeom, normalHeightMap);
             }
         }
 

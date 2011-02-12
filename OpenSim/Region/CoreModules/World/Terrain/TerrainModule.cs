@@ -87,6 +87,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_waterRevert;
         private Scene m_scene;
         private volatile bool m_tainted;
+        private volatile bool m_backingUp;
         private const double MAX_HEIGHT = 250;
         private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
@@ -754,9 +755,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 //It's time
                 if (m_tainted)
                 {
-                    m_tainted = false;
-                    m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
-                    SaveTerrain();
+                    if (!m_backingUp)
+                    {
+                        m_backingUp = true;
+                        Util.FireAndForget(delegate(object o)
+                        {
+                            m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
+                            SaveTerrain();
+                            m_tainted = false;
+                            m_backingUp = false;
+                        });
+                    }
                 }
             }
         }
