@@ -1099,14 +1099,79 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 int[] x = new int[] { px };
                 int[] y = new int[] { py };
-                
+
                 LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLandPacket(map, x, y, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
-                
+
                 OutPacket(layerpack, ThrottleOutPacketType.Unknown);
             }
             catch (Exception e)
             {
                 m_log.Error("[CLIENT]: SendLayerData() Failed with exception: " + e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Sends a specified patch to a client
+        /// </summary>
+        /// <param name="px">Patch coordinates (x) 0..regionSize/16</param>
+        /// <param name="py">Patch coordinates (y) 0..regionSize/16</param>
+        /// <param name="map">heightmap</param>
+        public void SendLayerData(int[] x, int[] y, float[] map)
+        {
+            LayerDataPacket layerpack;
+            int MaxPatches = 10;
+            //Only send 10 at a time
+            for (int i = 0; i < x.Length; i += MaxPatches)
+            {
+                try
+                {
+                    //Find the size for the array
+                    int Size = x.Length - 10 > 0 ? 10 : x.Length;
+                    int[] xTemp = new int[Size];
+                    int[] yTemp = new int[Size];
+
+                    //Copy the arrays
+                    Array.Copy(x, i, xTemp, 0, Size);
+                    Array.Copy(y, i, yTemp, 0, Size);
+
+                    //Build the packet
+                    layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xTemp, yTemp, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+
+                    layerpack.Header.Zerocoded = true;
+                    layerpack.Header.Reliable = true;
+
+                    if (layerpack.Length > 1000) // Oversize packet was created
+                    {
+                        for (int xa = 0; xa < 10; xa++)
+                        {
+                            // Send oversize packet in individual patches
+                            //
+                            SendLayerData(x[i + xa], y[i + xa], map);
+                        }
+                    }
+                    else
+                    {
+                        OutPacket(layerpack, ThrottleOutPacketType.Unknown);
+                    }
+                }
+                catch (OverflowException)
+                {
+                    for (int xa = 0; xa < 10; xa++)
+                    {
+                        // Send oversize packet in individual patches
+                        //
+                        SendLayerData(x[i + xa], y[i + xa], map);
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    for (int xa = 0; xa < 10; xa++)
+                    {
+                        // Bad terrain, send individual chunks
+                        //
+                        SendLayerData(x[i + xa], y[i + xa], map);
+                    }
+                }
             }
         }
 

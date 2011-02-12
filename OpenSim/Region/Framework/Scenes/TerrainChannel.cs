@@ -43,6 +43,8 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private bool[,] taint;
         private double[,] map;
+        private float[] m_cachedMap;
+        private bool m_tainted = false;
         private IScene m_scene;
 
         public TerrainChannel(IScene scene)
@@ -132,6 +134,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float[] GetFloatsSerialised(IScene scene)
         {
+            if (m_cachedMap != null && !m_tainted)
+                return m_cachedMap;
             // Move the member variables into local variables, calling
             // member variables 256*256 times gets expensive
             int w = Width;
@@ -147,7 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
                     heights[idx++] = (float)map[j, i];
                 }
             }
-
+            m_cachedMap = heights;
             return heights;
         }
 
@@ -174,6 +178,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (map[x, y] != value)
                 {
                     taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
+                    m_tainted = true;
                     map[x, y] = value;
                 }
             }

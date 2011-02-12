@@ -673,7 +673,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant, int RegionSizeX, int RegionSizeY)
         {
-            float[] block = new float[RegionSizeX > Constants.RegionSize ? RegionSizeX : Constants.RegionSize];
+            float[] block = new float[Constants.RegionSize];
             int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);

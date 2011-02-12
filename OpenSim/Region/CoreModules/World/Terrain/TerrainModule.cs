@@ -863,6 +863,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
             if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
             {
+                List<int> xs = new List<int>();
+                List<int> ys = new List<int>();
                 for (int x = 0; x <
                     m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
                 {
@@ -883,11 +885,16 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             {
                                 //They can see it, send it ot them
                                 m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                presence.ControllingClient.SendLayerData(x, y, serializedMap);
+                                xs.Add(x);
+                                ys.Add(y);
+                                //Wait and send them all at once
+                                //presence.ControllingClient.SendLayerData(x, y, serializedMap);
                             }
                         }
                     }
                 }
+                //Send all the patches at once
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedMap);
             }
             else
             {
@@ -963,26 +970,24 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             ITerrainChannel channel = isWater ? m_waterChannel : m_channel;
             bool shouldTaint = false;
-            float[] serialised = channel.GetFloatsSerialised(m_scene);
-            int x;
-            for (x = 0; x < channel.Width; x += Constants.TerrainPatchSize)
+
+            // if we should respect the estate settings then
+            // fixup and height deltas that don't respect them
+            if(respectEstateSettings)
+                LimitChannelChanges();
+            else if (!forceSendOfTerrainInfo)
+                LimitMaxTerrain();
+
+            List<int> xs = new List<int>();
+            List<int> ys = new List<int>();
+            for (int x = 0; x < channel.Width; x += Constants.TerrainPatchSize)
             {
-                int y;
-                for (y = 0; y < channel.Height; y += Constants.TerrainPatchSize)
+                for (int y = 0; y < channel.Height; y += Constants.TerrainPatchSize)
                 {
                     if (channel.Tainted(x, y) || forceSendOfTerrainInfo)
                     {
-                        // if we should respect the estate settings then
-                        // fixup and height deltas that don't respect them
-                        if ((respectEstateSettings && LimitChannelChanges(x, y)) ||
-                            LimitMaxTerrain(x, y) && !forceSendOfTerrainInfo)
-                        {
-                            // this has been vetoed, so update
-                            // what we are going to send to the client
-                            serialised = channel.GetFloatsSerialised(m_scene);
-                        }
-
-                        SendToClients(serialised, x, y);
+                        xs.Add(x);
+                        ys.Add(y);
                         shouldTaint = true;
                     }
                 }
@@ -990,6 +995,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (shouldTaint || forceSendOfTerrainInfo)
             {
                 m_tainted = true;
+            }
+
+            float[] serialised = channel.GetFloatsSerialised(m_scene);
+            foreach (ScenePresence presence in m_scene.ScenePresences)
+            {
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised);
             }
         }
 
@@ -1013,6 +1024,72 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     else if (requestedHeight < MIN_HEIGHT)
                     {
                         m_channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
+                        changesLimited = true;
+                    }
+                }
+            }
+
+            return changesLimited;
+        }
+
+        private bool LimitMaxTerrain()
+        {
+            bool changesLimited = false;
+
+            // loop through the height map for this patch and compare it against
+            // the revert map
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
+            {
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / +Constants.TerrainPatchSize; y++)
+                {
+                    double requestedHeight = m_channel[x, y];
+
+                    if (requestedHeight > MAX_HEIGHT)
+                    {
+                        m_channel[x, y] = MAX_HEIGHT;
+                        changesLimited = true;
+                    }
+                    else if (requestedHeight < MIN_HEIGHT)
+                    {
+                        m_channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
+                        changesLimited = true;
+                    }
+                }
+            }
+
+            return changesLimited;
+        }
+
+        /// <summary>
+        /// Checks to see height deltas in the tainted terrain patch at xStart ,yStart
+        /// are all within the current estate limits
+        /// <returns>true if changes were limited, false otherwise</returns>
+        /// </summary>
+        private bool LimitChannelChanges()
+        {
+            bool changesLimited = false;
+            double minDelta = m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
+            double maxDelta = m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
+
+            // loop through the height map for this patch and compare it against
+            // the revert map
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
+            {
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
+                {
+
+                    double requestedHeight = m_channel[x, y];
+                    double bakedHeight = m_revert[x, y];
+                    double requestedDelta = requestedHeight - bakedHeight;
+
+                    if (requestedDelta > maxDelta)
+                    {
+                        m_channel[x, y] = bakedHeight + maxDelta;
+                        changesLimited = true;
+                    }
+                    else if (requestedDelta < minDelta)
+                    {
+                        m_channel[x, y] = bakedHeight + minDelta; //as lower is a -ve delta
                         changesLimited = true;
                     }
                 }

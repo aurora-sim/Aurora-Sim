@@ -2219,12 +2219,17 @@ namespace Aurora.BotManager
 
         void IClientAPI.SendLayerData(float[] map)
         {
-            
+
         }
 
         void IClientAPI.SendLayerData(int px, int py, float[] map)
         {
-            
+
+        }
+
+        void IClientAPI.SendLayerData(int[] x, int[] y, float[] map)
+        {
+
         }
 
         void IClientAPI.SendLayerPacket(float[] map, int x, int y)

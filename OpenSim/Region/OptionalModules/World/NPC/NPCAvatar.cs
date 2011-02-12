@@ -573,6 +573,11 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         public virtual void SendLayerData(int px, int py, float[] map)
         {
         }
+
+        public void SendLayerData(int[] x, int[] y, float[] map)
+        {
+
+        }
         public virtual void SendLayerData(int px, int py, float[] map, bool track)
         {
         }

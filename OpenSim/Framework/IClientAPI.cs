@@ -1132,6 +1132,7 @@ namespace OpenSim.Framework
 
         void SendLayerData(float[] map);
         void SendLayerData(int px, int py, float[] map);
+        void SendLayerData(int[] x, int[] y, float[] map);
         void SendLayerPacket(float[] map, int x, int y);
 
         void SendWindData(Vector2[] windSpeeds);
