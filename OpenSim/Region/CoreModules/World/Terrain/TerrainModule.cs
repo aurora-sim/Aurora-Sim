@@ -312,6 +312,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
             }
+            catch (IndexOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_channel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_channel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            }
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
