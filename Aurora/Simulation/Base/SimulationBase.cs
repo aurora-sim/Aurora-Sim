@@ -132,8 +132,6 @@ namespace Aurora.Simulation.Base
 
                 m_TimerScriptFileName = startupConfig.GetString("timer_Script", "disabled");
                 m_TimerScriptTime = startupConfig.GetInt("timer_time", m_TimerScriptTime);
-                if (m_TimerScriptTime < 5) //Limit for things like backup and etc...
-                    m_TimerScriptTime = 5;
 
                 string pidFile = startupConfig.GetString("PIDFile", String.Empty);
                 if (pidFile != String.Empty)
