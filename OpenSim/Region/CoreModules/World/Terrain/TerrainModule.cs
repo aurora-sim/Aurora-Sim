@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Net;
+using System.Timers;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
@@ -86,12 +87,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_revert;
         private ITerrainChannel m_waterRevert;
         private Scene m_scene;
-        private volatile bool m_tainted;
-        private volatile bool m_backingUp;
+
+        private long m_queueNextSave = 0;
+        private int m_savetime = 2; // seconds to wait before saving terrain
+        private Timer m_queueTimer = new Timer();
+
         private const double MAX_HEIGHT = 250;
         private const double MIN_HEIGHT = -100;
         private readonly UndoStack<LandUndoState> m_undo = new UndoStack<LandUndoState>(5);
-        private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
         private bool m_sendTerrainUpdatesByViewDistance = false;
         protected Dictionary<UUID, bool[,]> m_terrainPatchesSent = new Dictionary<UUID, bool[,]>();
         protected bool m_use3DWater = false;
@@ -109,6 +112,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_sendTerrainUpdatesByViewDistance = config.Configs["TerrainModule"].GetBoolean("SendTerrainByViewDistance", m_sendTerrainUpdatesByViewDistance);
                 m_use3DWater = config.Configs["TerrainModule"].GetBoolean("Use3DWater", m_use3DWater);
+                m_savetime = config.Configs["TerrainModule"].GetInt("QueueSaveTime", m_savetime);
             }
         }
 
@@ -126,7 +130,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
-            m_scene.EventManager.OnFrame += EventManager_OnFrame;
             m_scene.EventManager.OnClosingClient += OnClosingClient;
             m_scene.EventManager.OnSignificantClientMovement += EventManager_OnSignificantClientMovement;
             m_scene.AuroraEventManager.OnGenericEvent += AuroraEventManager_OnGenericEvent;
@@ -137,6 +140,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             InstallDefaultEffects();
             LoadPlugins();
+
+            m_queueTimer.Enabled = false;
+            m_queueTimer.AutoReset = true;
+            m_queueTimer.Interval = m_savetime * 1000;
+            m_queueTimer.Elapsed += TerrainUpdateTimer;
         }
 
         public void RegionLoaded(Scene scene)
@@ -148,7 +156,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             lock (m_scene)
             {
                 // remove the event-handlers
-                m_scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                 m_scene.EventManager.OnClosingClient -= OnClosingClient;
                 m_scene.EventManager.OnSignificantClientMovement -= EventManager_OnSignificantClientMovement;
@@ -177,6 +184,27 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         #region ITerrainModule Members
+
+        public void TerrainUpdateTimer(object sender, EventArgs ea)
+        {
+            long now = DateTime.Now.Ticks;
+
+            if (m_queueNextSave > 0 && m_queueNextSave < now)
+            {
+                //Save the terarin
+                SaveTerrain();
+                m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
+                
+                m_queueNextSave = 0;
+                m_queueTimer.Stop();
+            }
+        }
+
+        public void QueueTerrainUpdate()
+        {
+            m_queueNextSave = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
+            m_queueTimer.Start();
+        }
 
         public void UpdateWaterHeight(double height)
         {
@@ -931,31 +959,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
-        /// Performs updates to the region periodically, synchronising physics and other heightmap aware sections
-        /// </summary>
-        private void EventManager_OnFrame()
-        {
-            if ((m_scene.Frame & m_update_terrain) == 0)
-            {
-                //It's time
-                if (m_tainted)
-                {
-                    if (!m_backingUp)
-                    {
-                        m_backingUp = true;
-                        Util.FireAndForget(delegate(object o)
-                        {
-                            m_tainted = false;
-                            m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
-                            SaveTerrain();
-                            m_backingUp = false;
-                        });
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Installs terrain brush hook to IClientAPI
         /// </summary>
         /// <param name="client"></param>
@@ -1188,9 +1191,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
             }
             if (shouldTaint || forceSendOfTerrainInfo)
-            {
-                m_tainted = true;
-            }
+                QueueTerrainUpdate();
 
             float[] serialised = channel.GetFloatsSerialised(m_scene);
             foreach (ScenePresence presence in m_scene.ScenePresences)
