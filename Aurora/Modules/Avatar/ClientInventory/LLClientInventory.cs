@@ -873,12 +873,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (item == null)
                         return;
 
-                    if (item.Type == 10)
-                    {
-                        part.RemoveScriptEvents(itemID);
-                        m_scene.EventManager.TriggerRemoveScript(localID, itemID);
-                    }
-
                     group.RemoveInventoryItem(localID, itemID);
                     part.GetProperties(remoteClient);
                 }

@@ -2372,6 +2372,7 @@ namespace OpenSim.Region.Framework.Scenes
             Array.Copy(Shape.ExtraParams, extraP, extraP.Length);
             dupe.Shape.ExtraParams = extraP;
 
+            dupe.m_scriptEvents = new Dictionary<UUID,scriptEvents>();
             if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
             {
                 m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived);
