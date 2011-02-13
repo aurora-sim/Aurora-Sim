@@ -46,7 +46,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void EnableChildAgents(ScenePresence agent);
 
-        void CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion destination);
+        bool CrossGroupToNewRegion(SceneObjectGroup sog, Vector3 position, GridRegion destination);
 
         void CancelTeleport(UUID AgentID, ulong RegionHandle);
 

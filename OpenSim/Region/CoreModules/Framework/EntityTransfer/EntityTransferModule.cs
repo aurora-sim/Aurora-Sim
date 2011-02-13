@@ -667,15 +667,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="attemptedPosition">the attempted out of region position of the scene object</param>
         /// <param name="grp">the scene object that we're crossing</param>
-        public void CrossGroupToNewRegion(SceneObjectGroup grp, Vector3 attemptedPosition, GridRegion destination)
+        public bool CrossGroupToNewRegion(SceneObjectGroup grp, Vector3 attemptedPosition, GridRegion destination)
         {
             if (grp == null)
-                return;
+                return false;
             if (grp.IsDeleted)
-                return;
+                return false;
 
             if (grp.Scene == null)
-                return;
+                return false;
             if (grp.RootPart.DIE_AT_EDGE)
             {
                 // We remove the object here
@@ -683,13 +683,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
+                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
                 }
                 catch (Exception)
                 {
                     m_log.Warn("[DATABASE]: exception when trying to remove the prim that crossed the border.");
                 }
-                return;
+                return false;
             }
 
             if (grp.RootPart.RETURN_AT_EDGE)
@@ -700,13 +700,13 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     List<SceneObjectGroup> objects = new List<SceneObjectGroup>() { grp };
                     ILLClientInventory inventoryModule = grp.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
-                        inventoryModule.ReturnObjects(objects.ToArray(), UUID.Zero);
+                        return inventoryModule.ReturnObjects(objects.ToArray(), UUID.Zero);
                 }
                 catch (Exception)
                 {
                     m_log.Warn("[SCENE]: exception when trying to return the prim that crossed the border.");
                 }
-                return;
+                return false;
             }
 
             Vector3 oldGroupPosition = grp.RootPart.GroupPosition;
@@ -715,7 +715,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 grp.OffsetForNewRegion(oldGroupPosition);
                 grp.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                return false;
             }
+            return true;
         }
 
         /// <summary>

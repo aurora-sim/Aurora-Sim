@@ -111,6 +111,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool m_isLoaded = false;
         public Vector3 m_lastSignificantPosition = Vector3.Zero;
         public UUID m_lastParcelUUID = UUID.Zero;
+        public bool m_inTransit = false;
 
         public override bool HasGroupChanged
         {
@@ -2564,8 +2565,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         //If we are headed out of the region, make sure we have a region there
                         INeighborService neighborService = Scene.RequestModuleInterface<INeighborService>();
-                        if (neighborService != null)
+                        if (neighborService != null && !m_inTransit)
                         {
+                            m_inTransit = true;
                             List<GridRegion> neighbors = neighborService.GetNeighbors(Scene.RegionInfo);
 
                             int RegionCrossX = Scene.RegionInfo.RegionLocX;
@@ -2601,17 +2603,20 @@ namespace OpenSim.Region.Framework.Scenes
 
                                 IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
                                 if (transferModule != null)
-                                    transferModule.CrossGroupToNewRegion(this, val, neighborRegion);
+                                {
+                                    if (transferModule.CrossGroupToNewRegion(this, val, neighborRegion))
+                                    {
+                                        m_inTransit = false;
+                                        return;
+                                    }
+                                }
                             }
-                            else
-                            {
-                                //The group should have crossed a region, but no region was found so return it instead
-                                m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
-                                ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
-                                if(inventoryModule != null)
-                                    inventoryModule.ReturnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
-                                return;
-                            }
+                            //The group should have crossed a region, but no region was found so return it instead
+                            m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
+                            ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
+                            if (inventoryModule != null)
+                                inventoryModule.ReturnObjects(new SceneObjectGroup[1] { this }, UUID.Zero);
+                            return;
                         }
                     }
                 }
