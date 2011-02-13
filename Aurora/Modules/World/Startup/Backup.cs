@@ -191,30 +191,44 @@ namespace Aurora.Modules
                 List<SceneObjectGroup> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
                 foreach (SceneObjectGroup group in PrimsFromDB)
                 {
-                    m_scene.SceneGraph.CheckAllocationOfLocalIds(group);
-                    if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
-                        (group.RootPart.Shape.PCode == (byte)PCode.None ||
-                        group.RootPart.Shape.PCode == (byte)PCode.Prim ||
-                        group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
+                    try
                     {
-                        m_log.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
-                        //WTF went wrong here? Remove it and then pass it by on loading
-                        m_scene.SimulationDataService.RemoveObject(group.UUID, m_scene.RegionInfo.RegionID);
-                        continue;
-                    }
-                    group.Scene = m_scene;
+                        m_scene.SceneGraph.CheckAllocationOfLocalIds(group);
+                        if (group.IsAttachment || (group.RootPart.Shape != null && (group.RootPart.Shape.State != 0 &&
+                            (group.RootPart.Shape.PCode == (byte)PCode.None ||
+                            group.RootPart.Shape.PCode == (byte)PCode.Prim ||
+                            group.RootPart.Shape.PCode == (byte)PCode.Avatar))))
+                        {
+                            m_log.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
+                            //WTF went wrong here? Remove it and then pass it by on loading
+                            m_scene.SimulationDataService.RemoveObject(group.UUID, m_scene.RegionInfo.RegionID);
+                            continue;
+                        }
+                        else if (group.RootPart.Shape == null)
+                        {
+                            m_log.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
+                            //WTF went wrong here? Remove it and then pass it by on loading
+                            m_scene.SimulationDataService.RemoveObject(group.UUID, m_scene.RegionInfo.RegionID);
+                            continue;
+                        }
+                        group.Scene = m_scene;
 
-                    if (group.RootPart == null)
-                    {
-                        m_log.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                          group.ChildrenList.Count);
-                        continue;
+                        if (group.RootPart == null)
+                        {
+                            m_log.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
+                                              group.ChildrenList.Count);
+                            continue;
+                        }
+                        m_scene.SceneGraph.RestorePrimToScene(group);
+                        SceneObjectPart rootPart = group.GetChildPart(group.UUID);
+                        rootPart.Flags &= ~PrimFlags.Scripted;
+                        rootPart.TrimPermissions();
+                        group.CheckSculptAndLoad();
                     }
-                    m_scene.SceneGraph.RestorePrimToScene(group);
-                    SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-                    rootPart.Flags &= ~PrimFlags.Scripted;
-                    rootPart.TrimPermissions();
-                    group.CheckSculptAndLoad();
+                    catch(Exception ex)
+                    {
+                        m_log.Warn("[BackupModule]: Exception attempting to load object from the database, " + ex.ToString());
+                    }
                 }
                 LoadingPrims = false;
                 m_log.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");

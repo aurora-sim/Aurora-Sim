@@ -247,7 +247,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         // Loop over prim in group
                         foreach (SceneObjectPart part in mapdot.ChildrenList)
                         {
-                            if (part == null)
+                            if (part == null || part.Shape == null)
                                 continue;
 
                             // Draw if the object is at least .5 meter wide in any direction
