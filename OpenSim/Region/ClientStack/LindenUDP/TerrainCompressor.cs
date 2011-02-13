@@ -179,9 +179,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public static void CreatePatch(BitPack output, float[] patchData, int x, int y)
         {
-            if (patchData.Length != Constants.TerrainPatchSize * Constants.TerrainPatchSize)
-                throw new ArgumentException(string.Format("Patch data must be a {0}x{0} array", Constants.TerrainPatchSize));
-
             TerrainPatch.Header header = PrescanPatch(patchData);
             header.QuantWBits = 136;
             header.PatchIDs = (y & 0x1F);
@@ -189,15 +186,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // NOTE: No idea what prequant and postquant should be or what they do
             int[] patch = CompressPatch(patchData, header, 10);
-            int wbits = EncodePatchHeader(output, header, patch);
+            int wbits = EncodePatchHeader(output, header, patch, Constants.RegionSize, Constants.RegionSize);
             EncodePatch(output, patch, 0, wbits);
         }
 
         public static void CreatePatch(BitPack output, float[,] patchData, int x, int y)
         {
-            if (patchData.Length != Constants.TerrainPatchSize * Constants.TerrainPatchSize)
-                throw new ArgumentException(string.Format("Patch data must be a {0}x{0} array", Constants.TerrainPatchSize));
-
             TerrainPatch.Header header = PrescanPatch(patchData);
             header.QuantWBits = 136;
             header.PatchIDs = (y & 0x1F);
@@ -205,7 +199,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // NOTE: No idea what prequant and postquant should be or what they do
             int[] patch = CompressPatch(patchData, header, 10);
-            int wbits = EncodePatchHeader(output, header, patch);
+            int wbits = EncodePatchHeader(output, header, patch, Constants.RegionSize, Constants.RegionSize);
             EncodePatch(output, patch, 0, wbits);
         }
 
@@ -228,7 +222,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // NOTE: No idea what prequant and postquant should be or what they do
             int[] patch = CompressPatch(heightmap, x, y, header, 10, RegionSizeX, RegionSizeY);
-            int wbits = EncodePatchHeader(output, header, patch);
+            int wbits = EncodePatchHeader(output, header, patch, RegionSizeX, RegionSizeY);
             EncodePatch(output, patch, 0, wbits);
         }
 
@@ -323,7 +317,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return header;
         }
 
-        private static int EncodePatchHeader(BitPack output, TerrainPatch.Header header, int[] patch)
+        private static int EncodePatchHeader(BitPack output, TerrainPatch.Header header, int[] patch, int RegionSizeX, int RegionSizeY)
         {
             int temp;
             int wbits = (header.QuantWBits & 0x0f) + 2;
@@ -361,7 +355,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             output.PackBits(header.QuantWBits, 8);
             output.PackFloat(header.DCOffset);
             output.PackBits(header.Range, 16);
-            output.PackBits(header.PatchIDs, 10);
+            if (RegionSizeX != Constants.RegionSize)
+                output.PackBits(header.PatchIDs, 32);
+            else
+                output.PackBits(header.PatchIDs, 10);
 
             return wbits;
         }
@@ -667,7 +664,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private static int[] CompressPatch(float[] heightmap, int patchX, int patchY, TerrainPatch.Header header, int prequant, int RegionSizeX, int RegionSizeY)
         {
-            float[] block = new float[Constants.RegionSize];
+            float[] block = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];
             int wordsize = prequant;
             float oozrange = 1.0f / (float)header.Range;
             float range = (float)(1 << prequant);
