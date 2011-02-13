@@ -155,6 +155,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private double CollisionEventDelayTicks = (double)0.5;
         private Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
         public bool MovingInQueue = false;
+        /// <summary>
+        /// Note: This should be saved in the state save!
+        /// </summary>
+        public bool TargetOmegaWasSet = false;
 
         public int EventsProcDataLocked = 0;
         public bool InEventsProcData = false;
@@ -223,8 +227,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
 
             #region Clean out script parts
-            part.AngularVelocity = Vector3.Zero; // Removed in SL
-            part.ScheduleUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
+
+            //Only if this script changed target omega do we reset it
+            if (TargetOmegaWasSet)
+            {
+                part.AngularVelocity = Vector3.Zero; // Removed in SL
+                part.ScheduleUpdate(PrimUpdateFlags.AngularVelocity); // Send changes to client.
+            }
+
             #endregion
 
             if (Script != null)

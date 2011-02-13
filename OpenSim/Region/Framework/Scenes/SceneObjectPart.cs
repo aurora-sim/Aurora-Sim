@@ -546,7 +546,7 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         private int m_scriptAccessPin;
         [XmlIgnore]
-        private readonly Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
+        private Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
         private string m_sitName = String.Empty;
         private string m_sitAnimation = "SIT";
         private string m_text = String.Empty;

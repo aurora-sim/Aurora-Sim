@@ -4174,6 +4174,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             m_host.AngularVelocity = new Vector3((float)(axis.x * spinrate), (float)(axis.y * spinrate), (float)(axis.z * spinrate));
+            ScriptData script = ScriptProtection.GetScript(this.m_itemID);
+            if (script != null)
+                script.TargetOmegaWasSet = true;
             m_host.ScheduleTerseUpdate();
             //m_host.SendTerseUpdateToAllClients();
             m_host.ParentGroup.HasGroupChanged = true;
