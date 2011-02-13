@@ -104,6 +104,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             int offsetX = 0;
             int offsetY = 0;
             int offsetZ = 0;
+            bool flipX = false;
+            bool flipY = false;
 
             int i = 0;
             foreach (string param in mainParams)
@@ -123,6 +125,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetZ);
                 }
+                if (param.StartsWith("FlipX"))
+                {
+                    flipX = true;
+                }
+                if (param.StartsWith("FlipY"))
+                {
+                    flipY = true;
+                }
                 i++;
             }
           
@@ -133,11 +143,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             
             if (mainParams.Count > 2)
             {
-                DearchiveRegion(mainParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ);
+                DearchiveRegion(mainParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY);
             }
             else
             {
-                DearchiveRegion(DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets, offsetX, offsetY, offsetZ);
+                DearchiveRegion(DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY);
             }
         }
 
@@ -182,15 +192,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public void DearchiveRegion(string loadPath)
         {
-            DearchiveRegion(loadPath, false, false, 0, 0, 0);
+            DearchiveRegion(loadPath, false, false, 0, 0, 0, false, false);
         }
 
-        public void DearchiveRegion(string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
+        public void DearchiveRegion(string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY)
         {
             m_log.InfoFormat(
                 "[ARCHIVER]: Loading archive to region {0} from {1}", m_scene.RegionInfo.RegionName, loadPath);
-            
-            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX, offsetY, offsetZ).DearchiveRegion();
+
+            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY).DearchiveRegion();
         }
         
         public void DearchiveRegion(Stream loadStream)
