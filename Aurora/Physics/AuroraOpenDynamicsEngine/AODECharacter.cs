@@ -1013,7 +1013,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (_parent_scene.AllowUnderwaterPhysics)
                 {
                 //Position plus height to av's shoulder (aprox) is just above water
-                if ((tempPos.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.waterlevel)
+                    if ((tempPos.Z + (CAPSULE_LENGTH / 3) - .25f) < _parent_scene.GetWaterLevel((float)tempPos.X, (float)tempPos.Y))
                     {
                     if (StartingUnderWater)
                         ShouldBeWalking = Flying == false;
@@ -1023,13 +1023,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     lastUnderwaterPush = 0;
                     if (ShouldBeWalking)
                         {
-                    lastUnderwaterPush += (_parent_scene.waterlevel - tempPos.Z) * 33 + 3;
+                            lastUnderwaterPush += (float)(_parent_scene.GetWaterLevel((float)tempPos.X, (float)tempPos.Y) - tempPos.Z) * 33 + 3;
                         vec.Z += lastUnderwaterPush;
                         }
                     else
                         {
                         lastUnderwaterPush += 3500;
-                        lastUnderwaterPush += (_parent_scene.waterlevel - tempPos.Z) * 8;
+                        lastUnderwaterPush += (float)(_parent_scene.GetWaterLevel((float)tempPos.X, (float)tempPos.Y) - tempPos.Z) * 8;
                         vec.Z += lastUnderwaterPush;
                         }
                     }

@@ -94,6 +94,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private int m_update_terrain = 50; //Trigger the updating of the terrain mesh in the physics engine
         private bool m_sendTerrainUpdatesByViewDistance = false;
         protected Dictionary<UUID, bool[,]> m_terrainPatchesSent = new Dictionary<UUID, bool[,]>();
+        protected bool m_use3DWater = false;
 
         #region INonSharedRegionModule Members
 
@@ -107,6 +108,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (config.Configs["TerrainModule"] != null)
             {
                 m_sendTerrainUpdatesByViewDistance = config.Configs["TerrainModule"].GetBoolean("SendTerrainByViewDistance", m_sendTerrainUpdatesByViewDistance);
+                m_use3DWater = config.Configs["TerrainModule"].GetBoolean("Use3DWater", m_use3DWater);
             }
         }
 
@@ -118,8 +120,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_terrainModules.Add(this);
 
             LoadWorldHeightmap();
+            LoadWorldWaterMap();
             scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
-            scene.SceneGraph.PhysicsScene.SetWaterLevel((float)scene.RegionInfo.RegionSettings.WaterHeight);
+            UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -174,6 +177,25 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #endregion
 
         #region ITerrainModule Members
+
+        public void UpdateWaterHeight(double height)
+        {
+            float[] waterMap;
+            if (m_waterChannel == null)
+            {
+                waterMap = new float[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY];
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                {
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+                    {
+                        waterMap[y * m_scene.RegionInfo.RegionSizeX + x] = (float)height;
+                    }
+                }
+            }
+            else
+                waterMap = m_waterChannel.GetFloatsSerialised(m_scene);
+            m_scene.SceneGraph.PhysicsScene.SetWaterLevel(waterMap);
+        }
 
         /// <summary>
         /// Store the terrain in the persistant data store
@@ -391,6 +413,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// </summary>
         public void LoadWorldWaterMap()
         {
+            if (!m_use3DWater)
+                return;
             try
             {
                 double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);

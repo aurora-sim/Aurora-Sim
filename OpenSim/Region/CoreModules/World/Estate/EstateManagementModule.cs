@@ -364,7 +364,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 // Water Height
                 m_scene.RegionInfo.RegionSettings.WaterHeight = WaterHeight;
                 //Update physics so that the water stuff works after a height change.
-                m_scene.SceneGraph.PhysicsScene.SetWaterLevel(WaterHeight);
+                ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
+                if (terrainModule != null)
+                    terrainModule.UpdateWaterHeight(m_scene.RegionInfo.RegionSettings.WaterHeight);
 
                 // Terraforming limits
                 m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit = TerrainRaiseLimit;

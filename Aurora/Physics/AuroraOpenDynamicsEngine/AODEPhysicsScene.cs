@@ -112,7 +112,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int smallHashspaceLow = -4;
         private int smallHashspaceHigh = 66;
 
-        public float waterlevel = 0f;
         private int framecount = 0;
 
         private readonly IntPtr contactgroup;
@@ -199,6 +198,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
         private readonly Dictionary<IntPtr, double[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, double[]>();
+        private readonly Dictionary<UUID, float[]> WaterHeightFieldHeights = new Dictionary<UUID, float[]>();
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
 
@@ -3758,9 +3758,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
         }
 
-        public float GetWaterLevel()
+        public double GetWaterLevel(float x, float y)
         {
-            return waterlevel;
+            return WaterHeightFieldHeights[m_region.RegionID][(int)y * Region.RegionSizeX + (int)x];
         }
 
         public override bool SupportsCombining()
@@ -3828,66 +3828,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void SetWaterLevel(float baseheight)
+        public override void SetWaterLevel(float[] map)
         {
-            waterlevel = baseheight;
-            randomizeWater(waterlevel);
-        }
-
-        public void randomizeWater(float baseheight)
-        {
-            /*const uint heightmapWidth = m_regionWidth + 2;
-            const uint heightmapHeight = m_regionHeight + 2;
-            const uint heightmapWidthSamples = m_regionWidth + 2;
-            const uint heightmapHeightSamples = m_regionHeight + 2;
-            const float scale = 1.0f;
-            const float offset = 0.0f;
-            const float thickness = 2.9f;
-            const int wrap = 0;
-
-            for (int i = 0; i < (258 * 258); i++)
-            {
-                _watermap[i] = (baseheight-0.1f) + ((float)fluidRandomizer.Next(1,9) / 10f);
-               // m_log.Info((baseheight - 0.1f) + ((float)fluidRandomizer.Next(1, 9) / 10f));
-            }
-
-            lock (OdeLock)
-            {
-                if (WaterGeom != IntPtr.Zero)
-                {
-                    d.SpaceRemove(space, WaterGeom);
-                }
-                IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-                d.GeomHeightfieldDataBuildSingle(HeightmapData, _watermap, 0, heightmapWidth, heightmapHeight,
-                                                 (int)heightmapWidthSamples, (int)heightmapHeightSamples, scale,
-                                                 offset, thickness, wrap);
-                d.GeomHeightfieldDataSetBounds(HeightmapData, m_regionWidth, m_regionHeight);
-                WaterGeom = d.CreateHeightfield(space, HeightmapData, 1);
-                if (WaterGeom != IntPtr.Zero)
-                {
-                    d.GeomSetCategoryBits(WaterGeom, (int)(CollisionCategories.Water));
-                    d.GeomSetCollideBits(WaterGeom, (int)(CollisionCategories.Space));
-
-                }
-                geom_name_map[WaterGeom] = "Water";
-
-                d.Matrix3 R = new d.Matrix3();
-
-                Quaternion q1 = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), 1.5707f);
-                Quaternion q2 = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), 1.5707f);
-                //Axiom.Math.Quaternion q3 = Axiom.Math.Quaternion.FromAngleAxis(3.14f, new Axiom.Math.Vector3(0, 0, 1));
-
-                q1 = q1 * q2;
-                //q1 = q1 * q3;
-                Vector3 v3;
-                float angle;
-                q1.GetAxisAngle(out v3, out angle);
-
-                d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
-                d.GeomSetRotation(WaterGeom, ref R);
-                d.GeomSetPosition(WaterGeom, 128, 128, 0);
-            }
-            */
+            WaterHeightFieldHeights.Remove(m_region.RegionID);
+            WaterHeightFieldHeights.Add(m_region.RegionID, map);
         }
 
         public override void Dispose()

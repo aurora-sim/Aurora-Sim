@@ -68,8 +68,9 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void SaveTerrain();
         void SaveRevertTerrain(ITerrainChannel channel);
-        ITerrainChannel LoadRevertMap();
+        void LoadRevertMap();
         void LoadWorldHeightmap();
         void ResetTerrain();
+        void UpdateWaterHeight(double height);
     }
 }

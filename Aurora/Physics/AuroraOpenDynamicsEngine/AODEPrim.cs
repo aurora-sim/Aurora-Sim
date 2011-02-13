@@ -1585,7 +1585,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 break;
                             case PIDHoverType.GroundAndWater:
                                 m_groundHeight = _parent_scene.GetTerrainHeightAtXY((float)dcpos.X, (float)dcpos.Y);
-                                m_waterHeight = _parent_scene.GetWaterLevel();
+                                m_waterHeight = (float)_parent_scene.GetWaterLevel((float)dcpos.X, (float)dcpos.Y);
                                 if (m_groundHeight > m_waterHeight)
                                     {
                                     m_targetHoverHeight = m_groundHeight + m_PIDHoverHeight;

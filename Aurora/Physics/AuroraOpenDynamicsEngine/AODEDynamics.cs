@@ -769,7 +769,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // We should hover, get the target height
                 if ((m_Hoverflags & VehicleFlag.HOVER_WATER_ONLY) != 0)
                 {
-                    m_VhoverTargetHeight = _pParentScene.GetWaterLevel() + m_VhoverHeight;
+                    m_VhoverTargetHeight = (float)_pParentScene.GetWaterLevel((float)pos.X, (float)pos.Y) + m_VhoverHeight;
                 }
                 if ((m_Hoverflags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
                 {

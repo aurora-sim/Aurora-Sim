@@ -179,7 +179,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override void SetWaterLevel(float baseheight)
+        public override void SetWaterLevel(float[] map)
         {
         }
 
