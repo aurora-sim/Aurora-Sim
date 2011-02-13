@@ -41,9 +41,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         [Serializable]
         public struct Vector3
         {
-            public double x;
-            public double y;
-            public double z;
+            public LSLFloat x;
+            public LSLFloat y;
+            public LSLFloat z;
 
             #region Constructors
 
@@ -72,9 +72,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 bool res;
-                res = Double.TryParse(tmps[0], NumberStyles.Float, Culture.NumberFormatInfo, out x);
-                res = res & Double.TryParse(tmps[1], NumberStyles.Float, Culture.NumberFormatInfo, out y);
-                res = res & Double.TryParse(tmps[2], NumberStyles.Float, Culture.NumberFormatInfo, out z);
+                double xx, yy, zz;
+                res = Double.TryParse(tmps[0], NumberStyles.Float, Culture.NumberFormatInfo, out xx);
+                res = res & Double.TryParse(tmps[1], NumberStyles.Float, Culture.NumberFormatInfo, out yy);
+                res = res & Double.TryParse(tmps[2], NumberStyles.Float, Culture.NumberFormatInfo, out zz);
+                x = new LSLFloat(xx);
+                y = new LSLFloat(yy);
+                z = new LSLFloat(zz);
             }
 
             #endregion
@@ -1918,6 +1922,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             static public explicit operator float(LSLFloat f)
             {
                 return (float)f.value;
+            }
+
+            static public explicit operator byte(LSLFloat f)
+            {
+                return (byte)f.value;
+            }
+
+            static public explicit operator ushort(LSLFloat f)
+            {
+                return (ushort)f.value;
             }
 
             static public explicit operator int(LSLFloat f)
