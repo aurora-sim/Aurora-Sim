@@ -1,25 +1,5 @@
 [Network]
     http_listener_port = 8003
-    
-[DatabaseService]
-    StorageProvider = "OpenSim.Data.MySQL.dll"
-    ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;"
-    
-[AuroraData]
-    ; Local Data Manager Config
-    PluginModule = MySQL
-    ;ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*;"
-    
-[Includes]
-    ;; Main configuration
-    Include-Main = AuroraServerConfiguration/Main.ini
-    
-    ;;Other .ini files to add...
-    Include-AssetService = AuroraServerConfiguration/AssetService.ini
-    Include-Login = AuroraServerConfiguration/Login.ini
-    Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
-    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
-    Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
 
 [CAPSService]
     ;; Subsection Security
@@ -87,3 +67,15 @@
     ;; The maximum distance the user is allowed to see based on their draw distance (only works if UseVariableRegionSightDistance is enabled)
     ;; Default: 512 (meters)
     MaxDistanceVariableRegionSightDistance = 512
+    
+[Includes]
+    ;; Main configuration
+    Include-Main = AuroraServerConfiguration/Main.ini
+    
+    ;;Other .ini files to add...
+    Include-AssetService = AuroraServerConfiguration/AssetService.ini
+    Include-Login = AuroraServerConfiguration/Login.ini
+    Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
+    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
+    Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
+    Include-Data = AuroraServerConfiguration/Data/Data.ini
