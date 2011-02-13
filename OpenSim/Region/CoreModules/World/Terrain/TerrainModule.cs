@@ -233,49 +233,104 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <summary>
         /// Loads the World Revert heightmap
         /// </summary>
-        public ITerrainChannel LoadRevertMap()
+        public void LoadRevertMap()
         {
             try
             {
                 double[,] map = m_scene.SimulationDataService.LoadTerrain(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    map = m_channel.GetDoubles(m_scene);
-                    TerrainChannel channel = new TerrainChannel(map, m_scene);
-                    SaveRevertTerrain(channel);
-                    return channel;
+                    m_revert = m_channel.MakeCopy();
+
+                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
-                return new TerrainChannel(map, m_scene);
+                else
+                {
+                    m_revert = new TerrainChannel(map, m_scene);
+                }
+            }
+            catch (IOException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
+                if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
+                {
+                    m_revert = m_channel.MakeCopy();
+
+                    m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_revert = m_channel.MakeCopy();
+
+                m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_revert = m_channel.MakeCopy();
+
+                m_scene.SimulationDataService.StoreTerrain(m_revert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
             }
-            return m_channel;
         }
 
         /// <summary>
         /// Loads the World Revert heightmap
         /// </summary>
-        public ITerrainChannel LoadRevertWaterMap()
+        public void LoadRevertWaterMap()
         {
             try
             {
                 double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    map = m_waterChannel.GetDoubles(m_scene);
-                    TerrainChannel channel = new TerrainChannel(map, m_scene);
-                    SaveRevertWater(channel);
-                    return channel;
+                    m_waterRevert = m_waterChannel.MakeCopy();
+
+                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
                 }
-                return new TerrainChannel(map, m_scene);
+                else
+                {
+                    m_waterRevert = new TerrainChannel(map, m_scene);
+                }
+            }
+            catch (IOException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
+                // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
+                if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
+                {
+                    m_waterRevert = m_waterChannel.MakeCopy();
+
+                    m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_waterRevert = m_waterChannel.MakeCopy();
+
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_waterRevert = m_waterChannel.MakeCopy();
+
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadRevertMap() - Failed with exception " + e.ToString());
+                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e.ToString());
+                m_waterRevert = m_waterChannel.MakeCopy();
+
+                m_scene.SimulationDataService.StoreWater(m_waterRevert.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, true);
             }
-            return m_waterChannel;
         }
 
         /// <summary>
@@ -292,13 +347,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_channel = new TerrainChannel(m_scene);
 
                     m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
-                    //Update the revert map as well
-                    UpdateRevertMap();
                 }
                 else
                 {
                     m_channel = new TerrainChannel(map, m_scene);
-                    FindRevertMap();
                 }
             }
             catch (IOException e)
@@ -330,6 +382,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
             }
+            LoadRevertMap();
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
         }
 
@@ -343,22 +396,19 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 double[,] map = m_scene.SimulationDataService.LoadWater(m_scene.RegionInfo.RegionID, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 if (map == null)
                 {
-                    m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                    m_log.Info("[TERRAIN]: No default water. Generating a new water.");
                     m_waterChannel = new TerrainChannel(m_scene);
 
                     m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
-                    //Update the revert map as well
-                    UpdateRevertWaterMap();
                 }
                 else
                 {
-                    m_waterChannel = new TerrainChannel(map, m_scene);
-                    FindRevertWaterMap();
+                    m_channel = new TerrainChannel(map, m_scene);
                 }
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize || m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
                 {
@@ -367,10 +417,28 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
                 }
             }
+            catch (IndexOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_waterChannel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e.ToString() + " Regenerating");
+                m_waterChannel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
+            }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWaterMap() - Failed with exception " + e.ToString());
+                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
+                m_waterChannel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreWater(m_waterChannel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
             }
+            LoadRevertWaterMap();
         }
 
         public void UndoTerrain(ITerrainChannel channel)
@@ -784,28 +852,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
-        /// Finds and updates the revert map from the database.
-        /// </summary>
-        public void FindRevertWaterMap()
-        {
-            m_waterRevert = LoadRevertWaterMap();
-        }
-
-        /// <summary>
         /// Saves the current state of the region into the revert map buffer.
         /// </summary>
         public void UpdateRevertWaterMap()
         {
             m_waterRevert = m_waterChannel.MakeCopy();
             SaveRevertTerrain(m_waterRevert);
-        }
-
-        /// <summary>
-        /// Finds and updates the revert map from the database.
-        /// </summary>
-        public void FindRevertMap()
-        {
-            m_revert = LoadRevertMap();
         }
 
         /// <summary>
