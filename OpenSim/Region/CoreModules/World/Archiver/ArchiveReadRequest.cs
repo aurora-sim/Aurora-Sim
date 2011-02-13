@@ -83,12 +83,16 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         private int m_offsetX = 0;
         private int m_offsetY = 0;
         private int m_offsetZ = 0;
+        private bool m_flipX = false;
+        private bool m_flipY = false;
 
-        public ArchiveReadRequest(Scene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
+        public ArchiveReadRequest(Scene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY)
         {
             m_offsetX = offsetX;
             m_offsetY = offsetY;
             m_offsetZ = offsetZ;
+            m_flipX = flipX;
+            m_flipY = flipY;
             m_scene = scene;
 
             try
@@ -251,6 +255,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         Vector3 newPos = new Vector3(sceneObject.AbsolutePosition.X + m_offsetX,
                             sceneObject.AbsolutePosition.Y + m_offsetY,
                             sceneObject.AbsolutePosition.Z + m_offsetZ);
+                        if (m_flipX)
+                            newPos.X = m_scene.RegionInfo.RegionSizeX - newPos.X;
+                        if (m_flipY)
+                            newPos.Y = m_scene.RegionInfo.RegionSizeY - newPos.Y;
                         sceneObject.SetAbsolutePosition(false, newPos);
 
                         if (m_scene.SceneGraph.AddPrimToScene(sceneObject))

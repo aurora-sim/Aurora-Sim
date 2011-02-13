@@ -75,8 +75,6 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
         /// <param name="assets"></param>
         protected void LoadLibraries(string iarFileName)
         {
-            m_log.InfoFormat("[LIBRARY INVENTORY]: Loading iar file {0}", iarFileName);
-           
             RegionInfo regInfo = new RegionInfo();
             Scene m_MockScene = null;
             //Make the scene for the IAR loader
@@ -100,6 +98,23 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID);
             }
 
+            InventoryCollection col = m_MockScene.InventoryService.GetFolderContent(uinfo.PrincipalID, UUID.Zero);
+            bool alreadyExists = false;
+            foreach (InventoryFolderBase folder in col.Folders)
+            {
+                if (folder.Name == iarFileName)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+            if (alreadyExists)
+            {
+                m_log.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
+                return;
+            }
+
+            m_log.InfoFormat("[LIBRARY INVENTORY]: Loading iar file {0}", iarFileName);
             InventoryFolderBase rootFolder = m_MockScene.InventoryService.GetRootFolder(uinfo.PrincipalID);
 
             if (null == rootFolder)
@@ -119,6 +134,10 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
                 TraverseFolders(f, nodes[0].ID, m_MockScene);
                 //This is our loaded folder
+                //Fix the name for later
+                f.Name = iarFileName;
+                f.ParentID = UUID.Zero;
+                bool update = m_MockScene.InventoryService.UpdateFolder(f);
                 m_service.AddToDefaultInventory(f);
             }
             catch (Exception e)
