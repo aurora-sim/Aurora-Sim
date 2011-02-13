@@ -1181,7 +1181,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             // In the future, these values might need to go global.
             // Here's where you get them.
-            SitGround = (flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0;
+            if (!SitGround)
+                SitGround = (flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0;
             m_AgentControlFlags = flags;
             m_headrotation = agentData.HeadRotation;
             m_state = agentData.State;
