@@ -3077,7 +3077,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
             list.Add(new LSL_Float(arc * Math.PI));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Float(particles / 2));
+            list.Add(new LSL_Integer(particles / 2));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
             list.Add(new LSL_Float(0.0));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
@@ -3152,7 +3152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
             list.Add(new LSL_Float(arc * Math.PI));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Float(1));
+            list.Add(new LSL_Integer(1));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
             list.Add(new LSL_Float(0.0));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
@@ -3225,7 +3225,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
             list.Add(new LSL_Float(arc * Math.PI));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Float(1));
+            list.Add(new LSL_Integer(1));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
             list.Add(new LSL_Float(0.0));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
@@ -3299,7 +3299,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
             list.Add(new LSL_Float(arc * Math.PI));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Float(1));
+            list.Add(new LSL_Integer(1));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
             list.Add(new LSL_Float(0.0));
             list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
