@@ -80,6 +80,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private bool m_RegionOwnerIsGod = true;
         private bool m_RegionManagerIsGod = false;
         private bool m_ParcelOwnerIsGod = false;
+        private bool m_allowAdminFriendEditRights = true;
         
         /// <value>
         /// The set of users that are allowed to create scripts.  This is only active if permissions are not being
@@ -98,7 +99,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private Dictionary<string, bool> GrantVB = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantJS = new Dictionary<string, bool>();
         private Dictionary<string, bool> GrantYP = new Dictionary<string, bool>();
-        private IFriendsModule m_friendsModule;
         private IGroupsModule m_groupsModule;
         private IMoapModule m_moapModule;
         private IParcelManagementModule m_parcelManagement;
@@ -124,12 +124,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_RegionOwnerIsGod = PermissionsConfig.GetBoolean("region_owner_is_god", m_RegionOwnerIsGod);
             m_RegionManagerIsGod = PermissionsConfig.GetBoolean("region_manager_is_god", m_RegionManagerIsGod);
             m_ParcelOwnerIsGod = PermissionsConfig.GetBoolean("parcel_owner_is_god", m_ParcelOwnerIsGod);
-            
+            m_allowAdminFriendEditRights = PermissionsConfig.GetBoolean("allow_god_friends_edit_with_rights", m_allowAdminFriendEditRights);
+
             m_allowedScriptCreators 
                 = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_creators", m_allowedScriptCreators);
             m_allowedScriptEditors
                 = ParseUserSetConfigSetting(PermissionsConfig, "allowed_script_editors", m_allowedScriptEditors);
-
         }
 
         public void AddRegion(Scene scene)
@@ -279,8 +279,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public void RegionLoaded(Scene scene)
         {
-            m_friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
-
             //if (m_friendsModule == null)
             //    m_log.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");
 
@@ -494,10 +492,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (user == objectOwner)
                 return true; //Same person, implicit trust
 
-            if (m_friendsModule == null)
-                return false;
-
-            int friendPerms = m_friendsModule.GetFriendPerms(user, objectOwner);
+            int friendPerms = m_scene.RequestModuleInterface<IFriendsModule>().GetFriendPerms(user, objectOwner);
             
             if (friendPerms == -1) //Not a friend
                 return false;
@@ -555,8 +550,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             uint objflags = task.GetEffectiveObjectFlags();
             UUID objectOwner = task.OwnerID;
-
-
+            
+            
             // Remove any of the objectFlags that are temporary.  These will get added back if appropriate
             // in the next bit of code
 
@@ -574,6 +569,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                   PrimFlags.ObjectYouOfficer // Tells client that you've got group object editing permission. Used when ObjectGroupOwned is set
                     );
             #pragma warning restore 0612
+
 
             // Creating the three ObjectFlags options for this method to choose from.
             // Customize the OwnerMask
@@ -594,7 +590,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // Object owners should be able to edit their own content
             if (user == objectOwner)
                 return objectOwnerMask;
-            
+
             if (IsFriendWithPerms(user, objectOwner))
                 return objectOwnerMask;
 
@@ -744,7 +740,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // Admin objects should not be editable by the above
             if (IsAdministrator(objectOwner))
             {
-                permission = false;
+                permission = (IsFriendWithPerms(currentUser, objectOwner) && m_allowAdminFriendEditRights);
             }
 
             // Admin should be able to edit anything in the sim (including admin objects)
