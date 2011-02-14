@@ -574,7 +574,7 @@ namespace OpenSim.Region.OptionalModules.World.NPC
         {
         }
 
-        public void SendLayerData(int[] x, int[] y, float[] map)
+        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type)
         {
 
         }

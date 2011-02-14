@@ -2227,7 +2227,7 @@ namespace Aurora.BotManager
 
         }
 
-        void IClientAPI.SendLayerData(int[] x, int[] y, float[] map)
+        void IClientAPI.SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type)
         {
 
         }

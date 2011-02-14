@@ -1116,7 +1116,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="px">Patch coordinates (x) 0..regionSize/16</param>
         /// <param name="py">Patch coordinates (y) 0..regionSize/16</param>
         /// <param name="map">heightmap</param>
-        public void SendLayerData(int[] x, int[] y, float[] map)
+        public void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type)
         {
             LayerDataPacket layerpack;
             int MaxPatches = 10;
@@ -1135,7 +1135,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     Array.Copy(y, i, yTemp, 0, Size);
 
                     //Build the packet
-                    layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xTemp, yTemp, TerrainPatch.LayerType.Land, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                    layerpack = AuroraTerrainCompressor.CreateLandPacket(map, xTemp, yTemp, type, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
 
                     layerpack.Header.Zerocoded = true;
                     layerpack.Header.Reliable = true;

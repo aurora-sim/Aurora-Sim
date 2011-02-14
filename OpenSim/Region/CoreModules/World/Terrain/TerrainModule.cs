@@ -226,6 +226,175 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         }
 
         /// <summary>
+        /// Installs terrain brush hook to IClientAPI
+        /// </summary>
+        /// <param name="client"></param>
+        private void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnModifyTerrain += client_OnModifyTerrain;
+            client.OnBakeTerrain += client_OnBakeTerrain;
+            client.OnLandUndo += client_OnLandUndo;
+            client.OnGodlikeMessage += client_onGodlikeMessage;
+            client.OnUnackedTerrain += client_OnUnackedTerrain;
+            client.OnRegionHandShakeReply += SendLayerData;
+
+            //Add them to the cache
+            lock (m_terrainPatchesSent)
+            {
+                if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
+                {
+                    ScenePresence agent = m_scene.GetScenePresence(client.AgentId);
+                    if (agent != null && agent.IsChildAgent)
+                    {
+                        //If the avatar is a child agent, we need to send the terrain data initially
+                        EventManager_OnSignificantClientMovement(client);
+                    }
+                }
+            }
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnModifyTerrain -= client_OnModifyTerrain;
+            client.OnBakeTerrain -= client_OnBakeTerrain;
+            client.OnLandUndo -= client_OnLandUndo;
+            client.OnGodlikeMessage -= client_onGodlikeMessage;
+            client.OnUnackedTerrain -= client_OnUnackedTerrain;
+            client.OnRegionHandShakeReply -= SendLayerData;
+
+            //Remove them from the cache
+            lock (m_terrainPatchesSent)
+            {
+                m_terrainPatchesSent.Remove(client.AgentId);
+            }
+        }
+
+        /// <summary>
+        /// Send the region heightmap to the client
+        /// </summary>
+        /// <param name="RemoteClient">Client to send to</param>
+        public void SendLayerData(IClientAPI RemoteClient)
+        {
+            ScenePresence presence = m_scene.GetScenePresence(RemoteClient.AgentId);
+            if (!m_sendTerrainUpdatesByViewDistance)
+            {
+                //Default way, send the full terrain at once
+                RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(RemoteClient.Scene));
+            }
+            else
+            {
+                //Send only what the client can see,
+                //  but the client isn't loaded yet, wait until they get set up
+                //  The first agent update they send will trigger the DrawDistanceChanged event and send the land
+            }
+        }
+
+        void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
+        {
+            if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
+            {
+                SendTerrainUpdatesForClient((ScenePresence)parameters);
+            }
+        }
+
+        void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
+        {
+            ScenePresence presence = m_scene.GetScenePresence(remote_client.AgentId);
+            SendTerrainUpdatesForClient(presence);
+        }
+
+        void OnNewPresence(ScenePresence presence)
+        {
+            SendTerrainUpdatesForClient(presence);
+        }
+
+        protected void SendTerrainUpdatesForClient(ScenePresence presence)
+        {
+            if (!m_sendTerrainUpdatesByViewDistance)
+                return;
+
+            if (presence == null)
+                return;
+
+            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
+            {
+                int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
+                int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
+                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
+                    ySize]);
+            }
+
+            List<int> xs = new List<int>();
+            List<int> ys = new List<int>();
+            if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
+            {
+                for (int x = 0; x <
+                    m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
+                {
+                    for (int y = 0; y <
+                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
+                    {
+                        //Need to make sure we don't send the same ones over and over
+                        if (!m_terrainPatchesSent[presence.UUID][x, y])
+                        {
+                            //Check which has less distance, camera or avatar position, both have to be done
+                            double posdistance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
+                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                            double camdistance = Util.GetFlatDistanceTo(presence.CameraPosition,
+                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                            //Take the smaller of the two
+                            double distance = posdistance > camdistance ? camdistance : posdistance;
+                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
+                            {
+                                //They can see it, send it ot them
+                                m_terrainPatchesSent[presence.UUID][x, y] = true;
+                                xs.Add(x);
+                                ys.Add(y);
+                                //Wait and send them all at once
+                                //presence.ControllingClient.SendLayerData(x, y, serializedMap);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ///MegaRegion!
+                for (int x = 0; x <
+                    Constants.RegionSize / Constants.TerrainPatchSize; x++)
+                {
+                    for (int y = 0; y <
+                        Constants.RegionSize / Constants.TerrainPatchSize; y++)
+                    {
+                        //Need to make sure we don't send the same ones over and over
+                        if (!m_terrainPatchesSent[presence.UUID][x, y])
+                        {
+                            double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
+                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
+                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
+                            {
+                                //They can see it, send it ot them
+                                m_terrainPatchesSent[presence.UUID][x, y] = true;
+                                xs.Add(x);
+                                ys.Add(y);
+                            }
+                        }
+                    }
+                }
+            }
+            float[] serializedTerrainMap = m_channel.GetFloatsSerialised(m_scene);
+            //Send all the terrain patches at once
+            presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedTerrainMap, TerrainPatch.LayerType.Land);
+
+            if (m_use3DWater)
+            {
+                float[] serializedWaterMap = m_waterChannel.GetFloatsSerialised(m_scene);
+                //Send all the water patches at once
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedWaterMap, TerrainPatch.LayerType.Water);
+            }
+        }
+
+        /// <summary>
         /// Store the terrain in the persistant data store
         /// </summary>
         public void SaveTerrain()
@@ -958,168 +1127,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        /// <summary>
-        /// Installs terrain brush hook to IClientAPI
-        /// </summary>
-        /// <param name="client"></param>
-        private void EventManager_OnNewClient(IClientAPI client)
-        {
-            client.OnModifyTerrain += client_OnModifyTerrain;
-            client.OnBakeTerrain += client_OnBakeTerrain;
-            client.OnLandUndo += client_OnLandUndo;
-			client.OnGodlikeMessage += client_onGodlikeMessage;
-            client.OnUnackedTerrain += client_OnUnackedTerrain;
-            client.OnRegionHandShakeReply += SendLayerData;
-
-            //Add them to the cache
-            lock (m_terrainPatchesSent)
-            {
-                if (!m_terrainPatchesSent.ContainsKey(client.AgentId))
-                {
-                    ScenePresence agent = m_scene.GetScenePresence(client.AgentId);
-                    if (agent != null && agent.IsChildAgent)
-                    {
-                        //If the avatar is a child agent, we need to send the terrain data initially
-                        EventManager_OnSignificantClientMovement(client);
-                    }
-                }
-            }
-        }
-
-        private void OnClosingClient(IClientAPI client)
-        {
-            client.OnModifyTerrain -= client_OnModifyTerrain;
-            client.OnBakeTerrain -= client_OnBakeTerrain;
-            client.OnLandUndo -= client_OnLandUndo;
-            client.OnGodlikeMessage -= client_onGodlikeMessage;
-            client.OnUnackedTerrain -= client_OnUnackedTerrain;
-            client.OnRegionHandShakeReply -= SendLayerData;
-
-            //Remove them from the cache
-            lock (m_terrainPatchesSent)
-            {
-                m_terrainPatchesSent.Remove(client.AgentId);
-            }
-        }
-
-        /// <summary>
-        /// Send the region heightmap to the client
-        /// </summary>
-        /// <param name="RemoteClient">Client to send to</param>
-        public void SendLayerData(IClientAPI RemoteClient)
-        {
-            ScenePresence presence = m_scene.GetScenePresence(RemoteClient.AgentId);
-            if (!m_sendTerrainUpdatesByViewDistance)
-            {
-                //Default way, send the full terrain at once
-                RemoteClient.SendLayerData(m_channel.GetFloatsSerialised(RemoteClient.Scene));
-            }
-            else
-            {
-                //Send only what the client can see,
-                //  but the client isn't loaded yet, wait until they get set up
-                //  The first agent update they send will trigger the DrawDistanceChanged event and send the land
-            }
-        }
-
-        void AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
-        {
-            if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
-            {
-                SendTerrainUpdatesForClient((ScenePresence)parameters);
-            }
-        }
-
-        void EventManager_OnSignificantClientMovement(IClientAPI remote_client)
-        {
-            ScenePresence presence = m_scene.GetScenePresence(remote_client.AgentId);
-            SendTerrainUpdatesForClient(presence);
-        }
-
-        void OnNewPresence(ScenePresence presence)
-        {
-            SendTerrainUpdatesForClient(presence);
-        }
-
-        protected void SendTerrainUpdatesForClient(ScenePresence presence)
-        {
-            if (!m_sendTerrainUpdatesByViewDistance)
-                return;
-
-            if (presence == null)
-                return;
-
-            if (!m_terrainPatchesSent.ContainsKey(presence.UUID))
-            {
-                int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
-                int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize : Constants.RegionSize / Constants.TerrainPatchSize;
-                m_terrainPatchesSent.Add(presence.UUID, new bool[xSize,
-                    ySize]);
-            }
-
-            List<int> xs = new List<int>();
-            List<int> ys = new List<int>();
-            if (m_scene.RegionInfo.RegionSizeX != int.MaxValue)
-            {
-                for (int x = 0; x <
-                    m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++) //Make sure that we don't send past what viewers like
-                {
-                    for (int y = 0; y <
-                        m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++) //Make sure that we don't send past what viewers like
-                    {
-                        //Need to make sure we don't send the same ones over and over
-                        if (!m_terrainPatchesSent[presence.UUID][x, y])
-                        {
-                            //Check which has less distance, camera or avatar position, both have to be done
-                            double posdistance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            double camdistance = Util.GetFlatDistanceTo(presence.CameraPosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            //Take the smaller of the two
-                            double distance = posdistance > camdistance ? camdistance : posdistance;
-                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
-                            {
-                                //They can see it, send it ot them
-                                m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                xs.Add(x);
-                                ys.Add(y);
-                                //Wait and send them all at once
-                                //presence.ControllingClient.SendLayerData(x, y, serializedMap);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ///MegaRegion!
-                for (int x = 0; x <
-                    Constants.RegionSize / Constants.TerrainPatchSize; x++)
-                {
-                    for (int y = 0; y <
-                        Constants.RegionSize / Constants.TerrainPatchSize; y++)
-                    {
-                        //Need to make sure we don't send the same ones over and over
-                        if (!m_terrainPatchesSent[presence.UUID][x, y])
-                        {
-                            double distance = Util.GetFlatDistanceTo(presence.AbsolutePosition,
-                                new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize, 0));
-                            if (distance < presence.DrawDistance + 35) //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
-                            {
-                                //They can see it, send it ot them
-                                m_terrainPatchesSent[presence.UUID][x, y] = true;
-                                xs.Add(x);
-                                ys.Add(y);
-                            }
-                        }
-                    }
-                }
-            }
-            float[] serializedMap = m_channel.GetFloatsSerialised(m_scene);
-            //Send all the patches at once
-            presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serializedMap);
-        }
-
         void client_onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameters)
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
@@ -1196,7 +1203,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float[] serialised = channel.GetFloatsSerialised(m_scene);
             foreach (ScenePresence presence in m_scene.ScenePresences)
             {
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised);
+                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
             }
         }
 

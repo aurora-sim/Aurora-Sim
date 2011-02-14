@@ -1153,7 +1153,7 @@ namespace OpenSim.Framework
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="map"></param>
-        void SendLayerData(int[] x, int[] y, float[] map);
+        void SendLayerData(int[] x, int[] y, float[] map, TerrainPatch.LayerType type);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);
