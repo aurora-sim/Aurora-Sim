@@ -77,6 +77,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_iscollidingGround = false;
         private bool m_wascollidingGround = false;
         private bool m_iscollidingObj = false;
+        private bool m_wascolliding = false;
+
+        int m_colliderfilter = 0;
+        int m_colliderGroundfilter = 0;
+        int m_colliderObjectfilter = 0;
+
         private bool m_alwaysRun = false;
         private int m_requestedUpdateFrequency = 0;
         private Vector3 m_taintPosition = Vector3.Zero;
@@ -261,9 +267,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool IsColliding
         {
             get { return m_iscolliding; }
-            set
+        set
             {
-                m_iscolliding = value;
+            if (value)
+                {
+                m_colliderfilter += 2;
+                if (m_colliderfilter > 2)
+                    m_colliderfilter = 2;
+                }
+            else
+                {
+                m_colliderfilter--;
+                if (m_colliderfilter < 0)
+                    m_colliderfilter = 0;
+                }
+
+            if (m_colliderfilter == 0)
+                m_iscolliding = false;
+            else
+                m_iscolliding = true;
+
+            //                if (m_iscolliding)
+            //                    m_log.Warn("col");
+            m_wascolliding = m_iscolliding;
             }
         }
 
@@ -271,28 +297,60 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Returns if an avatar is colliding with the ground
         /// </summary>
         public override bool CollidingGround
-        {
+            {
             get { return m_iscollidingGround; }
             set
-            {
-                m_iscollidingGround = value;
+                {
 
-//                if (m_iscollidingGround)
-//                    m_log.Warn("colgnd");
+                if (value)
+                    {
+                    m_colliderGroundfilter += 2;
+                    if (m_colliderGroundfilter > 2)
+                        m_colliderGroundfilter = 2;
+                    }
+                else
+                    {
+                    m_colliderGroundfilter--;
+                    if (m_colliderGroundfilter < 0)
+                        m_colliderGroundfilter = 0;
+                    }
+
+                if (m_colliderGroundfilter == 0)
+                    m_iscollidingGround = false;
+                else
+                    m_iscollidingGround = true;
 
                 m_wascollidingGround = m_iscollidingGround;
-            }
+                }
         }
+
 
         /// <summary>
         /// Returns if the avatar is colliding with an object
         /// </summary>
         public override bool CollidingObj
-        {
-            get { return m_iscollidingObj; }
-            set
             {
-                m_iscollidingObj = value;
+            get { return m_iscollidingObj; }
+
+            set
+                {
+                if (value)
+                    {
+                    m_colliderObjectfilter += 2; // there are 2 falses per false
+                    if (m_colliderObjectfilter > 2)
+                        m_colliderObjectfilter = 2;
+                    }
+                else
+                    {
+                    m_colliderObjectfilter--;
+                    if (m_colliderObjectfilter < 0)
+                        m_colliderObjectfilter = 0;
+                    }
+
+                if (m_colliderGroundfilter == 0)
+                    m_iscollidingObj = false;
+                else
+                    m_iscollidingObj = true;
 
                 //            if (m_iscollidingObj)
                 //                m_log.Warn("colobj");
@@ -303,8 +361,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 else
                                     m_pidControllerActive = true;
                  */
+                }
             }
-        }
 
         /// <summary>
         /// turn the PID controller on or off.
