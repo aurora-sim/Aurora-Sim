@@ -125,72 +125,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return layer;
         }
 
-        public static LayerDataPacket CreateLandPacket(float[] patchData, int x, int y)
-        {
-            LayerDataPacket layer = new LayerDataPacket();
-            layer.LayerID.Type = (byte)TerrainPatch.LayerType.Land;
-
-            TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
-            header.Stride = STRIDE;
-            header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = TerrainPatch.LayerType.Land;
-
-            byte[] data = new byte[1536];
-            BitPack bitpack = new BitPack(data, 0);
-            bitpack.PackBits(header.Stride, 16);
-            bitpack.PackBits(header.PatchSize, 8);
-            bitpack.PackBits((int)header.Type, 8);
-
-            CreatePatch(bitpack, patchData, x, y);
-
-            bitpack.PackBits(END_OF_PATCHES, 8);
-
-            layer.LayerData.Data = new byte[bitpack.BytePos + 1];
-            Buffer.BlockCopy(bitpack.Data, 0, layer.LayerData.Data, 0, bitpack.BytePos + 1);
-
-            return layer;
-        }
-
-        public static LayerDataPacket CreateLandPacket(float[,] patchData, int x, int y)
-        {
-            LayerDataPacket layer = new LayerDataPacket();
-            layer.LayerID.Type = (byte)TerrainPatch.LayerType.Land;
-
-            TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
-            header.Stride = STRIDE;
-            header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = TerrainPatch.LayerType.Land;
-
-            byte[] data = new byte[1536];
-            BitPack bitpack = new BitPack(data, 0);
-            bitpack.PackBits(header.Stride, 16);
-            bitpack.PackBits(header.PatchSize, 8);
-            bitpack.PackBits((int)header.Type, 8);
-
-            CreatePatch(bitpack, patchData, x, y);
-
-            bitpack.PackBits(END_OF_PATCHES, 8);
-
-            layer.LayerData.Data = new byte[bitpack.BytePos + 1];
-            Buffer.BlockCopy(bitpack.Data, 0, layer.LayerData.Data, 0, bitpack.BytePos + 1);
-
-            return layer;
-        }
-
         public static void CreatePatch(BitPack output, float[] patchData, int x, int y)
-        {
-            TerrainPatch.Header header = PrescanPatch(patchData);
-            header.QuantWBits = 136;
-            header.PatchIDs = (y & 0x1F);
-            header.PatchIDs += (x << 5);
-
-            // NOTE: No idea what prequant and postquant should be or what they do
-            int[] patch = CompressPatch(patchData, header, 10);
-            int wbits = EncodePatchHeader(output, header, patch, Constants.RegionSize, Constants.RegionSize);
-            EncodePatch(output, patch, 0, wbits);
-        }
-
-        public static void CreatePatch(BitPack output, float[,] patchData, int x, int y)
         {
             TerrainPatch.Header header = PrescanPatch(patchData);
             header.QuantWBits = 136;
@@ -237,28 +172,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < Constants.TerrainPatchSize; i++)
                 {
                     float val = patch[j * Constants.TerrainPatchSize + i];
-                    if (val > zmax) zmax = val;
-                    if (val < zmin) zmin = val;
-                }
-            }
-
-            header.DCOffset = zmin;
-            header.Range = (int)((zmax - zmin) + 1.0f);
-
-            return header;
-        }
-
-        private static TerrainPatch.Header PrescanPatch(float[,] patch)
-        {
-            TerrainPatch.Header header = new TerrainPatch.Header();
-            float zmax = -99999999.0f;
-            float zmin = 99999999.0f;
-
-            for (int j = 0; j < Constants.TerrainPatchSize; j++)
-            {
-                for (int i = 0; i < Constants.TerrainPatchSize; i++)
-                {
-                    float val = patch[j, i];
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
@@ -698,7 +611,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             return itemp;
         }
-
 
         #region Initialization
 

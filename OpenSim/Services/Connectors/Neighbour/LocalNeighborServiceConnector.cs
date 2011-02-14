@@ -357,8 +357,8 @@ namespace OpenSim.Services.Connectors
                 neighbors = m_gridService.GetRegionRange(region.ScopeID,
                     xMin, xMax, yMin, yMax);
             }
-            else //Just get the cached list
-                neighbors = GetNeighbors(region);
+            else 
+                neighbors = FindNewNeighbors(region);
 
             return neighbors;
         }
