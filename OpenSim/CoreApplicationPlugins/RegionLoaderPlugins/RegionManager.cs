@@ -184,6 +184,14 @@ namespace Aurora.Modules.RegionLoader
             region.NumberStartup = int.Parse(StartupNumberBox.Text);
             region.RegionSizeX = int.Parse(RegionSizeX.Text);
             region.RegionSizeY = int.Parse(RegionSizeY.Text);
+
+            if ((region.RegionSizeX % Constants.MinRegionSize) != 0 || 
+                (region.RegionSizeY % Constants.MinRegionSize) != 0)
+            {
+                MessageBox.Show("You must enter a valid region size (multiple of " + Constants.MinRegionSize + "!");
+                return;
+            }
+
             m_connector.UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);

@@ -240,7 +240,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             region.RegionLocY = Convert.ToInt32(locationElements[1]) * Constants.RegionSize;
 
             int regionSizeX = config.GetInt("RegionSizeX", 0);
-            if (regionSizeX == 0)
+            if (regionSizeX == 0 || ((region.RegionSizeX % Constants.MinRegionSize) != 0))
             {
                 NeedsUpdate = true;
                 while (true)
@@ -253,7 +253,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             region.RegionSizeX = Convert.ToInt32(regionSizeX);
 
             int regionSizeY = config.GetInt("RegionSizeY", 0);
-            if (regionSizeY == 0)
+            if (regionSizeY == 0 || ((region.RegionSizeY % Constants.MinRegionSize) != 0))
             {
                 NeedsUpdate = true;
                 while(true)
