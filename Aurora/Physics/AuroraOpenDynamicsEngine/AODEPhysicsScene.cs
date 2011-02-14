@@ -1257,8 +1257,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             break;
                         default:
                             //This is required for some really weird reason... the heightmap collides every time...
-                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
-                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
+//                            float terrainHeight = GetTerrainHeightAtXY(p2.Position.X, p2.Position.Y);
+//                            if (terrainHeight + 1 >= (p2.Position.Z - p2.Size.Z / 2))
                                 p2colgnd = true;
                             break;
                         }
@@ -1267,11 +1267,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //These get cleared out before we start colliding...
                 // if we set them here just as near comes in,
                 // we have issues, since they overwrite each other.
-                if(!p2.CollidingObj)
+//                if(!p2.CollidingObj)
                     p2.CollidingObj = p2colobj;
-                if (!p2.CollidingGround)
+//                if (!p2.CollidingGround)
                     p2.CollidingGround = p2colgnd;
-                if (!p2.IsColliding)
+//                if (!p2.IsColliding)
                     p2.IsColliding = p2col;
 
                 if (count > geomContactPointsStartthrottle)
