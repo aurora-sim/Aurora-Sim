@@ -107,10 +107,6 @@ namespace OpenSim.Services.PresenceService
             m_log.Debug("[PRESENCE SERVICE]: Starting presence service");
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

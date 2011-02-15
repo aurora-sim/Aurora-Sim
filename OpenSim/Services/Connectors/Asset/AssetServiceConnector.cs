@@ -343,10 +343,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

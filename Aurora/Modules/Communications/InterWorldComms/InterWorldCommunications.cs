@@ -210,10 +210,6 @@ namespace Aurora.Modules
             m_registry = registry;
         }
 
-        public void PostInitialize(IConfigSource source, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource source, IRegistryCore registry)
         {
         }

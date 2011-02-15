@@ -103,10 +103,6 @@ namespace OpenSim.Services.GridService
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

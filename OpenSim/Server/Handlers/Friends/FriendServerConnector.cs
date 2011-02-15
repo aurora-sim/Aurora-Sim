@@ -36,7 +36,6 @@ namespace OpenSim.Server.Handlers.Friends
 {
     public class FriendsServiceConnector : IService
     {
-        private IFriendsService m_FriendsService;
         public string Name
         {
             get { return GetType().Name; }
@@ -44,11 +43,6 @@ namespace OpenSim.Server.Handlers.Friends
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -62,8 +56,8 @@ namespace OpenSim.Server.Handlers.Friends
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("FriendsInHandlerPort"));
-            
-            server.AddStreamHandler(new FriendsServerPostHandler(m_FriendsService));
+
+            server.AddStreamHandler(new FriendsServerPostHandler(registry.RequestModuleInterface<IFriendsService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

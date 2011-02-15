@@ -53,10 +53,6 @@ namespace OpenSim.Server.Handlers.Authentication
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

@@ -36,7 +36,6 @@ namespace OpenSim.Server.Handlers.Authentication
 {
     public class AuthenticationServiceConnector : IService
     {
-        private IAuthenticationService m_AuthenticationService;
         public string Name
         {
             get { return GetType().Name; }
@@ -44,11 +43,6 @@ namespace OpenSim.Server.Handlers.Authentication
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -63,7 +57,7 @@ namespace OpenSim.Server.Handlers.Authentication
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AuthenticationInHandlerPort"));
 
-            server.AddStreamHandler(new AuthenticationServerPostHandler(m_AuthenticationService));
+            server.AddStreamHandler(new AuthenticationServerPostHandler(registry.RequestModuleInterface<IAuthenticationService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

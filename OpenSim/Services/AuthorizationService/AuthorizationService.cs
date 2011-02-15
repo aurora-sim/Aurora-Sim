@@ -56,10 +56,6 @@ namespace OpenSim.Services.AuthorizationService
             m_log.Debug("[AuthorizationService]: Local Authorization service enabled");
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

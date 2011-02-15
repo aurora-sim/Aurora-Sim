@@ -48,14 +48,6 @@ namespace Aurora.Simulation.Base
         void Initialize(IConfigSource config, IRegistryCore registry);
 
         /// <summary>
-        /// Finish setting up any module pieces
-        /// NOTE: Do NOT load module interfaces from this method (unless you only want the base service), wait until PostStart
-        /// </summary>
-        /// <param name="config">Config file</param>
-        /// <param name="registry">Place to register the modules into</param>
-        void PostInitialize(IConfigSource config, IRegistryCore registry);
-
-        /// <summary>
         /// Load other IService modules now that this is set up
         /// NOTE: This is normally used to load remote connectors for remote grid mode
         /// </summary>

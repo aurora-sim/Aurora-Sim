@@ -82,10 +82,6 @@ namespace OpenSim.Services.CapsService
             registry.RegisterModuleInterface<ICapsService>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

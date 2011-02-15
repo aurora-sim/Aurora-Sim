@@ -39,7 +39,6 @@ namespace OpenSim.Server.Handlers.Grid
 {
     public class GridServiceConnector : IService
     {
-        private IGridService m_GridService;
         public string Name
         {
             get { return GetType().Name; }
@@ -47,11 +46,6 @@ namespace OpenSim.Server.Handlers.Grid
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_GridService = registry.RequestModuleInterface<IGridService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -65,8 +59,8 @@ namespace OpenSim.Server.Handlers.Grid
                 return;
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInHandlerPort"));
-            
-            GridServerPostHandler handler = new GridServerPostHandler(m_GridService);
+
+            GridServerPostHandler handler = new GridServerPostHandler(registry.RequestModuleInterface<IGridService>());
             server.AddStreamHandler(handler);
         }
 

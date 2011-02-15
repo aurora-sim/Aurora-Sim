@@ -75,10 +75,6 @@ namespace OpenSim.Services.CapsService
         {
         }
 
-        public override void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public override void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

@@ -36,7 +36,6 @@ namespace OpenSim.Server.Handlers.Presence
 {
     public class PresenceServiceConnector : IService
     {
-        private IPresenceService m_PresenceService;
         public string Name
         {
             get { return GetType().Name; }
@@ -44,11 +43,6 @@ namespace OpenSim.Server.Handlers.Presence
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_PresenceService = registry.RequestModuleInterface<IPresenceService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -61,8 +55,8 @@ namespace OpenSim.Server.Handlers.Presence
             if (handlerConfig.GetString("PresenceInHandler", "") != Name)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("PresenceInHandlerPort"));
-            
-            server.AddStreamHandler(new PresenceServerPostHandler(m_PresenceService));
+
+            server.AddStreamHandler(new PresenceServerPostHandler(registry.RequestModuleInterface<IPresenceService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

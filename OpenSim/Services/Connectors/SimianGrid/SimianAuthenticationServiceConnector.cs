@@ -58,10 +58,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];

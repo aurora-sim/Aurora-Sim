@@ -96,10 +96,6 @@ namespace OpenSim.Services.AuthenticationService
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

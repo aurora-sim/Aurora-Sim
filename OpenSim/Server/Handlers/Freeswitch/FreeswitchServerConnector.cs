@@ -55,10 +55,6 @@ namespace OpenSim.Server.Handlers.Freeswitch
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

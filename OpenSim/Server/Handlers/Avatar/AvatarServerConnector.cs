@@ -36,7 +36,6 @@ namespace OpenSim.Server.Handlers.Avatar
 {
     public class AvatarServiceConnector : IService
     {
-        private IAvatarService m_AvatarService;
         public string Name
         {
             get { return GetType().Name; }
@@ -50,11 +49,6 @@ namespace OpenSim.Server.Handlers.Avatar
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_AvatarService = registry.RequestModuleInterface<IAvatarService>();
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
@@ -66,7 +60,7 @@ namespace OpenSim.Server.Handlers.Avatar
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AvatarInHandlerPort"));
 
-            server.AddStreamHandler(new AvatarServerPostHandler(m_AvatarService));
+            server.AddStreamHandler(new AvatarServerPostHandler(registry.RequestModuleInterface<IAvatarService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

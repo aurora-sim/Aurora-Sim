@@ -101,10 +101,6 @@ namespace OpenSim.Services.AssetService
             m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

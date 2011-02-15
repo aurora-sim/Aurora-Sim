@@ -48,10 +48,6 @@ namespace OpenSim.Server.Handlers.Simulation
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

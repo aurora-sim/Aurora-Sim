@@ -70,10 +70,6 @@ namespace OpenSim.Services.UserAccountService
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

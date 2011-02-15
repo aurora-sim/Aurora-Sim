@@ -52,10 +52,6 @@ namespace OpenSim.Server.Handlers.Neighbor
         {
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

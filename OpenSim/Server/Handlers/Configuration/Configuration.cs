@@ -48,10 +48,6 @@ namespace OpenSim.Server.Handlers
             configMap[name] = m_config.GetString(name, "");
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

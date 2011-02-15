@@ -45,7 +45,6 @@ namespace OpenSim.Server.Handlers.Asset
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IInventoryService m_InventoryService;
         public string Name
         {
             get { return GetType().Name; }
@@ -53,11 +52,6 @@ namespace OpenSim.Server.Handlers.Asset
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -72,7 +66,7 @@ namespace OpenSim.Server.Handlers.Asset
 
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("InventoryInHandlerPort"));
 
-            server.AddStreamHandler(new XInventoryConnectorPostHandler(m_InventoryService));
+            server.AddStreamHandler(new XInventoryConnectorPostHandler(registry.RequestModuleInterface<IInventoryService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

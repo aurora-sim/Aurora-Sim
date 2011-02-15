@@ -94,10 +94,6 @@ namespace OpenSim.Services.InventoryService
             registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
-        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }

@@ -46,10 +46,6 @@ namespace OpenSim.Services.CapsService
             registry.RegisterModuleInterface<IEventQueueService>(this);
         }
 
-        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }

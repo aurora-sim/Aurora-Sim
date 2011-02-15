@@ -39,17 +39,12 @@ namespace OpenSim.Server.Handlers.Grid
 {
     public class GridInfoServerInConnector : IService
     {
-        //private string m_ConfigName = "GridInfoService";
         public string Name
         {
             get { return GetType().Name; }
         }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
         }
 

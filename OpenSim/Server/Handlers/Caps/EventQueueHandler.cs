@@ -22,9 +22,6 @@ namespace OpenSim.Server.Handlers
     {
         #region IService Members
 
-        IEventQueueService service;
-        ICapsService capsService;
-
         public string Name
         {
             get { return GetType().Name; }
@@ -32,12 +29,6 @@ namespace OpenSim.Server.Handlers
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            service = registry.RequestModuleInterface<IEventQueueService>();
-            capsService = registry.RequestModuleInterface<ICapsService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -50,8 +41,9 @@ namespace OpenSim.Server.Handlers
             if (handlerConfig.GetString("EventQueueInHandler", "") != Name)
                 return;
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("EventQueueInHandlerPort"));
-            
-            server.AddStreamHandler(new EQMEventPoster(service, capsService));
+
+            server.AddStreamHandler(new EQMEventPoster(registry.RequestModuleInterface<IEventQueueService>(),
+                registry.RequestModuleInterface<ICapsService>()));
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

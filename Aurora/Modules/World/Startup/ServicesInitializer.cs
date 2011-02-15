@@ -35,16 +35,6 @@ namespace OpenSim.Region.CoreModules
                     {
                     }
                 }
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.PostInitialize(source, openSimBase.ApplicationRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
             }
             scene.AddModuleInterfaces(openSimBase.ApplicationRegistry.GetInterfaces());
         }

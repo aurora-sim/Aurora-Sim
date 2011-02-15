@@ -197,10 +197,6 @@ namespace Flotsam.RegionModules.AssetCache
             }
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }

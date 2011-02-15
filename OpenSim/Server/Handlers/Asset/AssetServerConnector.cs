@@ -36,7 +36,6 @@ namespace OpenSim.Server.Handlers.Asset
 {
     public class AssetServiceConnector : IService
     {
-        private IAssetService m_AssetService;
         private string m_ConfigName = "AssetService";
         public string Name
         {
@@ -45,11 +44,6 @@ namespace OpenSim.Server.Handlers.Asset
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -67,6 +61,7 @@ namespace OpenSim.Server.Handlers.Asset
             IConfig serverConfig = config.Configs[m_ConfigName];
             bool allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
 
+            IAssetService m_AssetService = registry.RequestModuleInterface<IAssetService>();
             server.AddStreamHandler(new AssetServerGetHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerPostHandler(m_AssetService));
             server.AddStreamHandler(new AssetServerDeleteHandler(m_AssetService, allowDelete));

@@ -372,10 +372,6 @@ namespace OpenSim.Services.Connectors.Simulation
             }
         }
 
-        public virtual void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }

@@ -101,10 +101,6 @@ namespace OpenSim.Services.AvatarService
             m_log.Debug("[AVATAR SERVICE]: Starting avatar service");
         }
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
