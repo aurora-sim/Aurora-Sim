@@ -9,7 +9,7 @@ The Aurora Development Team is proud to present the release of Aurora virtual wo
  and a set of features around stability and simplified usability for users.
 
 We aren’t just releasing new features, but a new outlook on a virtual world development for the average human.
- We encourage you to read our manifesto (https://github.com/MatrixSmythe/Aurora/wikis)
+ We encourage you to read our manifesto (http://aurora-sim.org/index.php?option=com_content&view=article&id=20&Itemid=60)
  and learn about our direction to make the people’s choice in virtual server!
 
 --------------------------
