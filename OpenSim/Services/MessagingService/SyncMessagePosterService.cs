@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
@@ -30,9 +31,11 @@ namespace OpenSim.Services.MessagingService
         public void Post(OSDMap request)
         {
             OSDMap message = CreateWebRequest(request);
+            string postInfo = OSDParser.SerializeJsonString(message);
             foreach (string host in m_hosts)
             {
-                WebUtils.PostToService(host, message);
+                //Send it async
+                AsynchronousRestObjectRequester.MakeRequest("POST", host, postInfo);
             }
         }
 
