@@ -1215,7 +1215,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Wind);
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Wind, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Wind);
         }
@@ -1239,7 +1239,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Cloud);
+            LayerDataPacket layerpack = AuroraTerrainCompressor.CreateLayerDataPacket(patches, TerrainPatch.LayerType.Cloud, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             layerpack.Header.Zerocoded = true;
             OutPacket(layerpack, ThrottleOutPacketType.Cloud);
         }
