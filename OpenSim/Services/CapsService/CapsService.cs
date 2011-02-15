@@ -84,14 +84,6 @@ namespace OpenSim.Services.CapsService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
-            if (regionManager != null)
-            {
-                m_hostName = regionManager.Scenes[0].RegionInfo.ExternalHostName;
-                if (!m_hostName.StartsWith("http://"))
-                    m_hostName = "http://" + m_hostName;
-                m_port = MainServer.Instance.Port;
-            }
             ISimulationBase simBase = registry.RequestModuleInterface<ISimulationBase>();
             m_server = simBase.GetHttpServer(m_port);
 
