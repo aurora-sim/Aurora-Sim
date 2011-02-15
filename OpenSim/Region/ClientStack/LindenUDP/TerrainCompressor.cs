@@ -68,7 +68,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                 // extended regions layers types
                 type++; // land becomes 77, Water 88
-                if (type != TerrainPatch.LayerType.Land || type != TerrainPatch.LayerType.Water)
+                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
                     type++; // wind becames 57, cloud 58
                 }
 
@@ -115,7 +115,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                 // extended regions layers types
                 type++; // land becomes 77, Water 88
-                if (type != TerrainPatch.LayerType.Land || type != TerrainPatch.LayerType.Water)
+                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
                     type++; // wind becames 57, cloud 58
                 }
 
