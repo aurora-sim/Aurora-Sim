@@ -146,16 +146,16 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
             registry.RegisterModuleInterface<IAuthenticationService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AuthenticationServerURI");
         }
 
         #endregion

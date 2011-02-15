@@ -585,12 +585,12 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
             registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
         }
 
         #endregion

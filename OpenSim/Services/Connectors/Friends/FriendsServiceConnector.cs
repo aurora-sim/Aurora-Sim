@@ -218,12 +218,12 @@ namespace OpenSim.Services.Connectors
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
             registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
         }
 
         #endregion

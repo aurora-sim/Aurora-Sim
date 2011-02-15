@@ -14,7 +14,7 @@ using log4net;
 
 namespace OpenSim.Services.Connectors.ConfigurationService
 {
-    public class ConfigurationService : IConfigurationService, IApplicationPlugin
+    public class ConfigurationService : IConfigurationService, IService
     {
         protected static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -27,20 +27,6 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         public virtual string Name
         {
             get { return GetType().Name; }
-        }
-
-        public virtual void Initialize(ISimulationBase openSim)
-        {
-            m_config = openSim.ConfigSource;
-
-            IConfig handlerConfig = m_config.Configs["Handlers"];
-            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
-                return;
-
-            //Register us
-            openSim.ApplicationRegistry.RegisterModuleInterface<IConfigurationService>(this);
-
-            FindConfiguration(m_config.Configs["Configuration"]);
         }
 
         protected void FindConfiguration(IConfig autoConfig)
@@ -91,30 +77,6 @@ namespace OpenSim.Services.Connectors.ConfigurationService
         public void GetConfigFor(string name, OSDMap request)
         {
             request[name] = m_config.Configs["Configuration"].GetString(name, "");
-        }
-
-        public void ReloadConfiguration(IConfigSource config)
-        {
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Start()
-        {
-        }
-
-        public void PostStart()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public void Dispose()
-        {
         }
 
         public virtual void AddNewUser(string userID, OSDMap urls)
@@ -192,5 +154,28 @@ namespace OpenSim.Services.Connectors.ConfigurationService
 
             return keys;
         }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_config = config;
+
+            IConfig handlerConfig = m_config.Configs["Handlers"];
+            if (handlerConfig.GetString("ConfigurationHandler", "") != Name)
+                return;
+
+            //Register us
+            registry.RegisterModuleInterface<IConfigurationService>(this);
+
+            FindConfiguration(m_config.Configs["Configuration"]);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
