@@ -105,10 +105,6 @@ namespace OpenSim.Services.AvatarService
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public AvatarAppearance GetAppearance(UUID principalID)
         {
             AvatarData avatar = GetAvatar(principalID);

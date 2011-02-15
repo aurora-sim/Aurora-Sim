@@ -362,15 +362,6 @@ namespace OpenSim.Services.Connectors
             SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
         }
 
-        public virtual void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAssetService>(this);
-        }
-
         #endregion
     }
 }

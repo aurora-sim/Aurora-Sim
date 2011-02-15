@@ -108,10 +108,6 @@ namespace OpenSim.Services.GridService
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         #region IGridService
 
         public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID)

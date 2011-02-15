@@ -60,9 +60,5 @@ namespace OpenSim.Server.Handlers
 
             server.AddStreamHandler(new ConfigurationPostHandler(configMap));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

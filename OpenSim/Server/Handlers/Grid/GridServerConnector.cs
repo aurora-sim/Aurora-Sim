@@ -59,9 +59,5 @@ namespace OpenSim.Server.Handlers.Grid
             GridServerPostHandler handler = new GridServerPostHandler(registry.RequestModuleInterface<IGridService>());
             server.AddStreamHandler(handler);
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

@@ -60,11 +60,6 @@ namespace OpenSim.Services.AuthorizationService
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            registry.RegisterModuleInterface<IAuthorizationService>(this);
-        }
-
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();

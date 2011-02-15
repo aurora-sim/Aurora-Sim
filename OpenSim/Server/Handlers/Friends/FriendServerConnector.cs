@@ -55,9 +55,5 @@ namespace OpenSim.Server.Handlers.Friends
 
             server.AddStreamHandler(new FriendsServerPostHandler(registry.RequestModuleInterface<IFriendsService>()));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

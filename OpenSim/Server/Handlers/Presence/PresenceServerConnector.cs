@@ -54,9 +54,5 @@ namespace OpenSim.Server.Handlers.Presence
 
             server.AddStreamHandler(new PresenceServerPostHandler(registry.RequestModuleInterface<IPresenceService>()));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

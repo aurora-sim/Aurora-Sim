@@ -74,15 +74,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
-
         #endregion
 
         private void CommonInit(IConfigSource source)

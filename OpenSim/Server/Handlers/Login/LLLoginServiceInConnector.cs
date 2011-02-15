@@ -68,10 +68,6 @@ namespace OpenSim.Server.Handlers.Login
             InitializeHandlers(server);
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         private void ReadLocalServiceFromConfig(IConfigSource config)
         {
             m_Config = config;

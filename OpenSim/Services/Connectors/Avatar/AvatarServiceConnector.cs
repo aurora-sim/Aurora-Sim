@@ -354,15 +354,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAvatarService>(this);
-        }
-
         #endregion
     }
 }

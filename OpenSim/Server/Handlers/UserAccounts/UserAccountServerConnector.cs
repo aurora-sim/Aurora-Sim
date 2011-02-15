@@ -53,9 +53,5 @@ namespace OpenSim.Server.Handlers.UserAccounts
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("UserAccountInHandlerPort"));
             server.AddStreamHandler(new UserAccountServerPostHandler(registry.RequestModuleInterface<IUserAccountService>()));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

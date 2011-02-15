@@ -42,10 +42,6 @@ namespace OpenSim.Server.Handlers
                 registry.RequestModuleInterface<ICapsService>()));
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         #endregion
     }
 

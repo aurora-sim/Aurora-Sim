@@ -593,15 +593,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IInventoryService>(this);
-        }
-
         #endregion
     }
 }

@@ -92,10 +92,6 @@ namespace OpenSim.Services.FreeswitchService
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public Hashtable HandleDialplanRequest(Hashtable request)
         {
             m_log.DebugFormat("[FreeSwitchVoice] HandleDialplanRequest called with {0}", request.ToString());

@@ -79,16 +79,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             CheckForScenes(registry);
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IGridService>(this);
-            CheckForScenes(registry);
-        }
-
         protected void CheckForScenes(IRegistryCore registry)
         {
             //This is a dirty nasty hack of a way to pull the Scene out of an IRegistryCore interface

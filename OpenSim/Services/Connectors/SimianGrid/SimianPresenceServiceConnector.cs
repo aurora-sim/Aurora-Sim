@@ -74,16 +74,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("PresenceHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IPresenceService>(this);
-            registry.RegisterModuleInterface<IGridUserService>(this);
-        }
-
         #endregion
 
         private void CommonInit(IConfigSource source)

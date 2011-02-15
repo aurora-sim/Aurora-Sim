@@ -376,13 +376,6 @@ namespace OpenSim.Services.Connectors.Simulation
         {
         }
 
-        public virtual void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
-                registry.RegisterModuleInterface<ISimulationService>(this);
-        }
-
         #endregion
     }
 }

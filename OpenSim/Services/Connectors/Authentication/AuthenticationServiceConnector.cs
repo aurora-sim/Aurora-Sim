@@ -158,15 +158,6 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AuthenticationHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAuthenticationService>(this);
-        }
-
         #endregion
     }
 }

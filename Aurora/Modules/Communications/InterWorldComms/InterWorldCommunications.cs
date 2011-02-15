@@ -230,12 +230,6 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddNewRegistry(IConfigSource source, IRegistryCore registry)
-        {
-            if (m_Enabled)
-                registry.RegisterModuleInterface<InterWorldCommunications>(this);
-        }
-
         #endregion
     }
 

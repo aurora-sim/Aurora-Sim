@@ -76,15 +76,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             m_cache = registry.RequestModuleInterface<IImprovedAssetCache>();
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAssetService>(this);
-        }
-
         #endregion
         
         private void CommonInit(IConfigSource source)

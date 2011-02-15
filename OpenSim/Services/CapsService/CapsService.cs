@@ -98,11 +98,6 @@ namespace OpenSim.Services.CapsService
             MainConsole.Instance.Commands.AddCommand("capsService", false, "show presences", "show presences", "Shows all presences in the grid, experimental!", ShowUsers);
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            registry.RegisterModuleInterface<ICapsService>(this);
-        }
-
         #endregion
 
         #region Console Commands

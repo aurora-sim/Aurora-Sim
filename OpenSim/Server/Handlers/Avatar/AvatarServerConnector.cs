@@ -58,9 +58,5 @@ namespace OpenSim.Server.Handlers.Avatar
 
             server.AddStreamHandler(new AvatarServerPostHandler(registry.RequestModuleInterface<IAvatarService>()));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 }

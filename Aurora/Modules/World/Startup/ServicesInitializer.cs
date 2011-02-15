@@ -18,56 +18,13 @@ namespace OpenSim.Region.CoreModules
     public class ServicesInitializer : ISharedRegionStartupModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<IService> serviceConnectors;
-        private bool m_loaded = false;
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (serviceConnectors == null)
-            {
-                serviceConnectors = AuroraModuleLoader.PickupModules<IService>();
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.Initialize(source, openSimBase.ApplicationRegistry);
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
             scene.AddModuleInterfaces(openSimBase.ApplicationRegistry.GetInterfaces());
         }
 
         public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (!m_loaded)
-            {
-                m_loaded = true;
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.Start(source, scene);
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-            else
-            {
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.AddNewRegistry(source, scene);
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
         }
 
         public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)

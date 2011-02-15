@@ -94,10 +94,6 @@ namespace OpenSim.Services.UserAccountService
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public GridUserInfo GetGridUserInfo(string userID)
         {
             GridUserData d = m_Database.Get(userID);

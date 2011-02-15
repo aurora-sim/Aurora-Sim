@@ -64,10 +64,6 @@ namespace OpenSim.Server.Handlers.Asset
 
             server.AddStreamHandler(new XInventoryConnectorPostHandler(registry.RequestModuleInterface<IInventoryService>()));
         }
-
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
     }
 
     public class XInventoryConnectorPostHandler : BaseStreamHandler

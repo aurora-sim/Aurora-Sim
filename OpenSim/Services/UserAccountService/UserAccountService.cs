@@ -77,10 +77,6 @@ namespace OpenSim.Services.UserAccountService
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         #region IUserAccountService
 
         public UserAccount GetUserAccount(UUID scopeID, string firstName,

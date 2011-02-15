@@ -214,21 +214,6 @@ namespace Flotsam.RegionModules.AssetCache
             }
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig moduleConfig = config.Configs["Modules"];
-
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("AssetCaching", String.Empty);
-
-                if (name == Name)
-                {
-                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
-                }
-            }
-        }
-
         #endregion
 
         #region IImprovedAssetCache

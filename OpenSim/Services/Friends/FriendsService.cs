@@ -95,10 +95,6 @@ namespace OpenSim.Services.Friends
         {
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public FriendInfo[] GetFriends(UUID PrincipalID)
         {
             FriendsData[] data = m_Database.GetFriends(PrincipalID);
