@@ -60,9 +60,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             BuildQuantizeTable16();
         }
 
-        public static LayerDataPacket CreateLayerDataPacket(TerrainPatch[] patches, TerrainPatch.LayerType type)
+        public static LayerDataPacket CreateLayerDataPacket(TerrainPatch[] patches, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
+
+            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
+                {
+                // extended regions layers types
+                type++; // land becomes 77, Water 88
+                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
+                    type++; // wind becames 57, cloud 58
+                }
+
             layer.LayerID.Type = (byte)type;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
@@ -78,7 +87,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bitpack.PackBits((int)header.Type, 8);
 
             for (int i = 0; i < patches.Length; i++)
-                CreatePatch(bitpack, patches[i].Data, patches[i].X, patches[i].Y);
+                CreatePatch(bitpack, patches[i].Data, patches[i].X, patches[i].Y,RegionSizeX, RegionSizeY);
 
             bitpack.PackBits(END_OF_PATCHES, 8);
 
@@ -101,6 +110,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] x, int[] y, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
+
+            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
+                {
+                // extended regions layers types
+                type++; // land becomes 77, Water 88
+                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
+                    type++; // wind becames 57, cloud 58
+                }
+
             layer.LayerID.Type = (byte)type;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
@@ -125,12 +143,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return layer;
         }
 
-        public static void CreatePatch(BitPack output, float[] patchData, int x, int y)
+        public static void CreatePatch(BitPack output, float[] patchData, int x, int y, int RegionSizeX, int RegionSizeY)
         {
             TerrainPatch.Header header = PrescanPatch(patchData);
             header.QuantWBits = 136;
-            header.PatchIDs = (y & 0x1F);
-            header.PatchIDs += (x << 5);
+            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
+                {
+                header.PatchIDs = (y & 0xFFFF);
+                header.PatchIDs += (x << 16);
+                }
+            else
+                {
+                header.PatchIDs = (y & 0x1F);
+                header.PatchIDs += (x << 5);
+                }
+
 
             // NOTE: No idea what prequant and postquant should be or what they do
             int[] patch = CompressPatch(patchData, header, 10);
@@ -152,8 +179,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             TerrainPatch.Header header = PrescanPatch(heightmap, x, y, RegionSizeX, RegionSizeY);
             header.QuantWBits = 136;
-            header.PatchIDs = (y & 0x1F);
-            header.PatchIDs += (x << 5);
+            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
+                {
+                header.PatchIDs = (y & 0xFFFF);
+                header.PatchIDs += (x << 16);
+                }
+            else
+                {
+                header.PatchIDs = (y & 0x1F);
+                header.PatchIDs += (x << 5);
+                }
 
             // NOTE: No idea what prequant and postquant should be or what they do
             int[] patch = CompressPatch(heightmap, x, y, header, 10, RegionSizeX, RegionSizeY);
@@ -189,12 +224,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             float zmax = -99999999.0f;
             float zmin = 99999999.0f;
 
-            int sqrt = (int)Math.Sqrt(heightmap.Length);
+//            int sqrt = (int)Math.Sqrt(heightmap.Length);
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
                 {
-                    float val = heightmap[j * sqrt + i];
+                    float val = heightmap[j * RegionSizeX + i];
                     if (val > zmax) zmax = val;
                     if (val < zmin) zmin = val;
                 }
@@ -268,7 +303,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             output.PackBits(header.QuantWBits, 8);
             output.PackFloat(header.DCOffset);
             output.PackBits(header.Range, 16);
-            if (RegionSizeX != Constants.RegionSize)
+//            if (RegionSizeX != Constants.RegionSize)
+            if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 output.PackBits(header.PatchIDs, 32);
             else
                 output.PackBits(header.PatchIDs, 10);
@@ -588,7 +624,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             header.QuantWBits |= (prequant - 2) << 4;
 
             int k = 0;
-            int sqrt = (int)Math.Sqrt(heightmap.Length);
+//            int sqrt = (int)Math.Sqrt(heightmap.Length);
             //OpenSim.Framework.Console.MainConsole.Instance.Output(sqrt + "," + patchX + "," + patchY + ","+
             //    patchX * Constants.TerrainPatchSize + "," + 
             //    ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize + "," +
@@ -598,7 +634,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             for (int j = patchY * Constants.TerrainPatchSize; j < ((patchY >= (RegionSizeY / Constants.TerrainPatchSize) ? (RegionSizeY - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchY) + 1) * Constants.TerrainPatchSize; j++)
             {
                 for (int i = patchX * Constants.TerrainPatchSize; i < ((patchX >= (RegionSizeX / Constants.TerrainPatchSize) ? (RegionSizeX - Constants.TerrainPatchSize) / Constants.TerrainPatchSize : patchX) + 1) * Constants.TerrainPatchSize; i++)
-                    block[k++] = heightmap[j * sqrt + i] * premult - sub;
+//                    block[k++] = heightmap[j * sqrt + i] * premult - sub;
+                    block[k++] = heightmap[j * RegionSizeX + i] * premult - sub;
             }
 
             float[] ftemp = new float[Constants.TerrainPatchSize * Constants.TerrainPatchSize];

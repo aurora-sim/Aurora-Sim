@@ -148,13 +148,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_taintRotation = rotation;
             if (pos.IsFinite())
             {
-                if (pos.Z > 9999999f)
+                if (pos.Z > 9999999f || pos.Z <-90f)
                 {
-                    pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
-                }
-                if (pos.Z < -90f)
-                {
-                    pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
+//                    pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
+                    pos.Z = parent_scene.GetTerrainHeightAtXY(parent_scene.Region.RegionSizeX * 0.5f, parent_scene.Region.RegionSizeY * 0.5f) + 5.0f;
                 }
                 _position = pos;
                 m_taintPosition.X = pos.X;
@@ -163,7 +160,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f), parent_scene.GetTerrainHeightAtXY(128f, 128f) + 10f);
+                _position = new Vector3(((float)parent_scene.WorldExtents.X * 0.5f), ((float)parent_scene.WorldExtents.Y * 0.5f),
+                    parent_scene.GetTerrainHeightAtXY(parent_scene.Region.RegionSizeX * 0.5f, parent_scene.Region.RegionSizeY * 0.5f) + 10f);
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
@@ -393,13 +391,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if (value.IsFinite())
                     {
-                        if (value.Z > 9999999f)
+                        if (value.Z > 9999999f || value.Z <-90f)
                         {
-                            value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
-                        }
-                        if (value.Z < -90f)
-                        {
-                            value.Z = _parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
+                        value.Z = _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f, _parent_scene.Region.RegionSizeY * 0.5f) + 5;
                         }
 
                         _position.X = value.X;

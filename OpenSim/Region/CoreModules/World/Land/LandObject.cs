@@ -816,8 +816,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         private byte[] ConvertLandBitmapToBytes()
         {
-            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2*4);
-            byte[] tempConvertArr = new byte[(avg * avg) / 8];
+//            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2*4);
+//            byte[] tempConvertArr = new byte[(avg * avg) / 8];
+        byte[] tempConvertArr = new byte[(m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY) / 8 / 16];
+
             byte tempByte = 0;
             int x, y, i, byteNum = 0;
             i = 0;
@@ -842,15 +844,18 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempConvertMap.Initialize();
-            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2 * 4);
-            if (LandData.Bitmap.Length != (avg * avg) / 8) //Are the sizes the same
+            //            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2 * 4);
+            //            if (LandData.Bitmap.Length != (avg * avg) / 8) //Are the sizes the same
+            
+            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 16 / 8);
+            if (LandData.Bitmap.Length != avg) //Are the sizes the same
             {
                 //The sim size changed, deal with it
                 return false;
             }
             byte tempByte = 0;
             int x = 0, y = 0, i = 0, bitNum = 0;
-            for (i = 0; i < (avg * avg) / 8; i++)
+            for (i = 0; i < avg; i++)
             {
                 tempByte = LandData.Bitmap[i];
                 for (bitNum = 0; bitNum < 8; bitNum++)
