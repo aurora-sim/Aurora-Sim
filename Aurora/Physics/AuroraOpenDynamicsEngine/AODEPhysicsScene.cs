@@ -197,7 +197,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_activeJoint = new Dictionary<String, PhysicsJoint>();
         private readonly Dictionary<String, PhysicsJoint> SOPName_to_pendingJoint = new Dictionary<String, PhysicsJoint>();
         private readonly DoubleDictionary<Vector3, IntPtr, IntPtr> RegionTerrain = new DoubleDictionary<Vector3, IntPtr, IntPtr>();
-        private readonly Dictionary<IntPtr, double[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, double[]>();
+//        private readonly Dictionary<IntPtr, double[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, double[]>();
+        private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, float[]>();
         private readonly Dictionary<UUID, float[]> WaterHeightFieldHeights = new Dictionary<UUID, float[]>();
         public bool m_EnableAutoConfig = true;
         public bool m_DisableSlowPrims = true;
@@ -3613,9 +3614,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }*/
 
         public void SetTerrain(float[] heightMap, double[,] normalHeightMap, Vector3 pOffset)
-        {
-//            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
-            double[] _heightmap = new double[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
+            {
+            //            double[] _heightmap = new double[(((int)Math.Sqrt(heightMap.Length) + 2) * ((int)Math.Sqrt(heightMap.Length) + 2))];
+            //            double[] _heightmap = new double[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
+            float[] _heightmap = new float[((m_region.RegionSizeX + 2) * (m_region.RegionSizeY + 2))];
 
             int heightmapWidth = m_region.RegionSizeX + 1;
             int heightmapHeight = m_region.RegionSizeY + 1;
@@ -3624,7 +3626,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             int heightmapHeightSamples = m_region.RegionSizeY + 2;
 
 #pragma warning disable 0162
-/*
+            /*
             if (Constants.RegionSize == 256 &&
                 m_region.RegionSizeX == Constants.RegionSize && m_region.RegionSizeY == Constants.RegionSize)
             {
@@ -3637,7 +3639,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
  */
 #pragma warning restore 0162
 
-/* no resolution duplication for now 
+            /* no resolution duplication for now 
             int regionsize = (int)Constants.RegionSize;
 
             double hfmin = 2000;
@@ -3669,61 +3671,65 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             else
             {
  */
-//                int rSize = sqrtOfHeightMap > Constants.RegionSize ? sqrtOfHeightMap : Constants.RegionSize;
-//                heightmapWidth = rSize + 2;
-//                heightmapHeight = rSize + 2;
-//                heightmapWidthSamples = rSize + 2;
-//                heightmapHeightSamples = rSize + 2;
-//                _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
+            //                int rSize = sqrtOfHeightMap > Constants.RegionSize ? sqrtOfHeightMap : Constants.RegionSize;
+            //                heightmapWidth = rSize + 2;
+            //                heightmapHeight = rSize + 2;
+            //                heightmapWidthSamples = rSize + 2;
+            //                heightmapHeightSamples = rSize + 2;
+            //                _heightmap = new double[heightmapWidthSamples * heightmapHeightSamples];
 
-                double hfmin = 2000;
-                double hfmax = -2000;
+            //                double hfmin = 2000;
+            //                double hfmax = -2000;
 
-                for (int x = 0; x < heightmapWidthSamples; x++)
+            float hfmin = 2000;
+            float hfmax = -2000;
+
+
+            for (int x = 0; x < heightmapWidthSamples; x++)
                 {
                 for (int y = 0; y < heightmapHeightSamples; y++)
                     {
-                        //Some notes on this part
-                        //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
-                        // so we subtract one so that we can put the heightmap in correctly
-                        int xx = Util.Clip(x - 1, 0, m_region.RegionSizeX-1);
-                        int yy = Util.Clip(y - 1, 0, m_region.RegionSizeY-1);
+                    //Some notes on this part
+                    //xx and yy are used for the original heightmap, as we are offsetting the new one by 1
+                    // so we subtract one so that we can put the heightmap in correctly
+                    int xx = Util.Clip(x - 1, 0, m_region.RegionSizeX - 1);
+                    int yy = Util.Clip(y - 1, 0, m_region.RegionSizeY - 1);
 
-                        float val = heightMap[yy * m_region.RegionSizeX + xx];
-                        //ODE is evil... flip x and y
-                        _heightmap[(x * heightmapHeightSamples) + y] = val;
+                    float val = heightMap[yy * m_region.RegionSizeX + xx];
+                    //ODE is evil... flip x and y
+                    _heightmap[(x * heightmapHeightSamples) + y] = val;
 
-                        hfmin = (val < hfmin) ? val : hfmin;
-                        hfmax = (val > hfmax) ? val : hfmax;
+                    hfmin = (val < hfmin) ? val : hfmin;
+                    hfmax = (val > hfmax) ? val : hfmax;
                     }
                 }
-//            }
+            //            }
 
             lock (OdeLock)
-            {
+                {
                 IntPtr GroundGeom = IntPtr.Zero;
                 if (RegionTerrain.TryGetValue(pOffset, out GroundGeom))
-                {
-                    if (GroundGeom != IntPtr.Zero)
                     {
+                    if (GroundGeom != IntPtr.Zero)
+                        {
                         d.SpaceRemove(space, GroundGeom);
                         d.GeomDestroy(GroundGeom);
-                    }
+                        }
                     RegionTerrain.Remove(pOffset);
                     TerrainHeightFieldHeights.Remove(GroundGeom);
                     actor_name_map.Remove(GroundGeom);
                     geom_name_map.Remove(GroundGeom);
-                }
+                    }
 
                 const float scale = 1.0f;
                 const float offset = 0.0f;
-                const float thickness = 0.5f;
+                const float thickness = .5f;
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate();
-//                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
-//                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
-                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
+                //                d.GeomHeightfieldDataBuildDouble(HeightmapData, _heightmap, 1, heightmapWidth, heightmapHeight,
+                //                                                 heightmapWidthSamples, heightmapHeightSamples, scale,
+                d.GeomHeightfieldDataBuildSingle(HeightmapData, _heightmap, 1, heightmapHeight, heightmapWidth,
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
@@ -3731,10 +3737,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 GroundGeom = d.CreateHeightfield(space, HeightmapData, 1);
 
                 if (GroundGeom != IntPtr.Zero)
-                {
+                    {
                     d.GeomSetCategoryBits(GroundGeom, (int)(CollisionCategories.Land));
                     d.GeomSetCollideBits(GroundGeom, (int)(CollisionCategories.Space));
-                }
+                    }
 
                 geom_name_map[GroundGeom] = "Terrain";
 
@@ -3757,14 +3763,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 q1.GetAxisAngle(out v3, out angle);
 
                 d.RFromAxisAndAngle(out R, v3.X, v3.Y, v3.Z, angle);
-                
+
                 d.GeomSetRotation(GroundGeom, ref R);
                 d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
                 TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
+                }
             }
-        }
 
         public override void DeleteTerrain()
         {
