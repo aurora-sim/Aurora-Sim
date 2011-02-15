@@ -383,16 +383,17 @@ namespace Aurora.Modules
             /// <returns></returns>
             public bool DeleteSceneObjects(SceneObjectGroup[] groups, bool DeleteScripts)
             {
+                List<SceneObjectPart> parts = new List<SceneObjectPart>();
                 foreach (SceneObjectGroup group in groups)
                 {
                     //if (group.IsAttachment)
                     //    continue;
-
+                    parts.AddRange(group.ChildrenList);
                     DeleteSceneObject(group, true);
                 }
                 m_scene.ForEachScenePresence(delegate(ScenePresence avatar)
                 {
-                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, groups);
+                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
                 });
 
                 return true;
