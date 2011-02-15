@@ -9,7 +9,7 @@ using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 
-namespace OpenSim.Services.CapsService.MessagingService
+namespace OpenSim.Services.MessagingService
 {
     public class SyncMessagePosterService : ISyncMessagePosterService, IService
     {
