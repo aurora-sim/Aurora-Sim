@@ -119,8 +119,8 @@ namespace OpenSim.Services.Interfaces
         /// <param name="newRegionX"></param>
         /// <param name="newRegionY"></param>
         /// <param name="AgentID"></param>
-        /// <param name="currentRegionID"></param>
-        void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, UUID currentRegionID);
+        /// <param name="currentRegionHandle"></param>
+        void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, ulong currentRegionHandle);
 
         /// <summary>
         /// Check if the new position is outside of the range for the old position

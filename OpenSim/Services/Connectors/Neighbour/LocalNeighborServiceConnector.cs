@@ -472,15 +472,15 @@ namespace OpenSim.Services.Connectors
             return ((Math.Abs(oldRegionX - newRegionX) > RegionViewSize) || (Math.Abs(oldRegionY - newRegionY) > RegionViewSize));
         }
 
-        public void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, UUID currentRegionID)
+        public void CloseNeighborAgents(int newRegionX, int newRegionY, UUID AgentID, ulong currentRegionHandle)
         {
-            if (!m_KnownNeighbors.ContainsKey(currentRegionID))
-                return;
-            List<GridRegion> NeighborsOfCurrentRegion = m_KnownNeighbors[currentRegionID];
+            int x, y;
+            Util.UlongToInts(currentRegionHandle, out x, out y);
+            GridRegion neighbor = m_gridService.GetRegionByPosition(UUID.Zero, x,y);
+            List<GridRegion> NeighborsOfCurrentRegion = GetNeighbors(neighbor);
             List<GridRegion> byebyeRegions = new List<GridRegion>();
-            GridRegion neighbor = m_gridService.GetRegionByUUID(UUID.Zero, currentRegionID);
             m_log.InfoFormat(
-                "[NeighborService]: Closing child agents. Checking {0} regions in {1}",
+                "[NeighborService]: Closing child agents. Checking {0} regions around {1}",
                 NeighborsOfCurrentRegion.Count, neighbor.RegionName);
 
             foreach (GridRegion region in NeighborsOfCurrentRegion)
@@ -494,7 +494,7 @@ namespace OpenSim.Services.Connectors
             if (byebyeRegions.Count > 0)
             {
                 m_log.Debug("[NeighborService]: Closing " + byebyeRegions.Count + " child agents");
-                SendCloseChildAgent(AgentID, currentRegionID, byebyeRegions);
+                SendCloseChildAgent(AgentID, neighbor.RegionID, byebyeRegions);
             }
         }
 

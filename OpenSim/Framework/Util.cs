@@ -1694,5 +1694,13 @@ namespace OpenSim.Framework
             }
             return string.Empty;
         }
+
+        public static void UlongToInts(ulong regionHandle, out int x, out int y)
+        {
+            uint xx, yy;
+            Utils.LongToUInts(regionHandle, out xx, out yy);
+            x = (int)xx;
+            y = (int)yy;
+        }
     }
 }

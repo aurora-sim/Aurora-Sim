@@ -930,9 +930,7 @@ namespace OpenSim.Services.CapsService
                                 otherRegion.RootAgent = true;
                                 m_service.RootAgent = false;
 
-                                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                                service.GetNeighbors(ourRegion);
-                                service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                                service.CloseNeighborAgents(crossingRegion.RegionLocX, crossingRegion.RegionLocY, m_service.AgentID, m_service.RegionHandle);
                             }
                         }
                     }
@@ -976,8 +974,6 @@ namespace OpenSim.Services.CapsService
 
                 uint x, y;
                 Utils.LongToUInts(m_service.RegionHandle, out x, out y);
-                GridRegion ourRegion = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-
                 IEventQueueService EQService = m_service.Registry.RequestModuleInterface<IEventQueueService>();
 
                 IRegionClientCapsService otherRegion = m_service.ClientCaps.GetCapsService(destination.RegionHandle);
@@ -1008,8 +1004,8 @@ namespace OpenSim.Services.CapsService
                                     m_service.AgentID + ". Resetting.");
                             }
                             //Close the agent at the place we just created if it isn't a neighbor
-                            if (service.IsOutsideView(ourRegion.RegionLocX, destination.RegionLocX,
-                                ourRegion.RegionLocY, destination.RegionLocY))
+                            if (service.IsOutsideView((int)x, destination.RegionLocX,
+                                (int)y, destination.RegionLocY))
                                 SimulationService.CloseAgent(destination, m_service.AgentID);
                         }
                         else
@@ -1019,8 +1015,7 @@ namespace OpenSim.Services.CapsService
                             m_service.RootAgent = false;
 
                             //Ok... the agent exists... so lets assume that it worked?
-                            service.GetNeighbors(ourRegion);
-                            service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                            service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, m_service.RegionHandle);
                             //Make sure to set the result correctly as well
                             result = true;
                         }
@@ -1032,8 +1027,7 @@ namespace OpenSim.Services.CapsService
                         m_service.RootAgent = false;
 
                         // Next, let's close the child agent connections that are too far away.
-                        service.GetNeighbors(ourRegion);
-                        service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, ourRegion.RegionID);
+                        service.CloseNeighborAgents(destination.RegionLocX, destination.RegionLocY, m_service.AgentID, m_service.RegionHandle);
                     }
                 }
 

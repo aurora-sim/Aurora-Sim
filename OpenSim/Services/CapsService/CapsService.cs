@@ -20,6 +20,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Services.DataService;
 using OpenMetaverse.StructuredData;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
@@ -121,8 +122,14 @@ namespace OpenSim.Services.CapsService
             {
                 foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
                 {
-                    if((clientCaps.RootAgent || showChildAgents))
-                        m_log.InfoFormat("Region - {0}, User {1}, {2}", regionCaps.RegionHandle, clientCaps.AgentID, clientCaps.RootAgent ? "Root Agent" : "Child Agent");
+                    if ((clientCaps.RootAgent || showChildAgents))
+                    {
+                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                        uint x, y;
+                        Utils.LongToUInts(regionCaps.RegionHandle, out x, out y);
+                        GridRegion region = gridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
+                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", region.RegionName, clientCaps.AgentID, clientCaps.RootAgent ? "Root Agent" : "Child Agent", clientCaps.Disabled ? "Disabled" : "Not Disabled");
+                    }
                 }
             }
         }
