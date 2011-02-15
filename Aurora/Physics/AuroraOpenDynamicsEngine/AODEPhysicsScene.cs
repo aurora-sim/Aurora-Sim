@@ -1007,7 +1007,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         */
                 #endregion
-                    if (curContact.depth >= 1.00f)
+                    if (curContact.depth >= 1.0f)
                     {
                         //m_log.Info("[P]: " + contact.depth.ToString());
                         if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
@@ -3768,7 +3768,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.GeomSetPosition(GroundGeom, (pOffset.X + (m_region.RegionSizeX * 0.5f)), (pOffset.Y + (m_region.RegionSizeY * 0.5f)), 0);
                 RegionTerrain.Remove(pOffset);
                 RegionTerrain.Add(pOffset, GroundGeom, GroundGeom);
-                TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
+//                TerrainHeightFieldHeights.Add(GroundGeom, _heightmap);
+               
+                TerrainHeightFieldHeights.Add(GroundGeom, heightMap);
                 }
             }
 
