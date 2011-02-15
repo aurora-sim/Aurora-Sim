@@ -67,9 +67,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 {
                 // extended regions layers types
-                type++; // land becomes 77, Water 88
-                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
-                    type++; // wind becames 57, cloud 58
+                
+                if (type == TerrainPatch.LayerType.Land || type == TerrainPatch.LayerType.Water)
+                    type++; // land becomes 77, Water 88
+                else
+                    type+=2; // wind becames 57, cloud 58
                 }
 
             layer.LayerID.Type = (byte)type;
@@ -114,9 +116,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 {
                 // extended regions layers types
-                type++; // land becomes 77, Water 88
-                if (type != TerrainPatch.LayerType.Land && type != TerrainPatch.LayerType.Water)
-                    type++; // wind becames 57, cloud 58
+
+                if (type == TerrainPatch.LayerType.Land || type == TerrainPatch.LayerType.Water)
+                    type++; // land becomes 77, Water 88
+                else
+                    type += 2; // wind becames 57, cloud 58
                 }
 
             layer.LayerID.Type = (byte)type;
