@@ -105,10 +105,6 @@ namespace OpenSim.Services.GridService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
         }
 

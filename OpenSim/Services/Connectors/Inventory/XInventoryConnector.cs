@@ -581,10 +581,6 @@ namespace OpenSim.Services.Connectors
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("InventoryHandler", "") != Name)
                 return;
@@ -593,7 +589,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IInventoryService>(this);
         }
 
-        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 

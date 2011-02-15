@@ -109,10 +109,6 @@ namespace OpenSim.Services.PresenceService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_GridService = registry.RequestModuleInterface<IGridService>();
         }
 

@@ -31,10 +31,6 @@ namespace OpenSim.Services.Connectors.Simulation
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];

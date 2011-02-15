@@ -836,10 +836,6 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
@@ -848,7 +844,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 

@@ -465,13 +465,9 @@ namespace OpenSim.Services.Connectors
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlers = config.Configs["Handlers"];
             if (handlers.GetString("NeighborHandler", "") == Name)
-                m_LocalService.PostStart(config, registry);
+                m_LocalService.Start(config, registry);
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

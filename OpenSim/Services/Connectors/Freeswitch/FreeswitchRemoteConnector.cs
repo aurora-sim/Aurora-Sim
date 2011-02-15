@@ -80,10 +80,6 @@ namespace OpenSim.Services.Connectors
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FreeSwitchHandler", "") != Name)
                 return;
@@ -92,7 +88,7 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IFreeswitchService>(this);
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 

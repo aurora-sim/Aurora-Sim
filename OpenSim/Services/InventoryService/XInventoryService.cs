@@ -96,10 +96,6 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_AssetService = registry.RequestModuleInterface<IAssetService>();

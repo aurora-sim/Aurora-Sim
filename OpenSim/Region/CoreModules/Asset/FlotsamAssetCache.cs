@@ -199,10 +199,6 @@ namespace Flotsam.RegionModules.AssetCache
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
             IConfig moduleConfig = config.Configs["Modules"];

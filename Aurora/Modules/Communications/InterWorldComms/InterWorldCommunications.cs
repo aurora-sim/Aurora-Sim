@@ -212,10 +212,6 @@ namespace Aurora.Modules
 
         public void Start(IConfigSource source, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource source, IRegistryCore registry)
-        {
             if (m_Enabled)
             {
                 registry.RegisterModuleInterface<InterWorldCommunications>(this);

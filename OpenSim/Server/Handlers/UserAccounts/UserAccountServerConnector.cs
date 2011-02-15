@@ -47,10 +47,6 @@ namespace OpenSim.Server.Handlers.UserAccounts
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("UserAccountInHandler", "") != Name)
                 return;

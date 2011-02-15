@@ -48,10 +48,6 @@ namespace OpenSim.Services.CapsService
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public virtual void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             m_service = registry.RequestModuleInterface<ICapsService>();
         }
 

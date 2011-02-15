@@ -50,10 +50,6 @@ namespace OpenSim.Server.Handlers.Simulation
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("SimulationInHandler", "") != Name)
                 return;
@@ -62,7 +58,7 @@ namespace OpenSim.Server.Handlers.Simulation
             IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
 
             m_LocalSimulationService = registry.RequestModuleInterface<ISimulationService>();
-            
+
             string path = "/" + UUID.Random().ToString() + "/agent/";
 
             IGridRegisterModule registerModule = registry.RequestModuleInterface<IGridRegisterModule>();

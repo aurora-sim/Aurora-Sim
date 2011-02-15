@@ -100,10 +100,6 @@ namespace OpenSim.Services.AuthenticationService
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
         }

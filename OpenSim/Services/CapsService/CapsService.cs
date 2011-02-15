@@ -84,10 +84,6 @@ namespace OpenSim.Services.CapsService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             SceneManager regionManager = Registry.RequestModuleInterface<SceneManager>();
             if (regionManager != null)
             {

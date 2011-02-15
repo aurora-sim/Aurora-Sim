@@ -115,10 +115,6 @@ namespace OpenSim.Services.InventoryService
             LoadLibraries(registry);
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<ILibraryService>(this);

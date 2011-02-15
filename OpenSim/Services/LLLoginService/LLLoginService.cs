@@ -154,10 +154,7 @@ namespace OpenSim.Services.LLLoginService
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_CapsService = registry.RequestModuleInterface<ICapsService>();
-        }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             if (!Initialized)
             {
                 Initialized = true;

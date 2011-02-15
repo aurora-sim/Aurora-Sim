@@ -229,10 +229,6 @@ namespace OpenSim.Region.CoreModules.Asset
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig moduleConfig = config.Configs["Modules"];

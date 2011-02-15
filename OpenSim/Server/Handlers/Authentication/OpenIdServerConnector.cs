@@ -55,10 +55,6 @@ namespace OpenSim.Server.Handlers.Authentication
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-        }
-
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("OpenIdHandler", "") != Name)
                 return;

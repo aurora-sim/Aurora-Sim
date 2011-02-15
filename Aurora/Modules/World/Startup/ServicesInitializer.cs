@@ -54,16 +54,6 @@ namespace OpenSim.Region.CoreModules
                     {
                     }
                 }
-                foreach (IService connector in serviceConnectors)
-                {
-                    try
-                    {
-                        connector.PostStart(source, scene);
-                    }
-                    catch
-                    {
-                    }
-                }
             }
             else
             {

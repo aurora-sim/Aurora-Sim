@@ -60,10 +60,6 @@ namespace OpenSim.Services.AuthorizationService
         {
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IAuthorizationService>(this);
