@@ -123,8 +123,8 @@ namespace OpenSim.Services.CapsService
             block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.X = (ushort)(r.RegionSizeX);
-            block.Y = (ushort)(r.RegionSizeY);
+            block.SizeX = (ushort)(r.RegionSizeX);
+            block.SizeY = (ushort)(r.RegionSizeY);
             return block;
         }
 
