@@ -63,23 +63,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public static LayerDataPacket CreateLayerDataPacket(TerrainPatch[] patches, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
+            TerrainPatch.LayerType ltype = type;
 
             if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 {
                 // extended regions layers types
                 
-                if (type == TerrainPatch.LayerType.Land || type == TerrainPatch.LayerType.Water)
-                    type++; // land becomes 77, Water 88
+                if (ltype == TerrainPatch.LayerType.Land || ltype == TerrainPatch.LayerType.Water)
+                    ltype++; // land becomes 77, Water 88
                 else
-                    type+=2; // wind becames 57, cloud 58
+                    ltype+=2; // wind becames 57, cloud 58
                 }
 
-            layer.LayerID.Type = (byte)type;
+            layer.LayerID.Type = (byte)ltype;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
             header.Stride = STRIDE;
             header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = type;
+            header.Type = ltype;
 
             // Should be enough to fit even the most poorly packed data
             byte[] data = new byte[patches.Length * Constants.TerrainPatchSize * Constants.TerrainPatchSize * 2];
@@ -112,23 +113,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public static LayerDataPacket CreateLandPacket(float[] heightmap, int[] x, int[] y, TerrainPatch.LayerType type, int RegionSizeX, int RegionSizeY)
         {
             LayerDataPacket layer = new LayerDataPacket();
+            TerrainPatch.LayerType ltype = type;
 
             if (RegionSizeX > Constants.RegionSize || RegionSizeY > Constants.RegionSize)
                 {
                 // extended regions layers types
 
-                if (type == TerrainPatch.LayerType.Land || type == TerrainPatch.LayerType.Water)
-                    type++; // land becomes 77, Water 88
+                if (ltype == TerrainPatch.LayerType.Land || ltype == TerrainPatch.LayerType.Water)
+                    ltype++; // land becomes 77, Water 88
                 else
-                    type += 2; // wind becames 57, cloud 58
+                    ltype += 2; // wind becames 57, cloud 58
                 }
 
-            layer.LayerID.Type = (byte)type;
+            layer.LayerID.Type = (byte)ltype;
 
             TerrainPatch.GroupHeader header = new TerrainPatch.GroupHeader();
             header.Stride = STRIDE;
             header.PatchSize = Constants.TerrainPatchSize;
-            header.Type = type;
+            header.Type = ltype;
 
             byte[] data = new byte[1536];
             BitPack bitpack = new BitPack(data, 0);
