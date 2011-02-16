@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             Noise = 4,
             Revert = 5,
 
-            // Extended brushes
+            // Extended brushes for Aurora
             Erode = 255,
             Weather = 254,
             Olsen = 253
@@ -1203,36 +1203,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float[] serialised = channel.GetFloatsSerialised(m_scene);
             foreach (ScenePresence presence in m_scene.ScenePresences)
             {
-                presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
-            }
-        }
-
-        private bool LimitMaxTerrain(int xStart, int yStart)
-        {
-            bool changesLimited = false;
-
-            // loop through the height map for this patch and compare it against
-            // the revert map
-            for (int x = xStart; x < xStart + Constants.TerrainPatchSize; x++)
-            {
-                for (int y = yStart; y < yStart + Constants.TerrainPatchSize; y++)
+                for(int i = 0; i < xs.Count; i++)
                 {
-                    double requestedHeight = m_channel[x, y];
-
-                    if (requestedHeight > MAX_HEIGHT)
-                    {
-                        m_channel[x, y] = MAX_HEIGHT;
-                        changesLimited = true;
-                    }
-                    else if (requestedHeight < MIN_HEIGHT)
-                    {
-                        m_channel[x, y] = MIN_HEIGHT; //as lower is a -ve delta
-                        changesLimited = true;
-                    }
+                     m_terrainPatchesSent[presence.UUID][xs[i], ys[i]] = false;
                 }
+                SendTerrainUpdatesForClient(presence);
             }
-
-            return changesLimited;
         }
 
         private bool LimitMaxTerrain()
@@ -1279,44 +1255,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
             {
                 for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
-                {
-
-                    double requestedHeight = m_channel[x, y];
-                    double bakedHeight = m_revert[x, y];
-                    double requestedDelta = requestedHeight - bakedHeight;
-
-                    if (requestedDelta > maxDelta)
-                    {
-                        m_channel[x, y] = bakedHeight + maxDelta;
-                        changesLimited = true;
-                    }
-                    else if (requestedDelta < minDelta)
-                    {
-                        m_channel[x, y] = bakedHeight + minDelta; //as lower is a -ve delta
-                        changesLimited = true;
-                    }
-                }
-            }
-
-            return changesLimited;
-        }
-
-        /// <summary>
-        /// Checks to see height deltas in the tainted terrain patch at xStart ,yStart
-        /// are all within the current estate limits
-        /// <returns>true if changes were limited, false otherwise</returns>
-        /// </summary>
-        private bool LimitChannelChanges(int xStart, int yStart)
-        {
-            bool changesLimited = false;
-            double minDelta = m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
-            double maxDelta = m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
-
-            // loop through the height map for this patch and compare it against
-            // the revert map
-            for (int x = xStart; x < xStart + Constants.TerrainPatchSize; x++)
-            {
-                for (int y = yStart; y < yStart + Constants.TerrainPatchSize; y++)
                 {
 
                     double requestedHeight = m_channel[x, y];
@@ -1415,7 +1353,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 else
                 {
-                    m_log.Debug("Unknown terrain brush type " + action);
+                    m_log.Warn("Unknown terrain brush type " + action);
                 }
             }
             else
@@ -1457,7 +1395,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 else
                 {
-                    m_log.Debug("Unknown terrain flood type " + action);
+                    m_log.Warn("Unknown terrain flood type " + action);
                 }
             }
         }
