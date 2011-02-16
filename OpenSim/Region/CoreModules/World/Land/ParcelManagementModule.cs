@@ -1105,7 +1105,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeX / 4; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                     {
                         if (landBitmapSlave[x, y])
                         {
@@ -1372,9 +1372,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             byte[] byteArray = new byte[LAND_BLOCKS_PER_PACKET];
             int byteArrayCount = 0;
             int sequenceID = 0;
-            for (int y = 0; y < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize); y++)
+            for (int y = 0; y < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize); y++)
             {
-                for (int x = 0; x < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize); x++)
+                for (int x = 0; x < (ParcelManagementModule.LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize); x++)
                 {
                     byte tempByte = 0; //This represents the byte for the current 4x4
 
