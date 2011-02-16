@@ -41,10 +41,28 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 
             int x;
-            for (x = 0; x < map.Width; x++)
+
+            int xFrom = (int)(rx - BrushSize + 0.5);
+            int xTo = (int)(rx + BrushSize + 0.5) + 1;
+            int yFrom = (int)(ry - BrushSize + 0.5);
+            int yTo = (int)(ry + BrushSize + 0.5) + 1;
+
+            if (xFrom < 0)
+                xFrom = 0;
+
+            if (yFrom < 0)
+                yFrom = 0;
+
+            if (xTo > map.Width)
+                xTo = map.Width;
+
+            if (yTo > map.Height)
+                yTo = map.Height;
+
+            for (x = xFrom; x < xTo; x++)
             {
                 int y;
-                for (y = 0; y < map.Height; y++)
+                for (y = yFrom; y < yTo; y++)
                 {
                     if (!mask[x, y])
                         continue;
