@@ -41,6 +41,8 @@ namespace OpenSim.Framework
         public byte WaterHeight;
         public ushort X;
         public ushort Y;
+        public ushort SizeX;
+        public ushort SizeY;
 
         public MapBlockData()
         {
@@ -51,6 +53,8 @@ namespace OpenSim.Framework
             OSDMap map = new OSDMap();
             map["X"] = X;
             map["Y"] = Y;
+            map["SizeX"] = SizeX;
+            map["SizeY"] = SizeY;
             map["Name"] = Name;
             map["Access"] = Access;
             map["RegionFlags"] = RegionFlags;
