@@ -60,13 +60,14 @@ namespace OpenSim.Services.Interfaces
     ///   regions in the grid. This can be used to send grid wide notices or other events 
     ///   that regions need to know about
     /// </summary>
-    public interface IAsyncMessagePosterService
+    public interface IAsyncMessagePostService
     {
         /// <summary>
-        /// Post a request to all hosts that we have
-        /// This is asyncronous.
+        /// Post a request to the given region asyncronously
+        /// This request will be picked up by the region normally within 30 seconds
         /// </summary>
+        /// <param name="RegionHandle"></param>
         /// <param name="request"></param>
-        void Post(OSDMap request);
+        void Post(ulong RegionHandle, OSDMap request);
     }
 }
