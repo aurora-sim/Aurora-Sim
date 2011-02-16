@@ -1204,11 +1204,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             float[] serialised = channel.GetFloatsSerialised(m_scene);
             foreach (ScenePresence presence in m_scene.ScenePresences)
             {
-                for(int i = 0; i < xs.Count; i++)
+                if (!m_sendTerrainUpdatesByViewDistance)
                 {
-                     m_terrainPatchesSent[presence.UUID][xs[i], ys[i]] = false;
+                     presence.ControllingClient.SendLayerData(xs.ToArray(), ys.ToArray(), serialised, TerrainPatch.LayerType.Land);
                 }
-                SendTerrainUpdatesForClient(presence);
+                else
+                {
+                    for(int i = 0; i < xs.Count; i++)
+                    {
+                         m_terrainPatchesSent[presence.UUID][xs[i], ys[i]] = false;
+                    }
+                    SendTerrainUpdatesForClient(presence);
+                }
             }
         }
 
