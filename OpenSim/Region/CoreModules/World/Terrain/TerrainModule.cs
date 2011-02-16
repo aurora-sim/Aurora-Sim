@@ -191,12 +191,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             if (m_queueNextSave > 0 && m_queueNextSave < now)
             {
+                m_queueNextSave = 0;
                 //Save the terarin
                 SaveTerrain();
                 m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
                 
-                m_queueNextSave = 0;
-                m_queueTimer.Stop();
+                if(m_queueNextSave == 0)
+                    m_queueTimer.Stop();
             }
         }
 
