@@ -160,13 +160,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             // Using one 'rain' round for this, so skipping a useless loop
             // Will need to adapt back in for the Flood brush
 
-            ITerrainChannel water = new TerrainChannel(map.Width, map.Height, null);
-            ITerrainChannel sediment = new TerrainChannel(map.Width, map.Height, null);
+            ITerrainChannel water = new TerrainChannel(BrushSize, BrushSize, null);
+            ITerrainChannel sediment = new TerrainChannel(BrushSize, BrushSize, null);
 
             // Fill with rain
-            for (x = 0; x < water.Width; x++)
-                for (y = 0; y < water.Height; y++)
-                    water[x, y] = Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * rainHeight * duration);
+            for (x = 0; x < BrushSize; x++)
+                for (y = 0; y < BrushSize; y++)
+                    water[x, y] = Math.Max(0.0, TerrainUtil.SphericalFactor(rx+x, ry+y, rx, ry, strength) * rainHeight * duration);
 
             for (int i = 0; i < rounds; i++)
             {
@@ -175,11 +175,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        if (mask[x,y])
+                        if (mask[rx+x, ry+y])
                         {
                             const double solConst = (1.0 / rounds);
                             double sedDelta = water[x, y] * solConst;
-                            map[x, y] -= sedDelta;
+                            map[rx+x, ry+y] -= sedDelta;
                             sediment[x, y] += sedDelta;
                         }
                     }
@@ -197,7 +197,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
                         int neighbours = 0;
                         double altitudeTotal = 0.0;
-                        double altitudeMe = map[x, y] + water[x, y];
+                        double altitudeMe = map[rx+x, ry+y] + water[x, y];
 
                         const int NEIGHBOUR_ME = 4;
                         const int NEIGHBOUR_MAX = 9;
@@ -297,10 +297,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         double sedimentDeposit = sediment[x, y] - waterCapacity;
                         if (sedimentDeposit > 0)
                         {
-                            if (mask[x,y])
+                            if (mask[rx+x, ry+y])
                             {
                                 sediment[x, y] -= sedimentDeposit;
-                                map[x, y] += sedimentDeposit;
+                                map[rx+x, ry+y] += sedimentDeposit;
                             }
                         }
                     }
@@ -310,8 +310,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             // Deposit any remainder (should be minimal)
             for (x = 0; x < water.Width; x++)
                 for (y = 0; y < water.Height; y++)
-                    if (mask[x,y] && sediment[x, y] > 0)
-                        map[x, y] += sediment[x, y];
+                    if (mask[rx+x, ry+y] && sediment[x, y] > 0)
+                        map[rx+x, ry+y] += sediment[x, y];
         }
 
         #endregion
