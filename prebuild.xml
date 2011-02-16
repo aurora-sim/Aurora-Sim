@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <Prebuild version="1.7" xmlns="http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd">
-  <Solution activeConfig="Debug" platform="x86" name="Aurora" path="./" version="0.5.0-$Rev$">
+  <Solution activeConfig="Debug|x86" name="Aurora" path="./" version="0.5.0-$Rev$">
     <Configuration name="Debug" platform="x86">
       <Options>
         <CompilerDefines>TRACE;DEBUG</CompilerDefines>
@@ -9,7 +9,20 @@
         <AllowUnsafe>true</AllowUnsafe>
         <WarningLevel>4</WarningLevel>
         <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>
+    <Configuration name="Debug">
+      <Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
         <OutputPath>bin</OutputPath>
         <DebugInformation>true</DebugInformation>
         <IncrementalBuild>true</IncrementalBuild>
@@ -24,7 +37,6 @@
         <AllowUnsafe>true</AllowUnsafe>
         <WarningLevel>4</WarningLevel>
         <WarningsAsErrors>false</WarningsAsErrors>
-        <SuppressWarnings/>
         <OutputPath>bin</OutputPath>
         <DebugInformation>true</DebugInformation>
         <IncrementalBuild>true</IncrementalBuild>
