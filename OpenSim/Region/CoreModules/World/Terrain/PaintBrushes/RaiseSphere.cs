@@ -54,8 +54,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             if (xTo > map.Width)
                 xTo = map.Width;
 
-            if (yTo > map.Width)
-                yTo = map.Width;
+            if (yTo > map.Height)
+                yTo = map.Height;
 
             for (x = xFrom; x < xTo; x++)
             {
