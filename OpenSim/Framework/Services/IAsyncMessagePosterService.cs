@@ -29,7 +29,7 @@ namespace OpenSim.Services.Interfaces
         OSDMap Get(OSDMap request);
     }
 
-    public delegate OSDMap MessageReceieved(OSDMap message);
+    public delegate OSDMap MessageReceived(OSDMap message);
     /// <summary>
     /// This is used to deal with incoming requests from the ISyncMessagePosterService
     /// </summary>
@@ -45,7 +45,14 @@ namespace OpenSim.Services.Interfaces
         ///   If you do not wish to send a response back to the poster, return null, otherwise, return a
         ///   valid OSDMap that will be added to the response.
         /// </summary>
-        event MessageReceieved OnMessageReceieved;
+        event MessageReceived OnMessageReceived;
+
+        /// <summary>
+        /// Fire the MessageReceived event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        OSDMap FireMessageReceived(OSDMap message);
     }
 
     /// <summary>

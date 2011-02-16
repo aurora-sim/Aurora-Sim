@@ -38,16 +38,16 @@ namespace OpenSim.Services.MessagingService
 
         #region IAsyncMessageRecievedService Members
 
-        public event MessageReceieved OnMessageReceieved;
+        public event MessageReceived OnMessageReceived;
 
         #endregion
 
         public OSDMap FireMessageReceived(OSDMap message)
         {
             OSDMap result = null;
-            if (OnMessageReceieved != null)
+            if (OnMessageReceived != null)
             {
-                foreach (MessageReceieved messagedelegate in OnMessageReceieved.GetInvocationList())
+                foreach (MessageReceived messagedelegate in OnMessageReceived.GetInvocationList())
                 {
                     OSDMap r = messagedelegate(message);
                     if (r != null)
