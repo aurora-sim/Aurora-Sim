@@ -446,7 +446,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // Reset Terrain..  since terrain loads before we get here, we need to load 
             // it again so it loads in the root region
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene));
 
             // Create a client event forwarder and add this region's events to the root region.
             if (conn.ClientEventForwarder != null)
@@ -485,7 +485,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
 
             if (conn.ClientEventForwarder != null)
@@ -524,7 +524,7 @@ namespace OpenSim.Region.RegionCombinerModule
             // Reset Terrain..  since terrain normally loads first.
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             ITerrainChannel terrainHeightmap = scene.RequestModuleInterface<ITerrainChannel>();
-            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene), terrainHeightmap.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(terrainHeightmap.GetFloatsSerialised(scene));
             //conn.RegionScene.PhysicsScene.SetTerrain(conn.RegionScene.Heightmap.GetFloatsSerialised());
             
             if (conn.ClientEventForwarder != null)

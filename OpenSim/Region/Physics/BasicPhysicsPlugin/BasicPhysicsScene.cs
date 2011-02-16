@@ -189,7 +189,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return returncolliders;
         }
 
-        public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
+        public override void SetTerrain(float[] heightMap)
         {
             _heightMap = heightMap;
         }

@@ -143,7 +143,7 @@ namespace OpenSim.Region.Physics.Manager
 
         public abstract void GetResults();
 
-        public abstract void SetTerrain(float[] heightMap, double[,] normalHeightMap);
+        public abstract void SetTerrain(float[] heightMap);
 
         public abstract void SetWaterLevel(float[] map);
 
@@ -326,7 +326,7 @@ namespace OpenSim.Region.Physics.Manager
                 m_log.Info("[PHYSICS]: NullPhysicsScene : GetResults()");
             }
 
-            public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
+            public override void SetTerrain(float[] heightMap)
             {
                 m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
             }

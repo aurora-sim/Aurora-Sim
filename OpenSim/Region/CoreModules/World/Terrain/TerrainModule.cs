@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             LoadWorldHeightmap();
             LoadWorldWaterMap();
-            scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene), m_channel.GetDoubles(scene));
+            scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(scene));
             UpdateWaterHeight(scene.RegionInfo.RegionSettings.WaterHeight);
 
             m_scene.RegisterModuleInterface<ITerrainModule>(this);
@@ -193,7 +193,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             {
                 //Save the terarin
                 SaveTerrain();
-                m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene), m_channel.GetDoubles(m_scene));
+                m_scene.SceneGraph.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(m_scene));
                 
                 m_queueNextSave = 0;
                 m_queueTimer.Stop();
@@ -600,6 +600,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             catch (Exception e)
             {
                 m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e.ToString());
+                m_channel = new TerrainChannel(m_scene);
+
+                m_scene.SimulationDataService.StoreTerrain(m_channel.GetDoubles(m_scene), m_scene.RegionInfo.RegionID, false);
             }
             LoadRevertMap();
             m_scene.RegisterModuleInterface<ITerrainChannel>(m_channel);
@@ -1581,7 +1584,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
             foreach (TerrainModule tmodule in m)
             {
-                tmodule.m_scene.SceneGraph.PhysicsScene.SetTerrain(tmodule.m_channel.GetFloatsSerialised(tmodule.m_scene), tmodule.m_channel.GetDoubles(tmodule.m_scene));
+                tmodule.m_scene.SceneGraph.PhysicsScene.SetTerrain(tmodule.m_channel.GetFloatsSerialised(tmodule.m_scene));
             }
         }
 

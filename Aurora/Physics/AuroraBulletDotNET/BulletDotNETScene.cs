@@ -533,7 +533,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             
         }
 
-        public override void SetTerrain(float[] heightMap, double[,] normalHeightMap)
+        public override void SetTerrain(float[] heightMap)
         {
             if (m_terrainShape != null)
                 DeleteTerrain();
