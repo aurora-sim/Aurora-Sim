@@ -1371,10 +1371,10 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
 
-      <Reference name="Community.CsharpSqlite"/>
-      <Reference name="Community.CsharpSqlite.Sqlite"/>
+      <Reference name="Community.CsharpSqlite" path="../../../bin/"/>
+      <Reference name="Community.CsharpSqlite.Sqlite" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="Mono.Data.Sqlite"/>
+      <Reference name="Mono.Data.Sqlite" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
